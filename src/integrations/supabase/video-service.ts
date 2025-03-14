@@ -63,7 +63,7 @@ export async function uploadVideo(file: File, name: string, description?: string
       // O processamento é assíncrono, então não vamos falhar aqui
     }
 
-    return videoRecord;
+    return videoRecord as Video;
   } catch (error) {
     console.error('Erro ao fazer upload do vídeo:', error);
     toast({
@@ -86,7 +86,7 @@ export async function fetchVideos(): Promise<Video[]> {
       throw error;
     }
 
-    return data || [];
+    return (data || []) as Video[];
   } catch (error) {
     console.error('Erro ao buscar vídeos:', error);
     toast({
@@ -110,7 +110,7 @@ export async function getVideo(id: string): Promise<Video | null> {
       throw error;
     }
 
-    return data;
+    return data as Video;
   } catch (error) {
     console.error(`Erro ao buscar vídeo ${id}:`, error);
     return null;
