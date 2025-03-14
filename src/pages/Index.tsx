@@ -4,49 +4,25 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, Film, Copy, Play, Clock } from "lucide-react";
+import { Upload, Film, Copy, Play, Clock, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VideoPlayer from "@/components/VideoPlayer";
-
-// Tipo de vídeo para nossa aplicação
-interface Video {
-  id: string;
-  name: string;
-  createdAt: string;
-  status: 'uploading' | 'processing' | 'ready' | 'error';
-  hlsUrl: string;
-  duration: number;
-}
+import { fetchVideos, uploadVideo, deleteVideo, Video } from "@/integrations/supabase/video-service";
 
 const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Simular carregamento de vídeos iniciais
+  // Buscar vídeos do Supabase ao carregar a página
   useEffect(() => {
-    // Em uma implementação real, isso buscaria do armazenamento
-    const mockVideos: Video[] = [
-      {
-        id: '1',
-        name: 'Introdução ao Curso',
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'ready',
-        hlsUrl: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
-        duration: 3600,
-      },
-      {
-        id: '2',
-        name: 'Módulo 1 - Fundamentos',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'ready',
-        hlsUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-        duration: 3600,
-      }
-    ];
-    
-    setVideos(mockVideos);
+    loadVideos();
   }, []);
+  
+  const loadVideos = async () => {
+    const videoList = await fetchVideos();
+    setVideos(videoList);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,49 +30,65 @@ const Index = () => {
 
     setIsUploading(true);
 
-    // Adicionar vídeo em estado de uploading
-    const newVideo: Video = {
-      id: Date.now().toString(),
-      name: file.name.replace(/\.[^/.]+$/, ""),
-      createdAt: new Date().toISOString(),
-      status: 'uploading',
-      hlsUrl: '',
-      duration: 0
-    };
+    try {
+      // Upload do vídeo para o Supabase
+      const newVideo = await uploadVideo(file, file.name.replace(/\.[^/.]+$/, ""));
+      
+      if (newVideo) {
+        setVideos(prev => [newVideo, ...prev]);
+        
+        // Atualizar status do vídeo periodicamente
+        const checkStatus = setInterval(async () => {
+          const updatedVideos = await fetchVideos();
+          setVideos(updatedVideos);
+          
+          // Verificar se o vídeo atual está pronto ou com erro
+          const currentVideo = updatedVideos.find(v => v.id === newVideo.id);
+          if (currentVideo && (currentVideo.status === 'ready' || currentVideo.status === 'error')) {
+            clearInterval(checkStatus);
+            
+            if (currentVideo.status === 'ready') {
+              toast({
+                title: "Vídeo processado com sucesso",
+                description: `${file.name} está pronto para ser usado`
+              });
+            } else {
+              toast({
+                title: "Erro ao processar vídeo",
+                description: "Ocorreu um erro durante o processamento",
+                variant: "destructive"
+              });
+            }
+          }
+        }, 3000); // Verificar a cada 3 segundos
+      }
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer o upload do vídeo",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-    setVideos(prev => [newVideo, ...prev]);
-
-    // Simular upload e processamento
-    setTimeout(() => {
-      setVideos(prev => 
-        prev.map(video => 
-          video.id === newVideo.id 
-            ? { ...video, status: 'processing' } 
-            : video
-        )
-      );
-
-      // Simular conclusão do processamento (HLS)
-      setTimeout(() => {
-        setVideos(prev => 
-          prev.map(video => 
-            video.id === newVideo.id 
-              ? { 
-                  ...video, 
-                  status: 'ready',
-                  hlsUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-                  duration: 3600
-                } 
-              : video
-          )
-        );
-        setIsUploading(false);
+  const handleDeleteVideo = async (videoId: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este vídeo?")) {
+      const success = await deleteVideo(videoId);
+      
+      if (success) {
+        setVideos(prev => prev.filter(video => video.id !== videoId));
+        if (selectedVideo?.id === videoId) {
+          setSelectedVideo(null);
+        }
         toast({
-          title: "Vídeo processado com sucesso",
-          description: `${file.name} está pronto para ser usado`
+          title: "Vídeo excluído",
+          description: "O vídeo foi excluído com sucesso"
         });
-      }, 3000);
-    }, 2000);
+      }
+    }
   };
 
   const copyHlsUrl = (url: string) => {
@@ -155,7 +147,7 @@ const Index = () => {
                   {videos.map(video => (
                     <TableRow key={video.id}>
                       <TableCell className="font-medium">{video.name}</TableCell>
-                      <TableCell>{new Date(video.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(video.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
@@ -173,8 +165,8 @@ const Index = () => {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => copyHlsUrl(video.hlsUrl)}
-                            disabled={video.status !== 'ready'}
+                            onClick={() => video.hls_url && copyHlsUrl(video.hls_url)}
+                            disabled={video.status !== 'ready' || !video.hls_url}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -182,9 +174,16 @@ const Index = () => {
                             variant="outline" 
                             size="sm"
                             onClick={() => setSelectedVideo(video)}
-                            disabled={video.status !== 'ready'}
+                            disabled={video.status !== 'ready' || !video.hls_url}
                           >
                             <Play className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteVideo(video.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </div>
                       </TableCell>
@@ -204,24 +203,24 @@ const Index = () => {
         </CardContent>
       </Card>
 
-      {selectedVideo && (
+      {selectedVideo && selectedVideo.hls_url && (
         <Card>
           <CardHeader>
             <CardTitle>Preview: {selectedVideo.name}</CardTitle>
             <CardDescription>
-              URL HLS: <code className="bg-muted p-1 rounded">{selectedVideo.hlsUrl}</code>
+              URL HLS: <code className="bg-muted p-1 rounded">{selectedVideo.hls_url}</code>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="ml-2"
-                onClick={() => copyHlsUrl(selectedVideo.hlsUrl)}
+                onClick={() => selectedVideo.hls_url && copyHlsUrl(selectedVideo.hls_url)}
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <VideoPlayer src={selectedVideo.hlsUrl} />
+            <VideoPlayer src={selectedVideo.hls_url} poster={selectedVideo.thumbnail_url} />
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={() => setSelectedVideo(null)}>
@@ -232,7 +231,7 @@ const Index = () => {
               onClick={() => {
                 // Copiar código de embed para inserir no Cursaeduca
                 const embedCode = `<video-js class="vjs-default-skin" controls>
-  <source src="${selectedVideo.hlsUrl}" type="application/x-mpegURL">
+  <source src="${selectedVideo.hls_url}" type="application/x-mpegURL">
 </video-js>`;
                 navigator.clipboard.writeText(embedCode);
                 toast({
