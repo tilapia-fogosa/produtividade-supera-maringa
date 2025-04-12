@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle } from "lucide-react";
@@ -113,7 +112,6 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead className={isMobile ? "px-2 py-2 text-xs" : ""}>Nome</TableHead>
-                <TableHead className={`hidden md:table-cell ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Código</TableHead>
                 <TableHead className={`hidden md:table-cell ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
                 <TableHead className={`w-[100px] ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Produtividade</TableHead>
               </TableRow>
@@ -123,9 +121,6 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
                 <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
                   <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs truncate max-w-[120px]" : ""}`}>
                     {aluno.nome}
-                  </TableCell>
-                  <TableCell className={`hidden md:table-cell ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                    {aluno.codigo || '-'}
                   </TableCell>
                   <TableCell className={`hidden md:table-cell ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
                     {aluno.ultimo_nivel || '-'}
