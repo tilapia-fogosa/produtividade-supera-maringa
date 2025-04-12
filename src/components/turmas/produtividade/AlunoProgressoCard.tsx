@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from 'date-fns';
+import { format, differenceInMonths } from 'date-fns';
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AlunoProgressoCardProps {
@@ -23,6 +23,25 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
     return data ? format(new Date(data), 'dd/MM/yyyy HH:mm') : 'Não registrado';
   };
 
+  const getPaginasRestantesColor = (paginas?: number | null) => {
+    if (paginas === null || paginas === undefined) return "";
+    if (paginas < 5) return "text-red-600 font-bold";
+    if (paginas < 10) return "text-yellow-600 font-bold";
+    return "";
+  };
+
+  const getUltimaCorrecaoAHColor = (dataStr?: string | null) => {
+    if (!dataStr) return "";
+    
+    const data = new Date(dataStr);
+    const hoje = new Date();
+    const mesesDiferenca = differenceInMonths(hoje, data);
+    
+    if (mesesDiferenca >= 4) return "text-red-600 font-bold";
+    if (mesesDiferenca >= 3) return "text-yellow-600 font-bold";
+    return "";
+  };
+
   return (
     <Card className={`w-full ${isMobile ? 'text-sm' : ''}`}>
       <CardHeader>
@@ -39,11 +58,15 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
         </div>
         <div className="flex justify-between">
           <span>Páginas Restantes:</span>
-          <span className="font-semibold">{paginasRestantes !== null ? paginasRestantes : 'Não calculado'}</span>
+          <span className={`font-semibold ${getPaginasRestantesColor(paginasRestantes)}`}>
+            {paginasRestantes !== null ? paginasRestantes : 'Não calculado'}
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Última Correção AH:</span>
-          <span className="font-semibold">{formatarData(ultimaCorrecaoAH)}</span>
+          <span className={`font-semibold ${getUltimaCorrecaoAHColor(ultimaCorrecaoAH)}`}>
+            {formatarData(ultimaCorrecaoAH)}
+          </span>
         </div>
       </CardContent>
     </Card>
