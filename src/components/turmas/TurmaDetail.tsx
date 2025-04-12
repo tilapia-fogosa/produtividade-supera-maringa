@@ -4,7 +4,6 @@ import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { TelaModo } from './turma-detail/types';
 import TurmaHeader from './turma-detail/TurmaHeader';
 import ConfigErrorMessage from './turma-detail/ConfigErrorMessage';
-import ServiceSelectionMenu from './turma-detail/ServiceSelectionMenu';
 import ProdutividadeScreen from './turma-detail/ProdutividadeScreen';
 import AbindoHorizontesScreen from './turma-detail/AbindoHorizontesScreen';
 import ProdutividadeModal from './ProdutividadeModal';
@@ -34,38 +33,23 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // State for modals and errors
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   
-  // Set initial telaModo based on initialServiceType
-  const getInitialTelaModo = () => {
-    if (initialServiceType === 'produtividade') {
-      return TelaModo.LISTA_ALUNOS;
-    } else if (initialServiceType === 'abrindo_horizontes') {
-      return TelaModo.AH;
-    }
-    return TelaModo.MENU_INICIAL;
-  };
+  const [telaModo, setTelaModo] = useState<TelaModo>(
+    initialServiceType === 'abrindo_horizontes' ? TelaModo.AH : TelaModo.LISTA_ALUNOS
+  );
   
-  // Screen mode state
-  const [telaModo, setTelaModo] = useState<TelaModo>(getInitialTelaModo());
-  
-  // Handler functions
   const handleBackNavigation = () => {
-    if (telaModo === TelaModo.MENU_INICIAL) {
-      onVoltar();
+    if (telaModo === TelaModo.AH) {
+      setTelaModo(TelaModo.LISTA_ALUNOS);
     } else {
-      setTelaModo(TelaModo.MENU_INICIAL);
+      onVoltar();
     }
   };
 
-  const handleSelectService = (service: 'lista_alunos' | 'ah') => {
-    setTelaModo(service === 'lista_alunos' ? TelaModo.LISTA_ALUNOS : TelaModo.AH);
-  };
-  
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
     setModalAberto(true);
@@ -85,7 +69,6 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   };
 
   const handleModalError = (errorMessage: string) => {
-    // Check if the error is related to Google credentials
     if (errorMessage.includes("credenciais do Google") || 
         errorMessage.includes("Google Service Account")) {
       setConfigError("Configuração incompleta: O administrador precisa configurar as credenciais do Google Service Account");
@@ -102,12 +85,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
 
       <ConfigErrorMessage errorMessage={configError} />
 
-      {/* Render content based on current screen mode */}
       <div className={isMobile ? "mt-2" : "mt-4"}>
-        {telaModo === TelaModo.MENU_INICIAL && (
-          <ServiceSelectionMenu onSelectService={handleSelectService} />
-        )}
-        
         {telaModo === TelaModo.LISTA_ALUNOS && (
           <ProdutividadeScreen 
             alunos={alunos}
@@ -118,7 +96,9 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         )}
         
         {telaModo === TelaModo.AH && (
-          <AbindoHorizontesScreen onBackToMenu={() => setTelaModo(TelaModo.MENU_INICIAL)} />
+          <AbindoHorizontesScreen 
+            onBackToMenu={() => setTelaModo(TelaModo.LISTA_ALUNOS)} 
+          />
         )}
       </div>
 
