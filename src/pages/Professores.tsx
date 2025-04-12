@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Database, RefreshCw } from "lucide-react";
+import { Users, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { seedChristianeStudents } from "@/utils/seedDatabase";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Professor {
   id: string;
@@ -19,6 +19,7 @@ const Professores = () => {
   const [loading, setLoading] = useState(true);
   const [syncingGoogleSheets, setSyncingGoogleSheets] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchProfessores();
@@ -36,7 +37,15 @@ const Professores = () => {
         throw error;
       }
       
-      setProfessores(data || []);
+      // Temporariamente alterando "Andre" para "Camila"
+      const updatedData = data?.map(prof => {
+        if (prof.nome === "Andre") {
+          return { ...prof, nome: "Camila" };
+        }
+        return prof;
+      }) || [];
+      
+      setProfessores(updatedData);
     } catch (error) {
       console.error('Erro ao buscar professores:', error);
       toast({
@@ -46,23 +55,6 @@ const Professores = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSeedData = async () => {
-    const success = await seedChristianeStudents();
-    
-    if (success) {
-      toast({
-        title: "Sucesso",
-        description: "Dados de exemplo da Christiane inseridos com sucesso!",
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: "Erro ao inserir dados de exemplo.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -104,76 +96,69 @@ const Professores = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 text-center">
+      <div className="container mx-auto py-4 px-4 text-center">
         <p>Carregando professores...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-4 px-4 md:py-8">
+      <div className={`flex ${isMobile ? 'flex-col' : 'justify-between'} items-center mb-6 gap-4`}>
         <h1 className="text-2xl font-bold">Professores</h1>
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={handleSeedData}
-            className="flex items-center"
-          >
-            <Database className="mr-2 h-4 w-4" />
-            Inserir Dados de Exemplo
-          </Button>
-          
-          <Button 
-            onClick={syncGoogleSheets}
-            disabled={syncingGoogleSheets}
-            className="flex items-center"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
-            {syncingGoogleSheets ? 'Sincronizando...' : 'Sincronizar com Google Sheets'}
-          </Button>
-        </div>
+        
+        <Button 
+          onClick={syncGoogleSheets}
+          disabled={syncingGoogleSheets}
+          size="sm"
+          className="flex items-center self-end"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+          {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
+        </Button>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className={isMobile ? "px-4 py-4" : ""}>
           <CardTitle>Lista de Professores</CardTitle>
           <CardDescription>
             Selecione um professor para gerenciar suas turmas e alunos
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? "px-2 py-2" : ""}>
           {professores.length === 0 ? (
             <div className="text-center py-4">
               <p>Não há professores cadastrados.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead className="w-[100px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {professores.map((professor) => (
-                  <TableRow key={professor.id}>
-                    <TableCell className="font-medium">{professor.nome}</TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleProfessorClick(professor.id)}
-                        className="flex items-center"
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        Turmas
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="w-[100px] text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {professores.map((professor) => (
+                    <TableRow key={professor.id}>
+                      <TableCell className="font-medium">{professor.nome}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleProfessorClick(professor.id)}
+                          className="flex items-center"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Turmas
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
