@@ -8,116 +8,16 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
-import { Check, Book, X, Pen } from 'lucide-react';
 
-// Lista de professores (hardcoded for now)
-const PROFESSORES = [
-  "Prof. Daniel",
-  "Prof. Fernando",
-  "Prof. Luana",
-  "Prof. Mariana",
-  "Estagiário João",
-  "Estagiária Ana"
-];
-
-// Updated list of abacus workbooks
-const APOSTILAS_ABACO = [
-  "Infantil 1",
-  "Infantil 2",
-  "Júnior 1",
-  "Júnior 2", 
-  "Júnior 3",
-  "Júnior 4",
-  "Júnior 5",
-  "Sênior 1",
-  "Sênior 2", 
-  "Sênior 3",
-  "Sênior 4",
-  "Sênior 5",
-  "Básico 1",
-  "Básico 2",
-  "Intermediário 1",
-  "Intermediário 2", 
-  "Intermediário 3",
-  "Avançado 1",
-  "Avançado 2", 
-  "Avançado 3",
-  "Master 1",
-  "Master 2", 
-  "Master 3",
-  "Master 4",
-  "A",
-  "B", 
-  "C",
-  "D",
-  "Ábaco Girassol 1"
-];
-
-// Lista de apostilas AH
-const APOSTILAS_AH = Array.from({ length: 11 }, (_, i) => `AH ${i + 1}`);
-
-// Mapping entre os valores do banco de dados (ultimo_nivel) e as apostilas padronizadas
-const MAPEAMENTO_APOSTILAS = {
-  // Mapeamentos exatos
-  "Ap. Abaco 1": "Infantil 1",
-  "Ap. Abaco 2": "Infantil 2",
-  "Ap. Abaco B": "B",
-  "Ap. Abaco 4": "Júnior 1",
-  "Ap. Abaco 5": "Júnior 2",
-  "Ábaco INT. 1": "Intermediário 1",
-  "Ábaco INT. 2": "Intermediário 2",
-  "Ábaco INT. 3": "Intermediário 3",
-  
-  // Mapeamentos aproximados (padrões para casos não mapeados)
-  "A": "A",
-  "B": "B",
-  "C": "C",
-  "D": "D",
-  
-  // Outros padrões comuns que podem aparecer
-  "Básico": "Básico 1",
-  "Intermediário": "Intermediário 1",
-  "Avançado": "Avançado 1",
-  "Júnior": "Júnior 1",
-  "Sênior": "Sênior 1",
-  "Master": "Master 1",
-  "Girassol": "Ábaco Girassol 1"
-};
-
-// Função para encontrar a apostila mais próxima
-const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string => {
-  if (!ultimoNivel) return "";
-  
-  // Verificar correspondência exata
-  if (ultimoNivel in MAPEAMENTO_APOSTILAS) {
-    return MAPEAMENTO_APOSTILAS[ultimoNivel as keyof typeof MAPEAMENTO_APOSTILAS];
-  }
-  
-  // Verificar correspondência parcial
-  for (const [padrao, apostila] of Object.entries(MAPEAMENTO_APOSTILAS)) {
-    if (ultimoNivel.includes(padrao)) {
-      return apostila;
-    }
-  }
-  
-  // Verificar se alguma apostila está contida no ultimoNivel
-  const apostilaEncontrada = APOSTILAS_ABACO.find(apostila => ultimoNivel.includes(apostila));
-  if (apostilaEncontrada) {
-    return apostilaEncontrada;
-  }
-  
-  // Nenhuma correspondência encontrada
-  return "";
-};
+// Importar componentes refatorados
+import PresencaSection from './produtividade/PresencaSection';
+import AbacoSection from './produtividade/AbacoSection';
+import AhSection from './produtividade/AhSection';
+import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -274,198 +174,45 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           {/* Presença */}
-          <div className="space-y-2">
-            <Label>Aluno veio à aula?</Label>
-            <div className="flex gap-4">
-              <RadioGroup value={presente} onValueChange={(v) => setPresente(v as "sim" | "não")} className="flex flex-row gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sim" id="presente-sim" />
-                  <Label htmlFor="presente-sim" className="flex items-center">
-                    <Check className="mr-1 h-4 w-4 text-green-500" /> Sim
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="não" id="presente-nao" />
-                  <Label htmlFor="presente-nao" className="flex items-center">
-                    <X className="mr-1 h-4 w-4 text-red-500" /> Não
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-          
-          {/* Motivo da falta (se não estiver presente) */}
-          {presente === "não" && (
-            <div className="space-y-2">
-              <Label htmlFor="motivo-falta">Motivo da falta (opcional)</Label>
-              <Textarea 
-                id="motivo-falta" 
-                value={motivoFalta} 
-                onChange={(e) => setMotivoFalta(e.target.value)}
-                className="w-full"
-                placeholder="Informe o motivo da falta (opcional)"
-              />
-            </div>
-          )}
+          <PresencaSection 
+            presente={presente}
+            setPresente={setPresente}
+            motivoFalta={motivoFalta}
+            setMotivoFalta={setMotivoFalta}
+          />
           
           {/* Campos para alunos presentes */}
           {presente === "sim" && (
             <>
               {/* Ábaco */}
-              <div className="space-y-2">
-                <Label htmlFor="apostila-abaco">Apostila do ábaco</Label>
-                <Select value={apostilaAbaco} onValueChange={setApostilaAbaco}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a apostila" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {APOSTILAS_ABACO.map((apostila) => (
-                      <SelectItem key={apostila} value={apostila}>
-                        <div className="flex items-center">
-                          <Book className="mr-2 h-4 w-4" />
-                          {apostila}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <AbacoSection 
+                apostilaAbaco={apostilaAbaco}
+                setApostilaAbaco={setApostilaAbaco}
+                paginaAbaco={paginaAbaco}
+                setPaginaAbaco={setPaginaAbaco}
+                exerciciosAbaco={exerciciosAbaco}
+                setExerciciosAbaco={setExerciciosAbaco}
+                errosAbaco={errosAbaco}
+                setErrosAbaco={setErrosAbaco}
+                fezDesafio={fezDesafio}
+                setFezDesafio={setFezDesafio}
+                comentario={comentario}
+                setComentario={setComentario}
+              />
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pagina-abaco">Página do ábaco</Label>
-                  <Input
-                    id="pagina-abaco"
-                    value={paginaAbaco}
-                    onChange={(e) => setPaginaAbaco(e.target.value)}
-                    placeholder="Página"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="exercicios-abaco">Exercícios realizados</Label>
-                  <Input
-                    id="exercicios-abaco"
-                    value={exerciciosAbaco}
-                    onChange={(e) => setExerciciosAbaco(e.target.value)}
-                    placeholder="Quantidade"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="erros-abaco">Número de erros</Label>
-                <Input
-                  id="erros-abaco"
-                  value={errosAbaco}
-                  onChange={(e) => setErrosAbaco(e.target.value)}
-                  placeholder="Quantidade de erros"
-                />
-              </div>
-              
-              {/* Fez desafio */}
-              <div className="space-y-2">
-                <Label>Fez desafio?</Label>
-                <RadioGroup value={fezDesafio} onValueChange={(v) => setFezDesafio(v as "sim" | "não")} className="flex flex-row gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sim" id="desafio-sim" />
-                    <Label htmlFor="desafio-sim">Sim</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="não" id="desafio-nao" />
-                    <Label htmlFor="desafio-nao">Não</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              {/* Comentário */}
-              <div className="space-y-2">
-                <Label htmlFor="comentario">Comentário (opcional)</Label>
-                <Textarea
-                  id="comentario"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  placeholder="Comentários adicionais"
-                  className="w-full"
-                />
-              </div>
-              
-              {/* Lançar AH */}
-              <div className="space-y-2">
-                <Label>Lançar AH?</Label>
-                <RadioGroup value={lancouAh} onValueChange={(v) => setLancouAh(v as "sim" | "não")} className="flex flex-row gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sim" id="ah-sim" />
-                    <Label htmlFor="ah-sim">Sim</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="não" id="ah-nao" />
-                    <Label htmlFor="ah-nao">Não</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              {/* Campos para AH quando selecionado */}
-              {lancouAh === "sim" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="apostila-ah">Qual apostila AH?</Label>
-                    <Select value={apostilaAh} onValueChange={setApostilaAh}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a apostila AH" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {APOSTILAS_AH.map((apostila) => (
-                          <SelectItem key={apostila} value={apostila}>
-                            {apostila}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="exercicios-ah">Exercícios realizados</Label>
-                      <Input
-                        id="exercicios-ah"
-                        value={exerciciosAh}
-                        onChange={(e) => setExerciciosAh(e.target.value)}
-                        placeholder="Quantidade"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="erros-ah">Número de erros</Label>
-                      <Input
-                        id="erros-ah"
-                        value={errosAh}
-                        onChange={(e) => setErrosAh(e.target.value)}
-                        placeholder="Quantidade"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="professor-correcao">Professor que corrigiu</Label>
-                    <Select value={professorCorrecao} onValueChange={setProfessorCorrecao}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o professor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROFESSORES.map((professor) => (
-                          <SelectItem key={professor} value={professor}>
-                            <div className="flex items-center">
-                              <Pen className="mr-2 h-4 w-4" />
-                              {professor}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
+              {/* AH */}
+              <AhSection 
+                lancouAh={lancouAh}
+                setLancouAh={setLancouAh}
+                apostilaAh={apostilaAh}
+                setApostilaAh={setApostilaAh}
+                exerciciosAh={exerciciosAh}
+                setExerciciosAh={setExerciciosAh}
+                errosAh={errosAh}
+                setErrosAh={setErrosAh}
+                professorCorrecao={professorCorrecao}
+                setProfessorCorrecao={setProfessorCorrecao}
+              />
             </>
           )}
           
