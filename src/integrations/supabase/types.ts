@@ -55,22 +55,55 @@ export type Database = {
       }
       alunos: {
         Row: {
+          codigo: string | null
           created_at: string
+          curso: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
           id: string
+          idade: number | null
+          indice: string | null
+          matricula: string | null
           nome: string
+          telefone: string | null
           turma_id: string
+          ultimo_nivel: string | null
+          vencimento_contrato: string | null
         }
         Insert: {
+          codigo?: string | null
           created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
           id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
           nome: string
+          telefone?: string | null
           turma_id: string
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
         }
         Update: {
+          codigo?: string | null
           created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
           id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
           nome?: string
+          telefone?: string | null
           turma_id?: string
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
         }
         Relationships: [
           {
