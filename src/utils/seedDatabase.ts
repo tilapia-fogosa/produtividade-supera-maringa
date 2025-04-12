@@ -53,7 +53,7 @@ export const seedChristianeStudents = async () => {
     }
 
     if (turmaCriancas) {
-      // Adicionar alunos da turma de Crianças conforme a imagem
+      // Adicionar alunos da turma de Crianças
       const alunosCriancas = [
         { nome: 'Bernardo Diniz Kolln', turma_id: turmaCriancas },
         { nome: 'Gabriel Agustinho Tadeu', turma_id: turmaCriancas },

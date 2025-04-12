@@ -1,11 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Users, Database, SyncIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { seedChristianeStudents } from '@/utils/seedDatabase';
+import { seedChristianeStudents } from "@/utils/seedDatabase";
 
 interface Professor {
   id: string;
@@ -15,86 +17,164 @@ interface Professor {
 const Professores = () => {
   const [professores, setProfessores] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dataSeeded, setDataSeeded] = useState(false);
+  const [syncingGoogleSheets, setSyncingGoogleSheets] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProfessores = async () => {
+    fetchProfessores();
+  }, []);
+
+  const fetchProfessores = async () => {
+    try {
       setLoading(true);
       const { data, error } = await supabase
         .from('professores')
         .select('id, nome')
         .order('nome');
-
+        
       if (error) {
-        console.error('Erro ao buscar professores:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar a lista de professores.",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
+        throw error;
       }
-
+      
       setProfessores(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar professores:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de professores.",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
+    }
+  };
 
-      // Verificar se precisamos adicionar dados de teste
-      if (!dataSeeded) {
-        // Verificar se já temos alunos na turma da Christiane
-        const { data: alunosData, error: alunosError } = await supabase
-          .from('alunos')
-          .select('count')
-          .single();
+  const handleSeedData = async () => {
+    const success = await seedChristianeStudents();
+    
+    if (success) {
+      toast({
+        title: "Sucesso",
+        description: "Dados de exemplo da Christiane inseridos com sucesso!",
+      });
+    } else {
+      toast({
+        title: "Erro",
+        description: "Erro ao inserir dados de exemplo.",
+        variant: "destructive"
+      });
+    }
+  };
 
-        if (!alunosError && (!alunosData || alunosData.count === 0)) {
-          // Não temos alunos, vamos inserir os dados de teste
-          const success = await seedChristianeStudents();
-          if (success) {
-            setDataSeeded(true);
-            // Não precisamos recarregar os professores, só os alunos foram adicionados
-          }
-        } else {
-          // Já temos alunos ou ocorreu um erro, não inserimos novamente
-          setDataSeeded(true);
-        }
-      }
-    };
-
-    fetchProfessores();
-  }, [dataSeeded]);
-
-  const handleProfessorSelect = (professorId: string) => {
+  const handleProfessorClick = (professorId: string) => {
     navigate(`/turmas/${professorId}`);
+  };
+
+  const syncGoogleSheets = async () => {
+    try {
+      setSyncingGoogleSheets(true);
+      
+      const response = await supabase.functions.invoke('sync-students');
+      
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      
+      const result = response.data;
+      
+      if (result.success) {
+        toast({
+          title: "Sincronização concluída",
+          description: result.message,
+        });
+      } else {
+        throw new Error(result.error || 'Erro desconhecido na sincronização');
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar com Google Sheets:', error);
+      toast({
+        title: "Erro na sincronização",
+        description: error.message || "Não foi possível sincronizar com o Google Sheets.",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncingGoogleSheets(false);
+    }
   };
 
   if (loading) {
     return (
       <div className="container mx-auto py-8 text-center">
-        <p>Carregando...</p>
+        <p>Carregando professores...</p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Professores</h1>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={handleSeedData}
+            className="flex items-center"
+          >
+            <Database className="mr-2 h-4 w-4" />
+            Inserir Dados de Exemplo
+          </Button>
+          
+          <Button 
+            onClick={syncGoogleSheets}
+            disabled={syncingGoogleSheets}
+            className="flex items-center"
+          >
+            <SyncIcon className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+            {syncingGoogleSheets ? 'Sincronizando...' : 'Sincronizar com Google Sheets'}
+          </Button>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Selecione um Professor</CardTitle>
+          <CardTitle>Lista de Professores</CardTitle>
+          <CardDescription>
+            Selecione um professor para gerenciar suas turmas e alunos
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            {professores.map((professor) => (
-              <Button 
-                key={professor.id} 
-                onClick={() => handleProfessorSelect(professor.id)}
-                className="w-full justify-start text-left"
-              >
-                {professor.nome}
-              </Button>
-            ))}
-          </div>
+          {professores.length === 0 ? (
+            <div className="text-center py-4">
+              <p>Não há professores cadastrados.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead className="w-[100px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {professores.map((professor) => (
+                  <TableRow key={professor.id}>
+                    <TableCell className="font-medium">{professor.nome}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleProfessorClick(professor.id)}
+                        className="flex items-center"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Turmas
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
