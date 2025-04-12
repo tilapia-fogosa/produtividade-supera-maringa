@@ -1,37 +1,14 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle, AlertTriangle, BookOpen, Users } from "lucide-react";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { TelaModo } from './turma-detail/types';
+import TurmaHeader from './turma-detail/TurmaHeader';
+import ConfigErrorMessage from './turma-detail/ConfigErrorMessage';
+import ServiceSelectionMenu from './turma-detail/ServiceSelectionMenu';
+import ProdutividadeScreen from './turma-detail/ProdutividadeScreen';
+import AbindoHorizontesScreen from './turma-detail/AbindoHorizontesScreen';
 import ProdutividadeModal from './ProdutividadeModal';
 import ReposicaoAulaModal from './ReposicaoAulaModal';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface Turma {
-  id: string;
-  nome: string;
-  dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
-  horario: string;
-}
-
-interface Aluno {
-  id: string;
-  nome: string;
-  turma_id: string;
-  codigo?: string | null;
-  telefone?: string | null;
-  email?: string | null;
-  curso?: string | null;
-  matricula?: string | null;
-  idade?: number | null;
-  ultimo_nivel?: string | null;
-  dias_apostila?: number | null;
-  dias_supera?: number | null;
-  vencimento_contrato?: string | null;
-}
 
 interface TurmaDetailProps {
   turma: Turma;
@@ -44,13 +21,6 @@ interface TurmaDetailProps {
   initialServiceType?: string;
 }
 
-// Enum para controlar qual tela está sendo exibida
-enum TelaModo {
-  MENU_INICIAL,
-  LISTA_ALUNOS,
-  AH
-}
-
 const TurmaDetail: React.FC<TurmaDetailProps> = ({
   turma,
   alunos,
@@ -61,7 +31,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   produtividadeRegistrada = {},
   initialServiceType = 'produtividade'
 }) => {
-  const isMobile = useIsMobile();
+  // State for modals and errors
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
@@ -77,8 +47,21 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
     return TelaModo.MENU_INICIAL;
   };
   
-  // Novo estado para controlar qual tela está sendo exibida
+  // Screen mode state
   const [telaModo, setTelaModo] = useState<TelaModo>(getInitialTelaModo());
+  
+  // Handler functions
+  const handleBackNavigation = () => {
+    if (telaModo === TelaModo.MENU_INICIAL) {
+      onVoltar();
+    } else {
+      setTelaModo(TelaModo.MENU_INICIAL);
+    }
+  };
+
+  const handleSelectService = (service: 'lista_alunos' | 'ah') => {
+    setTelaModo(service === 'lista_alunos' ? TelaModo.LISTA_ALUNOS : TelaModo.AH);
+  };
   
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
@@ -103,157 +86,53 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
     if (errorMessage.includes("credenciais do Google") || 
         errorMessage.includes("Google Service Account")) {
       setConfigError("Configuração incompleta: O administrador precisa configurar as credenciais do Google Service Account");
-      toast({
-        title: "Erro de configuração",
-        description: "Configuração de credenciais do Google Service Account pendente. Contate o administrador.",
-        variant: "destructive"
-      });
     }
   };
   
-  const renderMenuInicial = () => (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-center">Selecione o serviço</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col space-y-4">
-        <Button 
-          size="lg" 
-          className="py-8 text-lg"
-          onClick={() => setTelaModo(TelaModo.LISTA_ALUNOS)}
-        >
-          <Users className="mr-2 h-6 w-6" />
-          Lançar Produtividade de Sala
-        </Button>
-        <Button 
-          size="lg" 
-          className="py-8 text-lg"
-          onClick={() => setTelaModo(TelaModo.AH)}
-          variant="outline"
-        >
-          <BookOpen className="mr-2 h-6 w-6" />
-          Lançar Abrindo Horizontes
-        </Button>
-      </CardContent>
-    </Card>
-  );
-  
-  const renderListaAlunos = () => (
-    <>
-      {/* Botão de Reposição de Aula */}
-      <div className="mb-3">
-        <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={handleClickReposicaoAula} className="w-full">
-          <RefreshCw className={`mr-1.5 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-          <span className={isMobile ? "text-xs" : ""}>Registrar Reposição de Aula</span>
-        </Button>
-      </div>
+  return (
+    <div>
+      <TurmaHeader 
+        turmaNome={turma.nome}
+        telaModo={telaModo}
+        onBack={handleBackNavigation}
+      />
 
-      {alunos.length === 0 ? <div className="text-center py-3">
-          <p className={isMobile ? "text-sm" : ""}>Não há alunos cadastrados nesta turma.</p>
-        </div> : <div className={isMobile ? "-mx-2" : ""}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className={isMobile ? "px-2 py-2 text-xs" : ""}>Nome</TableHead>
-                <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
-                <TableHead className={`w-[100px] ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Produtividade</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {alunos.map((aluno, index) => <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
-                  <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs truncate max-w-[120px]" : ""}`}>
-                    {aluno.nome}
-                  </TableCell>
-                  <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                    {aluno.ultimo_nivel || '-'}
-                  </TableCell>
-                  <TableCell className={isMobile ? "px-2 py-1.5" : ""}>
-                    <div className="flex items-center justify-center">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => handleClickRegistrarPresenca(aluno)} className={isMobile ? "h-7 w-7 p-0" : "h-8 px-2"}>
-                              {produtividadeRegistrada[aluno.id] && <CheckCircle className={`mr-1 text-green-500 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />}
-                              <TrendingUp className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
-                              {!isMobile && <span className="ml-1 text-xs">Lançar</span>}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {produtividadeRegistrada[aluno.id] ? "Produtividade já registrada hoje" : "Registrar produtividade"}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </TableCell>
-                </TableRow>)}
-            </TableBody>
-          </Table>
-        </div>}
-    </>
-  );
-  
-  const renderTelaAH = () => (
-    <div className="text-center py-6">
-      <h2 className="text-xl font-semibold mb-4">Lançamento de Abrindo Horizontes</h2>
-      <p className="mb-6">Funcionalidade em desenvolvimento</p>
-      <Button onClick={() => setTelaModo(TelaModo.MENU_INICIAL)}>
-        Voltar para o Menu
-      </Button>
-    </div>
-  );
-  
-  return <div>
-      <div className="flex justify-between items-center mb-3">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => {
-            if (telaModo === TelaModo.MENU_INICIAL) {
-              onVoltar();
-            } else {
-              setTelaModo(TelaModo.MENU_INICIAL);
-            }
-          }} 
-          className="px-2 py-1 h-8"
-        >
-          <ArrowLeft className="mr-1 h-3.5 w-3.5" /> 
-          <span className={isMobile ? "text-xs" : ""}>
-            {telaModo === TelaModo.MENU_INICIAL ? "Voltar" : "Menu"}
-          </span>
-        </Button>
-        <div className={`font-medium ${isMobile ? "text-sm ml-1" : "text-lg"}`}>
-          {turma.nome}
-        </div>
-      </div>
+      <ConfigErrorMessage errorMessage={configError} />
 
-      {/* Error message if configuration is incomplete */}
-      {configError && (
-        <div className="mb-3 p-2 border border-destructive bg-destructive/10 rounded-md text-sm flex items-center">
-          <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
-          <span>{configError}</span>
-        </div>
+      {/* Render content based on current screen mode */}
+      {telaModo === TelaModo.MENU_INICIAL && (
+        <ServiceSelectionMenu onSelectService={handleSelectService} />
+      )}
+      
+      {telaModo === TelaModo.LISTA_ALUNOS && (
+        <ProdutividadeScreen 
+          alunos={alunos}
+          onRegistrarPresenca={handleClickRegistrarPresenca}
+          onReposicaoAula={handleClickReposicaoAula}
+          produtividadeRegistrada={produtividadeRegistrada}
+        />
+      )}
+      
+      {telaModo === TelaModo.AH && (
+        <AbindoHorizontesScreen onBackToMenu={() => setTelaModo(TelaModo.MENU_INICIAL)} />
       )}
 
-      {/* Renderiza o conteúdo com base no modo atual */}
-      {telaModo === TelaModo.MENU_INICIAL && renderMenuInicial()}
-      {telaModo === TelaModo.LISTA_ALUNOS && renderListaAlunos()}
-      {telaModo === TelaModo.AH && renderTelaAH()}
+      {/* Modals */}
+      {alunoSelecionado && (
+        <ProdutividadeModal 
+          isOpen={modalAberto} 
+          aluno={alunoSelecionado} 
+          turma={turma} 
+          onClose={handleFecharModal} 
+          onSuccess={alunoId => {
+            if (produtividadeRegistrada && alunoId) {
+              produtividadeRegistrada[alunoId] = true;
+            }
+          }}
+          onError={handleModalError} 
+        />
+      )}
 
-      {/* Modal de Produtividade */}
-      {alunoSelecionado && <ProdutividadeModal 
-        isOpen={modalAberto} 
-        aluno={alunoSelecionado} 
-        turma={turma} 
-        onClose={handleFecharModal} 
-        onSuccess={alunoId => {
-          if (produtividadeRegistrada && alunoId) {
-            produtividadeRegistrada[alunoId] = true;
-          }
-        }}
-        onError={handleModalError} 
-      />}
-
-      {/* Modal de Reposição de Aula */}
       <ReposicaoAulaModal 
         isOpen={reposicaoModalAberto} 
         turma={turma} 
@@ -261,7 +140,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         onClose={handleFecharReposicaoModal}
         onError={handleModalError} 
       />
-    </div>;
+    </div>
+  );
 };
 
 export default TurmaDetail;
