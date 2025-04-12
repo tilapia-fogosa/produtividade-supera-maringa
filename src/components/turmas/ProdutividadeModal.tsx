@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -29,21 +28,37 @@ const PROFESSORES = [
   "Estagiária Ana"
 ];
 
-// Lista de apostilas de ábaco
+// Updated list of abacus workbooks
 const APOSTILAS_ABACO = [
-  "Avaliação",
-  "Adição 1",
-  "Adição 2",
-  "Subtração 1",
-  "Subtração 2",
-  "Multiplicação 1",
-  "Multiplicação 2",
-  "Divisão 1",
-  "Divisão 2",
-  "Números Decimais",
-  "Frações",
-  "Raiz Quadrada",
-  "Avançado"
+  "Infantil 1",
+  "Infantil 2",
+  "Júnior 1",
+  "Júnior 2", 
+  "Júnior 3",
+  "Júnior 4",
+  "Júnior 5",
+  "Sênior 1",
+  "Sênior 2", 
+  "Sênior 3",
+  "Sênior 4",
+  "Sênior 5",
+  "Básico 1",
+  "Básico 2",
+  "Intermediário 1",
+  "Intermediário 2", 
+  "Intermediário 3",
+  "Avançado 1",
+  "Avançado 2", 
+  "Avançado 3",
+  "Master 1",
+  "Master 2", 
+  "Master 3",
+  "Master 4",
+  "A",
+  "B", 
+  "C",
+  "D",
+  "Ábaco Girassol 1"
 ];
 
 // Lista de apostilas AH
