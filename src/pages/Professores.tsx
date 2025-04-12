@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Database, SyncIcon } from "lucide-react";
+import { Users, Database, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { seedChristianeStudents } from "@/utils/seedDatabase";
 
@@ -129,7 +129,7 @@ const Professores = () => {
             disabled={syncingGoogleSheets}
             className="flex items-center"
           >
-            <SyncIcon className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
             {syncingGoogleSheets ? 'Sincronizando...' : 'Sincronizar com Google Sheets'}
           </Button>
         </div>
