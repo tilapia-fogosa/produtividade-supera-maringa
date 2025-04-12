@@ -17,31 +17,52 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("Iniciando sincronização com Google Sheets");
+    
+    // Validar se as variáveis de ambiente estão configuradas
+    if (!GOOGLE_API_KEY) {
+      throw new Error('Google API Key não configurada');
+    }
+    
+    if (!SPREADSHEET_ID) {
+      throw new Error('Google Spreadsheet ID não configurado');
+    }
+    
+    console.log("Buscando dados da planilha...");
+    
     // Fetch data from Google Sheets
-    const sheetName = 'Alunos'; // You can make this configurable via request body
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}?key=${GOOGLE_API_KEY}`
-    );
+    const sheetName = 'Alunos'; // Você pode tornar isso configurável via corpo da requisição
+    const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}?key=${GOOGLE_API_KEY}`;
+    console.log(`Acessando URL: ${sheetsApiUrl.replace(GOOGLE_API_KEY, 'API_KEY_HIDDEN')}`);
+    
+    const response = await fetch(sheetsApiUrl);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch Google Sheets data: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Erro ao acessar Google Sheets: Status ${response.status} - ${errorText}`);
+      throw new Error(`Falha ao buscar dados do Google Sheets: ${response.statusText}. 
+        Verifique se: 
+        1. A chave API tem permissão para acessar o Google Sheets API
+        2. A planilha existe e está acessível
+        3. O nome da planilha "Alunos" está correto`);
     }
 
     const data = await response.json();
     const rows = data.values || [];
 
     if (rows.length <= 1) {
-      throw new Error('No data found in spreadsheet or only headers present');
+      throw new Error('Nenhum dado encontrado na planilha ou apenas cabeçalhos presentes');
     }
 
     // Process spreadsheet data
+    console.log(`Processando ${rows.length} linhas de dados...`);
     // Assuming first row contains headers: [Turma ID, Nome do Aluno]
     const headers = rows[0];
     const turmaIdIndex = headers.findIndex((h: string) => h.toLowerCase().includes('turma'));
     const nomeAlunoIndex = headers.findIndex((h: string) => h.toLowerCase().includes('nome'));
 
     if (turmaIdIndex === -1 || nomeAlunoIndex === -1) {
-      throw new Error('Required columns not found in spreadsheet');
+      throw new Error('Colunas obrigatórias não encontradas na planilha. É necessário ter colunas com "Turma" e "Nome" no cabeçalho.');
     }
 
     // Extract student data
@@ -52,6 +73,8 @@ Deno.serve(async (req) => {
       student.turma_id && student.nome
     );
 
+    console.log(`Extraídos ${students.length} alunos válidos da planilha`);
+
     // Sync with database
     // First, get existing students
     const { data: existingStudents, error: fetchError } = await supabase
@@ -59,7 +82,7 @@ Deno.serve(async (req) => {
       .select('id, nome, turma_id');
 
     if (fetchError) {
-      throw new Error(`Error fetching existing students: ${fetchError.message}`);
+      throw new Error(`Erro ao buscar alunos existentes: ${fetchError.message}`);
     }
 
     // Prepare batch operations
@@ -77,6 +100,8 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log(`${studentsToAdd.length} novos alunos para adicionar`);
+
     // Insert new students
     let insertResult = null;
     if (studentsToAdd.length > 0) {
@@ -86,7 +111,7 @@ Deno.serve(async (req) => {
         .select();
 
       if (insertError) {
-        throw new Error(`Error inserting students: ${insertError.message}`);
+        throw new Error(`Erro ao inserir alunos: ${insertError.message}`);
       }
       insertResult = insertData;
     }
@@ -94,7 +119,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Sync completed. Added ${studentsToAdd.length} new students.`,
+        message: `Sincronização concluída. Adicionados ${studentsToAdd.length} novos alunos.`,
         addedStudents: insertResult,
       }),
       {
@@ -106,7 +131,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Erro:', error.message);
     return new Response(
       JSON.stringify({
         success: false,

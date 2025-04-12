@@ -77,7 +77,7 @@ const Professores = () => {
       const response = await supabase.functions.invoke('sync-students');
       
       if (response.error) {
-        throw new Error(response.error.message);
+        throw new Error(response.error.message || 'Erro desconhecido ao chamar a função.');
       }
       
       const result = response.data;
@@ -94,7 +94,7 @@ const Professores = () => {
       console.error('Erro ao sincronizar com Google Sheets:', error);
       toast({
         title: "Erro na sincronização",
-        description: error.message || "Não foi possível sincronizar com o Google Sheets.",
+        description: error.message || "Não foi possível sincronizar com o Google Sheets. Verifique se as credenciais estão corretas e se a planilha está acessível.",
         variant: "destructive"
       });
     } finally {
