@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
 
     // Encontrando os índices das colunas necessárias
     const nomeIndex = headers.findIndex((h: string) => h === 'Nome');
+    // Aqui está a correção: agora procuramos por "Turma atual" em vez de "Turma"
     const turmaIndex = headers.findIndex((h: string) => h === 'Turma atual');
     const professorIndex = headers.findIndex((h: string) => h === 'Professor');
     const indiceIndex = headers.findIndex((h: string) => h === 'Índice');
