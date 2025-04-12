@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle } from "lucide-react";
@@ -6,12 +7,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import ProdutividadeModal from './ProdutividadeModal';
 import ReposicaoAulaModal from './ReposicaoAulaModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface Turma {
   id: string;
   nome: string;
   dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
   horario: string;
 }
+
 interface Aluno {
   id: string;
   nome: string;
@@ -27,6 +30,7 @@ interface Aluno {
   dias_supera?: number | null;
   vencimento_contrato?: string | null;
 }
+
 interface TurmaDetailProps {
   turma: Turma;
   alunos: Aluno[];
@@ -36,6 +40,7 @@ interface TurmaDetailProps {
   onRegistrarPresenca: (alunoId: string) => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }
+
 const TurmaDetail: React.FC<TurmaDetailProps> = ({
   turma,
   alunos,
@@ -49,20 +54,25 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
+  
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
     setModalAberto(true);
   };
+  
   const handleFecharModal = () => {
     setModalAberto(false);
     setAlunoSelecionado(null);
   };
+  
   const handleClickReposicaoAula = () => {
     setReposicaoModalAberto(true);
   };
+  
   const handleFecharReposicaoModal = () => {
     setReposicaoModalAberto(false);
   };
+  
   return <div>
       <div className="flex justify-between items-center mb-3">
         <Button variant="outline" size="sm" onClick={onVoltar} className="px-2 py-1 h-8">
@@ -89,8 +99,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead className={isMobile ? "px-2 py-2 text-xs" : ""}>Nome</TableHead>
-                <TableHead className={`hidden md:table-cell ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Apostila Ábaco
-            </TableHead>
+                <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
                 <TableHead className={`w-[100px] ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Produtividade</TableHead>
               </TableRow>
             </TableHeader>
@@ -99,7 +108,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
                   <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs truncate max-w-[120px]" : ""}`}>
                     {aluno.nome}
                   </TableCell>
-                  <TableCell className={`hidden md:table-cell ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
+                  <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
                     {aluno.ultimo_nivel || '-'}
                   </TableCell>
                   <TableCell className={isMobile ? "px-2 py-1.5" : ""}>
@@ -136,4 +145,5 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
       <ReposicaoAulaModal isOpen={reposicaoModalAberto} turma={turma} todosAlunos={todosAlunos} onClose={handleFecharReposicaoModal} />
     </div>;
 };
+
 export default TurmaDetail;

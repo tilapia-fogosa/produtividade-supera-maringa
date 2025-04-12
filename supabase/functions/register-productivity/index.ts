@@ -46,13 +46,38 @@ serve(async (req) => {
     // Get Google Service Account credentials from Supabase secrets
     const serviceAccountCredentials = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
     if (!serviceAccountCredentials) {
-      throw new Error("Google Service Account credentials not found");
+      console.error("Google Service Account credentials not found in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "Configuração incompleta: credenciais do Google Service Account não encontradas",
+          message: "Contate o administrador do sistema para configurar as credenciais da API do Google"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
 
-    const credentials = JSON.parse(serviceAccountCredentials);
+    // Log successful retrieval of credentials
+    console.log("Successfully retrieved Google Service Account credentials");
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(serviceAccountCredentials);
+      console.log("Successfully parsed credentials JSON");
+    } catch (error) {
+      console.error("Failed to parse Google Service Account credentials:", error);
+      return new Response(
+        JSON.stringify({ 
+          error: "Erro de configuração: formato inválido das credenciais do Google",
+          message: "O formato das credenciais do Google Service Account está inválido"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
     
     // Get an access token for the Google Sheets API
+    console.log("Attempting to get access token...");
     const token = await getAccessToken(credentials);
+    console.log("Successfully obtained access token");
     
     // Format current date and time for the timestamp column
     const now = new Date();
@@ -78,18 +103,23 @@ serve(async (req) => {
       data.presente && data.lancou_ah ? (data.professor_correcao || "") : "", // Selecione o Professor que Corrigiu a AH
     ];
 
+    console.log("Attempting to append data to Google Sheet...");
     // Add the data to the sheet using the Sheets API
     await appendRowToSheet(GOOGLE_SHEET_ID, GOOGLE_SHEET_NAME, rowData, token);
+    console.log("Successfully appended data to sheet");
 
     return new Response(
       JSON.stringify({ success: true, message: "Produtividade registrada com sucesso" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
-    console.error("Error:", error.message);
+    console.error("Error:", error.message, error.stack);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
@@ -99,104 +129,124 @@ serve(async (req) => {
  * Get an access token for the Google Sheets API using service account credentials
  */
 async function getAccessToken(credentials: any): Promise<string> {
-  const tokenUrl = "https://oauth2.googleapis.com/token";
-  
-  // Create a JWT to authenticate with Google
-  const jwtHeader = {
-    alg: "RS256",
-    typ: "JWT"
-  };
-  
-  const now = Math.floor(Date.now() / 1000);
-  const oneHour = 60 * 60;
-  
-  const jwtClaimSet = {
-    iss: credentials.client_email,
-    scope: "https://www.googleapis.com/auth/spreadsheets",
-    aud: "https://oauth2.googleapis.com/token",
-    exp: now + oneHour,
-    iat: now,
-  };
-  
-  // Encode the JWT
-  const encoder = new TextEncoder();
-  const header = btoa(JSON.stringify(jwtHeader));
-  const payload = btoa(JSON.stringify(jwtClaimSet));
-  const toSign = encoder.encode(`${header}.${payload}`);
-  
-  // Convert the private key to proper format
-  const privateKey = credentials.private_key.replace(/\\n/g, "\n");
-  
-  // Import the private key for signing
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    pemToArrayBuffer(privateKey),
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256",
-    },
-    false,
-    ["sign"]
-  );
-  
-  // Sign the JWT
-  const signature = await crypto.subtle.sign(
-    { name: "RSASSA-PKCS1-v1_5" },
-    cryptoKey,
-    toSign
-  );
-  
-  // Convert signature to base64
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-  
-  // Create the complete JWT
-  const jwt = `${header}.${payload}.${signatureB64}`;
-  
-  // Exchange the JWT for an access token
-  const response = await fetch(tokenUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
+  try {
+    console.log("Starting getAccessToken process");
+    const tokenUrl = "https://oauth2.googleapis.com/token";
+    
+    // Create a JWT to authenticate with Google
+    const jwtHeader = {
+      alg: "RS256",
+      typ: "JWT"
+    };
+    
+    const now = Math.floor(Date.now() / 1000);
+    const oneHour = 60 * 60;
+    
+    const jwtClaimSet = {
+      iss: credentials.client_email,
+      scope: "https://www.googleapis.com/auth/spreadsheets",
+      aud: "https://oauth2.googleapis.com/token",
+      exp: now + oneHour,
+      iat: now,
+    };
+    
+    // Encode the JWT
+    const encoder = new TextEncoder();
+    const header = btoa(JSON.stringify(jwtHeader));
+    const payload = btoa(JSON.stringify(jwtClaimSet));
+    const toSign = encoder.encode(`${header}.${payload}`);
+    
+    // Convert the private key to proper format
+    const privateKey = credentials.private_key.replace(/\\n/g, "\n");
+    
+    console.log("Importing private key for signing");
+    // Import the private key for signing
+    const cryptoKey = await crypto.subtle.importKey(
+      "pkcs8",
+      pemToArrayBuffer(privateKey),
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: "SHA-256",
+      },
+      false,
+      ["sign"]
+    );
+    
+    console.log("Signing JWT");
+    // Sign the JWT
+    const signature = await crypto.subtle.sign(
+      { name: "RSASSA-PKCS1-v1_5" },
+      cryptoKey,
+      toSign
+    );
+    
+    // Convert signature to base64
+    const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    
+    // Create the complete JWT
+    const jwt = `${header}.${payload}.${signatureB64}`;
+    
+    console.log("Exchanging JWT for access token");
+    // Exchange the JWT for an access token
+    const response = await fetch(tokenUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: jwt,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Failed to get access token:", JSON.stringify(data));
+      throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
+    }
+    
+    console.log("Successfully obtained access token");
+    return data.access_token;
+  } catch (error) {
+    console.error("Error in getAccessToken:", error);
+    throw error;
   }
-  
-  return data.access_token;
 }
 
 /**
  * Append a row of data to a Google Sheet
  */
 async function appendRowToSheet(sheetId: string, sheetName: string, rowData: any[], accessToken: string): Promise<void> {
-  const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      values: [rowData],
-    }),
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(`Failed to append data to sheet: ${JSON.stringify(data)}`);
+  try {
+    console.log("Starting appendRowToSheet process");
+    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+    
+    console.log("Sending request to Google Sheets API");
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        values: [rowData],
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Failed to append data to sheet:", JSON.stringify(data));
+      throw new Error(`Failed to append data to sheet: ${JSON.stringify(data)}`);
+    }
+    console.log("Successfully appended data to sheet:", JSON.stringify(data));
+  } catch (error) {
+    console.error("Error in appendRowToSheet:", error);
+    throw error;
   }
 }
 
@@ -204,20 +254,26 @@ async function appendRowToSheet(sheetId: string, sheetName: string, rowData: any
  * Convert PEM formatted private key to ArrayBuffer for crypto operations
  */
 function pemToArrayBuffer(pem: string): ArrayBuffer {
-  // Remove header, footer, and newlines
-  const base64 = pem
-    .replace("-----BEGIN PRIVATE KEY-----", "")
-    .replace("-----END PRIVATE KEY-----", "")
-    .replace(/\n/g, "");
-  
-  // Convert base64 to binary
-  const binaryString = atob(base64);
-  
-  // Convert binary to ArrayBuffer
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+  try {
+    console.log("Converting PEM to ArrayBuffer");
+    // Remove header, footer, and newlines
+    const base64 = pem
+      .replace("-----BEGIN PRIVATE KEY-----", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replace(/\n/g, "");
+    
+    // Convert base64 to binary
+    const binaryString = atob(base64);
+    
+    // Convert binary to ArrayBuffer
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    return bytes.buffer;
+  } catch (error) {
+    console.error("Error in pemToArrayBuffer:", error);
+    throw error;
   }
-  
-  return bytes.buffer;
 }
