@@ -29,25 +29,25 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
   }
 
   return (
-    <div className={isMobile ? "-mx-2" : ""}>
+    <div className={`w-full ${isMobile ? "-mx-2" : ""}`}>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className={isMobile ? "px-2 py-2 text-xs" : ""}>Nome</TableHead>
-            <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
-            <TableHead className={`w-[100px] ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Produtividade</TableHead>
+            <TableHead className={`w-1/3 ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Nome</TableHead>
+            <TableHead className={`w-1/3 ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
+            <TableHead className={`w-1/3 text-center ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Produtividade</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {alunos.map((aluno, index) => (
             <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
-              <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs truncate max-w-[120px]" : ""}`}>
+              <TableCell className={`w-1/3 font-medium truncate ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
                 {aluno.nome}
               </TableCell>
-              <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
+              <TableCell className={`w-1/3 ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
                 {aluno.ultimo_nivel || '-'}
               </TableCell>
-              <TableCell className={isMobile ? "px-2 py-1.5" : ""}>
+              <TableCell className={`w-1/3 text-center ${isMobile ? "px-2 py-1.5" : ""}`}>
                 <div className="flex items-center justify-center">
                   <TooltipProvider>
                     <Tooltip>
@@ -56,11 +56,12 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
                           variant="outline" 
                           size="sm" 
                           onClick={() => onRegistrarPresenca(aluno)} 
-                          className={isMobile ? "h-7 w-7 p-0" : "h-8 px-2"}
+                          className={`${isMobile ? "h-7 w-7 p-0" : "h-8 px-2"} flex items-center justify-center`}
                         >
-                          {produtividadeRegistrada[aluno.id] && <CheckCircle className={`mr-1 text-green-500 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />}
+                          {produtividadeRegistrada[aluno.id] && (
+                            <CheckCircle className={`text-green-500 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+                          )}
                           <TrendingUp className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
-                          {!isMobile && <span className="ml-1 text-xs">Lançar</span>}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -79,3 +80,4 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
 };
 
 export default AlunosListaTable;
+
