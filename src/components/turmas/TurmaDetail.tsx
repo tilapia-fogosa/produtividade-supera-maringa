@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle, AlertTriangle, BookOpen, Users } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProdutividadeModal from './ProdutividadeModal';
 import ReposicaoAulaModal from './ReposicaoAulaModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Turma {
   id: string;
@@ -42,6 +43,13 @@ interface TurmaDetailProps {
   produtividadeRegistrada?: Record<string, boolean>;
 }
 
+// Enum para controlar qual tela está sendo exibida
+enum TelaModo {
+  MENU_INICIAL,
+  LISTA_ALUNOS,
+  AH
+}
+
 const TurmaDetail: React.FC<TurmaDetailProps> = ({
   turma,
   alunos,
@@ -56,6 +64,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
+  // Novo estado para controlar qual tela está sendo exibida
+  const [telaModo, setTelaModo] = useState<TelaModo>(TelaModo.MENU_INICIAL);
   
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
@@ -88,25 +98,35 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
     }
   };
   
-  return <div>
-      <div className="flex justify-between items-center mb-3">
-        <Button variant="outline" size="sm" onClick={onVoltar} className="px-2 py-1 h-8">
-          <ArrowLeft className="mr-1 h-3.5 w-3.5" /> 
-          <span className={isMobile ? "text-xs" : ""}>Voltar</span>
+  const renderMenuInicial = () => (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-center">Selecione o serviço</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col space-y-4">
+        <Button 
+          size="lg" 
+          className="py-8 text-lg"
+          onClick={() => setTelaModo(TelaModo.LISTA_ALUNOS)}
+        >
+          <Users className="mr-2 h-6 w-6" />
+          Lançar Produtividade de Sala
         </Button>
-        <div className={`font-medium ${isMobile ? "text-sm ml-1" : "text-lg"}`}>
-          {turma.nome}
-        </div>
-      </div>
-
-      {/* Error message if configuration is incomplete */}
-      {configError && (
-        <div className="mb-3 p-2 border border-destructive bg-destructive/10 rounded-md text-sm flex items-center">
-          <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
-          <span>{configError}</span>
-        </div>
-      )}
-
+        <Button 
+          size="lg" 
+          className="py-8 text-lg"
+          onClick={() => setTelaModo(TelaModo.AH)}
+          variant="outline"
+        >
+          <BookOpen className="mr-2 h-6 w-6" />
+          Lançar Abrindo Horizontes
+        </Button>
+      </CardContent>
+    </Card>
+  );
+  
+  const renderListaAlunos = () => (
+    <>
       {/* Botão de Reposição de Aula */}
       <div className="mb-3">
         <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={handleClickReposicaoAula} className="w-full">
@@ -156,6 +176,55 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
             </TableBody>
           </Table>
         </div>}
+    </>
+  );
+  
+  const renderTelaAH = () => (
+    <div className="text-center py-6">
+      <h2 className="text-xl font-semibold mb-4">Lançamento de Abrindo Horizontes</h2>
+      <p className="mb-6">Funcionalidade em desenvolvimento</p>
+      <Button onClick={() => setTelaModo(TelaModo.MENU_INICIAL)}>
+        Voltar para o Menu
+      </Button>
+    </div>
+  );
+  
+  return <div>
+      <div className="flex justify-between items-center mb-3">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            if (telaModo === TelaModo.MENU_INICIAL) {
+              onVoltar();
+            } else {
+              setTelaModo(TelaModo.MENU_INICIAL);
+            }
+          }} 
+          className="px-2 py-1 h-8"
+        >
+          <ArrowLeft className="mr-1 h-3.5 w-3.5" /> 
+          <span className={isMobile ? "text-xs" : ""}>
+            {telaModo === TelaModo.MENU_INICIAL ? "Voltar" : "Menu"}
+          </span>
+        </Button>
+        <div className={`font-medium ${isMobile ? "text-sm ml-1" : "text-lg"}`}>
+          {turma.nome}
+        </div>
+      </div>
+
+      {/* Error message if configuration is incomplete */}
+      {configError && (
+        <div className="mb-3 p-2 border border-destructive bg-destructive/10 rounded-md text-sm flex items-center">
+          <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
+          <span>{configError}</span>
+        </div>
+      )}
+
+      {/* Renderiza o conteúdo com base no modo atual */}
+      {telaModo === TelaModo.MENU_INICIAL && renderMenuInicial()}
+      {telaModo === TelaModo.LISTA_ALUNOS && renderListaAlunos()}
+      {telaModo === TelaModo.AH && renderTelaAH()}
 
       {/* Modal de Produtividade */}
       {alunoSelecionado && <ProdutividadeModal 
