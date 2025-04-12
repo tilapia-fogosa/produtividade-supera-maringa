@@ -40,6 +40,7 @@ interface ReposicaoAulaModalProps {
   turma: Turma;
   todosAlunos: Aluno[];
   onClose: () => void;
+  onError?: (errorMessage: string) => void;
 }
 
 interface FormValues {
@@ -63,7 +64,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   isOpen,
   turma,
   todosAlunos,
-  onClose
+  onClose,
+  onError
 }) => {
   const isMobile = useIsMobile();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -201,9 +203,28 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Erro ao registrar reposição:", error);
+      
+      // Extrair a mensagem de erro
+      let errorMessage = "Não foi possível registrar a reposição. Tente novamente.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Verificar se é um erro relacionado às credenciais do Google
+        if (error.message.includes("credenciais do Google") || 
+            error.message.includes("Google Service Account")) {
+          errorMessage = "Configuração incompleta: O sistema precisa das credenciais do Google Service Account";
+        }
+      }
+      
+      // Notificar o componente pai do erro
+      if (onError) {
+        onError(errorMessage);
+      }
+      
       toast({
         title: "Erro",
-        description: "Não foi possível registrar a reposição. Tente novamente.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

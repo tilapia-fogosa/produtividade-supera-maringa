@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle } from "lucide-react";
+import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProdutividadeModal from './ProdutividadeModal';
 import ReposicaoAulaModal from './ReposicaoAulaModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "@/hooks/use-toast";
 
 interface Turma {
   id: string;
@@ -54,6 +55,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
   
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
@@ -72,6 +74,19 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const handleFecharReposicaoModal = () => {
     setReposicaoModalAberto(false);
   };
+
+  const handleModalError = (errorMessage: string) => {
+    // Check if the error is related to Google credentials
+    if (errorMessage.includes("credenciais do Google") || 
+        errorMessage.includes("Google Service Account")) {
+      setConfigError("Configuração incompleta: O administrador precisa configurar as credenciais do Google Service Account");
+      toast({
+        title: "Erro de configuração",
+        description: "Configuração de credenciais do Google Service Account pendente. Contate o administrador.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return <div>
       <div className="flex justify-between items-center mb-3">
@@ -83,6 +98,14 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
           {turma.nome}
         </div>
       </div>
+
+      {/* Error message if configuration is incomplete */}
+      {configError && (
+        <div className="mb-3 p-2 border border-destructive bg-destructive/10 rounded-md text-sm flex items-center">
+          <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
+          <span>{configError}</span>
+        </div>
+      )}
 
       {/* Botão de Reposição de Aula */}
       <div className="mb-3">
@@ -135,14 +158,27 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         </div>}
 
       {/* Modal de Produtividade */}
-      {alunoSelecionado && <ProdutividadeModal isOpen={modalAberto} aluno={alunoSelecionado} turma={turma} onClose={handleFecharModal} onSuccess={alunoId => {
-      if (produtividadeRegistrada && alunoId) {
-        produtividadeRegistrada[alunoId] = true;
-      }
-    }} />}
+      {alunoSelecionado && <ProdutividadeModal 
+        isOpen={modalAberto} 
+        aluno={alunoSelecionado} 
+        turma={turma} 
+        onClose={handleFecharModal} 
+        onSuccess={alunoId => {
+          if (produtividadeRegistrada && alunoId) {
+            produtividadeRegistrada[alunoId] = true;
+          }
+        }}
+        onError={handleModalError} 
+      />}
 
       {/* Modal de Reposição de Aula */}
-      <ReposicaoAulaModal isOpen={reposicaoModalAberto} turma={turma} todosAlunos={todosAlunos} onClose={handleFecharReposicaoModal} />
+      <ReposicaoAulaModal 
+        isOpen={reposicaoModalAberto} 
+        turma={turma} 
+        todosAlunos={todosAlunos} 
+        onClose={handleFecharReposicaoModal}
+        onError={handleModalError} 
+      />
     </div>;
 };
 

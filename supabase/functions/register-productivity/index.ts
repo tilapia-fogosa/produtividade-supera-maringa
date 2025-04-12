@@ -25,6 +25,7 @@ interface ProdutividadeData {
   erros_ah?: string;
   professor_correcao?: string;
   data_registro: string;
+  is_reposicao?: boolean;
 }
 
 serve(async (req) => {
@@ -43,6 +44,9 @@ serve(async (req) => {
       );
     }
 
+    // Log data being processed
+    console.log("Processando dados de produtividade:", JSON.stringify(data, null, 2));
+
     // Get Google Service Account credentials from Supabase secrets
     const serviceAccountCredentials = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
     if (!serviceAccountCredentials) {
@@ -50,7 +54,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Configuração incompleta: credenciais do Google Service Account não encontradas",
-          message: "Contate o administrador do sistema para configurar as credenciais da API do Google"
+          message: "Contate o administrador do sistema para configurar as credenciais da API do Google",
+          details: "As credenciais do Google Service Account precisam ser configuradas como um segredo (secret) no Supabase"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
@@ -68,7 +73,21 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Erro de configuração: formato inválido das credenciais do Google",
-          message: "O formato das credenciais do Google Service Account está inválido"
+          message: "O formato das credenciais do Google Service Account está inválido",
+          details: "O valor configurado para GOOGLE_SERVICE_ACCOUNT não é um JSON válido"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+    
+    // Check if credentials include all required fields
+    if (!credentials.client_email || !credentials.private_key) {
+      console.error("Invalid Google Service Account credentials: missing required fields");
+      return new Response(
+        JSON.stringify({ 
+          error: "Erro de configuração: credenciais do Google Service Account inválidas",
+          message: "As credenciais do Google Service Account estão incompletas",
+          details: "As credenciais devem incluir client_email e private_key"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
@@ -101,6 +120,7 @@ serve(async (req) => {
       data.presente && data.lancou_ah ? (data.exercicios_ah || "") : "", // Abrindo Horizontes - Exercícios Realizados
       data.presente && data.lancou_ah ? (data.erros_ah || "") : "", // Abrindo Horizontes - Nº Erros
       data.presente && data.lancou_ah ? (data.professor_correcao || "") : "", // Selecione o Professor que Corrigiu a AH
+      data.is_reposicao ? "Sim" : "Não" // Indica se é reposição de aula
     ];
 
     console.log("Attempting to append data to Google Sheet...");
@@ -114,6 +134,21 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Error:", error.message, error.stack);
+    
+    // Check if it's a credentials-related error
+    const errorMessage = error.message || "";
+    if (errorMessage.includes("token") || 
+        errorMessage.includes("credential") || 
+        errorMessage.includes("auth") || 
+        errorMessage.includes("access_token")) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Erro nas credenciais do Google Service Account",
+          message: "Houve um problema com as credenciais do Google. Contate o administrador."
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
     
     return new Response(
       JSON.stringify({ 

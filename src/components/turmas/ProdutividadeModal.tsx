@@ -25,6 +25,7 @@ interface ProdutividadeModalProps {
   turma: Turma;
   onClose: () => void;
   onSuccess?: (alunoId: string) => void;
+  onError?: (errorMessage: string) => void;
 }
 
 const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
@@ -32,7 +33,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   aluno,
   turma,
   onClose,
-  onSuccess
+  onSuccess,
+  onError
 }) => {
   const isMobile = useIsMobile();
 
@@ -218,9 +220,28 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Erro ao registrar produtividade:", error);
+      
+      // Extrair a mensagem de erro
+      let errorMessage = "Não foi possível registrar a produtividade. Tente novamente.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Verificar se é um erro relacionado às credenciais do Google
+        if (error.message.includes("credenciais do Google") || 
+            error.message.includes("Google Service Account")) {
+          errorMessage = "Configuração incompleta: O sistema precisa das credenciais do Google Service Account";
+        }
+      }
+      
+      // Notificar o componente pai do erro
+      if (onError) {
+        onError(errorMessage);
+      }
+      
       toast({
         title: "Erro",
-        description: "Não foi possível registrar a produtividade. Tente novamente.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
