@@ -53,16 +53,13 @@ export const seedChristianeStudents = async () => {
     }
 
     if (turmaCriancas) {
-      // Adicionar alunos da turma de Crianças
+      // Adicionar alunos da turma de Crianças conforme a imagem
       const alunosCriancas = [
-        { nome: 'Pedro Santos', turma_id: turmaCriancas },
-        { nome: 'Júlia Mendes', turma_id: turmaCriancas },
-        { nome: 'Lucas Ferreira', turma_id: turmaCriancas },
-        { nome: 'Mariana Costa', turma_id: turmaCriancas },
-        { nome: 'Bruno Silva', turma_id: turmaCriancas },
-        { nome: 'Sofia Oliveira', turma_id: turmaCriancas },
-        { nome: 'Mateus Souza', turma_id: turmaCriancas },
-        { nome: 'Gabriela Lima', turma_id: turmaCriancas }
+        { nome: 'Bernardo Diniz Kolln', turma_id: turmaCriancas },
+        { nome: 'Gabriel Agustinho Tadeu', turma_id: turmaCriancas },
+        { nome: 'Gabriela Malerba Fertonani', turma_id: turmaCriancas },
+        { nome: 'Maria Luiza Marques', turma_id: turmaCriancas },
+        { nome: 'Melissa Harumi Kami', turma_id: turmaCriancas }
       ];
 
       const { error: erroInsercaoCriancas } = await supabase

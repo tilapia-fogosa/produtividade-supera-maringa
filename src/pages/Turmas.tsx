@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 interface Professor {
   id: string;
@@ -17,6 +18,12 @@ interface Turma {
   nome: string;
   dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
   horario: string;
+}
+
+interface Aluno {
+  id: string;
+  nome: string;
+  turma_id: string;
 }
 
 const diasSemanaFormatados: Record<string, string> = {
@@ -38,6 +45,8 @@ const Turmas = () => {
   const navigate = useNavigate();
   const [professor, setProfessor] = useState<Professor | null>(null);
   const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [turmaSelecionada, setTurmaSelecionada] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,11 +100,36 @@ const Turmas = () => {
     navigate('/');
   };
 
-  const handleAcessarTurma = (turmaId: string) => {
-    // Implementação futura: navegação para a página de detalhes da turma
+  const handleTurmaSelecionada = async (turmaId: string) => {
+    setTurmaSelecionada(turmaId);
+    
+    try {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select('*')
+        .eq('turma_id', turmaId)
+        .order('nome');
+        
+      if (error) {
+        throw error;
+      }
+      
+      setAlunos(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar alunos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de alunos.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRegistrarPresenca = (alunoId: string) => {
+    // Implementação futura
     toast({
       title: "Funcionalidade em desenvolvimento",
-      description: "O acesso aos detalhes da turma será implementado em breve.",
+      description: "O registro de presença será implementado em breve.",
     });
   };
 
@@ -127,22 +161,69 @@ const Turmas = () => {
               <p>Não há turmas cadastradas para este(a) professor(a).</p>
             </div>
           ) : (
-            <div className="grid gap-2">
-              {turmas.map((turma) => (
-                <Button
-                  key={turma.id}
-                  variant="outline"
-                  className="w-full justify-start text-left h-auto py-3"
-                  onClick={() => handleAcessarTurma(turma.id)}
-                >
-                  <div>
-                    <div className="font-medium">{turma.nome}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {diasSemanaFormatados[turma.dia_semana]} às {formatarHorario(turma.horario)}
+            <div className="grid gap-4">
+              {!turmaSelecionada ? (
+                // Lista de turmas
+                <div className="grid gap-2">
+                  {turmas.map((turma) => (
+                    <Button
+                      key={turma.id}
+                      variant="outline"
+                      className="w-full justify-start text-left h-auto py-3"
+                      onClick={() => handleTurmaSelecionada(turma.id)}
+                    >
+                      {turma.nome}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                // Lista de alunos da turma selecionada
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setTurmaSelecionada(null)}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para turmas
+                    </Button>
+                    <div className="text-lg font-medium">
+                      {turmas.find(t => t.id === turmaSelecionada)?.nome}
                     </div>
                   </div>
-                </Button>
-              ))}
+
+                  {alunos.length === 0 ? (
+                    <div className="text-center py-4">
+                      <p>Não há alunos cadastrados nesta turma.</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome do Aluno</TableHead>
+                          <TableHead className="w-[100px]">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {alunos.map((aluno, index) => (
+                          <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
+                            <TableCell>{aluno.nome}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleRegistrarPresenca(aluno.id)}
+                              >
+                                Presença
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </CardContent>
