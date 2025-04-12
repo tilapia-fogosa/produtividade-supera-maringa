@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, RefreshCw } from "lucide-react";
+import { Users, RefreshCw, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -72,11 +72,33 @@ const Professores = () => {
         // Adicionar avisos se existirem
         if (result.warnings) {
           if (result.warnings.turmasNaoEncontradas?.length > 0) {
-            message += ` Turmas não encontradas: ${result.warnings.turmasNaoEncontradas.join(', ')}.`;
+            // Limitar o número de turmas exibidas na mensagem para não sobrecarregar o toast
+            const turmasNaoEncontradas = result.warnings.turmasNaoEncontradas.slice(0, 5);
+            const countRestantes = result.warnings.turmasNaoEncontradas.length - 5;
+            
+            message += ` Turmas não encontradas: ${turmasNaoEncontradas.join(', ')}${countRestantes > 0 ? ` e mais ${countRestantes} outras` : ''}.`;
+            
+            // Se houver turmas não encontradas, adicionamos um toast de alerta separado com detalhes
+            if (result.warnings.turmasNaoEncontradas.length > 0) {
+              toast({
+                title: "Atenção - Turmas não encontradas",
+                description: `Existem ${result.warnings.turmasNaoEncontradas.length} turmas na planilha que não foram encontradas no sistema. Certifique-se de que os nomes das turmas correspondem exatamente.`,
+                variant: "default"
+              });
+            }
           }
+          
           if (result.warnings.professoresNaoEncontrados?.length > 0) {
-            message += ` Professores não encontrados: ${result.warnings.professoresNaoEncontrados.join(', ')}.`;
+            const professoresNaoEncontrados = result.warnings.professoresNaoEncontrados.slice(0, 3);
+            const countRestantes = result.warnings.professoresNaoEncontrados.length - 3;
+            
+            message += ` Professores não encontrados: ${professoresNaoEncontrados.join(', ')}${countRestantes > 0 ? ` e mais ${countRestantes} outros` : ''}.`;
           }
+        }
+
+        // Adicionar informações de diagnóstico
+        if (result.diagnostico) {
+          console.log("Diagnóstico da sincronização:", result.diagnostico);
         }
         
         toast({

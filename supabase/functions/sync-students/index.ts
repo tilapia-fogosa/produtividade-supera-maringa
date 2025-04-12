@@ -73,7 +73,6 @@ Deno.serve(async (req) => {
 
     // Encontrando os índices das colunas necessárias
     const nomeIndex = headers.findIndex((h: string) => h === 'Nome');
-    // Aqui está a correção: agora procuramos por "Turma atual" em vez de "Turma"
     const turmaIndex = headers.findIndex((h: string) => h === 'Turma atual');
     const professorIndex = headers.findIndex((h: string) => h === 'Professor');
     const indiceIndex = headers.findIndex((h: string) => h === 'Índice');
@@ -89,8 +88,20 @@ Deno.serve(async (req) => {
     const vencimentoContratoIndex = headers.findIndex((h: string) => h === 'Vencimento do contrato');
 
     // Verificando se as colunas obrigatórias foram encontradas
-    if (nomeIndex === -1 || turmaIndex === -1) {
-      throw new Error('Colunas obrigatórias não encontradas na planilha. É necessário ter colunas com "Nome" e "Turma atual" no cabeçalho.');
+    if (nomeIndex === -1) {
+      throw new Error('Coluna "Nome" não encontrada na planilha. É necessário ter uma coluna "Nome" no cabeçalho.');
+    }
+    
+    if (turmaIndex === -1) {
+      throw new Error('Coluna "Turma atual" não encontrada na planilha. É necessário ter uma coluna "Turma atual" no cabeçalho.');
+    }
+
+    console.log(`Coluna Nome encontrada no índice ${nomeIndex}`);
+    console.log(`Coluna Turma atual encontrada no índice ${turmaIndex}`);
+    if (professorIndex !== -1) {
+      console.log(`Coluna Professor encontrada no índice ${professorIndex}`);
+    } else {
+      console.log(`Coluna Professor não encontrada!`);
     }
 
     // Extract student data começando da linha após o cabeçalho (linha 6, índice 5)
@@ -139,28 +150,52 @@ Deno.serve(async (req) => {
       throw new Error(`Erro ao buscar turmas: ${turmasError.message}`);
     }
 
+    console.log(`Encontrados ${professores.length} professores e ${turmas.length} turmas no banco de dados`);
+
+    // Log dos nomes de professores para depuração
+    console.log("Professores no banco:", professores.map((p: any) => p.nome).join(', '));
+    console.log("Turmas no banco:", turmas.map((t: any) => t.nome).join(', '));
+
     // Mapear professores por nome para rápido acesso
     const professoresPorNome = professores.reduce((acc: Record<string, string>, prof: any) => {
-      acc[prof.nome.toLowerCase()] = prof.id;
+      acc[prof.nome.toLowerCase().trim()] = prof.id;
       return acc;
     }, {});
 
     // Mapear turmas por nome e professor_id para rápido acesso
     const turmasPorNome = turmas.reduce((acc: Record<string, string>, turma: any) => {
-      acc[`${turma.nome.toLowerCase()}_${turma.professor_id}`] = turma.id;
+      acc[`${turma.nome.toLowerCase().trim()}`] = turma.id;
+      // Também adicionar mapeamento com nome da turma + professor_id
+      if (turma.professor_id) {
+        acc[`${turma.nome.toLowerCase().trim()}_${turma.professor_id}`] = turma.id;
+      }
       return acc;
     }, {});
 
     // Preparar alunos para inserção, mapeando turmas
     const studentsToAdd = [];
-    const turmasNaoEncontradas = new Set();
-    const professoresNaoEncontrados = new Set();
+    const turmasNaoEncontradas = new Set<string>();
+    const professoresNaoEncontrados = new Set<string>();
+    const nomesOcorrencias: Record<string, number> = {};
 
     for (const student of students) {
+      // Normalizar os nomes para evitar problemas com espaços extras e capitalização
+      if (student.professor_nome) {
+        student.professor_nome = student.professor_nome.trim();
+      }
+      if (student.turma_nome) {
+        student.turma_nome = student.turma_nome.trim();
+      }
+      
+      // Contar ocorrências para diagnóstico
+      if (student.turma_nome) {
+        nomesOcorrencias[student.turma_nome] = (nomesOcorrencias[student.turma_nome] || 0) + 1;
+      }
+
       // Processar apenas se tiver nome e turma
       if (student.nome && student.turma_nome) {
         const professorId = student.professor_nome ? 
-          professoresPorNome[student.professor_nome.toLowerCase()] : 
+          professoresPorNome[student.professor_nome.toLowerCase().trim()] : 
           null;
 
         // Se não encontramos o professor, registrar para reportar
@@ -170,16 +205,26 @@ Deno.serve(async (req) => {
 
         // Tentar encontrar a turma pelo nome e professor
         let turmaId = null;
-        if (professorId) {
-          turmaId = turmasPorNome[`${student.turma_nome.toLowerCase()}_${professorId}`];
+        
+        // Primeiro tentamos pelo nome exato
+        turmaId = turmasPorNome[student.turma_nome.toLowerCase().trim()];
+        
+        // Se não encontrou e temos professor_id, tenta com a combinação
+        if (!turmaId && professorId) {
+          turmaId = turmasPorNome[`${student.turma_nome.toLowerCase().trim()}_${professorId}`];
         }
 
-        // Se não encontramos com professor específico, procurar qualquer turma com esse nome
+        // Se ainda não encontramos, tentamos buscar qualquer turma com um nome similar
         if (!turmaId) {
-          // Buscar qualquer turma com esse nome
-          const turmaComNome = turmas.find(t => t.nome.toLowerCase() === student.turma_nome.toLowerCase());
-          if (turmaComNome) {
-            turmaId = turmaComNome.id;
+          // Buscar turmas com nomes parecidos (ignorando espaços extras e case)
+          const turmaComNomeSimilar = turmas.find(t => 
+            t.nome.toLowerCase().trim() === student.turma_nome.toLowerCase().trim() ||
+            t.nome.toLowerCase().trim().replace(/\s+/g, '') === student.turma_nome.toLowerCase().trim().replace(/\s+/g, '')
+          );
+          
+          if (turmaComNomeSimilar) {
+            turmaId = turmaComNomeSimilar.id;
+            console.log(`Match aproximado encontrado: "${student.turma_nome}" -> "${turmaComNomeSimilar.nome}"`);
           } else {
             turmasNaoEncontradas.add(student.turma_nome);
             continue; // Pular este aluno se não tiver turma correspondente
@@ -211,12 +256,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Log das turmas mais frequentes no dataset
+    console.log("Top 10 turmas mais frequentes na planilha:");
+    Object.entries(nomesOcorrencias)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .forEach(([nome, count]) => {
+        console.log(`"${nome}": ${count} alunos`);
+      });
+
     console.log(`${studentsToAdd.length} novos alunos para adicionar`);
     if (turmasNaoEncontradas.size > 0) {
-      console.log(`Turmas não encontradas: ${Array.from(turmasNaoEncontradas).join(', ')}`);
+      console.log(`Turmas não encontradas (${turmasNaoEncontradas.size}): ${Array.from(turmasNaoEncontradas).join(', ')}`);
     }
     if (professoresNaoEncontrados.size > 0) {
-      console.log(`Professores não encontrados: ${Array.from(professoresNaoEncontrados).join(', ')}`);
+      console.log(`Professores não encontrados (${professoresNaoEncontrados.size}): ${Array.from(professoresNaoEncontrados).join(', ')}`);
     }
 
     // Obter alunos existentes para evitar duplicatas
@@ -264,6 +318,11 @@ Deno.serve(async (req) => {
         warnings: {
           turmasNaoEncontradas: Array.from(turmasNaoEncontradas),
           professoresNaoEncontrados: Array.from(professoresNaoEncontrados)
+        },
+        diagnostico: {
+          totalTurmasNaPlanilha: Object.keys(nomesOcorrencias).length,
+          totalTurmasNoDB: turmas.length,
+          totalProfessoresNoDB: professores.length
         }
       }),
       {
