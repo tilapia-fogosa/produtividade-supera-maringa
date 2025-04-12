@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +29,9 @@ export interface Aluno {
   dias_apostila?: number | null;
   dias_supera?: number | null;
   vencimento_contrato?: string | null;
+  ultima_pagina?: string | null;
+  paginas_restantes?: number | null;
+  ultima_correcao_ah?: string | null;
 }
 
 export function useProfessorTurmas() {
