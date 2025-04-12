@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User, Clock, Calendar, Info, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface Professor {
   id: string;
@@ -24,6 +25,16 @@ interface Aluno {
   id: string;
   nome: string;
   turma_id: string;
+  codigo?: string | null;
+  telefone?: string | null;
+  email?: string | null;
+  curso?: string | null;
+  matricula?: string | null;
+  idade?: number | null;
+  ultimo_nivel?: string | null;
+  dias_apostila?: number | null;
+  dias_supera?: number | null;
+  vencimento_contrato?: string | null;
 }
 
 const diasSemanaFormatados: Record<string, string> = {
@@ -48,6 +59,7 @@ const Turmas = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [turmaSelecionada, setTurmaSelecionada] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [alunoDetalhes, setAlunoDetalhes] = useState<Aluno | null>(null);
 
   useEffect(() => {
     const fetchProfessorETurmas = async () => {
@@ -102,6 +114,7 @@ const Turmas = () => {
 
   const handleTurmaSelecionada = async (turmaId: string) => {
     setTurmaSelecionada(turmaId);
+    setAlunoDetalhes(null);
     
     try {
       const { data, error } = await supabase
@@ -133,6 +146,14 @@ const Turmas = () => {
     });
   };
 
+  const mostrarDetalhesAluno = (aluno: Aluno) => {
+    setAlunoDetalhes(aluno);
+  };
+
+  const fecharDetalhesAluno = () => {
+    setAlunoDetalhes(null);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-8 text-center">
@@ -154,6 +175,9 @@ const Turmas = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-xl">{professor?.nome}</CardTitle>
+          <CardDescription>
+            {turmas.length} turma{turmas.length !== 1 ? 's' : ''} encontrada{turmas.length !== 1 ? 's' : ''}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {turmas.length === 0 ? (
@@ -169,12 +193,99 @@ const Turmas = () => {
                     <Button
                       key={turma.id}
                       variant="outline"
-                      className="w-full justify-start text-left h-auto py-3"
+                      className="w-full justify-between text-left h-auto py-3 px-4"
                       onClick={() => handleTurmaSelecionada(turma.id)}
                     >
-                      {turma.nome}
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{turma.nome}</span>
+                        <div className="flex items-center text-sm text-muted-foreground mt-1">
+                          <Calendar className="h-3.5 w-3.5 mr-1" />
+                          <span>{diasSemanaFormatados[turma.dia_semana]}</span>
+                          <Clock className="h-3.5 w-3.5 ml-3 mr-1" />
+                          <span>{formatarHorario(turma.horario)}</span>
+                        </div>
+                      </div>
+                      <ArrowLeft className="h-4 w-4 rotate-180" />
                     </Button>
                   ))}
+                </div>
+              ) : alunoDetalhes ? (
+                // Detalhes do aluno
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={fecharDetalhesAluno}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para lista
+                    </Button>
+                    <div className="text-lg font-medium truncate">
+                      {alunoDetalhes.nome}
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Informações Pessoais</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <dl className="space-y-2">
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Código:</dt>
+                            <dd>{alunoDetalhes.codigo || 'Não informado'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Idade:</dt>
+                            <dd>{alunoDetalhes.idade !== null ? alunoDetalhes.idade : 'Não informada'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Email:</dt>
+                            <dd className="break-all">{alunoDetalhes.email || 'Não informado'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Telefone:</dt>
+                            <dd>{alunoDetalhes.telefone || 'Não informado'}</dd>
+                          </div>
+                        </dl>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Informações Acadêmicas</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <dl className="space-y-2">
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Curso:</dt>
+                            <dd>{alunoDetalhes.curso || 'Não informado'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Matrícula:</dt>
+                            <dd>{alunoDetalhes.matricula || 'Não informada'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Último nível:</dt>
+                            <dd>{alunoDetalhes.ultimo_nivel || 'Não informado'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Dias na apostila:</dt>
+                            <dd>{alunoDetalhes.dias_apostila !== null ? alunoDetalhes.dias_apostila : 'Não informado'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Dias no Supera:</dt>
+                            <dd>{alunoDetalhes.dias_supera !== null ? alunoDetalhes.dias_supera : 'Não informado'}</dd>
+                          </div>
+                          <div className="flex justify-between">
+                            <dt className="font-medium text-muted-foreground">Vencimento do contrato:</dt>
+                            <dd>{alunoDetalhes.vencimento_contrato || 'Não informado'}</dd>
+                          </div>
+                        </dl>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               ) : (
                 // Lista de alunos da turma selecionada
@@ -201,21 +312,34 @@ const Turmas = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nome do Aluno</TableHead>
-                          <TableHead className="w-[100px]">Ações</TableHead>
+                          <TableHead className="hidden md:table-cell">Código</TableHead>
+                          <TableHead className="hidden md:table-cell">Último Nível</TableHead>
+                          <TableHead className="w-[120px]">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {alunos.map((aluno, index) => (
                           <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
-                            <TableCell>{aluno.nome}</TableCell>
+                            <TableCell className="font-medium">{aluno.nome}</TableCell>
+                            <TableCell className="hidden md:table-cell">{aluno.codigo || '-'}</TableCell>
+                            <TableCell className="hidden md:table-cell">{aluno.ultimo_nivel || '-'}</TableCell>
                             <TableCell>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleRegistrarPresenca(aluno.id)}
-                              >
-                                Presença
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => mostrarDetalhesAluno(aluno)}
+                                >
+                                  <Info className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleRegistrarPresenca(aluno.id)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
