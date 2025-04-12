@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Aluno {
   id: string;
@@ -26,77 +27,81 @@ interface AlunoDetailProps {
 }
 
 const AlunoDetail: React.FC<AlunoDetailProps> = ({ aluno, onVoltar }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={onVoltar}
+          className={isMobile ? "px-2 py-1 h-8" : ""}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para lista
+          <ArrowLeft className={`mr-1 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} /> 
+          <span className={isMobile ? "text-xs" : ""}>Voltar</span>
         </Button>
-        <div className="text-lg font-medium truncate">
+        <div className={`font-medium truncate max-w-[200px] ${isMobile ? "text-sm" : "text-lg"}`}>
           {aluno.nome}
         </div>
       </div>
       
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Informações Pessoais</CardTitle>
+      <div className="grid md:grid-cols-2 gap-3">
+        <Card className={isMobile ? "shadow-sm" : ""}>
+          <CardHeader className={isMobile ? "px-3 py-2 pb-1" : "pb-2"}>
+            <CardTitle className={isMobile ? "text-sm" : "text-base"}>Informações Pessoais</CardTitle>
           </CardHeader>
-          <CardContent>
-            <dl className="space-y-2">
+          <CardContent className={isMobile ? "px-3 py-2" : ""}>
+            <dl className="space-y-1.5">
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Código:</dt>
-                <dd>{aluno.codigo || 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Código:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.codigo || 'Não informado'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Idade:</dt>
-                <dd>{aluno.idade !== null ? aluno.idade : 'Não informada'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Idade:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.idade !== null ? aluno.idade : 'Não informada'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Email:</dt>
-                <dd className="break-all">{aluno.email || 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Email:</dt>
+                <dd className={`break-all ${isMobile ? "text-xs" : ""}`}>{aluno.email || 'Não informado'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Telefone:</dt>
-                <dd>{aluno.telefone || 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Telefone:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.telefone || 'Não informado'}</dd>
               </div>
             </dl>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Informações Acadêmicas</CardTitle>
+        <Card className={isMobile ? "shadow-sm" : ""}>
+          <CardHeader className={isMobile ? "px-3 py-2 pb-1" : "pb-2"}>
+            <CardTitle className={isMobile ? "text-sm" : "text-base"}>Informações Acadêmicas</CardTitle>
           </CardHeader>
-          <CardContent>
-            <dl className="space-y-2">
+          <CardContent className={isMobile ? "px-3 py-2" : ""}>
+            <dl className="space-y-1.5">
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Curso:</dt>
-                <dd>{aluno.curso || 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Curso:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.curso || 'Não informado'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Matrícula:</dt>
-                <dd>{aluno.matricula || 'Não informada'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Matrícula:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.matricula || 'Não informada'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Último nível:</dt>
-                <dd>{aluno.ultimo_nivel || 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Último nível:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.ultimo_nivel || 'Não informado'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Dias na apostila:</dt>
-                <dd>{aluno.dias_apostila !== null ? aluno.dias_apostila : 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Dias na apostila:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.dias_apostila !== null ? aluno.dias_apostila : 'Não informado'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Dias no Supera:</dt>
-                <dd>{aluno.dias_supera !== null ? aluno.dias_supera : 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Dias no Supera:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.dias_supera !== null ? aluno.dias_supera : 'Não informado'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="font-medium text-muted-foreground">Vencimento do contrato:</dt>
-                <dd>{aluno.vencimento_contrato || 'Não informado'}</dd>
+                <dt className={`font-medium text-muted-foreground ${isMobile ? "text-xs" : ""}`}>Vencimento do contrato:</dt>
+                <dd className={isMobile ? "text-xs" : ""}>{aluno.vencimento_contrato || 'Não informado'}</dd>
               </div>
             </dl>
           </CardContent>

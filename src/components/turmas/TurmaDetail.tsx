@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info, Pencil } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Turma {
   id: string;
@@ -42,63 +43,77 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   onShowAlunoDetails, 
   onRegistrarPresenca 
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={onVoltar}
+          className="px-2 py-1 h-8"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para turmas
+          <ArrowLeft className="mr-1 h-3.5 w-3.5" /> 
+          <span className={isMobile ? "text-xs" : ""}>Voltar</span>
         </Button>
-        <div className="text-lg font-medium">
+        <div className={`font-medium ${isMobile ? "text-sm ml-1" : "text-lg"}`}>
           {turma.nome}
         </div>
       </div>
 
       {alunos.length === 0 ? (
-        <div className="text-center py-4">
-          <p>Não há alunos cadastrados nesta turma.</p>
+        <div className="text-center py-3">
+          <p className={isMobile ? "text-sm" : ""}>Não há alunos cadastrados nesta turma.</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome do Aluno</TableHead>
-              <TableHead className="hidden md:table-cell">Código</TableHead>
-              <TableHead className="hidden md:table-cell">Último Nível</TableHead>
-              <TableHead className="w-[120px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {alunos.map((aluno, index) => (
-              <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
-                <TableCell className="font-medium">{aluno.nome}</TableCell>
-                <TableCell className="hidden md:table-cell">{aluno.codigo || '-'}</TableCell>
-                <TableCell className="hidden md:table-cell">{aluno.ultimo_nivel || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onShowAlunoDetails(aluno)}
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onRegistrarPresenca(aluno.id)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        <div className={isMobile ? "-mx-2" : ""}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className={isMobile ? "px-2 py-2 text-xs" : ""}>Nome</TableHead>
+                <TableHead className={`hidden md:table-cell ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Código</TableHead>
+                <TableHead className={`hidden md:table-cell ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
+                <TableHead className={`w-[100px] ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {alunos.map((aluno, index) => (
+                <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
+                  <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs truncate max-w-[120px]" : ""}`}>
+                    {aluno.nome}
+                  </TableCell>
+                  <TableCell className={`hidden md:table-cell ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
+                    {aluno.codigo || '-'}
+                  </TableCell>
+                  <TableCell className={`hidden md:table-cell ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
+                    {aluno.ultimo_nivel || '-'}
+                  </TableCell>
+                  <TableCell className={isMobile ? "px-2 py-1.5" : ""}>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onShowAlunoDetails(aluno)}
+                        className={isMobile ? "h-7 w-7 p-0" : ""}
+                      >
+                        <Info className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onRegistrarPresenca(aluno.id)}
+                        className={isMobile ? "h-7 w-7 p-0" : ""}
+                      >
+                        <Pencil className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );
