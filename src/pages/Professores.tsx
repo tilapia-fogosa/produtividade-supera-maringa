@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, RefreshCw, AlertCircle } from "lucide-react";
+import { Users, RefreshCw, AlertCircle, TrendingUp, BookOpen } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -14,10 +13,17 @@ interface Professor {
   nome: string;
 }
 
+enum ServiceType {
+  NONE = 'none',
+  PRODUTIVIDADE = 'produtividade',
+  ABRINDO_HORIZONTES = 'abrindo_horizontes'
+}
+
 const Professores = () => {
   const [professores, setProfessores] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingGoogleSheets, setSyncingGoogleSheets] = useState(false);
+  const [serviceType, setServiceType] = useState<ServiceType>(ServiceType.NONE);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -51,7 +57,7 @@ const Professores = () => {
   };
 
   const handleProfessorClick = (professorId: string) => {
-    navigate(`/turmas/${professorId}`);
+    navigate(`/turmas/${professorId}`, { state: { serviceType } });
   };
 
   const syncGoogleSheets = async () => {
@@ -69,16 +75,13 @@ const Professores = () => {
       if (result.success) {
         let message = result.message;
         
-        // Adicionar avisos se existirem
         if (result.warnings) {
           if (result.warnings.turmasNaoEncontradas?.length > 0) {
-            // Limitar o número de turmas exibidas na mensagem para não sobrecarregar o toast
             const turmasNaoEncontradas = result.warnings.turmasNaoEncontradas.slice(0, 5);
             const countRestantes = result.warnings.turmasNaoEncontradas.length - 5;
             
             message += ` Turmas não encontradas: ${turmasNaoEncontradas.join(', ')}${countRestantes > 0 ? ` e mais ${countRestantes} outras` : ''}.`;
             
-            // Se houver turmas não encontradas, adicionamos um toast de alerta separado com detalhes
             if (result.warnings.turmasNaoEncontradas.length > 0) {
               toast({
                 title: "Atenção - Turmas não encontradas",
@@ -94,11 +97,6 @@ const Professores = () => {
             
             message += ` Professores não encontrados: ${professoresNaoEncontrados.join(', ')}${countRestantes > 0 ? ` e mais ${countRestantes} outros` : ''}.`;
           }
-        }
-
-        // Adicionar informações de diagnóstico
-        if (result.diagnostico) {
-          console.log("Diagnóstico da sincronização:", result.diagnostico);
         }
         
         toast({
@@ -120,6 +118,14 @@ const Professores = () => {
     }
   };
 
+  const handleServiceSelection = (type: ServiceType) => {
+    setServiceType(type);
+  };
+
+  const handleBackToServices = () => {
+    setServiceType(ServiceType.NONE);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-4 px-4 text-center">
@@ -131,62 +137,111 @@ const Professores = () => {
   return (
     <div className="container mx-auto py-4 px-4 md:py-8">
       <div className={`flex ${isMobile ? 'flex-col' : 'justify-between'} items-center mb-6 gap-4`}>
-        <h1 className="text-2xl font-bold">Professores</h1>
+        <h1 className="text-2xl font-bold">
+          {serviceType === ServiceType.NONE ? "Serviços" : 
+           serviceType === ServiceType.PRODUTIVIDADE ? "Lançar Produtividade de Sala" : 
+           "Lançar Abrindo Horizontes"}
+        </h1>
         
-        <Button 
-          onClick={syncGoogleSheets}
-          disabled={syncingGoogleSheets}
-          size="sm"
-          className="flex items-center self-end"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
-          {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
-        </Button>
+        {serviceType !== ServiceType.NONE && (
+          <Button 
+            onClick={syncGoogleSheets}
+            disabled={syncingGoogleSheets}
+            size="sm"
+            className="flex items-center self-end"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+            {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
+          </Button>
+        )}
       </div>
 
       <Card>
-        <CardHeader className={isMobile ? "px-4 py-4" : ""}>
-          <CardTitle>Lista de Professores</CardTitle>
-          <CardDescription>
-            Selecione um professor para gerenciar suas turmas e alunos
-          </CardDescription>
-        </CardHeader>
-        <CardContent className={isMobile ? "px-2 py-2" : ""}>
-          {professores.length === 0 ? (
-            <div className="text-center py-4">
-              <p>Não há professores cadastrados.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead className="w-[100px] text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {professores.map((professor) => (
-                    <TableRow key={professor.id}>
-                      <TableCell className="font-medium">{professor.nome}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleProfessorClick(professor.id)}
-                          className="flex items-center"
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          Turmas
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
+        {serviceType === ServiceType.NONE ? (
+          <>
+            <CardHeader className={isMobile ? "px-4 py-4" : ""}>
+              <CardTitle>Selecione o tipo de serviço</CardTitle>
+              <CardDescription>
+                Escolha o tipo de serviço que deseja lançar
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col space-y-4 p-6">
+              <Button 
+                size="lg" 
+                className="py-8 text-lg"
+                onClick={() => handleServiceSelection(ServiceType.PRODUTIVIDADE)}
+              >
+                <TrendingUp className="mr-2 h-6 w-6" />
+                Lançar Produtividade de Sala
+              </Button>
+              <Button 
+                size="lg" 
+                className="py-8 text-lg"
+                onClick={() => handleServiceSelection(ServiceType.ABRINDO_HORIZONTES)}
+                variant="outline"
+              >
+                <BookOpen className="mr-2 h-6 w-6" />
+                Lançar Abrindo Horizontes
+              </Button>
+            </CardContent>
+          </>
+        ) : (
+          <>
+            <CardHeader className={isMobile ? "px-4 py-4" : ""}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Lista de Professores</CardTitle>
+                  <CardDescription>
+                    Selecione um professor para gerenciar suas turmas e alunos
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleBackToServices}
+                >
+                  Voltar para Serviços
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className={isMobile ? "px-2 py-2" : ""}>
+              {professores.length === 0 ? (
+                <div className="text-center py-4">
+                  <p>Não há professores cadastrados.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead className="w-[100px] text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {professores.map((professor) => (
+                        <TableRow key={professor.id}>
+                          <TableCell className="font-medium">{professor.nome}</TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleProfessorClick(professor.id)}
+                              className="flex items-center"
+                            >
+                              <Users className="mr-2 h-4 w-4" />
+                              Turmas
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </>
+        )}
       </Card>
     </div>
   );

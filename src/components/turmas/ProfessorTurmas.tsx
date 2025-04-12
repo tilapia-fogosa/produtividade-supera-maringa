@@ -6,7 +6,11 @@ import ProfessorConteudo from './ProfessorConteudo';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
 
-const ProfessorTurmas = () => {
+interface ProfessorTurmasProps {
+  initialServiceType?: string;
+}
+
+const ProfessorTurmas: React.FC<ProfessorTurmasProps> = ({ initialServiceType = 'produtividade' }) => {
   const { professor, turmas, loading, navigate } = useProfessorTurmas();
   const {
     alunos,
@@ -56,6 +60,7 @@ const ProfessorTurmas = () => {
           onShowAlunoDetails={mostrarDetalhesAluno}
           onVoltarParaTurmas={voltarParaTurmas}
           onFecharDetalhesAluno={fecharDetalhesAluno}
+          initialServiceType={initialServiceType}
         />
       </Card>
     </div>

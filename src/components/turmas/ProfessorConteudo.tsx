@@ -19,6 +19,7 @@ interface ProfessorConteudoProps {
   onShowAlunoDetails: (aluno: Aluno) => void;
   onVoltarParaTurmas: () => void;
   onFecharDetalhesAluno: () => void;
+  initialServiceType?: string;
 }
 
 const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
@@ -32,7 +33,8 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
   onRegistrarPresenca,
   onShowAlunoDetails,
   onVoltarParaTurmas,
-  onFecharDetalhesAluno
+  onFecharDetalhesAluno,
+  initialServiceType = 'produtividade'
 }) => {
   return (
     <CardContent>
@@ -62,6 +64,7 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
               onShowAlunoDetails={onShowAlunoDetails}
               onRegistrarPresenca={onRegistrarPresenca}
               produtividadeRegistrada={produtividadeRegistrada}
+              initialServiceType={initialServiceType}
             />
           )}
         </div>

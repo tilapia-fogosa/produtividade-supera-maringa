@@ -41,6 +41,7 @@ interface TurmaDetailProps {
   onShowAlunoDetails: (aluno: Aluno) => void;
   onRegistrarPresenca: (alunoId: string) => void;
   produtividadeRegistrada?: Record<string, boolean>;
+  initialServiceType?: string;
 }
 
 // Enum para controlar qual tela está sendo exibida
@@ -57,15 +58,27 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   onVoltar,
   onShowAlunoDetails,
   onRegistrarPresenca,
-  produtividadeRegistrada = {}
+  produtividadeRegistrada = {},
+  initialServiceType = 'produtividade'
 }) => {
   const isMobile = useIsMobile();
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
+  
+  // Set initial telaModo based on initialServiceType
+  const getInitialTelaModo = () => {
+    if (initialServiceType === 'produtividade') {
+      return TelaModo.LISTA_ALUNOS;
+    } else if (initialServiceType === 'abrindo_horizontes') {
+      return TelaModo.AH;
+    }
+    return TelaModo.MENU_INICIAL;
+  };
+  
   // Novo estado para controlar qual tela está sendo exibida
-  const [telaModo, setTelaModo] = useState<TelaModo>(TelaModo.MENU_INICIAL);
+  const [telaModo, setTelaModo] = useState<TelaModo>(getInitialTelaModo());
   
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
