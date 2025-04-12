@@ -33,7 +33,6 @@ import { useForm } from "react-hook-form";
 // Import reused sections
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
-import AhSection from './produtividade/AhSection';
 
 interface ReposicaoAulaModalProps {
   isOpen: boolean;
@@ -53,11 +52,6 @@ interface FormValues {
   errosAbaco: string;
   fezDesafio: "sim" | "não";
   comentario: string;
-  lancouAh: "sim" | "não";
-  apostilaAh: string;
-  exerciciosAh: string;
-  errosAh: string;
-  professorCorrecao: string;
 }
 
 const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
@@ -82,12 +76,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       exerciciosAbaco: "",
       errosAbaco: "",
       fezDesafio: "não",
-      comentario: "",
-      lancouAh: "não",
-      apostilaAh: "",
-      exerciciosAh: "",
-      errosAh: "",
-      professorCorrecao: ""
+      comentario: ""
     }
   });
   
@@ -130,24 +119,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       return;
     }
 
-    if (values.lancouAh === "sim" && !values.apostilaAh) {
-      toast({
-        title: "Erro",
-        description: "Selecione a apostila AH",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (values.lancouAh === "sim" && !values.professorCorrecao) {
-      toast({
-        title: "Erro",
-        description: "Selecione o professor que corrigiu",
-        variant: "destructive"
-      });
-      return;
-    }
-
     // Find the selected student to get their name
     const alunoSelecionado = todosAlunos.find(a => a.id === values.alunoId);
     
@@ -177,11 +148,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         erros_abaco: values.presente === "sim" ? values.errosAbaco : undefined,
         fez_desafio: values.presente === "sim" ? values.fezDesafio === "sim" : undefined,
         comentario: values.presente === "sim" ? values.comentario : undefined,
-        lancou_ah: values.presente === "sim" ? values.lancouAh === "sim" : undefined,
-        apostila_ah: values.presente === "sim" && values.lancouAh === "sim" ? values.apostilaAh : undefined,
-        exercicios_ah: values.presente === "sim" && values.lancouAh === "sim" ? values.exerciciosAh : undefined,
-        erros_ah: values.presente === "sim" && values.lancouAh === "sim" ? values.errosAh : undefined,
-        professor_correcao: values.presente === "sim" && values.lancouAh === "sim" ? values.professorCorrecao : undefined,
         data_registro: new Date().toISOString(),
         is_reposicao: true
       };
@@ -233,7 +199,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   };
 
   const presente = form.watch("presente");
-  const lancouAh = form.watch("lancouAh");
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -327,26 +292,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                       setFezDesafio={(value) => form.setValue("fezDesafio", value)}
                       comentario={form.watch("comentario")}
                       setComentario={(value) => form.setValue("comentario", value)}
-                    />
-                  )}
-                />
-                
-                {/* AH */}
-                <FormField
-                  control={form.control}
-                  name="lancouAh"
-                  render={({ field }) => (
-                    <AhSection 
-                      lancouAh={field.value}
-                      setLancouAh={(value) => field.onChange(value)}
-                      apostilaAh={form.watch("apostilaAh")}
-                      setApostilaAh={(value) => form.setValue("apostilaAh", value)}
-                      exerciciosAh={form.watch("exerciciosAh")}
-                      setExerciciosAh={(value) => form.setValue("exerciciosAh", value)}
-                      errosAh={form.watch("errosAh")}
-                      setErrosAh={(value) => form.setValue("errosAh", value)}
-                      professorCorrecao={form.watch("professorCorrecao")}
-                      setProfessorCorrecao={(value) => form.setValue("professorCorrecao", value)}
                     />
                   )}
                 />

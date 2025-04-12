@@ -16,7 +16,6 @@ import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 // Importar componentes refatorados
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
-import AhSection from './produtividade/AhSection';
 import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 
 interface ProdutividadeModalProps {
@@ -50,13 +49,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [errosAbaco, setErrosAbaco] = useState("");
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
-  
-  // Campos do AH
-  const [lancouAh, setLancouAh] = useState<"sim" | "não">("não");
-  const [apostilaAh, setApostilaAh] = useState("");
-  const [exerciciosAh, setExerciciosAh] = useState("");
-  const [errosAh, setErrosAh] = useState("");
-  const [professorCorrecao, setProfessorCorrecao] = useState("");
 
   // Pré-selecionar a apostila de ábaco com base no último nível do aluno
   useEffect(() => {
@@ -77,11 +69,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       setErrosAbaco("");
       setFezDesafio("não");
       setComentario("");
-      setLancouAh("não");
-      setApostilaAh("");
-      setExerciciosAh("");
-      setErrosAh("");
-      setProfessorCorrecao("");
     }
   }, [isOpen]);
 
@@ -148,24 +135,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       return;
     }
 
-    if (lancouAh === "sim" && !apostilaAh) {
-      toast({
-        title: "Erro",
-        description: "Selecione a apostila AH",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (lancouAh === "sim" && !professorCorrecao) {
-      toast({
-        title: "Erro",
-        description: "Selecione o professor que corrigiu",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       
@@ -190,11 +159,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         erros_abaco: presente === "sim" ? errosAbaco : undefined,
         fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
         comentario: presente === "sim" ? comentario : undefined,
-        lancou_ah: presente === "sim" ? lancouAh === "sim" : undefined,
-        apostila_ah: presente === "sim" && lancouAh === "sim" ? apostilaAh : undefined,
-        exercicios_ah: presente === "sim" && lancouAh === "sim" ? exerciciosAh : undefined,
-        erros_ah: presente === "sim" && lancouAh === "sim" ? errosAh : undefined,
-        professor_correcao: presente === "sim" && lancouAh === "sim" ? professorCorrecao : undefined,
         data_registro: new Date().toISOString(),
       };
 
@@ -284,20 +248,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
                 setFezDesafio={setFezDesafio}
                 comentario={comentario}
                 setComentario={setComentario}
-              />
-              
-              {/* AH */}
-              <AhSection 
-                lancouAh={lancouAh}
-                setLancouAh={setLancouAh}
-                apostilaAh={apostilaAh}
-                setApostilaAh={setApostilaAh}
-                exerciciosAh={exerciciosAh}
-                setExerciciosAh={setExerciciosAh}
-                errosAh={errosAh}
-                setErrosAh={setErrosAh}
-                professorCorrecao={professorCorrecao}
-                setProfessorCorrecao={setProfessorCorrecao}
               />
             </>
           )}
