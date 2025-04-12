@@ -37,7 +37,7 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
   initialServiceType = 'produtividade'
 }) => {
   return (
-    <CardContent>
+    <CardContent className="bg-orange-50/50 rounded-b-lg">
       {turmas.length === 0 ? (
         <TurmasVazia />
       ) : (

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -137,7 +138,7 @@ const Professores = () => {
   return (
     <div className="container mx-auto py-4 px-4 md:py-8">
       <div className={`flex ${isMobile ? 'flex-col' : 'justify-between'} items-center mb-6 gap-4`}>
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold text-orange-800">
           {serviceType === ServiceType.NONE ? "Serviços" : 
            serviceType === ServiceType.PRODUTIVIDADE ? "Lançar Produtividade de Sala" : 
            "Lançar Abrindo Horizontes"}
@@ -148,7 +149,7 @@ const Professores = () => {
             onClick={syncGoogleSheets}
             disabled={syncingGoogleSheets}
             size="sm"
-            className="flex items-center self-end"
+            className="flex items-center self-end bg-supera hover:bg-supera-600"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
             {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
@@ -156,19 +157,19 @@ const Professores = () => {
         )}
       </div>
 
-      <Card>
+      <Card className="border-orange-200 bg-white">
         {serviceType === ServiceType.NONE ? (
           <>
-            <CardHeader className={isMobile ? "px-4 py-4" : ""}>
-              <CardTitle>Selecione o tipo de serviço</CardTitle>
-              <CardDescription>
+            <CardHeader className={`${isMobile ? "px-4 py-4" : ""} border-b border-orange-100`}>
+              <CardTitle className="text-orange-800">Selecione o tipo de serviço</CardTitle>
+              <CardDescription className="text-orange-700">
                 Escolha o tipo de serviço que deseja lançar
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col space-y-4 p-6">
               <Button 
                 size="lg" 
-                className="py-8 text-lg"
+                className="py-8 text-lg bg-supera hover:bg-supera-600"
                 onClick={() => handleServiceSelection(ServiceType.PRODUTIVIDADE)}
               >
                 <TrendingUp className="mr-2 h-6 w-6" />
@@ -176,7 +177,7 @@ const Professores = () => {
               </Button>
               <Button 
                 size="lg" 
-                className="py-8 text-lg"
+                className="py-8 text-lg border-orange-300 text-orange-800 hover:bg-orange-100"
                 onClick={() => handleServiceSelection(ServiceType.ABRINDO_HORIZONTES)}
                 variant="outline"
               >
@@ -187,11 +188,11 @@ const Professores = () => {
           </>
         ) : (
           <>
-            <CardHeader className={isMobile ? "px-4 py-4" : ""}>
+            <CardHeader className={`${isMobile ? "px-4 py-4" : ""} border-b border-orange-100`}>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Lista de Professores</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-orange-800">Lista de Professores</CardTitle>
+                  <CardDescription className="text-orange-700">
                     Selecione um professor para gerenciar suas turmas e alunos
                   </CardDescription>
                 </div>
@@ -199,6 +200,7 @@ const Professores = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleBackToServices}
+                  className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
                 >
                   Voltar para Serviços
                 </Button>
@@ -206,28 +208,28 @@ const Professores = () => {
             </CardHeader>
             <CardContent className={isMobile ? "px-2 py-2" : ""}>
               {professores.length === 0 ? (
-                <div className="text-center py-4">
+                <div className="text-center py-4 text-orange-800">
                   <p>Não há professores cadastrados.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead className="w-[100px] text-right">Ações</TableHead>
+                      <TableRow className="border-orange-200">
+                        <TableHead className="text-orange-700">Nome</TableHead>
+                        <TableHead className="w-[100px] text-right text-orange-700">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {professores.map((professor) => (
-                        <TableRow key={professor.id}>
-                          <TableCell className="font-medium">{professor.nome}</TableCell>
+                        <TableRow key={professor.id} className="border-orange-200">
+                          <TableCell className="font-medium text-orange-800">{professor.nome}</TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="outline" 
                               size="sm"
                               onClick={() => handleProfessorClick(professor.id)}
-                              className="flex items-center"
+                              className="flex items-center border-orange-300 text-orange-700 hover:bg-orange-50"
                             >
                               <Users className="mr-2 h-4 w-4" />
                               Turmas

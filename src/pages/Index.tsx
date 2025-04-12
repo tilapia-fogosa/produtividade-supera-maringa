@@ -108,10 +108,10 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Gerenciador de Vídeos para Cursaeduca</CardTitle>
-          <CardDescription>
+      <Card className="border-orange-200 bg-white">
+        <CardHeader className="border-b border-orange-100">
+          <CardTitle className="text-orange-800">Gerenciador de Vídeos para Cursaeduca</CardTitle>
+          <CardDescription className="text-orange-700">
             Faça upload, gerencie e obtenha os códigos HLS para seus vídeos de treinamento
           </CardDescription>
         </CardHeader>
@@ -204,15 +204,15 @@ const Index = () => {
       </Card>
 
       {selectedVideo && selectedVideo.hls_url && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Preview: {selectedVideo.name}</CardTitle>
-            <CardDescription>
-              URL HLS: <code className="bg-muted p-1 rounded">{selectedVideo.hls_url}</code>
+        <Card className="border-orange-200 bg-white">
+          <CardHeader className="border-b border-orange-100">
+            <CardTitle className="text-orange-800">Preview: {selectedVideo.name}</CardTitle>
+            <CardDescription className="text-orange-700">
+              URL HLS: <code className="bg-orange-50 p-1 rounded">{selectedVideo.hls_url}</code>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="ml-2"
+                className="ml-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50"
                 onClick={() => selectedVideo.hls_url && copyHlsUrl(selectedVideo.hls_url)}
               >
                 <Copy className="h-4 w-4" />
@@ -222,12 +222,12 @@ const Index = () => {
           <CardContent>
             <VideoPlayer src={selectedVideo.hls_url} poster={selectedVideo.thumbnail_url} />
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => setSelectedVideo(null)}>
+          <CardFooter className="flex justify-between border-t border-orange-100">
+            <Button variant="outline" onClick={() => setSelectedVideo(null)} className="border-orange-200 text-orange-700 hover:bg-orange-50">
               Fechar
             </Button>
             <Button 
-              variant="default"
+              className="bg-supera hover:bg-supera-600"
               onClick={() => {
                 // Copiar código de embed para inserir no Cursaeduca
                 const embedCode = `<video-js class="vjs-default-skin" controls>

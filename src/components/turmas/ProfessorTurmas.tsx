@@ -33,7 +33,7 @@ const ProfessorTurmas: React.FC<ProfessorTurmasProps> = ({ initialServiceType = 
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 text-center">
+      <div className="container mx-auto py-8 text-center text-orange-800">
         <p>Carregando...</p>
       </div>
     );
@@ -47,7 +47,7 @@ const ProfessorTurmas: React.FC<ProfessorTurmasProps> = ({ initialServiceType = 
         onVoltar={handleVoltar} 
       />
 
-      <Card>
+      <Card className="border-orange-200 bg-white">
         <ProfessorConteudo 
           turmas={turmas}
           turmaSelecionada={turmaSelecionada}

@@ -16,7 +16,7 @@ const Turmas = () => {
   }, [professorId, navigate]);
 
   return (
-    <div className="bg-gradient-to-b from-orange-50 to-white min-h-screen">
+    <div className="container mx-auto py-8">
       {professorId ? <ProfessorTurmas initialServiceType={serviceType} /> : null}
     </div>
   );
