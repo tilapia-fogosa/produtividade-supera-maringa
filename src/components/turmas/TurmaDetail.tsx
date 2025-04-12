@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ProdutividadeModal from './ProdutividadeModal';
 
 interface Turma {
   id: string;
@@ -44,6 +45,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   onRegistrarPresenca 
 }) => {
   const isMobile = useIsMobile();
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
   
   // Add the "Reposição de aula" entry with a special ID
   const todosAlunos = [
@@ -54,6 +57,16 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
       turma_id: turma.id
     }
   ];
+
+  const handleClickRegistrarPresenca = (aluno: Aluno) => {
+    setAlunoSelecionado(aluno);
+    setModalAberto(true);
+  };
+
+  const handleFecharModal = () => {
+    setModalAberto(false);
+    setAlunoSelecionado(null);
+  };
   
   return (
     <div>
@@ -104,7 +117,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => onRegistrarPresenca(aluno.id)}
+                        onClick={() => handleClickRegistrarPresenca(aluno)}
                         className={isMobile ? "h-7 w-7 p-0" : "h-8 px-2"}
                       >
                         <TrendingUp className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
@@ -117,6 +130,16 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {/* Modal de Produtividade */}
+      {alunoSelecionado && (
+        <ProdutividadeModal 
+          isOpen={modalAberto}
+          aluno={alunoSelecionado}
+          turma={turma}
+          onClose={handleFecharModal}
+        />
       )}
     </div>
   );
