@@ -4,19 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface Turma {
-  id: string;
-  nome: string;
-  dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
-  horario: string;
-}
-
-interface TurmasListProps {
-  turmas: Turma[];
-  onTurmaSelecionada: (turmaId: string) => void;
-}
-
-const diasSemanaFormatados: Record<string, string> = {
+const diasSemanaFormatados = {
   'segunda': 'Segunda-feira',
   'terca': 'Terça-feira',
   'quarta': 'Quarta-feira',
@@ -27,10 +15,10 @@ const diasSemanaFormatados: Record<string, string> = {
 };
 
 const formatarHorario = (horario: string) => {
-  return horario.substring(0, 5); // Retorna apenas HH:MM
+  return horario.substring(0, 5);
 };
 
-const diasSemanaAbreviados: Record<string, string> = {
+const diasSemanaAbreviados = {
   'segunda': 'Seg',
   'terca': 'Ter',
   'quarta': 'Qua',
@@ -40,12 +28,20 @@ const diasSemanaAbreviados: Record<string, string> = {
   'domingo': 'Dom'
 };
 
-const TurmasList: React.FC<TurmasListProps> = ({ turmas, onTurmaSelecionada }) => {
+const TurmasList: React.FC<{
+  turmas: { 
+    id: string; 
+    nome: string; 
+    dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo'; 
+    horario: string 
+  }[], 
+  onTurmaSelecionada: (turmaId: string) => void
+}> = ({ turmas, onTurmaSelecionada }) => {
   const isMobile = useIsMobile();
   
   return (
     <div className="p-2 bg-orange-50 rounded-lg">
-      <h2 className="text-center font-bold mb-4 text-orange-600 border-b border-orange-200 pb-2">
+      <h2 className="text-center font-bold mb-4 text-azul-500 border-b border-orange-200 pb-2">
         Turmas Disponíveis
       </h2>
       <div className="grid gap-3">
@@ -57,15 +53,15 @@ const TurmasList: React.FC<TurmasListProps> = ({ turmas, onTurmaSelecionada }) =
             onClick={() => onTurmaSelecionada(turma.id)}
           >
             <div className="flex flex-col items-start">
-              <span className={`font-medium text-orange-800 ${isMobile ? "text-sm" : ""}`}>{turma.nome}</span>
-              <div className={`flex items-center text-orange-600 mt-1 ${isMobile ? "text-xs" : "text-sm"}`}>
+              <span className={`font-medium text-azul-500 ${isMobile ? "text-sm" : ""}`}>{turma.nome}</span>
+              <div className={`flex items-center text-azul-400 mt-1 ${isMobile ? "text-xs" : "text-sm"}`}>
                 <Calendar className={`${isMobile ? "h-3 w-3 mr-0.5" : "h-3.5 w-3.5 mr-1"}`} />
                 <span>{isMobile ? diasSemanaAbreviados[turma.dia_semana] : diasSemanaFormatados[turma.dia_semana]}</span>
                 <Clock className={`${isMobile ? "h-3 w-3 ml-2 mr-0.5" : "h-3.5 w-3.5 ml-3 mr-1"}`} />
                 <span>{formatarHorario(turma.horario)}</span>
               </div>
             </div>
-            <ArrowLeft className={`rotate-180 text-orange-500 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+            <ArrowLeft className={`rotate-180 text-azul-400 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
           </Button>
         ))}
       </div>

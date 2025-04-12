@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -76,6 +75,17 @@ export default {
 					800: '#742F06',
 					900: '#3B1803',
 					foreground: '#FFFFFF'
+				},
+				azul: {
+					// Tons de azul para texto
+					50: '#E6F2FF',   // Azul muito claro
+					100: '#B3E0FF',  // Azul claro
+					200: '#66C2FF',  // Azul médio-claro
+					300: '#1E90FF',  // Azul médio (dodger blue)
+					400: '#0066CC',  // Azul médio-escuro
+					500: '#003366',  // Azul escuro
+					600: '#001A33',  // Azul muito escuro
+					foreground: '#003366' // Cor padrão para texto
 				}
 			},
 			borderRadius: {
