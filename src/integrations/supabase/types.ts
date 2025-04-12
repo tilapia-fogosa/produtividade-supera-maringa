@@ -68,6 +68,7 @@ export type Database = {
           nome: string
           telefone: string | null
           turma_id: string
+          ultima_correcao_ah: string | null
           ultimo_nivel: string | null
           vencimento_contrato: string | null
         }
@@ -85,6 +86,7 @@ export type Database = {
           nome: string
           telefone?: string | null
           turma_id: string
+          ultima_correcao_ah?: string | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }
@@ -102,6 +104,7 @@ export type Database = {
           nome?: string
           telefone?: string | null
           turma_id?: string
+          ultima_correcao_ah?: string | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }

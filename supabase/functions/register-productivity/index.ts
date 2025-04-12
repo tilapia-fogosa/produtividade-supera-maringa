@@ -1,10 +1,5 @@
-
-// register-productivity/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-
-const GOOGLE_SHEET_ID = "1CfLqLbtTOx_yaXSxOOKHAgGoSxW0TmdIOUeg5usXlaU";
-const GOOGLE_SHEET_NAME = "Respostas ao formulário 1"; // Updated sheet name
 
 interface ProdutividadeData {
   aluno_id: string;
@@ -26,10 +21,10 @@ interface ProdutividadeData {
   professor_correcao?: string;
   data_registro: string;
   is_reposicao?: boolean;
+  data_ultima_correcao_ah?: string;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -44,10 +39,8 @@ serve(async (req) => {
       );
     }
 
-    // Log data being processed
     console.log("Processando dados de produtividade:", JSON.stringify(data, null, 2));
 
-    // Get Google Service Account credentials from Supabase secrets
     const serviceAccountCredentials = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
     if (!serviceAccountCredentials) {
       console.error("Google Service Account credentials not found in environment variables");
@@ -61,7 +54,6 @@ serve(async (req) => {
       );
     }
 
-    // Log successful retrieval of credentials
     console.log("Successfully retrieved Google Service Account credentials");
     
     let credentials;
@@ -80,7 +72,6 @@ serve(async (req) => {
       );
     }
     
-    // Check if credentials include all required fields
     if (!credentials.client_email || !credentials.private_key) {
       console.error("Invalid Google Service Account credentials: missing required fields");
       return new Response(
@@ -93,40 +84,47 @@ serve(async (req) => {
       );
     }
     
-    // Get an access token for the Google Sheets API
     console.log("Attempting to get access token...");
     const token = await getAccessToken(credentials);
     console.log("Successfully obtained access token");
     
-    // Format current date and time for the timestamp column
     const now = new Date();
-    const formattedDate = now.toLocaleDateString('pt-BR'); // Format: DD/MM/YYYY
-    const formattedTime = now.toLocaleTimeString('pt-BR'); // Format: HH:MM:SS
+    const formattedDate = now.toLocaleDateString('pt-BR');
+    const formattedTime = now.toLocaleTimeString('pt-BR');
     const timestamp = `${formattedDate} ${formattedTime}`;
     
-    // Format data for Google Sheets according to specified columns
     const rowData = [
-      timestamp, // Carimbo de data/hora
-      data.aluno_nome, // Nome do Aluno
-      formattedDate, // Data
-      data.presente ? (data.apostila_abaco || "") : "", // Qual Apostila de Ábaco?
-      data.presente ? (data.pagina_abaco || "") : "", // Ábaco - Página
-      data.presente ? (data.exercicios_abaco || "") : "", // Ábaco - Exercícios Realizados
-      data.presente ? (data.erros_abaco || "") : "", // Ábaco - Nº de Erros
-      data.presente ? (data.fez_desafio ? "Sim" : "Não") : "", // Fez Desafio?
-      data.presente ? (data.comentario || "") : "", // Comentário, observação ou Situação
-      data.presente ? (data.lancou_ah ? "Sim" : "Não") : "", // Lançar AH?
-      data.presente && data.lancou_ah ? (data.apostila_ah || "") : "", // Qual Apostila AH?
-      data.presente && data.lancou_ah ? (data.exercicios_ah || "") : "", // Abrindo Horizontes - Exercícios Realizados
-      data.presente && data.lancou_ah ? (data.erros_ah || "") : "", // Abrindo Horizontes - Nº Erros
-      data.presente && data.lancou_ah ? (data.professor_correcao || "") : "", // Selecione o Professor que Corrigiu a AH
-      data.is_reposicao ? "Sim" : "Não" // Indica se é reposição de aula
+      timestamp,
+      data.aluno_nome,
+      formattedDate,
+      data.presente ? (data.apostila_abaco || "") : "",
+      data.presente ? (data.pagina_abaco || "") : "",
+      data.presente ? (data.exercicios_abaco || "") : "",
+      data.presente ? (data.erros_abaco || "") : "",
+      data.presente ? (data.fez_desafio ? "Sim" : "Não") : "",
+      data.presente ? (data.comentario || "") : "",
+      data.presente ? (data.lancou_ah ? "Sim" : "Não") : "",
+      data.presente && data.lancou_ah ? (data.apostila_ah || "") : "",
+      data.presente && data.lancou_ah ? (data.exercicios_ah || "") : "",
+      data.presente && data.lancou_ah ? (data.erros_ah || "") : "",
+      data.presente && data.lancou_ah ? (data.professor_correcao || "") : "",
+      data.is_reposicao ? "Sim" : "Não"
     ];
 
     console.log("Attempting to append data to Google Sheet...");
-    // Add the data to the sheet using the Sheets API
     await appendRowToSheet(GOOGLE_SHEET_ID, GOOGLE_SHEET_NAME, rowData, token);
     console.log("Successfully appended data to sheet");
+
+    if (data.data_ultima_correcao_ah) {
+      const { error: updateError } = await supabase
+        .from('alunos')
+        .update({ ultima_correcao_ah: data.data_ultima_correcao_ah })
+        .eq('id', data.aluno_id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar data da última correção AH:', updateError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: "Produtividade registrada com sucesso" }),
@@ -135,7 +133,6 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error:", error.message, error.stack);
     
-    // Check if it's a credentials-related error
     const errorMessage = error.message || "";
     if (errorMessage.includes("token") || 
         errorMessage.includes("credential") || 
@@ -160,15 +157,11 @@ serve(async (req) => {
   }
 });
 
-/**
- * Get an access token for the Google Sheets API using service account credentials
- */
 async function getAccessToken(credentials: any): Promise<string> {
   try {
     console.log("Starting getAccessToken process");
     const tokenUrl = "https://oauth2.googleapis.com/token";
     
-    // Create a JWT to authenticate with Google
     const jwtHeader = {
       alg: "RS256",
       typ: "JWT"
@@ -185,17 +178,14 @@ async function getAccessToken(credentials: any): Promise<string> {
       iat: now,
     };
     
-    // Encode the JWT
     const encoder = new TextEncoder();
     const header = btoa(JSON.stringify(jwtHeader));
     const payload = btoa(JSON.stringify(jwtClaimSet));
     const toSign = encoder.encode(`${header}.${payload}`);
     
-    // Convert the private key to proper format
     const privateKey = credentials.private_key.replace(/\\n/g, "\n");
     
     console.log("Importing private key for signing");
-    // Import the private key for signing
     const cryptoKey = await crypto.subtle.importKey(
       "pkcs8",
       pemToArrayBuffer(privateKey),
@@ -208,24 +198,20 @@ async function getAccessToken(credentials: any): Promise<string> {
     );
     
     console.log("Signing JWT");
-    // Sign the JWT
     const signature = await crypto.subtle.sign(
       { name: "RSASSA-PKCS1-v1_5" },
       cryptoKey,
       toSign
     );
     
-    // Convert signature to base64
     const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
     
-    // Create the complete JWT
     const jwt = `${header}.${payload}.${signatureB64}`;
     
     console.log("Exchanging JWT for access token");
-    // Exchange the JWT for an access token
     const response = await fetch(tokenUrl, {
       method: "POST",
       headers: {
@@ -252,9 +238,6 @@ async function getAccessToken(credentials: any): Promise<string> {
   }
 }
 
-/**
- * Append a row of data to a Google Sheet
- */
 async function appendRowToSheet(sheetId: string, sheetName: string, rowData: any[], accessToken: string): Promise<void> {
   try {
     console.log("Starting appendRowToSheet process");
@@ -285,22 +268,16 @@ async function appendRowToSheet(sheetId: string, sheetName: string, rowData: any
   }
 }
 
-/**
- * Convert PEM formatted private key to ArrayBuffer for crypto operations
- */
 function pemToArrayBuffer(pem: string): ArrayBuffer {
   try {
     console.log("Converting PEM to ArrayBuffer");
-    // Remove header, footer, and newlines
     const base64 = pem
       .replace("-----BEGIN PRIVATE KEY-----", "")
       .replace("-----END PRIVATE KEY-----", "")
       .replace(/\n/g, "");
     
-    // Convert base64 to binary
     const binaryString = atob(base64);
     
-    // Convert binary to ArrayBuffer
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);

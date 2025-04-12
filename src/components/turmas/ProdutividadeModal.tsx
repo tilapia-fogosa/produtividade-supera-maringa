@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -12,11 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
-
-// Importar componentes refatorados
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
 import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
+import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -37,12 +35,10 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Estado principal do formulário
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [presente, setPresente] = useState<"sim" | "não">("sim");
   const [motivoFalta, setMotivoFalta] = useState("");
   
-  // Campos do ábaco (quando presente)
   const [apostilaAbaco, setApostilaAbaco] = useState("");
   const [paginaAbaco, setPaginaAbaco] = useState("");
   const [exerciciosAbaco, setExerciciosAbaco] = useState("");
@@ -50,7 +46,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
 
-  // Pré-selecionar a apostila de ábaco com base no último nível do aluno
   useEffect(() => {
     if (isOpen && aluno && aluno.ultimo_nivel) {
       const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
@@ -58,7 +53,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     }
   }, [isOpen, aluno]);
 
-  // Reset form quando o modal fecha
   useEffect(() => {
     if (!isOpen) {
       setPresente("sim");
@@ -76,7 +70,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     try {
       const dataHoje = new Date().toISOString().split('T')[0];
       
-      // Verificar se já existe registro para este aluno hoje
       const { data: registrosExistentes, error: errorVerificacao } = await supabase
         .from('presencas')
         .select('*')
@@ -87,7 +80,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         throw errorVerificacao;
       }
       
-      // Se já existir um registro, atualizar em vez de inserir
       if (registrosExistentes && registrosExistentes.length > 0) {
         const { error: errorAtualizacao } = await supabase
           .from('presencas')
@@ -101,7 +93,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
           throw errorAtualizacao;
         }
       } else {
-        // Inserir novo registro
         const { error: errorInsercao } = await supabase
           .from('presencas')
           .insert({
@@ -138,14 +129,12 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Primeiro registrar a presença
       const presencaRegistrada = await registrarPresencaNoSupabase();
       
       if (!presencaRegistrada) {
         throw new Error("Falha ao registrar presença");
       }
       
-      // Preparar dados para enviar
       const produtividadeData = {
         aluno_id: aluno.id,
         aluno_nome: aluno.nome,
@@ -160,9 +149,9 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
         comentario: presente === "sim" ? comentario : undefined,
         data_registro: new Date().toISOString(),
+        data_ultima_correcao_ah: presente === "sim" ? new Date().toISOString() : undefined,
       };
 
-      // Enviar para a função Edge
       const { data, error } = await supabase.functions.invoke('register-productivity', {
         body: { data: produtividadeData }
       });
@@ -176,7 +165,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         description: "Produtividade registrada com sucesso",
       });
       
-      // Notificar o componente pai do sucesso
       if (onSuccess) {
         onSuccess(aluno.id);
       }
@@ -185,20 +173,17 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     } catch (error) {
       console.error("Erro ao registrar produtividade:", error);
       
-      // Extrair a mensagem de erro
       let errorMessage = "Não foi possível registrar a produtividade. Tente novamente.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
         
-        // Verificar se é um erro relacionado às credenciais do Google
         if (error.message.includes("credenciais do Google") || 
             error.message.includes("Google Service Account")) {
           errorMessage = "Configuração incompleta: O sistema precisa das credenciais do Google Service Account";
         }
       }
       
-      // Notificar o componente pai do erro
       if (onError) {
         onError(errorMessage);
       }
@@ -222,8 +207,14 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
           </DialogTitle>
         </DialogHeader>
         
+        <AlunoProgressoCard 
+          apostilaAtual={aluno.ultimo_nivel}
+          ultimaPaginaCorrigida={aluno.ultima_pagina}
+          paginasRestantes={aluno.paginas_restantes}
+          ultimaCorrecaoAH={aluno.ultima_correcao_ah}
+        />
+        
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          {/* Presença */}
           <PresencaSection 
             presente={presente}
             setPresente={setPresente}
@@ -231,10 +222,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
             setMotivoFalta={setMotivoFalta}
           />
           
-          {/* Campos para alunos presentes */}
           {presente === "sim" && (
             <>
-              {/* Ábaco */}
               <AbacoSection 
                 apostilaAbaco={apostilaAbaco}
                 setApostilaAbaco={setApostilaAbaco}
