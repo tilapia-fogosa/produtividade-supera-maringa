@@ -4,8 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { ArrowLeft, ClipboardCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Professor {
@@ -18,12 +17,6 @@ interface Turma {
   nome: string;
   dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
   horario: string;
-}
-
-interface Aluno {
-  id: string;
-  nome: string;
-  turma_id: string;
 }
 
 const diasSemanaFormatados: Record<string, string> = {
@@ -45,7 +38,6 @@ const Turmas = () => {
   const navigate = useNavigate();
   const [professor, setProfessor] = useState<Professor | null>(null);
   const [turmas, setTurmas] = useState<Turma[]>([]);
-  const [alunos, setAlunos] = useState<Record<string, Aluno[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -78,29 +70,6 @@ const Turmas = () => {
         }
 
         setTurmas(turmasData || []);
-
-        // Se tiver turmas, buscar alunos para cada turma
-        if (turmasData && turmasData.length > 0) {
-          const alunosPorTurma: Record<string, Aluno[]> = {};
-          
-          // Buscar alunos para cada turma
-          for (const turma of turmasData) {
-            const { data: alunosData, error: alunosError } = await supabase
-              .from('alunos')
-              .select('*')
-              .eq('turma_id', turma.id)
-              .order('nome');
-
-            if (alunosError) {
-              console.error('Erro ao buscar alunos:', alunosError);
-              continue;
-            }
-
-            alunosPorTurma[turma.id] = alunosData || [];
-          }
-
-          setAlunos(alunosPorTurma);
-        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         toast({
@@ -122,11 +91,11 @@ const Turmas = () => {
     navigate('/');
   };
 
-  const handleRegistrarPresenca = (turmaId: string) => {
-    // Implementação futura: navegação para a página de registro de presença
+  const handleAcessarTurma = (turmaId: string) => {
+    // Implementação futura: navegação para a página de detalhes da turma
     toast({
       title: "Funcionalidade em desenvolvimento",
-      description: "O registro de presença será implementado em breve.",
+      description: "O acesso aos detalhes da turma será implementado em breve.",
     });
   };
 
@@ -149,8 +118,8 @@ const Turmas = () => {
       </Button>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Turmas do(a) Professor(a) {professor?.nome}</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl">{professor?.nome}</CardTitle>
         </CardHeader>
         <CardContent>
           {turmas.length === 0 ? (
@@ -158,43 +127,21 @@ const Turmas = () => {
               <p>Não há turmas cadastradas para este(a) professor(a).</p>
             </div>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-2">
               {turmas.map((turma) => (
-                <Card key={turma.id}>
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      <span>Turma: {turma.nome}</span>
-                      <Button onClick={() => handleRegistrarPresenca(turma.id)}>
-                        <ClipboardCheck className="mr-2 h-4 w-4" /> 
-                        Registrar Presença
-                      </Button>
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                <Button
+                  key={turma.id}
+                  variant="outline"
+                  className="w-full justify-start text-left h-auto py-3"
+                  onClick={() => handleAcessarTurma(turma.id)}
+                >
+                  <div>
+                    <div className="font-medium">{turma.nome}</div>
+                    <div className="text-xs text-muted-foreground">
                       {diasSemanaFormatados[turma.dia_semana]} às {formatarHorario(turma.horario)}
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <h3 className="text-lg font-semibold mb-2">Alunos</h3>
-                    {alunos[turma.id]?.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nome</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {alunos[turma.id].map((aluno) => (
-                            <TableRow key={aluno.id}>
-                              <TableCell>{aluno.nome}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <p>Não há alunos cadastrados nesta turma.</p>
-                    )}
-                  </CardContent>
-                </Card>
+                    </div>
+                  </div>
+                </Button>
               ))}
             </div>
           )}
