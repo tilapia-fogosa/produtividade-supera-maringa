@@ -76,7 +76,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   };
   
   return (
-    <div className={isMobile ? "px-0" : ""}>
+    <div className="w-full px-1">
       <TurmaHeader 
         turmaNome={turma.nome}
         telaModo={telaModo}

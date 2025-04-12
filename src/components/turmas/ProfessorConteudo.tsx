@@ -37,11 +37,11 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
   initialServiceType = 'produtividade'
 }) => {
   return (
-    <CardContent className="bg-orange-50/50 rounded-b-lg">
+    <CardContent className="bg-orange-50/50 rounded-b-lg p-3 md:p-6">
       {turmas.length === 0 ? (
         <TurmasVazia />
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-2 md:gap-4 w-full">
           {!turmaSelecionada ? (
             // Lista de turmas
             <TurmasList 

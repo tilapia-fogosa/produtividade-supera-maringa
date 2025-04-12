@@ -29,7 +29,7 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto -mx-1">
+    <div className="overflow-x-auto w-full">
       <Table>
         <TableHeader>
           <TableRow>
@@ -42,7 +42,7 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
           {alunos.map((aluno, index) => (
             <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
               <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                <div className="truncate max-w-[120px]">{aluno.nome}</div>
+                <div className="truncate max-w-[150px]">{aluno.nome}</div>
               </TableCell>
               <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
                 {aluno.ultimo_nivel || '-'}
