@@ -37,15 +37,7 @@ const Professores = () => {
         throw error;
       }
       
-      // Temporariamente alterando "Andre" para "Camila"
-      const updatedData = data?.map(prof => {
-        if (prof.nome === "Andre") {
-          return { ...prof, nome: "Camila" };
-        }
-        return prof;
-      }) || [];
-      
-      setProfessores(updatedData);
+      setProfessores(data || []);
     } catch (error) {
       console.error('Erro ao buscar professores:', error);
       toast({
@@ -75,9 +67,21 @@ const Professores = () => {
       const result = response.data;
       
       if (result.success) {
+        let message = result.message;
+        
+        // Adicionar avisos se existirem
+        if (result.warnings) {
+          if (result.warnings.turmasNaoEncontradas?.length > 0) {
+            message += ` Turmas não encontradas: ${result.warnings.turmasNaoEncontradas.join(', ')}.`;
+          }
+          if (result.warnings.professoresNaoEncontrados?.length > 0) {
+            message += ` Professores não encontrados: ${result.warnings.professoresNaoEncontrados.join(', ')}.`;
+          }
+        }
+        
         toast({
           title: "Sincronização concluída",
-          description: result.message,
+          description: message,
         });
       } else {
         throw new Error(result.error || 'Erro desconhecido na sincronização');
