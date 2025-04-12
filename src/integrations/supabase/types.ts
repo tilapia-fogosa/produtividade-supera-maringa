@@ -53,14 +53,45 @@ export type Database = {
           },
         ]
       }
+      alunos: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          turma_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          turma_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          turma_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alunos_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           ad_acc_id: number | null
           Ad_acc_stat: Database["public"]["Enums"]["ad_acc_status"]
           bairro: string | null
+          cep: string | null
           cidade: string | null
           cnpj: number | null
           cobranca_meta: Database["public"]["Enums"]["Cobrança Meta"] | null
+          contrato: Database["public"]["Enums"]["estado_contrato"] | null
           created_at: string
           creditos: number | null
           data_primeira_mensalidade: string | null
@@ -69,6 +100,7 @@ export type Database = {
           estado: string | null
           facebook_page_id: string | null
           fim_do_contrato: string | null
+          fim_do_desconto: string | null
           id: number
           inicio_do_contrato: string | null
           instagram_page_id: string | null
@@ -80,6 +112,7 @@ export type Database = {
           page_token_status:
             | Database["public"]["Enums"]["page_token_status"]
             | null
+          postagens_instagram_ativo: boolean | null
           preco_do_lead_15d: number | null
           preco_do_lead_3d: number | null
           preco_do_lead_7d: number | null
@@ -95,14 +128,17 @@ export type Database = {
           ultima_atualizacao_preco_lead: string | null
           ultimo_boleto_enviado: string | null
           ultimo_envio: string | null
+          valor_com_desconto: number | null
         }
         Insert: {
           ad_acc_id?: number | null
           Ad_acc_stat?: Database["public"]["Enums"]["ad_acc_status"]
           bairro?: string | null
+          cep?: string | null
           cidade?: string | null
           cnpj?: number | null
           cobranca_meta?: Database["public"]["Enums"]["Cobrança Meta"] | null
+          contrato?: Database["public"]["Enums"]["estado_contrato"] | null
           created_at?: string
           creditos?: number | null
           data_primeira_mensalidade?: string | null
@@ -111,6 +147,7 @@ export type Database = {
           estado?: string | null
           facebook_page_id?: string | null
           fim_do_contrato?: string | null
+          fim_do_desconto?: string | null
           id?: number
           inicio_do_contrato?: string | null
           instagram_page_id?: string | null
@@ -122,6 +159,7 @@ export type Database = {
           page_token_status?:
             | Database["public"]["Enums"]["page_token_status"]
             | null
+          postagens_instagram_ativo?: boolean | null
           preco_do_lead_15d?: number | null
           preco_do_lead_3d?: number | null
           preco_do_lead_7d?: number | null
@@ -137,14 +175,17 @@ export type Database = {
           ultima_atualizacao_preco_lead?: string | null
           ultimo_boleto_enviado?: string | null
           ultimo_envio?: string | null
+          valor_com_desconto?: number | null
         }
         Update: {
           ad_acc_id?: number | null
           Ad_acc_stat?: Database["public"]["Enums"]["ad_acc_status"]
           bairro?: string | null
+          cep?: string | null
           cidade?: string | null
           cnpj?: number | null
           cobranca_meta?: Database["public"]["Enums"]["Cobrança Meta"] | null
+          contrato?: Database["public"]["Enums"]["estado_contrato"] | null
           created_at?: string
           creditos?: number | null
           data_primeira_mensalidade?: string | null
@@ -153,6 +194,7 @@ export type Database = {
           estado?: string | null
           facebook_page_id?: string | null
           fim_do_contrato?: string | null
+          fim_do_desconto?: string | null
           id?: number
           inicio_do_contrato?: string | null
           instagram_page_id?: string | null
@@ -164,6 +206,7 @@ export type Database = {
           page_token_status?:
             | Database["public"]["Enums"]["page_token_status"]
             | null
+          postagens_instagram_ativo?: boolean | null
           preco_do_lead_15d?: number | null
           preco_do_lead_3d?: number | null
           preco_do_lead_7d?: number | null
@@ -179,6 +222,7 @@ export type Database = {
           ultima_atualizacao_preco_lead?: string | null
           ultimo_boleto_enviado?: string | null
           ultimo_envio?: string | null
+          valor_com_desconto?: number | null
         }
         Relationships: [
           {
@@ -186,6 +230,50 @@ export type Database = {
             columns: ["responsavel_financeiro_id"]
             isOneToOne: false
             referencedRelation: "membros_unidade"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cursos: {
+        Row: {
+          data_atualizacao: string
+          data_criacao: string
+          descricao: string | null
+          id: string
+          instrutor_id: string | null
+          ordem_exibicao: number
+          publicado: boolean
+          thumbnail_url: string | null
+          titulo: string
+        }
+        Insert: {
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          id?: string
+          instrutor_id?: string | null
+          ordem_exibicao?: number
+          publicado?: boolean
+          thumbnail_url?: string | null
+          titulo: string
+        }
+        Update: {
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          id?: string
+          instrutor_id?: string | null
+          ordem_exibicao?: number
+          publicado?: boolean
+          thumbnail_url?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cursos_instrutor_id_fkey"
+            columns: ["instrutor_id"]
+            isOneToOne: false
+            referencedRelation: "instrutores"
             referencedColumns: ["id"]
           },
         ]
@@ -205,6 +293,80 @@ export type Database = {
           data?: string | null
           id?: number
           key?: string
+        }
+        Relationships: []
+      }
+      faturas: {
+        Row: {
+          cliente_id: number
+          created_at: string
+          data_emissao: string
+          data_vencimento: string
+          id: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          cliente_id: number
+          created_at?: string
+          data_emissao?: string
+          data_vencimento: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          cliente_id?: number
+          created_at?: string
+          data_emissao?: string
+          data_vencimento?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instrutores: {
+        Row: {
+          bio: string | null
+          data_atualizacao: string
+          data_criacao: string
+          especialidade: string | null
+          foto_url: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          bio?: string | null
+          data_atualizacao?: string
+          data_criacao?: string
+          especialidade?: string | null
+          foto_url?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          bio?: string | null
+          data_atualizacao?: string
+          data_criacao?: string
+          especialidade?: string | null
+          foto_url?: string | null
+          id?: string
+          nome?: string
         }
         Relationships: []
       }
@@ -259,7 +421,7 @@ export type Database = {
         Row: {
           cliente_id: number | null
           email: string | null
-          funcao: string | null
+          funcao: Database["public"]["Enums"]["funcao_membro"] | null
           id: number
           nome: string
           telefone: string | null
@@ -267,7 +429,7 @@ export type Database = {
         Insert: {
           cliente_id?: number | null
           email?: string | null
-          funcao?: string | null
+          funcao?: Database["public"]["Enums"]["funcao_membro"] | null
           id?: number
           nome: string
           telefone?: string | null
@@ -275,7 +437,7 @@ export type Database = {
         Update: {
           cliente_id?: number | null
           email?: string | null
-          funcao?: string | null
+          funcao?: Database["public"]["Enums"]["funcao_membro"] | null
           id?: number
           nome?: string
           telefone?: string | null
@@ -286,6 +448,213 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modulo_videos: {
+        Row: {
+          data_atualizacao: string
+          data_criacao: string
+          descricao: string | null
+          duracao: number | null
+          id: string
+          modulo_id: string
+          ordem: number
+          titulo: string
+          video_id: string
+        }
+        Insert: {
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          duracao?: number | null
+          id?: string
+          modulo_id: string
+          ordem?: number
+          titulo: string
+          video_id: string
+        }
+        Update: {
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          duracao?: number | null
+          id?: string
+          modulo_id?: string
+          ordem?: number
+          titulo?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modulo_videos_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "modulos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modulo_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modulos: {
+        Row: {
+          curso_id: string
+          data_atualizacao: string
+          data_criacao: string
+          descricao: string | null
+          id: string
+          ordem: number
+          titulo: string
+        }
+        Insert: {
+          curso_id: string
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+        }
+        Update: {
+          curso_id?: string
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modulos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos: {
+        Row: {
+          cliente_id: number
+          comprovante_url: string | null
+          created_at: string
+          data_pagamento: string
+          fatura_id: string | null
+          id: string
+          metodo_pagamento: string
+          observacoes: string | null
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          cliente_id: number
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string
+          fatura_id?: string | null
+          id?: string
+          metodo_pagamento: string
+          observacoes?: string | null
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          cliente_id?: number
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string
+          fatura_id?: string | null
+          id?: string
+          metodo_pagamento?: string
+          observacoes?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_fatura_id_fkey"
+            columns: ["fatura_id"]
+            isOneToOne: false
+            referencedRelation: "faturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presencas: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_aula: string
+          id: string
+          observacao: string | null
+          presente: boolean
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_aula: string
+          id?: string
+          observacao?: string | null
+          presente?: boolean
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_aula?: string
+          id?: string
+          observacao?: string | null
+          presente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presencas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professores: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          unidade_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          unidade_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professores_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
@@ -316,6 +685,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      progresso_usuario: {
+        Row: {
+          concluido: boolean
+          id: string
+          porcentagem_assistida: number
+          posicao_segundos: number | null
+          ultima_visualizacao: string
+          usuario_id: string
+          video_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          id?: string
+          porcentagem_assistida?: number
+          posicao_segundos?: number | null
+          ultima_visualizacao?: string
+          usuario_id: string
+          video_id: string
+        }
+        Update: {
+          concluido?: boolean
+          id?: string
+          porcentagem_assistida?: number
+          posicao_segundos?: number | null
+          ultima_visualizacao?: string
+          usuario_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progresso_usuario_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_posts: {
         Row: {
@@ -359,6 +766,226 @@ export type Database = {
           published_at?: string | null
           scheduled_for?: string
           status?: Database["public"]["Enums"]["post_status"]
+        }
+        Relationships: []
+      }
+      ticket_anexos: {
+        Row: {
+          data_upload: string
+          id: string
+          nome_arquivo: string
+          tamanho_arquivo: number | null
+          ticket_id: string
+          tipo_arquivo: string | null
+          url_arquivo: string
+          usuario_id: string
+        }
+        Insert: {
+          data_upload?: string
+          id?: string
+          nome_arquivo: string
+          tamanho_arquivo?: number | null
+          ticket_id: string
+          tipo_arquivo?: string | null
+          url_arquivo: string
+          usuario_id: string
+        }
+        Update: {
+          data_upload?: string
+          id?: string
+          nome_arquivo?: string
+          tamanho_arquivo?: number | null
+          ticket_id?: string
+          tipo_arquivo?: string | null
+          url_arquivo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_anexos_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_comentarios: {
+        Row: {
+          conteudo: string
+          data_atualizacao: string
+          data_criacao: string
+          id: string
+          ticket_id: string
+          usuario_id: string
+        }
+        Insert: {
+          conteudo: string
+          data_atualizacao?: string
+          data_criacao?: string
+          id?: string
+          ticket_id: string
+          usuario_id: string
+        }
+        Update: {
+          conteudo?: string
+          data_atualizacao?: string
+          data_criacao?: string
+          id?: string
+          ticket_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comentarios_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_historico: {
+        Row: {
+          campo_alterado: string
+          data_alteracao: string
+          id: string
+          ticket_id: string
+          usuario_id: string
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          campo_alterado: string
+          data_alteracao?: string
+          id?: string
+          ticket_id: string
+          usuario_id: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          campo_alterado?: string
+          data_alteracao?: string
+          id?: string
+          ticket_id?: string
+          usuario_id?: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_historico_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          categoria: string | null
+          cliente_id: number | null
+          criado_por: string
+          data_atualizacao: string
+          data_criacao: string
+          descricao: string | null
+          id: string
+          prazo: string | null
+          prioridade: string | null
+          responsavel_id: string | null
+          status: string | null
+          titulo: string
+        }
+        Insert: {
+          categoria?: string | null
+          cliente_id?: number | null
+          criado_por: string
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          id?: string
+          prazo?: string | null
+          prioridade?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          titulo: string
+        }
+        Update: {
+          categoria?: string | null
+          cliente_id?: number | null
+          criado_por?: string
+          data_atualizacao?: string
+          data_criacao?: string
+          descricao?: string | null
+          id?: string
+          prazo?: string | null
+          prioridade?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      turmas: {
+        Row: {
+          created_at: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario: string
+          id: string
+          nome: string
+          professor_id: string
+        }
+        Insert: {
+          created_at?: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario: string
+          id?: string
+          nome: string
+          professor_id: string
+        }
+        Update: {
+          created_at?: string
+          dia_semana?: Database["public"]["Enums"]["dia_semana"]
+          horario?: string
+          id?: string
+          nome?: string
+          professor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turmas_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidades: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
         }
         Relationships: []
       }
@@ -418,8 +1045,11 @@ export type Database = {
           created_at: string
           description: string | null
           duration: number | null
+          error_message: string | null
+          file_size: number | null
           hls_url: string | null
           id: string
+          mime_type: string | null
           name: string
           original_filename: string
           status: string
@@ -430,8 +1060,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: number | null
+          error_message?: string | null
+          file_size?: number | null
           hls_url?: string | null
           id?: string
+          mime_type?: string | null
           name: string
           original_filename: string
           status?: string
@@ -442,8 +1075,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: number | null
+          error_message?: string | null
+          file_size?: number | null
           hls_url?: string | null
           id?: string
+          mime_type?: string | null
           name?: string
           original_filename?: string
           status?: string
@@ -458,10 +1094,7 @@ export type Database = {
     }
     Functions: {
       cliente_necessita_analise: {
-        Args: {
-          ultima_analise: string
-          prioridade: string
-        }
+        Args: { ultima_analise: string; prioridade: string }
         Returns: boolean
       }
       has_role: {
@@ -476,6 +1109,16 @@ export type Database = {
       ad_acc_status: "Ativa" | "Inativa"
       app_role: "admin" | "social_media" | "financeiro" | "padrao"
       "Cobrança Meta": "Boleto" | "Cartão" | "Não faz trafego"
+      dia_semana:
+        | "segunda"
+        | "terca"
+        | "quarta"
+        | "quinta"
+        | "sexta"
+        | "sabado"
+        | "domingo"
+      estado_contrato: "assinado" | "esperando assinatura" | "esperando dados"
+      funcao_membro: "Consultor" | "SDR" | "Financeiro" | "franqueado"
       page_token_status: "valid" | "expired" | "pending" | "failed"
       post_status: "pending" | "published" | "failed"
       Prioridade: "Baixo" | "Médio" | "Alto" | "Quarentena"
@@ -485,6 +1128,13 @@ export type Database = {
         | "Ativo"
         | "Desligamento Programado"
         | "Desistente"
+      ticket_priority: "baixa" | "media" | "alta" | "critica"
+      ticket_status:
+        | "aberto"
+        | "em_andamento"
+        | "pendente"
+        | "concluido"
+        | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -492,27 +1142,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -520,20 +1172,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -541,20 +1195,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -562,21 +1218,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -585,6 +1243,45 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      ad_acc_status: ["Ativa", "Inativa"],
+      app_role: ["admin", "social_media", "financeiro", "padrao"],
+      "Cobrança Meta": ["Boleto", "Cartão", "Não faz trafego"],
+      dia_semana: [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo",
+      ],
+      estado_contrato: ["assinado", "esperando assinatura", "esperando dados"],
+      funcao_membro: ["Consultor", "SDR", "Financeiro", "franqueado"],
+      page_token_status: ["valid", "expired", "pending", "failed"],
+      post_status: ["pending", "published", "failed"],
+      Prioridade: ["Baixo", "Médio", "Alto", "Quarentena"],
+      Status: [
+        "Fechado",
+        "Onboarding",
+        "Ativo",
+        "Desligamento Programado",
+        "Desistente",
+      ],
+      ticket_priority: ["baixa", "media", "alta", "critica"],
+      ticket_status: [
+        "aberto",
+        "em_andamento",
+        "pendente",
+        "concluido",
+        "cancelado",
+      ],
+    },
+  },
+} as const
