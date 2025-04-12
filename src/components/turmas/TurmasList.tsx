@@ -44,26 +44,31 @@ const TurmasList: React.FC<TurmasListProps> = ({ turmas, onTurmaSelecionada }) =
   const isMobile = useIsMobile();
   
   return (
-    <div className="grid gap-2">
-      {turmas.map((turma) => (
-        <Button
-          key={turma.id}
-          variant="outline"
-          className={`w-full justify-between text-left h-auto ${isMobile ? "py-2 px-3" : "py-3 px-4"}`}
-          onClick={() => onTurmaSelecionada(turma.id)}
-        >
-          <div className="flex flex-col items-start">
-            <span className={`font-medium ${isMobile ? "text-sm" : ""}`}>{turma.nome}</span>
-            <div className={`flex items-center text-muted-foreground mt-0.5 ${isMobile ? "text-xs" : "text-sm"}`}>
-              <Calendar className={`${isMobile ? "h-3 w-3 mr-0.5" : "h-3.5 w-3.5 mr-1"}`} />
-              <span>{isMobile ? diasSemanaAbreviados[turma.dia_semana] : diasSemanaFormatados[turma.dia_semana]}</span>
-              <Clock className={`${isMobile ? "h-3 w-3 ml-2 mr-0.5" : "h-3.5 w-3.5 ml-3 mr-1"}`} />
-              <span>{formatarHorario(turma.horario)}</span>
+    <div className="p-2 bg-orange-50 rounded-lg">
+      <h2 className="text-center font-bold mb-4 text-orange-600 border-b border-orange-200 pb-2">
+        Turmas Disponíveis
+      </h2>
+      <div className="grid gap-3">
+        {turmas.map((turma) => (
+          <Button
+            key={turma.id}
+            variant="outline"
+            className={`w-full justify-between text-left h-auto border-orange-200 hover:bg-orange-100 hover:border-orange-300 ${isMobile ? "py-3 px-3" : "py-3 px-4"}`}
+            onClick={() => onTurmaSelecionada(turma.id)}
+          >
+            <div className="flex flex-col items-start">
+              <span className={`font-medium text-orange-800 ${isMobile ? "text-sm" : ""}`}>{turma.nome}</span>
+              <div className={`flex items-center text-orange-600 mt-1 ${isMobile ? "text-xs" : "text-sm"}`}>
+                <Calendar className={`${isMobile ? "h-3 w-3 mr-0.5" : "h-3.5 w-3.5 mr-1"}`} />
+                <span>{isMobile ? diasSemanaAbreviados[turma.dia_semana] : diasSemanaFormatados[turma.dia_semana]}</span>
+                <Clock className={`${isMobile ? "h-3 w-3 ml-2 mr-0.5" : "h-3.5 w-3.5 ml-3 mr-1"}`} />
+                <span>{formatarHorario(turma.horario)}</span>
+              </div>
             </div>
-          </div>
-          <ArrowLeft className={`rotate-180 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-        </Button>
-      ))}
+            <ArrowLeft className={`rotate-180 text-orange-500 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+          </Button>
+        ))}
+      </div>
     </div>
   );
 };

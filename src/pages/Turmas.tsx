@@ -15,7 +15,11 @@ const Turmas = () => {
     }
   }, [professorId, navigate]);
 
-  return professorId ? <ProfessorTurmas initialServiceType={serviceType} /> : null;
+  return (
+    <div className="bg-gradient-to-b from-orange-50 to-white min-h-screen">
+      {professorId ? <ProfessorTurmas initialServiceType={serviceType} /> : null}
+    </div>
+  );
 };
 
 export default Turmas;

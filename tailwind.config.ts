@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				supera: {
+					DEFAULT: '#F47321', // Laranja Supera
+					50: '#FFF5EB',
+					100: '#FEEDDC',
+					200: '#FCDAB9',
+					300: '#FAC796',
+					400: '#F89F54',
+					500: '#F47321',
+					600: '#DC5E0B',
+					700: '#A84708',
+					800: '#742F06',
+					900: '#3B1803',
+					foreground: '#FFFFFF'
 				}
 			},
 			borderRadius: {
