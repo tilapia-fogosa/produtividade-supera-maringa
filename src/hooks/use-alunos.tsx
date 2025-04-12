@@ -10,6 +10,7 @@ export function useAlunos() {
   const [turmaSelecionada, setTurmaSelecionada] = useState<string | null>(null);
   const [alunoDetalhes, setAlunoDetalhes] = useState<Aluno | null>(null);
   const [carregandoAlunos, setCarregandoAlunos] = useState(false);
+  const [produtividadeRegistrada, setProdutividadeRegistrada] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // Carregar todos os alunos para uso na reposição de aula
@@ -38,6 +39,32 @@ export function useAlunos() {
     fetchTodosAlunos();
   }, []);
 
+  const verificarProdutividadeHoje = async (alunosLista: Aluno[]) => {
+    try {
+      // Obter a data de hoje no formato YYYY-MM-DD
+      const dataHoje = new Date().toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('presencas')
+        .select('aluno_id')
+        .eq('data_aula', dataHoje);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Criar um mapa para fácil verificação
+      const alunosComPresenca: Record<string, boolean> = {};
+      data?.forEach(registro => {
+        alunosComPresenca[registro.aluno_id] = true;
+      });
+      
+      setProdutividadeRegistrada(alunosComPresenca);
+    } catch (error) {
+      console.error('Erro ao verificar produtividade:', error);
+    }
+  };
+
   const handleTurmaSelecionada = async (turmaId: string) => {
     setTurmaSelecionada(turmaId);
     setAlunoDetalhes(null);
@@ -55,6 +82,9 @@ export function useAlunos() {
       }
       
       setAlunos(data || []);
+      
+      // Verificar quais alunos já tiveram produtividade registrada hoje
+      await verificarProdutividadeHoje(data || []);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
       toast({
@@ -67,12 +97,20 @@ export function useAlunos() {
     }
   };
 
-  const handleRegistrarPresenca = (alunoId: string) => {
+  const handleRegistrarPresenca = async (alunoId: string) => {
     // Implementação futura
     toast({
       title: "Funcionalidade em desenvolvimento",
       description: "O registro de presença será implementado em breve.",
     });
+  };
+
+  const atualizarProdutividadeRegistrada = async (alunoId: string) => {
+    // Atualizar o estado local após registrar a presença
+    setProdutividadeRegistrada(prev => ({
+      ...prev,
+      [alunoId]: true
+    }));
   };
 
   const mostrarDetalhesAluno = (aluno: Aluno) => {
@@ -94,10 +132,12 @@ export function useAlunos() {
     turmaSelecionada,
     alunoDetalhes,
     carregandoAlunos,
+    produtividadeRegistrada,
     handleTurmaSelecionada,
     handleRegistrarPresenca,
     mostrarDetalhesAluno,
     fecharDetalhesAluno,
-    voltarParaTurmas
+    voltarParaTurmas,
+    atualizarProdutividadeRegistrada
   };
 }

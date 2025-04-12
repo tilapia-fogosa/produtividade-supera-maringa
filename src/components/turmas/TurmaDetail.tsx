@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, RefreshCw } from "lucide-react";
+import { ArrowLeft, TrendingUp, RefreshCw, CheckCircle } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProdutividadeModal from './ProdutividadeModal';
 import ReposicaoAulaModal from './ReposicaoAulaModal';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Turma {
   id: string;
@@ -37,6 +38,7 @@ interface TurmaDetailProps {
   onVoltar: () => void;
   onShowAlunoDetails: (aluno: Aluno) => void;
   onRegistrarPresenca: (alunoId: string) => void;
+  produtividadeRegistrada?: Record<string, boolean>;
 }
 
 const TurmaDetail: React.FC<TurmaDetailProps> = ({ 
@@ -45,7 +47,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   todosAlunos,
   onVoltar, 
   onShowAlunoDetails, 
-  onRegistrarPresenca 
+  onRegistrarPresenca,
+  produtividadeRegistrada = {}
 }) => {
   const isMobile = useIsMobile();
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
@@ -129,15 +132,29 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
                   </TableCell>
                   <TableCell className={isMobile ? "px-2 py-1.5" : ""}>
                     <div className="flex items-center justify-center">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleClickRegistrarPresenca(aluno)}
-                        className={isMobile ? "h-7 w-7 p-0" : "h-8 px-2"}
-                      >
-                        <TrendingUp className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
-                        {!isMobile && <span className="ml-1 text-xs">Lançar</span>}
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleClickRegistrarPresenca(aluno)}
+                              className={isMobile ? "h-7 w-7 p-0" : "h-8 px-2"}
+                            >
+                              {produtividadeRegistrada[aluno.id] && (
+                                <CheckCircle className={`mr-1 text-green-500 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+                              )}
+                              <TrendingUp className={isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} />
+                              {!isMobile && <span className="ml-1 text-xs">Lançar</span>}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {produtividadeRegistrada[aluno.id] 
+                              ? "Produtividade já registrada hoje" 
+                              : "Registrar produtividade"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -154,6 +171,11 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
           aluno={alunoSelecionado}
           turma={turma}
           onClose={handleFecharModal}
+          onSuccess={(alunoId) => {
+            if (produtividadeRegistrada && alunoId) {
+              produtividadeRegistrada[alunoId] = true;
+            }
+          }}
         />
       )}
 

@@ -24,13 +24,15 @@ interface ProdutividadeModalProps {
   aluno: Aluno;
   turma: Turma;
   onClose: () => void;
+  onSuccess?: (alunoId: string) => void;
 }
 
 const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   isOpen,
   aluno,
   turma,
-  onClose
+  onClose,
+  onSuccess
 }) => {
   const isMobile = useIsMobile();
 
@@ -81,6 +83,57 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     }
   }, [isOpen]);
 
+  const registrarPresencaNoSupabase = async () => {
+    try {
+      const dataHoje = new Date().toISOString().split('T')[0];
+      
+      // Verificar se já existe registro para este aluno hoje
+      const { data: registrosExistentes, error: errorVerificacao } = await supabase
+        .from('presencas')
+        .select('*')
+        .eq('aluno_id', aluno.id)
+        .eq('data_aula', dataHoje);
+        
+      if (errorVerificacao) {
+        throw errorVerificacao;
+      }
+      
+      // Se já existir um registro, atualizar em vez de inserir
+      if (registrosExistentes && registrosExistentes.length > 0) {
+        const { error: errorAtualizacao } = await supabase
+          .from('presencas')
+          .update({
+            presente: presente === "sim",
+            observacao: presente === "sim" ? comentario : motivoFalta
+          })
+          .eq('id', registrosExistentes[0].id);
+          
+        if (errorAtualizacao) {
+          throw errorAtualizacao;
+        }
+      } else {
+        // Inserir novo registro
+        const { error: errorInsercao } = await supabase
+          .from('presencas')
+          .insert({
+            aluno_id: aluno.id,
+            presente: presente === "sim",
+            data_aula: dataHoje,
+            observacao: presente === "sim" ? comentario : motivoFalta
+          });
+          
+        if (errorInsercao) {
+          throw errorInsercao;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao registrar presença:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -113,6 +166,13 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 
     try {
       setIsSubmitting(true);
+      
+      // Primeiro registrar a presença
+      const presencaRegistrada = await registrarPresencaNoSupabase();
+      
+      if (!presencaRegistrada) {
+        throw new Error("Falha ao registrar presença");
+      }
       
       // Preparar dados para enviar
       const produtividadeData = {
@@ -149,6 +209,11 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         title: "Sucesso",
         description: "Produtividade registrada com sucesso",
       });
+      
+      // Notificar o componente pai do sucesso
+      if (onSuccess) {
+        onSuccess(aluno.id);
+      }
       
       onClose();
     } catch (error) {

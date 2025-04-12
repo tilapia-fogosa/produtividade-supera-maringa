@@ -14,11 +14,13 @@ const ProfessorTurmas = () => {
     turmaSelecionada,
     alunoDetalhes,
     carregandoAlunos,
+    produtividadeRegistrada,
     handleTurmaSelecionada,
     handleRegistrarPresenca,
     mostrarDetalhesAluno,
     fecharDetalhesAluno,
-    voltarParaTurmas
+    voltarParaTurmas,
+    atualizarProdutividadeRegistrada
   } = useAlunos();
 
   const handleVoltar = () => {
@@ -48,6 +50,7 @@ const ProfessorTurmas = () => {
           alunos={alunos}
           todosAlunos={todosAlunos}
           alunoDetalhes={alunoDetalhes}
+          produtividadeRegistrada={produtividadeRegistrada}
           onTurmaSelecionada={handleTurmaSelecionada}
           onRegistrarPresenca={handleRegistrarPresenca}
           onShowAlunoDetails={mostrarDetalhesAluno}
