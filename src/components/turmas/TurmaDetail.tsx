@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { ArrowLeft, TrendingUp, RefreshCw } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProdutividadeModal from './ProdutividadeModal';
+import ReposicaoAulaModal from './ReposicaoAulaModal';
 
 interface Turma {
   id: string;
@@ -32,6 +33,7 @@ interface Aluno {
 interface TurmaDetailProps {
   turma: Turma;
   alunos: Aluno[];
+  todosAlunos: Aluno[];
   onVoltar: () => void;
   onShowAlunoDetails: (aluno: Aluno) => void;
   onRegistrarPresenca: (alunoId: string) => void;
@@ -40,6 +42,7 @@ interface TurmaDetailProps {
 const TurmaDetail: React.FC<TurmaDetailProps> = ({ 
   turma, 
   alunos, 
+  todosAlunos,
   onVoltar, 
   onShowAlunoDetails, 
   onRegistrarPresenca 
@@ -47,17 +50,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const isMobile = useIsMobile();
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
+  const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   
-  // Add the "Reposição de aula" entry with a special ID
-  const todosAlunos = [
-    ...alunos,
-    {
-      id: "reposicao",
-      nome: "Reposição de aula",
-      turma_id: turma.id
-    }
-  ];
-
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
     setModalAberto(true);
@@ -66,6 +60,14 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const handleFecharModal = () => {
     setModalAberto(false);
     setAlunoSelecionado(null);
+  };
+
+  const handleClickReposicaoAula = () => {
+    setReposicaoModalAberto(true);
+  };
+
+  const handleFecharReposicaoModal = () => {
+    setReposicaoModalAberto(false);
   };
   
   return (
@@ -85,6 +87,19 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         </div>
       </div>
 
+      {/* Botão de Reposição de Aula */}
+      <div className="mb-3">
+        <Button 
+          variant="outline" 
+          size={isMobile ? "sm" : "default"} 
+          onClick={handleClickReposicaoAula}
+          className="w-full"
+        >
+          <RefreshCw className={`mr-1.5 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+          <span className={isMobile ? "text-xs" : ""}>Registrar Reposição de Aula</span>
+        </Button>
+      </div>
+
       {alunos.length === 0 ? (
         <div className="text-center py-3">
           <p className={isMobile ? "text-sm" : ""}>Não há alunos cadastrados nesta turma.</p>
@@ -101,7 +116,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {todosAlunos.map((aluno, index) => (
+              {alunos.map((aluno, index) => (
                 <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
                   <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs truncate max-w-[120px]" : ""}`}>
                     {aluno.nome}
@@ -141,6 +156,14 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
           onClose={handleFecharModal}
         />
       )}
+
+      {/* Modal de Reposição de Aula */}
+      <ReposicaoAulaModal
+        isOpen={reposicaoModalAberto}
+        turma={turma}
+        todosAlunos={todosAlunos}
+        onClose={handleFecharReposicaoModal}
+      />
     </div>
   );
 };

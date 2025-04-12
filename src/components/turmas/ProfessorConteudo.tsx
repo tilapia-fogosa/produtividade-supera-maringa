@@ -11,6 +11,7 @@ interface ProfessorConteudoProps {
   turmas: Turma[];
   turmaSelecionada: string | null;
   alunos: Aluno[];
+  todosAlunos: Aluno[];
   alunoDetalhes: Aluno | null;
   onTurmaSelecionada: (turmaId: string) => void;
   onRegistrarPresenca: (alunoId: string) => void;
@@ -23,6 +24,7 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
   turmas,
   turmaSelecionada,
   alunos,
+  todosAlunos,
   alunoDetalhes,
   onTurmaSelecionada,
   onRegistrarPresenca,
@@ -53,6 +55,7 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
             <TurmaDetail
               turma={turmas.find(t => t.id === turmaSelecionada)!}
               alunos={alunos}
+              todosAlunos={todosAlunos}
               onVoltar={onVoltarParaTurmas}
               onShowAlunoDetails={onShowAlunoDetails}
               onRegistrarPresenca={onRegistrarPresenca}

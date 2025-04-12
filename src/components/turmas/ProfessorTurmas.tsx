@@ -10,8 +10,10 @@ const ProfessorTurmas = () => {
   const { professor, turmas, loading, navigate } = useProfessorTurmas();
   const {
     alunos,
+    todosAlunos,
     turmaSelecionada,
     alunoDetalhes,
+    carregandoAlunos,
     handleTurmaSelecionada,
     handleRegistrarPresenca,
     mostrarDetalhesAluno,
@@ -44,6 +46,7 @@ const ProfessorTurmas = () => {
           turmas={turmas}
           turmaSelecionada={turmaSelecionada}
           alunos={alunos}
+          todosAlunos={todosAlunos}
           alunoDetalhes={alunoDetalhes}
           onTurmaSelecionada={handleTurmaSelecionada}
           onRegistrarPresenca={handleRegistrarPresenca}
