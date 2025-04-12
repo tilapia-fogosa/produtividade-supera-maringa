@@ -9,6 +9,7 @@ import ProdutividadeScreen from './turma-detail/ProdutividadeScreen';
 import AbindoHorizontesScreen from './turma-detail/AbindoHorizontesScreen';
 import ProdutividadeModal from './ProdutividadeModal';
 import ReposicaoAulaModal from './ReposicaoAulaModal';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TurmaDetailProps {
   turma: Turma;
@@ -31,6 +32,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   produtividadeRegistrada = {},
   initialServiceType = 'produtividade'
 }) => {
+  const isMobile = useIsMobile();
+  
   // State for modals and errors
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
@@ -90,7 +93,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   };
   
   return (
-    <div>
+    <div className={isMobile ? "px-0" : ""}>
       <TurmaHeader 
         turmaNome={turma.nome}
         telaModo={telaModo}
@@ -100,22 +103,24 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
       <ConfigErrorMessage errorMessage={configError} />
 
       {/* Render content based on current screen mode */}
-      {telaModo === TelaModo.MENU_INICIAL && (
-        <ServiceSelectionMenu onSelectService={handleSelectService} />
-      )}
-      
-      {telaModo === TelaModo.LISTA_ALUNOS && (
-        <ProdutividadeScreen 
-          alunos={alunos}
-          onRegistrarPresenca={handleClickRegistrarPresenca}
-          onReposicaoAula={handleClickReposicaoAula}
-          produtividadeRegistrada={produtividadeRegistrada}
-        />
-      )}
-      
-      {telaModo === TelaModo.AH && (
-        <AbindoHorizontesScreen onBackToMenu={() => setTelaModo(TelaModo.MENU_INICIAL)} />
-      )}
+      <div className={isMobile ? "mt-2" : "mt-4"}>
+        {telaModo === TelaModo.MENU_INICIAL && (
+          <ServiceSelectionMenu onSelectService={handleSelectService} />
+        )}
+        
+        {telaModo === TelaModo.LISTA_ALUNOS && (
+          <ProdutividadeScreen 
+            alunos={alunos}
+            onRegistrarPresenca={handleClickRegistrarPresenca}
+            onReposicaoAula={handleClickReposicaoAula}
+            produtividadeRegistrada={produtividadeRegistrada}
+          />
+        )}
+        
+        {telaModo === TelaModo.AH && (
+          <AbindoHorizontesScreen onBackToMenu={() => setTelaModo(TelaModo.MENU_INICIAL)} />
+        )}
+      </div>
 
       {/* Modals */}
       {alunoSelecionado && (
