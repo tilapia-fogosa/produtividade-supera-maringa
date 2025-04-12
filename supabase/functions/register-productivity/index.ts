@@ -5,7 +5,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { GoogleSpreadsheet } from "https://cdn.skypack.dev/google-spreadsheet@4.1.0?dts";
 import { JWT } from "https://cdn.skypack.dev/google-auth-library@7.14.0?dts";
 
-const GOOGLE_SHEET_ID = "Ueg5usXlaU";
+const GOOGLE_SHEET_ID = "1CfLqLbtTOx_yaXSxOOKHAgGoSxW0TmdIOUeg5usXlaU";
 const GOOGLE_SHEET_NAME = "Produtividade";
 
 interface ProdutividadeData {
