@@ -31,23 +31,33 @@ Deno.serve(async (req) => {
     console.log("Buscando dados da planilha...");
     
     // Fetch data from Google Sheets
-    const sheetName = 'Alunos'; // Você pode tornar isso configurável via corpo da requisição
-    const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}?key=${GOOGLE_API_KEY}`;
+    // Usando o nome correto da aba: SGS>Alunos
+    const sheetName = 'SGS>Alunos'; 
+    const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${GOOGLE_API_KEY}`;
     console.log(`Acessando URL: ${sheetsApiUrl.replace(GOOGLE_API_KEY, 'API_KEY_HIDDEN')}`);
     
     const response = await fetch(sheetsApiUrl);
+    const responseText = await response.text(); // Vamos obter o texto da resposta primeiro
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro ao acessar Google Sheets: Status ${response.status} - ${errorText}`);
+      console.error(`Erro ao acessar Google Sheets: Status ${response.status} - ${responseText}`);
       throw new Error(`Falha ao buscar dados do Google Sheets: ${response.statusText}. 
         Verifique se: 
         1. A chave API tem permissão para acessar o Google Sheets API
         2. A planilha existe e está acessível
-        3. O nome da planilha "Alunos" está correto`);
+        3. O nome da aba "SGS>Alunos" está correto
+        4. A planilha está compartilhada como pública ou com o e-mail correto
+        Resposta da API: ${responseText.substring(0, 200)}...`);
     }
 
-    const data = await response.json();
+    // Parse do texto para JSON
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error(`Erro ao analisar resposta do Google Sheets: ${e.message}. Resposta recebida: ${responseText.substring(0, 200)}...`);
+    }
+
     const rows = data.values || [];
 
     if (rows.length <= 1) {
