@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -64,6 +65,60 @@ const APOSTILAS_ABACO = [
 // Lista de apostilas AH
 const APOSTILAS_AH = Array.from({ length: 11 }, (_, i) => `AH ${i + 1}`);
 
+// Mapping entre os valores do banco de dados (ultimo_nivel) e as apostilas padronizadas
+const MAPEAMENTO_APOSTILAS = {
+  // Mapeamentos exatos
+  "Ap. Abaco 1": "Infantil 1",
+  "Ap. Abaco 2": "Infantil 2",
+  "Ap. Abaco B": "B",
+  "Ap. Abaco 4": "Júnior 1",
+  "Ap. Abaco 5": "Júnior 2",
+  "Ábaco INT. 1": "Intermediário 1",
+  "Ábaco INT. 2": "Intermediário 2",
+  "Ábaco INT. 3": "Intermediário 3",
+  
+  // Mapeamentos aproximados (padrões para casos não mapeados)
+  "A": "A",
+  "B": "B",
+  "C": "C",
+  "D": "D",
+  
+  // Outros padrões comuns que podem aparecer
+  "Básico": "Básico 1",
+  "Intermediário": "Intermediário 1",
+  "Avançado": "Avançado 1",
+  "Júnior": "Júnior 1",
+  "Sênior": "Sênior 1",
+  "Master": "Master 1",
+  "Girassol": "Ábaco Girassol 1"
+};
+
+// Função para encontrar a apostila mais próxima
+const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string => {
+  if (!ultimoNivel) return "";
+  
+  // Verificar correspondência exata
+  if (ultimoNivel in MAPEAMENTO_APOSTILAS) {
+    return MAPEAMENTO_APOSTILAS[ultimoNivel as keyof typeof MAPEAMENTO_APOSTILAS];
+  }
+  
+  // Verificar correspondência parcial
+  for (const [padrao, apostila] of Object.entries(MAPEAMENTO_APOSTILAS)) {
+    if (ultimoNivel.includes(padrao)) {
+      return apostila;
+    }
+  }
+  
+  // Verificar se alguma apostila está contida no ultimoNivel
+  const apostilaEncontrada = APOSTILAS_ABACO.find(apostila => ultimoNivel.includes(apostila));
+  if (apostilaEncontrada) {
+    return apostilaEncontrada;
+  }
+  
+  // Nenhuma correspondência encontrada
+  return "";
+};
+
 interface ProdutividadeModalProps {
   isOpen: boolean;
   aluno: Aluno;
@@ -99,8 +154,16 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [errosAh, setErrosAh] = useState("");
   const [professorCorrecao, setProfessorCorrecao] = useState("");
 
+  // Pré-selecionar a apostila de ábaco com base no último nível do aluno
+  useEffect(() => {
+    if (isOpen && aluno && aluno.ultimo_nivel) {
+      const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
+      setApostilaAbaco(apostilaSugerida);
+    }
+  }, [isOpen, aluno]);
+
   // Reset form quando o modal fecha
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) {
       setPresente("sim");
       setMotivoFalta("");
