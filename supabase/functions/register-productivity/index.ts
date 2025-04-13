@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -97,10 +98,19 @@ serve(async (req) => {
         data.presente ? 'Presente' : 'Faltoso' // Tipo de Situação
       ];
 
-      // Converter a string do Service Account em objeto JSON
-      const serviceAccountCredentials = JSON.parse(googleServiceAccount);
+      // Converter a string do Service Account JSON em objeto
+      let serviceAccountCredentials;
+      try {
+        serviceAccountCredentials = JSON.parse(googleServiceAccount);
+      } catch (parseError) {
+        console.error('Erro ao analisar JSON do Service Account:', parseError);
+        throw new Error('Formato inválido do Google Service Account. Certifique-se de que é um JSON válido.');
+      }
       
-      // Obter um token OAuth2 usando o service account
+      // Gerar JWT para autenticação
+      const jwt = createJWT(serviceAccountCredentials);
+      
+      // Obter um token OAuth2 usando o JWT
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -108,18 +118,22 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-          assertion: createJWT(serviceAccountCredentials)
+          assertion: jwt
         })
       });
       
-      const tokenData = await tokenResponse.json();
-      
       if (!tokenResponse.ok) {
-        console.error('Erro ao obter token OAuth:', tokenData);
-        throw new Error('Falha ao autenticar com Google: ' + JSON.stringify(tokenData));
+        const tokenErrorData = await tokenResponse.text();
+        console.error('Erro na resposta do token OAuth:', tokenErrorData);
+        throw new Error(`Falha ao autenticar com Google: ${tokenErrorData}`);
       }
       
+      const tokenData = await tokenResponse.json();
       const accessToken = tokenData.access_token;
+      
+      if (!accessToken) {
+        throw new Error('Token de acesso não recebido do Google');
+      }
 
       // Formatar os dados como JSON para a API Sheets
       const values = [googleSheetData];
@@ -145,13 +159,18 @@ serve(async (req) => {
 
       // Verificar a resposta da API do Google Sheets
       if (!response.ok) {
+        const errorText = await response.text();
         console.error('Erro ao registrar no Google Sheets:', 
           response.status, 
           response.statusText, 
-          await response.text()
+          errorText
         );
-        throw new Error('Erro ao registrar no Google Sheets: ' + response.statusText);
+        throw new Error(`Erro ao registrar no Google Sheets: ${response.status} - ${errorText}`);
       }
+      
+      const responseData = await response.json();
+      console.log('Resposta do Google Sheets:', JSON.stringify(responseData));
+      
     } catch (googleError) {
       console.error('Erro ao processar operação do Google Sheets:', googleError);
       
