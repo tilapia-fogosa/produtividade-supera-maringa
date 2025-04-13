@@ -1,5 +1,7 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 interface ProdutividadeData {
   aluno_id: string;
@@ -24,6 +26,10 @@ interface ProdutividadeData {
   data_ultima_correcao_ah?: string;
 }
 
+// Constantes para a planilha
+const GOOGLE_SHEET_ID = Deno.env.get("GOOGLE_SPREADSHEET_ID");
+const GOOGLE_SHEET_NAME = "Produtividade"; // Nome da planilha onde os dados serão gravados
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,6 +47,7 @@ serve(async (req) => {
 
     console.log("Processando dados de produtividade:", JSON.stringify(data, null, 2));
 
+    // Verificar se as credenciais do Google Service Account estão configuradas
     const serviceAccountCredentials = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
     if (!serviceAccountCredentials) {
       console.error("Google Service Account credentials not found in environment variables");
@@ -49,6 +56,19 @@ serve(async (req) => {
           error: "Configuração incompleta: credenciais do Google Service Account não encontradas",
           message: "Contate o administrador do sistema para configurar as credenciais da API do Google",
           details: "As credenciais do Google Service Account precisam ser configuradas como um segredo (secret) no Supabase"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+
+    // Verificar se o ID da planilha está configurado
+    if (!GOOGLE_SHEET_ID) {
+      console.error("Google Sheet ID not found in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "Configuração incompleta: ID da planilha do Google não encontrado",
+          message: "Contate o administrador do sistema para configurar o ID da planilha do Google",
+          details: "O ID da planilha precisa ser configurado como um segredo (secret) no Supabase"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
@@ -112,17 +132,28 @@ serve(async (req) => {
     ];
 
     console.log("Attempting to append data to Google Sheet...");
+    console.log(`Sheet ID: ${GOOGLE_SHEET_ID}, Sheet Name: ${GOOGLE_SHEET_NAME}`);
     await appendRowToSheet(GOOGLE_SHEET_ID, GOOGLE_SHEET_NAME, rowData, token);
     console.log("Successfully appended data to sheet");
 
+    // Atualizar data da última correção AH se aplicável
     if (data.data_ultima_correcao_ah) {
-      const { error: updateError } = await supabase
-        .from('alunos')
-        .update({ ultima_correcao_ah: data.data_ultima_correcao_ah })
-        .eq('id', data.aluno_id);
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        
+        const { error: updateError } = await supabase
+          .from('alunos')
+          .update({ ultima_correcao_ah: data.data_ultima_correcao_ah })
+          .eq('id', data.aluno_id);
 
-      if (updateError) {
-        console.error('Erro ao atualizar data da última correção AH:', updateError);
+        if (updateError) {
+          console.error('Erro ao atualizar data da última correção AH:', updateError);
+        }
+      } else {
+        console.log('Credenciais do Supabase não encontradas, pulando atualização do banco de dados');
       }
     }
 
