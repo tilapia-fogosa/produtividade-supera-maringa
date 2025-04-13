@@ -199,6 +199,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   };
 
   const presente = form.watch("presente");
+  const alunoId = form.watch("alunoId"); // Adicionando esta linha para obter o ID do aluno selecionado
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -262,12 +263,15 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
               control={form.control}
               name="presente"
               render={({ field }) => (
-                <PresencaSection 
-                  presente={field.value}
-                  setPresente={(value) => field.onChange(value)}
-                  motivoFalta={form.watch("motivoFalta")}
-                  setMotivoFalta={(value) => form.setValue("motivoFalta", value)}
-                />
+                <FormItem>
+                  <PresencaSection 
+                    presente={field.value}
+                    setPresente={(value) => field.onChange(value)}
+                    motivoFalta={form.watch("motivoFalta")}
+                    setMotivoFalta={(value) => form.setValue("motivoFalta", value)}
+                    alunoId={alunoId} // Passando o ID do aluno selecionado
+                  />
+                </FormItem>
               )}
             />
             
