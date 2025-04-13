@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -21,6 +20,7 @@ interface ProdutividadeData {
   data_ultima_correcao_ah?: string;
   apostila_atual?: string;
   ultima_pagina?: string;
+  is_reposicao?: boolean;
 }
 
 serve(async (req) => {
@@ -82,21 +82,19 @@ serve(async (req) => {
     }
 
     try {
-      // Preparar os dados para o Google Sheets
+      // Preparar os dados para o Google Sheets de acordo com os cabeçalhos corretos
+      const dataAtual = new Date().toLocaleString('pt-BR');
       const googleSheetData = [
-        data.aluno_id,
-        data.aluno_nome,
-        data.turma_id,
-        data.turma_nome,
-        data.presente ? 'Sim' : 'Não',
-        data.motivo_falta || '',
-        data.apostila_abaco || '',
-        data.pagina_abaco || '',
-        data.exercicios_abaco || '',
-        data.erros_abaco || '',
-        data.fez_desafio ? 'Sim' : 'Não',
-        data.comentario || '',
-        data.data_registro
+        dataAtual,                           // Carimbo de data/hora
+        data.aluno_nome,                     // Nome do Aluno
+        data.data_registro.split('T')[0],    // Data
+        data.apostila_abaco || '',           // Qual Apostila de Ábaco?
+        data.pagina_abaco || '',             // Ábaco - Página
+        data.exercicios_abaco || '',         // Ábaco - Exercícios Realizados
+        data.erros_abaco || '',              // Ábaco - Nº de Erros
+        data.fez_desafio ? 'Sim' : 'Não',    // Fez Desafio?
+        data.comentario || '',               // Comentário, observação ou Situação
+        data.presente ? 'Presente' : 'Faltoso' // Tipo de Situação
       ];
 
       // Converter a string do Service Account em objeto JSON
@@ -131,9 +129,9 @@ serve(async (req) => {
 
       // Construir a URL da API do Google Sheets
       const spreadsheetId = googleSpreadsheetId;
-      const range = 'Sheet1'; // Nome da planilha
+      const range = 'Respostas ao formulário 1'; // Nome correto da planilha
       const valueInputOption = 'USER_ENTERED';
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:append?valueInputOption=${valueInputOption}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=${valueInputOption}`;
 
       // Enviar os dados para o Google Sheets usando o token OAuth obtido
       const response = await fetch(url, {
