@@ -228,10 +228,19 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         throw new Error(error.message);
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Produtividade registrada com sucesso",
-      });
+      // Verificar se os dados foram salvos no banco, mas houve erro no Google Sheets
+      if (data && data.googleSheetsError) {
+        toast({
+          title: "Parcialmente concluído",
+          description: data.message || "Dados salvos, mas não sincronizados com Google Sheets.",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Produtividade registrada com sucesso",
+        });
+      }
       
       if (onSuccess) {
         onSuccess(aluno.id);
