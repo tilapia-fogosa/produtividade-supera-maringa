@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -50,6 +51,15 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     if (isOpen && aluno && aluno.ultimo_nivel) {
       const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
       setApostilaAbaco(apostilaSugerida);
+      
+      // Preencher com os dados atuais se disponíveis
+      if (aluno.apostila_atual) {
+        setApostilaAbaco(aluno.apostila_atual);
+      }
+      
+      if (aluno.ultima_pagina) {
+        setPaginaAbaco(aluno.ultima_pagina);
+      }
     }
   }, [isOpen, aluno]);
 
@@ -107,6 +117,62 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         }
       }
       
+      // Se o aluno faltou, registrar na tabela de faltas
+      if (presente === "não") {
+        // Primeiro verificar se já existe um registro de falta para hoje
+        const { data: faltasExistentes, error: errorFaltas } = await supabase
+          .from('faltas_alunos')
+          .select('*')
+          .eq('aluno_id', aluno.id)
+          .eq('data_falta', dataHoje);
+          
+        if (errorFaltas) {
+          throw errorFaltas;
+        }
+        
+        if (faltasExistentes && faltasExistentes.length === 0) {
+          // Não existe falta registrada, então inserir
+          const { error: errorInserirFalta } = await supabase
+            .from('faltas_alunos')
+            .insert({
+              aluno_id: aluno.id,
+              data_falta: dataHoje,
+              motivo: motivoFalta
+            });
+            
+          if (errorInserirFalta) {
+            throw errorInserirFalta;
+          }
+        } else {
+          // Atualizar o registro existente
+          const { error: errorAtualizarFalta } = await supabase
+            .from('faltas_alunos')
+            .update({
+              motivo: motivoFalta
+            })
+            .eq('id', faltasExistentes[0].id);
+            
+          if (errorAtualizarFalta) {
+            throw errorAtualizarFalta;
+          }
+        }
+      }
+      
+      // Atualizar a apostila e página atual do aluno
+      if (presente === "sim" && apostilaAbaco && paginaAbaco) {
+        const { error: errorAtualizarAluno } = await supabase
+          .from('alunos')
+          .update({
+            apostila_atual: apostilaAbaco,
+            ultima_pagina: paginaAbaco
+          })
+          .eq('id', aluno.id);
+          
+        if (errorAtualizarAluno) {
+          throw errorAtualizarAluno;
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error("Erro ao registrar presença:", error);
@@ -150,6 +216,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         comentario: presente === "sim" ? comentario : undefined,
         data_registro: new Date().toISOString(),
         data_ultima_correcao_ah: presente === "sim" ? new Date().toISOString() : undefined,
+        apostila_atual: presente === "sim" ? apostilaAbaco : undefined,
+        ultima_pagina: presente === "sim" ? paginaAbaco : undefined,
       };
 
       const { data, error } = await supabase.functions.invoke('register-productivity', {
@@ -208,10 +276,11 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         </DialogHeader>
         
         <AlunoProgressoCard 
-          apostilaAtual={aluno.ultimo_nivel}
+          apostilaAtual={aluno.apostila_atual || aluno.ultimo_nivel}
           ultimaPaginaCorrigida={aluno.ultima_pagina}
           paginasRestantes={aluno.paginas_restantes}
           ultimaCorrecaoAH={aluno.ultima_correcao_ah}
+          alunoId={aluno.id}
         />
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
@@ -220,6 +289,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
             setPresente={setPresente}
             motivoFalta={motivoFalta}
             setMotivoFalta={setMotivoFalta}
+            alunoId={aluno.id}
           />
           
           {presente === "sim" && (

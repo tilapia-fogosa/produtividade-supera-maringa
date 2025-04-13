@@ -55,6 +55,7 @@ export type Database = {
       }
       alunos: {
         Row: {
+          apostila_atual: string | null
           codigo: string | null
           created_at: string
           curso: string | null
@@ -69,10 +70,12 @@ export type Database = {
           telefone: string | null
           turma_id: string
           ultima_correcao_ah: string | null
+          ultima_pagina: string | null
           ultimo_nivel: string | null
           vencimento_contrato: string | null
         }
         Insert: {
+          apostila_atual?: string | null
           codigo?: string | null
           created_at?: string
           curso?: string | null
@@ -87,10 +90,12 @@ export type Database = {
           telefone?: string | null
           turma_id: string
           ultima_correcao_ah?: string | null
+          ultima_pagina?: string | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }
         Update: {
+          apostila_atual?: string | null
           codigo?: string | null
           created_at?: string
           curso?: string | null
@@ -105,6 +110,7 @@ export type Database = {
           telefone?: string | null
           turma_id?: string
           ultima_correcao_ah?: string | null
+          ultima_pagina?: string | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }
@@ -331,6 +337,38 @@ export type Database = {
           key?: string
         }
         Relationships: []
+      }
+      faltas_alunos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_falta: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_falta: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_falta?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faltas_alunos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       faturas: {
         Row: {
