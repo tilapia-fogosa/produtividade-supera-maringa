@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { getTotalPaginasPorApostila } from '@/components/turmas/constants/apostilas';
 
 export interface Professor {
   id: string;
@@ -78,7 +78,33 @@ export function useProfessorTurmas() {
           throw turmasError;
         }
 
-        setTurmas(turmasData || []);
+        const turmasComAlunosComPaginasRestantes = turmasData?.map(turma => {
+          const alunosComPaginasRestantes = turma.alunos?.map(aluno => {
+            const totalPaginas = aluno.apostila_atual 
+              ? getTotalPaginasPorApostila(aluno.apostila_atual) 
+              : null;
+            
+            const ultimaPagina = aluno.ultima_pagina 
+              ? parseInt(aluno.ultima_pagina, 10) 
+              : null;
+            
+            const paginasRestantes = totalPaginas && ultimaPagina 
+              ? totalPaginas - ultimaPagina 
+              : null;
+
+            return {
+              ...aluno,
+              paginas_restantes: paginasRestantes
+            };
+          });
+
+          return {
+            ...turma,
+            alunos: alunosComPaginasRestantes
+          };
+        });
+
+        setTurmas(turmasComAlunosComPaginasRestantes || []);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         toast({
