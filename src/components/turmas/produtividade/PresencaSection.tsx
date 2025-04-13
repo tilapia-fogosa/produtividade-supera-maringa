@@ -21,18 +21,18 @@ const PresencaSection: React.FC<PresencaSectionProps> = ({
   return (
     <>
       <div className="space-y-2">
-        <Label>Aluno veio à aula?</Label>
+        <Label className="text-azul-500">Aluno veio à aula?</Label>
         <div className="flex gap-4">
           <RadioGroup value={presente} onValueChange={(v) => setPresente(v as "sim" | "não")} className="flex flex-row gap-4">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="sim" id="presente-sim" />
-              <Label htmlFor="presente-sim" className="flex items-center">
+              <Label htmlFor="presente-sim" className="flex items-center text-azul-500">
                 <Check className="mr-1 h-4 w-4 text-green-500" /> Sim
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="não" id="presente-nao" />
-              <Label htmlFor="presente-nao" className="flex items-center">
+              <Label htmlFor="presente-nao" className="flex items-center text-azul-500">
                 <X className="mr-1 h-4 w-4 text-red-500" /> Não
               </Label>
             </div>
@@ -42,12 +42,12 @@ const PresencaSection: React.FC<PresencaSectionProps> = ({
       
       {presente === "não" && (
         <div className="space-y-2">
-          <Label htmlFor="motivo-falta">Motivo da falta (opcional)</Label>
+          <Label htmlFor="motivo-falta" className="text-azul-500">Motivo da falta (opcional)</Label>
           <Textarea 
             id="motivo-falta" 
             value={motivoFalta} 
             onChange={(e) => setMotivoFalta(e.target.value)}
-            className="w-full"
+            className="w-full border-orange-200"
             placeholder="Informe o motivo da falta (opcional)"
           />
         </div>

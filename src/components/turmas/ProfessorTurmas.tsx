@@ -33,7 +33,7 @@ const ProfessorTurmas: React.FC<ProfessorTurmasProps> = ({ initialServiceType = 
 
   if (loading) {
     return (
-      <div className="container mx-auto py-4 px-2 text-center text-orange-800">
+      <div className="container mx-auto py-4 px-2 text-center text-azul-500">
         <p>Carregando...</p>
       </div>
     );

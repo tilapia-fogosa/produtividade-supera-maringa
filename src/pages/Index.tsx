@@ -110,8 +110,8 @@ const Index = () => {
     <div className="container mx-auto py-6 space-y-6">
       <Card className="border-orange-200 bg-white">
         <CardHeader className="border-b border-orange-100">
-          <CardTitle className="text-orange-800">Gerenciador de Vídeos para Cursaeduca</CardTitle>
-          <CardDescription className="text-orange-700">
+          <CardTitle className="text-azul-500">Gerenciador de Vídeos para Cursaeduca</CardTitle>
+          <CardDescription className="text-azul-400">
             Faça upload, gerencie e obtenha os códigos HLS para seus vídeos de treinamento
           </CardDescription>
         </CardHeader>
@@ -126,7 +126,7 @@ const Index = () => {
                 disabled={isUploading}
                 className="w-full max-w-md"
               />
-              <Button disabled={isUploading}>
+              <Button disabled={isUploading} className="bg-supera hover:bg-supera-600">
                 <Upload className="mr-2" />
                 {isUploading ? "Enviando..." : "Enviar Vídeo"}
               </Button>
@@ -136,25 +136,25 @@ const Index = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Data de Upload</TableHead>
-                    <TableHead>Duração</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Ações</TableHead>
+                    <TableHead className="text-azul-400">Nome</TableHead>
+                    <TableHead className="text-azul-400">Data de Upload</TableHead>
+                    <TableHead className="text-azul-400">Duração</TableHead>
+                    <TableHead className="text-azul-400">Status</TableHead>
+                    <TableHead className="text-azul-400">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {videos.map(video => (
                     <TableRow key={video.id}>
-                      <TableCell className="font-medium">{video.name}</TableCell>
-                      <TableCell>{new Date(video.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium text-azul-500">{video.name}</TableCell>
+                      <TableCell className="text-azul-500">{new Date(video.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-azul-500">
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
                           {formatDuration(video.duration)}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-azul-500">
                         {video.status === 'uploading' && "Enviando..."}
                         {video.status === 'processing' && "Processando..."}
                         {video.status === 'ready' && "Pronto"}
@@ -167,6 +167,7 @@ const Index = () => {
                             size="sm" 
                             onClick={() => video.hls_url && copyHlsUrl(video.hls_url)}
                             disabled={video.status !== 'ready' || !video.hls_url}
+                            className="text-azul-500 border-orange-200"
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -175,6 +176,7 @@ const Index = () => {
                             size="sm"
                             onClick={() => setSelectedVideo(video)}
                             disabled={video.status !== 'ready' || !video.hls_url}
+                            className="text-azul-500 border-orange-200"
                           >
                             <Play className="h-4 w-4" />
                           </Button>
@@ -182,8 +184,9 @@ const Index = () => {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleDeleteVideo(video.id)}
+                            className="text-red-500 border-orange-200"
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -191,7 +194,7 @@ const Index = () => {
                   ))}
                   {videos.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-6 text-azul-400">
                         Nenhum vídeo encontrado. Faça upload do seu primeiro vídeo.
                       </TableCell>
                     </TableRow>
@@ -206,13 +209,13 @@ const Index = () => {
       {selectedVideo && selectedVideo.hls_url && (
         <Card className="border-orange-200 bg-white">
           <CardHeader className="border-b border-orange-100">
-            <CardTitle className="text-orange-800">Preview: {selectedVideo.name}</CardTitle>
-            <CardDescription className="text-orange-700">
-              URL HLS: <code className="bg-orange-50 p-1 rounded">{selectedVideo.hls_url}</code>
+            <CardTitle className="text-azul-500">Preview: {selectedVideo.name}</CardTitle>
+            <CardDescription className="text-azul-400">
+              URL HLS: <code className="bg-orange-50 p-1 rounded text-azul-500">{selectedVideo.hls_url}</code>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="ml-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+                className="ml-2 text-azul-400 hover:text-azul-500 hover:bg-orange-50"
                 onClick={() => selectedVideo.hls_url && copyHlsUrl(selectedVideo.hls_url)}
               >
                 <Copy className="h-4 w-4" />
@@ -223,7 +226,7 @@ const Index = () => {
             <VideoPlayer src={selectedVideo.hls_url} poster={selectedVideo.thumbnail_url} />
           </CardContent>
           <CardFooter className="flex justify-between border-t border-orange-100">
-            <Button variant="outline" onClick={() => setSelectedVideo(null)} className="border-orange-200 text-orange-700 hover:bg-orange-50">
+            <Button variant="outline" onClick={() => setSelectedVideo(null)} className="border-orange-200 text-azul-500 hover:bg-orange-50">
               Fechar
             </Button>
             <Button 

@@ -43,27 +43,27 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
   };
 
   return (
-    <Card className={`w-full ${isMobile ? 'text-sm' : ''}`}>
+    <Card className={`w-full ${isMobile ? 'text-sm' : ''} border-orange-200`}>
       <CardHeader>
-        <CardTitle className={isMobile ? 'text-lg' : ''}>Progresso do Aluno</CardTitle>
+        <CardTitle className={`${isMobile ? 'text-lg' : ''} text-azul-500`}>Progresso do Aluno</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex justify-between">
-          <span>Apostila Atual:</span>
-          <span className="font-semibold">{apostilaAtual || 'Não definido'}</span>
+          <span className="text-azul-400">Apostila Atual:</span>
+          <span className="font-semibold text-azul-500">{apostilaAtual || 'Não definido'}</span>
         </div>
         <div className="flex justify-between">
-          <span>Última Página:</span>
-          <span className="font-semibold">{ultimaPaginaCorrigida || 'Não registrado'}</span>
+          <span className="text-azul-400">Última Página:</span>
+          <span className="font-semibold text-azul-500">{ultimaPaginaCorrigida || 'Não registrado'}</span>
         </div>
         <div className="flex justify-between">
-          <span>Páginas Restantes:</span>
+          <span className="text-azul-400">Páginas Restantes:</span>
           <span className={`font-semibold ${getPaginasRestantesColor(paginasRestantes)}`}>
             {paginasRestantes !== null ? paginasRestantes : 'Não calculado'}
           </span>
         </div>
         <div className="flex justify-between">
-          <span>Última Correção AH:</span>
+          <span className="text-azul-400">Última Correção AH:</span>
           <span className={`font-semibold ${getUltimaCorrecaoAHColor(ultimaCorrecaoAH)}`}>
             {formatarData(ultimaCorrecaoAH)}
           </span>
