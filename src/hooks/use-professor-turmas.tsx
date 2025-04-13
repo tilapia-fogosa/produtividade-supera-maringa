@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ export interface Turma {
   nome: string;
   dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
   horario: string;
+  alunos?: Aluno[]; // Tornando alunos opcional
 }
 
 export interface Aluno {
@@ -78,8 +80,23 @@ export function useProfessorTurmas() {
           throw turmasError;
         }
 
-        const turmasComAlunosComPaginasRestantes = turmasData?.map(turma => {
-          const alunosComPaginasRestantes = turma.alunos?.map(aluno => {
+        // Inicialização das turmas sem alunos
+        const turmasIniciais = turmasData || [];
+        
+        // Para cada turma, buscar seus alunos
+        const turmasComAlunos = await Promise.all(turmasIniciais.map(async (turma) => {
+          const { data: alunosData, error: alunosError } = await supabase
+            .from('alunos')
+            .select('*')
+            .eq('turma_id', turma.id);
+            
+          if (alunosError) {
+            console.error('Erro ao buscar alunos da turma:', alunosError);
+            return { ...turma, alunos: [] };
+          }
+
+          // Calcular páginas restantes para cada aluno
+          const alunosComPaginasRestantes = alunosData?.map(aluno => {
             const totalPaginas = aluno.apostila_atual 
               ? getTotalPaginasPorApostila(aluno.apostila_atual) 
               : null;
@@ -96,15 +113,12 @@ export function useProfessorTurmas() {
               ...aluno,
               paginas_restantes: paginasRestantes
             };
-          });
+          }) || [];
 
-          return {
-            ...turma,
-            alunos: alunosComPaginasRestantes
-          };
-        });
+          return { ...turma, alunos: alunosComPaginasRestantes };
+        }));
 
-        setTurmas(turmasComAlunosComPaginasRestantes || []);
+        setTurmas(turmasComAlunos);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         toast({
