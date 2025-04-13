@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Book } from 'lucide-react';
 import { APOSTILAS_ABACO } from '../constants/apostilas';
+import { getTotalPaginasPorApostila } from '../constants/apostilas';
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -37,6 +37,8 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   comentario,
   setComentario
 }) => {
+  const totalPaginas = apostilaAbaco ? getTotalPaginasPorApostila(apostilaAbaco) : 40;
+
   return (
     <>
       <div className="space-y-2">
@@ -63,9 +65,12 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
           <Label htmlFor="pagina-abaco">Página do ábaco</Label>
           <Input
             id="pagina-abaco"
+            type="number"
+            min="1"
+            max={totalPaginas}
             value={paginaAbaco}
             onChange={(e) => setPaginaAbaco(e.target.value)}
-            placeholder="Página"
+            placeholder={`Página (1-${totalPaginas})`}
           />
         </div>
         
