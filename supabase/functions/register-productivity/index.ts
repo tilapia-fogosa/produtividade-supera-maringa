@@ -41,6 +41,8 @@ serve(async (req) => {
       );
     }
 
+    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
+
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       // Supabase API URL
@@ -72,20 +74,25 @@ serve(async (req) => {
     }
 
     // Verificar se as credenciais do Google estão configuradas
-    const googleServiceAccount = Deno.env.get('GOOGLE_SERVICE_ACCOUNT');
-    const googleSpreadsheetId = Deno.env.get('GOOGLE_SPREADSHEET_ID');
+    const credentialsJSON = Deno.env.get('GOOGLE_SERVICE_ACCOUNT');
+    const spreadsheetId = Deno.env.get('GOOGLE_SPREADSHEET_ID');
 
-    if (!googleServiceAccount || !googleSpreadsheetId) {
+    if (!credentialsJSON || !spreadsheetId) {
+      console.error('Credenciais do Google não configuradas corretamente');
       return new Response(
-        JSON.stringify({ error: 'Credenciais do Google Service Account não configuradas' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ 
+          success: true, 
+          googleSheetsError: true,
+          message: 'Dados salvos no banco, mas credenciais do Google Sheets não configuradas'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     try {
-      // Preparar os dados para o Google Sheets de acordo com os cabeçalhos corretos
+      // Preparar os dados para o Google Sheets
       const dataAtual = new Date().toLocaleString('pt-BR');
-      const googleSheetData = [
+      const sheetData = [
         dataAtual,                           // Carimbo de data/hora
         data.aluno_nome,                     // Nome do Aluno
         data.data_registro.split('T')[0],    // Data
@@ -95,222 +102,143 @@ serve(async (req) => {
         data.erros_abaco || '',              // Ábaco - Nº de Erros
         data.fez_desafio ? 'Sim' : 'Não',    // Fez Desafio?
         data.comentario || '',               // Comentário, observação ou Situação
-        data.presente ? 'Presente' : 'Faltoso' // Tipo de Situação
+        data.presente ? 'Presente' : 'Faltoso', // Tipo de Situação
+        data.is_reposicao ? 'Sim' : 'Não'    // É reposição?
       ];
 
-      // Converter a string do Service Account JSON em objeto
-      let serviceAccountCredentials;
+      // Verificar formato das credenciais
+      let credentials;
       try {
-        serviceAccountCredentials = JSON.parse(googleServiceAccount);
-        console.log('Service Account parseda com sucesso.');
+        credentials = JSON.parse(credentialsJSON);
+        console.log('Credenciais do Google parseadas com sucesso');
       } catch (parseError) {
-        console.error('Erro ao analisar JSON do Service Account:', parseError);
-        throw new Error('Formato inválido do Google Service Account. Certifique-se de que é um JSON válido.');
+        console.error('Erro ao analisar credenciais do Google:', parseError);
+        throw new Error('Formato das credenciais do Google é inválido. Verifique se é um JSON válido.');
       }
-      
-      // Importar a biblioteca para assinatura criptográfica
-      const importKey = async (serviceAccount) => {
-        try {
-          const privateKey = serviceAccount.private_key.replace(/\\n/g, "\n");
-          
-          // Importar a chave privada para uso com a API Web Crypto
-          const cryptoKey = await crypto.subtle.importKey(
-            "pkcs8",
-            pemToArrayBuffer(privateKey),
-            {
-              name: "RSASSA-PKCS1-v1_5",
-              hash: { name: "SHA-256" }
-            },
-            false,
-            ["sign"]
-          );
-          
-          console.log('Chave RSA importada com sucesso');
-          return cryptoKey;
-        } catch (error) {
-          console.error('Erro ao importar chave privada:', error);
-          throw error;
-        }
-      };
-      
-      // Função para converter PEM para ArrayBuffer
-      const pemToArrayBuffer = (pem) => {
-        // Remover cabeçalho e rodapé PEM e quebras de linha
-        const base64 = pem
-          .replace('-----BEGIN PRIVATE KEY-----', '')
-          .replace('-----END PRIVATE KEY-----', '')
-          .replace(/\n/g, '');
+
+      // Função para obter token de acesso usando OAuth2
+      async function getAccessToken(credentials) {
+        console.log('Iniciando obtenção de token de acesso...');
         
-        // Decodificar Base64 para string binária
-        const binaryString = atob(base64);
+        const tokenEndpoint = 'https://oauth2.googleapis.com/token';
+        const scopes = ['https://www.googleapis.com/auth/spreadsheets'];
         
-        // Converter string binária para ArrayBuffer
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
+        const jwtHeader = {
+          alg: 'RS256',
+          typ: 'JWT'
+        };
+        
+        const now = Math.floor(Date.now() / 1000);
+        const jwtClaimSet = {
+          iss: credentials.client_email,
+          scope: scopes.join(' '),
+          aud: tokenEndpoint,
+          exp: now + 3600,
+          iat: now
+        };
+        
+        // Função para codificar objeto em base64url
+        function base64UrlEncode(obj) {
+          const json = JSON.stringify(obj);
+          const base64 = btoa(json);
+          return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         }
         
-        return bytes.buffer;
-      };
-      
-      // Função para criar um JWT usando Web Crypto API
-      const createJWT = async (serviceAccount) => {
-        try {
-          // Cabeçalho JWT
-          const header = {
-            alg: "RS256",
-            typ: "JWT"
-          };
-          
-          // Tempo atual em segundos
-          const now = Math.floor(Date.now() / 1000);
-          
-          // Payload (claims)
-          const payload = {
-            iss: serviceAccount.client_email,
-            scope: "https://www.googleapis.com/auth/spreadsheets",
-            aud: "https://oauth2.googleapis.com/token",
-            exp: now + 3600, // 1 hora
-            iat: now
-          };
-          
-          // Codificar cabeçalho e payload para base64url
-          const encodeSegment = (segment) => {
-            const str = JSON.stringify(segment);
-            const base64 = btoa(str);
-            return base64
-              .replace(/\+/g, "-")
-              .replace(/\//g, "_")
-              .replace(/=+$/, "");
-          };
-          
-          const encodedHeader = encodeSegment(header);
-          const encodedPayload = encodeSegment(payload);
-          
-          // Concatenar para formar a parte não assinada do JWT
-          const signingInput = `${encodedHeader}.${encodedPayload}`;
-          
-          // Importar a chave e assinar
-          const key = await importKey(serviceAccount);
-          
-          // Converter a string de entrada para ArrayBuffer para assinatura
-          const encoder = new TextEncoder();
-          const data = encoder.encode(signingInput);
-          
-          // Assinar usando a chave RSA e o algoritmo SHA-256
-          const signatureBuffer = await crypto.subtle.sign(
-            { name: "RSASSA-PKCS1-v1_5" },
-            key,
-            data
-          );
-          
-          // Converter a assinatura para base64url
-          const signature = arrayBufferToBase64Url(signatureBuffer);
-          
-          // Formar o JWT completo
-          const jwt = `${signingInput}.${signature}`;
-          
-          console.log('JWT gerado com sucesso');
-          return jwt;
-        } catch (error) {
-          console.error('Erro ao criar JWT:', error);
-          throw error;
+        // Formar a parte de cabeçalho e payload do JWT
+        const encodedHeader = base64UrlEncode(jwtHeader);
+        const encodedClaimSet = base64UrlEncode(jwtClaimSet);
+        const signatureInput = `${encodedHeader}.${encodedClaimSet}`;
+        
+        // Usar a chave privada das credenciais para assinar
+        const privateKey = credentials.private_key.replace(/\\n/g, '\n');
+        
+        // Importar a chave para WebCrypto
+        const importedKey = await crypto.subtle.importKey(
+          'pkcs8',
+          new TextEncoder().encode(privateKey).buffer,
+          {
+            name: 'RSASSA-PKCS1-v1_5',
+            hash: 'SHA-256'
+          },
+          false,
+          ['sign']
+        );
+        
+        // Assinar o JWT
+        const signature = await crypto.subtle.sign(
+          'RSASSA-PKCS1-v1_5',
+          importedKey,
+          new TextEncoder().encode(signatureInput)
+        );
+        
+        // Converter a assinatura para base64url
+        const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+        const encodedSignature = signatureBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        
+        // Formar o JWT completo
+        const jwt = `${signatureInput}.${encodedSignature}`;
+        
+        // Usar o JWT para solicitar um token de acesso
+        const response = await fetch(tokenEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Erro na resposta do token OAuth:', errorText);
+          throw new Error(`Falha ao obter token: ${response.status} - ${errorText}`);
         }
-      };
-      
-      // Função para converter ArrayBuffer para string base64url
-      const arrayBufferToBase64Url = (buffer) => {
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = btoa(binary);
-        return base64
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=+$/, "");
-      };
-      
-      // Gerar JWT para autenticação
-      console.log('Iniciando geração do JWT...');
-      const jwt = await createJWT(serviceAccountCredentials);
-      console.log('JWT gerado e pronto para uso na autenticação');
-      
-      // Obter um token OAuth2 usando o JWT
-      console.log('Solicitando token OAuth2...');
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-          assertion: jwt
-        })
-      });
-      
-      if (!tokenResponse.ok) {
-        const tokenErrorData = await tokenResponse.text();
-        console.error('Erro na resposta do token OAuth:', tokenErrorData);
-        throw new Error(`Falha ao autenticar com Google: ${tokenErrorData}`);
+        
+        const tokenData = await response.json();
+        console.log('Token de acesso obtido com sucesso');
+        return tokenData.access_token;
       }
-      
-      const tokenData = await tokenResponse.json();
-      console.log('Token OAuth2 obtido com sucesso');
-      const accessToken = tokenData.access_token;
+
+      // Obter token de acesso
+      const accessToken = await getAccessToken(credentials);
       
       if (!accessToken) {
-        throw new Error('Token de acesso não recebido do Google');
+        throw new Error('Não foi possível obter o token de acesso do Google');
       }
 
-      // Formatar os dados como JSON para a API Sheets
-      const values = [googleSheetData];
-      const body = {
-        values,
-      };
-
-      // Construir a URL da API do Google Sheets
-      const spreadsheetId = googleSpreadsheetId;
-      const range = 'Respostas ao formulário 1'; // Nome correto da planilha
-      const valueInputOption = 'USER_ENTERED';
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=${valueInputOption}`;
-
+      // Enviar dados para o Google Sheets
       console.log('Enviando dados para o Google Sheets...');
-      // Enviar os dados para o Google Sheets usando o token OAuth obtido
-      const response = await fetch(url, {
+      const sheetsEndpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Respostas ao formulário 1:append?valueInputOption=USER_ENTERED`;
+      
+      const sheetsResponse = await fetch(sheetsEndpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          values: [sheetData]
+        })
       });
-
-      // Verificar a resposta da API do Google Sheets
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Erro ao registrar no Google Sheets:', 
-          response.status, 
-          response.statusText, 
-          errorText
-        );
-        throw new Error(`Erro ao registrar no Google Sheets: ${response.status} - ${errorText}`);
+      
+      if (!sheetsResponse.ok) {
+        const errorText = await sheetsResponse.text();
+        console.error('Erro ao enviar para Google Sheets:', errorText);
+        throw new Error(`Erro ao registrar no Google Sheets: ${sheetsResponse.status} - ${errorText}`);
       }
       
-      const responseData = await response.json();
-      console.log('Resposta do Google Sheets:', JSON.stringify(responseData));
-      console.log('Dados registrados com sucesso no Google Sheets!');
+      const responseData = await sheetsResponse.json();
+      console.log('Dados registrados com sucesso no Google Sheets:', responseData);
       
     } catch (googleError) {
       console.error('Erro ao processar operação do Google Sheets:', googleError);
+      console.error('Detalhes do erro:', googleError.stack || 'Sem stack trace disponível');
       
       // Retornar mensagem mais amigável para o usuário
       return new Response(
         JSON.stringify({ 
           success: true, 
           googleSheetsError: true,
-          message: 'Dados salvos no banco, mas não foi possível sincronizar com o Google Sheets. Por favor, verifique as configurações de API.'
+          message: 'Dados salvos no banco, mas não foi possível sincronizar com o Google Sheets: ' + googleError.message
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -322,7 +250,8 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Erro:', error);
+    console.error('Erro geral:', error);
+    console.error('Detalhes do erro:', error.stack || 'Sem stack trace disponível');
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
