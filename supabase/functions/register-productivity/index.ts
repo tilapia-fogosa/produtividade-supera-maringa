@@ -5,6 +5,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { ProdutividadeData } from "./types.ts";
 import { createSupabaseClient, registrarDadosAluno } from "./database-service.ts";
 import { getAccessToken, enviarParaGoogleSheets, prepararDadosParaSheets } from "./sheets-service.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -13,39 +14,36 @@ serve(async (req) => {
   }
 
   try {
-    // Diagnóstico de ambiente: Listar todas as variáveis de ambiente disponíveis
-    console.log('=== DIAGNÓSTICO DE VARIÁVEIS DE AMBIENTE ===');
-    console.log('Lista de todas as chaves de variáveis de ambiente:');
-    try {
-      // Deno.env.toObject() não funciona no ambiente Edge, vamos listar keys específicas
-      const envKeys = [
-        'SUPABASE_URL', 
-        'SUPABASE_ANON_KEY', 
-        'SUPABASE_SERVICE_ROLE_KEY', 
-        'GOOGLE_SERVICE_ACCOUNT', 
-        'GOOGLE_SPREADSHEET_ID'
-      ];
-      
-      for (const key of envKeys) {
-        const value = Deno.env.get(key);
-        console.log(`${key} existe: ${value !== undefined ? 'Sim' : 'Não'}`);
-        
-        // Se for a chave do Google Service Account, verificar formato
-        if (key === 'GOOGLE_SERVICE_ACCOUNT' && value) {
-          try {
-            const parsed = JSON.parse(value);
-            console.log('GOOGLE_SERVICE_ACCOUNT é um JSON válido');
-            console.log('Contém client_email:', parsed.client_email ? 'Sim' : 'Não');
-            console.log('Contém private_key:', parsed.private_key ? 'Sim' : 'Não');
-          } catch (e) {
-            console.error('GOOGLE_SERVICE_ACCOUNT não é um JSON válido:', e.message);
-          }
-        }
-      }
-    } catch (envError) {
-      console.error('Erro ao acessar variáveis de ambiente:', envError);
-    }
+    // Criar cliente Supabase para buscar configurações
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Buscar configurações do Google Sheets
+    const { data: configsData, error: configsError } = await supabase
+      .from('dados_importantes')
+      .select('key, data')
+      .in('key', ['GOOGLE_SERVICE_ACCOUNT_JSON', 'GOOGLE_SPREADSHEET_ID']);
     
+    if (configsError) {
+      console.error('Erro ao buscar configurações:', configsError);
+      throw new Error('Não foi possível recuperar as configurações do Google Sheets');
+    }
+
+    // Converter array de configurações em objeto
+    const configs = configsData.reduce((acc, item) => {
+      acc[item.key] = item.data;
+      return acc;
+    }, {});
+
+    const credentialsJSON = configs['GOOGLE_SERVICE_ACCOUNT_JSON'];
+    const spreadsheetId = configs['GOOGLE_SPREADSHEET_ID'];
+
+    console.log('Configurações carregadas:');
+    console.log('GOOGLE_SERVICE_ACCOUNT_JSON:', credentialsJSON ? 'Configurado' : 'Não configurado');
+    console.log('GOOGLE_SPREADSHEET_ID:', spreadsheetId ? 'Configurado' : 'Não configurado');
+
     // Obter os dados da solicitação
     const { data } = await req.json();
     
@@ -55,8 +53,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-
-    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
 
     // Criar um cliente Supabase com o contexto de autenticação do usuário logado
     const supabaseClient = createSupabaseClient(req.headers.get('Authorization')!);
@@ -72,13 +68,6 @@ serve(async (req) => {
     }
 
     // Verificar se as credenciais do Google estão configuradas
-    const credentialsJSON = Deno.env.get('GOOGLE_SERVICE_ACCOUNT');
-    const spreadsheetId = Deno.env.get('GOOGLE_SPREADSHEET_ID');
-
-    // Debug: Log das credenciais (apenas indicar se existem, não mostrar o conteúdo completo)
-    console.log('GOOGLE_SERVICE_ACCOUNT configurado:', credentialsJSON ? 'Sim' : 'Não');
-    console.log('GOOGLE_SPREADSHEET_ID configurado:', spreadsheetId ? 'Sim' : 'Não');
-
     if (!credentialsJSON || !spreadsheetId) {
       console.error('Credenciais do Google não configuradas corretamente');
       return new Response(
@@ -101,7 +90,7 @@ serve(async (req) => {
         console.log('Credenciais do Google parseadas com sucesso');
       } catch (parseError) {
         console.error('Erro ao analisar credenciais do Google:', parseError);
-        throw new Error('Formato das credenciais do Google é inválido. Verifique se é um JSON válido.');
+        throw new Error('Formato das credenciais do Google é inválido.');
       }
 
       // Obter token de acesso
@@ -127,7 +116,6 @@ serve(async (req) => {
       
     } catch (googleError) {
       console.error('Erro ao processar operação do Google Sheets:', googleError);
-      console.error('Detalhes do erro:', googleError.stack || 'Sem stack trace disponível');
       
       return new Response(
         JSON.stringify({ 
@@ -146,10 +134,10 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Erro geral:', error);
-    console.error('Detalhes do erro:', error.stack || 'Sem stack trace disponível');
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
+
