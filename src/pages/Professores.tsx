@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -127,6 +126,30 @@ const Professores = () => {
     setServiceType(ServiceType.NONE);
   };
 
+  const testarGoogleSheets = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('test-google-sheets');
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        toast({
+          title: "Teste realizado com sucesso",
+          description: data.message,
+        });
+      } else {
+        throw new Error(data.error || 'Erro desconhecido no teste');
+      }
+    } catch (error) {
+      console.error('Erro ao testar integração:', error);
+      toast({
+        title: "Erro no teste",
+        description: error.message || "Não foi possível realizar o teste do Google Sheets",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-4 px-4 text-center text-azul-500">
@@ -144,17 +167,28 @@ const Professores = () => {
            "Lançar Abrindo Horizontes"}
         </h1>
         
-        {serviceType !== ServiceType.NONE && (
-          <Button 
-            onClick={syncGoogleSheets}
-            disabled={syncingGoogleSheets}
+        <div className="flex gap-2">
+          {serviceType !== ServiceType.NONE && (
+            <Button 
+              onClick={syncGoogleSheets}
+              disabled={syncingGoogleSheets}
+              size="sm"
+              className="flex items-center self-end bg-supera hover:bg-supera-600"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+              {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
+            </Button>
+          )}
+          
+          <Button
+            onClick={testarGoogleSheets}
             size="sm"
-            className="flex items-center self-end bg-supera hover:bg-supera-600"
+            variant="outline"
+            className="flex items-center self-end border-orange-300 text-azul-500 hover:bg-orange-50"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
-            {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
+            Testar Google Sheets
           </Button>
-        )}
+        </div>
       </div>
 
       <Card className="border-orange-200 bg-white">
