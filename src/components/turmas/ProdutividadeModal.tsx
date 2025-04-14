@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -16,6 +17,7 @@ import AbacoSection from './produtividade/AbacoSection';
 import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { calcularPaginasRestantes } from './utils/paginasUtils';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -46,16 +48,44 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [errosAbaco, setErrosAbaco] = useState("");
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
+  const [apostilas, setApostilas] = useState<{nome: string, total_paginas: number}[]>([]);
 
   useEffect(() => {
-    if (isOpen && aluno && aluno.ultimo_nivel) {
-      const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
-      setApostilaAbaco(apostilaSugerida);
-      
-      if (aluno.ultimo_nivel) {
-        setApostilaAbaco(aluno.ultimo_nivel);
+    // Carregar apostilas do banco de dados
+    const carregarApostilas = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('apostilas')
+          .select('nome, total_paginas')
+          .order('nome');
+          
+        if (error) {
+          console.error("Erro ao carregar apostilas:", error);
+          return;
+        }
+        
+        if (data) {
+          setApostilas(data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar apostilas:", error);
+      }
+    };
+    
+    carregarApostilas();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && aluno) {
+      // Definir a apostila atual do aluno como padrão, se disponível
+      if (aluno.apostila_atual) {
+        setApostilaAbaco(aluno.apostila_atual);
+      } else if (aluno.ultimo_nivel) {
+        const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
+        setApostilaAbaco(apostilaSugerida);
       }
       
+      // Definir a última página, se disponível
       if (aluno.ultima_pagina) {
         setPaginaAbaco(aluno.ultima_pagina);
       }
@@ -280,61 +310,66 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <AlunoProgressoCard 
-          ultimo_nivel={aluno.ultimo_nivel}
-          ultimaPaginaCorrigida={aluno.ultima_pagina}
-          paginasRestantes={aluno.paginas_restantes}
-          ultimaCorrecaoAH={aluno.ultima_correcao_ah}
-          alunoId={aluno.id}
-        />
-        
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          <PresencaSection 
-            presente={presente}
-            setPresente={setPresente}
-            motivoFalta={motivoFalta}
-            setMotivoFalta={setMotivoFalta}
-            alunoId={aluno.id}
-          />
-          
-          {presente === "sim" && (
-            <>
-              <AbacoSection 
-                apostilaAbaco={apostilaAbaco}
-                setApostilaAbaco={setApostilaAbaco}
-                paginaAbaco={paginaAbaco}
-                setPaginaAbaco={setPaginaAbaco}
-                exerciciosAbaco={exerciciosAbaco}
-                setExerciciosAbaco={setExerciciosAbaco}
-                errosAbaco={errosAbaco}
-                setErrosAbaco={setErrosAbaco}
-                fezDesafio={fezDesafio}
-                setFezDesafio={setFezDesafio}
-                comentario={comentario}
-                setComentario={setComentario}
+        <ScrollArea className="max-h-[70vh] pr-4">
+          <div className="space-y-4">
+            <AlunoProgressoCard 
+              ultimo_nivel={aluno.ultimo_nivel}
+              ultimaPaginaCorrigida={aluno.ultima_pagina}
+              paginasRestantes={aluno.paginas_restantes}
+              ultimaCorrecaoAH={aluno.ultima_correcao_ah}
+              alunoId={aluno.id}
+            />
+            
+            <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+              <PresencaSection 
+                presente={presente}
+                setPresente={setPresente}
+                motivoFalta={motivoFalta}
+                setMotivoFalta={setMotivoFalta}
+                alunoId={aluno.id}
               />
-            </>
-          )}
-          
-          <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              disabled={isSubmitting}
-              className={isMobile ? "w-full" : ""}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className={isMobile ? "w-full" : ""}
-            >
-              {isSubmitting ? "Salvando..." : "Salvar"}
-            </Button>
-          </DialogFooter>
-        </form>
+              
+              {presente === "sim" && (
+                <>
+                  <AbacoSection 
+                    apostilaAbaco={apostilaAbaco}
+                    setApostilaAbaco={setApostilaAbaco}
+                    paginaAbaco={paginaAbaco}
+                    setPaginaAbaco={setPaginaAbaco}
+                    exerciciosAbaco={exerciciosAbaco}
+                    setExerciciosAbaco={setExerciciosAbaco}
+                    errosAbaco={errosAbaco}
+                    setErrosAbaco={setErrosAbaco}
+                    fezDesafio={fezDesafio}
+                    setFezDesafio={setFezDesafio}
+                    comentario={comentario}
+                    setComentario={setComentario}
+                    apostilas={apostilas}
+                  />
+                </>
+              )}
+              
+              <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className={isMobile ? "w-full" : ""}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className={isMobile ? "w-full" : ""}
+                >
+                  {isSubmitting ? "Salvando..." : "Salvar"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

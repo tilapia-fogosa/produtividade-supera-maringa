@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -5,8 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Book } from 'lucide-react';
-import { APOSTILAS_ABACO } from '../constants/apostilas';
-import { getTotalPaginasPorApostila } from '../constants/apostilas';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -21,6 +21,7 @@ interface AbacoSectionProps {
   setFezDesafio: (value: "sim" | "não") => void;
   comentario: string;
   setComentario: (value: string) => void;
+  apostilas: {nome: string, total_paginas: number}[];
 }
 
 const AbacoSection: React.FC<AbacoSectionProps> = ({
@@ -35,9 +36,12 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   fezDesafio,
   setFezDesafio,
   comentario,
-  setComentario
+  setComentario,
+  apostilas
 }) => {
-  const totalPaginas = apostilaAbaco ? getTotalPaginasPorApostila(apostilaAbaco) : 40;
+  // Obter o total de páginas da apostila selecionada
+  const apostilaSelecionada = apostilas.find(a => a.nome === apostilaAbaco);
+  const totalPaginas = apostilaSelecionada ? apostilaSelecionada.total_paginas : 40;
 
   return (
     <>
@@ -48,14 +52,16 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
             <SelectValue placeholder="Selecione a apostila" />
           </SelectTrigger>
           <SelectContent>
-            {APOSTILAS_ABACO.map((apostila) => (
-              <SelectItem key={apostila} value={apostila}>
-                <div className="flex items-center">
-                  <Book className="mr-2 h-4 w-4" />
-                  {apostila}
-                </div>
-              </SelectItem>
-            ))}
+            <ScrollArea className="h-[200px]">
+              {apostilas.map((apostila) => (
+                <SelectItem key={apostila.nome} value={apostila.nome}>
+                  <div className="flex items-center">
+                    <Book className="mr-2 h-4 w-4" />
+                    {apostila.nome} ({apostila.total_paginas} págs)
+                  </div>
+                </SelectItem>
+              ))}
+            </ScrollArea>
           </SelectContent>
         </Select>
       </div>
