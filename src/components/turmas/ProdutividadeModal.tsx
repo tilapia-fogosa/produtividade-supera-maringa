@@ -51,7 +51,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
       setApostilaAbaco(apostilaSugerida);
       
-      // Preencher com os dados atuais se disponíveis
       if (aluno.ultimo_nivel) {
         setApostilaAbaco(aluno.ultimo_nivel);
       }
@@ -116,9 +115,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         }
       }
       
-      // Se o aluno faltou, registrar na tabela de faltas
       if (presente === "não") {
-        // Primeiro verificar se já existe um registro de falta para hoje
         const { data: faltasExistentes, error: errorFaltas } = await supabase
           .from('faltas_alunos')
           .select('*')
@@ -130,7 +127,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         }
         
         if (faltasExistentes && faltasExistentes.length === 0) {
-          // Não existe falta registrada, então inserir
           const { error: errorInserirFalta } = await supabase
             .from('faltas_alunos')
             .insert({
@@ -143,7 +139,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
             throw errorInserirFalta;
           }
         } else {
-          // Atualizar o registro existente
           const { error: errorAtualizarFalta } = await supabase
             .from('faltas_alunos')
             .update({
@@ -157,7 +152,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         }
       }
       
-      // Atualizar a apostila e página atual do aluno
       if (presente === "sim" && apostilaAbaco && paginaAbaco) {
         const { error: errorAtualizarAluno } = await supabase
           .from('alunos')
@@ -227,7 +221,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         throw new Error(error.message);
       }
 
-      // Verificar se os dados foram salvos no banco, mas houve erro no Google Sheets
       if (data && data.googleSheetsError) {
         toast({
           title: "Parcialmente concluído",
@@ -284,7 +277,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         </DialogHeader>
         
         <AlunoProgressoCard 
-          apostilaAtual={aluno.apostila_atual || aluno.ultimo_nivel}
+          ultimo_nivel={aluno.ultimo_nivel}
           ultimaPaginaCorrigida={aluno.ultima_pagina}
           paginasRestantes={aluno.paginas_restantes}
           ultimaCorrecaoAH={aluno.ultima_correcao_ah}

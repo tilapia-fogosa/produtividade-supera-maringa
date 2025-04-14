@@ -122,7 +122,35 @@ export type Database = {
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_aluno_apostila"
+            columns: ["ultimo_nivel"]
+            isOneToOne: false
+            referencedRelation: "apostilas"
+            referencedColumns: ["nome"]
+          },
         ]
+      }
+      apostilas: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          total_paginas: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          total_paginas: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          total_paginas?: number
+        }
+        Relationships: []
       }
       clientes: {
         Row: {
