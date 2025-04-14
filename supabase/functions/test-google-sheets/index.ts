@@ -85,11 +85,14 @@ serve(async (req) => {
     const encodedClaimSet = base64UrlEncode(jwtClaimSet);
     const signatureInput = `${encodedHeader}.${encodedClaimSet}`;
     
+    // Garantir que a chave privada esteja no formato correto
     const privateKey = credentials.private_key.replace(/\\n/g, '\n');
     
+    // Converter a chave privada para o formato PKCS8
+    const keyData = new TextEncoder().encode(privateKey);
     const importedKey = await crypto.subtle.importKey(
       'pkcs8',
-      new TextEncoder().encode(privateKey).buffer,
+      keyData.buffer,
       {
         name: 'RSASSA-PKCS1-v1_5',
         hash: 'SHA-256'
@@ -109,6 +112,7 @@ serve(async (req) => {
     
     const jwt = `${signatureInput}.${encodedSignature}`;
     
+    console.log('Solicitando token de acesso...');
     const tokenResponse = await fetch(tokenEndpoint, {
       method: 'POST',
       headers: {
@@ -118,7 +122,8 @@ serve(async (req) => {
     });
     
     if (!tokenResponse.ok) {
-      throw new Error('Falha ao obter token de acesso');
+      const errorText = await tokenResponse.text();
+      throw new Error(`Falha ao obter token de acesso: ${errorText}`);
     }
     
     const tokenData = await tokenResponse.json();
@@ -128,6 +133,7 @@ serve(async (req) => {
     const range = 'Teste!B3';
     const sheetsEndpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=RAW`;
     
+    console.log('Atualizando célula B3...');
     const updateResponse = await fetch(sheetsEndpoint, {
       method: 'PUT',
       headers: {
@@ -162,3 +168,4 @@ serve(async (req) => {
     );
   }
 });
+
