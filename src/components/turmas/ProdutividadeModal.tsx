@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -53,8 +52,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       setApostilaAbaco(apostilaSugerida);
       
       // Preencher com os dados atuais se disponíveis
-      if (aluno.apostila_atual) {
-        setApostilaAbaco(aluno.apostila_atual);
+      if (aluno.ultimo_nivel) {
+        setApostilaAbaco(aluno.ultimo_nivel);
       }
       
       if (aluno.ultima_pagina) {

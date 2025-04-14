@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, differenceInMonths, isThisMonth } from 'date-fns';
@@ -6,7 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AlunoProgressoCardProps {
-  apostilaAtual?: string | null;
+  ultimo_nivel?: string | null;
   ultimaPaginaCorrigida?: string | null;
   paginasRestantes?: number | null;
   ultimaCorrecaoAH?: string | null;
@@ -14,7 +13,7 @@ interface AlunoProgressoCardProps {
 }
 
 const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
-  apostilaAtual,
+  ultimo_nivel,
   ultimaPaginaCorrigida,
   paginasRestantes,
   ultimaCorrecaoAH,
@@ -90,7 +89,7 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
       <CardContent className="space-y-2">
         <div className="flex justify-between">
           <span className="text-azul-400">Apostila Atual:</span>
-          <span className="font-semibold text-azul-500">{apostilaAtual || 'Não definido'}</span>
+          <span className="font-semibold text-azul-500">{ultimo_nivel || 'Não definido'}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-azul-400">Última Página:</span>

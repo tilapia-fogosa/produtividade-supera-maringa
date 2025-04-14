@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 // Função para criar o cliente Supabase
@@ -16,20 +15,18 @@ export async function registrarDadosAluno(
   data: any
 ): Promise<boolean> {
   try {
-    // Se o aluno estava presente, atualizar a informação da última correção AH
     if (data.presente && data.data_ultima_correcao_ah) {
-      // Atualizar a data da última correção AH
       const { error: updateError } = await supabaseClient
         .from('alunos')
         .update({ 
           ultima_correcao_ah: data.data_ultima_correcao_ah,
-          apostila_atual: data.apostila_atual,
+          ultimo_nivel: data.ultimo_nivel,
           ultima_pagina: data.ultima_pagina 
         })
         .eq('id', data.aluno_id);
 
       if (updateError) {
-        console.error('Erro ao atualizar data da última correção AH:', updateError);
+        console.error('Erro ao atualizar dados do aluno:', updateError);
         return false;
       }
     }
