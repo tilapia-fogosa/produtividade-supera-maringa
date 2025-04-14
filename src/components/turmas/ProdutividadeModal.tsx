@@ -15,6 +15,7 @@ import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
 import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
+import { calcularPaginasRestantes } from './utils/paginasUtils';
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
