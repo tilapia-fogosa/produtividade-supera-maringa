@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, RefreshCw, AlertCircle, TrendingUp, BookOpen } from "lucide-react";
+import { Users, RefreshCw, TrendingUp, BookOpen } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -126,30 +126,6 @@ const Professores = () => {
     setServiceType(ServiceType.NONE);
   };
 
-  const testarGoogleSheets = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('test-google-sheets');
-      
-      if (error) throw error;
-      
-      if (data.success) {
-        toast({
-          title: "Teste realizado com sucesso",
-          description: data.message,
-        });
-      } else {
-        throw new Error(data.error || 'Erro desconhecido no teste');
-      }
-    } catch (error) {
-      console.error('Erro ao testar integração:', error);
-      toast({
-        title: "Erro no teste",
-        description: error.message || "Não foi possível realizar o teste do Google Sheets",
-        variant: "destructive"
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="container mx-auto py-4 px-4 text-center text-azul-500">
@@ -179,15 +155,6 @@ const Professores = () => {
               {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
             </Button>
           )}
-          
-          <Button
-            onClick={testarGoogleSheets}
-            size="sm"
-            variant="outline"
-            className="flex items-center self-end border-orange-300 text-azul-500 hover:bg-orange-50"
-          >
-            Testar Google Sheets
-          </Button>
         </div>
       </div>
 
