@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Film, Copy, Play, Clock, Trash2, Send } from "lucide-react";
@@ -20,7 +20,6 @@ const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [testando, setTestando] = useState(false);
 
   useEffect(() => {
     loadVideos();
@@ -110,31 +109,6 @@ const Index = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleTesteSheets = async () => {
-    setTestando(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('register-productivity', {
-        body: { teste: true }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso!",
-        description: data.message || "Teste realizado com sucesso!"
-      });
-    } catch (error) {
-      console.error('Erro ao testar:', error);
-      toast({
-        title: "Erro no teste",
-        description: error.message || "Não foi possível realizar o teste",
-        variant: "destructive"
-      });
-    } finally {
-      setTestando(false);
-    }
-  };
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Card className="border-orange-200 bg-white">
@@ -146,14 +120,6 @@ const Index = () => {
                 Faça upload, gerencie e obtenha os códigos HLS para seus vídeos de treinamento
               </CardDescription>
             </div>
-            <Button
-              onClick={handleTesteSheets}
-              disabled={testando}
-              className="bg-supera hover:bg-supera-600"
-            >
-              <Send className="mr-2 h-4 w-4" />
-              {testando ? "Testando..." : "Testar Sheets"}
-            </Button>
           </div>
         </CardHeader>
         <CardContent>

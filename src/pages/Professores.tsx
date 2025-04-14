@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, RefreshCw, AlertCircle, TrendingUp, BookOpen } from "lucide-react";
+import { Users, RefreshCw, AlertCircle, TrendingUp, BookOpen, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -27,6 +26,7 @@ const Professores = () => {
   const [serviceType, setServiceType] = useState<ServiceType>(ServiceType.NONE);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [testando, setTestando] = useState(false);
 
   useEffect(() => {
     fetchProfessores();
@@ -127,6 +127,31 @@ const Professores = () => {
     setServiceType(ServiceType.NONE);
   };
 
+  const handleTesteSheets = async () => {
+    setTestando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('register-productivity', {
+        body: { teste: true }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: data.message || "Teste realizado com sucesso!"
+      });
+    } catch (error) {
+      console.error('Erro ao testar:', error);
+      toast({
+        title: "Erro no teste",
+        description: error.message || "Não foi possível realizar o teste",
+        variant: "destructive"
+      });
+    } finally {
+      setTestando(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-4 px-4 text-center text-azul-500">
@@ -145,15 +170,26 @@ const Professores = () => {
         </h1>
         
         {serviceType !== ServiceType.NONE && (
-          <Button 
-            onClick={syncGoogleSheets}
-            disabled={syncingGoogleSheets}
-            size="sm"
-            className="flex items-center self-end bg-supera hover:bg-supera-600"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
-            {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={syncGoogleSheets}
+              disabled={syncingGoogleSheets}
+              size="sm"
+              className="flex items-center self-end bg-supera hover:bg-supera-600"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+              {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
+            </Button>
+            
+            <Button
+              onClick={handleTesteSheets}
+              disabled={testando}
+              className="flex items-center self-end bg-supera hover:bg-supera-600"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {testando ? "Testando..." : "Testar Sheets"}
+            </Button>
+          </div>
         )}
       </div>
 
