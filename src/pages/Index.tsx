@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Film, Copy, Play, Clock, Trash2, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/integrations/supabase/client';
 import VideoPlayer from "@/components/VideoPlayer";
 import { fetchVideos, uploadVideo, deleteVideo, Video } from "@/integrations/supabase/video-service";
 import { Input } from "@/components/ui/input";
@@ -114,7 +113,6 @@ const Index = () => {
   const handleTesteSheets = async () => {
     setTestando(true);
     try {
-      const supabase = createClientComponentClient();
       const { data, error } = await supabase.functions.invoke('register-productivity', {
         body: { teste: true }
       });
