@@ -13,6 +13,39 @@ serve(async (req) => {
   }
 
   try {
+    // Diagnóstico de ambiente: Listar todas as variáveis de ambiente disponíveis
+    console.log('=== DIAGNÓSTICO DE VARIÁVEIS DE AMBIENTE ===');
+    console.log('Lista de todas as chaves de variáveis de ambiente:');
+    try {
+      // Deno.env.toObject() não funciona no ambiente Edge, vamos listar keys específicas
+      const envKeys = [
+        'SUPABASE_URL', 
+        'SUPABASE_ANON_KEY', 
+        'SUPABASE_SERVICE_ROLE_KEY', 
+        'GOOGLE_SERVICE_ACCOUNT', 
+        'GOOGLE_SPREADSHEET_ID'
+      ];
+      
+      for (const key of envKeys) {
+        const value = Deno.env.get(key);
+        console.log(`${key} existe: ${value !== undefined ? 'Sim' : 'Não'}`);
+        
+        // Se for a chave do Google Service Account, verificar formato
+        if (key === 'GOOGLE_SERVICE_ACCOUNT' && value) {
+          try {
+            const parsed = JSON.parse(value);
+            console.log('GOOGLE_SERVICE_ACCOUNT é um JSON válido');
+            console.log('Contém client_email:', parsed.client_email ? 'Sim' : 'Não');
+            console.log('Contém private_key:', parsed.private_key ? 'Sim' : 'Não');
+          } catch (e) {
+            console.error('GOOGLE_SERVICE_ACCOUNT não é um JSON válido:', e.message);
+          }
+        }
+      }
+    } catch (envError) {
+      console.error('Erro ao acessar variáveis de ambiente:', envError);
+    }
+    
     // Obter os dados da solicitação
     const { data } = await req.json();
     
