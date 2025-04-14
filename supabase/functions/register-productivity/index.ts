@@ -55,6 +55,8 @@ serve(async (req) => {
     }
 
     try {
+      console.log('Iniciando processo de sincronização com Google Sheets...');
+      
       // Verificar formato das credenciais
       let credentials;
       try {
@@ -72,6 +74,8 @@ serve(async (req) => {
         throw new Error('Não foi possível obter o token de acesso do Google');
       }
 
+      console.log('Token de acesso obtido com sucesso');
+
       // Preparar os dados para o Google Sheets
       const sheetData = prepararDadosParaSheets(data);
       
@@ -82,11 +86,12 @@ serve(async (req) => {
         throw new Error('Falha ao enviar dados para o Google Sheets');
       }
       
+      console.log('Dados enviados com sucesso para o Google Sheets');
+      
     } catch (googleError) {
       console.error('Erro ao processar operação do Google Sheets:', googleError);
       console.error('Detalhes do erro:', googleError.stack || 'Sem stack trace disponível');
       
-      // Retornar mensagem mais amigável para o usuário
       return new Response(
         JSON.stringify({ 
           success: true, 
