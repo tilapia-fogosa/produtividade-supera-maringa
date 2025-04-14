@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Iniciando função de registro de produtividade...');
+    
     // Criar cliente Supabase para buscar configurações
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -21,6 +23,7 @@ serve(async (req) => {
     );
 
     // Buscar configurações do Google Sheets
+    console.log('Buscando configurações do Google Sheets da tabela dados_importantes...');
     const { data: configsData, error: configsError } = await supabase
       .from('dados_importantes')
       .select('key, data')
@@ -29,6 +32,11 @@ serve(async (req) => {
     if (configsError) {
       console.error('Erro ao buscar configurações:', configsError);
       throw new Error('Não foi possível recuperar as configurações do Google Sheets');
+    }
+
+    if (!configsData || configsData.length === 0) {
+      console.error('Configurações não encontradas na tabela dados_importantes');
+      throw new Error('Configurações do Google Sheets não encontradas');
     }
 
     // Converter array de configurações em objeto
@@ -43,6 +51,17 @@ serve(async (req) => {
     console.log('Configurações carregadas:');
     console.log('GOOGLE_SERVICE_ACCOUNT_JSON:', credentialsJSON ? 'Configurado' : 'Não configurado');
     console.log('GOOGLE_SPREADSHEET_ID:', spreadsheetId ? 'Configurado' : 'Não configurado');
+    
+    // Verificações detalhadas das configurações
+    if (!credentialsJSON) {
+      console.error('GOOGLE_SERVICE_ACCOUNT_JSON não encontrado ou vazio');
+      throw new Error('Credenciais do Google Service Account não configuradas');
+    }
+    
+    if (!spreadsheetId) {
+      console.error('GOOGLE_SPREADSHEET_ID não encontrado ou vazio');
+      throw new Error('ID da planilha do Google não configurado');
+    }
 
     // Obter os dados da solicitação
     const { data } = await req.json();
@@ -67,19 +86,6 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se as credenciais do Google estão configuradas
-    if (!credentialsJSON || !spreadsheetId) {
-      console.error('Credenciais do Google não configuradas corretamente');
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          googleSheetsError: true,
-          message: 'Dados salvos no banco, mas credenciais do Google Sheets não configuradas'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     try {
       console.log('Iniciando processo de sincronização com Google Sheets...');
       
@@ -90,7 +96,7 @@ serve(async (req) => {
         console.log('Credenciais do Google parseadas com sucesso');
       } catch (parseError) {
         console.error('Erro ao analisar credenciais do Google:', parseError);
-        throw new Error('Formato das credenciais do Google é inválido.');
+        throw new Error('Formato das credenciais do Google é inválido. Verifique se é um JSON válido.');
       }
 
       // Obter token de acesso
@@ -140,4 +146,3 @@ serve(async (req) => {
     );
   }
 });
-
