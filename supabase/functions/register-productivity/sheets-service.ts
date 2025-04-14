@@ -33,7 +33,7 @@ export async function getAccessToken(credentials: any): Promise<string | null> {
       iat: now
     };
     
-    console.log('JWT payload preparado:', { ...jwtClaimSet, privateKey: 'REDACTED' });
+    console.log('JWT payload preparado com email:', credentials.client_email);
     
     // Formar a parte de cabeçalho e payload do JWT
     const encodedHeader = base64UrlEncode(jwtHeader);
@@ -113,6 +113,7 @@ export async function enviarParaGoogleSheets(
 ): Promise<boolean> {
   try {
     console.log('Iniciando envio para Google Sheets...');
+    console.log('ID da planilha:', spreadsheetId);
     console.log('Dados a serem enviados:', JSON.stringify(sheetData, null, 2));
     
     const sheetsEndpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Respostas ao formulário 1:append?valueInputOption=USER_ENTERED`;
@@ -172,4 +173,3 @@ export function prepararDadosParaSheets(data: any): any[] {
   console.log('Dados preparados para Google Sheets:', dadosPreparados);
   return dadosPreparados;
 }
-

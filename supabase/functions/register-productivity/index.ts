@@ -42,6 +42,10 @@ serve(async (req) => {
     const credentialsJSON = Deno.env.get('GOOGLE_SERVICE_ACCOUNT');
     const spreadsheetId = Deno.env.get('GOOGLE_SPREADSHEET_ID');
 
+    // Debug: Log das credenciais (apenas indicar se existem, não mostrar o conteúdo completo)
+    console.log('GOOGLE_SERVICE_ACCOUNT configurado:', credentialsJSON ? 'Sim' : 'Não');
+    console.log('GOOGLE_SPREADSHEET_ID configurado:', spreadsheetId ? 'Sim' : 'Não');
+
     if (!credentialsJSON || !spreadsheetId) {
       console.error('Credenciais do Google não configuradas corretamente');
       return new Response(
