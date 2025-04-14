@@ -2,15 +2,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { createSupabaseClient } from "./database-service.ts";
+import { ProdutividadeData } from "./types.ts";
+import { createSupabaseClient, registrarDadosAluno } from "./database-service.ts";
 import { getAccessToken, enviarParaGoogleSheets, prepararDadosParaSheets } from "./sheets-service.ts";
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    // Obter os dados da solicitação
+    const { data } = await req.json();
+    
+    if (!data) {
+      return new Response(
+        JSON.stringify({ error: 'Dados de produtividade não fornecidos' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
+
+    // Criar um cliente Supabase com o contexto de autenticação do usuário logado
+    const supabaseClient = createSupabaseClient(req.headers.get('Authorization')!);
+
+    // Registrar dados do aluno no banco
+    const sucessoBanco = await registrarDadosAluno(supabaseClient, data);
+    
+    if (!sucessoBanco) {
+      return new Response(
+        JSON.stringify({ error: 'Erro ao atualizar dados do aluno' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
     // Verificar se as credenciais do Google estão configuradas
     const credentialsJSON = Deno.env.get('GOOGLE_SERVICE_ACCOUNT');
     const spreadsheetId = Deno.env.get('GOOGLE_SPREADSHEET_ID');
@@ -19,8 +46,9 @@ serve(async (req) => {
       console.error('Credenciais do Google não configuradas corretamente');
       return new Response(
         JSON.stringify({ 
-          error: true,
-          message: 'Credenciais do Google Sheets não configuradas'
+          success: true, 
+          googleSheetsError: true,
+          message: 'Dados salvos no banco, mas credenciais do Google Sheets não configuradas'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -29,15 +57,17 @@ serve(async (req) => {
     try {
       console.log('Iniciando processo de sincronização com Google Sheets...');
       
+      // Verificar formato das credenciais
       let credentials;
       try {
         credentials = JSON.parse(credentialsJSON);
         console.log('Credenciais do Google parseadas com sucesso');
       } catch (parseError) {
         console.error('Erro ao analisar credenciais do Google:', parseError);
-        throw new Error('Formato das credenciais do Google é inválido');
+        throw new Error('Formato das credenciais do Google é inválido. Verifique se é um JSON válido.');
       }
 
+      // Obter token de acesso
       const accessToken = await getAccessToken(credentials);
       
       if (!accessToken) {
@@ -46,14 +76,10 @@ serve(async (req) => {
 
       console.log('Token de acesso obtido com sucesso');
 
-      // Dados de teste
-      const testData = {
-        teste: true,
-        timestamp: new Date().toISOString()
-      };
+      // Preparar os dados para o Google Sheets
+      const sheetData = prepararDadosParaSheets(data);
       
-      const sheetData = prepararDadosParaSheets(testData);
-      
+      // Enviar dados para o Google Sheets
       const sucessoSheets = await enviarParaGoogleSheets(accessToken, spreadsheetId, sheetData);
       
       if (!sucessoSheets) {
@@ -62,22 +88,28 @@ serve(async (req) => {
       
       console.log('Dados enviados com sucesso para o Google Sheets');
       
+    } catch (googleError) {
+      console.error('Erro ao processar operação do Google Sheets:', googleError);
+      console.error('Detalhes do erro:', googleError.stack || 'Sem stack trace disponível');
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Teste realizado com sucesso!' 
+          googleSheetsError: true,
+          message: 'Dados salvos no banco, mas não foi possível sincronizar com o Google Sheets: ' + googleError.message
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-      
-    } catch (googleError) {
-      console.error('Erro ao processar operação do Google Sheets:', googleError);
-      throw googleError;
     }
 
+    // Retornar resposta de sucesso
+    return new Response(
+      JSON.stringify({ success: true, message: 'Produtividade registrada com sucesso!' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Erro geral:', error);
-    console.error('Stack trace:', error.stack || 'Sem stack trace disponível');
+    console.error('Detalhes do erro:', error.stack || 'Sem stack trace disponível');
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
