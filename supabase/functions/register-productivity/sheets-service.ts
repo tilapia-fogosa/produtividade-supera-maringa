@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 // Função para obter token de acesso usando OAuth2
@@ -115,7 +114,8 @@ export async function enviarParaGoogleSheets(
     console.log('Iniciando envio para Google Sheets...');
     console.log('Dados a serem enviados:', JSON.stringify(sheetData, null, 2));
     
-    const sheetsEndpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Respostas ao formulário 1:append?valueInputOption=USER_ENTERED`;
+    // Modificado para usar a sheet "teste"
+    const sheetsEndpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/teste:append?valueInputOption=USER_ENTERED`;
     
     console.log('Endpoint Google Sheets:', sheetsEndpoint);
     
@@ -153,23 +153,13 @@ export function prepararDadosParaSheets(data: any): any[] {
   console.log('Preparando dados para Google Sheets...');
   console.log('Dados recebidos:', JSON.stringify(data, null, 2));
   
-  const dataAtual = new Date().toLocaleString('pt-BR');
-  
+  // Simplificando para teste com apenas 3 colunas
   const dadosPreparados = [
-    dataAtual,                           // Carimbo de data/hora
-    data.aluno_nome,                     // Nome do Aluno
-    data.data_registro.split('T')[0],    // Data
-    data.apostila_abaco || '',           // Qual Apostila de Ábaco?
-    data.pagina_abaco || '',             // Ábaco - Página
-    data.exercicios_abaco || '',         // Ábaco - Exercícios Realizados
-    data.erros_abaco || '',              // Ábaco - Nº de Erros
-    data.fez_desafio ? 'Sim' : 'Não',    // Fez Desafio?
-    data.comentario || '',               // Comentário, observação ou Situação
-    data.presente ? 'Presente' : 'Faltoso', // Tipo de Situação
-    data.is_reposicao ? 'Sim' : 'Não'    // É reposição?
+    "Valor Teste 1",
+    "Valor Teste 2",
+    "Valor Teste 3"
   ];
   
   console.log('Dados preparados para Google Sheets:', dadosPreparados);
   return dadosPreparados;
 }
-

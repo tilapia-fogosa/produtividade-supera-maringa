@@ -1,11 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, Film, Copy, Play, Clock, Trash2 } from "lucide-react";
+import { Upload, Film, Copy, Play, Clock, Trash2, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import VideoPlayer from "@/components/VideoPlayer";
 import { fetchVideos, uploadVideo, deleteVideo, Video } from "@/integrations/supabase/video-service";
 
@@ -13,12 +11,12 @@ const Index = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [testando, setTestando] = useState(false);
 
-  // Buscar vídeos do Supabase ao carregar a página
   useEffect(() => {
     loadVideos();
   }, []);
-  
+
   const loadVideos = async () => {
     const videoList = await fetchVideos();
     setVideos(videoList);
@@ -31,18 +29,15 @@ const Index = () => {
     setIsUploading(true);
 
     try {
-      // Upload do vídeo para o Supabase
       const newVideo = await uploadVideo(file, file.name.replace(/\.[^/.]+$/, ""));
       
       if (newVideo) {
         setVideos(prev => [newVideo, ...prev]);
         
-        // Atualizar status do vídeo periodicamente
         const checkStatus = setInterval(async () => {
           const updatedVideos = await fetchVideos();
           setVideos(updatedVideos);
           
-          // Verificar se o vídeo atual está pronto ou com erro
           const currentVideo = updatedVideos.find(v => v.id === newVideo.id);
           if (currentVideo && (currentVideo.status === 'ready' || currentVideo.status === 'error')) {
             clearInterval(checkStatus);
@@ -60,7 +55,7 @@ const Index = () => {
               });
             }
           }
-        }, 3000); // Verificar a cada 3 segundos
+        }, 3000);
       }
     } catch (error) {
       console.error("Erro no upload:", error);
@@ -106,14 +101,52 @@ const Index = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleTesteSheets = async () => {
+    setTestando(true);
+    try {
+      const supabase = createClientComponentClient();
+      const { data, error } = await supabase.functions.invoke('register-productivity', {
+        body: { teste: true }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: data.message || "Teste realizado com sucesso!"
+      });
+    } catch (error) {
+      console.error('Erro ao testar:', error);
+      toast({
+        title: "Erro no teste",
+        description: error.message || "Não foi possível realizar o teste",
+        variant: "destructive"
+      });
+    } finally {
+      setTestando(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Card className="border-orange-200 bg-white">
         <CardHeader className="border-b border-orange-100">
-          <CardTitle className="text-azul-500">Gerenciador de Vídeos para Cursaeduca</CardTitle>
-          <CardDescription className="text-azul-400">
-            Faça upload, gerencie e obtenha os códigos HLS para seus vídeos de treinamento
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-azul-500">Gerenciador de Vídeos para Cursaeduca</CardTitle>
+              <CardDescription className="text-azul-400">
+                Faça upload, gerencie e obtenha os códigos HLS para seus vídeos de treinamento
+              </CardDescription>
+            </div>
+            <Button
+              onClick={handleTesteSheets}
+              disabled={testando}
+              className="bg-supera hover:bg-supera-600"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {testando ? "Testando..." : "Testar Sheets"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
@@ -232,7 +265,6 @@ const Index = () => {
             <Button 
               className="bg-supera hover:bg-supera-600"
               onClick={() => {
-                // Copiar código de embed para inserir no Cursaeduca
                 const embedCode = `<video-js class="vjs-default-skin" controls>
   <source src="${selectedVideo.hls_url}" type="application/x-mpegURL">
 </video-js>`;
