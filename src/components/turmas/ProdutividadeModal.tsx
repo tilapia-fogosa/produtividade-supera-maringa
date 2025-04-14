@@ -193,6 +193,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       if (!presencaRegistrada) {
         throw new Error("Falha ao registrar presença");
       }
+
+      const paginasRestantes = await calcularPaginasRestantes(apostilaAbaco, paginaAbaco);
       
       const produtividadeData = {
         aluno_id: aluno.id,
@@ -211,6 +213,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         data_ultima_correcao_ah: presente === "sim" ? new Date().toISOString() : undefined,
         apostila_atual: presente === "sim" ? apostilaAbaco : undefined,
         ultima_pagina: presente === "sim" ? paginaAbaco : undefined,
+        paginas_restantes: paginasRestantes,
       };
 
       const { data, error } = await supabase.functions.invoke('register-productivity', {

@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, differenceInMonths, isThisMonth } from 'date-fns';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { calcularPaginasRestantes } from '../utils/paginasUtils';
+import { Progress } from "@/components/ui/progress"
 
 interface AlunoProgressoCardProps {
   ultimo_nivel?: string | null;
@@ -15,12 +17,33 @@ interface AlunoProgressoCardProps {
 const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
   ultimo_nivel,
   ultimaPaginaCorrigida,
-  paginasRestantes,
+  paginasRestantes: paginasRestantesInicial,
   ultimaCorrecaoAH,
   alunoId
 }) => {
   const isMobile = useIsMobile();
   const [faltouMes, setFaltouMes] = useState<boolean | null>(null);
+  const [paginasRestantes, setPaginasRestantes] = useState<number | null>(paginasRestantesInicial ?? null);
+  const [totalPaginas, setTotalPaginas] = useState<number | null>(null);
+
+  useEffect(() => {
+    const buscarPaginasRestantes = async () => {
+      const restantes = await calcularPaginasRestantes(ultimo_nivel, ultimaPaginaCorrigida);
+      setPaginasRestantes(restantes);
+
+      if (ultimo_nivel) {
+        const { data } = await supabase
+          .from('apostilas')
+          .select('total_paginas')
+          .eq('nome', ultimo_nivel)
+          .maybeSingle();
+        
+        setTotalPaginas(data?.total_paginas ?? null);
+      }
+    };
+
+    buscarPaginasRestantes();
+  }, [ultimo_nivel, ultimaPaginaCorrigida]);
 
   useEffect(() => {
     if (!alunoId) return;
@@ -61,7 +84,14 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
     if (paginas === null || paginas === undefined) return "";
     if (paginas < 5) return "text-red-600 font-bold";
     if (paginas < 10) return "text-yellow-600 font-bold";
-    return "";
+    return "text-green-600 font-bold";
+  };
+
+  const getProgressoValue = () => {
+    if (!totalPaginas || !ultimaPaginaCorrigida) return 0;
+    const paginaAtual = parseInt(ultimaPaginaCorrigida, 10);
+    if (isNaN(paginaAtual)) return 0;
+    return Math.min(100, (paginaAtual / totalPaginas) * 100);
   };
 
   const getUltimaCorrecaoAHColor = (dataStr?: string | null) => {
@@ -101,6 +131,15 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
             {paginasRestantes !== null ? paginasRestantes : 'Não calculado'}
           </span>
         </div>
+        {totalPaginas && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span>Progresso da apostila</span>
+              <span>{Math.round(getProgressoValue())}%</span>
+            </div>
+            <Progress value={getProgressoValue()} className="h-2" />
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-azul-400">Última Correção AH:</span>
           <span className={`font-semibold ${getUltimaCorrecaoAHColor(ultimaCorrecaoAH)}`}>
