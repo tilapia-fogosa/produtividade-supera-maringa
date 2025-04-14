@@ -54,6 +54,11 @@ interface FormValues {
   comentario: string;
 }
 
+interface Apostila {
+  nome: string;
+  total_paginas: number;
+}
+
 const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   isOpen,
   turma,
@@ -65,6 +70,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filtro, setFiltro] = useState("");
   const [alunosFiltrados, setAlunosFiltrados] = useState<Aluno[]>(todosAlunos);
+  const [apostilas, setApostilas] = useState<Apostila[]>([]);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -80,11 +87,33 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
     }
   });
   
+  // Buscar apostilas do banco de dados
+  useEffect(() => {
+    const fetchApostilas = async () => {
+      const { data, error } = await supabase
+        .from('apostilas')
+        .select('nome, total_paginas')
+        .order('nome');
+        
+      if (error) {
+        console.error("Erro ao buscar apostilas:", error);
+        return;
+      }
+      
+      if (data) {
+        setApostilas(data);
+      }
+    };
+    
+    fetchApostilas();
+  }, []);
+
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       form.reset();
       setFiltro("");
+      setAlunoSelecionado(null);
     }
   }, [isOpen, form]);
   
@@ -99,6 +128,22 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       setAlunosFiltrados(todosAlunos);
     }
   }, [filtro, todosAlunos]);
+
+  // Atualizar apostila selecionada quando o aluno mudar
+  useEffect(() => {
+    const alunoId = form.watch("alunoId");
+    if (alunoId) {
+      const aluno = todosAlunos.find(a => a.id === alunoId);
+      if (aluno) {
+        setAlunoSelecionado(aluno);
+        
+        // Se o aluno tiver uma apostila atual, selecionar ela no formulário
+        if (aluno.apostila_atual) {
+          form.setValue("apostilaAbaco", aluno.apostila_atual);
+        }
+      }
+    }
+  }, [form.watch("alunoId"), todosAlunos, form]);
   
   const handleSubmit = async (values: FormValues) => {
     if (!values.alunoId) {
@@ -208,11 +253,11 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   };
 
   const presente = form.watch("presente");
-  const alunoId = form.watch("alunoId"); // Adicionando esta linha para obter o ID do aluno selecionado
+  const alunoId = form.watch("alunoId");
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={`max-w-md ${isMobile ? "w-[95%] p-4" : ""}`}>
+      <DialogContent className={`max-w-md ${isMobile ? "w-[95%] p-4" : ""} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle className={isMobile ? "text-lg" : ""}>
             Registrar Reposição de Aula
@@ -278,7 +323,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                     setPresente={(value) => field.onChange(value)}
                     motivoFalta={form.watch("motivoFalta")}
                     setMotivoFalta={(value) => form.setValue("motivoFalta", value)}
-                    alunoId={alunoId} // Passando o ID do aluno selecionado
+                    alunoId={alunoId}
                   />
                 </FormItem>
               )}
@@ -305,6 +350,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                       setFezDesafio={(value) => form.setValue("fezDesafio", value)}
                       comentario={form.watch("comentario")}
                       setComentario={(value) => form.setValue("comentario", value)}
+                      apostilas={apostilas}
                     />
                   )}
                 />
