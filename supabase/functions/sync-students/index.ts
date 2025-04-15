@@ -9,32 +9,28 @@ const SPREADSHEET_ID = Deno.env.get('GOOGLE_SPREADSHEET_ID') || '';
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Function to validate environment variables
-function validateEnvironmentVars() {
-  console.log("Validando variáveis de ambiente...");
-  console.log("SUPABASE_URL:", SUPABASE_URL ? "Configurado" : "Não configurado");
-  console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "Configurado" : "Não configurado");
-  console.log("GOOGLE_API_KEY:", GOOGLE_API_KEY ? "Configurado" : "Não configurado");
-  console.log("SPREADSHEET_ID:", SPREADSHEET_ID ? "Configurado" : "Não configurado");
+// Function to validate environment vars with provided keys
+function validateEnvironmentVars(googleApiKey: string, spreadsheetId: string) {
+  console.log("Validando credenciais fornecidas...");
   
-  if (!GOOGLE_API_KEY) {
-    throw new Error('Google API Key não configurada');
+  if (!googleApiKey) {
+    throw new Error('Google API Key não fornecida');
   }
   
-  if (!SPREADSHEET_ID) {
-    throw new Error('Google Spreadsheet ID não configurado');
+  if (!spreadsheetId) {
+    throw new Error('Google Spreadsheet ID não fornecido');
   }
 
-  console.log("Variáveis de ambiente validadas com sucesso");
+  console.log("Credenciais validadas com sucesso");
 }
 
-// Function to fetch data from Google Sheets
-async function fetchGoogleSheetsData() {
+// Function to fetch data from Google Sheets using provided keys
+async function fetchGoogleSheetsData(googleApiKey: string, spreadsheetId: string) {
   console.log("Buscando dados da planilha...");
   
   const sheetName = 'SGS>Alunos'; 
-  const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${GOOGLE_API_KEY}`;
-  console.log(`Acessando URL: ${sheetsApiUrl.replace(GOOGLE_API_KEY, 'API_KEY_HIDDEN')}`);
+  const sheetsApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${googleApiKey}`;
+  console.log(`Acessando URL: ${sheetsApiUrl.replace(googleApiKey, 'API_KEY_HIDDEN')}`);
   
   const response = await fetch(sheetsApiUrl);
   const responseText = await response.text();
@@ -477,15 +473,15 @@ async function syncStudents(rawData, turmas) {
 }
 
 // Main function to handle the full sync process
-async function syncFromGoogleSheets() {
+async function syncFromGoogleSheets(googleApiKey: string, spreadsheetId: string) {
   try {
     console.log("Iniciando sincronização completa com Google Sheets");
     
-    // Validate environment variables with detailed logging
-    validateEnvironmentVars();
+    // Validate provided keys
+    validateEnvironmentVars(googleApiKey, spreadsheetId);
     
-    // Fetch Google Sheets data
-    const data = await fetchGoogleSheetsData();
+    // Fetch Google Sheets data with provided keys
+    const data = await fetchGoogleSheetsData(googleApiKey, spreadsheetId);
     const rows = data.values || [];
     
     if (rows.length <= 5) {
@@ -541,7 +537,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const result = await syncFromGoogleSheets();
+    // Get API keys from request body
+    const { googleApiKey, spreadsheetId } = await req.json();
+    console.log('Chaves recebidas:', { 
+      googleApiKey: googleApiKey ? 'present' : 'missing', 
+      spreadsheetId: spreadsheetId ? 'present' : 'missing' 
+    });
+    
+    const result = await syncFromGoogleSheets(googleApiKey, spreadsheetId);
     console.log('Resultado da sincronização:', result);
     
     return new Response(
