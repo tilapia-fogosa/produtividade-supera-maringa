@@ -2,7 +2,19 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { ProdutividadeAbaco, FaltaAluno } from '@/types/produtividade';
+
+interface ProdutividadeAbaco {
+  aluno_id: string;
+  presente: boolean;
+  apostila?: string;
+  pagina?: string;
+  exercicios?: string | number;
+  erros?: string | number;
+  fez_desafio?: boolean;
+  comentario?: string;
+  data_aula: string;
+  is_reposicao?: boolean;
+}
 
 export const useProdutividade = (alunoId: string) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +39,19 @@ export const useProdutividade = (alunoId: string) => {
         if (error) throw error;
       }
 
+      // Registrar na tabela presencas
+      const { error: presencaError } = await supabase
+        .from('presencas')
+        .insert({
+          aluno_id: alunoId,
+          data_aula: data,
+          presente: presente,
+          observacao: motivoFalta,
+          is_reposicao: false
+        });
+
+      if (presencaError) throw presencaError;
+
       return true;
     } catch (error) {
       console.error('Erro ao registrar presença:', error);
@@ -41,15 +66,33 @@ export const useProdutividade = (alunoId: string) => {
     }
   };
 
-  const registrarProdutividade = async (dados: Omit<ProdutividadeAbaco, 'id' | 'created_at' | 'updated_at'>) => {
+  const registrarProdutividade = async (dados: ProdutividadeAbaco) => {
     try {
       setIsLoading(true);
-      
-      const { error } = await supabase
-        .from('produtividade_abaco')
-        .insert(dados);
 
-      if (error) throw error;
+      // Registrar produtividade do ábaco
+      const { error: produtividadeError } = await supabase
+        .from('produtividade_abaco')
+        .insert({
+          ...dados,
+          aluno_id: alunoId
+        });
+
+      if (produtividadeError) throw produtividadeError;
+
+      // Se tiver apostila e página, atualizar o aluno
+      if (dados.apostila && dados.pagina) {
+        const { error: alunoError } = await supabase
+          .from('alunos')
+          .update({
+            apostila_atual: dados.apostila,
+            ultima_pagina: dados.pagina,
+            ultima_correcao_ah: new Date().toISOString()
+          })
+          .eq('id', alunoId);
+
+        if (alunoError) throw alunoError;
+      }
 
       toast({
         title: "Sucesso",
@@ -70,28 +113,9 @@ export const useProdutividade = (alunoId: string) => {
     }
   };
 
-  const buscarFaltasDoDia = async (data: string) => {
-    try {
-      const { data: faltas, error } = await supabase
-        .from('faltas_alunos')
-        .select('*')
-        .eq('aluno_id', alunoId)
-        .eq('data_falta', data)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      return faltas;
-    } catch (error) {
-      console.error('Erro ao buscar faltas:', error);
-      return null;
-    }
-  };
-
   return {
     isLoading,
     registrarPresenca,
-    registrarProdutividade,
-    buscarFaltasDoDia
+    registrarProdutividade
   };
 };

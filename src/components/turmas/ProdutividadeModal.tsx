@@ -17,6 +17,7 @@ import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { calcularPaginasRestantes } from './utils/paginasUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useProdutividade } from '@/hooks/use-produtividade';
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   onError
 }) => {
   const isMobile = useIsMobile();
+  const { registrarPresenca, registrarProdutividade, isLoading } = useProdutividade(aluno.id);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [presente, setPresente] = useState<"sim" | "não">("sim");
@@ -101,105 +103,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     }
   }, [isOpen]);
 
-  const registrarPresencaNoSupabase = async () => {
-    try {
-      const dataHoje = new Date().toISOString().split('T')[0];
-      
-      const { data: registrosExistentes, error: errorVerificacao } = await supabase
-        .from('presencas')
-        .select('*')
-        .eq('aluno_id', aluno.id)
-        .eq('data_aula', dataHoje);
-        
-      if (errorVerificacao) {
-        throw errorVerificacao;
-      }
-      
-      if (registrosExistentes && registrosExistentes.length > 0) {
-        const { error: errorAtualizacao } = await supabase
-          .from('presencas')
-          .update({
-            presente: presente === "sim",
-            observacao: presente === "sim" ? comentario : motivoFalta
-          })
-          .eq('id', registrosExistentes[0].id);
-          
-        if (errorAtualizacao) {
-          throw errorAtualizacao;
-        }
-      } else {
-        const { error: errorInsercao } = await supabase
-          .from('presencas')
-          .insert({
-            aluno_id: aluno.id,
-            presente: presente === "sim",
-            data_aula: dataHoje,
-            observacao: presente === "sim" ? comentario : motivoFalta
-          });
-          
-        if (errorInsercao) {
-          throw errorInsercao;
-        }
-      }
-      
-      if (presente === "não") {
-        const { data: faltasExistentes, error: errorFaltas } = await supabase
-          .from('faltas_alunos')
-          .select('*')
-          .eq('aluno_id', aluno.id)
-          .eq('data_falta', dataHoje);
-          
-        if (errorFaltas) {
-          throw errorFaltas;
-        }
-        
-        if (faltasExistentes && faltasExistentes.length === 0) {
-          const { error: errorInserirFalta } = await supabase
-            .from('faltas_alunos')
-            .insert({
-              aluno_id: aluno.id,
-              data_falta: dataHoje,
-              motivo: motivoFalta
-            });
-            
-          if (errorInserirFalta) {
-            throw errorInserirFalta;
-          }
-        } else {
-          const { error: errorAtualizarFalta } = await supabase
-            .from('faltas_alunos')
-            .update({
-              motivo: motivoFalta
-            })
-            .eq('id', faltasExistentes[0].id);
-            
-          if (errorAtualizarFalta) {
-            throw errorAtualizarFalta;
-          }
-        }
-      }
-      
-      if (presente === "sim" && apostilaAbaco && paginaAbaco) {
-        const { error: errorAtualizarAluno } = await supabase
-          .from('alunos')
-          .update({
-            apostila_atual: apostilaAbaco,
-            ultima_pagina: paginaAbaco
-          })
-          .eq('id', aluno.id);
-          
-        if (errorAtualizarAluno) {
-          throw errorAtualizarAluno;
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Erro ao registrar presença:", error);
-      return false;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -215,55 +118,38 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     try {
       setIsSubmitting(true);
       
-      const presencaRegistrada = await registrarPresencaNoSupabase();
+      const dataHoje = new Date().toISOString().split('T')[0];
+
+      const presencaRegistrada = await registrarPresenca(
+        presente === "sim",
+        dataHoje,
+        presente === "não" ? motivoFalta : undefined
+      );
       
       if (!presencaRegistrada) {
         throw new Error("Falha ao registrar presença");
       }
 
-      const paginasRestantes = await calcularPaginasRestantes(apostilaAbaco, paginaAbaco);
-      
-      const produtividadeData = {
-        aluno_id: aluno.id,
-        aluno_nome: aluno.nome,
-        turma_id: turma.id,
-        turma_nome: turma.nome,
-        presente: presente === "sim",
-        motivo_falta: presente === "não" ? motivoFalta : undefined,
-        apostila_abaco: presente === "sim" ? apostilaAbaco : undefined,
-        pagina_abaco: presente === "sim" ? paginaAbaco : undefined,
-        exercicios_abaco: presente === "sim" ? exerciciosAbaco : undefined,
-        erros_abaco: presente === "sim" ? errosAbaco : undefined,
-        fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
-        comentario: presente === "sim" ? comentario : undefined,
-        data_registro: new Date().toISOString(),
-        data_ultima_correcao_ah: presente === "sim" ? new Date().toISOString() : undefined,
-        apostila_atual: presente === "sim" ? apostilaAbaco : undefined,
-        ultima_pagina: presente === "sim" ? paginaAbaco : undefined,
-        paginas_restantes: paginasRestantes,
-      };
+      if (presente === "sim") {
+        const dadosProdutividade = {
+          data_aula: dataHoje,
+          presente: true,
+          apostila: apostilaAbaco,
+          pagina: paginaAbaco,
+          exercicios: exerciciosAbaco,
+          erros: errosAbaco,
+          fez_desafio: fezDesafio === "sim",
+          comentario: comentario,
+          is_reposicao: false
+        };
 
-      const { data, error } = await supabase.functions.invoke('register-productivity', {
-        body: { data: produtividadeData }
-      });
-
-      if (error) {
-        throw new Error(error.message);
+        const produtividadeRegistrada = await registrarProdutividade(dadosProdutividade);
+        
+        if (!produtividadeRegistrada) {
+          throw new Error("Falha ao registrar produtividade");
+        }
       }
 
-      if (data && data.googleSheetsError) {
-        toast({
-          title: "Parcialmente concluído",
-          description: data.message || "Dados salvos, mas não sincronizados com Google Sheets.",
-          variant: "default"
-        });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: "Produtividade registrada com sucesso",
-        });
-      }
-      
       if (onSuccess) {
         onSuccess(aluno.id);
       }
