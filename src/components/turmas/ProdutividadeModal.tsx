@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -51,7 +50,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [apostilas, setApostilas] = useState<{nome: string, total_paginas: number}[]>([]);
 
   useEffect(() => {
-    // Carregar apostilas do banco de dados
     const carregarApostilas = async () => {
       try {
         const { data, error } = await supabase
@@ -77,7 +75,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 
   useEffect(() => {
     if (isOpen && aluno) {
-      // Definir a apostila atual do aluno como padrão, se disponível
       if (aluno.apostila_atual) {
         setApostilaAbaco(aluno.apostila_atual);
       } else if (aluno.ultimo_nivel) {
@@ -85,7 +82,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         setApostilaAbaco(apostilaSugerida);
       }
       
-      // Definir a última página, se disponível
       if (aluno.ultima_pagina) {
         setPaginaAbaco(aluno.ultima_pagina);
       }
@@ -107,6 +103,12 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 
   const registrarPresencaNoSupabase = async () => {
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Você precisa estar autenticado para registrar presença');
+      }
+
       const dataHoje = new Date().toISOString().split('T')[0];
       
       const { data: registrosExistentes, error: errorVerificacao } = await supabase
@@ -207,16 +209,22 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (presente === "sim" && !apostilaAbaco) {
-      toast({
-        title: "Erro",
-        description: "Selecione a apostila do ábaco",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Você precisa estar autenticado para registrar produtividade');
+      }
+
+      if (presente === "sim" && !apostilaAbaco) {
+        toast({
+          title: "Erro",
+          description: "Selecione a apostila do ábaco",
+          variant: "destructive"
+        });
+        return;
+      }
+
       setIsSubmitting(true);
       
       const presencaRegistrada = await registrarPresencaNoSupabase();
@@ -280,11 +288,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       
       if (error instanceof Error) {
         errorMessage = error.message;
-        
-        if (error.message.includes("credenciais do Google") || 
-            error.message.includes("Google Service Account")) {
-          errorMessage = "Configuração incompleta: O sistema precisa das credenciais do Google Service Account";
-        }
       }
       
       if (onError) {
