@@ -12,13 +12,6 @@ const GoogleSheetsSync = () => {
     try {
       setIsLoading(true);
       console.log('Iniciando sincronização...');
-
-      // Verificar se o usuário está autenticado
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Você precisa estar autenticado para sincronizar dados');
-      }
       
       const response = await supabase.functions.invoke('sync-students', {
         body: { 
@@ -63,3 +56,4 @@ const GoogleSheetsSync = () => {
 };
 
 export default GoogleSheetsSync;
+
