@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -62,9 +63,14 @@ const Professores = () => {
 
   const syncGoogleSheets = async () => {
     try {
+      console.log('Iniciando sincronização com Google Sheets...');
       setSyncingGoogleSheets(true);
       
-      const response = await supabase.functions.invoke('sync-students');
+      const response = await supabase.functions.invoke('sync-students', {
+        body: { test: true }
+      });
+      
+      console.log('Resposta da função:', response);
       
       if (response.error) {
         throw new Error(response.error.message || 'Erro desconhecido ao chamar a função.');
@@ -107,10 +113,10 @@ const Professores = () => {
         throw new Error(result.error || 'Erro desconhecido na sincronização');
       }
     } catch (error) {
-      console.error('Erro ao sincronizar com Google Sheets:', error);
+      console.error('Erro detalhado ao sincronizar:', error);
       toast({
         title: "Erro na sincronização",
-        description: error.message || "Não foi possível sincronizar com o Google Sheets. Verifique se as credenciais estão corretas e se a planilha está acessível.",
+        description: error.message || "Não foi possível sincronizar com o Google Sheets.",
         variant: "destructive"
       });
     } finally {
@@ -144,17 +150,15 @@ const Professores = () => {
         </h1>
         
         <div className="flex gap-2">
-          {serviceType !== ServiceType.NONE && (
-            <Button 
-              onClick={syncGoogleSheets}
-              disabled={syncingGoogleSheets}
-              size="sm"
-              className="flex items-center self-end bg-supera hover:bg-supera-600"
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
-              {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
-            </Button>
-          )}
+          <Button 
+            onClick={syncGoogleSheets}
+            disabled={syncingGoogleSheets}
+            size="sm"
+            className="flex items-center self-end bg-supera hover:bg-supera-600"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
+            {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
+          </Button>
         </div>
       </div>
 
