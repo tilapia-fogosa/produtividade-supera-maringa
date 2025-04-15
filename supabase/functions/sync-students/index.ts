@@ -177,9 +177,9 @@ async function syncProfessors(rawData) {
   
   // Add new professors to database
   if (professorsToAdd.length > 0) {
-    // Obter o ID da unidade de Maringá (ou uma outra unidade válida)
+    // Obter o ID da unidade (usando 'units' em vez de 'unidades')
     const { data: validUnit, error: unitError } = await supabase
-      .from('unidades')
+      .from('units')
       .select('id')
       .limit(1);
       
@@ -190,12 +190,12 @@ async function syncProfessors(rawData) {
     const defaultUnitId = validUnit[0].id;
     console.log(`Usando unidade ID: ${defaultUnitId} para novos professores`);
     
-    // Insert new professors with existing unit_id
+    // Atualizar para o campo correto conforme a tabela units
     const { data: insertedProfessors, error: insertError } = await supabase
       .from('professores')
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
-        unidade_id: defaultUnitId
+        unidade_id: defaultUnitId  // Manteremos unidade_id no campo de professores
       })))
       .select();
     
