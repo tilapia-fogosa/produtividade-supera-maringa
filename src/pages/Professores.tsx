@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Users, BookOpen, TrendingUp } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import SyncButton from "@/components/sync/SyncButton";
+import GoogleSheetsSync from "@/components/sync/GoogleSheetsSync";
 
 interface Professor {
   id: string;
@@ -86,7 +86,7 @@ const Professores = () => {
         </h1>
         
         <div className="flex gap-2">
-          <SyncButton className="self-end" />
+          <GoogleSheetsSync />
         </div>
       </div>
 
