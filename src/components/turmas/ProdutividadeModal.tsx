@@ -103,12 +103,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 
   const registrarPresencaNoSupabase = async () => {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Você precisa estar autenticado para registrar presença');
-      }
-
       const dataHoje = new Date().toISOString().split('T')[0];
       
       const { data: registrosExistentes, error: errorVerificacao } = await supabase
@@ -209,22 +203,16 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (presente === "sim" && !apostilaAbaco) {
+      toast({
+        title: "Erro",
+        description: "Selecione a apostila do ábaco",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Você precisa estar autenticado para registrar produtividade');
-      }
-
-      if (presente === "sim" && !apostilaAbaco) {
-        toast({
-          title: "Erro",
-          description: "Selecione a apostila do ábaco",
-          variant: "destructive"
-        });
-        return;
-      }
-
       setIsSubmitting(true);
       
       const presencaRegistrada = await registrarPresencaNoSupabase();
