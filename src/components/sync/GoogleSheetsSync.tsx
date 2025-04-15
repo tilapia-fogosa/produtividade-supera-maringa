@@ -47,7 +47,7 @@ const GoogleSheetsSync = () => {
       onClick={handleSync}
       disabled={isLoading}
       size="sm"
-      className="flex items-center bg-supera hover:bg-supera-600"
+      className="flex items-center bg-vivid-purple hover:bg-secondary-purple text-white"
     >
       <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
       {isLoading ? 'Sincronizando...' : 'Sincronizar'}
