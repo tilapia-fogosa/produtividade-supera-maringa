@@ -9,3 +9,4 @@ schemas = ["public", "storage", "graphql_public"]
 [functions]
 [functions.sync-students]
 verify_jwt = false
+
