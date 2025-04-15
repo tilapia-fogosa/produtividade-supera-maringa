@@ -62,24 +62,24 @@ async function fetchGoogleSheetsData() {
 }
 
 // Function to process headers and find column indexes
-function processHeaders(headers: string[]) {
+function processHeaders(headers) {
   console.log("Processando cabeçalhos:", headers);
 
   const columnIndexes = {
-    nomeIndex: headers.findIndex((h: string) => h === 'Nome'),
-    turmaIndex: headers.findIndex((h: string) => h === 'Turma atual'),
-    professorIndex: headers.findIndex((h: string) => h === 'Professor'),
-    indiceIndex: headers.findIndex((h: string) => h === 'Índice'),
-    codigoIndex: headers.findIndex((h: string) => h === 'Código'),
-    telefoneIndex: headers.findIndex((h: string) => h === 'Telefone'),
-    emailIndex: headers.findIndex((h: string) => h === 'E-mail'),
-    cursoIndex: headers.findIndex((h: string) => h === 'Curso'),
-    matriculaIndex: headers.findIndex((h: string) => h === 'Matrícula'),
-    idadeIndex: headers.findIndex((h: string) => h === 'Idade'),
-    ultimoNivelIndex: headers.findIndex((h: string) => h === 'Último nível'),
-    diasApostilaIndex: headers.findIndex((h: string) => h === 'Dias na apostila'),
-    diasSuperaIndex: headers.findIndex((h: string) => h === 'Dias no Supera'),
-    vencimentoContratoIndex: headers.findIndex((h: string) => h === 'Vencimento do contrato')
+    nomeIndex: headers.findIndex(h => h === 'Nome'),
+    turmaIndex: headers.findIndex(h => h === 'Turma atual'),
+    professorIndex: headers.findIndex(h => h === 'Professor'),
+    indiceIndex: headers.findIndex(h => h === 'Índice'),
+    codigoIndex: headers.findIndex(h => h === 'Código'),
+    telefoneIndex: headers.findIndex(h => h === 'Telefone'),
+    emailIndex: headers.findIndex(h => h === 'E-mail'),
+    cursoIndex: headers.findIndex(h => h === 'Curso'),
+    matriculaIndex: headers.findIndex(h => h === 'Matrícula'),
+    idadeIndex: headers.findIndex(h => h === 'Idade'),
+    ultimoNivelIndex: headers.findIndex(h => h === 'Último nível'),
+    diasApostilaIndex: headers.findIndex(h => h === 'Dias na apostila'),
+    diasSuperaIndex: headers.findIndex(h => h === 'Dias no Supera'),
+    vencimentoContratoIndex: headers.findIndex(h => h === 'Vencimento do contrato')
   };
 
   // Verificando se as colunas obrigatórias foram encontradas
@@ -103,13 +103,13 @@ function processHeaders(headers: string[]) {
 }
 
 // Function to extract data from rows with normalization
-function extractDataFromRows(rows: string[][], headerRow: number, columnIndexes: any) {
+function extractDataFromRows(rows, headerRow, columnIndexes) {
   console.log(`Extraindo dados de ${rows.length - (headerRow + 1)} linhas...`);
   
   // Extract data from rows starting after the header row
-  const rawData = rows.slice(headerRow + 1).map((row: string[]) => {
+  const rawData = rows.slice(headerRow + 1).map(row => {
     // Creating an object with all available columns
-    const rowData: Record<string, any> = {
+    const rowData = {
       nome: row[columnIndexes.nomeIndex]?.trim() || '',
       turma_nome: row[columnIndexes.turmaIndex]?.trim() || '',
     };
@@ -133,7 +133,7 @@ function extractDataFromRows(rows: string[][], headerRow: number, columnIndexes:
     if (columnIndexes.vencimentoContratoIndex !== -1) rowData.vencimento_contrato = row[columnIndexes.vencimentoContratoIndex]?.trim() || '';
 
     return rowData;
-  }).filter((data: Record<string, any>) => 
+  }).filter(data => 
     data.nome && data.turma_nome  // Filtering only valid data with name and class
   );
 
@@ -142,11 +142,11 @@ function extractDataFromRows(rows: string[][], headerRow: number, columnIndexes:
 }
 
 // STEP 1: Extract unique professors from spreadsheet and sync to database
-async function syncProfessors(rawData: Record<string, any>[]) {
+async function syncProfessors(rawData) {
   console.log("Sincronizando professores...");
   
   // Extract unique professors
-  const uniqueProfessors = new Set<string>();
+  const uniqueProfessors = new Set();
   
   rawData.forEach(row => {
     if (row.professor_nome && row.professor_nome.trim() !== '') {
@@ -251,7 +251,7 @@ async function syncProfessors(rawData: Record<string, any>[]) {
 }
 
 // STEP 2: Extract unique turmas from spreadsheet and sync to database
-async function syncTurmas(rawData: Record<string, any>[], professors: any[]) {
+async function syncTurmas(rawData, professors) {
   console.log("Sincronizando turmas...");
   
   // Create a map of professor names to IDs for quick lookup
@@ -260,7 +260,7 @@ async function syncTurmas(rawData: Record<string, any>[], professors: any[]) {
   );
   
   // Extract unique turmas with their professor associations
-  const turmasMap = new Map<string, { nome: string, professor_nome: string | null }>();
+  const turmasMap = new Map();
   
   rawData.forEach(row => {
     if (row.turma_nome && row.turma_nome.trim() !== '') {
@@ -367,7 +367,7 @@ async function syncTurmas(rawData: Record<string, any>[], professors: any[]) {
 }
 
 // STEP 3: Sync students and link them to turmas
-async function syncStudents(rawData: Record<string, any>[], turmas: any[]) {
+async function syncStudents(rawData, turmas) {
   console.log("Sincronizando alunos...");
   
   // Create a map of turma names to IDs for quick lookup
