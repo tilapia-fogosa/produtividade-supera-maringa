@@ -1,13 +1,13 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, RefreshCw, TrendingUp, BookOpen } from "lucide-react";
+import { Users, BookOpen, TrendingUp } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SyncButton from "@/components/sync/SyncButton";
 
 interface Professor {
   id: string;
@@ -23,7 +23,6 @@ enum ServiceType {
 const Professores = () => {
   const [professores, setProfessores] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncingGoogleSheets, setSyncingGoogleSheets] = useState(false);
   const [serviceType, setServiceType] = useState<ServiceType>(ServiceType.NONE);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -61,69 +60,6 @@ const Professores = () => {
     navigate(`/turmas/${professorId}`, { state: { serviceType } });
   };
 
-  const syncGoogleSheets = async () => {
-    try {
-      console.log('Iniciando sincronização com Google Sheets...');
-      setSyncingGoogleSheets(true);
-      
-      const response = await supabase.functions.invoke('sync-students', {
-        body: { test: true }
-      });
-      
-      console.log('Resposta da função:', response);
-      
-      if (response.error) {
-        throw new Error(response.error.message || 'Erro desconhecido ao chamar a função.');
-      }
-      
-      const result = response.data;
-      
-      if (result.success) {
-        let message = result.message;
-        
-        if (result.warnings) {
-          if (result.warnings.turmasNaoEncontradas?.length > 0) {
-            const turmasNaoEncontradas = result.warnings.turmasNaoEncontradas.slice(0, 5);
-            const countRestantes = result.warnings.turmasNaoEncontradas.length - 5;
-            
-            message += ` Turmas não encontradas: ${turmasNaoEncontradas.join(', ')}${countRestantes > 0 ? ` e mais ${countRestantes} outras` : ''}.`;
-            
-            if (result.warnings.turmasNaoEncontradas.length > 0) {
-              toast({
-                title: "Atenção - Turmas não encontradas",
-                description: `Existem ${result.warnings.turmasNaoEncontradas.length} turmas na planilha que não foram encontradas no sistema. Certifique-se de que os nomes das turmas correspondem exatamente.`,
-                variant: "default"
-              });
-            }
-          }
-          
-          if (result.warnings.professoresNaoEncontrados?.length > 0) {
-            const professoresNaoEncontrados = result.warnings.professoresNaoEncontrados.slice(0, 3);
-            const countRestantes = result.warnings.professoresNaoEncontrados.length - 3;
-            
-            message += ` Professores não encontrados: ${professoresNaoEncontrados.join(', ')}${countRestantes > 0 ? ` e mais ${countRestantes} outros` : ''}.`;
-          }
-        }
-        
-        toast({
-          title: "Sincronização concluída",
-          description: message,
-        });
-      } else {
-        throw new Error(result.error || 'Erro desconhecido na sincronização');
-      }
-    } catch (error) {
-      console.error('Erro detalhado ao sincronizar:', error);
-      toast({
-        title: "Erro na sincronização",
-        description: error.message || "Não foi possível sincronizar com o Google Sheets.",
-        variant: "destructive"
-      });
-    } finally {
-      setSyncingGoogleSheets(false);
-    }
-  };
-
   const handleServiceSelection = (type: ServiceType) => {
     setServiceType(type);
   };
@@ -150,15 +86,7 @@ const Professores = () => {
         </h1>
         
         <div className="flex gap-2">
-          <Button 
-            onClick={syncGoogleSheets}
-            disabled={syncingGoogleSheets}
-            size="sm"
-            className="flex items-center self-end bg-supera hover:bg-supera-600"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${syncingGoogleSheets ? 'animate-spin' : ''}`} />
-            {syncingGoogleSheets ? 'Sincronizando...' : isMobile ? 'Sincronizar' : 'Sincronizar Planilha'}
-          </Button>
+          <SyncButton className="self-end" />
         </div>
       </div>
 
