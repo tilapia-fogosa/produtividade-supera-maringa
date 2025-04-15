@@ -303,13 +303,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         
         <ScrollArea className="max-h-[70vh] pr-4">
           <div className="space-y-4">
-            <AlunoProgressoCard 
-              ultimo_nivel={aluno.ultimo_nivel}
-              ultimaPaginaCorrigida={aluno.ultima_pagina}
-              paginasRestantes={aluno.paginas_restantes}
-              ultimaCorrecaoAH={aluno.ultima_correcao_ah}
-              alunoId={aluno.id}
-            />
+            <AlunoProgressoCard alunoId={aluno.id} />
             
             <form onSubmit={handleSubmit} className="space-y-4 mt-2">
               <PresencaSection 
