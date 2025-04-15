@@ -548,6 +548,38 @@ export type Database = {
           },
         ]
       }
+      faltas_alunos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_falta: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_falta: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_falta?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faltas_alunos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_responsibles: {
         Row: {
           birth_date: string
@@ -950,6 +982,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "presencas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtividade_abaco: {
+        Row: {
+          aluno_id: string
+          apostila: string | null
+          comentario: string | null
+          created_at: string
+          data_aula: string
+          erros: number | null
+          exercicios: number | null
+          fez_desafio: boolean | null
+          id: string
+          is_reposicao: boolean
+          pagina: string | null
+          presente: boolean
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          data_aula: string
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string
+          is_reposicao?: boolean
+          pagina?: string | null
+          presente?: boolean
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          data_aula?: string
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string
+          is_reposicao?: boolean
+          pagina?: string | null
+          presente?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_abaco_aluno_id_fkey"
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos"

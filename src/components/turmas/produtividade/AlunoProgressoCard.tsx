@@ -49,24 +49,24 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
     if (!alunoId) return;
 
     const verificarFaltasMes = async () => {
-      // Obter o primeiro dia do mês atual
+      if (!alunoId) return;
+
       const dataAtual = new Date();
       const primeiroDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1);
       const ultimoDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0);
 
       try {
-        const { data, error } = await supabase
-          .from('faltas_alunos')
+        const { data: produtividade, error } = await supabase
+          .from('produtividade_abaco')
           .select('*')
           .eq('aluno_id', alunoId)
-          .gte('data_falta', primeiroDiaMes.toISOString().split('T')[0])
-          .lte('data_falta', ultimoDiaMes.toISOString().split('T')[0]);
+          .eq('presente', false)
+          .gte('data_aula', primeiroDiaMes.toISOString().split('T')[0])
+          .lte('data_aula', ultimoDiaMes.toISOString().split('T')[0]);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
-        setFaltouMes(data && data.length > 0);
+        setFaltouMes(produtividade && produtividade.length > 0);
       } catch (error) {
         console.error('Erro ao verificar faltas:', error);
         setFaltouMes(null);
