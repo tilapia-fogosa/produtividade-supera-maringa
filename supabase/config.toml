@@ -1,15 +1,1 @@
-
-project_id = "cydajutrsdqajxohohpy"
-
-[functions.process-video]
-verify_jwt = false
-
-[functions.sync-students]
-verify_jwt = false
-
-[functions.register-productivity]
-verify_jwt = false
-
-[functions.test-google-sheets]
-verify_jwt = false
-
+project_id = "hkvjdxxndapxpslovrlc"

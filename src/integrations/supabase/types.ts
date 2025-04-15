@@ -9,50 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      ad_account_logs: {
-        Row: {
-          cliente_id: number | null
-          error_message: string | null
-          id: number
-          new_credits: number | null
-          new_status: Database["public"]["Enums"]["ad_acc_status"] | null
-          previous_credits: number | null
-          previous_status: Database["public"]["Enums"]["ad_acc_status"] | null
-          sync_date: string | null
-          sync_type: string
-        }
-        Insert: {
-          cliente_id?: number | null
-          error_message?: string | null
-          id?: number
-          new_credits?: number | null
-          new_status?: Database["public"]["Enums"]["ad_acc_status"] | null
-          previous_credits?: number | null
-          previous_status?: Database["public"]["Enums"]["ad_acc_status"] | null
-          sync_date?: string | null
-          sync_type: string
-        }
-        Update: {
-          cliente_id?: number | null
-          error_message?: string | null
-          id?: number
-          new_credits?: number | null
-          new_status?: Database["public"]["Enums"]["ad_acc_status"] | null
-          previous_credits?: number | null
-          previous_status?: Database["public"]["Enums"]["ad_acc_status"] | null
-          sync_date?: string | null
-          sync_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ad_account_logs_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       alunos: {
         Row: {
           apostila_atual: string | null
@@ -114,22 +70,7 @@ export type Database = {
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "alunos_turma_id_fkey"
-            columns: ["turma_id"]
-            isOneToOne: false
-            referencedRelation: "turmas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_aluno_apostila"
-            columns: ["ultimo_nivel"]
-            isOneToOne: false
-            referencedRelation: "apostilas"
-            referencedColumns: ["nome"]
-          },
-        ]
+        Relationships: []
       }
       apostilas: {
         Row: {
@@ -152,198 +93,386 @@ export type Database = {
         }
         Relationships: []
       }
-      clientes: {
+      calendar_events: {
         Row: {
-          ad_acc_id: number | null
-          Ad_acc_stat: Database["public"]["Enums"]["ad_acc_status"]
-          bairro: string | null
-          cep: string | null
-          cidade: string | null
-          cnpj: number | null
-          cobranca_meta: Database["public"]["Enums"]["Cobrança Meta"] | null
-          contrato: Database["public"]["Enums"]["estado_contrato"] | null
-          created_at: string
-          creditos: number | null
-          data_primeira_mensalidade: string | null
-          desconto: number | null
-          endereco: string | null
-          estado: string | null
-          facebook_page_id: string | null
-          fim_do_contrato: string | null
-          fim_do_desconto: string | null
-          id: number
-          inicio_do_contrato: string | null
-          instagram_page_id: string | null
-          mensalidade_fee: number | null
-          nome: string | null
-          orcamento_mensal: number | null
-          page_token: string | null
-          page_token_expires_at: string | null
-          page_token_status:
-            | Database["public"]["Enums"]["page_token_status"]
-            | null
-          postagens_instagram_ativo: boolean | null
-          preco_do_lead_15d: number | null
-          preco_do_lead_3d: number | null
-          preco_do_lead_7d: number | null
-          prioridade: Database["public"]["Enums"]["Prioridade"] | null
-          responsavel_cpf: string | null
-          responsavel_email: string | null
-          responsavel_financeiro_id: number | null
-          responsavel_nome: string | null
-          responsavel_telefone: string | null
-          status: Database["public"]["Enums"]["Status"]
-          token_type: number | null
-          ultima_analise: string | null
-          ultima_atualizacao_preco_lead: string | null
-          ultimo_boleto_enviado: string | null
-          ultimo_envio: string | null
-          valor_com_desconto: number | null
+          active: boolean
+          activity_id: string | null
+          calendar_background_color: string | null
+          calendar_id: string | null
+          calendar_name: string | null
+          created_at: string | null
+          description: string | null
+          end_time: string
+          google_event_id: string | null
+          id: string
+          is_recurring: boolean | null
+          last_synced_at: string | null
+          recurring_rule: string | null
+          start_time: string
+          sync_status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
-          ad_acc_id?: number | null
-          Ad_acc_stat?: Database["public"]["Enums"]["ad_acc_status"]
-          bairro?: string | null
-          cep?: string | null
-          cidade?: string | null
-          cnpj?: number | null
-          cobranca_meta?: Database["public"]["Enums"]["Cobrança Meta"] | null
-          contrato?: Database["public"]["Enums"]["estado_contrato"] | null
-          created_at?: string
-          creditos?: number | null
-          data_primeira_mensalidade?: string | null
-          desconto?: number | null
-          endereco?: string | null
-          estado?: string | null
-          facebook_page_id?: string | null
-          fim_do_contrato?: string | null
-          fim_do_desconto?: string | null
-          id?: number
-          inicio_do_contrato?: string | null
-          instagram_page_id?: string | null
-          mensalidade_fee?: number | null
-          nome?: string | null
-          orcamento_mensal?: number | null
-          page_token?: string | null
-          page_token_expires_at?: string | null
-          page_token_status?:
-            | Database["public"]["Enums"]["page_token_status"]
-            | null
-          postagens_instagram_ativo?: boolean | null
-          preco_do_lead_15d?: number | null
-          preco_do_lead_3d?: number | null
-          preco_do_lead_7d?: number | null
-          prioridade?: Database["public"]["Enums"]["Prioridade"] | null
-          responsavel_cpf?: string | null
-          responsavel_email?: string | null
-          responsavel_financeiro_id?: number | null
-          responsavel_nome?: string | null
-          responsavel_telefone?: string | null
-          status?: Database["public"]["Enums"]["Status"]
-          token_type?: number | null
-          ultima_analise?: string | null
-          ultima_atualizacao_preco_lead?: string | null
-          ultimo_boleto_enviado?: string | null
-          ultimo_envio?: string | null
-          valor_com_desconto?: number | null
+          active?: boolean
+          activity_id?: string | null
+          calendar_background_color?: string | null
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          google_event_id?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          last_synced_at?: string | null
+          recurring_rule?: string | null
+          start_time: string
+          sync_status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          ad_acc_id?: number | null
-          Ad_acc_stat?: Database["public"]["Enums"]["ad_acc_status"]
-          bairro?: string | null
-          cep?: string | null
-          cidade?: string | null
-          cnpj?: number | null
-          cobranca_meta?: Database["public"]["Enums"]["Cobrança Meta"] | null
-          contrato?: Database["public"]["Enums"]["estado_contrato"] | null
-          created_at?: string
-          creditos?: number | null
-          data_primeira_mensalidade?: string | null
-          desconto?: number | null
-          endereco?: string | null
-          estado?: string | null
-          facebook_page_id?: string | null
-          fim_do_contrato?: string | null
-          fim_do_desconto?: string | null
-          id?: number
-          inicio_do_contrato?: string | null
-          instagram_page_id?: string | null
-          mensalidade_fee?: number | null
-          nome?: string | null
-          orcamento_mensal?: number | null
-          page_token?: string | null
-          page_token_expires_at?: string | null
-          page_token_status?:
-            | Database["public"]["Enums"]["page_token_status"]
-            | null
-          postagens_instagram_ativo?: boolean | null
-          preco_do_lead_15d?: number | null
-          preco_do_lead_3d?: number | null
-          preco_do_lead_7d?: number | null
-          prioridade?: Database["public"]["Enums"]["Prioridade"] | null
-          responsavel_cpf?: string | null
-          responsavel_email?: string | null
-          responsavel_financeiro_id?: number | null
-          responsavel_nome?: string | null
-          responsavel_telefone?: string | null
-          status?: Database["public"]["Enums"]["Status"]
-          token_type?: number | null
-          ultima_analise?: string | null
-          ultima_atualizacao_preco_lead?: string | null
-          ultimo_boleto_enviado?: string | null
-          ultimo_envio?: string | null
-          valor_com_desconto?: number | null
+          active?: boolean
+          activity_id?: string | null
+          calendar_background_color?: string | null
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          google_event_id?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          last_synced_at?: string | null
+          recurring_rule?: string | null
+          start_time?: string
+          sync_status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "clientes_responsavel_financeiro_id_fkey"
-            columns: ["responsavel_financeiro_id"]
+            foreignKeyName: "calendar_events_activity_id_fkey"
+            columns: ["activity_id"]
             isOneToOne: false
-            referencedRelation: "membros_unidade"
+            referencedRelation: "client_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      cursos: {
+      class_types: {
         Row: {
-          data_atualizacao: string
-          data_criacao: string
-          descricao: string | null
+          active: boolean
+          created_at: string
+          description: string | null
           id: string
-          instrutor_id: string | null
-          ordem_exibicao: number
-          publicado: boolean
-          thumbnail_url: string | null
-          titulo: string
+          max_capacity: number
+          name: string
+          unit_id: string
+          updated_at: string
         }
         Insert: {
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
+          active?: boolean
+          created_at?: string
+          description?: string | null
           id?: string
-          instrutor_id?: string | null
-          ordem_exibicao?: number
-          publicado?: boolean
-          thumbnail_url?: string | null
-          titulo: string
+          max_capacity: number
+          name: string
+          unit_id: string
+          updated_at?: string
         }
         Update: {
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
+          active?: boolean
+          created_at?: string
+          description?: string | null
           id?: string
-          instrutor_id?: string | null
-          ordem_exibicao?: number
-          publicado?: boolean
-          thumbnail_url?: string | null
-          titulo?: string
+          max_capacity?: number
+          name?: string
+          unit_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "cursos_instrutor_id_fkey"
-            columns: ["instrutor_id"]
+            foreignKeyName: "class_types_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "instrutores"
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          active: boolean
+          class_type_id: string
+          created_at: string
+          current_students: number
+          end_date: string | null
+          id: string
+          name: string
+          schedule: string
+          start_date: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          class_type_id: string
+          created_at?: string
+          current_students?: number
+          end_date?: string | null
+          id?: string
+          name: string
+          schedule: string
+          start_date: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          class_type_id?: string
+          created_at?: string
+          current_students?: number
+          end_date?: string | null
+          id?: string
+          name?: string
+          schedule?: string
+          start_date?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_class_type_id_fkey"
+            columns: ["class_type_id"]
+            isOneToOne: false
+            referencedRelation: "class_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_activities: {
+        Row: {
+          active: boolean
+          client_id: string
+          created_at: string
+          created_by: string
+          id: string
+          next_contact_date: string | null
+          notes: string | null
+          scheduled_date: string | null
+          tipo_atividade: string
+          tipo_contato: string
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean
+          client_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          next_contact_date?: string | null
+          notes?: string | null
+          scheduled_date?: string | null
+          tipo_atividade: string
+          tipo_contato: string
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          next_contact_date?: string | null
+          notes?: string | null
+          scheduled_date?: string | null
+          tipo_atividade?: string
+          tipo_contato?: string
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_activities_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_loss_reasons: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          observations: string | null
+          previous_status: string | null
+          reason_id: string | null
+          total_reasons: number
+          unit_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          observations?: string | null
+          previous_status?: string | null
+          reason_id?: string | null
+          total_reasons?: number
+          unit_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          observations?: string | null
+          previous_status?: string | null
+          reason_id?: string | null
+          total_reasons?: number
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_loss_reasons_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_loss_reasons_reason_id_fkey"
+            columns: ["reason_id"]
+            isOneToOne: false
+            referencedRelation: "loss_reasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_loss_reasons_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          active: boolean
+          age_range: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          lead_quality_score: number | null
+          lead_source: string
+          meta_id: string | null
+          name: string
+          next_contact_date: string | null
+          observations: string | null
+          original_ad: string | null
+          original_adset: string | null
+          phone_number: string
+          registration_cpf: string | null
+          registration_name: string | null
+          scheduled_date: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          age_range?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source: string
+          meta_id?: string | null
+          name: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number: string
+          registration_cpf?: string | null
+          registration_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          age_range?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source?: string
+          meta_id?: string | null
+          name?: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number?: string
+          registration_cpf?: string | null
+          registration_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_lead_source_fkey"
+            columns: ["lead_source"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -366,333 +495,426 @@ export type Database = {
         }
         Relationships: []
       }
-      faltas_alunos: {
+      data_imports: {
         Row: {
-          aluno_id: string
+          active: boolean
           created_at: string
-          data_falta: string
+          created_by: string
+          error_log: Json | null
+          file_name: string
           id: string
-          motivo: string | null
-        }
-        Insert: {
-          aluno_id: string
-          created_at?: string
-          data_falta: string
-          id?: string
-          motivo?: string | null
-        }
-        Update: {
-          aluno_id?: string
-          created_at?: string
-          data_falta?: string
-          id?: string
-          motivo?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "faltas_alunos_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      faturas: {
-        Row: {
-          cliente_id: number
-          created_at: string
-          data_emissao: string
-          data_vencimento: string
-          id: string
-          observacoes: string | null
+          import_type: string
+          processed_rows: number | null
           status: string
+          total_rows: number | null
+          unit_id: string
           updated_at: string
-          valor: number
         }
         Insert: {
-          cliente_id: number
+          active?: boolean
           created_at?: string
-          data_emissao?: string
-          data_vencimento: string
+          created_by: string
+          error_log?: Json | null
+          file_name: string
           id?: string
-          observacoes?: string | null
+          import_type: string
+          processed_rows?: number | null
           status?: string
+          total_rows?: number | null
+          unit_id: string
           updated_at?: string
-          valor: number
         }
         Update: {
-          cliente_id?: number
+          active?: boolean
           created_at?: string
-          data_emissao?: string
-          data_vencimento?: string
+          created_by?: string
+          error_log?: Json | null
+          file_name?: string
           id?: string
-          observacoes?: string | null
+          import_type?: string
+          processed_rows?: number | null
           status?: string
+          total_rows?: number | null
+          unit_id?: string
           updated_at?: string
-          valor?: number
         }
         Relationships: [
           {
-            foreignKeyName: "faturas_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "data_imports_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "clientes"
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
       }
-      instrutores: {
+      financial_responsibles: {
         Row: {
-          bio: string | null
-          data_atualizacao: string
-          data_criacao: string
-          especialidade: string | null
-          foto_url: string | null
+          birth_date: string
+          city: string
+          complement: string | null
+          country: string
+          cpf: string
+          created_at: string
+          created_by: string | null
+          email: string
+          full_name: string
           id: string
-          nome: string
+          mobile_phone: string
+          neighborhood: string
+          number: string
+          observations: string | null
+          postal_code: string
+          profession: string
+          state: string
+          street: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
         }
         Insert: {
-          bio?: string | null
-          data_atualizacao?: string
-          data_criacao?: string
-          especialidade?: string | null
-          foto_url?: string | null
+          birth_date: string
+          city: string
+          complement?: string | null
+          country?: string
+          cpf: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          full_name: string
           id?: string
-          nome: string
+          mobile_phone: string
+          neighborhood: string
+          number: string
+          observations?: string | null
+          postal_code: string
+          profession: string
+          state: string
+          street: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Update: {
-          bio?: string | null
-          data_atualizacao?: string
-          data_criacao?: string
-          especialidade?: string | null
-          foto_url?: string | null
+          birth_date?: string
+          city?: string
+          complement?: string | null
+          country?: string
+          cpf?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          full_name?: string
           id?: string
-          nome?: string
+          mobile_phone?: string
+          neighborhood?: string
+          number?: string
+          observations?: string | null
+          postal_code?: string
+          profession?: string
+          state?: string
+          street?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_responsibles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_versions: {
+        Row: {
+          active: boolean
+          created_at: string
+          current_stock: number
+          id: string
+          kit_type_id: string
+          unit_id: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          current_stock?: number
+          id?: string
+          kit_type_id: string
+          unit_id: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          current_stock?: number
+          id?: string
+          kit_type_id?: string
+          unit_id?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_versions_kit_type_id_fkey"
+            columns: ["kit_type_id"]
+            isOneToOne: false
+            referencedRelation: "kit_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_versions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_sources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_system: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id: string
+          is_system?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
         }
         Relationships: []
       }
-      lead_price_logs: {
+      loss_reason_categories: {
         Row: {
-          cliente_id: number | null
-          error_message: string | null
-          id: number
-          preco_anterior_15d: number | null
-          preco_anterior_3d: number | null
-          preco_anterior_7d: number | null
-          preco_novo_15d: number | null
-          preco_novo_3d: number | null
-          preco_novo_7d: number | null
-          sync_date: string | null
-        }
-        Insert: {
-          cliente_id?: number | null
-          error_message?: string | null
-          id?: number
-          preco_anterior_15d?: number | null
-          preco_anterior_3d?: number | null
-          preco_anterior_7d?: number | null
-          preco_novo_15d?: number | null
-          preco_novo_3d?: number | null
-          preco_novo_7d?: number | null
-          sync_date?: string | null
-        }
-        Update: {
-          cliente_id?: number | null
-          error_message?: string | null
-          id?: number
-          preco_anterior_15d?: number | null
-          preco_anterior_3d?: number | null
-          preco_anterior_7d?: number | null
-          preco_novo_15d?: number | null
-          preco_novo_3d?: number | null
-          preco_novo_7d?: number | null
-          sync_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lead_price_logs_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      membros_unidade: {
-        Row: {
-          cliente_id: number | null
-          email: string | null
-          funcao: Database["public"]["Enums"]["funcao_membro"] | null
-          id: number
-          nome: string
-          telefone: string | null
-        }
-        Insert: {
-          cliente_id?: number | null
-          email?: string | null
-          funcao?: Database["public"]["Enums"]["funcao_membro"] | null
-          id?: number
-          nome: string
-          telefone?: string | null
-        }
-        Update: {
-          cliente_id?: number | null
-          email?: string | null
-          funcao?: Database["public"]["Enums"]["funcao_membro"] | null
-          id?: number
-          nome?: string
-          telefone?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "membros_unidade_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      modulo_videos: {
-        Row: {
-          data_atualizacao: string
-          data_criacao: string
-          descricao: string | null
-          duracao: number | null
+          active: boolean | null
+          created_at: string | null
+          description: string | null
           id: string
-          modulo_id: string
-          ordem: number
-          titulo: string
-          video_id: string
+          name: string
         }
         Insert: {
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
-          duracao?: number | null
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
           id?: string
-          modulo_id: string
-          ordem?: number
-          titulo: string
-          video_id: string
+          name: string
         }
         Update: {
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
-          duracao?: number | null
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
           id?: string
-          modulo_id?: string
-          ordem?: number
-          titulo?: string
-          video_id?: string
+          name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "modulo_videos_modulo_id_fkey"
-            columns: ["modulo_id"]
-            isOneToOne: false
-            referencedRelation: "modulos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "modulo_videos_video_id_fkey"
-            columns: ["video_id"]
-            isOneToOne: false
-            referencedRelation: "videos"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      modulos: {
+      loss_reasons: {
         Row: {
-          curso_id: string
-          data_atualizacao: string
-          data_criacao: string
-          descricao: string | null
+          active: boolean | null
+          category_id: string | null
+          created_at: string | null
           id: string
-          ordem: number
-          titulo: string
+          name: string
         }
         Insert: {
-          curso_id: string
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
+          active?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
           id?: string
-          ordem?: number
-          titulo: string
+          name: string
         }
         Update: {
-          curso_id?: string
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
+          active?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
           id?: string
-          ordem?: number
-          titulo?: string
+          name?: string
         }
         Relationships: [
           {
-            foreignKeyName: "modulos_curso_id_fkey"
-            columns: ["curso_id"]
+            foreignKeyName: "loss_reasons_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "cursos"
+            referencedRelation: "loss_reason_categories"
             referencedColumns: ["id"]
           },
         ]
       }
-      pagamentos: {
+      pedagogical_enrollments: {
         Row: {
-          cliente_id: number
-          comprovante_url: string | null
+          class_id: string | null
           created_at: string
-          data_pagamento: string
-          fatura_id: string | null
+          created_by: string | null
           id: string
-          metodo_pagamento: string
-          observacoes: string | null
+          inaugural_class_date: string | null
+          kit_version_id: string | null
+          status: string
+          student_id: string
           updated_at: string
-          valor: number
+          updated_by: string | null
         }
         Insert: {
-          cliente_id: number
-          comprovante_url?: string | null
+          class_id?: string | null
           created_at?: string
-          data_pagamento?: string
-          fatura_id?: string | null
+          created_by?: string | null
           id?: string
-          metodo_pagamento: string
-          observacoes?: string | null
+          inaugural_class_date?: string | null
+          kit_version_id?: string | null
+          status?: string
+          student_id: string
           updated_at?: string
-          valor: number
+          updated_by?: string | null
         }
         Update: {
-          cliente_id?: number
-          comprovante_url?: string | null
+          class_id?: string | null
           created_at?: string
-          data_pagamento?: string
-          fatura_id?: string | null
+          created_by?: string | null
           id?: string
-          metodo_pagamento?: string
-          observacoes?: string | null
+          inaugural_class_date?: string | null
+          kit_version_id?: string | null
+          status?: string
+          student_id?: string
           updated_at?: string
-          valor?: number
+          updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "pagamentos_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "pedagogical_enrollments_class_id_fkey"
+            columns: ["class_id"]
             isOneToOne: false
-            referencedRelation: "clientes"
+            referencedRelation: "classes"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pagamentos_fatura_id_fkey"
-            columns: ["fatura_id"]
+            foreignKeyName: "pedagogical_enrollments_kit_version_id_fkey"
+            columns: ["kit_version_id"]
             isOneToOne: false
-            referencedRelation: "faturas"
+            referencedRelation: "kit_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedagogical_schedules: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          created_by: string
+          id: string
+          observations: string | null
+          schedule_date: string
+          status: string
+          student_id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          observations?: string | null
+          schedule_date: string
+          status?: string
+          student_id: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          observations?: string | null
+          schedule_date?: string
+          status?: string
+          student_id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedagogical_schedules_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_schedules_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_schedules_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -703,6 +925,7 @@ export type Database = {
           created_at: string
           data_aula: string
           id: string
+          is_reposicao: boolean
           observacao: string | null
           presente: boolean
         }
@@ -711,6 +934,7 @@ export type Database = {
           created_at?: string
           data_aula: string
           id?: string
+          is_reposicao?: boolean
           observacao?: string | null
           presente?: boolean
         }
@@ -719,6 +943,7 @@ export type Database = {
           created_at?: string
           data_aula?: string
           id?: string
+          is_reposicao?: boolean
           observacao?: string | null
           presente?: boolean
         }
@@ -763,280 +988,526 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_blocked: boolean | null
+          avatar_url: string | null
           created_at: string
-          email: string
-          first_name: string | null
+          email: string | null
+          email_confirmed: boolean | null
+          first_access_at: string | null
+          full_name: string | null
           id: string
-          last_name: string | null
+          is_admin: boolean | null
+          must_change_password: boolean | null
+          role: string | null
           updated_at: string
         }
         Insert: {
+          access_blocked?: boolean | null
+          avatar_url?: string | null
           created_at?: string
-          email: string
-          first_name?: string | null
+          email?: string | null
+          email_confirmed?: boolean | null
+          first_access_at?: string | null
+          full_name?: string | null
           id: string
-          last_name?: string | null
+          is_admin?: boolean | null
+          must_change_password?: boolean | null
+          role?: string | null
           updated_at?: string
         }
         Update: {
+          access_blocked?: boolean | null
+          avatar_url?: string | null
           created_at?: string
-          email?: string
-          first_name?: string | null
+          email?: string | null
+          email_confirmed?: boolean | null
+          first_access_at?: string | null
+          full_name?: string | null
           id?: string
-          last_name?: string | null
+          is_admin?: boolean | null
+          must_change_password?: boolean | null
+          role?: string | null
           updated_at?: string
         }
         Relationships: []
       }
-      progresso_usuario: {
+      regions: {
         Row: {
-          concluido: boolean
-          id: string
-          porcentagem_assistida: number
-          posicao_segundos: number | null
-          ultima_visualizacao: string
-          usuario_id: string
-          video_id: string
-        }
-        Insert: {
-          concluido?: boolean
-          id?: string
-          porcentagem_assistida?: number
-          posicao_segundos?: number | null
-          ultima_visualizacao?: string
-          usuario_id: string
-          video_id: string
-        }
-        Update: {
-          concluido?: boolean
-          id?: string
-          porcentagem_assistida?: number
-          posicao_segundos?: number | null
-          ultima_visualizacao?: string
-          usuario_id?: string
-          video_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "progresso_usuario_video_id_fkey"
-            columns: ["video_id"]
-            isOneToOne: false
-            referencedRelation: "videos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      scheduled_posts: {
-        Row: {
-          clientes_ids: number[]
+          active: boolean
           created_at: string
-          error_message: string | null
-          failed_clientes: Json | null
-          file_path: string
-          file_type: string
-          id: number
-          platforms: string[] | null
-          post_text: string
-          published_at: string | null
-          scheduled_for: string
-          status: Database["public"]["Enums"]["post_status"]
+          id: string
+          name: string
         }
         Insert: {
-          clientes_ids: number[]
+          active?: boolean
           created_at?: string
-          error_message?: string | null
-          failed_clientes?: Json | null
-          file_path: string
-          file_type: string
-          id?: never
-          platforms?: string[] | null
-          post_text: string
-          published_at?: string | null
-          scheduled_for: string
-          status?: Database["public"]["Enums"]["post_status"]
+          id?: string
+          name: string
         }
         Update: {
-          clientes_ids?: number[]
+          active?: boolean
           created_at?: string
-          error_message?: string | null
-          failed_clientes?: Json | null
-          file_path?: string
-          file_type?: string
-          id?: never
-          platforms?: string[] | null
-          post_text?: string
-          published_at?: string | null
-          scheduled_for?: string
-          status?: Database["public"]["Enums"]["post_status"]
+          id?: string
+          name?: string
         }
         Relationships: []
       }
-      ticket_anexos: {
+      sale_webhooks: {
         Row: {
-          data_upload: string
+          active: boolean
+          created_at: string | null
+          created_by: string | null
+          description: string | null
           id: string
-          nome_arquivo: string
-          tamanho_arquivo: number | null
-          ticket_id: string
-          tipo_arquivo: string | null
-          url_arquivo: string
-          usuario_id: string
+          last_failure: string | null
+          last_success: string | null
+          unit_id: string | null
+          url: string
         }
         Insert: {
-          data_upload?: string
+          active?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
           id?: string
-          nome_arquivo: string
-          tamanho_arquivo?: number | null
-          ticket_id: string
-          tipo_arquivo?: string | null
-          url_arquivo: string
-          usuario_id: string
+          last_failure?: string | null
+          last_success?: string | null
+          unit_id?: string | null
+          url: string
         }
         Update: {
-          data_upload?: string
+          active?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
           id?: string
-          nome_arquivo?: string
-          tamanho_arquivo?: number | null
-          ticket_id?: string
-          tipo_arquivo?: string | null
-          url_arquivo?: string
-          usuario_id?: string
+          last_failure?: string | null
+          last_success?: string | null
+          unit_id?: string | null
+          url?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ticket_anexos_ticket_id_fkey"
-            columns: ["ticket_id"]
+            foreignKeyName: "sale_webhooks_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "tickets"
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
       }
-      ticket_comentarios: {
+      sales: {
         Row: {
-          conteudo: string
-          data_atualizacao: string
-          data_criacao: string
+          active: boolean
+          attendance_activity_id: string
+          client_id: string
+          created_at: string
+          created_by: string | null
+          enrollment_amount: number
+          enrollment_installments: number
+          enrollment_payment_date: string
+          enrollment_payment_method: Database["public"]["Enums"]["payment_method"]
+          first_monthly_fee_date: string
           id: string
-          ticket_id: string
-          usuario_id: string
+          important_info: string | null
+          material_amount: number
+          material_installments: number
+          material_payment_date: string
+          material_payment_method: Database["public"]["Enums"]["payment_method"]
+          monthly_fee_amount: number
+          monthly_fee_due_day: Database["public"]["Enums"]["due_day"] | null
+          monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
+          photo_thumbnail_url: string | null
+          photo_url: string | null
+          sale_type: Database["public"]["Enums"]["sale_type"]
+          student_id: string | null
+          student_name: string
+          student_photo_thumbnail_url: string | null
+          student_photo_url: string | null
+          unit_id: string
+          updated_at: string
         }
         Insert: {
-          conteudo: string
-          data_atualizacao?: string
-          data_criacao?: string
+          active?: boolean
+          attendance_activity_id: string
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          enrollment_amount: number
+          enrollment_installments: number
+          enrollment_payment_date: string
+          enrollment_payment_method: Database["public"]["Enums"]["payment_method"]
+          first_monthly_fee_date: string
           id?: string
-          ticket_id: string
-          usuario_id: string
+          important_info?: string | null
+          material_amount: number
+          material_installments: number
+          material_payment_date: string
+          material_payment_method: Database["public"]["Enums"]["payment_method"]
+          monthly_fee_amount: number
+          monthly_fee_due_day?: Database["public"]["Enums"]["due_day"] | null
+          monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          sale_type?: Database["public"]["Enums"]["sale_type"]
+          student_id?: string | null
+          student_name: string
+          student_photo_thumbnail_url?: string | null
+          student_photo_url?: string | null
+          unit_id: string
+          updated_at?: string
         }
         Update: {
-          conteudo?: string
-          data_atualizacao?: string
-          data_criacao?: string
+          active?: boolean
+          attendance_activity_id?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          enrollment_amount?: number
+          enrollment_installments?: number
+          enrollment_payment_date?: string
+          enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+          first_monthly_fee_date?: string
           id?: string
-          ticket_id?: string
-          usuario_id?: string
+          important_info?: string | null
+          material_amount?: number
+          material_installments?: number
+          material_payment_date?: string
+          material_payment_method?: Database["public"]["Enums"]["payment_method"]
+          monthly_fee_amount?: number
+          monthly_fee_due_day?: Database["public"]["Enums"]["due_day"] | null
+          monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          sale_type?: Database["public"]["Enums"]["sale_type"]
+          student_id?: string | null
+          student_name?: string
+          student_photo_thumbnail_url?: string | null
+          student_photo_url?: string | null
+          unit_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ticket_comentarios_ticket_id_fkey"
-            columns: ["ticket_id"]
+            foreignKeyName: "fk_sales_created_by"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "tickets"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_attendance_activity_id_fkey"
+            columns: ["attendance_activity_id"]
+            isOneToOne: false
+            referencedRelation: "client_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
       }
-      ticket_historico: {
+      sales_history: {
         Row: {
-          campo_alterado: string
-          data_alteracao: string
+          changed_at: string
+          changed_by: string
           id: string
-          ticket_id: string
-          usuario_id: string
-          valor_anterior: string | null
-          valor_novo: string | null
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          sale_id: string
+          unit_id: string
         }
         Insert: {
-          campo_alterado: string
-          data_alteracao?: string
+          changed_at?: string
+          changed_by: string
           id?: string
-          ticket_id: string
-          usuario_id: string
-          valor_anterior?: string | null
-          valor_novo?: string | null
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          sale_id: string
+          unit_id: string
         }
         Update: {
-          campo_alterado?: string
-          data_alteracao?: string
+          changed_at?: string
+          changed_by?: string
           id?: string
-          ticket_id?: string
-          usuario_id?: string
-          valor_anterior?: string | null
-          valor_novo?: string | null
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          sale_id?: string
+          unit_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ticket_historico_ticket_id_fkey"
-            columns: ["ticket_id"]
+            foreignKeyName: "sales_history_sale_id_fkey"
+            columns: ["sale_id"]
             isOneToOne: false
-            referencedRelation: "tickets"
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_history_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
       }
-      tickets: {
+      student_logs: {
         Row: {
-          categoria: string | null
-          cliente_id: number | null
-          criado_por: string
-          data_atualizacao: string
-          data_criacao: string
-          descricao: string | null
+          created_at: string
+          created_by: string | null
           id: string
-          prazo: string | null
-          prioridade: string | null
-          responsavel_id: string | null
-          status: string | null
-          titulo: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          student_id: string
         }
         Insert: {
-          categoria?: string | null
-          cliente_id?: number | null
-          criado_por: string
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
+          created_at?: string
+          created_by?: string | null
           id?: string
-          prazo?: string | null
-          prioridade?: string | null
-          responsavel_id?: string | null
-          status?: string | null
-          titulo: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          student_id: string
         }
         Update: {
-          categoria?: string | null
-          cliente_id?: number | null
-          criado_por?: string
-          data_atualizacao?: string
-          data_criacao?: string
-          descricao?: string | null
+          created_at?: string
+          created_by?: string | null
           id?: string
-          prazo?: string | null
-          prioridade?: string | null
-          responsavel_id?: string | null
-          status?: string | null
-          titulo?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          student_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tickets_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "student_logs_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "clientes"
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
+      }
+      students: {
+        Row: {
+          active: boolean
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          address_street: string | null
+          alternative_phone: string | null
+          birth_city: string | null
+          birth_date: string | null
+          birth_state: string | null
+          client_id: string
+          commercial_data_completed: boolean | null
+          cpf: string | null
+          created_at: string
+          created_by: string | null
+          education_level: string | null
+          email: string | null
+          full_name: string
+          gender: Database["public"]["Enums"]["gender"] | null
+          id: string
+          is_own_financial_responsible: boolean | null
+          landline_phone: string | null
+          marital_status: Database["public"]["Enums"]["marital_status"] | null
+          mobile_phone: string | null
+          pedagogical_data_completed: boolean | null
+          photo_thumbnail_url: string | null
+          photo_url: string | null
+          profession: string | null
+          rg: string | null
+          ssp: string | null
+          status: Database["public"]["Enums"]["student_status"] | null
+          unit_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          alternative_phone?: string | null
+          birth_city?: string | null
+          birth_date?: string | null
+          birth_state?: string | null
+          client_id: string
+          commercial_data_completed?: boolean | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          education_level?: string | null
+          email?: string | null
+          full_name: string
+          gender?: Database["public"]["Enums"]["gender"] | null
+          id?: string
+          is_own_financial_responsible?: boolean | null
+          landline_phone?: string | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          mobile_phone?: string | null
+          pedagogical_data_completed?: boolean | null
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          profession?: string | null
+          rg?: string | null
+          ssp?: string | null
+          status?: Database["public"]["Enums"]["student_status"] | null
+          unit_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          alternative_phone?: string | null
+          birth_city?: string | null
+          birth_date?: string | null
+          birth_state?: string | null
+          client_id?: string
+          commercial_data_completed?: boolean | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          education_level?: string | null
+          email?: string | null
+          full_name?: string
+          gender?: Database["public"]["Enums"]["gender"] | null
+          id?: string
+          is_own_financial_responsible?: boolean | null
+          landline_phone?: string | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          mobile_phone?: string | null
+          pedagogical_data_completed?: boolean | null
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          profession?: string | null
+          rg?: string | null
+          ssp?: string | null
+          status?: Database["public"]["Enums"]["student_status"] | null
+          unit_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_pages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          path?: string
+        }
+        Relationships: []
+      }
+      system_updates: {
+        Row: {
+          active: boolean
+          build_version: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          published: boolean
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          build_version?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          published?: boolean
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          build_version?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          published?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       turmas: {
         Row: {
@@ -1091,126 +1562,410 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
+      unit_users: {
         Row: {
+          active: boolean
           created_at: string
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: Database["public"]["Enums"]["user_role"]
+          unit_id: string
           user_id: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role: Database["public"]["Enums"]["user_role"]
+          unit_id: string
           user_id: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: Database["public"]["Enums"]["user_role"]
+          unit_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_unit_users_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_users_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      usuarios: {
+      units: {
         Row: {
-          cpf: string
+          active: boolean
+          city: string
+          cnpj: string
+          company_name: string
+          complement: string | null
           created_at: string
-          email: string
+          email: string | null
+          enrollment_fee: number | null
           id: string
-          nivel_acesso: string
-          nome: string
+          legal_representative: string | null
+          material_fee: number | null
+          monthly_fee: number | null
+          name: string
+          neighborhood: string
+          number: string
+          phone: string | null
+          postal_code: string
+          region_id: string | null
+          state: string
+          street: string
+          trading_name: string | null
+          unit_number: number
           updated_at: string
         }
         Insert: {
-          cpf: string
+          active?: boolean
+          city: string
+          cnpj: string
+          company_name: string
+          complement?: string | null
           created_at?: string
-          email: string
+          email?: string | null
+          enrollment_fee?: number | null
           id?: string
-          nivel_acesso: string
-          nome: string
+          legal_representative?: string | null
+          material_fee?: number | null
+          monthly_fee?: number | null
+          name: string
+          neighborhood: string
+          number: string
+          phone?: string | null
+          postal_code: string
+          region_id?: string | null
+          state: string
+          street: string
+          trading_name?: string | null
+          unit_number: number
           updated_at?: string
         }
         Update: {
-          cpf?: string
+          active?: boolean
+          city?: string
+          cnpj?: string
+          company_name?: string
+          complement?: string | null
           created_at?: string
-          email?: string
+          email?: string | null
+          enrollment_fee?: number | null
           id?: string
-          nivel_acesso?: string
-          nome?: string
+          legal_representative?: string | null
+          material_fee?: number | null
+          monthly_fee?: number | null
+          name?: string
+          neighborhood?: string
+          number?: string
+          phone?: string | null
+          postal_code?: string
+          region_id?: string | null
+          state?: string
+          street?: string
+          trading_name?: string | null
+          unit_number?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "units_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      videos: {
+      user_calendar_settings: {
         Row: {
+          calendars_metadata: Json | null
+          created_at: string | null
+          default_calendar_id: string | null
+          google_account_email: string | null
+          google_refresh_token: string | null
+          id: string
+          last_sync: string | null
+          selected_calendars: Json | null
+          sync_enabled: boolean | null
+          sync_token: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calendars_metadata?: Json | null
+          created_at?: string | null
+          default_calendar_id?: string | null
+          google_account_email?: string | null
+          google_refresh_token?: string | null
+          id?: string
+          last_sync?: string | null
+          selected_calendars?: Json | null
+          sync_enabled?: boolean | null
+          sync_token?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calendars_metadata?: Json | null
+          created_at?: string | null
+          default_calendar_id?: string | null
+          google_account_email?: string | null
+          google_refresh_token?: string | null
+          id?: string
+          last_sync?: string | null
+          selected_calendars?: Json | null
+          sync_enabled?: boolean | null
+          sync_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_calendar_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_update_reads: {
+        Row: {
+          id: string
+          read_at: string
+          update_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          read_at?: string
+          update_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          read_at?: string
+          update_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_update_reads_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "system_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_credentials: {
+        Row: {
+          active: boolean | null
           created_at: string
           description: string | null
-          duration: number | null
-          error_message: string | null
-          file_size: number | null
-          hls_url: string | null
           id: string
-          mime_type: string | null
-          name: string
-          original_filename: string
-          status: string
-          thumbnail_url: string | null
+          password_hash: string
           updated_at: string
+          username: string
         }
         Insert: {
+          active?: boolean | null
           created_at?: string
           description?: string | null
-          duration?: number | null
-          error_message?: string | null
-          file_size?: number | null
-          hls_url?: string | null
           id?: string
-          mime_type?: string | null
-          name: string
-          original_filename: string
-          status?: string
-          thumbnail_url?: string | null
+          password_hash: string
           updated_at?: string
+          username: string
         }
         Update: {
+          active?: boolean | null
           created_at?: string
           description?: string | null
-          duration?: number | null
-          error_message?: string | null
-          file_size?: number | null
-          hls_url?: string | null
           id?: string
-          mime_type?: string | null
-          name?: string
-          original_filename?: string
-          status?: string
-          thumbnail_url?: string | null
+          password_hash?: string
           updated_at?: string
+          username?: string
         }
         Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          attempt_count: number
+          created_at: string | null
+          error_message: string | null
+          id: string
+          last_attempt: string | null
+          next_retry: string | null
+          payload: Json
+          sale_id: string
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          next_retry?: string | null
+          payload: Json
+          sale_id: string
+          status: string
+          webhook_id: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          next_retry?: string | null
+          payload?: Json
+          sale_id?: string
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "sale_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      cliente_necessita_analise: {
-        Args: { ultima_analise: string; prioridade: string }
+      change_initial_password: {
+        Args: { user_id: string; new_password: string }
         Returns: boolean
       }
-      has_role: {
+      count_draft_updates: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      create_unit_user: {
         Args: {
-          user_id: string
-          required_role: Database["public"]["Enums"]["app_role"]
+          p_email: string
+          p_full_name: string
+          p_unit_ids: string[]
+          p_role: Database["public"]["Enums"]["user_role"]
         }
+        Returns: string
+      }
+      create_unit_user_service: {
+        Args: {
+          p_creator_id: string
+          p_email: string
+          p_full_name: string
+          p_unit_ids: string[]
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
+      create_unit_user_simple: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
+      get_user_access_info: {
+        Args: { user_id: string }
+        Returns: {
+          last_sign_in_at: string
+          has_first_access: boolean
+        }[]
+      }
+      has_unread_updates: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      inactivate_activity: {
+        Args: { activity_id: string }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_admin_in_unit: {
+        Args: { unit_id: string }
+        Returns: boolean
+      }
+      is_admin_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      manage_user_units: {
+        Args: {
+          p_creator_id: string
+          p_user_id: string
+          p_unit_ids: string[]
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
+      mark_all_updates_as_read: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      mark_update_as_read: {
+        Args: { p_update_id: string }
+        Returns: boolean
+      }
+      publish_update: {
+        Args: { p_update_id: string }
+        Returns: boolean
+      }
+      retry_failed_webhooks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      unpublish_update: {
+        Args: { p_update_id: string }
+        Returns: boolean
+      }
+      user_has_access_to_unit: {
+        Args: { unit_id: string }
+        Returns: boolean
+      }
+      user_has_unit_access: {
+        Args: { p_unit_id: string }
+        Returns: boolean
+      }
+      verify_webhook_credentials: {
+        Args: { p_username: string; p_password: string }
         Returns: boolean
       }
     }
     Enums: {
-      ad_acc_status: "Ativa" | "Inativa"
-      app_role: "admin" | "social_media" | "financeiro" | "padrao"
-      "Cobrança Meta": "Boleto" | "Cartão" | "Não faz trafego"
       dia_semana:
         | "segunda"
         | "terca"
@@ -1219,24 +1974,25 @@ export type Database = {
         | "sexta"
         | "sabado"
         | "domingo"
-      estado_contrato: "assinado" | "esperando assinatura" | "esperando dados"
-      funcao_membro: "Consultor" | "SDR" | "Financeiro" | "franqueado"
-      page_token_status: "valid" | "expired" | "pending" | "failed"
-      post_status: "pending" | "published" | "failed"
-      Prioridade: "Baixo" | "Médio" | "Alto" | "Quarentena"
-      Status:
-        | "Fechado"
-        | "Onboarding"
-        | "Ativo"
-        | "Desligamento Programado"
-        | "Desistente"
-      ticket_priority: "baixa" | "media" | "alta" | "critica"
-      ticket_status:
-        | "aberto"
-        | "em_andamento"
-        | "pendente"
-        | "concluido"
-        | "cancelado"
+      due_day: "5" | "10" | "15" | "20" | "25"
+      gender: "masculino" | "feminino"
+      marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
+      payment_method:
+        | "dinheiro"
+        | "pix"
+        | "cartao_credito"
+        | "cartao_debito"
+        | "boleto"
+        | "recorrencia"
+      sale_type: "matricula" | "outros"
+      student_status: "pre_matricula" | "matricula_completa"
+      user_role:
+        | "consultor"
+        | "franqueado"
+        | "admin"
+        | "educador"
+        | "gestor_pedagogico"
+      user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1352,9 +2108,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      ad_acc_status: ["Ativa", "Inativa"],
-      app_role: ["admin", "social_media", "financeiro", "padrao"],
-      "Cobrança Meta": ["Boleto", "Cartão", "Não faz trafego"],
       dia_semana: [
         "segunda",
         "terca",
@@ -1364,26 +2117,27 @@ export const Constants = {
         "sabado",
         "domingo",
       ],
-      estado_contrato: ["assinado", "esperando assinatura", "esperando dados"],
-      funcao_membro: ["Consultor", "SDR", "Financeiro", "franqueado"],
-      page_token_status: ["valid", "expired", "pending", "failed"],
-      post_status: ["pending", "published", "failed"],
-      Prioridade: ["Baixo", "Médio", "Alto", "Quarentena"],
-      Status: [
-        "Fechado",
-        "Onboarding",
-        "Ativo",
-        "Desligamento Programado",
-        "Desistente",
+      due_day: ["5", "10", "15", "20", "25"],
+      gender: ["masculino", "feminino"],
+      marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],
+      payment_method: [
+        "dinheiro",
+        "pix",
+        "cartao_credito",
+        "cartao_debito",
+        "boleto",
+        "recorrencia",
       ],
-      ticket_priority: ["baixa", "media", "alta", "critica"],
-      ticket_status: [
-        "aberto",
-        "em_andamento",
-        "pendente",
-        "concluido",
-        "cancelado",
+      sale_type: ["matricula", "outros"],
+      student_status: ["pre_matricula", "matricula_completa"],
+      user_role: [
+        "consultor",
+        "franqueado",
+        "admin",
+        "educador",
+        "gestor_pedagogico",
       ],
+      user_role_old: ["consultor", "franqueado", "gestor_comercial"],
     },
   },
 } as const
