@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -19,8 +18,15 @@ const SyncButton: React.FC<SyncButtonProps> = ({ className }) => {
       console.log('Iniciando sincronização com Google Sheets...');
       setSyncing(true);
       
+      // Chaves hardcoded apenas para teste
+      const googleApiKey = "AIzaSyDD_yZKdX5TRttuS3yVifj2LgIpMmPn_z4";
+      const spreadsheetId = "1d7s_6NzfNL3Y4G5LUOsVHDfuQIGCizkELjw8iKQb1OY";
+      
       const response = await supabase.functions.invoke('sync-students', {
-        body: { test: true }
+        body: { 
+          googleApiKey,
+          spreadsheetId
+        }
       });
       
       console.log('Resposta da função:', response);
