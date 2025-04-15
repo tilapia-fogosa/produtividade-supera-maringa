@@ -15,8 +15,8 @@ const GoogleSheetsSync = () => {
       
       const response = await supabase.functions.invoke('sync-students', {
         body: { 
-          googleApiKey: "AIzaSyDD_yZKdX5TRttuS3yVifj2LgIpMmPn_z4",
-          spreadsheetId: "1d7s_6NzfNL3Y4G5LUOsVHDfuQIGCizkELjw8iKQb1OY"
+          googleApiKey: "AIzaSyDXql17Sz5PR3ki08IT2QNzZk-nGrffyao",
+          spreadsheetId: "1yNEJzz05TpB7polA_W3kAs7e93LAo85hWwfomM-Yz44"
         }
       });
 
