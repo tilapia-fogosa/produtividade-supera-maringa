@@ -1,49 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, differenceInMonths, isThisMonth } from 'date-fns';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPaginasRestantes } from '../utils/paginasUtils';
-import { Progress } from "@/components/ui/progress"
+import { Progress } from "@/components/ui/progress";
+import { useAlunoProgresso } from '@/hooks/use-aluno-progresso';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AlunoProgressoCardProps {
-  ultimo_nivel?: string | null;
-  ultimaPaginaCorrigida?: string | null;
-  paginasRestantes?: number | null;
-  ultimaCorrecaoAH?: string | null;
   alunoId?: string;
 }
 
-const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
-  ultimo_nivel,
-  ultimaPaginaCorrigida,
-  paginasRestantes: paginasRestantesInicial,
-  ultimaCorrecaoAH,
-  alunoId
-}) => {
+const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
   const isMobile = useIsMobile();
   const [faltouMes, setFaltouMes] = useState<boolean | null>(null);
-  const [paginasRestantes, setPaginasRestantes] = useState<number | null>(paginasRestantesInicial ?? null);
-  const [totalPaginas, setTotalPaginas] = useState<number | null>(null);
-
-  useEffect(() => {
-    const buscarPaginasRestantes = async () => {
-      const restantes = await calcularPaginasRestantes(ultimo_nivel, ultimaPaginaCorrigida);
-      setPaginasRestantes(restantes);
-
-      if (ultimo_nivel) {
-        const { data } = await supabase
-          .from('apostilas')
-          .select('total_paginas')
-          .eq('nome', ultimo_nivel)
-          .maybeSingle();
-        
-        setTotalPaginas(data?.total_paginas ?? null);
-      }
-    };
-
-    buscarPaginasRestantes();
-  }, [ultimo_nivel, ultimaPaginaCorrigida]);
+  const { progresso, loading, error } = useAlunoProgresso(alunoId || '');
 
   useEffect(() => {
     if (!alunoId) return;
@@ -88,10 +60,10 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
   };
 
   const getProgressoValue = () => {
-    if (!totalPaginas || !ultimaPaginaCorrigida) return 0;
-    const paginaAtual = parseInt(ultimaPaginaCorrigida, 10);
+    if (!progresso?.total_paginas || !progresso.ultima_pagina) return 0;
+    const paginaAtual = parseInt(progresso.ultima_pagina, 10);
     if (isNaN(paginaAtual)) return 0;
-    return Math.min(100, (paginaAtual / totalPaginas) * 100);
+    return Math.min(100, (paginaAtual / progresso.total_paginas) * 100);
   };
 
   const getUltimaCorrecaoAHColor = (dataStr?: string | null) => {
@@ -111,27 +83,57 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
     return faltou ? "text-red-600 font-bold" : "text-green-600 font-bold";
   };
 
+  if (loading) {
+    return (
+      <Card className={`w-full ${isMobile ? 'text-sm' : ''} border-orange-200`}>
+        <CardHeader>
+          <CardTitle className={`${isMobile ? 'text-lg' : ''} text-azul-500`}>
+            Progresso do Aluno
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex justify-between items-center">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-4 w-[150px]" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={`w-full ${isMobile ? 'text-sm' : ''} border-orange-200`}>
+        <CardContent className="py-4">
+          <p className="text-red-600 text-center">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={`w-full ${isMobile ? 'text-sm' : ''} border-orange-200`}>
       <CardHeader>
-        <CardTitle className={`${isMobile ? 'text-lg' : ''} text-azul-500`}>Progresso do Aluno</CardTitle>
+        <CardTitle className={`${isMobile ? 'text-lg' : ''} text-azul-500`}>
+          Progresso do Aluno
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex justify-between">
           <span className="text-azul-400">Apostila Atual:</span>
-          <span className="font-semibold text-azul-500">{ultimo_nivel || 'Não definido'}</span>
+          <span className="font-semibold text-azul-500">
+            {progresso?.apostila_atual || 'Não definido'}
+          </span>
         </div>
         <div className="flex justify-between">
           <span className="text-azul-400">Última Página:</span>
-          <span className="font-semibold text-azul-500">{ultimaPaginaCorrigida || 'Não registrado'}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-azul-400">Páginas Restantes:</span>
-          <span className={`font-semibold ${getPaginasRestantesColor(paginasRestantes)}`}>
-            {paginasRestantes !== null ? paginasRestantes : 'Não calculado'}
+          <span className="font-semibold text-azul-500">
+            {progresso?.ultima_pagina || 'Não registrado'}
           </span>
         </div>
-        {totalPaginas && (
+        {progresso?.total_paginas && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
               <span>Progresso da apostila</span>
@@ -142,8 +144,8 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({
         )}
         <div className="flex justify-between">
           <span className="text-azul-400">Última Correção AH:</span>
-          <span className={`font-semibold ${getUltimaCorrecaoAHColor(ultimaCorrecaoAH)}`}>
-            {formatarData(ultimaCorrecaoAH)}
+          <span className={`font-semibold ${getUltimaCorrecaoAHColor(progresso?.ultima_correcao_ah)}`}>
+            {formatarData(progresso?.ultima_correcao_ah)}
           </span>
         </div>
         <div className="flex justify-between">
