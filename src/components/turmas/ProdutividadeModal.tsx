@@ -17,6 +17,7 @@ import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
+import { APOSTILAS_ABACO_DETALHES } from './constants/apostilas';
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -48,31 +49,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [errosAbaco, setErrosAbaco] = useState("");
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
-  const [apostilas, setApostilas] = useState<{nome: string, total_paginas: number}[]>([]);
-
-  useEffect(() => {
-    const carregarApostilas = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('apostilas')
-          .select('nome, total_paginas')
-          .order('nome');
-          
-        if (error) {
-          console.error("Erro ao carregar apostilas:", error);
-          return;
-        }
-        
-        if (data) {
-          setApostilas(data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar apostilas:", error);
-      }
-    };
-    
-    carregarApostilas();
-  }, []);
+  const [apostilas] = useState(APOSTILAS_ABACO_DETALHES);
 
   useEffect(() => {
     if (isOpen && aluno) {
