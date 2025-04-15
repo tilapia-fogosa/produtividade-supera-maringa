@@ -177,70 +177,25 @@ async function syncProfessors(rawData) {
   
   // Add new professors to database
   if (professorsToAdd.length > 0) {
-    // Find a unidade_id to associate professors with (use default if available)
-    const { data: unidades, error: unidadeError } = await supabase
-      .from('unidades')
-      .select('id')
-      .limit(1);
+    const defaultUnitId = '0df79a04-444e-46ee-b218-59e4b1835f4a'; // ID da unidade de Maringá
     
-    if (unidadeError) {
-      throw new Error(`Erro ao buscar unidade padrão: ${unidadeError.message}`);
+    // Insert new professors with existing unit_id
+    const { data: insertedProfessors, error: insertError } = await supabase
+      .from('professores')
+      .insert(professorsToAdd.map(nome => ({ 
+        nome, 
+        unidade_id: defaultUnitId
+      })))
+      .select();
+    
+    if (insertError) {
+      throw new Error(`Erro ao inserir novos professores: ${insertError.message}`);
     }
     
-    const defaultUnidadeId = unidades.length > 0 ? unidades[0].id : null;
+    console.log(`${insertedProfessors.length} professores adicionados com sucesso`);
     
-    if (!defaultUnidadeId) {
-      // If no unit exists, create a default one
-      const { data: newUnidade, error: createUnidadeError } = await supabase
-        .from('unidades')
-        .insert({ nome: 'Unidade Padrão' })
-        .select()
-        .single();
-        
-      if (createUnidadeError) {
-        throw new Error(`Erro ao criar unidade padrão: ${createUnidadeError.message}`);
-      }
-      
-      console.log("Criada unidade padrão para associar professores");
-      
-      const unidadeId = newUnidade.id;
-      
-      // Insert the new professors
-      const { data: insertedProfessors, error: insertError } = await supabase
-        .from('professores')
-        .insert(professorsToAdd.map(nome => ({ 
-          nome, 
-          unidade_id: unidadeId 
-        })))
-        .select();
-      
-      if (insertError) {
-        throw new Error(`Erro ao inserir novos professores: ${insertError.message}`);
-      }
-      
-      console.log(`${insertedProfessors.length} professores adicionados com sucesso`);
-      
-      // Return combined list of all professors
-      return [...existingProfessors, ...insertedProfessors];
-    } else {
-      // Insert the new professors with existing unidade_id
-      const { data: insertedProfessors, error: insertError } = await supabase
-        .from('professores')
-        .insert(professorsToAdd.map(nome => ({ 
-          nome, 
-          unidade_id: defaultUnidadeId 
-        })))
-        .select();
-      
-      if (insertError) {
-        throw new Error(`Erro ao inserir novos professores: ${insertError.message}`);
-      }
-      
-      console.log(`${insertedProfessors.length} professores adicionados com sucesso`);
-      
-      // Return combined list of all professors
-      return [...existingProfessors, ...insertedProfessors];
-    }
+    // Return combined list of all professors
+    return [...existingProfessors, ...insertedProfessors];
   }
   
   return existingProfessors;
