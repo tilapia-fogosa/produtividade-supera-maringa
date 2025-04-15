@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -15,7 +16,6 @@ import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
 import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
-import { calcularPaginasRestantes } from './utils/paginasUtils';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
 
@@ -131,19 +131,18 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       }
 
       if (presente === "sim") {
-        const dadosProdutividade = {
+        // Registrar produtividade do ábaco
+        const produtividadeRegistrada = await registrarProdutividade({
           data_aula: dataHoje,
           presente: true,
           apostila: apostilaAbaco,
           pagina: paginaAbaco,
-          exercicios: exerciciosAbaco,
-          erros: errosAbaco,
+          exercicios: exerciciosAbaco ? Number(exerciciosAbaco) : undefined,
+          erros: errosAbaco ? Number(errosAbaco) : undefined,
           fez_desafio: fezDesafio === "sim",
           comentario: comentario,
           is_reposicao: false
-        };
-
-        const produtividadeRegistrada = await registrarProdutividade(dadosProdutividade);
+        });
         
         if (!produtividadeRegistrada) {
           throw new Error("Falha ao registrar produtividade");

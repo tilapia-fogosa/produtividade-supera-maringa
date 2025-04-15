@@ -8,8 +8,8 @@ interface ProdutividadeAbaco {
   presente: boolean;
   apostila?: string;
   pagina?: string;
-  exercicios?: string | number;
-  erros?: string | number;
+  exercicios?: number;
+  erros?: number;
   fez_desafio?: boolean;
   comentario?: string;
   data_aula: string;
@@ -70,13 +70,25 @@ export const useProdutividade = (alunoId: string) => {
     try {
       setIsLoading(true);
 
+      // Garantir que aluno_id existe
+      const dadosCompletos = {
+        ...dados,
+        aluno_id: alunoId
+      };
+
+      // Converter exercicios e erros para número se forem string
+      if (typeof dadosCompletos.exercicios === 'string' && dadosCompletos.exercicios) {
+        dadosCompletos.exercicios = Number(dadosCompletos.exercicios);
+      }
+
+      if (typeof dadosCompletos.erros === 'string' && dadosCompletos.erros) {
+        dadosCompletos.erros = Number(dadosCompletos.erros);
+      }
+
       // Registrar produtividade do ábaco
       const { error: produtividadeError } = await supabase
         .from('produtividade_abaco')
-        .insert({
-          ...dados,
-          aluno_id: alunoId
-        });
+        .insert(dadosCompletos);
 
       if (produtividadeError) throw produtividadeError;
 
