@@ -23,12 +23,18 @@ const GoogleSheetsSync = () => {
       console.log('Resposta:', response);
 
       if (response.error) {
-        throw new Error(response.error.message);
+        throw new Error(response.error.message || "Erro na sincronização com o Google Sheets");
       }
 
+      // Verificar se há erros específicos no resultado
+      if (response.data && !response.data.success) {
+        throw new Error(response.data.error || "Falha na sincronização dos dados");
+      }
+
+      // Sucesso na sincronização
       toast({
         title: "Sincronização concluída",
-        description: "Dados atualizados com sucesso.",
+        description: response.data?.message || "Dados atualizados com sucesso.",
       });
     } catch (error) {
       console.error('Erro na sincronização:', error);
@@ -56,4 +62,3 @@ const GoogleSheetsSync = () => {
 };
 
 export default GoogleSheetsSync;
-

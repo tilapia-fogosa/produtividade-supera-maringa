@@ -177,7 +177,18 @@ async function syncProfessors(rawData) {
   
   // Add new professors to database
   if (professorsToAdd.length > 0) {
-    const defaultUnitId = '0df79a04-444e-46ee-b218-59e4b1835f4a'; // ID da unidade de Maringá
+    // Obter o ID da unidade de Maringá (ou uma outra unidade válida)
+    const { data: validUnit, error: unitError } = await supabase
+      .from('unidades')
+      .select('id')
+      .limit(1);
+      
+    if (unitError || !validUnit || validUnit.length === 0) {
+      throw new Error(`Erro ao buscar unidade válida: ${unitError?.message || "Nenhuma unidade encontrada"}`);
+    }
+    
+    const defaultUnitId = validUnit[0].id;
+    console.log(`Usando unidade ID: ${defaultUnitId} para novos professores`);
     
     // Insert new professors with existing unit_id
     const { data: insertedProfessors, error: insertError } = await supabase
