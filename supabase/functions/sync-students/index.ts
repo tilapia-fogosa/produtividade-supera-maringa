@@ -12,6 +12,10 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Function to validate environment variables
 function validateEnvironmentVars() {
   console.log("Validando variáveis de ambiente...");
+  console.log("SUPABASE_URL:", SUPABASE_URL ? "Configurado" : "Não configurado");
+  console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "Configurado" : "Não configurado");
+  console.log("GOOGLE_API_KEY:", GOOGLE_API_KEY ? "Configurado" : "Não configurado");
+  console.log("SPREADSHEET_ID:", SPREADSHEET_ID ? "Configurado" : "Não configurado");
   
   if (!GOOGLE_API_KEY) {
     throw new Error('Google API Key não configurada');
@@ -477,7 +481,7 @@ async function syncFromGoogleSheets() {
   try {
     console.log("Iniciando sincronização completa com Google Sheets");
     
-    // Validate environment variables
+    // Validate environment variables with detailed logging
     validateEnvironmentVars();
     
     // Fetch Google Sheets data
@@ -522,12 +526,15 @@ async function syncFromGoogleSheets() {
     return {
       success: false,
       error: error.message,
+      details: error.stack
     };
   }
 }
 
 // Main request handler
 Deno.serve(async (req) => {
+  console.log(`Recebida requisição ${req.method}`);
+  
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -535,6 +542,7 @@ Deno.serve(async (req) => {
 
   try {
     const result = await syncFromGoogleSheets();
+    console.log('Resultado da sincronização:', result);
     
     return new Response(
       JSON.stringify(result),
@@ -547,11 +555,12 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Erro:', error.message);
+    console.error('Erro não tratado:', error.message, error.stack);
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message,
+        details: error.stack
       }),
       {
         headers: {
