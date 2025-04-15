@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { APOSTILAS_ABACO_DETALHES } from '../constants/apostilas';
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -36,12 +37,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   fezDesafio,
   setFezDesafio,
   comentario,
-  setComentario,
-  apostilas
+  setComentario
 }) => {
   // Obter o total de páginas da apostila selecionada
-  const apostilaSelecionada = apostilas.find(a => a.nome === apostilaAbaco);
-  const totalPaginas = apostilaSelecionada ? apostilaSelecionada.total_paginas : 40;
+  const apostilaSelecionada = APOSTILAS_ABACO_DETALHES.find(a => a.nome === apostilaAbaco);
+  const totalPaginas = apostilaSelecionada ? apostilaSelecionada.paginas : 40;
 
   return (
     <>
@@ -53,11 +53,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
           </SelectTrigger>
           <SelectContent>
             <ScrollArea className="h-[200px]">
-              {apostilas.map((apostila) => (
+              {APOSTILAS_ABACO_DETALHES.map((apostila) => (
                 <SelectItem key={apostila.nome} value={apostila.nome}>
                   <div className="flex items-center">
                     <Book className="mr-2 h-4 w-4" />
-                    {apostila.nome} ({apostila.total_paginas} págs)
+                    {apostila.nome} ({apostila.paginas} págs)
                   </div>
                 </SelectItem>
               ))}

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, differenceInMonths, isThisMonth } from 'date-fns';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPaginasRestantes } from '../utils/paginasUtils';
 import { Progress } from "@/components/ui/progress";
 import { useAlunoProgresso } from '@/hooks/use-aluno-progresso';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,15 +21,13 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
     if (!alunoId) return;
 
     const verificarFaltasMes = async () => {
-      if (!alunoId) return;
-
       const dataAtual = new Date();
       const primeiroDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1);
       const ultimoDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0);
 
       try {
-        const { data: produtividade, error } = await supabase
-          .from('produtividade_abaco')
+        const { data: presencas, error } = await supabase
+          .from('presencas')
           .select('*')
           .eq('aluno_id', alunoId)
           .eq('presente', false)
@@ -39,7 +36,7 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
 
         if (error) throw error;
 
-        setFaltouMes(produtividade && produtividade.length > 0);
+        setFaltouMes(presencas && presencas.length > 0);
       } catch (error) {
         console.error('Erro ao verificar faltas:', error);
         setFaltouMes(null);
@@ -50,21 +47,8 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
   }, [alunoId]);
 
   const formatarData = (data?: string | null) => {
-    return data ? format(new Date(data), 'dd/MM/yyyy HH:mm') : 'Não registrado';
-  };
-
-  const getPaginasRestantesColor = (paginas?: number | null) => {
-    if (paginas === null || paginas === undefined) return "";
-    if (paginas < 5) return "text-red-600 font-bold";
-    if (paginas < 10) return "text-yellow-600 font-bold";
-    return "text-green-600 font-bold";
-  };
-
-  const getProgressoValue = () => {
-    if (!progresso?.total_paginas || !progresso.ultima_pagina) return 0;
-    const paginaAtual = parseInt(progresso.ultima_pagina, 10);
-    if (isNaN(paginaAtual)) return 0;
-    return Math.min(100, (paginaAtual / progresso.total_paginas) * 100);
+    if (!data) return 'Não registrado';
+    return format(new Date(data), 'dd/MM/yyyy HH:mm');
   };
 
   const getUltimaCorrecaoAHColor = (dataStr?: string | null) => {
@@ -82,6 +66,13 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
   const getFaltouMesColor = (faltou: boolean | null) => {
     if (faltou === null) return "";
     return faltou ? "text-red-600 font-bold" : "text-green-600 font-bold";
+  };
+
+  const getProgressoValue = () => {
+    if (!progresso?.total_paginas || !progresso.ultima_pagina) return 0;
+    const paginaAtual = parseInt(progresso.ultima_pagina, 10);
+    if (isNaN(paginaAtual)) return 0;
+    return Math.min(100, (paginaAtual / progresso.total_paginas) * 100);
   };
 
   if (loading) {
