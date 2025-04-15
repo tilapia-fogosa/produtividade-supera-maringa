@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 interface ProdutividadeAbaco {
-  aluno_id: string;
+  aluno_id?: string;
   presente: boolean;
   apostila?: string;
   pagina?: string;
