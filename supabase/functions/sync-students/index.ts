@@ -190,12 +190,12 @@ async function syncProfessors(rawData) {
     const defaultUnitId = validUnit[0].id;
     console.log(`Usando unidade ID: ${defaultUnitId} para novos professores`);
     
-    // Atualizar para o campo correto conforme a tabela units
+    // Atualizar para usar o nome correto da coluna (unit_id)
     const { data: insertedProfessors, error: insertError } = await supabase
       .from('professores')
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
-        unidade_id: defaultUnitId  // Manteremos unidade_id no campo de professores
+        unit_id: defaultUnitId  // Agora usando unit_id em vez de unidade_id
       })))
       .select();
     
@@ -205,7 +205,6 @@ async function syncProfessors(rawData) {
     
     console.log(`${insertedProfessors.length} professores adicionados com sucesso`);
     
-    // Return combined list of all professors
     return [...existingProfessors, ...insertedProfessors];
   }
   

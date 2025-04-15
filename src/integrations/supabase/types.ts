@@ -1053,26 +1053,26 @@ export type Database = {
           created_at: string
           id: string
           nome: string
-          unidade_id: string
+          unit_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           nome: string
-          unidade_id: string
+          unit_id: string
         }
         Update: {
           created_at?: string
           id?: string
           nome?: string
-          unidade_id?: string
+          unit_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "professores_unidade_id_fkey"
-            columns: ["unidade_id"]
+            foreignKeyName: "professores_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "unidades"
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
