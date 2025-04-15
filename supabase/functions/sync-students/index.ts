@@ -393,9 +393,10 @@ async function syncStudents(rawData: Record<string, any>[], turmas: any[]) {
       dias_apostila: row.dias_apostila || null,
       dias_supera: row.dias_supera || null,
       vencimento_contrato: row.vencimento_contrato || null,
-      indice: row.indice || null
+      indice: row.indice || null,
+      active: true // Marcando todos os alunos da planilha como ativos
     };
-  }).filter(Boolean); // Remove null entries where turma wasn't found
+  }).filter(Boolean);
   
   console.log(`Preparados ${studentsData.length} alunos para sincronização`);
   
@@ -404,41 +405,71 @@ async function syncStudents(rawData: Record<string, any>[], turmas: any[]) {
     return [];
   }
   
-  // Get existing students
-  const { data: existingStudents, error: fetchError } = await supabase
-    .from('alunos')
-    .select('id, nome, turma_id');
-  
-  if (fetchError) {
-    throw new Error(`Erro ao buscar alunos existentes: ${fetchError.message}`);
-  }
-  
-  // Filter to find only new students (avoid duplicates)
-  const studentsToAdd = studentsData.filter(newStudent => {
-    return !existingStudents.some(existingStudent => 
-      existingStudent.nome.toLowerCase() === newStudent.nome.toLowerCase() && 
-      existingStudent.turma_id === newStudent.turma_id
-    );
-  });
-  
-  console.log(`${studentsToAdd.length} novos alunos para adicionar`);
-  
-  // Insert new students
-  if (studentsToAdd.length > 0) {
-    const { data: insertedStudents, error: insertError } = await supabase
+  try {
+    // Primeiro, marcar todos os alunos como inativos
+    const { error: updateError } = await supabase
       .from('alunos')
-      .insert(studentsToAdd)
-      .select();
-    
-    if (insertError) {
-      throw new Error(`Erro ao inserir novos alunos: ${insertError.message}`);
+      .update({ active: false })
+      .eq('active', true);
+      
+    if (updateError) {
+      throw new Error(`Erro ao marcar alunos como inativos: ${updateError.message}`);
     }
     
-    console.log(`${insertedStudents.length} alunos adicionados com sucesso`);
-    return insertedStudents;
+    console.log("Todos os alunos marcados como inativos temporariamente");
+    
+    // Agora, para cada aluno na planilha
+    for (const studentData of studentsData) {
+      // Verificar se o aluno já existe (por nome e turma)
+      const { data: existingStudent, error: fetchError } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('nome', studentData.nome)
+        .eq('turma_id', studentData.turma_id)
+        .maybeSingle();
+        
+      if (fetchError) {
+        console.error(`Erro ao buscar aluno ${studentData.nome}:`, fetchError);
+        continue;
+      }
+      
+      if (existingStudent) {
+        // Atualizar aluno existente
+        const { error: updateError } = await supabase
+          .from('alunos')
+          .update({ ...studentData })
+          .eq('id', existingStudent.id);
+          
+        if (updateError) {
+          console.error(`Erro ao atualizar aluno ${studentData.nome}:`, updateError);
+        }
+      } else {
+        // Inserir novo aluno
+        const { error: insertError } = await supabase
+          .from('alunos')
+          .insert([studentData]);
+          
+        if (insertError) {
+          console.error(`Erro ao inserir aluno ${studentData.nome}:`, insertError);
+        }
+      }
+    }
+    
+    // Retornar os alunos ativos após a sincronização
+    const { data: activeStudents, error: fetchActiveError } = await supabase
+      .from('alunos')
+      .select('*')
+      .eq('active', true);
+      
+    if (fetchActiveError) {
+      throw fetchActiveError;
+    }
+    
+    return activeStudents || [];
+  } catch (error) {
+    console.error('Erro durante a sincronização de alunos:', error);
+    throw error;
   }
-  
-  return [];
 }
 
 // Main function to handle the full sync process

@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       alunos: {
         Row: {
+          active: boolean
           apostila_atual: string | null
           codigo: string | null
           created_at: string
@@ -31,6 +32,7 @@ export type Database = {
           vencimento_contrato: string | null
         }
         Insert: {
+          active?: boolean
           apostila_atual?: string | null
           codigo?: string | null
           created_at?: string
@@ -51,6 +53,7 @@ export type Database = {
           vencimento_contrato?: string | null
         }
         Update: {
+          active?: boolean
           apostila_atual?: string | null
           codigo?: string | null
           created_at?: string
