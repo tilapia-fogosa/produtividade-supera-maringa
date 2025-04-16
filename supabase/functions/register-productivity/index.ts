@@ -41,7 +41,10 @@ serve(async (req) => {
     const webhookUrl = configData.data;
 
     // Obter os dados da solicitação
-    const { data } = await req.json();
+    const requestData = await req.json();
+    const data = requestData.data;
+    
+    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     
     if (!data) {
       return new Response(

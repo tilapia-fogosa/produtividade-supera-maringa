@@ -72,6 +72,7 @@ export async function registrarProdutividade(
       
       if (presencaError) {
         console.error('Erro ao registrar presença:', presencaError);
+        console.error('Detalhes do erro:', JSON.stringify(presencaError));
         return false;
       }
       
@@ -151,6 +152,7 @@ export async function registrarProdutividade(
       
       if (produtividadeError) {
         console.error('Erro ao registrar produtividade ábaco:', produtividadeError);
+        console.error('Detalhes do erro produtividade:', JSON.stringify(produtividadeError));
         return false;
       }
     }
