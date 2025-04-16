@@ -42,6 +42,13 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   
+  // Logar o carregamento das apostilas
+  useEffect(() => {
+    console.log('[AbacoSection] Hooks carregados - apostilasDisponiveis:', apostilasDisponiveis);
+    console.log('[AbacoSection] Estado de carregamento:', carregandoApostila);
+    console.log('[AbacoSection] Erro (se houver):', erroApostila);
+  }, [apostilasDisponiveis, carregandoApostila, erroApostila]);
+  
   // Atualizar o total de páginas quando a apostila selecionada mudar
   useEffect(() => {
     if (apostilaAbaco) {
