@@ -103,42 +103,50 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       
       const dataHoje = new Date().toISOString().split('T')[0];
 
-      const presencaRegistrada = await registrarPresenca(
-        presente === "sim",
-        dataHoje,
-        presente === "não" ? motivoFalta : undefined
-      );
-      
-      if (!presencaRegistrada) {
-        throw new Error("Falha ao registrar presença");
+      // Preparar os dados para enviar para a Edge Function
+      const produtividadeData = {
+        aluno_id: aluno.id,
+        aluno_nome: aluno.nome,
+        turma_id: turma.id,
+        turma_nome: turma.nome,
+        presente: presente === "sim",
+        motivo_falta: presente === "não" ? motivoFalta : undefined,
+        apostila_abaco: presente === "sim" ? apostilaAbaco : undefined,
+        pagina_abaco: presente === "sim" ? paginaAbaco : undefined,
+        exercicios_abaco: presente === "sim" ? exerciciosAbaco : undefined,
+        erros_abaco: presente === "sim" ? errosAbaco : undefined,
+        fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
+        comentario: presente === "sim" ? comentario : undefined,
+        data_registro: dataHoje,
+        data_ultima_correcao_ah: new Date().toISOString(),
+        apostila_atual: apostilaAbaco,
+        ultima_pagina: paginaAbaco,
+        is_reposicao: false
+      };
+
+      console.log('ProdutividadeModal: Enviando dados para register-productivity:', produtividadeData);
+
+      const { data, error } = await supabase.functions.invoke('register-productivity', {
+        body: { data: produtividadeData }
+      });
+
+      if (error) {
+        throw new Error(error.message);
       }
 
-      if (presente === "sim") {
-        // Converter página para número
-        const paginaNumero = paginaAbaco ? Number(paginaAbaco) : undefined;
-        
-        console.log('ProdutividadeModal: Dados a serem enviados:', {
-          apostila: apostilaAbaco,
-          pagina: paginaNumero,
-          tipo: typeof paginaNumero
+      console.log('ProdutividadeModal: Resposta da Edge Function:', data);
+
+      if (data && data.webhookError) {
+        toast({
+          title: "Parcialmente concluído",
+          description: data.message || "Dados salvos, mas não sincronizados com webhook externo.",
+          variant: "default"
         });
-        
-        // Registrar produtividade do ábaco
-        const produtividadeRegistrada = await registrarProdutividade({
-          data_aula: dataHoje,
-          presente: true,
-          apostila: apostilaAbaco,
-          pagina: paginaNumero,
-          exercicios: exerciciosAbaco ? Number(exerciciosAbaco) : undefined,
-          erros: errosAbaco ? Number(errosAbaco) : undefined,
-          fez_desafio: fezDesafio === "sim",
-          comentario: comentario,
-          is_reposicao: false
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Produtividade registrada com sucesso!",
         });
-        
-        if (!produtividadeRegistrada) {
-          throw new Error("Falha ao registrar produtividade");
-        }
       }
 
       if (onSuccess) {

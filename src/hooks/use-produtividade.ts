@@ -7,7 +7,7 @@ interface ProdutividadeAbaco {
   aluno_id?: string;
   presente: boolean;
   apostila?: string;
-  pagina?: number; // Alterado de string para number
+  pagina?: number;
   exercicios?: number;
   erros?: number;
   fez_desafio?: boolean;
@@ -109,7 +109,7 @@ export const useProdutividade = (alunoId: string) => {
           .from('alunos')
           .update({
             apostila_atual: dados.apostila,
-            ultima_pagina: dados.pagina, // Agora é um número
+            ultima_pagina: dados.pagina,
             ultima_correcao_ah: new Date().toISOString()
           })
           .eq('id', alunoId);
@@ -117,20 +117,10 @@ export const useProdutividade = (alunoId: string) => {
         if (alunoError) throw alunoError;
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Produtividade registrada com sucesso",
-      });
-      
       return true;
     } catch (error) {
       console.error('Erro ao registrar produtividade:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível registrar a produtividade",
-        variant: "destructive"
-      });
-      return false;
+      throw error;
     } finally {
       setIsLoading(false);
     }

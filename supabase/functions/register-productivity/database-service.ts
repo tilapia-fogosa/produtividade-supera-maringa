@@ -16,12 +16,18 @@ export async function registrarDadosAluno(
   data: any
 ): Promise<boolean> {
   try {
-    if (data.presente && data.data_ultima_correcao_ah) {
+    if (data.presente && data.apostila_atual && data.ultima_pagina) {
+      console.log('Atualizando dados do aluno:', {
+        ultimo_nivel: data.apostila_atual,
+        ultima_pagina: data.ultima_pagina,
+        ultima_correcao_ah: data.data_ultima_correcao_ah
+      });
+      
       const { error: updateError } = await supabaseClient
         .from('alunos')
         .update({ 
           ultima_correcao_ah: data.data_ultima_correcao_ah,
-          ultimo_nivel: data.ultimo_nivel,
+          ultimo_nivel: data.apostila_atual,
           ultima_pagina: data.ultima_pagina 
         })
         .eq('id', data.aluno_id);
