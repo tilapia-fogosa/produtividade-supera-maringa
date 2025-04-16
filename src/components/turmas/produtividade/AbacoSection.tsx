@@ -107,40 +107,43 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
               </div>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[85vh] pt-6 pb-10">
-            <div className="sticky top-0 z-10 bg-background pb-2 mb-2 border-b">
-              <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
-            </div>
-            <ScrollArea className="h-[calc(100%-3rem)] px-1 pb-10">
-              {carregandoApostila ? (
-                <div className="p-4 text-center text-gray-500">
-                  Carregando apostilas...
-                </div>
-              ) : apostilasDisponiveis.length > 0 ? (
-                <div className="space-y-1 pb-8">
-                  {apostilasDisponiveis.map((apostila) => (
-                    <div 
-                      key={apostila.nome} 
-                      className={`flex items-center p-3 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
-                      onClick={() => handleApostilaChange(apostila.nome)}
-                    >
-                      <Book className="mr-3 h-5 w-5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{apostila.nome}</div>
-                        <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
+          <SheetContent side="bottom" className="h-[85vh]">
+            <div className="flex flex-col h-full">
+              <div className="sticky top-0 z-10 bg-background pb-2 mb-2 border-b">
+                <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
+              </div>
+              
+              <div className="flex-1 overflow-auto pb-safe">
+                {carregandoApostila ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Carregando apostilas...
+                  </div>
+                ) : apostilasDisponiveis.length > 0 ? (
+                  <div className="space-y-1 pb-16">
+                    {apostilasDisponiveis.map((apostila) => (
+                      <div 
+                        key={apostila.nome} 
+                        className={`flex items-center p-3 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
+                        onClick={() => handleApostilaChange(apostila.nome)}
+                      >
+                        <Book className="mr-3 h-5 w-5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{apostila.nome}</div>
+                          <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
+                        </div>
+                        {apostilaAbaco === apostila.nome && (
+                          <Check className="ml-2 h-5 w-5 text-primary flex-shrink-0" />
+                        )}
                       </div>
-                      {apostilaAbaco === apostila.nome && (
-                        <Check className="ml-2 h-5 w-5 text-primary flex-shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 text-center text-gray-500">
-                  {erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
-                </div>
-              )}
-            </ScrollArea>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-gray-500">
+                    {erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
+                  </div>
+                )}
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
       );
