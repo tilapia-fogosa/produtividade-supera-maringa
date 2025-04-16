@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Book } from 'lucide-react';
+import { Book, AlertCircle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { APOSTILAS_ABACO_DETALHES } from '../constants/apostilas';
 import { obterInfoApostila } from '../utils/apostilasUtils';
@@ -41,14 +41,25 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   setComentario
 }) => {
   const [totalPaginas, setTotalPaginas] = useState(40);
+  const [carregandoApostila, setCarregandoApostila] = useState(false);
+  const [erroApostila, setErroApostila] = useState<string | null>(null);
   
   // Buscar o total de páginas da apostila selecionada quando ela mudar
   useEffect(() => {
     const buscarTotalPaginas = async () => {
       if (apostilaAbaco) {
-        const infoApostila = await obterInfoApostila(apostilaAbaco);
-        setTotalPaginas(infoApostila.total_paginas);
-        console.log(`Apostila ${apostilaAbaco} tem ${infoApostila.total_paginas} páginas`);
+        setCarregandoApostila(true);
+        setErroApostila(null);
+        try {
+          const infoApostila = await obterInfoApostila(apostilaAbaco);
+          setTotalPaginas(infoApostila.total_paginas);
+          console.log(`Apostila ${apostilaAbaco} tem ${infoApostila.total_paginas} páginas`);
+        } catch (error) {
+          console.error('Erro ao buscar informações da apostila:', error);
+          setErroApostila('Não foi possível obter as informações da apostila');
+        } finally {
+          setCarregandoApostila(false);
+        }
       }
     };
     
@@ -76,6 +87,25 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
             </ScrollArea>
           </SelectContent>
         </Select>
+        
+        {carregandoApostila && (
+          <div className="text-xs text-gray-500 mt-1">
+            Carregando informações da apostila...
+          </div>
+        )}
+        
+        {erroApostila && (
+          <div className="flex items-center text-red-500 text-xs mt-1">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            {erroApostila}
+          </div>
+        )}
+        
+        {apostilaAbaco && !carregandoApostila && !erroApostila && (
+          <div className="text-xs text-gray-500 mt-1">
+            Total de páginas: {totalPaginas}
+          </div>
+        )}
       </div>
       
       <div className="grid grid-cols-2 gap-4">

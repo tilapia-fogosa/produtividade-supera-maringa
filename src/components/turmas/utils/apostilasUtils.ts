@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Função para normalizar o nome da apostila para encontrar uma correspondência no banco de dados
@@ -187,8 +188,14 @@ export const obterInfoApostila = async (nomeApostila: string | null): Promise<Ap
     "Ábaco AV. 2": "Ábaco AV. 2",
     "Ábaco AV. 3": "Ábaco AV. 3",
     "Ábaco AV. 4": "Ábaco AV. 4",
+    "Ábaco Jr. 1": "Ábaco Jr. 1",
+    "Ábaco Jr. 2": "Ábaco Jr. 2",
+    "Ábaco Jr. 3": "Ábaco Jr. 3",
+    "Ábaco Jr. 4": "Ábaco Jr. 4",
+    "Ábaco 5": "Ábaco 5", 
+    "Ábaco 6": "Ábaco 6",
     
-    // Mapeamentos para Ap. Abaco 1
+    // Mapeamentos para Ap. Abaco X
     "AP. ABACO 1": "Ábaco INT. 1",
     "Ap. Abaco 1": "Ábaco INT. 1",
     "ap. abaco 1": "Ábaco INT. 1",
@@ -196,7 +203,6 @@ export const obterInfoApostila = async (nomeApostila: string | null): Promise<Ap
     "Abaco 1": "Ábaco INT. 1",
     "Ábaco 1": "Ábaco INT. 1",
     
-    // Mapeamentos para Ap. Abaco 2
     "AP. ABACO 2": "Ábaco INT. 2", 
     "Ap. Abaco 2": "Ábaco INT. 2",
     "ap. abaco 2": "Ábaco INT. 2",
@@ -204,11 +210,23 @@ export const obterInfoApostila = async (nomeApostila: string | null): Promise<Ap
     "Abaco 2": "Ábaco INT. 2",
     "Ábaco 2": "Ábaco INT. 2",
     
-    // Outros mapeamentos de nomenclaturas antigas
     "Ap. Abaco 3": "Ábaco INT. 3",
     "ap. abaco 3": "Ábaco INT. 3",
+    "Abaco 3": "Ábaco INT. 3",
+    "Ábaco 3": "Ábaco INT. 3",
+    
     "Ap. Abaco 4": "Ábaco INT. 4",
-    "ap. abaco 4": "Ábaco INT. 4"
+    "ap. abaco 4": "Ábaco INT. 4",
+    "Abaco 4": "Ábaco INT. 4",
+    "Ábaco 4": "Ábaco INT. 4",
+    
+    "Ap. Abaco 5": "Ábaco 5",
+    "ap. abaco 5": "Ábaco 5",
+    "Abaco 5": "Ábaco 5",
+    
+    "Ap. Abaco 6": "Ábaco 6",
+    "ap. abaco 6": "Ábaco 6",
+    "Abaco 6": "Ábaco 6"
   };
   
   // Primeiro, verificar se existe um mapeamento direto
@@ -248,6 +266,75 @@ export const obterInfoApostila = async (nomeApostila: string | null): Promise<Ap
         total_paginas: apostilaOriginal.total_paginas 
       };
     }
+  }
+  
+  // Se não encontrou no banco, vamos fazer uma busca mais ampla
+  console.log('Tentando busca mais ampla por: ', nomePadronizado);
+  
+  const { data: apostilasSimilares } = await supabase
+    .from('apostilas')
+    .select('nome, total_paginas')
+    .limit(20);
+    
+  // Imprimir as apostilas disponíveis para debug
+  if (apostilasSimilares && apostilasSimilares.length > 0) {
+    console.log('Apostilas disponíveis no banco:');
+    apostilasSimilares.forEach(ap => {
+      console.log(`- ${ap.nome} (${ap.total_paginas} páginas)`);
+    });
+  } else {
+    console.log('Nenhuma apostila encontrada no banco de dados');
+  }
+  
+  // Verificar se existe alguma apostila com nome similar
+  if (apostilasSimilares) {
+    // Comparar nomes sem acentos e em minúsculas
+    const normalizeString = (str: string) => {
+      return str.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, ""); // Remove tudo que não for alfanumérico
+    };
+    
+    const nomeNormalizado = normalizeString(nomePadronizado);
+    
+    for (const ap of apostilasSimilares) {
+      const apNormalizado = normalizeString(ap.nome);
+      
+      // Se o nome normalizado da apostila contém o nome que estamos procurando
+      if (apNormalizado.includes(nomeNormalizado) || nomeNormalizado.includes(apNormalizado)) {
+        console.log(`Encontrada apostila similar: ${ap.nome} (${ap.total_paginas} páginas)`);
+        return {
+          nome: ap.nome,
+          total_paginas: ap.total_paginas
+        };
+      }
+    }
+  }
+  
+  // Se não encontrou no banco, tenta criar uma nova apostila
+  try {
+    console.log('Tentando criar nova apostila com nome:', nomePadronizado);
+    
+    const { data: novaApostila, error } = await supabase
+      .from('apostilas')
+      .insert([
+        { nome: nomePadronizado, total_paginas: 40 }
+      ])
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Erro ao criar apostila:', error);
+    } else if (novaApostila) {
+      console.log('Nova apostila criada com sucesso:', novaApostila.nome, 'com', novaApostila.total_paginas, 'páginas');
+      return { 
+        nome: novaApostila.nome, 
+        total_paginas: novaApostila.total_paginas 
+      };
+    }
+  } catch (err) {
+    console.error('Exceção ao tentar criar apostila:', err);
   }
   
   // Se não encontrou no banco, retorna o nome original com número padrão de páginas
