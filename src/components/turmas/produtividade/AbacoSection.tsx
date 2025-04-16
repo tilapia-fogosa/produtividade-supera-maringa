@@ -9,6 +9,7 @@ import { Book, AlertCircle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useApostilas } from '@/hooks/use-apostilas';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -44,6 +45,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   const isMobile = useIsMobile();
   const [valorOriginalApostila, setValorOriginalApostila] = useState<string>(apostilaAbaco);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   // Logar o carregamento das apostilas
   useEffect(() => {
@@ -74,6 +76,9 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const handleApostilaChange = (value: string) => {
     if (value) {
       setApostilaAbaco(value);
+      if (isMobile) {
+        setIsSheetOpen(false);
+      }
     } else {
       // Se nenhum valor for selecionado, use o valor original (apostila atual do aluno)
       setApostilaAbaco(valorOriginalApostila);
@@ -81,10 +86,55 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     }
   };
 
-  return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="apostila-abaco">Apostila do ábaco</Label>
+  // Renderiza o seletor de apostilas com base no dispositivo (mobile ou desktop)
+  const renderApostilaSelector = () => {
+    if (isMobile) {
+      return (
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetTrigger asChild>
+            <div className="flex items-center justify-between p-2 border rounded-md cursor-pointer bg-background">
+              <div className="flex items-center">
+                <Book className="mr-2 h-4 w-4" />
+                <span className="line-clamp-1">{apostilaAbaco || "Selecione a apostila"}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">{apostilaAbaco ? `(${getTotalPaginas(apostilaAbaco)} páginas)` : ""}</div>
+            </div>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[70vh] p-0">
+            <div className="p-4 border-b">
+              <h3 className="text-lg font-semibold">Selecione a apostila</h3>
+            </div>
+            <ScrollArea className="h-[calc(70vh-4rem)] px-4">
+              <div className="py-2 space-y-2">
+                {apostilasDisponiveis.length > 0 ? (
+                  apostilasDisponiveis.map((apostila) => (
+                    <div 
+                      key={apostila.nome} 
+                      className={`flex items-center p-3 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
+                      onClick={() => handleApostilaChange(apostila.nome)}
+                    >
+                      <Book className="mr-2 h-5 w-5" />
+                      <div>
+                        <div>{apostila.nome}</div>
+                        <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
+                      </div>
+                      {apostilaAbaco === apostila.nome && (
+                        <Check className="ml-auto h-4 w-4" />
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-2 py-4 text-center text-gray-500">
+                    {carregandoApostila ? 'Carregando apostilas...' : 'Nenhuma apostila disponível'}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+      );
+    } else {
+      return (
         <Select 
           value={apostilaAbaco} 
           onValueChange={handleApostilaChange}
@@ -93,8 +143,8 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
           <SelectTrigger>
             <SelectValue placeholder="Selecione a apostila" />
           </SelectTrigger>
-          <SelectContent className={isMobile ? "max-h-[40vh]" : ""}>
-            <ScrollArea className={isMobile ? "h-[35vh]" : "h-[200px]"}>
+          <SelectContent>
+            <ScrollArea className="h-[200px]">
               {apostilasDisponiveis.length > 0 ? (
                 apostilasDisponiveis.map((apostila) => (
                   <SelectItem key={apostila.nome} value={apostila.nome} className="py-2">
@@ -112,6 +162,15 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
             </ScrollArea>
           </SelectContent>
         </Select>
+      );
+    }
+  };
+
+  return (
+    <>
+      <div className="space-y-2">
+        <Label htmlFor="apostila-abaco">Apostila do ábaco</Label>
+        {renderApostilaSelector()}
         
         {carregandoApostila && (
           <div className="text-xs text-gray-500 mt-1">
