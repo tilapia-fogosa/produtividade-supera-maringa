@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -36,6 +37,8 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         if (alunoError) throw alunoError;
 
+        console.log('Dados do aluno:', alunoData);
+
         let totalPaginas = null;
         let exerciciosPorPagina = null;
         
@@ -44,20 +47,36 @@ export const useAlunoProgresso = (alunoId: string) => {
           const apostilaNormalizada = encontrarApostilaMaisProxima(alunoData.ultimo_nivel);
           console.log('Apostila normalizada:', apostilaNormalizada);
           
-          const { data: apostilaData, error: apostilaError } = await supabase
-            .from('apostilas')
-            .select('total_paginas, exercicios_por_pagina')
-            .eq('nome', apostilaNormalizada)
-            .maybeSingle();
+          // Verificar se a apostila normalizada não está vazia
+          if (apostilaNormalizada) {
+            const { data: apostilaData, error: apostilaError } = await supabase
+              .from('apostilas')
+              .select('total_paginas, exercicios_por_pagina')
+              .eq('nome', apostilaNormalizada)
+              .maybeSingle();
 
-          if (apostilaError) throw apostilaError;
-          
-          if (apostilaData) {
-            console.log('Dados da apostila encontrados:', apostilaData);
-            totalPaginas = apostilaData.total_paginas;
-            exerciciosPorPagina = apostilaData.exercicios_por_pagina;
-          } else {
-            console.log('Nenhum dado encontrado para a apostila:', apostilaNormalizada);
+            if (apostilaError) throw apostilaError;
+            
+            if (apostilaData) {
+              console.log('Dados da apostila encontrados:', apostilaData);
+              totalPaginas = apostilaData.total_paginas;
+              exerciciosPorPagina = apostilaData.exercicios_por_pagina;
+            } else {
+              console.log('Nenhum dado encontrado para a apostila:', apostilaNormalizada);
+              
+              // Tentar buscar com correspondência parcial (LIKE)
+              const { data: apostilaSimilarData, error: apostilaSimilarError } = await supabase
+                .from('apostilas')
+                .select('total_paginas, exercicios_por_pagina, nome')
+                .ilike('nome', `%${apostilaNormalizada}%`)
+                .maybeSingle();
+                
+              if (!apostilaSimilarError && apostilaSimilarData) {
+                console.log('Encontrou apostila similar:', apostilaSimilarData.nome);
+                totalPaginas = apostilaSimilarData.total_paginas;
+                exerciciosPorPagina = apostilaSimilarData.exercicios_por_pagina;
+              }
+            }
           }
         }
 
