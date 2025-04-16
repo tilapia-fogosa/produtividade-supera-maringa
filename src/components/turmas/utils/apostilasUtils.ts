@@ -21,11 +21,19 @@ export const obterInfoApostila = async (nomeApostila: string | null): Promise<Ap
       .eq('nome', nomeApostila)
       .maybeSingle();
       
-    if (!error && apostila) {
+    if (error) {
+      console.error('Erro na consulta do Supabase:', error);
+      return { nome: nomeApostila, total_paginas: 40 };
+    }
+    
+    if (apostila) {
       console.log('Apostila encontrada no banco:', apostila);
+      const totalPaginas = Number(apostila.total_paginas);
+      console.log('Total de páginas convertido para número:', totalPaginas);
+      
       return { 
         nome: apostila.nome, 
-        total_paginas: Number(apostila.total_paginas) 
+        total_paginas: totalPaginas
       };
     } else {
       console.log('Apostila não encontrada no banco:', nomeApostila);
@@ -55,16 +63,25 @@ export const carregarApostilasDisponiveis = async (): Promise<ApostilaInfo[]> =>
       .order('nome');
       
     if (error) {
+      console.error('Erro na consulta do Supabase:', error);
       throw error;
     }
     
     if (apostilasDB && apostilasDB.length > 0) {
       console.log(`Carregadas ${apostilasDB.length} apostilas do banco`);
-      // Garantir que total_paginas seja número
-      return apostilasDB.map(a => ({
-        nome: a.nome,
-        total_paginas: Number(a.total_paginas)
-      }));
+      
+      // Converter explicitamente total_paginas para número e fazer log para debug
+      const apostilasConvertidas = apostilasDB.map(a => {
+        const totalPaginas = Number(a.total_paginas);
+        console.log(`Apostila: ${a.nome}, total_paginas (original): ${a.total_paginas}, convertido: ${totalPaginas}, tipo: ${typeof totalPaginas}`);
+        
+        return {
+          nome: a.nome,
+          total_paginas: totalPaginas
+        };
+      });
+      
+      return apostilasConvertidas;
     } else {
       console.log('Nenhuma apostila encontrada no banco');
       return [];

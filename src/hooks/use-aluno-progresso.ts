@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
-import { obterInfoApostila } from '@/components/turmas/utils/apostilasUtils';
 
 interface AlunoProgresso {
   ultimo_nivel: string | null;
@@ -37,32 +36,31 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         if (alunoError) throw alunoError;
 
-        console.log('DEBUG - Dados do aluno:', {
-          ultimo_nivel: alunoData.ultimo_nivel,
-          ultima_pagina: alunoData.ultima_pagina,
-          tipo_ultima_pagina: typeof alunoData.ultima_pagina
-        });
+        console.log('Dados do aluno recuperados:', alunoData);
 
         let totalPaginas = null;
         let paginasRestantes = null;
         let progressoPercentual = 0;
         
         if (alunoData.ultimo_nivel) {
-          // Busca direta pelo nome da apostila no banco de dados
+          // Busca direta pelo nome da apostila
           const { data: apostilaDB, error: apostilaError } = await supabase
             .from('apostilas')
             .select('nome, total_paginas')
             .eq('nome', alunoData.ultimo_nivel)
             .maybeSingle();
           
-          if (!apostilaError && apostilaDB) {
-            console.log('DEBUG - Apostila encontrada no banco:', apostilaDB);
+          if (apostilaError) {
+            console.error('Erro ao buscar apostila:', apostilaError);
+          }
+          
+          if (apostilaDB) {
+            console.log('Apostila encontrada no banco:', apostilaDB);
             totalPaginas = Number(apostilaDB.total_paginas);
+            console.log('Total de páginas após conversão:', totalPaginas);
           } else {
-            // Se não encontrou no banco, usa a função obterInfoApostila como fallback
-            console.log('DEBUG - Apostila não encontrada no banco, usando obterInfoApostila');
-            const infoApostila = await obterInfoApostila(alunoData.ultimo_nivel);
-            totalPaginas = infoApostila.total_paginas;
+            console.log('Apostila não encontrada no banco:', alunoData.ultimo_nivel);
+            totalPaginas = 40; // Valor padrão
           }
           
           const ultimaPagina = alunoData.ultima_pagina !== null ? Number(alunoData.ultima_pagina) : null;
@@ -71,7 +69,7 @@ export const useAlunoProgresso = (alunoId: string) => {
             paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
             progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
             
-            console.log('DEBUG - Cálculos finalizados:', {
+            console.log('Cálculos de progresso:', {
               total_paginas: totalPaginas,
               ultima_pagina: ultimaPagina,
               paginas_restantes: paginasRestantes,

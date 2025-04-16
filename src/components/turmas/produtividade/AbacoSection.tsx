@@ -39,7 +39,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   comentario,
   setComentario
 }) => {
-  const [totalPaginas, setTotalPaginas] = useState(40);
+  const [totalPaginas, setTotalPaginas] = useState<number>(40);
   const [carregandoApostila, setCarregandoApostila] = useState(false);
   const [erroApostila, setErroApostila] = useState<string | null>(null);
   const [apostilasDisponiveis, setApostilasDisponiveis] = useState<ApostilaInfo[]>([]);
@@ -49,6 +49,8 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     const buscarApostilasDisponiveis = async () => {
       try {
         setCarregandoApostila(true);
+        setErroApostila(null);
+        
         const apostilas = await carregarApostilasDisponiveis();
         
         if (apostilas.length > 0) {
@@ -72,10 +74,16 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   // Atualizar o total de páginas quando a apostila selecionada mudar
   useEffect(() => {
     if (apostilaAbaco) {
+      console.log('Buscando apostila selecionada:', apostilaAbaco);
+      console.log('Apostilas disponíveis:', apostilasDisponiveis);
+      
       const apostilaSelecionada = apostilasDisponiveis.find(a => a.nome === apostilaAbaco);
       
       if (apostilaSelecionada) {
         console.log(`Apostila ${apostilaAbaco} selecionada:`, apostilaSelecionada);
+        console.log(`Total de páginas (tipo): ${typeof apostilaSelecionada.total_paginas}`);
+        console.log(`Total de páginas (valor): ${apostilaSelecionada.total_paginas}`);
+        
         setTotalPaginas(apostilaSelecionada.total_paginas);
       } else {
         console.log(`Apostila ${apostilaAbaco} não encontrada no cache`);
