@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Função para normalizar o nome da apostila para encontrar uma correspondência no banco de dados
@@ -48,7 +47,13 @@ export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string
   return ultimoNivel;
 };
 
-// Nova função que busca diretamente na tabela apostilas
+// Interface para representar dados da apostila
+export interface ApostilaInfo {
+  nome: string;
+  total_paginas: number;
+}
+
+// Função que busca diretamente na tabela apostilas
 export const encontrarApostila = async (nomeApostila: string | null): Promise<string> => {
   if (!nomeApostila) return "";
   
@@ -163,4 +168,92 @@ export const encontrarApostila = async (nomeApostila: string | null): Promise<st
   
   // Se não foi possível criar uma nova apostila, retorna o nome original
   return nomeApostila;
+};
+
+// Nova função para obter apostila com informações completas (nome e páginas)
+export const obterInfoApostila = async (nomeApostila: string | null): Promise<ApostilaInfo> => {
+  if (!nomeApostila) return { nome: "", total_paginas: 40 };
+  
+  console.log('Buscando informações completas da apostila:', nomeApostila);
+  
+  // Lista completa de mapeamentos de apostilas (nomes alternativos para os padrões)
+  const mapeamentosCompletos: Record<string, string> = {
+    // Mapeamentos exatos 
+    "Ábaco INT. 1": "Ábaco INT. 1",
+    "Ábaco INT. 2": "Ábaco INT. 2",
+    "Ábaco INT. 3": "Ábaco INT. 3",
+    "Ábaco INT. 4": "Ábaco INT. 4",
+    "Ábaco AV. 1": "Ábaco AV. 1", 
+    "Ábaco AV. 2": "Ábaco AV. 2",
+    "Ábaco AV. 3": "Ábaco AV. 3",
+    "Ábaco AV. 4": "Ábaco AV. 4",
+    
+    // Mapeamentos para Ap. Abaco 1
+    "AP. ABACO 1": "Ábaco INT. 1",
+    "Ap. Abaco 1": "Ábaco INT. 1",
+    "ap. abaco 1": "Ábaco INT. 1",
+    "Ap Abaco 1": "Ábaco INT. 1",
+    "Abaco 1": "Ábaco INT. 1",
+    "Ábaco 1": "Ábaco INT. 1",
+    
+    // Mapeamentos para Ap. Abaco 2
+    "AP. ABACO 2": "Ábaco INT. 2", 
+    "Ap. Abaco 2": "Ábaco INT. 2",
+    "ap. abaco 2": "Ábaco INT. 2",
+    "Ap Abaco 2": "Ábaco INT. 2",
+    "Abaco 2": "Ábaco INT. 2",
+    "Ábaco 2": "Ábaco INT. 2",
+    
+    // Outros mapeamentos de nomenclaturas antigas
+    "Ap. Abaco 3": "Ábaco INT. 3",
+    "ap. abaco 3": "Ábaco INT. 3",
+    "Ap. Abaco 4": "Ábaco INT. 4",
+    "ap. abaco 4": "Ábaco INT. 4"
+  };
+  
+  // Primeiro, verificar se existe um mapeamento direto
+  let nomePadronizado = nomeApostila;
+  if (mapeamentosCompletos[nomeApostila]) {
+    nomePadronizado = mapeamentosCompletos[nomeApostila];
+    console.log(`Mapeamento encontrado: ${nomeApostila} -> ${nomePadronizado}`);
+  }
+  
+  // Buscar no banco pelo nome padronizado
+  const { data: apostila, error } = await supabase
+    .from('apostilas')
+    .select('nome, total_paginas')
+    .eq('nome', nomePadronizado)
+    .maybeSingle();
+    
+  if (apostila) {
+    console.log('Apostila encontrada no banco:', apostila.nome, 'com', apostila.total_paginas, 'páginas');
+    return { 
+      nome: apostila.nome, 
+      total_paginas: apostila.total_paginas 
+    };
+  }
+  
+  // Se não encontrou com o nome padronizado, tenta com o nome original
+  if (nomePadronizado !== nomeApostila) {
+    const { data: apostilaOriginal } = await supabase
+      .from('apostilas')
+      .select('nome, total_paginas')
+      .eq('nome', nomeApostila)
+      .maybeSingle();
+      
+    if (apostilaOriginal) {
+      console.log('Apostila encontrada no banco com nome original:', apostilaOriginal.nome, 'com', apostilaOriginal.total_paginas, 'páginas');
+      return { 
+        nome: apostilaOriginal.nome, 
+        total_paginas: apostilaOriginal.total_paginas 
+      };
+    }
+  }
+  
+  // Se não encontrou no banco, retorna o nome original com número padrão de páginas
+  console.log('Apostila não encontrada no banco. Usando valor padrão de 40 páginas para:', nomeApostila);
+  return { 
+    nome: nomeApostila, 
+    total_paginas: 40 
+  };
 };

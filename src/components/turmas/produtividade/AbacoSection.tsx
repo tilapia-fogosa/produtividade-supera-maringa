@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Book } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { APOSTILAS_ABACO_DETALHES } from '../constants/apostilas';
+import { obterInfoApostila } from '../utils/apostilasUtils';
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -39,9 +40,20 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   comentario,
   setComentario
 }) => {
-  // Obter o total de páginas da apostila selecionada
-  const apostilaSelecionada = APOSTILAS_ABACO_DETALHES.find(a => a.nome === apostilaAbaco);
-  const totalPaginas = apostilaSelecionada ? apostilaSelecionada.paginas : 40;
+  const [totalPaginas, setTotalPaginas] = useState(40);
+  
+  // Buscar o total de páginas da apostila selecionada quando ela mudar
+  useEffect(() => {
+    const buscarTotalPaginas = async () => {
+      if (apostilaAbaco) {
+        const infoApostila = await obterInfoApostila(apostilaAbaco);
+        setTotalPaginas(infoApostila.total_paginas);
+        console.log(`Apostila ${apostilaAbaco} tem ${infoApostila.total_paginas} páginas`);
+      }
+    };
+    
+    buscarTotalPaginas();
+  }, [apostilaAbaco]);
 
   return (
     <>
@@ -57,7 +69,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                 <SelectItem key={apostila.nome} value={apostila.nome}>
                   <div className="flex items-center">
                     <Book className="mr-2 h-4 w-4" />
-                    {apostila.nome} ({apostila.paginas} págs)
+                    {apostila.nome}
                   </div>
                 </SelectItem>
               ))}

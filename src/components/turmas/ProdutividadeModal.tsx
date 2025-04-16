@@ -14,7 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
-import { encontrarApostila } from './utils/apostilasUtils';
+import { obterInfoApostila } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
@@ -60,10 +60,10 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
           
           if (aluno.ultimo_nivel) {
             console.log('Último nível do aluno:', aluno.ultimo_nivel);
-            // Usar a função aprimorada para obter o nome correto da apostila
-            const apostilaNome = await encontrarApostila(aluno.ultimo_nivel);
-            console.log('Nome de apostila encontrado:', apostilaNome);
-            setApostilaAbaco(apostilaNome);
+            // Usar a função aprimorada para obter o nome correto da apostila e páginas
+            const infoApostila = await obterInfoApostila(aluno.ultimo_nivel);
+            console.log('Informações da apostila encontradas:', infoApostila);
+            setApostilaAbaco(infoApostila.nome);
           } else {
             console.log('Aluno não tem último nível definido');
           }
