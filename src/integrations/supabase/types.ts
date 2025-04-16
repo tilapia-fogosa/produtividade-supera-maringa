@@ -12,7 +12,6 @@ export type Database = {
       alunos: {
         Row: {
           active: boolean
-          apostila_atual: string | null
           codigo: string | null
           created_at: string
           curso: string | null
@@ -27,13 +26,13 @@ export type Database = {
           telefone: string | null
           turma_id: string
           ultima_correcao_ah: string | null
+          ultima_falta: string | null
           ultima_pagina: string | null
           ultimo_nivel: string | null
           vencimento_contrato: string | null
         }
         Insert: {
           active?: boolean
-          apostila_atual?: string | null
           codigo?: string | null
           created_at?: string
           curso?: string | null
@@ -48,13 +47,13 @@ export type Database = {
           telefone?: string | null
           turma_id: string
           ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
           ultima_pagina?: string | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }
         Update: {
           active?: boolean
-          apostila_atual?: string | null
           codigo?: string | null
           created_at?: string
           curso?: string | null
@@ -69,6 +68,7 @@ export type Database = {
           telefone?: string | null
           turma_id?: string
           ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
           ultima_pagina?: string | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
@@ -78,18 +78,21 @@ export type Database = {
       apostilas: {
         Row: {
           created_at: string
+          exercicios_por_pagina: number | null
           id: string
           nome: string
           total_paginas: number
         }
         Insert: {
           created_at?: string
+          exercicios_por_pagina?: number | null
           id?: string
           nome: string
           total_paginas: number
         }
         Update: {
           created_at?: string
+          exercicios_por_pagina?: number | null
           id?: string
           nome?: string
           total_paginas?: number
