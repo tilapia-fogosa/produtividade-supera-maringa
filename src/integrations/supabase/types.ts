@@ -27,7 +27,7 @@ export type Database = {
           turma_id: string
           ultima_correcao_ah: string | null
           ultima_falta: string | null
-          ultima_pagina: string | null
+          ultima_pagina: number | null
           ultimo_nivel: string | null
           vencimento_contrato: string | null
         }
@@ -48,7 +48,7 @@ export type Database = {
           turma_id: string
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
-          ultima_pagina?: string | null
+          ultima_pagina?: number | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }
@@ -69,7 +69,7 @@ export type Database = {
           turma_id?: string
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
-          ultima_pagina?: string | null
+          ultima_pagina?: number | null
           ultimo_nivel?: string | null
           vencimento_contrato?: string | null
         }

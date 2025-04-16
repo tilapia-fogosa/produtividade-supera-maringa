@@ -5,7 +5,7 @@ import { encontrarApostilaMaisProxima } from '@/components/turmas/utils/apostila
 
 interface AlunoProgresso {
   ultimo_nivel: string | null;
-  ultima_pagina: string | null;
+  ultima_pagina: number | null;
   ultima_correcao_ah: string | null;
   total_paginas: number | null;
   paginas_restantes: number | null;
@@ -68,26 +68,19 @@ export const useAlunoProgresso = (alunoId: string) => {
             console.log('DEBUG - Apostila encontrada:', apostilaData);
             totalPaginas = apostilaData.total_paginas;
             
-            if (alunoData.ultima_pagina) {
-              const ultimaPagina = parseInt(alunoData.ultima_pagina, 10);
-              console.log('DEBUG - Convertendo última página:', {
-                valor_original: alunoData.ultima_pagina,
-                valor_convertido: ultimaPagina,
-                tipo: typeof ultimaPagina,
-                is_nan: isNaN(ultimaPagina)
-              });
+            // Como agora ultima_pagina já é um número, não precisamos fazer parse
+            const ultimaPagina = alunoData.ultima_pagina;
+            
+            if (ultimaPagina !== null) {
+              paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
+              progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
               
-              if (!isNaN(ultimaPagina)) {
-                paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
-                progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
-                
-                console.log('DEBUG - Cálculos finalizados:', {
-                  total_paginas: totalPaginas,
-                  ultima_pagina: ultimaPagina,
-                  paginas_restantes: paginasRestantes,
-                  progresso_percentual: progressoPercentual
-                });
-              }
+              console.log('DEBUG - Cálculos finalizados:', {
+                total_paginas: totalPaginas,
+                ultima_pagina: ultimaPagina,
+                paginas_restantes: paginasRestantes,
+                progresso_percentual: progressoPercentual
+              });
             }
           } else {
             console.log('DEBUG - Nenhuma apostila encontrada com o nome:', apostilaNormalizada);
