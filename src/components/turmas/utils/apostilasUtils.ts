@@ -7,7 +7,7 @@ export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string
   
   // Mapeamento de nomes de apostilas para o formato exato do banco de dados
   const mapeamentoApostilas: Record<string, string> = {
-    // Apostilas de Ábaco
+    // Mapeamento de nomes alternativos para o padrão do banco
     "Ábaco INT. 1": "AP. Abaco 1",
     "Ábaco INT. 2": "AP. Abaco 2",
     "Ábaco INT. 3": "AP. Abaco 3",
@@ -17,7 +17,7 @@ export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string
     "Ábaco AV. 3": "AP. Abaco Avancado 3",
     "Ábaco AV. 4": "AP. Abaco Avancado 4",
     
-    // Para compatibilidade, manter também o formato inverso
+    // Para compatibilidade, manter também o formato do banco
     "AP. Abaco 1": "AP. Abaco 1",
     "AP. Abaco 2": "AP. Abaco 2",
     "AP. Abaco 3": "AP. Abaco 3",
@@ -25,7 +25,7 @@ export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string
     "AP. Abaco Avancado 1": "AP. Abaco Avancado 1",
     "AP. Abaco Avancado 2": "AP. Abaco Avancado 2",
     "AP. Abaco Avancado 3": "AP. Abaco Avancado 3",
-    "AP. Abaco Avancado 4": "AP. Abaco Avancado 4",
+    "AP. Abaco Avancado 4": "AP. Abaco Avancado 4"
   };
   
   // Verificar se existe um mapeamento direto para este nome

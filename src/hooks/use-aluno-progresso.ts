@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -28,6 +27,7 @@ export const useAlunoProgresso = (alunoId: string) => {
         setLoading(true);
         setError(null);
 
+        // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta')
@@ -36,63 +36,67 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         if (alunoError) throw alunoError;
 
-        console.log('Dados do aluno:', alunoData);
-        console.log('Última página:', alunoData.ultima_pagina, 'Tipo:', typeof alunoData.ultima_pagina);
+        console.log('DEBUG - Dados do aluno:', {
+          ultimo_nivel: alunoData.ultimo_nivel,
+          ultima_pagina: alunoData.ultima_pagina,
+          tipo_ultima_pagina: typeof alunoData.ultima_pagina
+        });
 
         let totalPaginas = null;
-        let exerciciosPorPagina = null;
+        let paginasRestantes = null;
+        let progressoPercentual = 0;
         
         if (alunoData.ultimo_nivel) {
           const apostilaNormalizada = encontrarApostilaMaisProxima(alunoData.ultimo_nivel);
-          console.log('Nome exato da apostila:', apostilaNormalizada);
+          console.log('DEBUG - Buscando apostila:', {
+            nivel_original: alunoData.ultimo_nivel,
+            apostila_normalizada: apostilaNormalizada
+          });
           
+          // Buscar apostila no banco
           const { data: apostilaData, error: apostilaError } = await supabase
             .from('apostilas')
             .select('total_paginas, exercicios_por_pagina')
             .eq('nome', apostilaNormalizada)
             .maybeSingle();
 
-          if (apostilaError) throw apostilaError;
+          if (apostilaError) {
+            console.error('DEBUG - Erro ao buscar apostila:', apostilaError);
+          }
             
           if (apostilaData) {
-            console.log('Dados da apostila encontrados:', apostilaData);
+            console.log('DEBUG - Apostila encontrada:', apostilaData);
             totalPaginas = apostilaData.total_paginas;
-            exerciciosPorPagina = apostilaData.exercicios_por_pagina;
-            console.log('Total de páginas:', totalPaginas, 'Tipo:', typeof totalPaginas);
-          } else {
-            console.log('Nenhuma apostila encontrada com o nome exato:', apostilaNormalizada);
             
-            // Fallback: Vamos listar todas as apostilas para debug
+            if (alunoData.ultima_pagina) {
+              const ultimaPagina = parseInt(alunoData.ultima_pagina, 10);
+              console.log('DEBUG - Convertendo última página:', {
+                valor_original: alunoData.ultima_pagina,
+                valor_convertido: ultimaPagina,
+                tipo: typeof ultimaPagina,
+                is_nan: isNaN(ultimaPagina)
+              });
+              
+              if (!isNaN(ultimaPagina)) {
+                paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
+                progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
+                
+                console.log('DEBUG - Cálculos finalizados:', {
+                  total_paginas: totalPaginas,
+                  ultima_pagina: ultimaPagina,
+                  paginas_restantes: paginasRestantes,
+                  progresso_percentual: progressoPercentual
+                });
+              }
+            }
+          } else {
+            console.log('DEBUG - Nenhuma apostila encontrada com o nome:', apostilaNormalizada);
             const { data: todasApostilas } = await supabase
               .from('apostilas')
-              .select('nome')
-              .limit(20);
+              .select('nome');
               
-            console.log('Apostilas disponíveis no banco:', todasApostilas?.map(a => a.nome));
+            console.log('DEBUG - Apostilas disponíveis:', todasApostilas?.map(a => a.nome));
           }
-        }
-
-        let paginasRestantes = null;
-        let progressoPercentual = 0;
-        
-        if (totalPaginas && alunoData.ultima_pagina) {
-          console.log('Calculando páginas restantes...');
-          const ultimaPagina = parseInt(alunoData.ultima_pagina, 10);
-          console.log('Última página convertida:', ultimaPagina, 'Tipo:', typeof ultimaPagina);
-          
-          if (!isNaN(ultimaPagina)) {
-            paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
-            progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
-            console.log('Páginas restantes calculadas:', paginasRestantes);
-            console.log('Progresso percentual calculado:', progressoPercentual);
-          } else {
-            console.log('Erro ao converter última página para número');
-          }
-        } else {
-          console.log('Não foi possível calcular páginas restantes:', {
-            temTotalPaginas: !!totalPaginas,
-            temUltimaPagina: !!alunoData.ultima_pagina
-          });
         }
 
         const dataAtual = new Date();
@@ -159,9 +163,9 @@ export const useAlunoProgresso = (alunoId: string) => {
           paginas_restantes: paginasRestantes,
           progresso_percentual: progressoPercentual,
           faltou_mes_atual: faltouMesAtual,
-          previsao_conclusao: previsaoConclusao,
-          media_paginas_por_aula: mediaPaginasPorAula,
-          media_exercicios_por_aula: mediaExerciciosPorAula
+          previsao_conclusao: null,
+          media_paginas_por_aula: null,
+          media_exercicios_por_aula: null
         });
       } catch (error) {
         console.error('Erro ao buscar progresso do aluno:', error);
