@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -47,21 +48,51 @@ export const useAlunoProgresso = (alunoId: string) => {
         let progressoPercentual = 0;
         
         if (alunoData.ultimo_nivel) {
-          // Tentativa 1: Buscar apostila diretamente do banco
+          // Busca direta pelo nome exato da apostila
           const { data: apostilaDB, error: apostilaError } = await supabase
             .from('apostilas')
             .select('nome, total_paginas')
             .eq('nome', alunoData.ultimo_nivel)
             .maybeSingle();
-            
+          
           if (!apostilaError && apostilaDB) {
             console.log('DEBUG - Apostila encontrada no banco:', apostilaDB);
+            // Garantir que total_paginas seja um número
             totalPaginas = Number(apostilaDB.total_paginas);
           } else {
-            // Tentativa 2: Usar a função obterInfoApostila
-            const infoApostila = await obterInfoApostila(alunoData.ultimo_nivel);
-            console.log('DEBUG - Informações da apostila via obterInfoApostila:', infoApostila);
-            totalPaginas = Number(infoApostila.total_paginas);
+            // Tenta buscar por nome similar
+            const { data: apostilasSimilares } = await supabase
+              .from('apostilas')
+              .select('nome, total_paginas');
+            
+            if (apostilasSimilares && apostilasSimilares.length > 0) {
+              console.log('DEBUG - Buscando apostila similar para:', alunoData.ultimo_nivel);
+              
+              // Função para normalizar nomes para comparação
+              const normalizar = (nome: string) => nome.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const nomeNormalizado = normalizar(alunoData.ultimo_nivel);
+              
+              // Busca por similaridade
+              const apostilaSimilar = apostilasSimilares.find(a => 
+                normalizar(a.nome).includes(nomeNormalizado) || 
+                nomeNormalizado.includes(normalizar(a.nome))
+              );
+              
+              if (apostilaSimilar) {
+                console.log('DEBUG - Apostila similar encontrada:', apostilaSimilar);
+                totalPaginas = Number(apostilaSimilar.total_paginas);
+              } else {
+                // Se não encontrou nada similar, usa a função obterInfoApostila como fallback
+                const infoApostila = await obterInfoApostila(alunoData.ultimo_nivel);
+                console.log('DEBUG - Informações da apostila via obterInfoApostila:', infoApostila);
+                totalPaginas = Number(infoApostila.total_paginas);
+              }
+            } else {
+              // Se não encontrou nenhuma apostila, usa a função obterInfoApostila
+              const infoApostila = await obterInfoApostila(alunoData.ultimo_nivel);
+              console.log('DEBUG - Informações da apostila via obterInfoApostila:', infoApostila);
+              totalPaginas = Number(infoApostila.total_paginas);
+            }
           }
           
           const ultimaPagina = alunoData.ultima_pagina !== null ? Number(alunoData.ultima_pagina) : null;

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Função para normalizar o nome da apostila para encontrar uma correspondência no banco de dados
@@ -117,6 +116,32 @@ export const encontrarApostila = async (nomeApostila: string | null): Promise<st
     return nomePadronizado;
   }
   
+  // Busca por similaridade se não encontrou mapeamento direto
+  try {
+    // Buscar todas as apostilas
+    const { data: todasApostilas } = await supabase
+      .from('apostilas')
+      .select('nome')
+      .order('nome');
+      
+    if (todasApostilas && todasApostilas.length > 0) {
+      // Função para normalizar strings para comparação
+      const normalizar = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const nomeNormalizado = normalizar(nomeApostila);
+      
+      // Procurar por similaridade
+      for (const apostila of todasApostilas) {
+        if (normalizar(apostila.nome).includes(nomeNormalizado) || 
+            nomeNormalizado.includes(normalizar(apostila.nome))) {
+          console.log(`Apostila similar encontrada: ${nomeApostila} -> ${apostila.nome}`);
+          return apostila.nome;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao buscar apostilas similares:', err);
+  }
+  
   // Caso não tenha mapeamento direto, verificar no banco com o nome original
   const { data: apostilaOriginal } = await supabase
     .from('apostilas')
@@ -131,43 +156,7 @@ export const encontrarApostila = async (nomeApostila: string | null): Promise<st
   
   console.log('Apostila não encontrada no banco nem nos mapeamentos. Nome original:', nomeApostila);
   
-  // Se chegou aqui, não encontrou nem no mapeamento nem no banco
-  // Vamos criar uma nova apostila no banco agora
-  try {
-    console.log('Tentando criar nova apostila:', nomeApostila);
-    
-    const { data: novaApostila, error } = await supabase
-      .from('apostilas')
-      .insert([
-        { nome: nomeApostila, total_paginas: 40 }
-      ])
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Erro ao criar apostila:', error);
-      
-      // Em caso de erro, verificar se o erro é por RLS, tentar buscar novamente 
-      // para garantir que realmente não existe
-      const { data: verificarNovamente } = await supabase
-        .from('apostilas')
-        .select('nome')
-        .eq('nome', nomeApostila)
-        .maybeSingle();
-        
-      if (verificarNovamente) {
-        console.log('Apostila encontrada após segunda verificação:', verificarNovamente.nome);
-        return verificarNovamente.nome;
-      }
-    } else if (novaApostila) {
-      console.log('Nova apostila criada com sucesso:', novaApostila.nome);
-      return novaApostila.nome;
-    }
-  } catch (err) {
-    console.error('Exceção ao tentar criar apostila:', err);
-  }
-  
-  // Se não foi possível criar uma nova apostila, retorna o nome original
+  // Se não encontrou nem no mapeamento nem no banco, retorna o nome original
   return nomeApostila;
 };
 
@@ -236,105 +225,74 @@ export const obterInfoApostila = async (nomeApostila: string | null): Promise<Ap
     console.log(`Mapeamento encontrado: ${nomeApostila} -> ${nomePadronizado}`);
   }
   
-  // Buscar no banco pelo nome padronizado
-  const { data: apostila, error } = await supabase
-    .from('apostilas')
-    .select('nome, total_paginas')
-    .eq('nome', nomePadronizado)
-    .maybeSingle();
-    
-  if (apostila) {
-    console.log('Apostila encontrada no banco:', apostila.nome, 'com', apostila.total_paginas, 'páginas');
-    return { 
-      nome: apostila.nome, 
-      total_paginas: apostila.total_paginas 
-    };
-  }
-  
-  // Se não encontrou com o nome padronizado, tenta com o nome original
-  if (nomePadronizado !== nomeApostila) {
-    const { data: apostilaOriginal } = await supabase
+  try {
+    // Buscar no banco pelo nome exato
+    const { data: apostila, error } = await supabase
       .from('apostilas')
       .select('nome, total_paginas')
-      .eq('nome', nomeApostila)
+      .eq('nome', nomePadronizado)
       .maybeSingle();
       
-    if (apostilaOriginal) {
-      console.log('Apostila encontrada no banco com nome original:', apostilaOriginal.nome, 'com', apostilaOriginal.total_paginas, 'páginas');
+    if (!error && apostila) {
+      console.log('Apostila encontrada no banco por nome exato:', apostila);
       return { 
-        nome: apostilaOriginal.nome, 
-        total_paginas: apostilaOriginal.total_paginas 
+        nome: apostila.nome, 
+        total_paginas: Number(apostila.total_paginas) 
       };
     }
-  }
-  
-  // Se não encontrou no banco, vamos fazer uma busca mais ampla
-  console.log('Tentando busca mais ampla por: ', nomePadronizado);
-  
-  const { data: apostilasSimilares } = await supabase
-    .from('apostilas')
-    .select('nome, total_paginas')
-    .limit(20);
     
-  // Imprimir as apostilas disponíveis para debug
-  if (apostilasSimilares && apostilasSimilares.length > 0) {
-    console.log('Apostilas disponíveis no banco:');
-    apostilasSimilares.forEach(ap => {
-      console.log(`- ${ap.nome} (${ap.total_paginas} páginas)`);
-    });
-  } else {
-    console.log('Nenhuma apostila encontrada no banco de dados');
-  }
-  
-  // Verificar se existe alguma apostila com nome similar
-  if (apostilasSimilares) {
-    // Comparar nomes sem acentos e em minúsculas
-    const normalizeString = (str: string) => {
-      return str.toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/g, ""); // Remove tudo que não for alfanumérico
-    };
-    
-    const nomeNormalizado = normalizeString(nomePadronizado);
-    
-    for (const ap of apostilasSimilares) {
-      const apNormalizado = normalizeString(ap.nome);
-      
-      // Se o nome normalizado da apostila contém o nome que estamos procurando
-      if (apNormalizado.includes(nomeNormalizado) || nomeNormalizado.includes(apNormalizado)) {
-        console.log(`Encontrada apostila similar: ${ap.nome} (${ap.total_paginas} páginas)`);
-        return {
-          nome: ap.nome,
-          total_paginas: ap.total_paginas
+    // Se não encontrou com o nome padronizado, tenta com o nome original
+    if (nomePadronizado !== nomeApostila) {
+      const { data: apostilaOriginal } = await supabase
+        .from('apostilas')
+        .select('nome, total_paginas')
+        .eq('nome', nomeApostila)
+        .maybeSingle();
+        
+      if (apostilaOriginal) {
+        console.log('Apostila encontrada com nome original:', apostilaOriginal);
+        return { 
+          nome: apostilaOriginal.nome, 
+          total_paginas: Number(apostilaOriginal.total_paginas) 
         };
       }
     }
-  }
-  
-  // Se não encontrou no banco, tenta criar uma nova apostila
-  try {
-    console.log('Tentando criar nova apostila com nome:', nomePadronizado);
     
-    const { data: novaApostila, error } = await supabase
+    // Buscar todas as apostilas para comparação por similaridade
+    const { data: todasApostilas } = await supabase
       .from('apostilas')
-      .insert([
-        { nome: nomePadronizado, total_paginas: 40 }
-      ])
-      .select()
-      .single();
+      .select('nome, total_paginas')
+      .order('nome');
       
-    if (error) {
-      console.error('Erro ao criar apostila:', error);
-    } else if (novaApostila) {
-      console.log('Nova apostila criada com sucesso:', novaApostila.nome, 'com', novaApostila.total_paginas, 'páginas');
-      return { 
-        nome: novaApostila.nome, 
-        total_paginas: novaApostila.total_paginas 
-      };
+    if (todasApostilas && todasApostilas.length > 0) {
+      console.log(`Buscando por similaridade entre ${todasApostilas.length} apostilas`);
+      
+      // Função para normalizar strings para comparação
+      const normalizar = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const nomeNormalizado = normalizar(nomeApostila);
+      
+      // Procurar por similaridade
+      for (const apostila of todasApostilas) {
+        const apostilaNormalizada = normalizar(apostila.nome);
+        
+        if (apostilaNormalizada.includes(nomeNormalizado) || 
+            nomeNormalizado.includes(apostilaNormalizada)) {
+          console.log(`Apostila similar encontrada: ${nomeApostila} -> ${apostila.nome} (${apostila.total_paginas} páginas)`);
+          return { 
+            nome: apostila.nome, 
+            total_paginas: Number(apostila.total_paginas) 
+          };
+        }
+      }
+      
+      // Se não encontrou similar, logs de debug
+      console.log('Apostilas disponíveis:');
+      todasApostilas.forEach(a => {
+        console.log(`- ${a.nome} (${a.total_paginas} páginas)`);
+      });
     }
   } catch (err) {
-    console.error('Exceção ao tentar criar apostila:', err);
+    console.error('Erro ao buscar informações da apostila:', err);
   }
   
   // Se não encontrou no banco, retorna o nome original com número padrão de páginas
