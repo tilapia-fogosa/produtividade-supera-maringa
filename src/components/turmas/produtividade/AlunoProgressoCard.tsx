@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Progress } from "@/components/ui/progress";
 import { useAlunoProgresso } from '@/hooks/use-aluno-progresso';
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { BookOpen, Calendar, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 interface AlunoProgressoCardProps {
   alunoId?: string;
@@ -73,9 +73,16 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
 
         <div className="flex justify-between items-center">
           <span className="text-azul-500">Páginas Restantes:</span>
-          <span className="font-semibold text-green-600">
-            {progresso?.paginas_restantes ?? 'N/A'}
-          </span>
+          {progresso?.paginas_restantes !== null ? (
+            <span className="font-semibold text-green-600">
+              {progresso.paginas_restantes}
+            </span>
+          ) : (
+            <div className="flex items-center text-amber-500 font-semibold">
+              <AlertTriangle size={16} className="mr-1" />
+              <span>Apostila não cadastrada</span>
+            </div>
+          )}
         </div>
 
         {progresso?.total_paginas && (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -60,6 +61,14 @@ export const useAlunoProgresso = (alunoId: string) => {
             console.log('Total de páginas:', totalPaginas, 'Tipo:', typeof totalPaginas);
           } else {
             console.log('Nenhuma apostila encontrada com o nome exato:', apostilaNormalizada);
+            
+            // Fallback: Vamos listar todas as apostilas para debug
+            const { data: todasApostilas } = await supabase
+              .from('apostilas')
+              .select('nome')
+              .limit(20);
+              
+            console.log('Apostilas disponíveis no banco:', todasApostilas?.map(a => a.nome));
           }
         }
 
