@@ -47,15 +47,26 @@ export const useAlunoProgresso = (alunoId: string) => {
         let progressoPercentual = 0;
         
         if (alunoData.ultimo_nivel) {
-          // Usando a nova função que busca informações completas da apostila
-          const infoApostila = await obterInfoApostila(alunoData.ultimo_nivel);
-          console.log('DEBUG - Informações da apostila:', infoApostila);
+          // Tentativa 1: Buscar apostila diretamente do banco
+          const { data: apostilaDB, error: apostilaError } = await supabase
+            .from('apostilas')
+            .select('nome, total_paginas')
+            .eq('nome', alunoData.ultimo_nivel)
+            .maybeSingle();
+            
+          if (!apostilaError && apostilaDB) {
+            console.log('DEBUG - Apostila encontrada no banco:', apostilaDB);
+            totalPaginas = Number(apostilaDB.total_paginas);
+          } else {
+            // Tentativa 2: Usar a função obterInfoApostila
+            const infoApostila = await obterInfoApostila(alunoData.ultimo_nivel);
+            console.log('DEBUG - Informações da apostila via obterInfoApostila:', infoApostila);
+            totalPaginas = Number(infoApostila.total_paginas);
+          }
           
-          totalPaginas = infoApostila.total_paginas;
+          const ultimaPagina = alunoData.ultima_pagina !== null ? Number(alunoData.ultima_pagina) : null;
           
-          const ultimaPagina = alunoData.ultima_pagina;
-          
-          if (ultimaPagina !== null) {
+          if (ultimaPagina !== null && totalPaginas !== null) {
             paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
             progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
             

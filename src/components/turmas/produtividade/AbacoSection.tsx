@@ -9,6 +9,7 @@ import { Book, AlertCircle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { APOSTILAS_ABACO_DETALHES } from '../constants/apostilas';
 import { obterInfoApostila } from '../utils/apostilasUtils';
+import { supabase } from "@/integrations/supabase/client";
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -43,17 +44,80 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const [totalPaginas, setTotalPaginas] = useState(40);
   const [carregandoApostila, setCarregandoApostila] = useState(false);
   const [erroApostila, setErroApostila] = useState<string | null>(null);
+  const [apostilasDisponiveis, setApostilasDisponiveis] = useState<{nome: string, total_paginas: number}[]>([]);
   
+  // Carregar apostilas disponíveis do banco
+  useEffect(() => {
+    const carregarApostilasDisponiveis = async () => {
+      try {
+        // Buscar apostilas diretamente do banco
+        const { data: apostilasDB, error } = await supabase
+          .from('apostilas')
+          .select('nome, total_paginas')
+          .order('nome');
+          
+        if (error) {
+          console.error('Erro ao buscar apostilas:', error);
+          return;
+        }
+        
+        if (apostilasDB && apostilasDB.length > 0) {
+          console.log('Apostilas disponíveis no banco:', apostilasDB);
+          setApostilasDisponiveis(apostilasDB);
+        } else {
+          // Se não encontrou no banco, usa a constante local
+          console.log('Usando apostilas locais:', APOSTILAS_ABACO_DETALHES);
+          setApostilasDisponiveis(APOSTILAS_ABACO_DETALHES.map(a => ({ 
+            nome: a.nome, 
+            total_paginas: typeof a.paginas === 'number' ? a.paginas : parseInt(a.paginas as any, 10) || 40
+          })));
+        }
+      } catch (err) {
+        console.error('Erro ao carregar apostilas:', err);
+      }
+    };
+    
+    carregarApostilasDisponiveis();
+  }, []);
+
   // Buscar o total de páginas da apostila selecionada quando ela mudar
   useEffect(() => {
     const buscarTotalPaginas = async () => {
       if (apostilaAbaco) {
         setCarregandoApostila(true);
         setErroApostila(null);
+        
         try {
-          const infoApostila = await obterInfoApostila(apostilaAbaco);
-          setTotalPaginas(infoApostila.total_paginas);
-          console.log(`Apostila ${apostilaAbaco} tem ${infoApostila.total_paginas} páginas`);
+          // Primeiro, tentar encontrar no banco carregado
+          const apostilaNoCache = apostilasDisponiveis.find(a => a.nome === apostilaAbaco);
+          
+          if (apostilaNoCache) {
+            // Se encontrou no cache, use diretamente
+            console.log(`Apostila ${apostilaAbaco} encontrada no cache com ${apostilaNoCache.total_paginas} páginas`);
+            setTotalPaginas(Number(apostilaNoCache.total_paginas));
+          } else {
+            // Se não encontrou no cache, busca diretamente do banco
+            console.log(`Buscando apostila ${apostilaAbaco} diretamente do banco`);
+            const { data: apostilaDB, error } = await supabase
+              .from('apostilas')
+              .select('nome, total_paginas')
+              .eq('nome', apostilaAbaco)
+              .maybeSingle();
+              
+            if (error) {
+              throw error;
+            }
+            
+            if (apostilaDB) {
+              console.log(`Apostila ${apostilaAbaco} encontrada no banco com ${apostilaDB.total_paginas} páginas`);
+              setTotalPaginas(Number(apostilaDB.total_paginas));
+            } else {
+              // Último recurso: usar a função obterInfoApostila
+              const infoApostila = await obterInfoApostila(apostilaAbaco);
+              console.log(`Apostila ${apostilaAbaco} via obterInfoApostila com ${infoApostila.total_paginas} páginas`);
+              setTotalPaginas(Number(infoApostila.total_paginas));
+            }
+          }
         } catch (error) {
           console.error('Erro ao buscar informações da apostila:', error);
           setErroApostila('Não foi possível obter as informações da apostila');
@@ -64,7 +128,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     };
     
     buscarTotalPaginas();
-  }, [apostilaAbaco]);
+  }, [apostilaAbaco, apostilasDisponiveis]);
 
   return (
     <>
@@ -76,11 +140,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
           </SelectTrigger>
           <SelectContent>
             <ScrollArea className="h-[200px]">
-              {APOSTILAS_ABACO_DETALHES.map((apostila) => (
+              {apostilasDisponiveis.map((apostila) => (
                 <SelectItem key={apostila.nome} value={apostila.nome}>
                   <div className="flex items-center">
                     <Book className="mr-2 h-4 w-4" />
-                    {apostila.nome}
+                    {apostila.nome} ({apostila.total_paginas} páginas)
                   </div>
                 </SelectItem>
               ))}
