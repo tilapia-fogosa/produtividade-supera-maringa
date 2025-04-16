@@ -56,6 +56,7 @@ export async function registrarProdutividade(
     console.log('Registrando produtividade para aluno:', data.aluno_id);
     
     // Registrar na tabela de presença
+    // Permitindo múltiplos registros por dia (removendo a validação que impedia isso)
     if (data.presente !== undefined) {
       console.log(`Registrando ${data.presente ? 'presença' : 'falta'} para o aluno:`, data.aluno_id);
       
@@ -94,6 +95,7 @@ export async function registrarProdutividade(
     }
     
     // Se aluno estiver presente, registrar produtividade do ábaco
+    // Permitindo múltiplos registros por dia (removendo a validação que impedia isso)
     if (data.presente) {
       console.log('Registrando produtividade do ábaco para o aluno:', data.aluno_id);
       
