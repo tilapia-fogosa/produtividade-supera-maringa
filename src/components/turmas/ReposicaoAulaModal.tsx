@@ -29,6 +29,8 @@ import {
 import { Search } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useApostilas } from '@/hooks/use-apostilas';
+import PresencaSection from './produtividade/PresencaSection';
+import AbacoSection from './produtividade/AbacoSection';
 
 interface ReposicaoAulaModalProps {
   isOpen: boolean;
