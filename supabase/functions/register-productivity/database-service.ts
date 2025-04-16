@@ -1,5 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { ProdutividadeData } from './types.ts';
 
 // Função para criar o cliente Supabase
 export function createSupabaseClient(authHeader: string) {
@@ -13,9 +14,10 @@ export function createSupabaseClient(authHeader: string) {
 // Função para registrar dados do aluno no banco de dados
 export async function registrarDadosAluno(
   supabaseClient: any, 
-  data: any
+  data: ProdutividadeData
 ): Promise<boolean> {
   try {
+    // Atualizar dados do aluno se presente e com apostila e página
     if (data.presente && data.apostila_atual && data.ultima_pagina) {
       console.log('Atualizando dados do aluno:', {
         ultimo_nivel: data.apostila_atual,
@@ -41,6 +43,86 @@ export async function registrarDadosAluno(
     return true;
   } catch (error) {
     console.error("Erro ao registrar dados do aluno:", error);
+    return false;
+  }
+}
+
+// Função para inserir dados de produtividade no banco de dados
+export async function registrarProdutividade(
+  supabaseClient: any,
+  data: ProdutividadeData
+): Promise<boolean> {
+  try {
+    console.log('Registrando produtividade para aluno:', data.aluno_id);
+    
+    // Registrar na tabela de presença
+    if (data.presente !== undefined) {
+      console.log(`Registrando ${data.presente ? 'presença' : 'falta'} para o aluno:`, data.aluno_id);
+      
+      const { error: presencaError } = await supabaseClient
+        .from('presencas')
+        .insert({
+          aluno_id: data.aluno_id,
+          data_aula: data.data_registro,
+          presente: data.presente,
+          observacao: data.motivo_falta,
+          is_reposicao: data.is_reposicao || false
+        });
+      
+      if (presencaError) {
+        console.error('Erro ao registrar presença:', presencaError);
+        return false;
+      }
+      
+      // Se for falta, registrar na tabela de faltas
+      if (!data.presente && data.motivo_falta) {
+        console.log('Registrando falta com motivo para o aluno:', data.aluno_id);
+        
+        const { error: faltaError } = await supabaseClient
+          .from('faltas_alunos')
+          .insert({
+            aluno_id: data.aluno_id,
+            data_falta: data.data_registro,
+            motivo: data.motivo_falta
+          });
+        
+        if (faltaError) {
+          console.error('Erro ao registrar falta:', faltaError);
+          return false;
+        }
+      }
+    }
+    
+    // Se aluno estiver presente, registrar produtividade do ábaco
+    if (data.presente) {
+      console.log('Registrando produtividade do ábaco para o aluno:', data.aluno_id);
+      
+      const produtividadeData = {
+        aluno_id: data.aluno_id,
+        data_aula: data.data_registro,
+        presente: data.presente,
+        is_reposicao: data.is_reposicao || false,
+        apostila: data.apostila_abaco || data.apostila_atual,
+        pagina: data.pagina_abaco || data.ultima_pagina,
+        exercicios: data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
+        erros: data.erros_abaco ? parseInt(data.erros_abaco) : null,
+        fez_desafio: data.fez_desafio || false,
+        comentario: data.comentario
+      };
+      
+      const { error: produtividadeError } = await supabaseClient
+        .from('produtividade_abaco')
+        .insert(produtividadeData);
+      
+      if (produtividadeError) {
+        console.error('Erro ao registrar produtividade ábaco:', produtividadeError);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Erro ao registrar produtividade:", error);
     return false;
   }
 }

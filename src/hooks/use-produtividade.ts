@@ -27,31 +27,21 @@ export const useProdutividade = (alunoId: string) => {
     try {
       setIsLoading(true);
       
-      if (!presente) {
-        const { error } = await supabase
-          .from('faltas_alunos')
-          .insert({
-            aluno_id: alunoId,
-            data_falta: data,
-            motivo: motivoFalta
-          });
-
-        if (error) throw error;
-      }
-
-      // Registrar na tabela presencas
-      const { error: presencaError } = await supabase
-        .from('presencas')
-        .insert({
-          aluno_id: alunoId,
-          data_aula: data,
-          presente: presente,
-          observacao: motivoFalta,
-          is_reposicao: false
-        });
-
-      if (presencaError) throw presencaError;
-
+      // Preparar dados para a edge function
+      const produtividadeData = {
+        aluno_id: alunoId,
+        presente: presente,
+        motivo_falta: motivoFalta,
+        data_registro: data
+      };
+      
+      // Chamar a edge function
+      const { data: responseData, error } = await supabase.functions.invoke('register-productivity', {
+        body: { data: produtividadeData }
+      });
+      
+      if (error) throw error;
+      
       return true;
     } catch (error) {
       console.error('Erro ao registrar presença:', error);
@@ -77,49 +67,59 @@ export const useProdutividade = (alunoId: string) => {
       };
 
       // Converter exercicios e erros para número se forem string
-      if (typeof dadosCompletos.exercicios === 'string' && dadosCompletos.exercicios) {
-        dadosCompletos.exercicios = Number(dadosCompletos.exercicios);
-      }
-
-      if (typeof dadosCompletos.erros === 'string' && dadosCompletos.erros) {
-        dadosCompletos.erros = Number(dadosCompletos.erros);
-      }
+      const exercicios = typeof dadosCompletos.exercicios === 'string' && dadosCompletos.exercicios 
+        ? Number(dadosCompletos.exercicios) 
+        : dadosCompletos.exercicios;
+        
+      const erros = typeof dadosCompletos.erros === 'string' && dadosCompletos.erros 
+        ? Number(dadosCompletos.erros) 
+        : dadosCompletos.erros;
       
       // Converter página para número se for string
-      if (typeof dadosCompletos.pagina === 'string' && dadosCompletos.pagina) {
-        dadosCompletos.pagina = Number(dadosCompletos.pagina);
-      }
+      const pagina = typeof dadosCompletos.pagina === 'string' && dadosCompletos.pagina 
+        ? Number(dadosCompletos.pagina) 
+        : dadosCompletos.pagina;
 
-      // Preparar dados para inserção, convertendo pagina number para string
-      const dadosParaInserir = {
-        ...dadosCompletos,
-        pagina: dadosCompletos.pagina !== undefined ? String(dadosCompletos.pagina) : null
+      // Preparar dados para a edge function
+      const produtividadeData = {
+        aluno_id: alunoId,
+        presente: dadosCompletos.presente,
+        apostila_abaco: dadosCompletos.apostila,
+        pagina_abaco: pagina ? String(pagina) : undefined,
+        exercicios_abaco: exercicios ? String(exercicios) : undefined,
+        erros_abaco: erros ? String(erros) : undefined,
+        fez_desafio: dadosCompletos.fez_desafio,
+        comentario: dadosCompletos.comentario,
+        data_registro: dadosCompletos.data_aula,
+        data_ultima_correcao_ah: new Date().toISOString(),
+        apostila_atual: dadosCompletos.apostila,
+        ultima_pagina: pagina ? String(pagina) : undefined,
+        is_reposicao: dadosCompletos.is_reposicao || false
       };
-
-      // Registrar produtividade do ábaco
-      const { error: produtividadeError } = await supabase
-        .from('produtividade_abaco')
-        .insert(dadosParaInserir);
-
-      if (produtividadeError) throw produtividadeError;
-
-      // Se tiver apostila e página, atualizar o aluno
-      if (dados.apostila && dados.pagina !== undefined) {
-        const { error: alunoError } = await supabase
-          .from('alunos')
-          .update({
-            apostila_atual: dados.apostila,
-            ultima_pagina: dados.pagina,
-            ultima_correcao_ah: new Date().toISOString()
-          })
-          .eq('id', alunoId);
-
-        if (alunoError) throw alunoError;
+      
+      // Chamar a edge function
+      const { data, error } = await supabase.functions.invoke('register-productivity', {
+        body: { data: produtividadeData }
+      });
+      
+      if (error) throw error;
+      
+      if (data && data.webhookError) {
+        toast({
+          title: "Parcialmente concluído",
+          description: data.message || "Dados salvos no banco, mas não sincronizados com webhook externo.",
+          variant: "default"
+        });
       }
 
       return true;
     } catch (error) {
       console.error('Erro ao registrar produtividade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar a produtividade",
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setIsLoading(false);

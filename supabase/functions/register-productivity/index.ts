@@ -1,8 +1,9 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { ProdutividadeData } from "./types.ts";
-import { createSupabaseClient, registrarDadosAluno } from "./database-service.ts";
+import { createSupabaseClient, registrarDadosAluno, registrarProdutividade } from "./database-service.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 serve(async (req) => {
@@ -58,6 +59,16 @@ serve(async (req) => {
     if (!sucessoBanco) {
       return new Response(
         JSON.stringify({ error: 'Erro ao atualizar dados do aluno' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    // Registrar produtividade nas tabelas do banco
+    const sucessoProdutividade = await registrarProdutividade(supabaseClient, data);
+    
+    if (!sucessoProdutividade) {
+      return new Response(
+        JSON.stringify({ error: 'Erro ao registrar produtividade' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
