@@ -30,7 +30,7 @@ export const APOSTILAS_ABACO_DETALHES = [
   { nome: "C", paginas: 40 },
   { nome: "D", paginas: 40 },
   { nome: "Ábaco Girassol 1", paginas: 40 },
-  // Adicionando as apostilas que estão no banco
+  // Adicionando as apostilas que estão no banco com os nomes exatos
   { nome: "Ábaco INT. 1", paginas: 40 },
   { nome: "Ábaco INT. 2", paginas: 40 },
   { nome: "Ábaco INT. 3", paginas: 40 },
@@ -59,13 +59,15 @@ export const PROFESSORES = [
 
 // Mapping entre os valores do banco de dados (ultimo_nivel) e as apostilas padronizadas
 export const MAPEAMENTO_APOSTILAS: Record<string, string> = {
-  // Mapeamentos exatos para nomes no banco
+  // Mapeamentos exatos para nomes no banco (sem alterações)
   "Ábaco INT. 1": "Ábaco INT. 1",
   "Ábaco INT. 2": "Ábaco INT. 2",
   "Ábaco INT. 3": "Ábaco INT. 3",
+  "Ábaco INT. 4": "Ábaco INT. 4",
   "Ábaco AV. 1": "Ábaco AV. 1",
   "Ábaco AV. 2": "Ábaco AV. 2",
   "Ábaco AV. 3": "Ábaco AV. 3",
+  "Ábaco AV. 4": "Ábaco AV. 4",
   
   // Mapeamentos antigos mantidos para compatibilidade
   "Ap. Abaco 1": "Ábaco INT. 1",
