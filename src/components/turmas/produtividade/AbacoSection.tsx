@@ -9,7 +9,11 @@ import { Book, AlertCircle, Check, ChevronRight } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useApostilas } from '@/hooks/use-apostilas';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -45,7 +49,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   const isMobile = useIsMobile();
   const [valorOriginalApostila, setValorOriginalApostila] = useState<string>(apostilaAbaco);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   // Logar o carregamento das apostilas
   useEffect(() => {
@@ -77,7 +81,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     if (value) {
       setApostilaAbaco(value);
       if (isMobile) {
-        setIsSheetOpen(false);
+        setIsDrawerOpen(false);
       }
     } else {
       // Se nenhum valor for selecionado, use o valor original (apostila atual do aluno)
@@ -90,8 +94,8 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const renderApostilaSelector = () => {
     if (isMobile) {
       return (
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <DrawerTrigger asChild>
             <div className="flex items-center justify-between p-3 border rounded-md cursor-pointer bg-white shadow-sm">
               <div className="flex items-center">
                 <Book className="mr-2 h-5 w-5 text-gray-600" />
@@ -102,49 +106,43 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                 <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
             </div>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="p-0 max-h-[85vh] overflow-hidden">
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b sticky top-0 bg-background z-10">
-                <h3 className="text-lg font-semibold">Selecione a apostila</h3>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-[calc(85vh-60px)] overflow-y-auto">
-                  <div className="py-2 px-2">
-                    {carregandoApostila ? (
-                      <div className="p-4 text-center text-gray-500">
-                        Carregando apostilas...
-                      </div>
-                    ) : apostilasDisponiveis.length > 0 ? (
-                      <div className="space-y-1">
-                        {apostilasDisponiveis.map((apostila) => (
-                          <div 
-                            key={apostila.nome} 
-                            className={`flex items-center p-3 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
-                            onClick={() => handleApostilaChange(apostila.nome)}
-                          >
-                            <Book className="mr-3 h-5 w-5 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">{apostila.nome}</div>
-                              <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
-                            </div>
-                            {apostilaAbaco === apostila.nome && (
-                              <Check className="ml-2 h-5 w-5 text-primary flex-shrink-0" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 text-center text-gray-500">
-                        {erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
+          </DrawerTrigger>
+          <DrawerContent className="p-0 max-h-[85vh]">
+            <div className="p-4 border-b bg-background sticky top-0 z-10">
+              <h3 className="text-lg font-semibold">Selecione a apostila</h3>
             </div>
-          </SheetContent>
-        </Sheet>
+            <div className="py-2 px-2 overflow-y-auto max-h-[calc(85vh-70px)]">
+              {carregandoApostila ? (
+                <div className="p-4 text-center text-gray-500">
+                  Carregando apostilas...
+                </div>
+              ) : apostilasDisponiveis.length > 0 ? (
+                <div className="space-y-1">
+                  {apostilasDisponiveis.map((apostila) => (
+                    <div 
+                      key={apostila.nome} 
+                      className={`flex items-center p-3 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
+                      onClick={() => handleApostilaChange(apostila.nome)}
+                    >
+                      <Book className="mr-3 h-5 w-5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{apostila.nome}</div>
+                        <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
+                      </div>
+                      {apostilaAbaco === apostila.nome && (
+                        <Check className="ml-2 h-5 w-5 text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  {erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
+                </div>
+              )}
+            </div>
+          </DrawerContent>
+        </Drawer>
       );
     } else {
       return (
