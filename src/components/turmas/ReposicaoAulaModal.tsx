@@ -54,9 +54,10 @@ interface FormValues {
   comentario: string;
 }
 
+// Modificando a interface para usar 'paginas' em vez de 'total_paginas'
 interface Apostila {
   nome: string;
-  total_paginas: number;
+  paginas: number;
 }
 
 const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
@@ -101,7 +102,12 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       }
       
       if (data) {
-        setApostilas(data);
+        // Convertendo total_paginas para paginas
+        const apostilasFormatadas = data.map(item => ({
+          nome: item.nome,
+          paginas: item.total_paginas
+        }));
+        setApostilas(apostilasFormatadas);
       }
     };
     
@@ -383,3 +389,4 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
 };
 
 export default ReposicaoAulaModal;
+
