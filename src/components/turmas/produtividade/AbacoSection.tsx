@@ -22,7 +22,7 @@ interface AbacoSectionProps {
   setFezDesafio: (value: "sim" | "não") => void;
   comentario: string;
   setComentario: (value: string) => void;
-  apostilas: {nome: string, total_paginas: number}[];
+  apostilas: {nome: string, paginas: number}[];
 }
 
 const AbacoSection: React.FC<AbacoSectionProps> = ({
