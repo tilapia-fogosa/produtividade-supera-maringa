@@ -27,7 +27,6 @@ export const useAlunoProgresso = (alunoId: string) => {
         setLoading(true);
         setError(null);
 
-        // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta')
@@ -37,16 +36,15 @@ export const useAlunoProgresso = (alunoId: string) => {
         if (alunoError) throw alunoError;
 
         console.log('Dados do aluno:', alunoData);
+        console.log('Última página:', alunoData.ultima_pagina, 'Tipo:', typeof alunoData.ultima_pagina);
 
         let totalPaginas = null;
         let exerciciosPorPagina = null;
         
-        // Buscar total de páginas da apostila atual usando o nome exato
         if (alunoData.ultimo_nivel) {
           const apostilaNormalizada = encontrarApostilaMaisProxima(alunoData.ultimo_nivel);
           console.log('Nome exato da apostila:', apostilaNormalizada);
           
-          // Buscar apenas com match exato
           const { data: apostilaData, error: apostilaError } = await supabase
             .from('apostilas')
             .select('total_paginas, exercicios_por_pagina')
@@ -59,24 +57,35 @@ export const useAlunoProgresso = (alunoId: string) => {
             console.log('Dados da apostila encontrados:', apostilaData);
             totalPaginas = apostilaData.total_paginas;
             exerciciosPorPagina = apostilaData.exercicios_por_pagina;
+            console.log('Total de páginas:', totalPaginas, 'Tipo:', typeof totalPaginas);
           } else {
             console.log('Nenhuma apostila encontrada com o nome exato:', apostilaNormalizada);
           }
         }
 
-        // Calcular páginas restantes
         let paginasRestantes = null;
         let progressoPercentual = 0;
         
         if (totalPaginas && alunoData.ultima_pagina) {
+          console.log('Calculando páginas restantes...');
           const ultimaPagina = parseInt(alunoData.ultima_pagina, 10);
+          console.log('Última página convertida:', ultimaPagina, 'Tipo:', typeof ultimaPagina);
+          
           if (!isNaN(ultimaPagina)) {
             paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
             progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
+            console.log('Páginas restantes calculadas:', paginasRestantes);
+            console.log('Progresso percentual calculado:', progressoPercentual);
+          } else {
+            console.log('Erro ao converter última página para número');
           }
+        } else {
+          console.log('Não foi possível calcular páginas restantes:', {
+            temTotalPaginas: !!totalPaginas,
+            temUltimaPagina: !!alunoData.ultima_pagina
+          });
         }
 
-        // Verificar se o aluno faltou no mês atual
         const dataAtual = new Date();
         const inicioMesAtual = startOfMonth(dataAtual);
         let faltouMesAtual = null;
@@ -86,7 +95,6 @@ export const useAlunoProgresso = (alunoId: string) => {
           faltouMesAtual = isAfter(dataUltimaFalta, inicioMesAtual);
         }
 
-        // Buscar histórico de produtividade para calcular médias
         const { data: produtividadeData, error: produtividadeError } = await supabase
           .from('produtividade_abaco')
           .select('pagina, exercicios, data_aula')
