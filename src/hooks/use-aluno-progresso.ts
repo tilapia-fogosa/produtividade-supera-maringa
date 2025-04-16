@@ -7,7 +7,6 @@ interface AlunoProgresso {
   ultimo_nivel: string | null;
   ultima_pagina: string | null;
   ultima_correcao_ah: string | null;
-  apostila_atual: string | null;
   total_paginas: number | null;
   paginas_restantes: number | null;
   progresso_percentual: number;
@@ -31,24 +30,21 @@ export const useAlunoProgresso = (alunoId: string) => {
         // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
-          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, apostila_atual, ultima_falta')
+          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta')
           .eq('id', alunoId)
           .single();
 
         if (alunoError) throw alunoError;
 
-        // Definir a apostila atual como ultimo_nivel se apostila_atual estiver vazio
-        const apostilaAtual = alunoData.apostila_atual || alunoData.ultimo_nivel;
-
         let totalPaginas = null;
         let exerciciosPorPagina = null;
         
-        // Buscar total de páginas da apostila atual
-        if (apostilaAtual) {
+        // Buscar total de páginas da apostila atual usando ultimo_nivel
+        if (alunoData.ultimo_nivel) {
           const { data: apostilaData, error: apostilaError } = await supabase
             .from('apostilas')
             .select('total_paginas, exercicios_por_pagina')
-            .eq('nome', apostilaAtual)
+            .eq('nome', alunoData.ultimo_nivel)
             .maybeSingle();
 
           if (apostilaError) throw apostilaError;
@@ -92,24 +88,19 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         if (produtividadeError) throw produtividadeError;
 
-        // Calcular médias de produtividade
         let mediaPaginasPorAula = null;
         let mediaExerciciosPorAula = null;
         let previsaoConclusao = null;
 
         if (produtividadeData && produtividadeData.length > 0) {
-          // Filtrar registros sem pagina
           const registrosComPagina = produtividadeData.filter(p => p.pagina);
           
           if (registrosComPagina.length > 1) {
-            // Calcular páginas completadas por aula
             const paginasNumeros = registrosComPagina.map(p => parseInt(p.pagina, 10)).filter(p => !isNaN(p));
             
             if (paginasNumeros.length >= 2) {
-              // Ordenar em ordem crescente para calcular a diferença
               paginasNumeros.sort((a, b) => a - b);
               
-              // Calcular a média de páginas por aula
               let somaDiferencas = 0;
               for (let i = 1; i < paginasNumeros.length; i++) {
                 somaDiferencas += (paginasNumeros[i] - paginasNumeros[i-1]);
@@ -117,7 +108,6 @@ export const useAlunoProgresso = (alunoId: string) => {
               
               mediaPaginasPorAula = somaDiferencas / (paginasNumeros.length - 1);
               
-              // Calcular previsão de conclusão
               if (mediaPaginasPorAula > 0 && paginasRestantes !== null) {
                 const aulasParaConcluir = Math.ceil(paginasRestantes / mediaPaginasPorAula);
                 previsaoConclusao = `Aprox. ${aulasParaConcluir} aulas`;
@@ -125,7 +115,6 @@ export const useAlunoProgresso = (alunoId: string) => {
             }
           }
           
-          // Calcular média de exercícios por aula
           const exerciciosValidos = produtividadeData
             .filter(p => p.exercicios !== null)
             .map(p => p.exercicios);
@@ -137,8 +126,9 @@ export const useAlunoProgresso = (alunoId: string) => {
         }
 
         setProgresso({
-          ...alunoData,
-          apostila_atual: apostilaAtual,
+          ultimo_nivel: alunoData.ultimo_nivel,
+          ultima_pagina: alunoData.ultima_pagina,
+          ultima_correcao_ah: alunoData.ultima_correcao_ah,
           total_paginas: totalPaginas,
           paginas_restantes: paginasRestantes,
           progresso_percentual: progressoPercentual,

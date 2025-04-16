@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +34,6 @@ export interface Aluno {
   ultima_pagina?: string | null;
   paginas_restantes?: number | null;
   ultima_correcao_ah?: string | null;
-  apostila_atual?: string | null;
 }
 
 export function useProfessorTurmas() {
@@ -97,8 +95,8 @@ export function useProfessorTurmas() {
 
           // Calcular páginas restantes para cada aluno
           const alunosComPaginasRestantes = alunosData?.map(aluno => {
-            const totalPaginas = aluno.apostila_atual 
-              ? getTotalPaginasPorApostila(aluno.apostila_atual) 
+            const totalPaginas = aluno.ultimo_nivel 
+              ? getTotalPaginasPorApostila(aluno.ultimo_nivel) 
               : null;
             
             const ultimaPagina = aluno.ultima_pagina 
