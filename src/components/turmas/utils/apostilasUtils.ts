@@ -5,9 +5,14 @@ import { APOSTILAS_ABACO, MAPEAMENTO_APOSTILAS } from "../constants/apostilas";
 export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string => {
   if (!ultimoNivel) return "";
   
-  // Verificar correspondência exata
+  // Primeiro, tenta correspondência exata
   if (ultimoNivel in MAPEAMENTO_APOSTILAS) {
     return MAPEAMENTO_APOSTILAS[ultimoNivel as keyof typeof MAPEAMENTO_APOSTILAS];
+  }
+  
+  // Adicionar mapeamento específico para 'Ap. BPA 4'
+  if (ultimoNivel === 'Ap. BPA 4') {
+    return 'Ap. BPA 4';
   }
   
   // Verificar correspondência parcial
@@ -24,5 +29,5 @@ export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string
   }
   
   // Nenhuma correspondência encontrada
-  return "";
+  return ultimoNivel; // Retorna o nome original se não encontrar mapeamento
 };
