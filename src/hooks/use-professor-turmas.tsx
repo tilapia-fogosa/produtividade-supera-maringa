@@ -81,6 +81,7 @@ export function useProfessorTurmas() {
 
         // Inicialização das turmas sem alunos
         const turmasIniciais = turmasData || [];
+        console.log('Turmas carregadas:', turmasIniciais);
         
         // Para cada turma, buscar seus alunos
         const turmasComAlunos = await Promise.all(turmasIniciais.map(async (turma) => {

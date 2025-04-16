@@ -36,6 +36,9 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
   onFecharDetalhesAluno,
   initialServiceType = 'produtividade'
 }) => {
+  // Adiciona log para depuração
+  console.log('Turmas recebidas no ProfessorConteudo:', turmas);
+  
   return (
     <CardContent className="bg-orange-50/50 rounded-b-lg p-3 md:p-6 text-azul-500">
       {turmas.length === 0 ? (
