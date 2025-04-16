@@ -107,19 +107,20 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
               </div>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[85vh]">
-            <div className="flex flex-col h-full">
+          <SheetContent side="bottom" className="max-h-[80vh] overflow-hidden">
+            <div className="flex flex-col h-full max-h-full">
               <div className="sticky top-0 z-10 bg-background pb-2 mb-2 border-b">
                 <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
               </div>
               
-              <div className="flex-1 overflow-auto pb-safe">
+              {/* Lista com scroll nativo - importante para interação touch */}
+              <div className="flex-1 overflow-y-auto overscroll-contain -mx-6 px-6 pb-16">
                 {carregandoApostila ? (
                   <div className="p-4 text-center text-gray-500">
                     Carregando apostilas...
                   </div>
                 ) : apostilasDisponiveis.length > 0 ? (
-                  <div className="space-y-1 pb-16">
+                  <div className="space-y-1">
                     {apostilasDisponiveis.map((apostila) => (
                       <div 
                         key={apostila.nome} 
