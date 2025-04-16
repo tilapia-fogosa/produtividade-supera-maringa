@@ -10,10 +10,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useApostilas } from '@/hooks/use-apostilas';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -49,7 +49,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   const isMobile = useIsMobile();
   const [valorOriginalApostila, setValorOriginalApostila] = useState<string>(apostilaAbaco);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   // Logar o carregamento das apostilas
   useEffect(() => {
@@ -81,7 +81,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     if (value) {
       setApostilaAbaco(value);
       if (isMobile) {
-        setIsDrawerOpen(false);
+        setIsSheetOpen(false);
       }
     } else {
       // Se nenhum valor for selecionado, use o valor original (apostila atual do aluno)
@@ -94,8 +94,8 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const renderApostilaSelector = () => {
     if (isMobile) {
       return (
-        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-          <DrawerTrigger asChild>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetTrigger asChild>
             <div className="flex items-center justify-between p-3 border rounded-md cursor-pointer bg-white shadow-sm">
               <div className="flex items-center">
                 <Book className="mr-2 h-5 w-5 text-gray-600" />
@@ -106,18 +106,18 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                 <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
             </div>
-          </DrawerTrigger>
-          <DrawerContent className="p-0 max-h-[85vh]">
-            <div className="p-4 border-b bg-background sticky top-0 z-10">
-              <h3 className="text-lg font-semibold">Selecione a apostila</h3>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] pt-6 pb-10">
+            <div className="sticky top-0 z-10 bg-background pb-2 mb-2 border-b">
+              <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
             </div>
-            <div className="py-2 px-2 overflow-y-auto max-h-[calc(85vh-70px)]">
+            <ScrollArea className="h-[calc(100%-3rem)] px-1 pb-10">
               {carregandoApostila ? (
                 <div className="p-4 text-center text-gray-500">
                   Carregando apostilas...
                 </div>
               ) : apostilasDisponiveis.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-1 pb-8">
                   {apostilasDisponiveis.map((apostila) => (
                     <div 
                       key={apostila.nome} 
@@ -140,9 +140,9 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                   {erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
                 </div>
               )}
-            </div>
-          </DrawerContent>
-        </Drawer>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       );
     } else {
       return (
@@ -166,7 +166,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                   </SelectItem>
                 ))
               ) : (
-                <div className="px-2 py-1 text-gray-500">
+                <div className="px-2 py-1 text-sm text-gray-500 text-center">
                   {carregandoApostila ? 'Carregando apostilas...' : 'Nenhuma apostila disponível'}
                 </div>
               )}
