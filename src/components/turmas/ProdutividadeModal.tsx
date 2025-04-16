@@ -55,14 +55,25 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   useEffect(() => {
     const carregarApostila = async () => {
       if (isOpen && aluno) {
-        if (aluno.ultimo_nivel) {
-          // Usar a função encontrarApostila para conseguir o nome correto da apostila
-          const apostilaNome = await encontrarApostila(aluno.ultimo_nivel);
-          setApostilaAbaco(apostilaNome);
-        }
-        
-        if (aluno.ultima_pagina) {
-          setPaginaAbaco(aluno.ultima_pagina.toString());
+        try {
+          console.log('Carregando apostila para aluno:', aluno.nome);
+          
+          if (aluno.ultimo_nivel) {
+            console.log('Último nível do aluno:', aluno.ultimo_nivel);
+            // Usar a função aprimorada para obter o nome correto da apostila
+            const apostilaNome = await encontrarApostila(aluno.ultimo_nivel);
+            console.log('Nome de apostila encontrado:', apostilaNome);
+            setApostilaAbaco(apostilaNome);
+          } else {
+            console.log('Aluno não tem último nível definido');
+          }
+          
+          if (aluno.ultima_pagina) {
+            console.log('Última página do aluno:', aluno.ultima_pagina);
+            setPaginaAbaco(aluno.ultima_pagina.toString());
+          }
+        } catch (error) {
+          console.error('Erro ao carregar apostila:', error);
         }
       }
     };

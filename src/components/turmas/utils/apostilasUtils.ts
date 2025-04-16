@@ -54,56 +54,113 @@ export const encontrarApostila = async (nomeApostila: string | null): Promise<st
   
   console.log('Buscando apostila no banco:', nomeApostila);
   
-  // Primeiro tenta encontrar exatamente como está
-  let { data: apostila, error } = await supabase
+  // Lista completa de mapeamentos de apostilas (nomes alternativos para os padrões)
+  const mapeamentosCompletos: Record<string, string> = {
+    // Mapeamentos exatos 
+    "Ábaco INT. 1": "Ábaco INT. 1",
+    "Ábaco INT. 2": "Ábaco INT. 2",
+    "Ábaco INT. 3": "Ábaco INT. 3",
+    "Ábaco INT. 4": "Ábaco INT. 4",
+    "Ábaco AV. 1": "Ábaco AV. 1", 
+    "Ábaco AV. 2": "Ábaco AV. 2",
+    "Ábaco AV. 3": "Ábaco AV. 3",
+    "Ábaco AV. 4": "Ábaco AV. 4",
+    
+    // Mapeamentos para Ap. Abaco 1
+    "AP. ABACO 1": "Ábaco INT. 1",
+    "Ap. Abaco 1": "Ábaco INT. 1",
+    "ap. abaco 1": "Ábaco INT. 1",
+    "Ap Abaco 1": "Ábaco INT. 1",
+    "Abaco 1": "Ábaco INT. 1",
+    "Ábaco 1": "Ábaco INT. 1",
+    
+    // Mapeamentos para Ap. Abaco 2
+    "AP. ABACO 2": "Ábaco INT. 2", 
+    "Ap. Abaco 2": "Ábaco INT. 2",
+    "ap. abaco 2": "Ábaco INT. 2",
+    "Ap Abaco 2": "Ábaco INT. 2",
+    "Abaco 2": "Ábaco INT. 2",
+    "Ábaco 2": "Ábaco INT. 2",
+    
+    // Outros mapeamentos de nomenclaturas antigas
+    "Ap. Abaco 3": "Ábaco INT. 3",
+    "ap. abaco 3": "Ábaco INT. 3",
+    "Ap. Abaco 4": "Ábaco INT. 4",
+    "ap. abaco 4": "Ábaco INT. 4"
+  };
+  
+  // Primeiro, verificar se existe um mapeamento direto
+  if (mapeamentosCompletos[nomeApostila]) {
+    const nomePadronizado = mapeamentosCompletos[nomeApostila];
+    console.log(`Mapeamento encontrado: ${nomeApostila} -> ${nomePadronizado}`);
+    
+    // Buscar no banco o nome padronizado
+    const { data: apostila } = await supabase
+      .from('apostilas')
+      .select('nome')
+      .eq('nome', nomePadronizado)
+      .maybeSingle();
+      
+    if (apostila) {
+      console.log('Apostila encontrada no banco:', apostila.nome);
+      return apostila.nome;
+    }
+    
+    // Se não encontrou a versão padronizada, retorná-la mesmo assim
+    console.log('Nome padronizado definido, mas não encontrado no banco:', nomePadronizado);
+    return nomePadronizado;
+  }
+  
+  // Caso não tenha mapeamento direto, verificar no banco com o nome original
+  const { data: apostilaOriginal } = await supabase
     .from('apostilas')
     .select('nome')
     .eq('nome', nomeApostila)
     .maybeSingle();
     
-  if (apostila) {
-    console.log('Apostila encontrada com nome exato:', apostila.nome);
-    return apostila.nome;
+  if (apostilaOriginal) {
+    console.log('Apostila encontrada no banco com nome original:', apostilaOriginal.nome);
+    return apostilaOriginal.nome;
   }
   
-  // Se não encontrou com o nome exato, faz um mapeamento para nomes conhecidos
-  if (nomeApostila.toLowerCase().includes('abaco') || nomeApostila.toLowerCase().includes('ábaco')) {
-    // Mapeamento de nomes comuns
-    const mapeamentos: Record<string, string> = {
-      "Ap. Abaco 1": "Ábaco INT. 1",
-      "AP. ABACO 1": "Ábaco INT. 1",
-      "ap. abaco 1": "Ábaco INT. 1",
-      "Ap Abaco 1": "Ábaco INT. 1",
-      "Abaco 1": "Ábaco INT. 1",
-      "Ábaco 1": "Ábaco INT. 1",
-      "AP. ABACO 2": "Ábaco INT. 2",
-      "ap. abaco 2": "Ábaco INT. 2",
-      "Ap Abaco 2": "Ábaco INT. 2",
-      "Abaco 2": "Ábaco INT. 2",
-      "Ábaco 2": "Ábaco INT. 2"
-    };
+  console.log('Apostila não encontrada no banco nem nos mapeamentos. Nome original:', nomeApostila);
+  
+  // Se chegou aqui, não encontrou nem no mapeamento nem no banco
+  // Vamos criar uma nova apostila no banco agora
+  try {
+    console.log('Tentando criar nova apostila:', nomeApostila);
     
-    const nomeNormalizado = mapeamentos[nomeApostila];
-    if (nomeNormalizado) {
-      console.log('Usando mapeamento conhecido:', nomeApostila, '->', nomeNormalizado);
+    const { data: novaApostila, error } = await supabase
+      .from('apostilas')
+      .insert([
+        { nome: nomeApostila, total_paginas: 40 }
+      ])
+      .select()
+      .single();
       
-      // Verifica se o nome normalizado existe no banco
-      const { data: apostilaNormalizada } = await supabase
+    if (error) {
+      console.error('Erro ao criar apostila:', error);
+      
+      // Em caso de erro, verificar se o erro é por RLS, tentar buscar novamente 
+      // para garantir que realmente não existe
+      const { data: verificarNovamente } = await supabase
         .from('apostilas')
         .select('nome')
-        .eq('nome', nomeNormalizado)
+        .eq('nome', nomeApostila)
         .maybeSingle();
         
-      if (apostilaNormalizada) {
-        console.log('Apostila encontrada com nome normalizado:', apostilaNormalizada.nome);
-        return apostilaNormalizada.nome;
+      if (verificarNovamente) {
+        console.log('Apostila encontrada após segunda verificação:', verificarNovamente.nome);
+        return verificarNovamente.nome;
       }
+    } else if (novaApostila) {
+      console.log('Nova apostila criada com sucesso:', novaApostila.nome);
+      return novaApostila.nome;
     }
+  } catch (err) {
+    console.error('Exceção ao tentar criar apostila:', err);
   }
-
-  // Se nenhuma correspondência for encontrada, criar uma nova apostila
-  console.log('Apostila não encontrada, usando nome original:', nomeApostila);
   
-  // Em caso de erro, simplesmente retorna o nome original
+  // Se não foi possível criar uma nova apostila, retorna o nome original
   return nomeApostila;
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -46,17 +45,18 @@ export const useAlunoProgresso = (alunoId: string) => {
         let totalPaginas = null;
         let paginasRestantes = null;
         let progressoPercentual = 0;
+        let nomeApostilaEncontrada = null;
         
         if (alunoData.ultimo_nivel) {
-          // Usando a nova função que busca diretamente na tabela apostilas
-          const nomeApostila = await encontrarApostila(alunoData.ultimo_nivel);
-          console.log('DEBUG - Apostila normalizada:', nomeApostila);
+          // Usando a função aprimorada que busca apostilas de forma mais confiável
+          nomeApostilaEncontrada = await encontrarApostila(alunoData.ultimo_nivel);
+          console.log('DEBUG - Apostila encontrada:', nomeApostilaEncontrada);
           
           // Buscar apostila no banco
           const { data: apostilaData, error: apostilaError } = await supabase
             .from('apostilas')
             .select('total_paginas, exercicios_por_pagina')
-            .eq('nome', nomeApostila)
+            .eq('nome', nomeApostilaEncontrada)
             .maybeSingle();
 
           if (apostilaError) {
@@ -81,39 +81,23 @@ export const useAlunoProgresso = (alunoId: string) => {
               });
             }
           } else {
-            console.log('DEBUG - Nenhuma apostila encontrada com o nome:', nomeApostila);
+            console.log('DEBUG - Nenhuma apostila encontrada com o nome:', nomeApostilaEncontrada);
             
-            // Logging para debug - liste todas as apostilas disponíveis
-            const { data: todasApostilas } = await supabase
-              .from('apostilas')
-              .select('nome');
+            // Como não encontrou, vamos definir um valor padrão para totalPaginas
+            totalPaginas = 40;
+            
+            const ultimaPagina = alunoData.ultima_pagina;
+            
+            if (ultimaPagina !== null) {
+              paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
+              progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
               
-            console.log('DEBUG - Apostilas disponíveis:', todasApostilas?.map(a => a.nome));
-            
-            // Tentar fazer uma inserção da apostila com esse nome
-            if (nomeApostila) {
-              console.log('DEBUG - Tentando criar a apostila:', nomeApostila);
-              const { data: novaApostila, error: insertError } = await supabase
-                .from('apostilas')
-                .insert([
-                  { nome: nomeApostila, total_paginas: 40 } // Valor padrão de 40 páginas
-                ])
-                .select()
-                .single();
-                
-              if (insertError) {
-                console.error('DEBUG - Erro ao criar apostila:', insertError);
-              } else {
-                console.log('DEBUG - Apostila criada com sucesso:', novaApostila);
-                totalPaginas = 40;
-                
-                const ultimaPagina = alunoData.ultima_pagina;
-                
-                if (ultimaPagina !== null) {
-                  paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
-                  progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
-                }
-              }
+              console.log('DEBUG - Cálculos com valor padrão:', {
+                total_paginas: totalPaginas,
+                ultima_pagina: ultimaPagina,
+                paginas_restantes: paginasRestantes,
+                progresso_percentual: progressoPercentual
+              });
             }
           }
         }
