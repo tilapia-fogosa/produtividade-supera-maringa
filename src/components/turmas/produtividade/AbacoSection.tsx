@@ -63,7 +63,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     <>
       <div className="space-y-2">
         <Label htmlFor="apostila-abaco">Apostila do ábaco</Label>
-        <Select value={apostilaAbaco} onValueChange={setApostilaAbaco}>
+        <Select 
+          value={apostilaAbaco} 
+          onValueChange={setApostilaAbaco}
+          defaultValue={apostilaAbaco} // Adicionado defaultValue para garantir que o valor inicial seja mostrado
+        >
           <SelectTrigger>
             <SelectValue placeholder="Selecione a apostila" />
           </SelectTrigger>
