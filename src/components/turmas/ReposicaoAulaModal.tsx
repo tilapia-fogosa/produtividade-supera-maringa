@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -31,6 +32,8 @@ import { useForm } from "react-hook-form";
 import { useApostilas } from '@/hooks/use-apostilas';
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
+import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ReposicaoAulaModalProps {
   isOpen: boolean;
@@ -226,114 +229,120 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <FormLabel>Selecione o Aluno</FormLabel>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Pesquisar aluno..."
-                  value={filtro}
-                  onChange={(e) => setFiltro(e.target.value)}
-                  className="pl-8"
+        <ScrollArea className="max-h-[70vh] pr-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <FormLabel>Selecione o Aluno</FormLabel>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Pesquisar aluno..."
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="alunoId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um aluno" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-60">
+                          {alunosFiltrados.length === 0 ? (
+                            <div className="py-2 px-2 text-sm text-gray-500 text-center">
+                              Nenhum aluno encontrado
+                            </div>
+                          ) : (
+                            alunosFiltrados.map((aluno) => (
+                              <SelectItem key={aluno.id} value={aluno.id}>
+                                {aluno.nome} {aluno.codigo ? `(${aluno.codigo})` : ''}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
                 />
               </div>
               
+              {alunoId && (
+                <AlunoProgressoCard alunoId={alunoId} />
+              )}
+              
               <FormField
                 control={form.control}
-                name="alunoId"
+                name="presente"
                 render={({ field }) => (
                   <FormItem>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um aluno" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-60">
-                        {alunosFiltrados.length === 0 ? (
-                          <div className="py-2 px-2 text-sm text-gray-500 text-center">
-                            Nenhum aluno encontrado
-                          </div>
-                        ) : (
-                          alunosFiltrados.map((aluno) => (
-                            <SelectItem key={aluno.id} value={aluno.id}>
-                              {aluno.nome} {aluno.codigo ? `(${aluno.codigo})` : ''}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <PresencaSection 
+                      presente={field.value}
+                      setPresente={(value) => field.onChange(value)}
+                      motivoFalta={form.watch("motivoFalta")}
+                      setMotivoFalta={(value) => form.setValue("motivoFalta", value)}
+                      alunoId={alunoId}
+                    />
                   </FormItem>
                 )}
               />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="presente"
-              render={({ field }) => (
-                <FormItem>
-                  <PresencaSection 
-                    presente={field.value}
-                    setPresente={(value) => field.onChange(value)}
-                    motivoFalta={form.watch("motivoFalta")}
-                    setMotivoFalta={(value) => form.setValue("motivoFalta", value)}
-                    alunoId={alunoId}
+              
+              {presente === "sim" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="apostilaAbaco"
+                    render={({ field }) => (
+                      <AbacoSection 
+                        apostilaAbaco={field.value}
+                        setApostilaAbaco={(value) => field.onChange(value)}
+                        paginaAbaco={form.watch("paginaAbaco")}
+                        setPaginaAbaco={(value) => form.setValue("paginaAbaco", value)}
+                        exerciciosAbaco={form.watch("exerciciosAbaco")}
+                        setExerciciosAbaco={(value) => form.setValue("exerciciosAbaco", value)}
+                        errosAbaco={form.watch("errosAbaco")}
+                        setErrosAbaco={(value) => form.setValue("errosAbaco", value)}
+                        fezDesafio={form.watch("fezDesafio")}
+                        setFezDesafio={(value) => form.setValue("fezDesafio", value)}
+                        comentario={form.watch("comentario")}
+                        setComentario={(value) => form.setValue("comentario", value)}
+                      />
+                    )}
                   />
-                </FormItem>
+                </>
               )}
-            />
-            
-            {presente === "sim" && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="apostilaAbaco"
-                  render={({ field }) => (
-                    <AbacoSection 
-                      apostilaAbaco={field.value}
-                      setApostilaAbaco={(value) => field.onChange(value)}
-                      paginaAbaco={form.watch("paginaAbaco")}
-                      setPaginaAbaco={(value) => form.setValue("paginaAbaco", value)}
-                      exerciciosAbaco={form.watch("exerciciosAbaco")}
-                      setExerciciosAbaco={(value) => form.setValue("exerciciosAbaco", value)}
-                      errosAbaco={form.watch("errosAbaco")}
-                      setErrosAbaco={(value) => form.setValue("errosAbaco", value)}
-                      fezDesafio={form.watch("fezDesafio")}
-                      setFezDesafio={(value) => form.setValue("fezDesafio", value)}
-                      comentario={form.watch("comentario")}
-                      setComentario={(value) => form.setValue("comentario", value)}
-                    />
-                  )}
-                />
-              </>
-            )}
-            
-            <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-                disabled={isSubmitting}
-                className={isMobile ? "w-full" : ""}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className={isMobile ? "w-full" : ""}
-              >
-                {isSubmitting ? "Salvando..." : "Salvar"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              
+              <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className={isMobile ? "w-full" : ""}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className={isMobile ? "w-full" : ""}
+                >
+                  {isSubmitting ? "Salvando..." : "Salvar"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
