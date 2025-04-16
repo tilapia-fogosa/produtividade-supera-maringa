@@ -90,10 +90,16 @@ export const useProdutividade = (alunoId: string) => {
         dadosCompletos.pagina = Number(dadosCompletos.pagina);
       }
 
+      // Preparar dados para inserção, convertendo pagina number para string
+      const dadosParaInserir = {
+        ...dadosCompletos,
+        pagina: dadosCompletos.pagina !== undefined ? String(dadosCompletos.pagina) : null
+      };
+
       // Registrar produtividade do ábaco
       const { error: produtividadeError } = await supabase
         .from('produtividade_abaco')
-        .insert(dadosCompletos);
+        .insert(dadosParaInserir);
 
       if (produtividadeError) throw produtividadeError;
 
