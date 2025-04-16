@@ -14,7 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
-import { encontrarApostilaMaisProxima } from './utils/apostilasUtils';
+import { encontrarApostila } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
@@ -53,18 +53,21 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [apostilas] = useState(APOSTILAS_ABACO_DETALHES);
 
   useEffect(() => {
-    if (isOpen && aluno) {
-      if (aluno.ultimo_nivel) {
-        setApostilaAbaco(aluno.ultimo_nivel);
-      } else {
-        const apostilaSugerida = encontrarApostilaMaisProxima("");
-        setApostilaAbaco(apostilaSugerida);
+    const carregarApostila = async () => {
+      if (isOpen && aluno) {
+        if (aluno.ultimo_nivel) {
+          // Usar a função encontrarApostila para conseguir o nome correto da apostila
+          const apostilaNome = await encontrarApostila(aluno.ultimo_nivel);
+          setApostilaAbaco(apostilaNome);
+        }
+        
+        if (aluno.ultima_pagina) {
+          setPaginaAbaco(aluno.ultima_pagina.toString());
+        }
       }
-      
-      if (aluno.ultima_pagina) {
-        setPaginaAbaco(aluno.ultima_pagina.toString());
-      }
-    }
+    };
+    
+    carregarApostila();
   }, [isOpen, aluno]);
 
   useEffect(() => {

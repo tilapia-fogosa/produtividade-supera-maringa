@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Função para normalizar o nome da apostila para encontrar uma correspondência no banco de dados
@@ -53,22 +54,56 @@ export const encontrarApostila = async (nomeApostila: string | null): Promise<st
   
   console.log('Buscando apostila no banco:', nomeApostila);
   
-  const { data: apostila, error } = await supabase
+  // Primeiro tenta encontrar exatamente como está
+  let { data: apostila, error } = await supabase
     .from('apostilas')
     .select('nome')
     .eq('nome', nomeApostila)
-    .single();
+    .maybeSingle();
     
-  if (error) {
-    console.error('Erro ao buscar apostila:', error);
-    return nomeApostila;
-  }
-  
   if (apostila) {
-    console.log('Apostila encontrada:', apostila.nome);
+    console.log('Apostila encontrada com nome exato:', apostila.nome);
     return apostila.nome;
   }
+  
+  // Se não encontrou com o nome exato, faz um mapeamento para nomes conhecidos
+  if (nomeApostila.toLowerCase().includes('abaco') || nomeApostila.toLowerCase().includes('ábaco')) {
+    // Mapeamento de nomes comuns
+    const mapeamentos: Record<string, string> = {
+      "Ap. Abaco 1": "Ábaco INT. 1",
+      "AP. ABACO 1": "Ábaco INT. 1",
+      "ap. abaco 1": "Ábaco INT. 1",
+      "Ap Abaco 1": "Ábaco INT. 1",
+      "Abaco 1": "Ábaco INT. 1",
+      "Ábaco 1": "Ábaco INT. 1",
+      "AP. ABACO 2": "Ábaco INT. 2",
+      "ap. abaco 2": "Ábaco INT. 2",
+      "Ap Abaco 2": "Ábaco INT. 2",
+      "Abaco 2": "Ábaco INT. 2",
+      "Ábaco 2": "Ábaco INT. 2"
+    };
+    
+    const nomeNormalizado = mapeamentos[nomeApostila];
+    if (nomeNormalizado) {
+      console.log('Usando mapeamento conhecido:', nomeApostila, '->', nomeNormalizado);
+      
+      // Verifica se o nome normalizado existe no banco
+      const { data: apostilaNormalizada } = await supabase
+        .from('apostilas')
+        .select('nome')
+        .eq('nome', nomeNormalizado)
+        .maybeSingle();
+        
+      if (apostilaNormalizada) {
+        console.log('Apostila encontrada com nome normalizado:', apostilaNormalizada.nome);
+        return apostilaNormalizada.nome;
+      }
+    }
+  }
 
-  console.log('Apostila não encontrada, retornando nome original:', nomeApostila);
+  // Se nenhuma correspondência for encontrada, criar uma nova apostila
+  console.log('Apostila não encontrada, usando nome original:', nomeApostila);
+  
+  // Em caso de erro, simplesmente retorna o nome original
   return nomeApostila;
 };

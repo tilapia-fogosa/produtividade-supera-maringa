@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
-import { encontrarApostilaMaisProxima } from '@/components/turmas/utils/apostilasUtils';
+import { encontrarApostila } from '@/components/turmas/utils/apostilasUtils';
 
 interface AlunoProgresso {
   ultimo_nivel: string | null;
@@ -47,17 +48,15 @@ export const useAlunoProgresso = (alunoId: string) => {
         let progressoPercentual = 0;
         
         if (alunoData.ultimo_nivel) {
-          const apostilaNormalizada = encontrarApostilaMaisProxima(alunoData.ultimo_nivel);
-          console.log('DEBUG - Buscando apostila:', {
-            nivel_original: alunoData.ultimo_nivel,
-            apostila_normalizada: apostilaNormalizada
-          });
+          // Usando a nova função que busca diretamente na tabela apostilas
+          const nomeApostila = await encontrarApostila(alunoData.ultimo_nivel);
+          console.log('DEBUG - Apostila normalizada:', nomeApostila);
           
           // Buscar apostila no banco
           const { data: apostilaData, error: apostilaError } = await supabase
             .from('apostilas')
             .select('total_paginas, exercicios_por_pagina')
-            .eq('nome', apostilaNormalizada)
+            .eq('nome', nomeApostila)
             .maybeSingle();
 
           if (apostilaError) {
@@ -68,7 +67,6 @@ export const useAlunoProgresso = (alunoId: string) => {
             console.log('DEBUG - Apostila encontrada:', apostilaData);
             totalPaginas = apostilaData.total_paginas;
             
-            // Como agora ultima_pagina já é um número, não precisamos fazer parse
             const ultimaPagina = alunoData.ultima_pagina;
             
             if (ultimaPagina !== null) {
@@ -83,12 +81,40 @@ export const useAlunoProgresso = (alunoId: string) => {
               });
             }
           } else {
-            console.log('DEBUG - Nenhuma apostila encontrada com o nome:', apostilaNormalizada);
+            console.log('DEBUG - Nenhuma apostila encontrada com o nome:', nomeApostila);
+            
+            // Logging para debug - liste todas as apostilas disponíveis
             const { data: todasApostilas } = await supabase
               .from('apostilas')
               .select('nome');
               
             console.log('DEBUG - Apostilas disponíveis:', todasApostilas?.map(a => a.nome));
+            
+            // Tentar fazer uma inserção da apostila com esse nome
+            if (nomeApostila) {
+              console.log('DEBUG - Tentando criar a apostila:', nomeApostila);
+              const { data: novaApostila, error: insertError } = await supabase
+                .from('apostilas')
+                .insert([
+                  { nome: nomeApostila, total_paginas: 40 } // Valor padrão de 40 páginas
+                ])
+                .select()
+                .single();
+                
+              if (insertError) {
+                console.error('DEBUG - Erro ao criar apostila:', insertError);
+              } else {
+                console.log('DEBUG - Apostila criada com sucesso:', novaApostila);
+                totalPaginas = 40;
+                
+                const ultimaPagina = alunoData.ultima_pagina;
+                
+                if (ultimaPagina !== null) {
+                  paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
+                  progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
+                }
+              }
+            }
           }
         }
 
@@ -156,9 +182,9 @@ export const useAlunoProgresso = (alunoId: string) => {
           paginas_restantes: paginasRestantes,
           progresso_percentual: progressoPercentual,
           faltou_mes_atual: faltouMesAtual,
-          previsao_conclusao: null,
-          media_paginas_por_aula: null,
-          media_exercicios_por_aula: null
+          previsao_conclusao: previsaoConclusao,
+          media_paginas_por_aula: mediaPaginasPorAula,
+          media_exercicios_por_aula: mediaExerciciosPorAula
         });
       } catch (error) {
         console.error('Erro ao buscar progresso do aluno:', error);
