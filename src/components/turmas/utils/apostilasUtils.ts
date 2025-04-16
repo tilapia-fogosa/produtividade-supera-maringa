@@ -1,33 +1,43 @@
 
 import { APOSTILAS_ABACO, MAPEAMENTO_APOSTILAS } from "../constants/apostilas";
 
-// Função para encontrar a apostila mais próxima
 export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string => {
   if (!ultimoNivel) return "";
   
-  // Primeiro, tenta correspondência exata
+  console.log('Buscando apostila para:', ultimoNivel);
+  
+  // Primeiro, tenta correspondência exata com o nome original
+  const apostilaExata = APOSTILAS_ABACO.find(apostila => apostila === ultimoNivel);
+  if (apostilaExata) {
+    console.log('Encontrou correspondência exata:', apostilaExata);
+    return apostilaExata;
+  }
+  
+  // Se não encontrou exata, tenta pelo mapeamento
   if (ultimoNivel in MAPEAMENTO_APOSTILAS) {
-    return MAPEAMENTO_APOSTILAS[ultimoNivel as keyof typeof MAPEAMENTO_APOSTILAS];
+    const apostilaMapeada = MAPEAMENTO_APOSTILAS[ultimoNivel as keyof typeof MAPEAMENTO_APOSTILAS];
+    console.log('Encontrou no mapeamento:', apostilaMapeada);
+    return apostilaMapeada;
   }
   
-  // Adicionar mapeamento específico para 'Ap. BPA 4'
-  if (ultimoNivel === 'Ap. BPA 4') {
-    return 'Ap. BPA 4';
-  }
-  
-  // Verificar correspondência parcial
+  // Verifica correspondência parcial com o mapeamento
   for (const [padrao, apostila] of Object.entries(MAPEAMENTO_APOSTILAS)) {
     if (ultimoNivel.includes(padrao)) {
+      console.log('Encontrou correspondência parcial:', apostila);
       return apostila;
     }
   }
   
-  // Verificar se alguma apostila está contida no ultimoNivel
-  const apostilaEncontrada = APOSTILAS_ABACO.find(apostila => ultimoNivel.includes(apostila));
+  // Verifica correspondência parcial com a lista de apostilas
+  const apostilaEncontrada = APOSTILAS_ABACO.find(apostila => 
+    ultimoNivel.toLowerCase().includes(apostila.toLowerCase())
+  );
+  
   if (apostilaEncontrada) {
+    console.log('Encontrou na lista de apostilas:', apostilaEncontrada);
     return apostilaEncontrada;
   }
   
-  // Nenhuma correspondência encontrada
-  return ultimoNivel; // Retorna o nome original se não encontrar mapeamento
+  console.log('Nenhuma correspondência encontrada, retornando nome original:', ultimoNivel);
+  return ultimoNivel;
 };

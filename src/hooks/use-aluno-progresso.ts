@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
+import { encontrarApostilaMaisProxima } from '@/components/turmas/utils/apostilasUtils';
 
 interface AlunoProgresso {
   ultimo_nivel: string | null;
@@ -39,19 +39,25 @@ export const useAlunoProgresso = (alunoId: string) => {
         let totalPaginas = null;
         let exerciciosPorPagina = null;
         
-        // Buscar total de páginas da apostila atual usando ultimo_nivel
+        // Buscar total de páginas da apostila atual usando ultimo_nivel normalizado
         if (alunoData.ultimo_nivel) {
+          const apostilaNormalizada = encontrarApostilaMaisProxima(alunoData.ultimo_nivel);
+          console.log('Apostila normalizada:', apostilaNormalizada);
+          
           const { data: apostilaData, error: apostilaError } = await supabase
             .from('apostilas')
             .select('total_paginas, exercicios_por_pagina')
-            .eq('nome', alunoData.ultimo_nivel)
+            .eq('nome', apostilaNormalizada)
             .maybeSingle();
 
           if (apostilaError) throw apostilaError;
           
           if (apostilaData) {
+            console.log('Dados da apostila encontrados:', apostilaData);
             totalPaginas = apostilaData.total_paginas;
             exerciciosPorPagina = apostilaData.exercicios_por_pagina;
+          } else {
+            console.log('Nenhum dado encontrado para a apostila:', apostilaNormalizada);
           }
         }
 
