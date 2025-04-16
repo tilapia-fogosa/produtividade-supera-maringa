@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Book, AlertCircle } from 'lucide-react';
+import { Book, AlertCircle, Check } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useApostilas } from '@/hooks/use-apostilas';
 import { useIsMobile } from '@/hooks/use-mobile';
