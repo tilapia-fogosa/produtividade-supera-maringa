@@ -16,7 +16,7 @@ export const useApostilas = () => {
   useEffect(() => {
     const carregarApostilas = async () => {
       try {
-        console.log('Hook useApostilas: Iniciando carregamento de apostilas');
+        console.log('[useApostilas] Iniciando carregamento de apostilas');
         setLoading(true);
         setError(null);
         
@@ -26,18 +26,18 @@ export const useApostilas = () => {
           .order('nome');
           
         if (error) {
-          console.error('Hook useApostilas: Erro na consulta do Supabase:', error);
+          console.error('[useApostilas] Erro na consulta do Supabase:', error);
           setError('Erro ao carregar apostilas');
           return;
         }
         
         if (apostilasDB && apostilasDB.length > 0) {
-          console.log(`Hook useApostilas: Carregadas ${apostilasDB.length} apostilas do banco`);
+          console.log(`[useApostilas] Carregadas ${apostilasDB.length} apostilas do banco:`, apostilasDB);
           
           // Converter total_paginas para número explicitamente
           const apostilasConvertidas = apostilasDB.map(a => {
             const totalPaginas = typeof a.total_paginas === 'number' ? a.total_paginas : Number(a.total_paginas);
-            console.log(`Hook useApostilas: Apostila: ${a.nome}, total_paginas (original): ${a.total_paginas}, convertido: ${totalPaginas}, tipo: ${typeof totalPaginas}`);
+            console.log(`[useApostilas] Apostila: ${a.nome}, total_paginas (original): ${a.total_paginas}, convertido: ${totalPaginas}, tipo: ${typeof totalPaginas}`);
             
             return {
               nome: a.nome,
@@ -47,11 +47,11 @@ export const useApostilas = () => {
           
           setApostilas(apostilasConvertidas);
         } else {
-          console.log('Hook useApostilas: Nenhuma apostila encontrada no banco');
+          console.log('[useApostilas] Nenhuma apostila encontrada no banco');
           setApostilas([]);
         }
       } catch (err) {
-        console.error('Hook useApostilas: Erro ao carregar apostilas:', err);
+        console.error('[useApostilas] Erro ao carregar apostilas:', err);
         setError('Erro ao carregar apostilas do banco de dados');
       } finally {
         setLoading(false);
@@ -66,18 +66,26 @@ export const useApostilas = () => {
     if (!nome) return undefined;
     
     const apostila = apostilas.find(a => a.nome === nome);
-    console.log(`Hook useApostilas: Buscando apostila '${nome}', encontrada:`, apostila || 'não encontrada');
+    console.log(`[useApostilas] Buscando apostila '${nome}', encontrada:`, apostila || 'não encontrada');
     
     return apostila;
   }, [apostilas]);
 
   // Função para obter o total de páginas de uma apostila
   const getTotalPaginas = useCallback((nome: string | null | undefined): number => {
-    if (!nome) return 40; // Valor padrão
+    if (!nome) {
+      console.log('[useApostilas] Nome não fornecido, retornando valor padrão (40)');
+      return 40; // Valor padrão
+    }
     
     const apostila = getApostila(nome);
     const totalPaginas = apostila ? apostila.total_paginas : 40;
-    console.log(`Hook useApostilas: Total de páginas para '${nome}': ${totalPaginas}`);
+    
+    if (!apostila) {
+      console.log(`[useApostilas] Apostila '${nome}' não encontrada, retornando valor padrão (40)`);
+    } else {
+      console.log(`[useApostilas] Total de páginas para '${nome}': ${totalPaginas}`);
+    }
     
     return totalPaginas;
   }, [getApostila]);

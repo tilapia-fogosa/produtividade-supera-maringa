@@ -22,7 +22,6 @@ interface AbacoSectionProps {
   setFezDesafio: (value: "sim" | "não") => void;
   comentario: string;
   setComentario: (value: string) => void;
-  apostilas?: {nome: string, paginas: number}[];
 }
 
 const AbacoSection: React.FC<AbacoSectionProps> = ({
@@ -39,16 +38,16 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   comentario,
   setComentario
 }) => {
-  // Usar o novo hook de apostilas
+  // Usar o hook de apostilas
   const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   
   // Atualizar o total de páginas quando a apostila selecionada mudar
   useEffect(() => {
     if (apostilaAbaco) {
-      console.log('AbacoSection: Apostila selecionada:', apostilaAbaco);
+      console.log('[AbacoSection] Apostila selecionada:', apostilaAbaco);
       const paginas = getTotalPaginas(apostilaAbaco);
-      console.log(`AbacoSection: Total de páginas da apostila ${apostilaAbaco}:`, paginas);
+      console.log(`[AbacoSection] Total de páginas da apostila ${apostilaAbaco}:`, paginas);
       setTotalPaginas(paginas);
     }
   }, [apostilaAbaco, getTotalPaginas]);
@@ -63,14 +62,20 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
           </SelectTrigger>
           <SelectContent>
             <ScrollArea className="h-[200px]">
-              {apostilasDisponiveis.map((apostila) => (
-                <SelectItem key={apostila.nome} value={apostila.nome}>
-                  <div className="flex items-center">
-                    <Book className="mr-2 h-4 w-4" />
-                    {apostila.nome} ({apostila.total_paginas} páginas)
-                  </div>
-                </SelectItem>
-              ))}
+              {apostilasDisponiveis.length > 0 ? (
+                apostilasDisponiveis.map((apostila) => (
+                  <SelectItem key={apostila.nome} value={apostila.nome}>
+                    <div className="flex items-center">
+                      <Book className="mr-2 h-4 w-4" />
+                      {apostila.nome} ({apostila.total_paginas} páginas)
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="px-2 py-1 text-gray-500">
+                  {carregandoApostila ? 'Carregando apostilas...' : 'Nenhuma apostila disponível'}
+                </div>
+              )}
             </ScrollArea>
           </SelectContent>
         </Select>
