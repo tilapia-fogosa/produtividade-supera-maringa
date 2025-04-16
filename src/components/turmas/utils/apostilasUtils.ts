@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 
 // Função para normalizar o nome da apostila para encontrar uma correspondência no banco de dados
 export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string => {
@@ -44,4 +45,30 @@ export const encontrarApostilaMaisProxima = (ultimoNivel: string | null): string
   // Se não encontrar, retornar o nome original
   console.log('Nenhuma correspondência encontrada. Retornando nome original:', ultimoNivel);
   return ultimoNivel;
+};
+
+// Nova função que busca diretamente na tabela apostilas
+export const encontrarApostila = async (nomeApostila: string | null): Promise<string> => {
+  if (!nomeApostila) return "";
+  
+  console.log('Buscando apostila no banco:', nomeApostila);
+  
+  const { data: apostila, error } = await supabase
+    .from('apostilas')
+    .select('nome')
+    .eq('nome', nomeApostila)
+    .single();
+    
+  if (error) {
+    console.error('Erro ao buscar apostila:', error);
+    return nomeApostila;
+  }
+  
+  if (apostila) {
+    console.log('Apostila encontrada:', apostila.nome);
+    return apostila.nome;
+  }
+
+  console.log('Apostila não encontrada, retornando nome original:', nomeApostila);
+  return nomeApostila;
 };
