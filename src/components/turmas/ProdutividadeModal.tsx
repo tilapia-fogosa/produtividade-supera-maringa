@@ -62,7 +62,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       }
       
       if (aluno.ultima_pagina) {
-        setPaginaAbaco(aluno.ultima_pagina);
+        setPaginaAbaco(aluno.ultima_pagina.toString());
       }
     }
   }, [isOpen, aluno]);
@@ -108,12 +108,15 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       }
 
       if (presente === "sim") {
+        // Converter página para número
+        const paginaNumero = paginaAbaco ? Number(paginaAbaco) : undefined;
+        
         // Registrar produtividade do ábaco
         const produtividadeRegistrada = await registrarProdutividade({
           data_aula: dataHoje,
           presente: true,
           apostila: apostilaAbaco,
-          pagina: paginaAbaco,
+          pagina: paginaNumero,
           exercicios: exerciciosAbaco ? Number(exerciciosAbaco) : undefined,
           erros: errosAbaco ? Number(errosAbaco) : undefined,
           fez_desafio: fezDesafio === "sim",

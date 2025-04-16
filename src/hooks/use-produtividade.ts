@@ -7,7 +7,7 @@ interface ProdutividadeAbaco {
   aluno_id?: string;
   presente: boolean;
   apostila?: string;
-  pagina?: string;
+  pagina?: number; // Alterado de string para number
   exercicios?: number;
   erros?: number;
   fez_desafio?: boolean;
@@ -84,6 +84,11 @@ export const useProdutividade = (alunoId: string) => {
       if (typeof dadosCompletos.erros === 'string' && dadosCompletos.erros) {
         dadosCompletos.erros = Number(dadosCompletos.erros);
       }
+      
+      // Converter página para número se for string
+      if (typeof dadosCompletos.pagina === 'string' && dadosCompletos.pagina) {
+        dadosCompletos.pagina = Number(dadosCompletos.pagina);
+      }
 
       // Registrar produtividade do ábaco
       const { error: produtividadeError } = await supabase
@@ -93,12 +98,12 @@ export const useProdutividade = (alunoId: string) => {
       if (produtividadeError) throw produtividadeError;
 
       // Se tiver apostila e página, atualizar o aluno
-      if (dados.apostila && dados.pagina) {
+      if (dados.apostila && dados.pagina !== undefined) {
         const { error: alunoError } = await supabase
           .from('alunos')
           .update({
             apostila_atual: dados.apostila,
-            ultima_pagina: dados.pagina,
+            ultima_pagina: dados.pagina, // Agora é um número
             ultima_correcao_ah: new Date().toISOString()
           })
           .eq('id', alunoId);

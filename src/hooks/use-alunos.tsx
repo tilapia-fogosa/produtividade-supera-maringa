@@ -25,7 +25,9 @@ export function useAlunos() {
           throw error;
         }
         
-        setTodosAlunos(data || []);
+        // Converter para o tipo Aluno
+        const alunosTyped: Aluno[] = data || [];
+        setTodosAlunos(alunosTyped);
       } catch (error) {
         console.error('Erro ao buscar todos os alunos:', error);
         toast({
@@ -81,10 +83,12 @@ export function useAlunos() {
         throw error;
       }
       
-      setAlunos(data || []);
+      // Converter para o tipo Aluno
+      const alunosTyped: Aluno[] = data || [];
+      setAlunos(alunosTyped);
       
       // Verificar quais alunos já tiveram produtividade registrada hoje
-      await verificarProdutividadeHoje(data || []);
+      await verificarProdutividadeHoje(alunosTyped);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
       toast({
