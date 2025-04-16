@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Book, AlertCircle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useApostilas } from '@/hooks/use-apostilas';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -41,6 +42,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   // Usar o hook de apostilas
   const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
+  const isMobile = useIsMobile();
   
   // Logar o carregamento das apostilas
   useEffect(() => {
@@ -66,16 +68,16 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
         <Select 
           value={apostilaAbaco} 
           onValueChange={setApostilaAbaco}
-          defaultValue={apostilaAbaco} // Adicionado defaultValue para garantir que o valor inicial seja mostrado
+          defaultValue={apostilaAbaco}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione a apostila" />
           </SelectTrigger>
-          <SelectContent>
-            <ScrollArea className="h-[200px]">
+          <SelectContent className={isMobile ? "max-h-[40vh]" : ""}>
+            <ScrollArea className={isMobile ? "h-[35vh]" : "h-[200px]"}>
               {apostilasDisponiveis.length > 0 ? (
                 apostilasDisponiveis.map((apostila) => (
-                  <SelectItem key={apostila.nome} value={apostila.nome}>
+                  <SelectItem key={apostila.nome} value={apostila.nome} className="py-2">
                     <div className="flex items-center">
                       <Book className="mr-2 h-4 w-4" />
                       {apostila.nome} ({apostila.total_paginas} páginas)
