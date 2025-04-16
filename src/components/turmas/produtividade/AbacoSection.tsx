@@ -103,13 +103,13 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
               </div>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="p-0 max-h-[85vh]">
+          <SheetContent side="bottom" className="p-0 max-h-[85vh] overflow-hidden">
             <div className="flex flex-col h-full">
               <div className="p-4 border-b sticky top-0 bg-background z-10">
                 <h3 className="text-lg font-semibold">Selecione a apostila</h3>
               </div>
               <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-[calc(85vh-60px)]">
+                <ScrollArea className="h-[calc(85vh-60px)] overflow-y-auto">
                   <div className="py-2 px-2">
                     {carregandoApostila ? (
                       <div className="p-4 text-center text-gray-500">
@@ -156,7 +156,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
           <SelectTrigger>
             <SelectValue placeholder="Selecione a apostila" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[300px]">
             <ScrollArea className="h-[200px]">
               {apostilasDisponiveis.length > 0 ? (
                 apostilasDisponiveis.map((apostila) => (
