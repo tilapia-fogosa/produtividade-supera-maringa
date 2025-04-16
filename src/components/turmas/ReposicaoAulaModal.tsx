@@ -131,21 +131,23 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       return;
     }
     
-    if (values.presente === "sim" && !values.apostilaAbaco) {
-      toast({
-        title: "Erro",
-        description: "Selecione a apostila do ábaco",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    // Buscar o aluno atual
     const alunoSelecionado = todosAlunos.find(a => a.id === values.alunoId);
     
     if (!alunoSelecionado) {
       toast({
         title: "Erro",
         description: "Aluno não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Só validar apostila se o aluno não tiver um último nível definido
+    if (values.presente === "sim" && !values.apostilaAbaco && !alunoSelecionado.ultimo_nivel) {
+      toast({
+        title: "Erro",
+        description: "Selecione a apostila do ábaco",
         variant: "destructive"
       });
       return;
@@ -168,6 +170,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         fez_desafio: values.presente === "sim" ? values.fezDesafio === "sim" : undefined,
         comentario: values.presente === "sim" ? values.comentario : undefined,
         data_registro: new Date().toISOString(),
+        apostila_atual: alunoSelecionado.ultimo_nivel,
+        ultima_pagina: alunoSelecionado.ultima_pagina?.toString(),
         is_reposicao: true
       };
 

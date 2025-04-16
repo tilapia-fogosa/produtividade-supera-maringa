@@ -43,6 +43,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   const isMobile = useIsMobile();
+  const [valorOriginalApostila, setValorOriginalApostila] = useState<string>(apostilaAbaco);
   
   // Logar o carregamento das apostilas
   useEffect(() => {
@@ -61,13 +62,32 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     }
   }, [apostilaAbaco, getTotalPaginas]);
 
+  // Guardar o valor original da apostila quando componente for montado
+  useEffect(() => {
+    if (apostilaAbaco) {
+      setValorOriginalApostila(apostilaAbaco);
+      console.log('[AbacoSection] Valor original da apostila definido:', apostilaAbaco);
+    }
+  }, []);
+
+  // Função para tratar a mudança de valor da apostila
+  const handleApostilaChange = (value: string) => {
+    if (value) {
+      setApostilaAbaco(value);
+    } else {
+      // Se nenhum valor for selecionado, use o valor original (apostila atual do aluno)
+      setApostilaAbaco(valorOriginalApostila);
+      console.log('[AbacoSection] Restaurando para apostila original:', valorOriginalApostila);
+    }
+  };
+
   return (
     <>
       <div className="space-y-2">
         <Label htmlFor="apostila-abaco">Apostila do ábaco</Label>
         <Select 
           value={apostilaAbaco} 
-          onValueChange={setApostilaAbaco}
+          onValueChange={handleApostilaChange}
           defaultValue={apostilaAbaco}
         >
           <SelectTrigger>

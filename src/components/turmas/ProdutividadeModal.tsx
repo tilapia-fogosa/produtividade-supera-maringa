@@ -89,7 +89,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (presente === "sim" && !apostilaAbaco) {
+    if (presente === "sim" && !apostilaAbaco && !aluno.ultimo_nivel) {
       toast({
         title: "Erro",
         description: "Selecione a apostila do ábaco",
@@ -119,8 +119,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         comentario: presente === "sim" ? comentario : undefined,
         data_registro: dataHoje,
         data_ultima_correcao_ah: new Date().toISOString(),
-        apostila_atual: apostilaAbaco,
-        ultima_pagina: paginaAbaco,
+        apostila_atual: aluno.ultimo_nivel, // Sempre enviando a apostila atual como fallback
+        ultima_pagina: aluno.ultima_pagina?.toString(), // Sempre enviando a última página como fallback
         is_reposicao: false
       };
 

@@ -97,18 +97,51 @@ export async function registrarProdutividade(
     if (data.presente) {
       console.log('Registrando produtividade do ábaco para o aluno:', data.aluno_id);
       
+      // Usar apostila_abaco se fornecida, caso contrário usar a apostila_atual
+      const apostilaFinal = data.apostila_abaco || data.apostila_atual;
+      
+      // Se ainda assim não tiver uma apostila, buscar da tabela de alunos
+      let apostila = apostilaFinal;
+      let pagina = data.pagina_abaco || data.ultima_pagina;
+      
+      if (!apostila) {
+        console.log('Apostila não fornecida, buscando dados do aluno...');
+        const { data: alunoData, error: alunoError } = await supabaseClient
+          .from('alunos')
+          .select('ultimo_nivel, ultima_pagina')
+          .eq('id', data.aluno_id)
+          .single();
+          
+        if (!alunoError && alunoData) {
+          apostila = alunoData.ultimo_nivel;
+          if (!pagina) {
+            pagina = alunoData.ultima_pagina?.toString();
+          }
+          console.log('Dados recuperados do aluno:', { apostila, pagina });
+        } else if (alunoError) {
+          console.error('Erro ao buscar dados do aluno:', alunoError);
+        }
+      }
+      
+      if (!apostila) {
+        console.warn('Não foi possível determinar a apostila do aluno. Usando valor padrão.');
+        apostila = 'Não especificada';
+      }
+      
       const produtividadeData = {
         aluno_id: data.aluno_id,
         data_aula: data.data_registro,
         presente: data.presente,
         is_reposicao: data.is_reposicao || false,
-        apostila: data.apostila_abaco || data.apostila_atual,
-        pagina: data.pagina_abaco || data.ultima_pagina,
+        apostila: apostila,
+        pagina: pagina,
         exercicios: data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
         erros: data.erros_abaco ? parseInt(data.erros_abaco) : null,
         fez_desafio: data.fez_desafio || false,
         comentario: data.comentario
       };
+      
+      console.log('Dados de produtividade a salvar:', produtividadeData);
       
       const { error: produtividadeError } = await supabaseClient
         .from('produtividade_abaco')
