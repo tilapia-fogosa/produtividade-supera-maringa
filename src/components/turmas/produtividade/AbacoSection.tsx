@@ -7,9 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Book, AlertCircle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { APOSTILAS_ABACO_DETALHES } from '../constants/apostilas';
-import { obterInfoApostila } from '../utils/apostilasUtils';
-import { supabase } from "@/integrations/supabase/client";
+import { carregarApostilasDisponiveis, ApostilaInfo } from '../utils/apostilasUtils';
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -24,7 +22,7 @@ interface AbacoSectionProps {
   setFezDesafio: (value: "sim" | "não") => void;
   comentario: string;
   setComentario: (value: string) => void;
-  apostilas: {nome: string, paginas: number}[];
+  apostilas?: {nome: string, paginas: number}[];
 }
 
 const AbacoSection: React.FC<AbacoSectionProps> = ({
@@ -44,132 +42,46 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const [totalPaginas, setTotalPaginas] = useState(40);
   const [carregandoApostila, setCarregandoApostila] = useState(false);
   const [erroApostila, setErroApostila] = useState<string | null>(null);
-  const [apostilasDisponiveis, setApostilasDisponiveis] = useState<{nome: string, total_paginas: number}[]>([]);
+  const [apostilasDisponiveis, setApostilasDisponiveis] = useState<ApostilaInfo[]>([]);
   
   // Carregar apostilas disponíveis do banco
   useEffect(() => {
-    const carregarApostilasDisponiveis = async () => {
+    const buscarApostilasDisponiveis = async () => {
       try {
         setCarregandoApostila(true);
-        // Buscar apostilas diretamente do banco
-        const { data: apostilasDB, error } = await supabase
-          .from('apostilas')
-          .select('nome, total_paginas')
-          .order('nome');
-          
-        if (error) {
-          console.error('Erro ao buscar apostilas:', error);
-          throw error;
-        }
+        const apostilas = await carregarApostilasDisponiveis();
         
-        if (apostilasDB && apostilasDB.length > 0) {
-          console.log('Apostilas disponíveis no banco:', apostilasDB);
-          // Converter total_paginas para número
-          const apostilasComNumeros = apostilasDB.map(a => ({
-            nome: a.nome,
-            total_paginas: Number(a.total_paginas)
-          }));
-          setApostilasDisponiveis(apostilasComNumeros);
+        if (apostilas.length > 0) {
+          console.log('Apostilas carregadas com sucesso:', apostilas);
+          setApostilasDisponiveis(apostilas);
         } else {
-          // Se não encontrou no banco, usa a constante local
-          console.log('Usando apostilas locais:', APOSTILAS_ABACO_DETALHES);
-          setApostilasDisponiveis(APOSTILAS_ABACO_DETALHES.map(a => ({ 
-            nome: a.nome, 
-            total_paginas: Number(a.paginas)
-          })));
+          console.log('Nenhuma apostila encontrada ou erro ao carregar');
+          setErroApostila('Não foi possível carregar as apostilas');
         }
       } catch (err) {
         console.error('Erro ao carregar apostilas:', err);
-        // Fallback para apostilas locais
-        setApostilasDisponiveis(APOSTILAS_ABACO_DETALHES.map(a => ({ 
-          nome: a.nome, 
-          total_paginas: Number(a.paginas)
-        })));
+        setErroApostila('Erro ao carregar apostilas');
       } finally {
         setCarregandoApostila(false);
       }
     };
     
-    carregarApostilasDisponiveis();
+    buscarApostilasDisponiveis();
   }, []);
 
-  // Buscar o total de páginas da apostila selecionada quando ela mudar
+  // Atualizar o total de páginas quando a apostila selecionada mudar
   useEffect(() => {
-    const buscarTotalPaginas = async () => {
-      if (apostilaAbaco) {
-        setCarregandoApostila(true);
-        setErroApostila(null);
-        
-        try {
-          // Primeiro, tentar encontrar no cache local
-          const apostilaNoCache = apostilasDisponiveis.find(a => a.nome === apostilaAbaco);
-          
-          if (apostilaNoCache) {
-            // Se encontrou no cache, use diretamente
-            console.log(`Apostila ${apostilaAbaco} encontrada no cache com ${apostilaNoCache.total_paginas} páginas`);
-            setTotalPaginas(Number(apostilaNoCache.total_paginas));
-          } else {
-            // Se não encontrou no cache, busca diretamente do banco
-            console.log(`Buscando apostila ${apostilaAbaco} diretamente do banco`);
-            const { data: apostilaDB, error } = await supabase
-              .from('apostilas')
-              .select('nome, total_paginas')
-              .eq('nome', apostilaAbaco)
-              .maybeSingle();
-              
-            if (error) {
-              throw error;
-            }
-            
-            if (apostilaDB) {
-              console.log(`Apostila ${apostilaAbaco} encontrada no banco com ${apostilaDB.total_paginas} páginas`);
-              setTotalPaginas(Number(apostilaDB.total_paginas));
-            } else {
-              // Tenta buscar por nome similar
-              const { data: apostilasSimilares } = await supabase
-                .from('apostilas')
-                .select('nome, total_paginas');
-                
-              if (apostilasSimilares && apostilasSimilares.length > 0) {
-                // Função para normalizar nomes para comparação
-                const normalizar = (nome: string) => nome.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const nomeNormalizado = normalizar(apostilaAbaco);
-                
-                // Busca por similaridade
-                const apostilaSimilar = apostilasSimilares.find(a => 
-                  normalizar(a.nome).includes(nomeNormalizado) || 
-                  nomeNormalizado.includes(normalizar(a.nome))
-                );
-                
-                if (apostilaSimilar) {
-                  console.log(`Apostila similar encontrada: ${apostilaSimilar.nome} com ${apostilaSimilar.total_paginas} páginas`);
-                  setTotalPaginas(Number(apostilaSimilar.total_paginas));
-                } else {
-                  // Último recurso: usar a função obterInfoApostila
-                  const infoApostila = await obterInfoApostila(apostilaAbaco);
-                  console.log(`Apostila ${apostilaAbaco} via obterInfoApostila com ${infoApostila.total_paginas} páginas`);
-                  setTotalPaginas(Number(infoApostila.total_paginas));
-                }
-              } else {
-                // Se não há apostilas no banco, usa a função obterInfoApostila
-                const infoApostila = await obterInfoApostila(apostilaAbaco);
-                console.log(`Apostila ${apostilaAbaco} via obterInfoApostila com ${infoApostila.total_paginas} páginas`);
-                setTotalPaginas(Number(infoApostila.total_paginas));
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Erro ao buscar informações da apostila:', error);
-          setErroApostila('Não foi possível obter as informações da apostila');
-          // Valor padrão em caso de erro
-          setTotalPaginas(40);
-        } finally {
-          setCarregandoApostila(false);
-        }
+    if (apostilaAbaco) {
+      const apostilaSelecionada = apostilasDisponiveis.find(a => a.nome === apostilaAbaco);
+      
+      if (apostilaSelecionada) {
+        console.log(`Apostila ${apostilaAbaco} selecionada:`, apostilaSelecionada);
+        setTotalPaginas(apostilaSelecionada.total_paginas);
+      } else {
+        console.log(`Apostila ${apostilaAbaco} não encontrada no cache`);
+        setTotalPaginas(40); // Valor padrão
       }
-    };
-    
-    buscarTotalPaginas();
+    }
   }, [apostilaAbaco, apostilasDisponiveis]);
 
   return (
