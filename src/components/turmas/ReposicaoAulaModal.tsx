@@ -143,9 +143,9 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       if (aluno) {
         setAlunoSelecionado(aluno);
         
-        // Se o aluno tiver uma apostila atual, selecionar ela no formulário
-        if (aluno.apostila_atual) {
-          form.setValue("apostilaAbaco", aluno.apostila_atual);
+        // Se o aluno tiver um último nível, selecionar ele no formulário
+        if (aluno.ultimo_nivel) {
+          form.setValue("apostilaAbaco", aluno.ultimo_nivel);
         }
       }
     }

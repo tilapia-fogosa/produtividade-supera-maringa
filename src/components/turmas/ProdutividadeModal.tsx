@@ -54,10 +54,10 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 
   useEffect(() => {
     if (isOpen && aluno) {
-      if (aluno.apostila_atual) {
-        setApostilaAbaco(aluno.apostila_atual);
-      } else if (aluno.ultimo_nivel) {
-        const apostilaSugerida = encontrarApostilaMaisProxima(aluno.ultimo_nivel);
+      if (aluno.ultimo_nivel) {
+        setApostilaAbaco(aluno.ultimo_nivel);
+      } else {
+        const apostilaSugerida = encontrarApostilaMaisProxima("");
         setApostilaAbaco(apostilaSugerida);
       }
       

@@ -94,7 +94,7 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
             <BookOpen size={16} className="mr-1" /> Apostila Atual:
           </span>
           <span className="font-semibold text-azul-500">
-            {progresso?.apostila_atual || 'Não definido'}
+            {progresso?.ultimo_nivel || 'Não definido'}
           </span>
         </div>
         
