@@ -29,7 +29,16 @@ export const APOSTILAS_ABACO_DETALHES = [
   { nome: "B", paginas: 40 },
   { nome: "C", paginas: 40 },
   { nome: "D", paginas: 40 },
-  { nome: "Ábaco Girassol 1", paginas: 40 }
+  { nome: "Ábaco Girassol 1", paginas: 40 },
+  // Adicionando as apostilas que estão no banco
+  { nome: "Ábaco INT. 1", paginas: 40 },
+  { nome: "Ábaco INT. 2", paginas: 40 },
+  { nome: "Ábaco INT. 3", paginas: 40 },
+  { nome: "Ábaco INT. 4", paginas: 40 },
+  { nome: "Ábaco AV. 1", paginas: 40 },
+  { nome: "Ábaco AV. 2", paginas: 40 },
+  { nome: "Ábaco AV. 3", paginas: 40 },
+  { nome: "Ábaco AV. 4", paginas: 40 }
 ];
 
 // Extrair apenas os nomes das apostilas para compatibilidade com código existente
@@ -50,15 +59,20 @@ export const PROFESSORES = [
 
 // Mapping entre os valores do banco de dados (ultimo_nivel) e as apostilas padronizadas
 export const MAPEAMENTO_APOSTILAS: Record<string, string> = {
-  // Mapeamentos exatos
-  "Ap. Abaco 1": "Infantil 1",
-  "Ap. Abaco 2": "Infantil 2",
+  // Mapeamentos exatos para nomes no banco
+  "Ábaco INT. 1": "Ábaco INT. 1",
+  "Ábaco INT. 2": "Ábaco INT. 2",
+  "Ábaco INT. 3": "Ábaco INT. 3",
+  "Ábaco AV. 1": "Ábaco AV. 1",
+  "Ábaco AV. 2": "Ábaco AV. 2",
+  "Ábaco AV. 3": "Ábaco AV. 3",
+  
+  // Mapeamentos antigos mantidos para compatibilidade
+  "Ap. Abaco 1": "Ábaco INT. 1",
+  "Ap. Abaco 2": "Ábaco INT. 2",
   "Ap. Abaco B": "B",
   "Ap. Abaco 4": "Júnior 1",
   "Ap. Abaco 5": "Júnior 2",
-  "Ábaco INT. 1": "Intermediário 1",
-  "Ábaco INT. 2": "Intermediário 2",
-  "Ábaco INT. 3": "Intermediário 3",
   
   // Mapeamentos aproximados (padrões para casos não mapeados)
   "A": "A",
