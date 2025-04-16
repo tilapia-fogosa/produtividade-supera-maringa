@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
+import { useApostilas } from './use-apostilas';
 
 interface AlunoProgresso {
   ultimo_nivel: string | null;
@@ -20,6 +20,7 @@ export const useAlunoProgresso = (alunoId: string) => {
   const [loading, setLoading] = useState(true);
   const [progresso, setProgresso] = useState<AlunoProgresso | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { getTotalPaginas } = useApostilas();
 
   useEffect(() => {
     const fetchProgresso = async () => {
@@ -36,32 +37,16 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         if (alunoError) throw alunoError;
 
-        console.log('Dados do aluno recuperados:', alunoData);
+        console.log('useAlunoProgresso: Dados do aluno recuperados:', alunoData);
 
         let totalPaginas = null;
         let paginasRestantes = null;
         let progressoPercentual = 0;
         
         if (alunoData.ultimo_nivel) {
-          // Busca direta pelo nome da apostila
-          const { data: apostilaDB, error: apostilaError } = await supabase
-            .from('apostilas')
-            .select('nome, total_paginas')
-            .eq('nome', alunoData.ultimo_nivel)
-            .maybeSingle();
-          
-          if (apostilaError) {
-            console.error('Erro ao buscar apostila:', apostilaError);
-          }
-          
-          if (apostilaDB) {
-            console.log('Apostila encontrada no banco:', apostilaDB);
-            totalPaginas = Number(apostilaDB.total_paginas);
-            console.log('Total de páginas após conversão:', totalPaginas);
-          } else {
-            console.log('Apostila não encontrada no banco:', alunoData.ultimo_nivel);
-            totalPaginas = 40; // Valor padrão
-          }
+          // Obter total de páginas através do hook useApostilas
+          totalPaginas = getTotalPaginas(alunoData.ultimo_nivel);
+          console.log(`useAlunoProgresso: Total de páginas para ${alunoData.ultimo_nivel}:`, totalPaginas);
           
           const ultimaPagina = alunoData.ultima_pagina !== null ? Number(alunoData.ultima_pagina) : null;
           
@@ -69,7 +54,7 @@ export const useAlunoProgresso = (alunoId: string) => {
             paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
             progressoPercentual = Math.min(100, (ultimaPagina / totalPaginas) * 100);
             
-            console.log('Cálculos de progresso:', {
+            console.log('useAlunoProgresso: Cálculos de progresso:', {
               total_paginas: totalPaginas,
               ultima_pagina: ultimaPagina,
               paginas_restantes: paginasRestantes,
@@ -147,7 +132,7 @@ export const useAlunoProgresso = (alunoId: string) => {
           media_exercicios_por_aula: mediaExerciciosPorAula
         });
       } catch (error) {
-        console.error('Erro ao buscar progresso do aluno:', error);
+        console.error('useAlunoProgresso: Erro ao buscar progresso do aluno:', error);
         setError('Erro ao buscar dados do aluno');
       } finally {
         setLoading(false);
@@ -157,7 +142,7 @@ export const useAlunoProgresso = (alunoId: string) => {
     if (alunoId) {
       fetchProgresso();
     }
-  }, [alunoId]);
+  }, [alunoId, getTotalPaginas]);
 
   return { progresso, loading, error };
 };

@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Book, AlertCircle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { carregarApostilasDisponiveis, ApostilaInfo } from '../utils/apostilasUtils';
+import { useApostilas } from '@/hooks/use-apostilas';
 
 interface AbacoSectionProps {
   apostilaAbaco: string;
@@ -39,58 +39,19 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   comentario,
   setComentario
 }) => {
+  // Usar o novo hook de apostilas
+  const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
-  const [carregandoApostila, setCarregandoApostila] = useState(false);
-  const [erroApostila, setErroApostila] = useState<string | null>(null);
-  const [apostilasDisponiveis, setApostilasDisponiveis] = useState<ApostilaInfo[]>([]);
   
-  // Carregar apostilas disponíveis do banco
-  useEffect(() => {
-    const buscarApostilasDisponiveis = async () => {
-      try {
-        setCarregandoApostila(true);
-        setErroApostila(null);
-        
-        const apostilas = await carregarApostilasDisponiveis();
-        
-        if (apostilas.length > 0) {
-          console.log('Apostilas carregadas com sucesso:', apostilas);
-          setApostilasDisponiveis(apostilas);
-        } else {
-          console.log('Nenhuma apostila encontrada ou erro ao carregar');
-          setErroApostila('Não foi possível carregar as apostilas');
-        }
-      } catch (err) {
-        console.error('Erro ao carregar apostilas:', err);
-        setErroApostila('Erro ao carregar apostilas');
-      } finally {
-        setCarregandoApostila(false);
-      }
-    };
-    
-    buscarApostilasDisponiveis();
-  }, []);
-
   // Atualizar o total de páginas quando a apostila selecionada mudar
   useEffect(() => {
     if (apostilaAbaco) {
-      console.log('Buscando apostila selecionada:', apostilaAbaco);
-      console.log('Apostilas disponíveis:', apostilasDisponiveis);
-      
-      const apostilaSelecionada = apostilasDisponiveis.find(a => a.nome === apostilaAbaco);
-      
-      if (apostilaSelecionada) {
-        console.log(`Apostila ${apostilaAbaco} selecionada:`, apostilaSelecionada);
-        console.log(`Total de páginas (tipo): ${typeof apostilaSelecionada.total_paginas}`);
-        console.log(`Total de páginas (valor): ${apostilaSelecionada.total_paginas}`);
-        
-        setTotalPaginas(apostilaSelecionada.total_paginas);
-      } else {
-        console.log(`Apostila ${apostilaAbaco} não encontrada no cache`);
-        setTotalPaginas(40); // Valor padrão
-      }
+      console.log('AbacoSection: Apostila selecionada:', apostilaAbaco);
+      const paginas = getTotalPaginas(apostilaAbaco);
+      console.log(`AbacoSection: Total de páginas da apostila ${apostilaAbaco}:`, paginas);
+      setTotalPaginas(paginas);
     }
-  }, [apostilaAbaco, apostilasDisponiveis]);
+  }, [apostilaAbaco, getTotalPaginas]);
 
   return (
     <>

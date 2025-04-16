@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -29,10 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useForm } from "react-hook-form";
-
-// Import reused sections
-import PresencaSection from './produtividade/PresencaSection';
-import AbacoSection from './produtividade/AbacoSection';
+import { useApostilas } from '@/hooks/use-apostilas';
 
 interface ReposicaoAulaModalProps {
   isOpen: boolean;
@@ -54,12 +50,6 @@ interface FormValues {
   comentario: string;
 }
 
-// Modificando a interface para usar 'paginas' em vez de 'total_paginas'
-interface Apostila {
-  nome: string;
-  paginas: number;
-}
-
 const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   isOpen,
   turma,
@@ -71,8 +61,9 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filtro, setFiltro] = useState("");
   const [alunosFiltrados, setAlunosFiltrados] = useState<Aluno[]>(todosAlunos);
-  const [apostilas, setApostilas] = useState<Apostila[]>([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  
+  const { apostilas: apostilasDisponiveis } = useApostilas();
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -87,34 +78,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       comentario: ""
     }
   });
-  
-  // Buscar apostilas do banco de dados
-  useEffect(() => {
-    const fetchApostilas = async () => {
-      const { data, error } = await supabase
-        .from('apostilas')
-        .select('nome, total_paginas')
-        .order('nome');
-        
-      if (error) {
-        console.error("Erro ao buscar apostilas:", error);
-        return;
-      }
-      
-      if (data) {
-        // Convertendo total_paginas para paginas
-        const apostilasFormatadas = data.map(item => ({
-          nome: item.nome,
-          paginas: item.total_paginas
-        }));
-        setApostilas(apostilasFormatadas);
-      }
-    };
-    
-    fetchApostilas();
-  }, []);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       form.reset();
@@ -123,7 +87,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
     }
   }, [isOpen, form]);
   
-  // Filter students by name as user types
   useEffect(() => {
     if (filtro) {
       const filtered = todosAlunos.filter(aluno => 
@@ -135,7 +98,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
     }
   }, [filtro, todosAlunos]);
 
-  // Atualizar apostila selecionada quando o aluno mudar
   useEffect(() => {
     const alunoId = form.watch("alunoId");
     if (alunoId) {
@@ -143,7 +105,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       if (aluno) {
         setAlunoSelecionado(aluno);
         
-        // Se o aluno tiver um último nível, selecionar ele no formulário
         if (aluno.ultimo_nivel) {
           form.setValue("apostilaAbaco", aluno.ultimo_nivel);
         }
@@ -170,7 +131,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       return;
     }
 
-    // Find the selected student to get their name
     const alunoSelecionado = todosAlunos.find(a => a.id === values.alunoId);
     
     if (!alunoSelecionado) {
@@ -185,7 +145,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Prepare data for submission
       const produtividadeData = {
         aluno_id: values.alunoId,
         aluno_nome: alunoSelecionado.nome,
@@ -203,7 +162,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         is_reposicao: true
       };
 
-      // Send to Edge function
       const { data, error } = await supabase.functions.invoke('register-productivity', {
         body: { data: produtividadeData }
       });
@@ -212,7 +170,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         throw new Error(error.message);
       }
 
-      // Verificar se os dados foram salvos no banco, mas houve erro no Google Sheets
       if (data && data.googleSheetsError) {
         toast({
           title: "Parcialmente concluído",
@@ -230,20 +187,17 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
     } catch (error) {
       console.error("Erro ao registrar reposição:", error);
       
-      // Extrair a mensagem de erro
       let errorMessage = "Não foi possível registrar a reposição. Tente novamente.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
         
-        // Verificar se é um erro relacionado às credenciais do Google
         if (error.message.includes("credenciais do Google") || 
             error.message.includes("Google Service Account")) {
           errorMessage = "Configuração incompleta: O sistema precisa das credenciais do Google Service Account";
         }
       }
       
-      // Notificar o componente pai do erro
       if (onError) {
         onError(errorMessage);
       }
@@ -272,7 +226,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-2">
-            {/* Seleção de Aluno */}
             <div className="space-y-2">
               <FormLabel>Selecione o Aluno</FormLabel>
               <div className="relative">
@@ -318,7 +271,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
               />
             </div>
             
-            {/* Presença */}
             <FormField
               control={form.control}
               name="presente"
@@ -335,10 +287,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
               )}
             />
             
-            {/* Campos para alunos presentes */}
             {presente === "sim" && (
               <>
-                {/* Ábaco */}
                 <FormField
                   control={form.control}
                   name="apostilaAbaco"
@@ -356,7 +306,6 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                       setFezDesafio={(value) => form.setValue("fezDesafio", value)}
                       comentario={form.watch("comentario")}
                       setComentario={(value) => form.setValue("comentario", value)}
-                      apostilas={apostilas}
                     />
                   )}
                 />
@@ -389,4 +338,3 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
 };
 
 export default ReposicaoAulaModal;
-

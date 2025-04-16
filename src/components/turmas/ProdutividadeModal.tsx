@@ -14,11 +14,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import PresencaSection from './produtividade/PresencaSection';
 import AbacoSection from './produtividade/AbacoSection';
-import { obterInfoApostila } from './utils/apostilasUtils';
 import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
-import { APOSTILAS_ABACO_DETALHES } from './constants/apostilas';
+import { useApostilas } from '@/hooks/use-apostilas';
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -39,6 +38,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { registrarPresenca, registrarProdutividade, isLoading } = useProdutividade(aluno.id);
+  const { getApostila } = useApostilas();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [presente, setPresente] = useState<"sim" | "não">("sim");
@@ -50,35 +50,27 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [errosAbaco, setErrosAbaco] = useState("");
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
-  const [apostilas] = useState(APOSTILAS_ABACO_DETALHES);
 
   useEffect(() => {
-    const carregarApostila = async () => {
-      if (isOpen && aluno) {
-        try {
-          console.log('Carregando apostila para aluno:', aluno.nome);
-          
-          if (aluno.ultimo_nivel) {
-            console.log('Último nível do aluno:', aluno.ultimo_nivel);
-            // Usar a função aprimorada para obter o nome correto da apostila e páginas
-            const infoApostila = await obterInfoApostila(aluno.ultimo_nivel);
-            console.log('Informações da apostila encontradas:', infoApostila);
-            setApostilaAbaco(infoApostila.nome);
-          } else {
-            console.log('Aluno não tem último nível definido');
-          }
-          
-          if (aluno.ultima_pagina) {
-            console.log('Última página do aluno:', aluno.ultima_pagina);
-            setPaginaAbaco(aluno.ultima_pagina.toString());
-          }
-        } catch (error) {
-          console.error('Erro ao carregar apostila:', error);
+    if (isOpen && aluno) {
+      try {
+        console.log('ProdutividadeModal: Carregando apostila para aluno:', aluno.nome);
+        
+        if (aluno.ultimo_nivel) {
+          console.log('ProdutividadeModal: Último nível do aluno:', aluno.ultimo_nivel);
+          setApostilaAbaco(aluno.ultimo_nivel);
+        } else {
+          console.log('ProdutividadeModal: Aluno não tem último nível definido');
         }
+        
+        if (aluno.ultima_pagina) {
+          console.log('ProdutividadeModal: Última página do aluno:', aluno.ultima_pagina);
+          setPaginaAbaco(aluno.ultima_pagina.toString());
+        }
+      } catch (error) {
+        console.error('ProdutividadeModal: Erro ao carregar apostila:', error);
       }
-    };
-    
-    carregarApostila();
+    }
   }, [isOpen, aluno]);
 
   useEffect(() => {
@@ -125,6 +117,12 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         // Converter página para número
         const paginaNumero = paginaAbaco ? Number(paginaAbaco) : undefined;
         
+        console.log('ProdutividadeModal: Dados a serem enviados:', {
+          apostila: apostilaAbaco,
+          pagina: paginaNumero,
+          tipo: typeof paginaNumero
+        });
+        
         // Registrar produtividade do ábaco
         const produtividadeRegistrada = await registrarProdutividade({
           data_aula: dataHoje,
@@ -149,7 +147,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       
       onClose();
     } catch (error) {
-      console.error("Erro ao registrar produtividade:", error);
+      console.error("ProdutividadeModal: Erro ao registrar produtividade:", error);
       
       let errorMessage = "Não foi possível registrar a produtividade. Tente novamente.";
       
@@ -208,7 +206,6 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
                     setFezDesafio={setFezDesafio}
                     comentario={comentario}
                     setComentario={setComentario}
-                    apostilas={apostilas}
                   />
                 </>
               )}
