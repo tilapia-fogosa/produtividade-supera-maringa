@@ -18,7 +18,12 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
 
   const formatarData = (data?: string | null) => {
     if (!data) return 'Não registrado';
-    return format(new Date(data), 'dd/MM/yyyy HH:mm');
+    try {
+      return format(new Date(data), 'dd/MM/yyyy HH:mm');
+    } catch (e) {
+      console.error('Erro ao formatar data:', e, data);
+      return 'Data inválida';
+    }
   };
 
   if (loading) {
@@ -41,6 +46,16 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
       <Card className="w-full border-orange-200">
         <CardContent className="py-4">
           <p className="text-red-500 text-center">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!progresso) {
+    return (
+      <Card className="w-full border-orange-200">
+        <CardContent className="py-4">
+          <p className="text-amber-500 text-center">Dados não disponíveis</p>
         </CardContent>
       </Card>
     );
@@ -85,7 +100,7 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
           )}
         </div>
 
-        {progresso?.total_paginas && (
+        {progresso?.total_paginas && progresso.progresso_percentual !== undefined && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-500">
               <span>Progresso da apostila</span>

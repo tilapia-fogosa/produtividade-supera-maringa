@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -20,22 +21,35 @@ export const useAlunoProgresso = (alunoId: string) => {
   const [loading, setLoading] = useState(true);
   const [progresso, setProgresso] = useState<AlunoProgresso | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { getTotalPaginas } = useApostilas();
+  const { getTotalPaginas, loading: loadingApostilas } = useApostilas();
 
   useEffect(() => {
     const fetchProgresso = async () => {
       try {
+        if (!alunoId || loadingApostilas) return;
+        
         setLoading(true);
         setError(null);
+
+        console.log('useAlunoProgresso: Buscando dados para o aluno ID:', alunoId);
 
         // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta')
           .eq('id', alunoId)
-          .single();
+          .maybeSingle();
 
-        if (alunoError) throw alunoError;
+        if (alunoError) {
+          console.error('useAlunoProgresso: Erro ao buscar dados do aluno:', alunoError);
+          throw alunoError;
+        }
+
+        if (!alunoData) {
+          console.log('useAlunoProgresso: Nenhum dado encontrado para o aluno ID:', alunoId);
+          setProgresso(null);
+          return;
+        }
 
         console.log('useAlunoProgresso: Dados do aluno recuperados:', alunoData);
 
@@ -90,7 +104,9 @@ export const useAlunoProgresso = (alunoId: string) => {
           const registrosComPagina = produtividadeData.filter(p => p.pagina);
           
           if (registrosComPagina.length > 1) {
-            const paginasNumeros = registrosComPagina.map(p => parseInt(p.pagina, 10)).filter(p => !isNaN(p));
+            const paginasNumeros = registrosComPagina
+              .map(p => typeof p.pagina === 'number' ? p.pagina : parseInt(p.pagina, 10))
+              .filter(p => !isNaN(p));
             
             if (paginasNumeros.length >= 2) {
               paginasNumeros.sort((a, b) => a - b);
@@ -141,8 +157,11 @@ export const useAlunoProgresso = (alunoId: string) => {
 
     if (alunoId) {
       fetchProgresso();
+    } else {
+      setProgresso(null);
+      setLoading(false);
     }
-  }, [alunoId, getTotalPaginas]);
+  }, [alunoId, getTotalPaginas, loadingApostilas]);
 
   return { progresso, loading, error };
 };

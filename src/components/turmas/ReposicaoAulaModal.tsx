@@ -113,7 +113,11 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         if (aluno.ultimo_nivel) {
           form.setValue("apostilaAbaco", aluno.ultimo_nivel);
         }
+      } else {
+        setAlunoSelecionado(null);
       }
+    } else {
+      setAlunoSelecionado(null);
     }
   }, [form.watch("alunoId"), todosAlunos, form]);
   
@@ -278,7 +282,9 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
               </div>
               
               {alunoId && (
-                <AlunoProgressoCard alunoId={alunoId} />
+                <div className="pt-2">
+                  <AlunoProgressoCard alunoId={alunoId} />
+                </div>
               )}
               
               <FormField

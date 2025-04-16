@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Apostila {
@@ -36,8 +36,8 @@ export const useApostilas = () => {
           
           // Converter total_paginas para número explicitamente
           const apostilasConvertidas = apostilasDB.map(a => {
-            const totalPaginas = Number(a.total_paginas);
-            console.log(`Hook useApostilas: Apostila: ${a.nome}, total_paginas (original): ${a.total_paginas}, convertido: ${totalPaginas}`);
+            const totalPaginas = typeof a.total_paginas === 'number' ? a.total_paginas : Number(a.total_paginas);
+            console.log(`Hook useApostilas: Apostila: ${a.nome}, total_paginas (original): ${a.total_paginas}, convertido: ${totalPaginas}, tipo: ${typeof totalPaginas}`);
             
             return {
               nome: a.nome,
@@ -62,22 +62,25 @@ export const useApostilas = () => {
   }, []);
 
   // Função auxiliar para buscar uma apostila pelo nome
-  const getApostila = (nome: string | null | undefined): Apostila | undefined => {
+  const getApostila = useCallback((nome: string | null | undefined): Apostila | undefined => {
     if (!nome) return undefined;
     
     const apostila = apostilas.find(a => a.nome === nome);
-    console.log(`Hook useApostilas: Buscando apostila '${nome}', encontrada:`, apostila);
+    console.log(`Hook useApostilas: Buscando apostila '${nome}', encontrada:`, apostila || 'não encontrada');
     
     return apostila;
-  };
+  }, [apostilas]);
 
   // Função para obter o total de páginas de uma apostila
-  const getTotalPaginas = (nome: string | null | undefined): number => {
+  const getTotalPaginas = useCallback((nome: string | null | undefined): number => {
     if (!nome) return 40; // Valor padrão
     
     const apostila = getApostila(nome);
-    return apostila ? apostila.total_paginas : 40;
-  };
+    const totalPaginas = apostila ? apostila.total_paginas : 40;
+    console.log(`Hook useApostilas: Total de páginas para '${nome}': ${totalPaginas}`);
+    
+    return totalPaginas;
+  }, [getApostila]);
 
   return {
     apostilas,
