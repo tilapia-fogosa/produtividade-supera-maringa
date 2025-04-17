@@ -1,17 +1,17 @@
 
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import ProfessorHeader from './ProfessorHeader';
 import ProfessorConteudo from './ProfessorConteudo';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
 
-interface ProfessorTurmasProps {
-  initialServiceType?: string;
-}
-
-const ProfessorTurmas: React.FC<ProfessorTurmasProps> = ({ initialServiceType = 'produtividade' }) => {
+const ProfessorTurmas = () => {
   const { professor, turmas, loading, navigate } = useProfessorTurmas();
+  const location = useLocation();
+  const initialServiceType = location.state?.serviceType === 'abrindo_horizontes' ? 'abrindo_horizontes' : 'produtividade';
+
   const {
     alunos,
     todosAlunos,

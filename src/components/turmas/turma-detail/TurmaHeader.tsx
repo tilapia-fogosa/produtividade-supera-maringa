@@ -2,23 +2,27 @@
 import React from 'react';
 import { TelaModo } from './types';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Book, List } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TurmaHeaderProps {
   turmaNome: string;
   telaModo: TelaModo;
   onBack: () => void;
-  onModeChange?: (mode: TelaModo) => void;
 }
 
 const TurmaHeader: React.FC<TurmaHeaderProps> = ({ 
   turmaNome, 
   telaModo,
-  onBack,
-  onModeChange
+  onBack
 }) => {
   const isMobile = useIsMobile();
+  
+  const getHeaderText = () => {
+    return telaModo === TelaModo.LISTA_ALUNOS 
+      ? "Produtividade de Sala" 
+      : "Abrindo Horizontes";
+  };
 
   return (
     <div className="border-b border-orange-100 pb-2 mb-2">
@@ -34,34 +38,13 @@ const TurmaHeader: React.FC<TurmaHeaderProps> = ({
             Voltar
           </Button>
           
-          <h1 className={`font-bold text-azul-500 ${isMobile ? "text-lg" : "text-xl"}`}>
-            {turmaNome}
-          </h1>
-        </div>
-        
-        {onModeChange && (
-          <div className="flex space-x-1">
-            <Button
-              variant={telaModo === TelaModo.LISTA_ALUNOS ? "default" : "outline"}
-              size="sm"
-              onClick={() => onModeChange(TelaModo.LISTA_ALUNOS)}
-              className={`${telaModo === TelaModo.LISTA_ALUNOS ? "bg-supera text-white" : "border-orange-200 text-azul-500"}`}
-            >
-              <List className="h-4 w-4 mr-1" />
-              {!isMobile && "Produtividade"}
-            </Button>
-            
-            <Button
-              variant={telaModo === TelaModo.AH ? "default" : "outline"}
-              size="sm"
-              onClick={() => onModeChange(TelaModo.AH)}
-              className={`${telaModo === TelaModo.AH ? "bg-supera text-white" : "border-orange-200 text-azul-500"}`}
-            >
-              <Book className="h-4 w-4 mr-1" />
-              {!isMobile && "Abrindo Horizontes"}
-            </Button>
+          <div>
+            <h2 className={`font-bold text-azul-500 ${isMobile ? "text-lg" : "text-xl"}`}>
+              {turmaNome}
+            </h2>
+            <p className="text-sm text-azul-400">{getHeaderText()}</p>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Pen, ArrowLeft } from 'lucide-react';
+import { Pen } from 'lucide-react';
 import { APOSTILAS_AH, PROFESSORES } from '../constants/apostilas';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Aluno } from "@/hooks/use-professor-turmas";
@@ -145,20 +145,6 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
   
   return (
     <div className="py-2">
-      <div className="flex items-center mb-4">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onBackToMenu} 
-          className="mr-2"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h2 className={`font-semibold text-azul-500 ${isMobile ? "text-lg" : "text-xl"}`}>
-          Lançamento de Abrindo Horizontes
-        </h2>
-      </div>
-      
       <ScrollArea className="max-h-[80vh] pr-4">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
