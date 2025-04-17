@@ -24,7 +24,7 @@ serve(async (req) => {
       .from('dados_importantes')
       .select('data')
       .eq('key', 'webhook_lancarha')
-      .single();
+      .maybeSingle();
     
     if (configError) {
       console.error('Erro ao buscar webhook URL:', configError);
@@ -32,6 +32,7 @@ serve(async (req) => {
     }
 
     if (!configData || !configData.data) {
+      console.error('URL do webhook não encontrada na tabela dados_importantes');
       throw new Error('URL do webhook não encontrada');
     }
 
@@ -48,39 +49,68 @@ serve(async (req) => {
       data_registro: new Date().toISOString()
     };
 
-    // Enviar dados para o webhook
+    console.log('Payload a ser enviada:', JSON.stringify(testData, null, 2));
+
+    // Enviar dados para o webhook com timeout e retry
     console.log('Enviando dados para o webhook...');
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testData)
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-    const responseText = await response.text();
-    console.log('Resposta do webhook:', responseText, 'Status:', response.status);
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Supera-AH-Webhook-Test',
+        },
+        body: JSON.stringify(testData),
+        signal: controller.signal
+      });
 
-    if (!response.ok) {
-      throw new Error(`Erro ao enviar dados para o webhook: Status ${response.status} - ${responseText}`);
+      clearTimeout(timeoutId);
+
+      const responseText = await response.text();
+      console.log('Status da resposta:', response.status);
+      console.log('Headers da resposta:', JSON.stringify(Object.fromEntries([...response.headers]), null, 2));
+      console.log('Corpo da resposta:', responseText);
+
+      if (!response.ok) {
+        throw new Error(`Erro ao enviar dados para o webhook: Status ${response.status} - ${responseText}`);
+      }
+
+      console.log('Dados enviados com sucesso para o webhook!');
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Dados enviados para o webhook AH com sucesso!',
+          webhookUrl,
+          payload: testData,
+          response: {
+            status: response.status,
+            body: responseText,
+            headers: Object.fromEntries([...response.headers])
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        console.error('Timeout ao tentar enviar dados para o webhook');
+        throw new Error('Timeout ao tentar enviar dados para o webhook após 10 segundos');
+      }
+      throw fetchError;
     }
-
-    console.log('Dados enviados com sucesso para o webhook!');
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Dados enviados para o webhook AH com sucesso!' 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Erro:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
-
