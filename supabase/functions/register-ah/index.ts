@@ -101,7 +101,8 @@ serve(async (req) => {
       aluno_codigo: alunoData?.codigo,
       aluno_matricula: alunoData?.matricula,
       turma_id: alunoData?.turma_id,
-      data_registro: new Date().toISOString()
+      data_registro: new Date().toISOString(),
+      teste: "teste" // Novo campo para testar webhook
     };
 
     console.log('Payload a ser enviado para webhook:', JSON.stringify(webhookPayload, null, 2));
