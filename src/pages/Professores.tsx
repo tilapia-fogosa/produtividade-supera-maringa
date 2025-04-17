@@ -5,11 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, BookOpen, TrendingUp, Upload } from "lucide-react";
+import { Users, BookOpen, TrendingUp } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GoogleSheetsSync from "@/components/sync/GoogleSheetsSync";
-import CsvUploadComponent from "@/components/upload/CsvUploadComponent";
 
 interface Professor {
   id: string;
@@ -119,10 +118,6 @@ const Professores = () => {
                 <BookOpen className="mr-2 h-6 w-6" />
                 Lançar Abrindo Horizontes
               </Button>
-              
-              <div className="mt-8 pt-4 border-t border-orange-100">
-                <CsvUploadComponent />
-              </div>
             </CardContent>
           </>
         ) : (
