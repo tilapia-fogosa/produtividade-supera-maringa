@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -44,21 +43,18 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   comentario,
   setComentario
 }) => {
-  // Usar o hook de apostilas
   const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
   const isMobile = useIsMobile();
   const [valorOriginalApostila, setValorOriginalApostila] = useState<string>(apostilaAbaco);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
-  // Logar o carregamento das apostilas
   useEffect(() => {
     console.log('[AbacoSection] Hooks carregados - apostilasDisponiveis:', apostilasDisponiveis);
     console.log('[AbacoSection] Estado de carregamento:', carregandoApostila);
     console.log('[AbacoSection] Erro (se houver):', erroApostila);
   }, [apostilasDisponiveis, carregandoApostila, erroApostila]);
   
-  // Atualizar o total de páginas quando a apostila selecionada mudar
   useEffect(() => {
     if (apostilaAbaco) {
       console.log('[AbacoSection] Apostila selecionada:', apostilaAbaco);
@@ -68,7 +64,6 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     }
   }, [apostilaAbaco, getTotalPaginas]);
 
-  // Guardar o valor original da apostila quando componente for montado
   useEffect(() => {
     if (apostilaAbaco) {
       setValorOriginalApostila(apostilaAbaco);
@@ -76,7 +71,6 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     }
   }, []);
 
-  // Função para tratar a mudança de valor da apostila
   const handleApostilaChange = (value: string) => {
     if (value) {
       setApostilaAbaco(value);
@@ -84,13 +78,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
         setIsSheetOpen(false);
       }
     } else {
-      // Se nenhum valor for selecionado, use o valor original (apostila atual do aluno)
       setApostilaAbaco(valorOriginalApostila);
       console.log('[AbacoSection] Restaurando para apostila original:', valorOriginalApostila);
     }
   };
 
-  // Renderiza o seletor de apostilas com base no dispositivo (mobile ou desktop)
   const renderApostilaSelector = () => {
     if (isMobile) {
       return (
@@ -113,7 +105,6 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                 <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
               </div>
               
-              {/* Lista com scroll nativo - importante para interação touch */}
               <div className="flex-1 overflow-y-auto overscroll-contain -mx-6 px-6 pb-16">
                 {carregandoApostila ? (
                   <div className="p-4 text-center text-gray-500">
@@ -181,6 +172,27 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     }
   };
 
+  const [nivelDesafio, setNivelDesafio] = useState<string>("");
+
+  const handleDesafioChange = async (value: "sim" | "não") => {
+    setFezDesafio(value);
+    if (value === "não") {
+      setNivelDesafio("");
+    }
+  };
+
+  const handleNivelDesafioChange = async (nivel: string) => {
+    setNivelDesafio(nivel);
+    try {
+      // await supabase
+      //   .from('alunos')
+      //   .update({ ultimo_desafio: parseInt(nivel) })
+      //   .eq('id', aluno_id);
+    } catch (error) {
+      console.error('Erro ao atualizar nível do desafio:', error);
+    }
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -244,7 +256,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
       
       <div className="space-y-2">
         <Label>Fez desafio?</Label>
-        <RadioGroup value={fezDesafio} onValueChange={(v) => setFezDesafio(v as "sim" | "não")} className="flex flex-row gap-4">
+        <RadioGroup 
+          value={fezDesafio} 
+          onValueChange={handleDesafioChange} 
+          className="flex flex-row gap-4"
+        >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="sim" id="desafio-sim" />
             <Label htmlFor="desafio-sim">Sim</Label>
@@ -254,6 +270,24 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
             <Label htmlFor="desafio-nao">Não</Label>
           </div>
         </RadioGroup>
+
+        {fezDesafio === "sim" && (
+          <div className="mt-2">
+            <Label>Nível do desafio</Label>
+            <Select value={nivelDesafio} onValueChange={handleNivelDesafioChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o nível" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Nível 1</SelectItem>
+                <SelectItem value="2">Nível 2</SelectItem>
+                <SelectItem value="3">Nível 3</SelectItem>
+                <SelectItem value="4">Nível 4</SelectItem>
+                <SelectItem value="5">Nível 5</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
       
       <div className="space-y-2">
