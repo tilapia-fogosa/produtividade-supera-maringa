@@ -5,9 +5,6 @@ import { toast } from '@/hooks/use-toast';
 
 interface ProdutividadeAH {
   aluno_id: string;
-  data_aula: string;
-  presente: boolean;
-  is_reposicao?: boolean;
   apostila: string;
   exercicios: number;
   erros: number;
@@ -70,7 +67,7 @@ export const useAhLancamento = (alunoId?: string) => {
         .from('produtividade_ah')
         .select('*')
         .eq('aluno_id', alunoId)
-        .order('data_aula', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
       
       if (error) throw error;

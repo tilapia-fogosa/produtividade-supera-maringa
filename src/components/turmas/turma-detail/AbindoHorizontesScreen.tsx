@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -90,14 +89,9 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
     try {
       setIsLoading(true);
       
-      const dataHoje = new Date().toISOString().split('T')[0];
-      
       // Preparar dados para o banco
       const produtividadeData = {
         aluno_id: values.aluno,
-        data_aula: dataHoje,
-        presente: true,
-        is_reposicao: false,
         apostila: values.apostila,
         exercicios: parseInt(values.exercicios),
         erros: parseInt(values.erros),

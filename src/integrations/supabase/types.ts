@@ -1081,12 +1081,9 @@ export type Database = {
           apostila: string | null
           comentario: string | null
           created_at: string
-          data_aula: string
           erros: number | null
           exercicios: number | null
           id: string
-          is_reposicao: boolean
-          presente: boolean
           professor_correcao: string | null
           updated_at: string
         }
@@ -1095,12 +1092,9 @@ export type Database = {
           apostila?: string | null
           comentario?: string | null
           created_at?: string
-          data_aula: string
           erros?: number | null
           exercicios?: number | null
           id?: string
-          is_reposicao?: boolean
-          presente?: boolean
           professor_correcao?: string | null
           updated_at?: string
         }
@@ -1109,12 +1103,9 @@ export type Database = {
           apostila?: string | null
           comentario?: string | null
           created_at?: string
-          data_aula?: string
           erros?: number | null
           exercicios?: number | null
           id?: string
-          is_reposicao?: boolean
-          presente?: boolean
           professor_correcao?: string | null
           updated_at?: string
         }

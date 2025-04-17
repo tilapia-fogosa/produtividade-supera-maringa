@@ -26,9 +26,6 @@ export interface FaltaAluno {
 export interface ProdutividadeAH {
   id: string;
   aluno_id: string;
-  data_aula: string;
-  presente: boolean;
-  is_reposicao: boolean;
   apostila: string | null;
   exercicios: number | null;
   erros: number | null;
