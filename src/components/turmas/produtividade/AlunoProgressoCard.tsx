@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -6,7 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Progress } from "@/components/ui/progress";
 import { useAlunoProgresso } from '@/hooks/use-aluno-progresso';
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Calendar, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { BookOpen, Calendar, CheckCircle, XCircle, AlertTriangle, Medal } from "lucide-react";
 
 interface AlunoProgressoCardProps {
   alunoId?: string;
@@ -140,6 +139,16 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
                 <span className="text-green-500">Não</span>
               </>
             )}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-azul-500 flex items-center gap-2">
+            <Medal size={16} />
+            Desafio da Semana:
+          </span>
+          <span className="font-semibold text-orange-500">
+            {progresso?.ultimo_desafio || 'Não registrado'}
           </span>
         </div>
       </CardContent>

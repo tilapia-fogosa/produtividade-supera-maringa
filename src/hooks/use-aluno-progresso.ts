@@ -15,6 +15,7 @@ interface AlunoProgresso {
   previsao_conclusao: string | null;
   media_paginas_por_aula: number | null;
   media_exercicios_por_aula: number | null;
+  ultimo_desafio: number | null;
 }
 
 export const useAlunoProgresso = (alunoId: string) => {
@@ -36,7 +37,7 @@ export const useAlunoProgresso = (alunoId: string) => {
         // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
-          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta')
+          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta, ultimo_desafio')
           .eq('id', alunoId)
           .maybeSingle();
 
@@ -145,8 +146,10 @@ export const useAlunoProgresso = (alunoId: string) => {
           faltou_mes_atual: faltouMesAtual,
           previsao_conclusao: previsaoConclusao,
           media_paginas_por_aula: mediaPaginasPorAula,
-          media_exercicios_por_aula: mediaExerciciosPorAula
+          media_exercicios_por_aula: mediaExerciciosPorAula,
+          ultimo_desafio: alunoData.ultimo_desafio
         });
+
       } catch (error) {
         console.error('useAlunoProgresso: Erro ao buscar progresso do aluno:', error);
         setError('Erro ao buscar dados do aluno');
