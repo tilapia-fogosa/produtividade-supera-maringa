@@ -25,6 +25,12 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
     }
   };
 
+  React.useEffect(() => {
+    if (progresso) {
+      console.log('Dados de progresso do aluno:', progresso);
+    }
+  }, [progresso]);
+
   if (loading) {
     return (
       <Card className="w-full border-orange-200">

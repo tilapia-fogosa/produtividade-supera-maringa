@@ -174,20 +174,13 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
 
   const [nivelDesafio, setNivelDesafio] = useState<string>("");
 
-  const handleDesafioChange = async (value: "sim" | "não") => {
+  const handleDesafioChange = (value: "sim" | "não") => {
     setFezDesafio(value);
   };
 
-  const handleNivelDesafioChange = async (nivel: string) => {
+  const handleNivelDesafioChange = (nivel: string) => {
     setNivelDesafio(nivel);
-    try {
-      // await supabase
-      //   .from('alunos')
-      //   .update({ ultimo_desafio: parseInt(nivel) })
-      //   .eq('id', aluno_id);
-    } catch (error) {
-      console.error('Erro ao atualizar nível do desafio:', error);
-    }
+    console.log('Nível do desafio selecionado:', nivel);
   };
 
   return (
