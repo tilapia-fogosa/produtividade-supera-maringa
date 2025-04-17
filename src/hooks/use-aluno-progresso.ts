@@ -35,9 +35,11 @@ export const useAlunoProgresso = (alunoId: string) => {
         console.log('useAlunoProgresso: Buscando dados para o aluno ID:', alunoId);
 
         // Buscar dados do aluno
+        // Não vamos incluir ultimo_desafio diretamente na query para evitar erros
+        // se a coluna ainda não tiver sido criada
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
-          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta, ultimo_desafio')
+          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta')
           .eq('id', alunoId)
           .maybeSingle();
 
@@ -53,6 +55,22 @@ export const useAlunoProgresso = (alunoId: string) => {
         }
 
         console.log('useAlunoProgresso: Dados do aluno recuperados:', alunoData);
+
+        // Buscar o último desafio separadamente para lidar com o caso em que a coluna não existe
+        let ultimoDesafio = null;
+        try {
+          const { data: desafioData } = await supabase
+            .from('alunos')
+            .select('ultimo_desafio')
+            .eq('id', alunoId)
+            .maybeSingle();
+            
+          if (desafioData && 'ultimo_desafio' in desafioData) {
+            ultimoDesafio = desafioData.ultimo_desafio;
+          }
+        } catch (error) {
+          console.log('useAlunoProgresso: A coluna ultimo_desafio pode não existir ainda:', error);
+        }
 
         let totalPaginas = null;
         let paginasRestantes = null;
@@ -87,6 +105,7 @@ export const useAlunoProgresso = (alunoId: string) => {
           faltouMesAtual = isAfter(dataUltimaFalta, inicioMesAtual);
         }
 
+        // Resto do código para buscar produtividade permanece o mesmo
         const { data: produtividadeData, error: produtividadeError } = await supabase
           .from('produtividade_abaco')
           .select('pagina, exercicios, data_aula')
@@ -147,7 +166,7 @@ export const useAlunoProgresso = (alunoId: string) => {
           previsao_conclusao: previsaoConclusao,
           media_paginas_por_aula: mediaPaginasPorAula,
           media_exercicios_por_aula: mediaExerciciosPorAula,
-          ultimo_desafio: alunoData.ultimo_desafio
+          ultimo_desafio: ultimoDesafio
         });
 
       } catch (error) {
