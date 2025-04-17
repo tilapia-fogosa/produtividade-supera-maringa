@@ -90,13 +90,24 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
   // Enviar o formulário
   const onSubmit = async (values: AhFormValues) => {
     try {
+      // Encontrar o nome do corretor a partir do ID
+      const corretor = corretores.find(c => c.id === values.corretor);
+      if (!corretor) {
+        toast({
+          title: "Erro",
+          description: "Corretor não encontrado",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Preparar dados para o serviço
       const produtividadeData = {
         aluno_id: values.aluno,
         apostila: values.apostila,
         exercicios: parseInt(values.exercicios),
         erros: parseInt(values.erros),
-        professor_correcao: values.corretor,
+        professor_correcao: corretor.nome, // Enviando o NOME do corretor, não o ID
         comentario: values.comentario || null
       };
       

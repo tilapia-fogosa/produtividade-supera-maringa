@@ -44,7 +44,7 @@ serve(async (req) => {
       .from('dados_importantes')
       .select('data')
       .eq('key', 'webhook_lancarha')
-      .single();
+      .maybeSingle();
 
     if (webhookError) {
       console.error('Erro ao buscar webhook URL:', webhookError);
@@ -92,7 +92,7 @@ serve(async (req) => {
       .from('alunos')
       .select('nome, turma_id, codigo, matricula, curso')
       .eq('id', data.aluno_id)
-      .single();
+      .maybeSingle();
 
     if (alunoFetchError) {
       console.error('Erro ao buscar dados do aluno:', alunoFetchError);
