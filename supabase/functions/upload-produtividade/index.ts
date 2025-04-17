@@ -22,24 +22,46 @@ serve(async (req) => {
     // Receber os dados do CSV
     const { data: csvData } = await req.json();
 
+    // Validar se os dados estão presentes
+    if (!csvData || !Array.isArray(csvData) || csvData.length === 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Nenhum dado válido encontrado no CSV"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Array para armazenar os registros processados
     const processedRecords = [];
 
     // Processar cada linha do CSV
     for (const record of csvData) {
+      // Verificar se o aluno_id está presente
+      if (!record.aluno_id) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: "O campo aluno_id é obrigatório em todos os registros"
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Criar um objeto com os dados necessários
       const produtividadeRecord = {
         id: crypto.randomUUID(), // Gera um UUID único
-        aluno_id: record.aluno_id || null,
+        aluno_id: record.aluno_id,
         data_aula: record.data_aula,
-        presente: record.presente === 'true',
+        presente: typeof record.presente === 'boolean' ? record.presente : record.presente === 'true',
         apostila: record.apostila || null,
         pagina: record.pagina ? String(record.pagina) : null,
-        exercicios: record.exercicios ? parseInt(record.exercicios) : null,
-        erros: record.erros ? parseInt(record.erros) : null,
-        fez_desafio: record.fez_desafio === 'true',
+        exercicios: record.exercicios ? parseInt(String(record.exercicios)) : null,
+        erros: record.erros ? parseInt(String(record.erros)) : null,
+        fez_desafio: typeof record.fez_desafio === 'boolean' ? record.fez_desafio : record.fez_desafio === 'true',
         comentario: record.comentario || null,
-        is_reposicao: record.is_reposicao === 'true',
+        is_reposicao: typeof record.is_reposicao === 'boolean' ? record.is_reposicao : record.is_reposicao === 'true',
         created_at: record.created_at || new Date().toISOString(),
         updated_at: record.updated_at || new Date().toISOString()
       };
