@@ -7,11 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const WEBHOOK_URL = 'https://hook.us1.make.com/c5nlmxwc6cf5sebwnrpoe11mys7gpolv';
+
 serve(async (req) => {
   const startTime = performance.now();
   console.log('Iniciando função register-ah...');
 
-  // Lidar com solicitações CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -19,7 +20,6 @@ serve(async (req) => {
   try {
     console.log('Processando requisição...');
     
-    // Obter dados da solicitação
     const requestData = await req.json();
     const data = requestData.data;
     
@@ -41,27 +41,6 @@ serve(async (req) => {
         headers: { Authorization: req.headers.get('Authorization')! } 
       }
     });
-
-    // Buscar URL do webhook
-    console.log('Buscando URL do webhook...');
-    const { data: webhookConfig, error: webhookError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'webhook_lancarha')
-      .maybeSingle();
-
-    if (webhookError) {
-      console.error('Erro ao buscar webhook URL:', webhookError);
-      throw new Error('Não foi possível recuperar a URL do webhook');
-    }
-
-    if (!webhookConfig?.data) {
-      console.error('URL do webhook não encontrada na tabela dados_importantes');
-      throw new Error('URL do webhook não encontrada');
-    }
-
-    const webhookUrl = webhookConfig.data;
-    console.log('URL do webhook encontrada:', webhookUrl);
 
     // Registrar na tabela produtividade_ah
     console.log('Registrando dados na tabela produtividade_ah...');
@@ -96,28 +75,32 @@ serve(async (req) => {
 
     // Preparar payload para o webhook
     const webhookPayload = {
-      ...data,
+      aluno_id: data.aluno_id,
       aluno_nome: alunoData?.nome,
       aluno_codigo: alunoData?.codigo,
       aluno_matricula: alunoData?.matricula,
       turma_id: alunoData?.turma_id,
-      data_registro: new Date().toISOString(),
-      teste: "teste" // Novo campo para testar webhook
+      apostila: data.apostila,
+      exercicios: data.exercicios,
+      erros: data.erros,
+      professor_correcao: data.professor_correcao,
+      comentario: data.comentario,
+      data_registro: new Date().toISOString()
     };
 
-    console.log('Payload a ser enviado para webhook:', JSON.stringify(webhookPayload, null, 2));
+    console.log('Enviando para webhook:', JSON.stringify(webhookPayload, null, 2));
 
-    // Enviar dados para o webhook com timeout
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
       console.log('Iniciando envio para webhook...');
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Supera-AH-Webhook',
+          'Accept': 'application/json',
+          'User-Agent': 'Supera-AH-Webhook'
         },
         body: JSON.stringify(webhookPayload),
         signal: controller.signal
@@ -153,7 +136,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
-          webhookUrl,
+          webhookUrl: WEBHOOK_URL,
           payload: webhookPayload,
           response: {
             status: response.status,
