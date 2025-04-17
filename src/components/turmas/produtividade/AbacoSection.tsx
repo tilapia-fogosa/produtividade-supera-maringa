@@ -176,9 +176,6 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
 
   const handleDesafioChange = async (value: "sim" | "não") => {
     setFezDesafio(value);
-    if (value === "não") {
-      setNivelDesafio("");
-    }
   };
 
   const handleNivelDesafioChange = async (nivel: string) => {
@@ -256,28 +253,27 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
       
       <div className="space-y-2">
         <Label>Fez desafio?</Label>
-        <RadioGroup 
-          value={fezDesafio} 
-          onValueChange={handleDesafioChange} 
-          className="flex flex-row gap-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="sim" id="desafio-sim" />
-            <Label htmlFor="desafio-sim">Sim</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="não" id="desafio-nao" />
-            <Label htmlFor="desafio-nao">Não</Label>
-          </div>
-        </RadioGroup>
+        <div className="grid grid-cols-[1fr,1fr] gap-4 items-center">
+          <RadioGroup 
+            value={fezDesafio} 
+            onValueChange={handleDesafioChange} 
+            className="flex flex-row gap-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="sim" id="desafio-sim" />
+              <Label htmlFor="desafio-sim">Sim</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="não" id="desafio-nao" />
+              <Label htmlFor="desafio-nao">Não</Label>
+            </div>
+          </RadioGroup>
 
-        {fezDesafio === "sim" && (
-          <div className="mt-2">
+          <div>
             <Label>Nível do desafio</Label>
             <Select 
               value={nivelDesafio} 
               onValueChange={handleNivelDesafioChange}
-              disabled={fezDesafio !== "sim"}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o nível" />
@@ -291,7 +287,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
               </SelectContent>
             </Select>
           </div>
-        )}
+        </div>
       </div>
       
       <div className="space-y-2">
