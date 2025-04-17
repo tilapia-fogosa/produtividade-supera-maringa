@@ -115,6 +115,8 @@ serve(async (req) => {
           data_registro: new Date().toISOString(),
         };
         
+        console.log('Payload a ser enviado para webhook:', JSON.stringify(webhookPayload, null, 2));
+        
         const webhookResponse = await fetch(webhookUrl, {
           method: 'POST',
           headers: {
@@ -123,9 +125,11 @@ serve(async (req) => {
           body: JSON.stringify(webhookPayload)
         });
 
+        const responseText = await webhookResponse.text();
+        console.log('Resposta do webhook:', responseText, 'Status:', webhookResponse.status);
+
         if (!webhookResponse.ok) {
-          const errorText = await webhookResponse.text();
-          throw new Error(`Erro no webhook: ${errorText}`);
+          throw new Error(`Erro no webhook: Status ${webhookResponse.status} - ${responseText}`);
         }
 
         console.log('Dados enviados com sucesso para o webhook!');
