@@ -44,14 +44,17 @@ const CsvUploadComponent = () => {
     setIsUploading(true);
     setErrorMessage(null);
     try {
+      console.log("Iniciando processamento do arquivo CSV");
       const text = await selectedFile.text();
       const lines = text.split('\n');
-      const headers = lines[0].split(',');
+      const headers = lines[0].split(',').map(header => header.trim());
       
       // Verificar se o cabeçalho aluno_id está presente
       if (!headers.includes('aluno_id')) {
         throw new Error("O arquivo CSV deve conter uma coluna 'aluno_id'");
       }
+
+      console.log("Cabeçalhos encontrados:", headers);
 
       const data = lines.slice(1)
         .filter(line => line.trim() !== '')
@@ -62,21 +65,24 @@ const CsvUploadComponent = () => {
             let value = values[index]?.trim() || null;
             
             // Garantir que aluno_id nunca seja nulo
-            if (header.trim() === 'aluno_id' && !value) {
+            if (header === 'aluno_id' && !value) {
               throw new Error("Valor de aluno_id não pode ser vazio");
             }
             
             // Conversão de tipos
-            if (header.trim() === 'presente' || header.trim() === 'fez_desafio' || header.trim() === 'is_reposicao') {
-              obj[header.trim()] = value === 'true' || value === '1' || value === 'sim';
-            } else if (header.trim() === 'exercicios' || header.trim() === 'erros') {
-              obj[header.trim()] = value ? parseInt(value) : null;
+            if (header === 'presente' || header === 'fez_desafio' || header === 'is_reposicao') {
+              obj[header] = value === 'true' || value === '1' || value === 'sim';
+            } else if (header === 'exercicios' || header === 'erros') {
+              obj[header] = value ? parseInt(value) : null;
             } else {
-              obj[header.trim()] = value;
+              obj[header] = value;
             }
           });
           return obj;
         });
+
+      console.log(`Processados ${data.length} registros do CSV`);
+      console.log("Amostra de dados:", data.slice(0, 2));
 
       await uploadCsv(data);
       setSelectedFile(null);
@@ -159,4 +165,3 @@ const CsvUploadComponent = () => {
 };
 
 export default CsvUploadComponent;
-

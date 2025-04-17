@@ -19,11 +19,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    console.log('Iniciando processamento de CSV para produtividade');
+    
     // Receber os dados do CSV
     const { data: csvData } = await req.json();
 
     // Validar se os dados estão presentes
     if (!csvData || !Array.isArray(csvData) || csvData.length === 0) {
+      console.error('Nenhum dado válido encontrado no CSV');
       return new Response(JSON.stringify({
         success: false,
         error: "Nenhum dado válido encontrado no CSV"
@@ -40,6 +43,7 @@ serve(async (req) => {
     for (const record of csvData) {
       // Verificar se o aluno_id está presente
       if (!record.aluno_id) {
+        console.error('Registro sem aluno_id:', record);
         return new Response(JSON.stringify({
           success: false,
           error: "O campo aluno_id é obrigatório em todos os registros"
@@ -48,10 +52,12 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      
+      console.log(`Processando registro para aluno_id: ${record.aluno_id}`);
 
-      // Criar um objeto com os dados necessários
+      // Criar um objeto com os dados necessários e garantir que um UUID é gerado para o id
       const produtividadeRecord = {
-        id: crypto.randomUUID(), // Gera um UUID único
+        id: crypto.randomUUID(), // Gera um UUID único para cada registro
         aluno_id: record.aluno_id,
         data_aula: record.data_aula,
         presente: typeof record.presente === 'boolean' ? record.presente : record.presente === 'true',
@@ -66,15 +72,23 @@ serve(async (req) => {
         updated_at: record.updated_at || new Date().toISOString()
       };
 
+      console.log('Registro processado:', produtividadeRecord);
       processedRecords.push(produtividadeRecord);
     }
+
+    console.log(`Total de ${processedRecords.length} registros processados, pronto para inserção`);
 
     // Inserir os registros processados no banco de dados
     const { data, error } = await supabase
       .from('produtividade_abaco')
       .insert(processedRecords);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Erro ao inserir registros:', error);
+      throw error;
+    }
+
+    console.log('Registros inseridos com sucesso');
 
     // Retornar sucesso
     return new Response(JSON.stringify({
