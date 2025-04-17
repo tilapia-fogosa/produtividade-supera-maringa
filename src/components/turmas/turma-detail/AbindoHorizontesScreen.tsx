@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Pen, BookText, GraduationCap, UserRound } from 'lucide-react';
+import { BookText } from 'lucide-react';
 import { APOSTILAS_AH } from '../constants/apostilas';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Aluno } from "@/hooks/use-professor-turmas";
@@ -17,7 +17,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import AlunosAHTable from './AlunosAHTable';
 import { useCorretores } from '@/hooks/use-corretores';
-import { Corretor } from '@/types/corretores';
 import { 
   Dialog, 
   DialogContent, 
@@ -50,7 +49,7 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ahRegistrado, setAhRegistrado] = useState<Record<string, boolean>>({});
   
-  // Carregar corretores (professores + estagiários)
+  // Carregar corretores
   const { corretores, isLoading: carregandoCorretores } = useCorretores();
   
   // Inicializar o formulário com validação
@@ -84,14 +83,6 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
     setIsModalOpen(false);
     setSelectedAluno(null);
     form.reset();
-  };
-
-  // Renderizar ícone com base no tipo de corretor
-  const renderIconeCorretor = (corretor: Corretor) => {
-    if (corretor.tipo === 'professor') {
-      return <GraduationCap className="mr-2 h-4 w-4" />;
-    }
-    return <UserRound className="mr-2 h-4 w-4" />;
   };
 
   // Enviar o formulário
@@ -238,8 +229,8 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
                     {corretores.map((corretor) => (
                       <SelectItem key={corretor.id} value={corretor.id}>
                         <div className="flex items-center">
-                          {renderIconeCorretor(corretor)}
-                          {corretor.nome} {corretor.tipo === 'estagiario' ? '(Estagiário)' : ''}
+                          <BookText className="mr-2 h-4 w-4" />
+                          {corretor.nome}
                         </div>
                       </SelectItem>
                     ))}

@@ -1,13 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pen, GraduationCap, UserRound } from 'lucide-react';
+import { BookText } from 'lucide-react';
 import { APOSTILAS_AH } from '../constants/apostilas';
 import { useCorretores } from '@/hooks/use-corretores';
-import { Corretor } from '@/types/corretores';
 
 interface AhSectionProps {
   lancouAh: "sim" | "não";
@@ -35,14 +34,6 @@ const AhSection: React.FC<AhSectionProps> = ({
   setProfessorCorrecao
 }) => {
   const { corretores, isLoading: carregandoCorretores } = useCorretores();
-
-  // Renderizar ícone com base no tipo de corretor
-  const renderIconeCorretor = (corretor: Corretor) => {
-    if (corretor.tipo === 'professor') {
-      return <GraduationCap className="mr-2 h-4 w-4" />;
-    }
-    return <UserRound className="mr-2 h-4 w-4" />;
-  };
 
   return (
     <>
@@ -110,8 +101,8 @@ const AhSection: React.FC<AhSectionProps> = ({
                 {corretores.map((corretor) => (
                   <SelectItem key={corretor.id} value={corretor.id}>
                     <div className="flex items-center">
-                      {renderIconeCorretor(corretor)}
-                      {corretor.nome} {corretor.tipo === 'estagiario' ? '(Estagiário)' : ''}
+                      <BookText className="mr-2 h-4 w-4" />
+                      {corretor.nome}
                     </div>
                   </SelectItem>
                 ))}

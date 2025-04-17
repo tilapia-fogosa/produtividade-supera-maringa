@@ -33,14 +33,14 @@ export const useCorretores = (unitId?: string) => {
         const professoresFormatados: Corretor[] = (professores || []).map(prof => ({
           id: prof.id,
           nome: prof.nome,
-          tipo: 'professor' as const
+          tipo: 'corretor'
         }));
         
         // Mapear estagiários para o formato de Corretor
         const estagiariosFormatados: Corretor[] = (estagiarios || []).map(est => ({
           id: est.id,
           nome: est.nome,
-          tipo: 'estagiario' as const
+          tipo: 'corretor'
         }));
         
         // Combinar as listas e ordenar por nome
