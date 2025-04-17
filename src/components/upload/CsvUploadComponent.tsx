@@ -49,9 +49,12 @@ const CsvUploadComponent = () => {
       const lines = text.split('\n');
       const headers = lines[0].split(',').map(header => header.trim());
       
-      // Verificar se o cabeçalho aluno_id está presente
-      if (!headers.includes('aluno_id')) {
-        throw new Error("O arquivo CSV deve conter uma coluna 'aluno_id'");
+      // Verificar se os cabeçalhos obrigatórios estão presentes
+      const requiredHeaders = ['aluno_id', 'data_aula'];
+      const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+      
+      if (missingHeaders.length > 0) {
+        throw new Error(`Cabeçalhos obrigatórios ausentes: ${missingHeaders.join(', ')}`);
       }
 
       console.log("Cabeçalhos encontrados:", headers);
@@ -156,7 +159,7 @@ const CsvUploadComponent = () => {
           )}
           <div className="text-xs text-center text-azul-400 mt-2">
             <p className="font-semibold">O arquivo CSV deve conter as seguintes colunas:</p>
-            <p>aluno_id, data_aula, presente, is_reposicao, apostila, pagina, exercicios, erros, fez_desafio, comentario</p>
+            <p>id (opcional), aluno_id, data_aula, presente, is_reposicao, apostila, pagina, exercicios, erros, fez_desafio, comentario</p>
           </div>
         </div>
       </CardContent>

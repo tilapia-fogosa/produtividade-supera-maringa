@@ -55,9 +55,12 @@ serve(async (req) => {
       
       console.log(`Processando registro para aluno_id: ${record.aluno_id}`);
 
-      // Criar um objeto com os dados necessários e garantir que um UUID é gerado para o id
+      // Usar o ID fornecido no CSV ou gerar um novo
+      const recordId = record.id || crypto.randomUUID();
+      
+      // Criar um objeto com os dados necessários, usando o ID existente ou o gerado
       const produtividadeRecord = {
-        id: crypto.randomUUID(), // Gera um UUID único para cada registro
+        id: recordId,
         aluno_id: record.aluno_id,
         data_aula: record.data_aula,
         presente: typeof record.presente === 'boolean' ? record.presente : record.presente === 'true',
