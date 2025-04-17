@@ -50,6 +50,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [errosAbaco, setErrosAbaco] = useState("");
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
+  const [nivelDesafio, setNivelDesafio] = useState<string>("");
 
   useEffect(() => {
     if (isOpen && aluno) {
@@ -67,6 +68,13 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
           console.log('ProdutividadeModal: Última página do aluno:', aluno.ultima_pagina);
           setPaginaAbaco(aluno.ultima_pagina.toString());
         }
+        
+        if (aluno.niveldesafio) {
+          console.log('ProdutividadeModal: Nível do desafio do aluno:', aluno.niveldesafio);
+          setNivelDesafio(aluno.niveldesafio.toString());
+        } else {
+          setNivelDesafio("1"); // Valor padrão
+        }
       } catch (error) {
         console.error('ProdutividadeModal: Erro ao carregar apostila:', error);
       }
@@ -83,6 +91,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       setErrosAbaco("");
       setFezDesafio("não");
       setComentario("");
+      setNivelDesafio("");
     }
   }, [isOpen]);
 
@@ -116,6 +125,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         exercicios_abaco: presente === "sim" ? exerciciosAbaco : undefined,
         erros_abaco: presente === "sim" ? errosAbaco : undefined,
         fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
+        nivel_desafio: presente === "sim" && fezDesafio === "sim" ? nivelDesafio : undefined,
         comentario: presente === "sim" ? comentario : undefined,
         data_registro: dataHoje,
         data_ultima_correcao_ah: new Date().toISOString(),
@@ -214,6 +224,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
                     setFezDesafio={setFezDesafio}
                     comentario={comentario}
                     setComentario={setComentario}
+                    nivelDesafio={nivelDesafio}
+                    setNivelDesafio={setNivelDesafio}
                   />
                 </>
               )}

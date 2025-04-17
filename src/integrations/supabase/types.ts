@@ -22,6 +22,7 @@ export type Database = {
           idade: number | null
           indice: string | null
           matricula: string | null
+          niveldesafio: number | null
           nome: string
           telefone: string | null
           turma_id: string
@@ -43,6 +44,7 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           matricula?: string | null
+          niveldesafio?: number | null
           nome: string
           telefone?: string | null
           turma_id: string
@@ -64,6 +66,7 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           matricula?: string | null
+          niveldesafio?: number | null
           nome?: string
           telefone?: string | null
           turma_id?: string

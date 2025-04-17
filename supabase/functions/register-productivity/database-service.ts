@@ -18,20 +18,30 @@ export async function registrarDadosAluno(
 ): Promise<boolean> {
   try {
     // Atualizar dados do aluno se presente e com apostila e página
-    if (data.presente && data.apostila_atual && data.ultima_pagina) {
-      console.log('Atualizando dados do aluno:', {
-        ultimo_nivel: data.apostila_atual,
-        ultima_pagina: data.ultima_pagina,
-        ultima_correcao_ah: data.data_ultima_correcao_ah
-      });
+    if (data.presente) {
+      const updateData: any = {};
+      
+      // Adicionar campos básicos
+      if (data.apostila_atual && data.ultima_pagina) {
+        updateData.ultimo_nivel = data.apostila_atual;
+        updateData.ultima_pagina = data.ultima_pagina;
+      }
+      
+      // Adicionar última correção AH, se houver
+      if (data.data_ultima_correcao_ah) {
+        updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      }
+      
+      // Adicionar nível do desafio, se houver e se fez desafio
+      if (data.fez_desafio && data.nivel_desafio) {
+        updateData.niveldesafio = parseInt(data.nivel_desafio);
+      }
+      
+      console.log('Atualizando dados do aluno:', updateData);
       
       const { error: updateError } = await supabaseClient
         .from('alunos')
-        .update({ 
-          ultima_correcao_ah: data.data_ultima_correcao_ah,
-          ultimo_nivel: data.apostila_atual,
-          ultima_pagina: data.ultima_pagina 
-        })
+        .update(updateData)
         .eq('id', data.aluno_id);
 
       if (updateError) {

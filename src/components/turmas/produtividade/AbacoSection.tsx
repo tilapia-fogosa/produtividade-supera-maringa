@@ -27,6 +27,8 @@ interface AbacoSectionProps {
   setFezDesafio: (value: "sim" | "não") => void;
   comentario: string;
   setComentario: (value: string) => void;
+  nivelDesafio?: string;
+  setNivelDesafio?: (value: string) => void;
 }
 
 const AbacoSection: React.FC<AbacoSectionProps> = ({
@@ -41,7 +43,9 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   fezDesafio,
   setFezDesafio,
   comentario,
-  setComentario
+  setComentario,
+  nivelDesafio = "",
+  setNivelDesafio = () => {}
 }) => {
   const { apostilas: apostilasDisponiveis, loading: carregandoApostila, error: erroApostila, getTotalPaginas } = useApostilas();
   const [totalPaginas, setTotalPaginas] = useState<number>(40);
@@ -171,8 +175,6 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
       );
     }
   };
-
-  const [nivelDesafio, setNivelDesafio] = useState<string>("");
 
   const handleDesafioChange = (value: "sim" | "não") => {
     setFezDesafio(value);

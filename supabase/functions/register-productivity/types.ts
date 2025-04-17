@@ -12,6 +12,7 @@ export interface ProdutividadeData {
   exercicios_abaco?: string;
   erros_abaco?: string;
   fez_desafio?: boolean;
+  nivel_desafio?: string;
   comentario?: string;
   data_registro: string;
   data_ultima_correcao_ah?: string;

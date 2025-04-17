@@ -53,6 +53,7 @@ interface FormValues {
   errosAbaco: string;
   fezDesafio: "sim" | "não";
   comentario: string;
+  nivelDesafio: string;
 }
 
 const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
@@ -80,7 +81,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       exerciciosAbaco: "",
       errosAbaco: "",
       fezDesafio: "não",
-      comentario: ""
+      comentario: "",
+      nivelDesafio: "1"
     }
   });
 
@@ -112,6 +114,10 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         
         if (aluno.ultimo_nivel) {
           form.setValue("apostilaAbaco", aluno.ultimo_nivel);
+        }
+        
+        if (aluno.niveldesafio) {
+          form.setValue("nivelDesafio", aluno.niveldesafio.toString());
         }
       } else {
         setAlunoSelecionado(null);
@@ -168,6 +174,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         exercicios_abaco: values.presente === "sim" ? values.exerciciosAbaco : undefined,
         erros_abaco: values.presente === "sim" ? values.errosAbaco : undefined,
         fez_desafio: values.presente === "sim" ? values.fezDesafio === "sim" : undefined,
+        nivel_desafio: values.presente === "sim" && values.fezDesafio === "sim" ? values.nivelDesafio : undefined,
         comentario: values.presente === "sim" ? values.comentario : undefined,
         data_registro: new Date().toISOString(),
         apostila_atual: alunoSelecionado.ultimo_nivel,
@@ -326,6 +333,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                         setFezDesafio={(value) => form.setValue("fezDesafio", value)}
                         comentario={form.watch("comentario")}
                         setComentario={(value) => form.setValue("comentario", value)}
+                        nivelDesafio={form.watch("nivelDesafio")}
+                        setNivelDesafio={(value) => form.setValue("nivelDesafio", value)}
                       />
                     )}
                   />

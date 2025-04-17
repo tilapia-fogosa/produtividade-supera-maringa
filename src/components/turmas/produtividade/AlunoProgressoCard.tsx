@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -154,7 +155,7 @@ const AlunoProgressoCard: React.FC<AlunoProgressoCardProps> = ({ alunoId }) => {
             Desafio da Semana:
           </span>
           <span className="font-semibold text-orange-500">
-            {progresso?.ultimo_desafio || 'Não registrado'}
+            {progresso?.ultimo_desafio ? `Nível ${progresso.ultimo_desafio}` : 'Não registrado'}
           </span>
         </div>
       </CardContent>
