@@ -1051,6 +1051,59 @@ export type Database = {
           },
         ]
       }
+      produtividade_ah: {
+        Row: {
+          aluno_id: string
+          apostila: string | null
+          comentario: string | null
+          created_at: string
+          data_aula: string
+          erros: number | null
+          exercicios: number | null
+          id: string
+          is_reposicao: boolean
+          presente: boolean
+          professor_correcao: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          data_aula: string
+          erros?: number | null
+          exercicios?: number | null
+          id?: string
+          is_reposicao?: boolean
+          presente?: boolean
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          data_aula?: string
+          erros?: number | null
+          exercicios?: number | null
+          id?: string
+          is_reposicao?: boolean
+          presente?: boolean
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_ah_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professores: {
         Row: {
           created_at: string

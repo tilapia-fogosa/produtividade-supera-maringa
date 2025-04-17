@@ -74,6 +74,10 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
       setConfigError("Configuração incompleta: O administrador precisa configurar as credenciais do Google Service Account");
     }
   };
+
+  const handleSetTelaModo = (modo: TelaModo) => {
+    setTelaModo(modo);
+  };
   
   return (
     <div className="w-full px-1 text-azul-500">
@@ -81,6 +85,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         turmaNome={turma.nome}
         telaModo={telaModo}
         onBack={handleBackNavigation}
+        onModeChange={handleSetTelaModo}
       />
 
       <ConfigErrorMessage errorMessage={configError} />
@@ -92,6 +97,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
             onRegistrarPresenca={handleClickRegistrarPresenca}
             onReposicaoAula={handleClickReposicaoAula}
             produtividadeRegistrada={produtividadeRegistrada}
+            onModeChange={handleSetTelaModo}
           />
         )}
         

@@ -22,3 +22,18 @@ export interface FaltaAluno {
   motivo: string | null;
   created_at: string;
 }
+
+export interface ProdutividadeAH {
+  id: string;
+  aluno_id: string;
+  data_aula: string;
+  presente: boolean;
+  is_reposicao: boolean;
+  apostila: string | null;
+  exercicios: number | null;
+  erros: number | null;
+  professor_correcao: string | null;
+  comentario: string | null;
+  created_at: string;
+  updated_at: string;
+}

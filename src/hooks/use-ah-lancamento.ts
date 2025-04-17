@@ -1,0 +1,92 @@
+
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+interface ProdutividadeAH {
+  aluno_id: string;
+  data_aula: string;
+  presente: boolean;
+  is_reposicao?: boolean;
+  apostila: string;
+  exercicios: number;
+  erros: number;
+  professor_correcao: string;
+  comentario?: string;
+}
+
+export const useAhLancamento = (alunoId?: string) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const registrarLancamentoAH = async (dados: ProdutividadeAH) => {
+    try {
+      setIsLoading(true);
+
+      // Garantir que aluno_id existe se foi passado na inicialização do hook
+      const dadosCompletos = {
+        ...dados,
+        aluno_id: alunoId || dados.aluno_id
+      };
+      
+      // Inserir produtividade AH
+      const { error } = await supabase
+        .from('produtividade_ah')
+        .insert(dadosCompletos);
+      
+      if (error) throw error;
+      
+      // Atualizar data da última correção AH do aluno
+      await supabase
+        .from('alunos')
+        .update({ 
+          ultima_correcao_ah: new Date().toISOString() 
+        })
+        .eq('id', dadosCompletos.aluno_id);
+
+      toast({
+        title: "Sucesso",
+        description: "Lançamento de Abrindo Horizontes registrado com sucesso!",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao registrar lançamento AH:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar o lançamento de Abrindo Horizontes",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getUltimosLancamentosAH = async (alunoId: string, limit = 5) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('produtividade_ah')
+        .select('*')
+        .eq('aluno_id', alunoId)
+        .order('data_aula', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Erro ao buscar lançamentos AH:', error);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    registrarLancamentoAH,
+    getUltimosLancamentosAH
+  };
+};
