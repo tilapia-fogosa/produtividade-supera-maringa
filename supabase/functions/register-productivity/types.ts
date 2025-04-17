@@ -19,4 +19,5 @@ export interface ProdutividadeData {
   apostila_atual?: string;
   ultima_pagina?: string;
   is_reposicao?: boolean;
+  niveldesafio?: number; // Adicionando o campo niveldesafio
 }

@@ -118,6 +118,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         
         if (aluno.niveldesafio) {
           form.setValue("nivelDesafio", aluno.niveldesafio.toString());
+        } else {
+          form.setValue("nivelDesafio", "1"); // Valor padrão caso não tenha
         }
       } else {
         setAlunoSelecionado(null);
