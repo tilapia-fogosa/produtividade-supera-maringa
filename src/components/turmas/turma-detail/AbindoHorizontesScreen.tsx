@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Form } from "@/components/ui/form";
@@ -9,13 +9,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Pen } from 'lucide-react';
-import { APOSTILAS_AH, PROFESSORES } from '../constants/apostilas';
+import { Pen, BookText, GraduationCap, UserRound } from 'lucide-react';
+import { APOSTILAS_AH } from '../constants/apostilas';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Aluno } from "@/hooks/use-professor-turmas";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import AlunosAHTable from './AlunosAHTable';
+import { useCorretores } from '@/hooks/use-corretores';
+import { Corretor } from '@/types/corretores';
 import { 
   Dialog, 
   DialogContent, 
@@ -35,7 +37,7 @@ const ahFormSchema = z.object({
   apostila: z.string().min(1, { message: "Selecione uma apostila" }),
   exercicios: z.string().min(1, { message: "Informe o número de exercícios" }),
   erros: z.string().min(1, { message: "Informe o número de erros" }),
-  professor: z.string().min(1, { message: "Selecione o professor" }),
+  corretor: z.string().min(1, { message: "Selecione o corretor" }),
   comentario: z.string().optional()
 });
 
@@ -48,6 +50,9 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ahRegistrado, setAhRegistrado] = useState<Record<string, boolean>>({});
   
+  // Carregar corretores (professores + estagiários)
+  const { corretores, isLoading: carregandoCorretores } = useCorretores();
+  
   // Inicializar o formulário com validação
   const form = useForm<AhFormValues>({
     resolver: zodResolver(ahFormSchema),
@@ -56,7 +61,7 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
       apostila: "",
       exercicios: "",
       erros: "",
-      professor: "",
+      corretor: "",
       comentario: ""
     }
   });
@@ -81,6 +86,14 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
     form.reset();
   };
 
+  // Renderizar ícone com base no tipo de corretor
+  const renderIconeCorretor = (corretor: Corretor) => {
+    if (corretor.tipo === 'professor') {
+      return <GraduationCap className="mr-2 h-4 w-4" />;
+    }
+    return <UserRound className="mr-2 h-4 w-4" />;
+  };
+
   // Enviar o formulário
   const onSubmit = async (values: AhFormValues) => {
     try {
@@ -97,7 +110,7 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
         apostila: values.apostila,
         exercicios: parseInt(values.exercicios),
         erros: parseInt(values.erros),
-        professor_correcao: values.professor,
+        professor_correcao: values.corretor,
         comentario: values.comentario || null
       };
       
@@ -212,27 +225,28 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="professor">Professor que corrigiu</Label>
+                <Label htmlFor="corretor">Quem corrigiu</Label>
                 <Select 
-                  onValueChange={(value) => form.setValue("professor", value)}
-                  value={form.watch("professor")}
+                  onValueChange={(value) => form.setValue("corretor", value)}
+                  value={form.watch("corretor")}
+                  disabled={carregandoCorretores}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o professor" />
+                    <SelectValue placeholder={carregandoCorretores ? "Carregando..." : "Selecione o corretor"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {PROFESSORES.map((professor) => (
-                      <SelectItem key={professor} value={professor}>
+                    {corretores.map((corretor) => (
+                      <SelectItem key={corretor.id} value={corretor.id}>
                         <div className="flex items-center">
-                          <Pen className="mr-2 h-4 w-4" />
-                          {professor}
+                          {renderIconeCorretor(corretor)}
+                          {corretor.nome} {corretor.tipo === 'estagiario' ? '(Estagiário)' : ''}
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {form.formState.errors.professor && (
-                  <p className="text-destructive text-sm">{form.formState.errors.professor.message}</p>
+                {form.formState.errors.corretor && (
+                  <p className="text-destructive text-sm">{form.formState.errors.corretor.message}</p>
                 )}
               </div>
               

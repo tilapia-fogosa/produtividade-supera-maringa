@@ -554,6 +554,30 @@ export type Database = {
           },
         ]
       }
+      estagiarios: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          nome: string
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          unit_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          unit_id?: string
+        }
+        Relationships: []
+      }
       faltas_alunos: {
         Row: {
           aluno_id: string

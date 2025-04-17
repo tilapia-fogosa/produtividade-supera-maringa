@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pen } from 'lucide-react';
-import { APOSTILAS_AH, PROFESSORES } from '../constants/apostilas';
+import { Pen, GraduationCap, UserRound } from 'lucide-react';
+import { APOSTILAS_AH } from '../constants/apostilas';
+import { useCorretores } from '@/hooks/use-corretores';
+import { Corretor } from '@/types/corretores';
 
 interface AhSectionProps {
   lancouAh: "sim" | "não";
@@ -32,6 +34,16 @@ const AhSection: React.FC<AhSectionProps> = ({
   professorCorrecao,
   setProfessorCorrecao
 }) => {
+  const { corretores, isLoading: carregandoCorretores } = useCorretores();
+
+  // Renderizar ícone com base no tipo de corretor
+  const renderIconeCorretor = (corretor: Corretor) => {
+    if (corretor.tipo === 'professor') {
+      return <GraduationCap className="mr-2 h-4 w-4" />;
+    }
+    return <UserRound className="mr-2 h-4 w-4" />;
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -89,17 +101,17 @@ const AhSection: React.FC<AhSectionProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="professor-correcao">Professor que corrigiu</Label>
-            <Select value={professorCorrecao} onValueChange={setProfessorCorrecao}>
+            <Label htmlFor="professor-correcao">Quem corrigiu</Label>
+            <Select value={professorCorrecao} onValueChange={setProfessorCorrecao} disabled={carregandoCorretores}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o professor" />
+                <SelectValue placeholder={carregandoCorretores ? "Carregando..." : "Selecione o corretor"} />
               </SelectTrigger>
               <SelectContent>
-                {PROFESSORES.map((professor) => (
-                  <SelectItem key={professor} value={professor}>
+                {corretores.map((corretor) => (
+                  <SelectItem key={corretor.id} value={corretor.id}>
                     <div className="flex items-center">
-                      <Pen className="mr-2 h-4 w-4" />
-                      {professor}
+                      {renderIconeCorretor(corretor)}
+                      {corretor.nome} {corretor.tipo === 'estagiario' ? '(Estagiário)' : ''}
                     </div>
                   </SelectItem>
                 ))}
