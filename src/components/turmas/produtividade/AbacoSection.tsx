@@ -274,7 +274,11 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
         {fezDesafio === "sim" && (
           <div className="mt-2">
             <Label>Nível do desafio</Label>
-            <Select value={nivelDesafio} onValueChange={handleNivelDesafioChange}>
+            <Select 
+              value={nivelDesafio} 
+              onValueChange={handleNivelDesafioChange}
+              disabled={fezDesafio !== "sim"}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o nível" />
               </SelectTrigger>
