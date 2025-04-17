@@ -25,25 +25,30 @@ export const useAhLancamento = (alunoId?: string) => {
         aluno_id: alunoId || dados.aluno_id
       };
       
-      // Inserir produtividade AH
-      const { error } = await supabase
-        .from('produtividade_ah')
-        .insert(dadosCompletos);
+      console.log('Enviando dados para edge function:', dadosCompletos);
       
-      if (error) throw error;
-      
-      // Atualizar data da última correção AH do aluno
-      await supabase
-        .from('alunos')
-        .update({ 
-          ultima_correcao_ah: new Date().toISOString() 
-        })
-        .eq('id', dadosCompletos.aluno_id);
-
-      toast({
-        title: "Sucesso",
-        description: "Lançamento de Abrindo Horizontes registrado com sucesso!",
+      // Chamar a edge function para registrar os dados
+      const { data, error } = await supabase.functions.invoke('register-ah', {
+        body: { data: dadosCompletos }
       });
+      
+      if (error) {
+        console.error('Erro na resposta da edge function:', error);
+        throw new Error(error.message);
+      }
+      
+      if (data && data.webhookError) {
+        toast({
+          title: "Parcialmente concluído",
+          description: data.message || "Dados salvos, mas não sincronizados com webhook externo.",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Lançamento de Abrindo Horizontes registrado com sucesso!",
+        });
+      }
       
       return true;
     } catch (error) {

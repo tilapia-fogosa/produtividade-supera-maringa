@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Form } from "@/components/ui/form";
@@ -12,10 +13,10 @@ import { BookText } from 'lucide-react';
 import { APOSTILAS_AH } from '../constants/apostilas';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Aluno } from "@/hooks/use-professor-turmas";
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import AlunosAHTable from './AlunosAHTable';
 import { useCorretores } from '@/hooks/use-corretores';
+import { useAhLancamento } from '@/hooks/use-ah-lancamento';
 import { 
   Dialog, 
   DialogContent, 
@@ -43,13 +44,15 @@ type AhFormValues = z.infer<typeof ahFormSchema>;
 
 const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackToMenu, alunos }) => {
   const isMobile = useIsMobile();
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ahRegistrado, setAhRegistrado] = useState<Record<string, boolean>>({});
   
   // Carregar corretores
   const { corretores, isLoading: carregandoCorretores } = useCorretores();
+  
+  // Hook para lançamento AH
+  const { registrarLancamentoAH, isLoading } = useAhLancamento();
   
   // Inicializar o formulário com validação
   const form = useForm<AhFormValues>({
@@ -87,9 +90,7 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
   // Enviar o formulário
   const onSubmit = async (values: AhFormValues) => {
     try {
-      setIsLoading(true);
-      
-      // Preparar dados para o banco
+      // Preparar dados para o serviço
       const produtividadeData = {
         aluno_id: values.aluno,
         apostila: values.apostila,
@@ -99,35 +100,21 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
         comentario: values.comentario || null
       };
       
-      // Salvar no banco
-      const { error } = await supabase
-        .from('produtividade_ah')
-        .insert(produtividadeData);
+      // Chamar serviço para registrar lançamento
+      const resultado = await registrarLancamentoAH(produtividadeData);
+      
+      if (resultado) {
+        // Atualizar o estado para mostrar que o registro foi feito
+        setAhRegistrado(prev => ({
+          ...prev,
+          [values.aluno]: true
+        }));
         
-      if (error) throw error;
-      
-      // Atualizar a data da última correção AH do aluno
-      await supabase
-        .from('alunos')
-        .update({ ultima_correcao_ah: new Date().toISOString() })
-        .eq('id', values.aluno);
-      
-      toast({
-        title: "Sucesso",
-        description: "Lançamento de Abrindo Horizontes registrado com sucesso!",
-      });
-      
-      // Atualizar o estado para mostrar que o registro foi feito
-      setAhRegistrado(prev => ({
-        ...prev,
-        [values.aluno]: true
-      }));
-      
-      // Resetar o formulário e fechar o modal
-      form.reset();
-      setSelectedAluno(null);
-      setIsModalOpen(false);
-      
+        // Resetar o formulário e fechar o modal
+        form.reset();
+        setSelectedAluno(null);
+        setIsModalOpen(false);
+      }
     } catch (error) {
       console.error('Erro ao lançar AH:', error);
       toast({
@@ -135,8 +122,6 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
         description: "Não foi possível registrar o lançamento",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
   
