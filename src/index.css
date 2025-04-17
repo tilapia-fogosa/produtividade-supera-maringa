@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -52,41 +53,43 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Tema escuro com cores alinhadas à identidade da Supera */
+    --background: 26 45% 8%; /* Fundo escuro com tonalidade laranja sutil */
+    --foreground: 30 100% 95%; /* Texto claro com tonalidade laranja suave */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 26 40% 10%; /* Fundo do card um pouco mais claro que o background */
+    --card-foreground: 30 80% 90%; /* Texto do card */
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 26 40% 10%;
+    --popover-foreground: 30 80% 90%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 26 90% 60%; /* Cor principal - laranja Supera */
+    --primary-foreground: 210 20% 98%; /* Texto sobre a cor principal */
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 26 30% 18%; /* Cor secundária mais escura */
+    --secondary-foreground: 30 70% 85%; /* Texto sobre cor secundária */
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 26 25% 20%; /* Cor para elementos atenuados */
+    --muted-foreground: 30 50% 70%; /* Texto sobre elementos atenuados */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 26 60% 30%; /* Cor de destaque */
+    --accent-foreground: 30 90% 90%; /* Texto sobre cor de destaque */
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 40.6%; /* Vermelho para alertas */
+    --destructive-foreground: 30 90% 95%; /* Texto sobre alertas */
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 26 30% 25%; /* Bordas com tom laranja escuro */
+    --input: 26 30% 25%; /* Inputs com mesmo tom das bordas */
+    --ring: 26 80% 60%; /* Anéis de foco com laranja mais vibrante */
+
+    --sidebar-background: 26 35% 12%; /* Fundo da sidebar */
+    --sidebar-foreground: 30 70% 85%; /* Texto da sidebar */
+    --sidebar-primary: 26 80% 50%; /* Cor primária da sidebar */
+    --sidebar-primary-foreground: 0 0% 100%; /* Texto sobre a cor primária */
+    --sidebar-accent: 26 30% 20%; /* Cor de destaque da sidebar */
+    --sidebar-accent-foreground: 30 90% 90%; /* Texto sobre destaque */
+    --sidebar-border: 26 25% 25%; /* Bordas da sidebar */
+    --sidebar-ring: 26 80% 60%; /* Anéis de foco da sidebar */
   }
 }
 
