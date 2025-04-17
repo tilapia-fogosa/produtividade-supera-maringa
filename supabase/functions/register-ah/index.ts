@@ -8,21 +8,25 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  const startTime = performance.now();
+  console.log('Iniciando função register-ah...');
+
   // Lidar com solicitações CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    console.log('Iniciando função de registro de Abrindo Horizontes...');
+    console.log('Processando requisição...');
     
     // Obter dados da solicitação
     const requestData = await req.json();
     const data = requestData.data;
     
-    console.log('Dados recebidos para AH:', JSON.stringify(data, null, 2));
+    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     
     if (!data || !data.aluno_id) {
+      console.error('Dados incompletos recebidos');
       return new Response(
         JSON.stringify({ error: 'Dados incompletos. ID do aluno é obrigatório.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -38,8 +42,8 @@ serve(async (req) => {
       }
     });
 
-    // Etapa 1: Buscar URL do webhook
-    console.log('Buscando URL do webhook para AH...');
+    // Buscar URL do webhook
+    console.log('Buscando URL do webhook...');
     const { data: webhookConfig, error: webhookError } = await supabase
       .from('dados_importantes')
       .select('data')
@@ -51,10 +55,15 @@ serve(async (req) => {
       throw new Error('Não foi possível recuperar a URL do webhook');
     }
 
-    const webhookUrl = webhookConfig?.data;
+    if (!webhookConfig?.data) {
+      console.error('URL do webhook não encontrada na tabela dados_importantes');
+      throw new Error('URL do webhook não encontrada');
+    }
+
+    const webhookUrl = webhookConfig.data;
     console.log('URL do webhook encontrada:', webhookUrl);
 
-    // Etapa 2: Registrar na tabela produtividade_ah
+    // Registrar na tabela produtividade_ah
     console.log('Registrando dados na tabela produtividade_ah...');
     const { error: produtividadeError } = await supabase
       .from('produtividade_ah')
@@ -72,96 +81,108 @@ serve(async (req) => {
       throw new Error('Erro ao salvar dados de produtividade: ' + produtividadeError.message);
     }
 
-    // Etapa 3: Atualizar a coluna ultima_correcao_ah na tabela de alunos
-    console.log('Atualizando data da última correção AH do aluno...');
-    const { error: alunoError } = await supabase
+    // Buscar dados adicionais do aluno para enriquecer o payload
+    console.log('Buscando dados do aluno...');
+    const { data: alunoData, error: alunoError } = await supabase
       .from('alunos')
-      .update({ 
-        ultima_correcao_ah: new Date().toISOString() 
-      })
-      .eq('id', data.aluno_id);
+      .select('nome, turma_id, codigo, matricula')
+      .eq('id', data.aluno_id)
+      .single();
 
     if (alunoError) {
-      console.error('Erro ao atualizar data da última correção AH:', alunoError);
-      throw new Error('Erro ao atualizar data da última correção: ' + alunoError.message);
-    }
-
-    // Etapa 4: Buscar dados adicionais do aluno para enriquecer o payload do webhook
-    console.log('Buscando dados adicionais do aluno...');
-    const { data: alunoData, error: alunoFetchError } = await supabase
-      .from('alunos')
-      .select('nome, turma_id, codigo, matricula, curso')
-      .eq('id', data.aluno_id)
-      .maybeSingle();
-
-    if (alunoFetchError) {
-      console.error('Erro ao buscar dados do aluno:', alunoFetchError);
+      console.error('Erro ao buscar dados do aluno:', alunoError);
       // Continuar mesmo com erro na busca de dados adicionais
     }
 
-    // Etapa 5: Enviar dados para o webhook
+    // Preparar payload para o webhook
+    const webhookPayload = {
+      ...data,
+      aluno_nome: alunoData?.nome,
+      aluno_codigo: alunoData?.codigo,
+      aluno_matricula: alunoData?.matricula,
+      turma_id: alunoData?.turma_id,
+      data_registro: new Date().toISOString()
+    };
+
+    console.log('Payload a ser enviado para webhook:', JSON.stringify(webhookPayload, null, 2));
+
+    // Enviar dados para o webhook com timeout
     try {
-      if (webhookUrl) {
-        console.log('Enviando dados para o webhook...');
-        
-        // Preparar payload enriquecido para o webhook
-        const webhookPayload = {
-          ...data,
-          aluno_nome: alunoData?.nome,
-          aluno_codigo: alunoData?.codigo,
-          aluno_matricula: alunoData?.matricula,
-          aluno_curso: alunoData?.curso,
-          turma_id: alunoData?.turma_id,
-          data_registro: new Date().toISOString(),
-        };
-        
-        console.log('Payload a ser enviado para webhook:', JSON.stringify(webhookPayload, null, 2));
-        
-        const webhookResponse = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookPayload)
-        });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-        const responseText = await webhookResponse.text();
-        console.log('Resposta do webhook:', responseText, 'Status:', webhookResponse.status);
+      console.log('Iniciando envio para webhook...');
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Supera-AH-Webhook',
+        },
+        body: JSON.stringify(webhookPayload),
+        signal: controller.signal
+      });
 
-        if (!webhookResponse.ok) {
-          throw new Error(`Erro no webhook: Status ${webhookResponse.status} - ${responseText}`);
-        }
+      clearTimeout(timeoutId);
 
-        console.log('Dados enviados com sucesso para o webhook!');
-      } else {
-        console.warn('URL do webhook não encontrada ou vazia, ignorando etapa de webhook');
-      }
-    } catch (webhookError) {
-      console.error('Erro ao processar webhook:', webhookError);
+      const responseText = await response.text();
+      const responseTime = performance.now() - startTime;
       
-      // Não falhar a operação inteira, apenas retornar status de sucesso parcial
+      console.log('Status da resposta:', response.status);
+      console.log('Headers da resposta:', JSON.stringify(Object.fromEntries([...response.headers]), null, 2));
+      console.log('Corpo da resposta:', responseText);
+      console.log('Tempo total de execução:', responseTime.toFixed(2), 'ms');
+
+      if (!response.ok) {
+        throw new Error(`Erro no webhook: Status ${response.status} - ${responseText}`);
+      }
+
+      // Atualizar última correção AH do aluno
+      const { error: updateError } = await supabase
+        .from('alunos')
+        .update({ 
+          ultima_correcao_ah: new Date().toISOString() 
+        })
+        .eq('id', data.aluno_id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar data da última correção AH:', updateError);
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          webhookError: true,
-          message: 'Dados salvos no banco, mas não foi possível sincronizar com o webhook: ' + webhookError.message
+          message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
+          webhookUrl,
+          payload: webhookPayload,
+          response: {
+            status: response.status,
+            body: responseText,
+            headers: Object.fromEntries([...response.headers]),
+            executionTime: responseTime
+          }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+
+    } catch (webhookError) {
+      if (webhookError.name === 'AbortError') {
+        console.error('Timeout ao tentar enviar dados para o webhook');
+        throw new Error('Timeout ao tentar enviar dados para o webhook após 10 segundos');
+      }
+      throw webhookError;
     }
 
-    // Retornar resposta de sucesso
+  } catch (error) {
+    const errorTime = performance.now() - startTime;
+    console.error('Erro geral:', error);
+    console.error('Tempo até erro:', errorTime.toFixed(2), 'ms');
+    
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: 'Lançamento de Abrindo Horizontes registrado com sucesso!'
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        executionTime: errorTime
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Erro geral:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
