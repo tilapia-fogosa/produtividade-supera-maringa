@@ -30,17 +30,17 @@ export const useCorretores = (unitId?: string) => {
         if (estError) throw estError;
         
         // Mapear professores para o formato de Corretor
-        const professoresFormatados: Corretor[] = (professores || []).map(prof => ({
+        const professoresFormatados = (professores || []).map(prof => ({
           id: prof.id,
           nome: prof.nome,
-          tipo: 'corretor'
+          tipo: 'corretor' as const
         }));
         
         // Mapear estagiários para o formato de Corretor
-        const estagiariosFormatados: Corretor[] = (estagiarios || []).map(est => ({
+        const estagiariosFormatados = (estagiarios || []).map(est => ({
           id: est.id,
           nome: est.nome,
-          tipo: 'corretor'
+          tipo: 'corretor' as const
         }));
         
         // Combinar as listas e ordenar por nome
