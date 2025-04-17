@@ -93,7 +93,8 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         
         {telaModo === TelaModo.AH && (
           <AbindoHorizontesScreen 
-            onBackToMenu={handleBackNavigation} 
+            onBackToMenu={handleBackNavigation}
+            alunos={alunos} // Passando os alunos como props
           />
         )}
       </div>

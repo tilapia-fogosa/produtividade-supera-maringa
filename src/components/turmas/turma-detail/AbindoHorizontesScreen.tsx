@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 
 interface AbindoHorizontesScreenProps {
   onBackToMenu: () => void;
+  alunos: Aluno[]; // Adicionado prop alunos
 }
 
 // Schema para validação do formulário
@@ -32,10 +33,9 @@ const ahFormSchema = z.object({
 
 type AhFormValues = z.infer<typeof ahFormSchema>;
 
-const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackToMenu }) => {
+const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackToMenu, alunos }) => {
   const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
-  const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
   
   // Inicializar o formulário com validação
@@ -50,37 +50,6 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({ onBackT
       comentario: ""
     }
   });
-
-  // Carregar alunos da turma atual
-  React.useEffect(() => {
-    const fetchAlunos = async () => {
-      try {
-        // Obter id da turma da URL
-        const pathSegments = window.location.pathname.split('/');
-        const turmaId = pathSegments[pathSegments.length - 1]; 
-        
-        if (!turmaId) return;
-        
-        const { data, error } = await supabase
-          .from('alunos')
-          .select('*')
-          .eq('turma_id', turmaId)
-          .eq('active', true);
-          
-        if (error) throw error;
-        setAlunos(data || []);
-      } catch (error) {
-        console.error('Erro ao carregar alunos:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os alunos",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    fetchAlunos();
-  }, []);
 
   // Quando aluno é selecionado
   const handleAlunoChange = (value: string) => {
