@@ -1,4 +1,3 @@
-
 // Lista de apostilas de ábaco com número de páginas
 export const APOSTILAS_ABACO_DETALHES = [
   { nome: "Infantil 1", paginas: 40 },
@@ -45,7 +44,26 @@ export const APOSTILAS_ABACO_DETALHES = [
 export const APOSTILAS_ABACO = APOSTILAS_ABACO_DETALHES.map(apostila => apostila.nome);
 
 // Lista de apostilas AH
-export const APOSTILAS_AH = Array.from({ length: 11 }, (_, i) => `AH ${i + 1}`);
+export const APOSTILAS_AH = [
+  "AH 1",
+  "AH 2",
+  "AH 3",
+  "AH 4",
+  "AH 4A",
+  "AH 5",
+  "AH 5A",
+  "AH 6",
+  "AH 7",
+  "AH 8",
+  "AH 9",
+  "AH 10",
+  "AH 11",
+  "AH I Iniciar",
+  "AH II Focar",
+  "AH III Persistir",
+  "AH IV Avançar",
+  "AH Alta Performance"
+];
 
 // Lista de professores (hardcoded for now)
 export const PROFESSORES = [
