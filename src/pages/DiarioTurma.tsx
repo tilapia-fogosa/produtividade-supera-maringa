@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
+import { Button } from "@/components/ui/button";  // Add this import
 
 const DiarioTurma = () => {
   const { turmaId } = useParams<{ turmaId: string }>();
