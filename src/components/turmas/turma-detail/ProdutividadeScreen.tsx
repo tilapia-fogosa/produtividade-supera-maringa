@@ -31,7 +31,10 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
         <ReposicaoButton onClick={onReposicaoAula} />
         <Button 
           variant="outline"
-          onClick={() => navigate(`/diario/${turma.id}`)}
+          onClick={() => {
+            console.log('Navegando para o diário da turma:', turma.id);
+            navigate(`/diario/${turma.id}`);
+          }}
           className="ml-2"
         >
           Ver Diário
