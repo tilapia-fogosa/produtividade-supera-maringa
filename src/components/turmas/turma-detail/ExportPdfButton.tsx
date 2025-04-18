@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { toast } from "@/hooks/use-toast";
 
@@ -84,4 +84,3 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ tableRef, turma, data
 };
 
 export default ExportPdfButton;
-
