@@ -17,7 +17,12 @@ type ServiceType = 'lista_alunos' | 'ah' | 'diario_turma';
 const TurmaDetail: React.FC<TurmaDetailProps> = ({ turma, onBack }) => {
   const location = useLocation();
   const state = location.state as any;
-  const serviceType = state?.serviceType === 'abrindo_horizontes' ? 'ah' : 'lista_alunos';
+  const serviceType: ServiceType = 
+    state?.serviceType === 'abrindo_horizontes' 
+      ? 'ah' 
+      : state?.serviceType === 'diario_turma'
+        ? 'diario_turma'
+        : 'lista_alunos';
 
   const renderContent = () => {
     switch (serviceType) {
