@@ -14,6 +14,7 @@ import Servicos from "./pages/Servicos";
 import PainelPedagogico from "./pages/PainelPedagogico";
 import Estoque from "./pages/Estoque";
 import Devolutivas from "./pages/Devolutivas";
+import Lancamentos from "./pages/Lancamentos";
 
 const queryClient = new QueryClient();
 
@@ -31,8 +32,8 @@ const App = () => (
                 <div className="p-4">
                   <SidebarTrigger className="mb-4" />
                   <Routes>
-                    <Route path="/" element={<Servicos />} />
-                    <Route path="/servicos" element={<Servicos />} />
+                    <Route path="/" element={<Lancamentos />} />
+                    <Route path="/lancamentos" element={<Lancamentos />} />
                     <Route path="/professores" element={<Professores />} />
                     <Route path="/turmas/:professorId" element={<Turmas />} />
                     <Route path="/diario/:turmaId" element={<DiarioTurma />} />
