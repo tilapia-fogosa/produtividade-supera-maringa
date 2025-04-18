@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { useIsMobile } from "@/hooks/use-mobile";
 import AlunosAHTable from './AlunosAHTable';
+import AhLancamentoModal from '../AhLancamentoModal';
 
 interface AbindoHorizontesScreenProps {
   turma: Turma;
@@ -21,15 +22,24 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [ahRegistrado, setAhRegistrado] = useState<Record<string, boolean>>({});
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
   
   const handleSelecionarAluno = (aluno: Aluno) => {
-    // Aqui você implementará a lógica de seleção de aluno no futuro
     console.log("Aluno selecionado para correção AH:", aluno.nome);
-    
-    // Simulando o registro de correção
+    setAlunoSelecionado(aluno);
+    setModalAberto(true);
+  };
+  
+  const handleFecharModal = () => {
+    setModalAberto(false);
+    setAlunoSelecionado(null);
+  };
+  
+  const handleModalSuccess = (alunoId: string) => {
     setAhRegistrado(prev => ({
       ...prev,
-      [aluno.id]: true
+      [alunoId]: true
     }));
   };
   
@@ -63,6 +73,15 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
         onSelecionarAluno={handleSelecionarAluno} 
         ahRegistrado={ahRegistrado}
       />
+      
+      {alunoSelecionado && (
+        <AhLancamentoModal
+          isOpen={modalAberto}
+          aluno={alunoSelecionado}
+          onClose={handleFecharModal}
+          onSuccess={handleModalSuccess}
+        />
+      )}
     </>
   );
 };
