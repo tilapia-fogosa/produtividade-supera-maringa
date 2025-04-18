@@ -31,11 +31,12 @@ const App = () => (
                 <div className="p-4">
                   <SidebarTrigger className="mb-4" />
                   <Routes>
-                    <Route path="/" element={<Professores />} />
+                    <Route path="/" element={<Servicos />} />
+                    <Route path="/servicos" element={<Servicos />} />
+                    <Route path="/professores" element={<Professores />} />
                     <Route path="/turmas/:professorId" element={<Turmas />} />
                     <Route path="/diario/:turmaId" element={<DiarioTurma />} />
                     <Route path="/diario" element={<DiarioTurma />} />
-                    <Route path="/servicos" element={<Servicos />} />
                     <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
                     <Route path="/estoque" element={<Estoque />} />
                     <Route path="/devolutivas" element={<Devolutivas />} />
