@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ServiceSelectionMenuProps {
-  onSelectService: (service: 'lista_alunos' | 'ah') => void;
+  onSelectService: (service: 'lista_alunos' | 'ah' | 'diario_turma') => void;
 }
 
 const ServiceSelectionMenu: React.FC<ServiceSelectionMenuProps> = ({ onSelectService }) => {
@@ -25,6 +25,13 @@ const ServiceSelectionMenu: React.FC<ServiceSelectionMenuProps> = ({ onSelectSer
         className={`w-full ${isMobile ? "text-sm py-2" : ""}`}
       >
         Lançamento Abrindo Horizontes
+      </Button>
+      <Button 
+        variant="outline" 
+        onClick={() => onSelectService('diario_turma')} 
+        className={`w-full ${isMobile ? "text-sm py-2" : ""}`}
+      >
+        Diário de Turma
       </Button>
     </div>
   );

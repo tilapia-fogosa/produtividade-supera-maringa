@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, BookOpen, TrendingUp } from "lucide-react";
+import { Users, BookOpen, TrendingUp, CalendarDays } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GoogleSheetsSync from "@/components/sync/GoogleSheetsSync";
@@ -18,7 +18,8 @@ interface Professor {
 enum ServiceType {
   NONE = 'none',
   PRODUTIVIDADE = 'produtividade',
-  ABRINDO_HORIZONTES = 'abrindo_horizontes'
+  ABRINDO_HORIZONTES = 'abrindo_horizontes',
+  DIARIO_TURMA = 'diario_turma'
 }
 
 const Professores = () => {
@@ -83,7 +84,8 @@ const Professores = () => {
         <h1 className="text-2xl font-bold text-azul-500">
           {serviceType === ServiceType.NONE ? "Serviços" : 
            serviceType === ServiceType.PRODUTIVIDADE ? "Lançar Produtividade de Sala" : 
-           "Lançar Abrindo Horizontes"}
+           serviceType === ServiceType.ABRINDO_HORIZONTES ? "Lançar Abrindo Horizontes" :
+           "Diário de Turma"}
         </h1>
         
         <div className="flex gap-2">
@@ -117,6 +119,14 @@ const Professores = () => {
               >
                 <BookOpen className="mr-2 h-6 w-6" />
                 Lançar Abrindo Horizontes
+              </Button>
+              <Button 
+                size="lg" 
+                className="py-8 text-lg bg-azul-500 hover:bg-azul-600"
+                onClick={() => handleServiceSelection(ServiceType.DIARIO_TURMA)}
+              >
+                <CalendarDays className="mr-2 h-6 w-6" />
+                Diário de Turma
               </Button>
             </CardContent>
           </>
