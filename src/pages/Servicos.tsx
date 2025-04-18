@@ -7,11 +7,11 @@ const Servicos = () => {
   const navigate = useNavigate();
 
   const handleProdutividadeClick = () => {
-    navigate('/professores', { state: { serviceType: 'produtividade' } });
+    navigate('/', { state: { serviceType: 'produtividade' } });
   };
 
   const handleAHClick = () => {
-    navigate('/professores', { state: { serviceType: 'abrindo_horizontes' } });
+    navigate('/', { state: { serviceType: 'abrindo_horizontes' } });
   };
 
   return (
