@@ -55,7 +55,10 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({ turma, onBack }) => {
   return (
     <div className="space-y-6">
       {activeService === 'menu' && (
-        <TurmaHeader turma={turma} onBack={onBack} />
+        <TurmaHeader 
+          turmaNome={turma.nome}
+          onBack={onBack} 
+        />
       )}
       {renderContent()}
     </div>

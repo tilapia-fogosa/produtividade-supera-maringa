@@ -1,25 +1,24 @@
 
 import React from 'react';
-import { TelaModo } from './types';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TurmaHeaderProps {
   turmaNome: string;
-  telaModo: TelaModo;
   onBack: () => void;
+  telaModo?: 'LISTA_ALUNOS' | 'AH';
 }
 
 const TurmaHeader: React.FC<TurmaHeaderProps> = ({ 
   turmaNome, 
-  telaModo,
+  telaModo = 'LISTA_ALUNOS',
   onBack
 }) => {
   const isMobile = useIsMobile();
   
   const getHeaderText = () => {
-    return telaModo === TelaModo.LISTA_ALUNOS 
+    return telaModo === 'LISTA_ALUNOS' 
       ? "Produtividade de Sala" 
       : "Abrindo Horizontes";
   };

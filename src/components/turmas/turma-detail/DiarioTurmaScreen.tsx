@@ -97,7 +97,7 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({ turma, onBack }) 
           exercicios: prodAluno?.exercicios ? prodAluno.exercicios.toString() : '',
           erros: prodAluno?.erros ? prodAluno.erros.toString() : '',
           fez_desafio: prodAluno?.fez_desafio || false,
-          nivel_desafio: prodAluno?.nivel_desafio || (aluno.niveldesafio ? aluno.niveldesafio.toString() : '1')
+          nivel_desafio: aluno.niveldesafio ? aluno.niveldesafio.toString() : '1'
         };
       });
       
