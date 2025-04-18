@@ -32,28 +32,30 @@ const Estoque = () => {
   };
 
   const ListaApostilas = ({ items, tipo }: { items: EstoqueItem[], tipo: 'abaco' | 'ah' }) => (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       {items.map((item, index) => (
-        <Card key={item.nome} className="p-4 flex items-center justify-between">
-          <span className="text-sm font-medium">{item.nome}</span>
-          <div className="flex items-center space-x-2">
-            <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900 rounded-md">
+        <Card key={item.nome} className="p-2 flex items-center justify-between">
+          <span className="text-xs font-medium">{item.nome}</span>
+          <div className="flex items-center space-x-1">
+            <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 rounded text-xs min-w-[2rem] text-center">
               {item.quantidade}
             </span>
             <div className="flex space-x-1">
               <Button
                 variant="outline"
                 size="icon"
+                className="h-7 w-7"
                 onClick={() => alterarQuantidade(tipo, index, -1)}
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-3 w-3" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
+                className="h-7 w-7"
                 onClick={() => alterarQuantidade(tipo, index, 1)}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3 w-3" />
               </Button>
             </div>
           </div>
@@ -63,17 +65,17 @@ const Estoque = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Estoque</h1>
+    <div className="container mx-auto p-2">
+      <h1 className="text-xl font-bold mb-4">Estoque</h1>
       
-      <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <section>
-          <h2 className="text-xl font-semibold mb-4">Apostilas de Ábaco</h2>
+          <h2 className="text-lg font-semibold mb-2">Apostilas de Ábaco</h2>
           <ListaApostilas items={estoqueAbaco} tipo="abaco" />
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold mb-4">Apostilas Abrindo Horizontes</h2>
+          <h2 className="text-lg font-semibold mb-2">Apostilas Abrindo Horizontes</h2>
           <ListaApostilas items={estoqueAH} tipo="ah" />
         </section>
       </div>
