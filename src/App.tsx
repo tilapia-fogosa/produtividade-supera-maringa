@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Professores from "./pages/Professores";
 import Turmas from "./pages/Turmas";
+import DiarioTurma from "./pages/DiarioTurma";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Professores />} />
             <Route path="/turmas/:professorId" element={<Turmas />} />
+            <Route path="/diario/:turmaId" element={<DiarioTurma />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

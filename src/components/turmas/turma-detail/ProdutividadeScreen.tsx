@@ -1,11 +1,10 @@
 
 import React from 'react';
+import { Button } from "@/components/ui/button";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import ReposicaoButton from './ReposicaoButton';
 import AlunosListaTable from './AlunosListaTable';
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface ProdutividadeScreenProps {
   turma: Turma;
@@ -24,12 +23,19 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
   onReposicaoAula = () => {},
   produtividadeRegistrada = {}
 }) => {
-  const isMobile = useIsMobile();
-  
+  const navigate = useNavigate();
+
   return (
     <>
       <div className="flex justify-between items-center mb-3">
         <ReposicaoButton onClick={onReposicaoAula} />
+        <Button 
+          variant="outline"
+          onClick={() => navigate(`/diario/${turma.id}`)}
+          className="ml-2"
+        >
+          Ver Diário
+        </Button>
       </div>
       
       <AlunosListaTable 
