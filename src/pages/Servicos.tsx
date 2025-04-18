@@ -7,13 +7,13 @@ const Servicos = () => {
   const navigate = useNavigate();
 
   const handleProdutividadeClick = () => {
-    // Navegar diretamente para a lista de professores com tipo 'produtividade'
-    navigate('/', { state: { serviceType: 'produtividade' } });
+    // Navegar para a lista de professores com tipo 'produtividade'
+    navigate('/professores', { state: { serviceType: 'produtividade' } });
   };
 
   const handleAHClick = () => {
-    // Navegar diretamente para a lista de professores com tipo 'abrindo_horizontes'
-    navigate('/', { state: { serviceType: 'abrindo_horizontes' } });
+    // Navegar para a lista de professores com tipo 'abrindo_horizontes'
+    navigate('/professores', { state: { serviceType: 'abrindo_horizontes' } });
   };
 
   return (
