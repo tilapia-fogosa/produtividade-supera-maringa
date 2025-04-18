@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Turma } from '@/hooks/use-professor-turmas';
-import ServiceSelectionMenu from './ServiceSelectionMenu';
 import ProdutividadeScreen from './ProdutividadeScreen';
 import AbindoHorizontesScreen from './AbindoHorizontesScreen';
 import DiarioTurmaScreen from './DiarioTurmaScreen';
@@ -13,53 +12,32 @@ interface TurmaDetailProps {
   onBack: () => void;
 }
 
-type ServiceType = 'menu' | 'lista_alunos' | 'ah' | 'diario_turma';
+type ServiceType = 'lista_alunos' | 'ah' | 'diario_turma';
 
 const TurmaDetail: React.FC<TurmaDetailProps> = ({ turma, onBack }) => {
   const location = useLocation();
-  const [activeService, setActiveService] = useState<ServiceType>('menu');
-  
-  useEffect(() => {
-    // Verificar se há um serviço específico na navegação
-    const state = location.state as any;
-    if (state?.serviceType) {
-      if (state.serviceType === 'produtividade') {
-        setActiveService('lista_alunos');
-      } else if (state.serviceType === 'abrindo_horizontes') {
-        setActiveService('ah');
-      } else if (state.serviceType === 'diario_turma') {
-        setActiveService('diario_turma');
-      }
-    }
-  }, [location.state]);
-
-  const handleServiceSelection = (service: 'lista_alunos' | 'ah' | 'diario_turma') => {
-    setActiveService(service);
-  };
+  const state = location.state as any;
+  const serviceType = state?.serviceType === 'abrindo_horizontes' ? 'ah' : 'lista_alunos';
 
   const renderContent = () => {
-    switch (activeService) {
-      case 'menu':
-        return <ServiceSelectionMenu onSelectService={handleServiceSelection} />;
+    switch (serviceType) {
       case 'lista_alunos':
-        return <ProdutividadeScreen turma={turma} onBack={() => setActiveService('menu')} />;
+        return <ProdutividadeScreen turma={turma} onBack={onBack} />;
       case 'ah':
-        return <AbindoHorizontesScreen turma={turma} onBack={() => setActiveService('menu')} />;
+        return <AbindoHorizontesScreen turma={turma} onBack={onBack} />;
       case 'diario_turma':
-        return <DiarioTurmaScreen turma={turma} onBack={() => setActiveService('menu')} />;
+        return <DiarioTurmaScreen turma={turma} onBack={onBack} />;
       default:
-        return <ServiceSelectionMenu onSelectService={handleServiceSelection} />;
+        return <ProdutividadeScreen turma={turma} onBack={onBack} />;
     }
   };
 
   return (
     <div className="space-y-6">
-      {activeService === 'menu' && (
-        <TurmaHeader 
-          turmaNome={turma.nome}
-          onBack={onBack} 
-        />
-      )}
+      <TurmaHeader 
+        turmaNome={turma.nome}
+        onBack={onBack} 
+      />
       {renderContent()}
     </div>
   );
