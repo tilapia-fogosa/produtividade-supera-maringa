@@ -10,14 +10,14 @@ import { formatDateBr } from "@/lib/utils";
 
 interface AlunosAHTableProps {
   alunos: Aluno[];
-  onSelecionarAluno: (aluno: Aluno) => void;
-  ahRegistrado: Record<string, boolean>;
+  onSelecionarAluno?: (aluno: Aluno) => void;
+  ahRegistrado?: Record<string, boolean>;
 }
 
 const AlunosAHTable: React.FC<AlunosAHTableProps> = ({ 
   alunos, 
-  onSelecionarAluno, 
-  ahRegistrado
+  onSelecionarAluno = () => {}, 
+  ahRegistrado = {}
 }) => {
   const isMobile = useIsMobile();
 

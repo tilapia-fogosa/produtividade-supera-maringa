@@ -3,19 +3,28 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Turma } from '@/hooks/use-professor-turmas';
 
 interface TurmaHeaderProps {
-  turmaNome: string;
+  turmaNome?: string;
+  turma?: Turma;
   onBack: () => void;
   telaModo?: 'LISTA_ALUNOS' | 'AH';
 }
 
 const TurmaHeader: React.FC<TurmaHeaderProps> = ({ 
   turmaNome, 
+  turma,
   telaModo = 'LISTA_ALUNOS',
   onBack
 }) => {
   const isMobile = useIsMobile();
+  
+  const getNomeTurma = () => {
+    if (turmaNome) return turmaNome;
+    if (turma) return turma.nome;
+    return "";
+  };
   
   const getHeaderText = () => {
     return telaModo === 'LISTA_ALUNOS' 
@@ -39,7 +48,7 @@ const TurmaHeader: React.FC<TurmaHeaderProps> = ({
           
           <div>
             <h2 className={`font-bold text-azul-500 ${isMobile ? "text-lg" : "text-xl"}`}>
-              {turmaNome}
+              {getNomeTurma()}
             </h2>
             <p className="text-sm text-azul-400">{getHeaderText()}</p>
           </div>

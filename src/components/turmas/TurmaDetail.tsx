@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { TelaModo } from './turma-detail/types';
 import TurmaHeader from './turma-detail/TurmaHeader';
@@ -38,9 +39,9 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   
-  const [telaModo, setTelaModo] = useState<TelaModo>(
-    initialServiceType === 'abrindo_horizontes' ? TelaModo.AH : TelaModo.LISTA_ALUNOS
-  );
+  // Convertendo o valor de string para o enum TelaModo
+  const telaInicial = initialServiceType === 'abrindo_horizontes' ? 'AH' : 'LISTA_ALUNOS';
+  const [telaModo, setTelaModo] = useState<'LISTA_ALUNOS' | 'AH'>(telaInicial);
   
   const handleBackNavigation = () => {
     onVoltar();
@@ -74,7 +75,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   return (
     <div className="w-full px-1 text-azul-500">
       <TurmaHeader 
-        turmaNome={turma.nome}
+        turma={turma}
         telaModo={telaModo}
         onBack={handleBackNavigation}
       />
@@ -82,8 +83,10 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
       <ConfigErrorMessage errorMessage={configError} />
 
       <div className={isMobile ? "mt-2" : "mt-4"}>
-        {telaModo === TelaModo.LISTA_ALUNOS && (
+        {telaModo === 'LISTA_ALUNOS' && (
           <ProdutividadeScreen 
+            turma={turma}
+            onBack={() => {}} // Não usado, mas necessário para tipagem
             alunos={alunos}
             onRegistrarPresenca={handleClickRegistrarPresenca}
             onReposicaoAula={handleClickReposicaoAula}
@@ -91,10 +94,12 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
           />
         )}
         
-        {telaModo === TelaModo.AH && (
+        {telaModo === 'AH' && (
           <AbindoHorizontesScreen 
+            turma={turma}
+            onBack={() => {}} // Não usado, mas necessário para tipagem
+            alunos={alunos}
             onBackToMenu={handleBackNavigation}
-            alunos={alunos} // Passando os alunos como props
           />
         )}
       </div>

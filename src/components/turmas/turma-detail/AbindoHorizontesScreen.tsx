@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
@@ -20,6 +20,18 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
   onBackToMenu = () => {}
 }) => {
   const isMobile = useIsMobile();
+  const [ahRegistrado, setAhRegistrado] = useState<Record<string, boolean>>({});
+  
+  const handleSelecionarAluno = (aluno: Aluno) => {
+    // Aqui você implementará a lógica de seleção de aluno no futuro
+    console.log("Aluno selecionado para correção AH:", aluno.nome);
+    
+    // Simulando o registro de correção
+    setAhRegistrado(prev => ({
+      ...prev,
+      [aluno.id]: true
+    }));
+  };
   
   return (
     <>
@@ -46,7 +58,11 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
         </div>
       </div>
       
-      <AlunosAHTable alunos={alunos} />
+      <AlunosAHTable 
+        alunos={alunos} 
+        onSelecionarAluno={handleSelecionarAluno} 
+        ahRegistrado={ahRegistrado}
+      />
     </>
   );
 };
