@@ -7,18 +7,18 @@ const Servicos = () => {
   const navigate = useNavigate();
 
   const handleProdutividadeClick = () => {
-    navigate('/', { state: { serviceType: 'produtividade' } });
+    navigate('/professores', { state: { serviceType: 'produtividade' } });
   };
 
   const handleAHClick = () => {
-    navigate('/', { state: { serviceType: 'abrindo_horizontes' } });
+    navigate('/professores', { state: { serviceType: 'abrindo_horizontes' } });
   };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-azul-500">Serviços</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+      <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
         <Button 
           size="lg" 
           className="py-8 text-lg bg-supera hover:bg-supera-600"
