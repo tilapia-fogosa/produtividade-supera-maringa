@@ -292,8 +292,8 @@ const DiarioTurma = () => {
                     </TableCell>
                     <TableCell>{registro?.apostila || "-"}</TableCell>
                     <TableCell>{registro?.pagina || "-"}</TableCell>
-                    <TableCell>{registro?.exercicios || "-"}</TableCell>
-                    <TableCell>{registro?.erros || "-"}</TableCell>
+                    <TableCell>{registro?.exercicios === 0 ? "0" : registro?.exercicios || "-"}</TableCell>
+                    <TableCell>{registro?.erros === 0 ? "0" : registro?.erros || "-"}</TableCell>
                     <TableCell>
                       {registro ? (
                         registro.fez_desafio ? (
@@ -317,7 +317,7 @@ const DiarioTurma = () => {
                         )
                       ) : ("-")}
                     </TableCell>
-                    <TableCell>{aluno.niveldesafio || "-"}</TableCell>
+                    <TableCell>{aluno.niveldesafio === 0 ? "0" : aluno.niveldesafio || "-"}</TableCell>
                   </TableRow>
                 );
               })
