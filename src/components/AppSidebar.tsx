@@ -1,12 +1,12 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, GraduationCap, Package, MessageCircle, CalendarDays } from "lucide-react";
+import { Settings, GraduationCap, Package, MessageCircle, CalendarDays, Home } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -14,9 +14,9 @@ import {
 
 const menuItems = [
   {
-    title: "Serviços",
-    path: "/servicos",
-    icon: Settings,
+    title: "Home",
+    path: "/home",
+    icon: Home,
   },
   {
     title: "Diário de Turma",
