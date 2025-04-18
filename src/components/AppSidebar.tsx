@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, GraduationCap, Package } from "lucide-react";
+import { Settings, GraduationCap, Package, MessageCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,11 @@ const menuItems = [
     title: "Estoque",
     path: "/estoque",
     icon: Package,
+  },
+  {
+    title: "Devolutivas",
+    path: "/devolutivas",
+    icon: MessageCircle,
   },
 ];
 
