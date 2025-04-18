@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,8 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Check, X } from "lucide-react";
+import ExportPdfButton from '@/components/turmas/turma-detail/ExportPdfButton';
 
-// Definindo interfaces
 interface Turma {
   id: string;
   nome: string;
@@ -52,8 +51,8 @@ interface RegistroProdutividade {
 const DiarioTurma = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const tableRef = useRef<HTMLDivElement>(null);
   
-  // Estados
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [turmaSelecionada, setTurmaSelecionada] = useState<string>("");
   const [data, setData] = useState<Date>(new Date());
@@ -61,7 +60,6 @@ const DiarioTurma = () => {
   const [registros, setRegistros] = useState<Record<string, RegistroProdutividade>>({});
   const [carregando, setCarregando] = useState<boolean>(false);
   
-  // Buscar lista de turmas
   useEffect(() => {
     const fetchTurmas = async () => {
       try {
@@ -75,7 +73,6 @@ const DiarioTurma = () => {
         
         setTurmas(data || []);
         
-        // Se tiver turmas, seleciona a primeira por padrão
         if (data && data.length > 0) {
           setTurmaSelecionada(data[0].id);
         }
@@ -94,7 +91,6 @@ const DiarioTurma = () => {
     fetchTurmas();
   }, []);
   
-  // Buscar alunos quando a turma for selecionada
   useEffect(() => {
     const fetchAlunos = async () => {
       if (!turmaSelecionada) return;
@@ -124,7 +120,6 @@ const DiarioTurma = () => {
     fetchAlunos();
   }, [turmaSelecionada]);
   
-  // Buscar registros de produtividade quando a data ou a turma mudar
   useEffect(() => {
     const fetchRegistros = async () => {
       if (!turmaSelecionada || !alunos.length) return;
@@ -141,7 +136,6 @@ const DiarioTurma = () => {
           
         if (error) throw error;
         
-        // Mapear os registros pelo ID do aluno para fácil acesso
         const registrosMapeados: Record<string, RegistroProdutividade> = {};
         registrosData?.forEach(registro => {
           registrosMapeados[registro.aluno_id] = registro;
@@ -167,17 +161,27 @@ const DiarioTurma = () => {
   
   return (
     <div className="container mx-auto py-4 px-2 text-azul-500">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate('/')}
-          className="mr-2 text-azul-400 hover:text-azul-500 hover:bg-orange-50"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Voltar
-        </Button>
-        <h1 className="text-xl font-bold">Diário de Turma</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="mr-2 text-azul-400 hover:text-azul-500 hover:bg-orange-50"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Voltar
+          </Button>
+          <h1 className="text-xl font-bold">Diário de Turma</h1>
+        </div>
+        
+        {turmaSelecionada && (
+          <ExportPdfButton 
+            tableRef={tableRef}
+            turma={nomeTurmaSelecionada}
+            data={data}
+          />
+        )}
       </div>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -232,7 +236,7 @@ const DiarioTurma = () => {
         </div>
       )}
       
-      <div className="overflow-x-auto">
+      <div ref={tableRef} className="overflow-x-auto bg-white rounded-lg p-4">
         <Table>
           <TableHeader>
             <TableRow>
