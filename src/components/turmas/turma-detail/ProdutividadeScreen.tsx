@@ -32,8 +32,8 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
         <Button 
           variant="outline"
           onClick={() => {
-            console.log('Navegando para o diário da turma:', turma.id);
-            navigate(`/diario/${turma.id}`);
+            console.log('Navegando para o diário');
+            navigate('/diario');
           }}
           className="ml-2"
         >

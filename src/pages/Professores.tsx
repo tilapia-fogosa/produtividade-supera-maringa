@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +69,10 @@ const Professores = () => {
     setServiceType(ServiceType.NONE);
   };
 
+  const handleDiarioTurmaClick = () => {
+    navigate('/diario');
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-4 px-4 text-center text-azul-500">
@@ -123,7 +126,7 @@ const Professores = () => {
               <Button 
                 size="lg" 
                 className="py-8 text-lg bg-azul-500 hover:bg-azul-600"
-                onClick={() => handleServiceSelection(ServiceType.DIARIO_TURMA)}
+                onClick={handleDiarioTurmaClick}
               >
                 <CalendarDays className="mr-2 h-6 w-6" />
                 Diário de Turma
