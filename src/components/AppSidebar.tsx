@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, GraduationCap, Package, MessageCircle, CalendarDays } from "lucide-react";
+import { Settings, GraduationCap, Package, MessageCircle, CalendarDays, ClipboardList } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +37,11 @@ const menuItems = [
     title: "Devolutivas",
     path: "/devolutivas",
     icon: MessageCircle,
+  },
+  {
+    title: "Lançamentos",
+    path: "/lancamentos",
+    icon: ClipboardList,
   },
 ];
 
