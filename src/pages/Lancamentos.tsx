@@ -8,11 +8,11 @@ const Lancamentos = () => {
   const navigate = useNavigate();
 
   const handleProdutividadeClick = () => {
-    navigate('/professores', { state: { serviceType: 'produtividade' } });
+    navigate('/dias-lancamento', { state: { serviceType: 'produtividade' } });
   };
 
   const handleAHClick = () => {
-    navigate('/professores', { state: { serviceType: 'abrindo_horizontes' } });
+    navigate('/dias-lancamento', { state: { serviceType: 'abrindo_horizontes' } });
   };
 
   const handleDiarioTurmaClick = () => {

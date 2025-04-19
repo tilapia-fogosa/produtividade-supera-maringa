@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import Professores from "./pages/Professores";
 import Turmas from "./pages/Turmas";
 import DiarioTurma from "./pages/DiarioTurma";
 import NotFound from "./pages/NotFound";
@@ -16,6 +15,7 @@ import PainelPedagogico from "./pages/PainelPedagogico";
 import Estoque from "./pages/Estoque";
 import Devolutivas from "./pages/Devolutivas";
 import Lancamentos from "./pages/Lancamentos";
+import DiasLancamento from "./pages/DiasLancamento";
 
 const queryClient = new QueryClient();
 
@@ -35,8 +35,8 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Navigate to="/lancamentos" />} />
                     <Route path="/servicos" element={<Servicos />} />
-                    <Route path="/professores" element={<Professores />} />
-                    <Route path="/turmas/:professorId" element={<Turmas />} />
+                    <Route path="/dias-lancamento" element={<DiasLancamento />} />
+                    <Route path="/turmas/dia" element={<Turmas />} />
                     <Route path="/diario/:turmaId" element={<DiarioTurma />} />
                     <Route path="/diario" element={<DiarioTurma />} />
                     <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
@@ -57,4 +57,3 @@ const App = () => (
 );
 
 export default App;
-
