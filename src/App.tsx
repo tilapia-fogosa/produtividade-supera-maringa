@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +9,6 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Turmas from "./pages/Turmas";
 import DiarioTurma from "./pages/DiarioTurma";
 import NotFound from "./pages/NotFound";
-import Servicos from "./pages/Servicos";
 import PainelPedagogico from "./pages/PainelPedagogico";
 import Estoque from "./pages/Estoque";
 import Devolutivas from "./pages/Devolutivas";
@@ -34,7 +32,6 @@ const App = () => (
                   <SidebarTrigger className="mb-4" />
                   <Routes>
                     <Route path="/" element={<Navigate to="/lancamentos" />} />
-                    <Route path="/servicos" element={<Servicos />} />
                     <Route path="/dias-lancamento" element={<DiasLancamento />} />
                     <Route path="/turmas/dia" element={<Turmas />} />
                     <Route path="/diario/:turmaId" element={<DiarioTurma />} />
