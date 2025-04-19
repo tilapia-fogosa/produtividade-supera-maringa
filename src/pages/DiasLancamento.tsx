@@ -24,11 +24,11 @@ const DiasLancamento = () => {
     : 'Lançar Produtividade de Sala';
 
   const handleDiaClick = (dia: string) => {
-    navigate('/turmas/dia', { 
+    navigate(`/turmas/dia`, { 
       state: { 
         dia,
         serviceType 
-      } 
+      }
     });
   };
 
