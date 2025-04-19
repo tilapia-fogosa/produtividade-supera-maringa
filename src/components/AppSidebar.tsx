@@ -14,6 +14,11 @@ import {
 
 const menuItems = [
   {
+    title: "Lançamentos",
+    path: "/lancamentos",
+    icon: ClipboardList,
+  },
+  {
     title: "Serviços",
     path: "/servicos",
     icon: Settings,
@@ -37,11 +42,6 @@ const menuItems = [
     title: "Devolutivas",
     path: "/devolutivas",
     icon: MessageCircle,
-  },
-  {
-    title: "Lançamentos",
-    path: "/lancamentos",
-    icon: ClipboardList,
   },
 ];
 
@@ -75,3 +75,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
