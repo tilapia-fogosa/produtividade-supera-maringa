@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, CalendarDays } from "lucide-react";
+import { TrendingUp, BookOpen } from "lucide-react";
 
 const Lancamentos = () => {
   const navigate = useNavigate();
@@ -13,10 +13,6 @@ const Lancamentos = () => {
 
   const handleAHClick = () => {
     navigate('/dias-lancamento', { state: { serviceType: 'abrindo_horizontes' } });
-  };
-
-  const handleDiarioTurmaClick = () => {
-    navigate('/diario');
   };
 
   return (
@@ -41,15 +37,6 @@ const Lancamentos = () => {
         >
           <BookOpen className="mr-2 h-6 w-6" />
           Lançar Abrindo Horizontes
-        </Button>
-        
-        <Button 
-          size="lg" 
-          className="py-8 text-lg bg-azul-500 hover:bg-azul-600"
-          onClick={handleDiarioTurmaClick}
-        >
-          <CalendarDays className="mr-2 h-6 w-6" />
-          Diário de Turma
         </Button>
       </div>
     </div>
