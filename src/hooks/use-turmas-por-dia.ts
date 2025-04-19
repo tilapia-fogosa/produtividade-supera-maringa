@@ -35,7 +35,7 @@ export function useTurmasPorDia() {
         }
 
         console.log('Turmas encontradas:', turmasData);
-        setTurmas(turmasData || []);
+        setTurmas(turmasData as Turma[] || []);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
       } finally {
