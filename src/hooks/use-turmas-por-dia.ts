@@ -2,7 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
-import { Turma } from './use-professor-turmas';
+
+// Defina o tipo Turma sem a propriedade alunos
+export interface Turma {
+  id: string;
+  nome: string;
+  dia_semana: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
+  horario: string;
+  professor_id: string;
+}
 
 export function useTurmasPorDia() {
   const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -19,14 +27,7 @@ export function useTurmasPorDia() {
         
         const { data: turmasData, error } = await supabase
           .from('turmas')
-          .select(`
-            id,
-            nome,
-            dia_semana,
-            horario,
-            professor_id,
-            alunos (*)
-          `)
+          .select('*')
           .eq('dia_semana', dia);
 
         if (error) {
@@ -35,7 +36,7 @@ export function useTurmasPorDia() {
         }
 
         console.log('Turmas encontradas:', turmasData);
-        setTurmas(turmasData as Turma[] || []);
+        setTurmas(turmasData || []);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
       } finally {
