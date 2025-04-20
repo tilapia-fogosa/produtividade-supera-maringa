@@ -34,7 +34,7 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({ turmas, loading }) => {
                 key={turma.id}
                 variant="outline"
                 className="w-full justify-between text-left h-auto border-orange-200 hover:bg-orange-100"
-                onClick={() => navigate(`/turma/${turma.id}`)}
+                onClick={() => navigate(`/diario/${turma.id}`)}
               >
                 <div className="flex flex-col items-start">
                   <span className="font-medium text-azul-500">{turma.nome}</span>
