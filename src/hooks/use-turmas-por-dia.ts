@@ -25,6 +25,13 @@ export function useTurmasPorDia() {
         setLoading(true);
         console.log('Buscando turmas para o dia:', dia);
         
+        if (!dia) {
+          console.error('Dia não especificado');
+          setTurmas([]);
+          setLoading(false);
+          return;
+        }
+        
         const { data: turmasData, error } = await supabase
           .from('turmas')
           .select('*')
@@ -46,6 +53,9 @@ export function useTurmasPorDia() {
 
     if (dia) {
       fetchTurmas();
+    } else {
+      setTurmas([]);
+      setLoading(false);
     }
   }, [dia]);
 

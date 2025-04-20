@@ -9,10 +9,14 @@ import { ArrowLeft } from 'lucide-react';
 const Turmas = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { turmas, loading, serviceType } = useTurmasPorDia();
   const dia = location.state?.dia;
-
+  const serviceType = location.state?.serviceType;
+  
   console.log("Página Turmas - Dia recebido:", dia);
+  
+  // Usando o hook com o valor do dia
+  const { turmas, loading } = useTurmasPorDia();
+  
   console.log("Turmas encontradas:", turmas);
 
   const handleVoltar = () => {
