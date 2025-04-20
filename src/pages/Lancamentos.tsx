@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, BookOpen } from "lucide-react";
+import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 
 const Lancamentos = () => {
   const navigate = useNavigate();
@@ -17,7 +18,10 @@ const Lancamentos = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-azul-500">Lançamentos</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-azul-500">Lançamentos</h1>
+        <GoogleSheetsSync />
+      </div>
       
       <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
         <Button 
