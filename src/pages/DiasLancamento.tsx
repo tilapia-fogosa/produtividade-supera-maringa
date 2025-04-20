@@ -24,6 +24,7 @@ const DiasLancamento = () => {
     : 'Lançar Produtividade de Sala';
 
   const handleDiaClick = (dia: string) => {
+    console.log("Navegando para turmas do dia:", dia);
     navigate(`/turmas/dia`, { 
       state: { 
         dia,
