@@ -137,6 +137,21 @@ function extractDataFromRows(rows, headerRow, columnIndexes) {
   return rawData;
 }
 
+// Function to determine weekday from class name
+function getDiaSemanaFromTurmaNome(turmaNome: string): "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo" {
+  const nomeLowerCase = turmaNome.toLowerCase().trim();
+  
+  if (nomeLowerCase.startsWith('2')) return 'segunda';
+  if (nomeLowerCase.startsWith('3')) return 'terca';
+  if (nomeLowerCase.startsWith('4')) return 'quarta';
+  if (nomeLowerCase.startsWith('5')) return 'quinta';
+  if (nomeLowerCase.startsWith('6')) return 'sexta';
+  if (nomeLowerCase.startsWith('sabado')) return 'sabado';
+  
+  console.log(`Nome de turma não reconhecido para dia da semana: ${turmaNome}. Usando segunda como padrão.`);
+  return 'segunda'; // fallback para manter compatibilidade
+}
+
 // STEP 1: Extract unique professors from spreadsheet and sync to database
 async function syncProfessors(rawData) {
   console.log("Sincronizando professores...");
@@ -232,7 +247,8 @@ async function syncTurmas(rawData, professors) {
       if (!turmasMap.has(turmaNome) || (!turmasMap.get(turmaNome)?.professor_nome && professorNome)) {
         turmasMap.set(turmaNome, { 
           nome: turmaNome, 
-          professor_nome: professorNome 
+          professor_nome: professorNome,
+          dia_semana: getDiaSemanaFromTurmaNome(turmaNome) // Using our new function here
         });
       }
     }
@@ -274,14 +290,18 @@ async function syncTurmas(rawData, professors) {
       turmasToAdd.push({
         nome: turma.nome,
         professor_id: professorId,
-        dia_semana: 'segunda', // Default values, can be updated later
-        horario: '14:00:00'    // Default values, can be updated later
+        dia_semana: turma.dia_semana, // Using the detected weekday
+        horario: '14:00:00'    // Default value, can be updated later
       });
-    } else if (professorId && existingTurma.professor_id !== professorId) {
-      // Existing turma with professor change
+    } else if (
+      professorId && existingTurma.professor_id !== professorId ||
+      existingTurma.dia_semana !== turma.dia_semana // Also update if weekday changed
+    ) {
+      // Existing turma with professor or weekday change
       turmasToUpdate.push({
         id: existingTurma.id,
-        professor_id: professorId
+        professor_id: professorId,
+        dia_semana: turma.dia_semana
       });
     }
   }
@@ -307,7 +327,10 @@ async function syncTurmas(rawData, professors) {
   for (const turma of turmasToUpdate) {
     const { error: updateError } = await supabase
       .from('turmas')
-      .update({ professor_id: turma.professor_id })
+      .update({ 
+        professor_id: turma.professor_id,
+        dia_semana: turma.dia_semana
+      })
       .eq('id', turma.id);
     
     if (updateError) {
