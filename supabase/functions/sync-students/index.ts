@@ -139,14 +139,14 @@ function extractDataFromRows(rows, headerRow, columnIndexes) {
 
 // Function to determine weekday from class name
 function getDiaSemanaFromTurmaNome(turmaNome: string): "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo" {
-  const nomeLowerCase = turmaNome.toLowerCase().trim();
+  const nomeLowerCase = turmaNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   
   if (nomeLowerCase.startsWith('2')) return 'segunda';
   if (nomeLowerCase.startsWith('3')) return 'terca';
   if (nomeLowerCase.startsWith('4')) return 'quarta';
   if (nomeLowerCase.startsWith('5')) return 'quinta';
   if (nomeLowerCase.startsWith('6')) return 'sexta';
-  if (nomeLowerCase.startsWith('sabado')) return 'sabado';
+  if (nomeLowerCase.startsWith('sab') || nomeLowerCase.includes('sabado')) return 'sabado';
   
   console.log(`Nome de turma não reconhecido para dia da semana: ${turmaNome}. Usando segunda como padrão.`);
   return 'segunda'; // fallback para manter compatibilidade
@@ -211,7 +211,7 @@ async function syncProfessors(rawData) {
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
         unit_id: defaultUnitId  // Agora usando unit_id em vez de unidade_id
-      })))
+      }))
       .select();
     
     if (insertError) {
