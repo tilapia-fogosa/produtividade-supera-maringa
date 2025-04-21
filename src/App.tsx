@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import Estoque from "./pages/Estoque";
 import Devolutivas from "./pages/Devolutivas";
 import Lancamentos from "./pages/Lancamentos";
 import DiasLancamento from "./pages/DiasLancamento";
+import DevolutivaTurma from "./pages/DevolutivaTurma";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,7 @@ const App = () => (
                     <Route path="/estoque" element={<Estoque />} />
                     <Route path="/devolutivas" element={<Devolutivas />} />
                     <Route path="/devolutivas/turmas" element={<Turmas />} />
+                    <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                     <Route path="/lancamentos" element={<Lancamentos />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
