@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AlunoDevolutiva } from '@/hooks/use-devolutivas';
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 const DevolutivaTurma = () => {
   const { turmaId } = useParams();
@@ -15,9 +16,7 @@ const DevolutivaTurma = () => {
   const [salvando, setSalvando] = useState(false);
   const [turma, setTurma] = useState<{ id: string; nome: string } | null>(null);
   const [alunos, setAlunos] = useState<AlunoDevolutiva[]>([]);
-  const [textoGeral, setTextoGeral] = useState('');
   const [textoAlunos, setTextoAlunos] = useState<Record<string, string>>({});
-  const [configId, setConfigId] = useState<string | null>(null);
 
   useEffect(() => {
     const carregarDados = async () => {
@@ -58,20 +57,6 @@ const DevolutivaTurma = () => {
         });
         setTextoAlunos(textos);
 
-        // Buscar texto geral da devolutiva
-        const { data: configData, error: configError } = await supabase
-          .from('devolutivas_config')
-          .select('*');
-
-        if (configError) {
-          console.error('Erro ao buscar configuração de devolutivas:', configError);
-          return;
-        }
-
-        if (configData && configData.length > 0) {
-          setTextoGeral(configData[0].texto_geral || '');
-          setConfigId(configData[0].id);
-        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       } finally {
@@ -88,35 +73,6 @@ const DevolutivaTurma = () => {
     navigate('/devolutivas/turmas');
   };
 
-  const handleSalvarTextoGeral = async () => {
-    setSalvando(true);
-    try {
-      if (configId) {
-        // Atualizar configuração existente
-        await supabase
-          .from('devolutivas_config')
-          .update({ texto_geral: textoGeral })
-          .eq('id', configId);
-      } else {
-        // Criar nova configuração
-        const { data } = await supabase
-          .from('devolutivas_config')
-          .insert({ texto_geral: textoGeral })
-          .select();
-        
-        if (data && data.length > 0) {
-          setConfigId(data[0].id);
-        }
-      }
-      alert('Texto geral salvo com sucesso!');
-    } catch (error) {
-      console.error('Erro ao salvar texto geral:', error);
-      alert('Erro ao salvar texto geral');
-    } finally {
-      setSalvando(false);
-    }
-  };
-
   const handleSalvarTextoAluno = async (alunoId: string) => {
     setSalvando(true);
     try {
@@ -125,10 +81,10 @@ const DevolutivaTurma = () => {
         .update({ texto_devolutiva: textoAlunos[alunoId] })
         .eq('id', alunoId);
       
-      alert('Texto do aluno salvo com sucesso!');
+      toast.success('Texto do aluno salvo com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar texto do aluno:', error);
-      alert('Erro ao salvar texto do aluno');
+      toast.error('Erro ao salvar texto do aluno');
     } finally {
       setSalvando(false);
     }
@@ -162,31 +118,6 @@ const DevolutivaTurma = () => {
       <h1 className="text-xl font-bold mb-4 text-azul-500">
         Devolutivas - {turma?.nome}
       </h1>
-      
-      <Card className="border-orange-200 bg-white mb-6">
-        <CardHeader className="border-b border-orange-100">
-          <CardTitle className="text-lg text-azul-500">Texto Geral da Devolutiva</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <Textarea
-            value={textoGeral}
-            onChange={(e) => setTextoGeral(e.target.value)}
-            placeholder="Digite o texto geral da devolutiva aqui..."
-            className="min-h-[150px] mb-4"
-          />
-          <Button 
-            onClick={handleSalvarTextoGeral}
-            disabled={salvando}
-            className="bg-azul-500 hover:bg-azul-600"
-          >
-            {salvando ? 'Salvando...' : 'Salvar Texto Geral'}
-          </Button>
-        </CardContent>
-      </Card>
-      
-      <h2 className="text-lg font-semibold mb-4 text-azul-500">
-        Devolutivas Individuais
-      </h2>
       
       <div className="space-y-4">
         {alunos.map((aluno) => (
