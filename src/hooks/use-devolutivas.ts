@@ -2,7 +2,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from 'react-router-dom';
-import { Aluno, Turma } from './use-turmas-por-dia';
+import { Turma } from './use-turmas-por-dia';
+
+export interface AlunoDevolutiva {
+  id: string;
+  nome: string;
+  texto_devolutiva: string | null;
+}
 
 export function useDevolutivas() {
   const [turmas, setTurmas] = useState<Turma[]>([]);
