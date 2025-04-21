@@ -1,22 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AlunoDevolutiva } from '@/hooks/use-devolutivas';
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
 
 const DevolutivaTurma = () => {
   const { turmaId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [salvando, setSalvando] = useState(false);
   const [turma, setTurma] = useState<{ id: string; nome: string } | null>(null);
   const [alunos, setAlunos] = useState<AlunoDevolutiva[]>([]);
-  const [textoAlunos, setTextoAlunos] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const carregarDados = async () => {
@@ -39,7 +34,7 @@ const DevolutivaTurma = () => {
         // Buscar alunos da turma
         const { data: alunosData, error: alunosError } = await supabase
           .from('alunos')
-          .select('id, nome, texto_devolutiva')
+          .select('id, nome')
           .eq('turma_id', turmaId)
           .eq('active', true);
 
@@ -49,13 +44,6 @@ const DevolutivaTurma = () => {
         }
 
         setAlunos(alunosData || []);
-
-        // Inicializar o estado de textos dos alunos
-        const textos: Record<string, string> = {};
-        alunosData?.forEach(aluno => {
-          textos[aluno.id] = aluno.texto_devolutiva || '';
-        });
-        setTextoAlunos(textos);
 
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -71,30 +59,6 @@ const DevolutivaTurma = () => {
 
   const handleVoltar = () => {
     navigate('/devolutivas/turmas');
-  };
-
-  const handleSalvarTextoAluno = async (alunoId: string) => {
-    setSalvando(true);
-    try {
-      await supabase
-        .from('alunos')
-        .update({ texto_devolutiva: textoAlunos[alunoId] })
-        .eq('id', alunoId);
-      
-      toast.success('Texto do aluno salvo com sucesso!');
-    } catch (error) {
-      console.error('Erro ao salvar texto do aluno:', error);
-      toast.error('Erro ao salvar texto do aluno');
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const handleTextoAlunoChange = (alunoId: string, texto: string) => {
-    setTextoAlunos(prev => ({
-      ...prev,
-      [alunoId]: texto
-    }));
   };
 
   if (loading) {
@@ -116,37 +80,20 @@ const DevolutivaTurma = () => {
       </Button>
       
       <h1 className="text-xl font-bold mb-4 text-azul-500">
-        Devolutivas - {turma?.nome}
+        Lista de Alunos - {turma?.nome}
       </h1>
       
       <div className="space-y-4">
-        {alunos.map((aluno) => (
-          <Card key={aluno.id} className="border-orange-200 bg-white">
-            <CardHeader className="border-b border-orange-100 py-3">
-              <CardTitle className="text-md text-azul-500">{aluno.nome}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <Textarea
-                value={textoAlunos[aluno.id] || ''}
-                onChange={(e) => handleTextoAlunoChange(aluno.id, e.target.value)}
-                placeholder="Digite a devolutiva individual aqui..."
-                className="min-h-[100px] mb-4"
-              />
-              <Button 
-                onClick={() => handleSalvarTextoAluno(aluno.id)}
-                disabled={salvando}
-                className="bg-azul-500 hover:bg-azul-600"
-              >
-                {salvando ? 'Salvando...' : 'Salvar'}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {alunos.length === 0 && (
+        {alunos.length === 0 ? (
           <p className="text-center text-gray-500 p-4">
             Nenhum aluno encontrado nesta turma.
           </p>
+        ) : (
+          alunos.map((aluno) => (
+            <div key={aluno.id} className="p-4 border rounded-lg border-orange-200 bg-white">
+              <h3 className="text-md text-azul-500">{aluno.nome}</h3>
+            </div>
+          ))
         )}
       </div>
     </div>
