@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,8 @@ interface DayTurmasListProps {
 
 const DayTurmasList: React.FC<DayTurmasListProps> = ({ turmas, loading }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const serviceType = location.state?.serviceType;
 
   if (loading) {
     return (
@@ -21,6 +22,14 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({ turmas, loading }) => {
       </div>
     );
   }
+
+  const handleTurmaClick = (turmaId: string) => {
+    if (serviceType === 'devolutiva') {
+      navigate(`/devolutivas/turma/${turmaId}`);
+    } else {
+      navigate(`/diario/${turmaId}`);
+    }
+  };
 
   return (
     <Card className="border-orange-200">
@@ -34,7 +43,7 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({ turmas, loading }) => {
                 key={turma.id}
                 variant="outline"
                 className="w-full justify-between text-left h-auto border-orange-200 hover:bg-orange-100"
-                onClick={() => navigate(`/diario/${turma.id}`)}
+                onClick={() => handleTurmaClick(turma.id)}
               >
                 <div className="flex flex-col items-start">
                   <span className="font-medium text-azul-500">{turma.nome}</span>

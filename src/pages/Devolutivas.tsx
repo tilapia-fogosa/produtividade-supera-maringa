@@ -1,13 +1,54 @@
 
-import React from "react";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarDays } from "lucide-react";
+
+const diasSemana = [
+  { id: 'segunda', nome: 'Segunda-feira' },
+  { id: 'terca', nome: 'Terça-feira' },
+  { id: 'quarta', nome: 'Quarta-feira' },
+  { id: 'quinta', nome: 'Quinta-feira' },
+  { id: 'sexta', nome: 'Sexta-feira' },
+  { id: 'sabado', nome: 'Sábado' },
+];
 
 const Devolutivas = () => {
+  const navigate = useNavigate();
+
+  const handleDiaClick = (dia: string) => {
+    navigate(`/devolutivas/turmas`, { 
+      state: { 
+        dia,
+        serviceType: 'devolutiva'
+      }
+    });
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Devolutivas</h1>
-      <p className="text-muted-foreground">
-        Página de devolutivas em desenvolvimento.
-      </p>
+      <h1 className="text-2xl font-bold mb-6 text-azul-500">Devolutivas</h1>
+      
+      <Card className="border-orange-200 bg-white">
+        <CardHeader className="border-b border-orange-100">
+          <CardTitle className="text-azul-500">Selecione o dia da semana</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 p-6">
+          {diasSemana.map((dia) => (
+            <Button 
+              key={dia.id}
+              size="lg"
+              className="py-8 text-lg border-orange-300 text-azul-500 hover:bg-orange-100"
+              variant="outline"
+              onClick={() => handleDiaClick(dia.id)}
+            >
+              <CalendarDays className="mr-2 h-6 w-6" />
+              {dia.nome}
+            </Button>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 };
