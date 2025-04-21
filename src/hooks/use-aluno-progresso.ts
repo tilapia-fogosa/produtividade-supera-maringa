@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, isAfter } from 'date-fns';
@@ -15,6 +16,7 @@ interface AlunoProgresso {
   media_paginas_por_aula: number | null;
   media_exercicios_por_aula: number | null;
   ultimo_desafio: number | null;
+  texto_devolutiva: string | null;
 }
 
 export const useAlunoProgresso = (alunoId: string) => {
@@ -33,10 +35,10 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         console.log('useAlunoProgresso: Buscando dados para o aluno ID:', alunoId);
 
-        // Buscar dados do aluno incluindo niveldesafio
+        // Buscar dados do aluno incluindo niveldesafio e texto_devolutiva
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
-          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta, niveldesafio')
+          .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta, niveldesafio, texto_devolutiva')
           .eq('id', alunoId)
           .maybeSingle();
 
@@ -147,7 +149,8 @@ export const useAlunoProgresso = (alunoId: string) => {
           previsao_conclusao: previsaoConclusao,
           media_paginas_por_aula: mediaPaginasPorAula,
           media_exercicios_por_aula: mediaExerciciosPorAula,
-          ultimo_desafio: alunoData.niveldesafio
+          ultimo_desafio: alunoData.niveldesafio,
+          texto_devolutiva: alunoData.texto_devolutiva
         });
 
       } catch (error) {

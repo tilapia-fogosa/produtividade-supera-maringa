@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -34,7 +34,7 @@ const DevolutivaTurma = () => {
         // Buscar alunos da turma
         const { data: alunosData, error: alunosError } = await supabase
           .from('alunos')
-          .select('id, nome')
+          .select('id, nome, texto_devolutiva')
           .eq('turma_id', turmaId)
           .eq('active', true);
 
