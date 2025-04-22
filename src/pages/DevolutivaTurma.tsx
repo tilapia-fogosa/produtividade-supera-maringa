@@ -90,7 +90,11 @@ const DevolutivaTurma = () => {
           </p>
         ) : (
           alunos.map((aluno) => (
-            <div key={aluno.id} className="p-4 border rounded-lg border-orange-200 bg-white">
+            <div 
+              key={aluno.id} 
+              className="p-4 border rounded-lg border-orange-200 bg-white hover:bg-orange-50 cursor-pointer transition-colors"
+              onClick={() => navigate(`/devolutivas/aluno/${aluno.id}`)}
+            >
               <h3 className="text-md text-azul-500">{aluno.nome}</h3>
             </div>
           ))

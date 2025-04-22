@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import Devolutivas from "./pages/Devolutivas";
 import Lancamentos from "./pages/Lancamentos";
 import DiasLancamento from "./pages/DiasLancamento";
 import DevolutivaTurma from "./pages/DevolutivaTurma";
+import DevolutivaAluno from "./pages/DevolutivaAluno";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +43,7 @@ const App = () => (
                     <Route path="/devolutivas" element={<Devolutivas />} />
                     <Route path="/devolutivas/turmas" element={<Turmas />} />
                     <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
+                    <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
                     <Route path="/lancamentos" element={<Lancamentos />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
