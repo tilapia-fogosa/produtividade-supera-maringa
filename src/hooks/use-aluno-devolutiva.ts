@@ -78,15 +78,15 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
       if (item.apostila) agrupamento[mesKey].livros.add(item.apostila);
     });
 
-    return Object.entries(agrupamento).map(([mes, dados]) => ({
-      mes: format(parseISO(mes + '-01'), 'MMMM yyyy', { locale: ptBR }),
+    return Object.entries(agrupamento).map(([mesKey, dados]) => ({
+      mes: format(parseISO(mesKey + '-01'), 'MMMM yyyy', { locale: ptBR }),
       livro: Array.from(dados.livros).join(', '),
       exercicios: dados.exercicios,
       erros: dados.erros,
       percentual_acerto: dados.exercicios > 0 ? ((dados.exercicios - dados.erros) / dados.exercicios) * 100 : 0
     })).sort((a, b) => {
-      const mesA = parseISO(mes + '-01');
-      const mesB = parseISO(mes + '-01');
+      const mesA = parseISO(a.mes.split(' ')[0] + '-01-' + a.mes.split(' ')[1]);
+      const mesB = parseISO(b.mes.split(' ')[0] + '-01-' + b.mes.split(' ')[1]);
       return mesB.getTime() - mesA.getTime();
     });
   };
