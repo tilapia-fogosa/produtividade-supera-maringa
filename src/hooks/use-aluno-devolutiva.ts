@@ -1,30 +1,29 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { subMonths, format, parseISO, isWithinInterval } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-export interface DesempenhoAbacoItem {
-  data: string;
+export interface DesempenhoMensalItem {
+  mes: string;
   livro: string;
   exercicios: number;
   erros: number;
   percentual_acerto: number;
 }
 
-export interface DesempenhoAHItem {
-  data: string;
-  livro: string;
-  exercicios: number;
-  erros: number;
-  percentual_acerto: number;
-}
+export interface DesempenhoMensalAH extends DesempenhoMensalItem {}
+export interface DesempenhoMensalAbaco extends DesempenhoMensalItem {}
+
+export type PeriodoFiltro = 'mes' | 'trimestre' | 'quadrimestre' | 'semestre' | 'ano';
 
 export interface AlunoDevolutiva {
   id: string;
   nome: string;
   desafios_feitos: number;
   texto_devolutiva: string | null;
-  desempenho_abaco: DesempenhoAbacoItem[];
-  desempenho_ah: DesempenhoAHItem[];
+  desempenho_abaco: DesempenhoMensalAbaco[];
+  desempenho_ah: DesempenhoMensalAH[];
   abaco_total_exercicios: number;
   abaco_total_erros: number;
   abaco_percentual_total: number;
@@ -33,17 +32,72 @@ export interface AlunoDevolutiva {
   ah_percentual_total: number;
 }
 
-export const useAlunoDevolutiva = (alunoId: string, mes?: string) => {
+interface AgrupamentoMensal {
+  [key: string]: {
+    exercicios: number;
+    erros: number;
+    livros: Set<string>;
+  };
+}
+
+export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'mes') => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AlunoDevolutiva | null>(null);
   const [mesesDisponiveis, setMesesDisponiveis] = useState<string[]>([]);
+
+  const getPeriodoData = (periodo: PeriodoFiltro) => {
+    const hoje = new Date();
+    const mesesAnteriores = {
+      mes: 1,
+      trimestre: 3,
+      quadrimestre: 4,
+      semestre: 6,
+      ano: 12
+    };
+    return subMonths(hoje, mesesAnteriores[periodo]);
+  };
+
+  const agruparPorMes = (dados: any[], dataField: string): DesempenhoMensalItem[] => {
+    const agrupamento: AgrupamentoMensal = {};
+    
+    dados.forEach(item => {
+      const data = typeof item[dataField] === 'string' ? parseISO(item[dataField]) : item[dataField];
+      const mesKey = format(data, 'yyyy-MM');
+      
+      if (!agrupamento[mesKey]) {
+        agrupamento[mesKey] = {
+          exercicios: 0,
+          erros: 0,
+          livros: new Set()
+        };
+      }
+      
+      agrupamento[mesKey].exercicios += item.exercicios || 0;
+      agrupamento[mesKey].erros += item.erros || 0;
+      if (item.apostila) agrupamento[mesKey].livros.add(item.apostila);
+    });
+
+    return Object.entries(agrupamento).map(([mes, dados]) => ({
+      mes: format(parseISO(mes + '-01'), 'MMMM yyyy', { locale: ptBR }),
+      livro: Array.from(dados.livros).join(', '),
+      exercicios: dados.exercicios,
+      erros: dados.erros,
+      percentual_acerto: dados.exercicios > 0 ? ((dados.exercicios - dados.erros) / dados.exercicios) * 100 : 0
+    })).sort((a, b) => {
+      const mesA = parseISO(mes + '-01');
+      const mesB = parseISO(mes + '-01');
+      return mesB.getTime() - mesA.getTime();
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        const dataInicial = getPeriodoData(periodo);
 
         // Buscar dados básicos do aluno
         const { data: alunoData, error: alunoError } = await supabase
@@ -59,6 +113,7 @@ export const useAlunoDevolutiva = (alunoId: string, mes?: string) => {
           .from('produtividade_abaco')
           .select('*')
           .eq('aluno_id', alunoId)
+          .gte('data_aula', dataInicial.toISOString())
           .order('data_aula', { ascending: true });
 
         if (abacoError) throw abacoError;
@@ -68,29 +123,16 @@ export const useAlunoDevolutiva = (alunoId: string, mes?: string) => {
           .from('produtividade_ah')
           .select('*')
           .eq('aluno_id', alunoId)
+          .gte('created_at', dataInicial.toISOString())
           .order('created_at', { ascending: true });
 
         if (ahError) throw ahError;
 
-        // Processar dados do Ábaco
-        const desempenhoAbaco = abacoData.map(item => ({
-          data: item.data_aula,
-          livro: item.apostila || '',
-          exercicios: item.exercicios || 0,
-          erros: item.erros || 0,
-          percentual_acerto: item.exercicios ? ((item.exercicios - (item.erros || 0)) / item.exercicios) * 100 : 0
-        }));
+        // Processar dados por mês
+        const desempenhoAbaco = agruparPorMes(abacoData, 'data_aula');
+        const desempenhoAH = agruparPorMes(ahData, 'created_at');
 
-        // Processar dados do AH
-        const desempenhoAH = ahData.map(item => ({
-          data: item.created_at,
-          livro: item.apostila || '',
-          exercicios: item.exercicios || 0,
-          erros: item.erros || 0,
-          percentual_acerto: item.exercicios ? ((item.exercicios - (item.erros || 0)) / item.exercicios) * 100 : 0
-        }));
-
-        // Calcular totais Ábaco
+        // Calcular totais gerais
         const abacoTotais = desempenhoAbaco.reduce(
           (acc, curr) => ({
             exercicios: acc.exercicios + curr.exercicios,
@@ -99,7 +141,6 @@ export const useAlunoDevolutiva = (alunoId: string, mes?: string) => {
           { exercicios: 0, erros: 0 }
         );
 
-        // Calcular totais AH
         const ahTotais = desempenhoAH.reduce(
           (acc, curr) => ({
             exercicios: acc.exercicios + curr.exercicios,
@@ -130,8 +171,8 @@ export const useAlunoDevolutiva = (alunoId: string, mes?: string) => {
 
         // Coletar meses disponíveis
         const meses = [...new Set([
-          ...abacoData.map(item => item.data_aula.substring(0, 7)),
-          ...ahData.map(item => item.created_at.substring(0, 7))
+          ...abacoData.map(item => format(new Date(item.data_aula), 'yyyy-MM')),
+          ...ahData.map(item => format(new Date(item.created_at), 'yyyy-MM'))
         ])].sort();
         
         setMesesDisponiveis(meses);
@@ -147,7 +188,7 @@ export const useAlunoDevolutiva = (alunoId: string, mes?: string) => {
     if (alunoId) {
       fetchData();
     }
-  }, [alunoId, mes]);
+  }, [alunoId, periodo]);
 
   return { data, loading, error, mesesDisponiveis };
 };

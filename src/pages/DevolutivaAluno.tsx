@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Brain } from "lucide-react";
-import { useAlunoDevolutiva } from '@/hooks/use-aluno-devolutiva';
+import { useAlunoDevolutiva, PeriodoFiltro } from '@/hooks/use-aluno-devolutiva';
 import {
   Select,
   SelectContent,
@@ -23,11 +23,19 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
+  { value: 'mes', label: 'Último mês' },
+  { value: 'trimestre', label: 'Último trimestre' },
+  { value: 'quadrimestre', label: 'Último quadrimestre' },
+  { value: 'semestre', label: 'Último semestre' },
+  { value: 'ano', label: 'Último ano' },
+];
+
 const DevolutivaAluno = () => {
   const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
-  const [selectedMes, setSelectedMes] = useState<string>('');
-  const { data: aluno, loading, error, mesesDisponiveis } = useAlunoDevolutiva(alunoId || '', selectedMes);
+  const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes');
+  const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
   const [textoDevolutiva, setTextoDevolutiva] = useState(aluno?.texto_devolutiva || '');
 
   const handleVoltar = () => {
@@ -88,14 +96,14 @@ const DevolutivaAluno = () => {
           <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
         </Button>
 
-        <Select value={selectedMes} onValueChange={setSelectedMes}>
+        <Select value={selectedPeriodo} onValueChange={(value: PeriodoFiltro) => setSelectedPeriodo(value)}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Selecionar mês" />
+            <SelectValue placeholder="Selecionar período" />
           </SelectTrigger>
           <SelectContent>
-            {mesesDisponiveis.map((mes) => (
-              <SelectItem key={mes} value={mes}>
-                {new Date(mes).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            {PERIODO_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -118,12 +126,12 @@ const DevolutivaAluno = () => {
       </div>
 
       <div className="space-y-6">
-        {/* Tabela Ábaco */}
+        {/* Tabela Ábaco - Mensal */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left">Data</TableHead>
+                <TableHead className="text-left">Mês</TableHead>
                 <TableHead>Livro</TableHead>
                 <TableHead>Exercícios</TableHead>
                 <TableHead>Erros</TableHead>
@@ -133,7 +141,7 @@ const DevolutivaAluno = () => {
             <TableBody>
               {aluno.desempenho_abaco.map((item, index) => (
                 <TableRow key={index}>
-                  <TableCell>{new Date(item.data).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell>{item.mes}</TableCell>
                   <TableCell>{item.livro}</TableCell>
                   <TableCell>{item.exercicios}</TableCell>
                   <TableCell>{item.erros}</TableCell>
@@ -150,12 +158,12 @@ const DevolutivaAluno = () => {
           </Table>
         </div>
 
-        {/* Tabela Abrindo Horizontes */}
+        {/* Tabela Abrindo Horizontes - Mensal */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left">Data</TableHead>
+                <TableHead className="text-left">Mês</TableHead>
                 <TableHead>Livro</TableHead>
                 <TableHead>Exercícios</TableHead>
                 <TableHead>Erros</TableHead>
@@ -165,7 +173,7 @@ const DevolutivaAluno = () => {
             <TableBody>
               {aluno.desempenho_ah.map((item, index) => (
                 <TableRow key={index}>
-                  <TableCell>{new Date(item.data).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell>{item.mes}</TableCell>
                   <TableCell>{item.livro}</TableCell>
                   <TableCell>{item.exercicios}</TableCell>
                   <TableCell>{item.erros}</TableCell>
