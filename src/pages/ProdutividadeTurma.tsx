@@ -6,6 +6,7 @@ import { useAlunos } from '@/hooks/use-alunos';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-turmas-por-dia';
 import { toast } from '@/hooks/use-toast';
+import { Aluno } from '@/hooks/use-professor-turmas';
 
 const ProdutividadeTurma = () => {
   const location = useLocation();
@@ -57,6 +58,12 @@ const ProdutividadeTurma = () => {
     });
   };
 
+  // Adaptar a função handleRegistrarPresenca para receber um objeto Aluno
+  // e extrair o ID antes de chamar a função original
+  const handleRegistrarPresencaAdapter = (aluno: Aluno) => {
+    return handleRegistrarPresenca(aluno.id);
+  };
+
   if (loading) {
     return (
       <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
@@ -84,7 +91,7 @@ const ProdutividadeTurma = () => {
           turma={turma}
           alunos={alunos}
           onBack={voltarParaTurmas}
-          onRegistrarPresenca={handleRegistrarPresenca}
+          onRegistrarPresenca={handleRegistrarPresencaAdapter}
           produtividadeRegistrada={produtividadeRegistrada}
         />
       </div>
