@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { Turma } from '@/hooks/use-professor-turmas';
 import { useIsMobile } from "@/hooks/use-mobile";
 import AlunosAHTable from './AlunosAHTable';
 import AhLancamentoModal from '../AhLancamentoModal';
@@ -10,7 +10,7 @@ import AhLancamentoModal from '../AhLancamentoModal';
 interface AbindoHorizontesScreenProps {
   turma: Turma;
   onBack: () => void;
-  alunos?: Aluno[];
+  alunos?: any[];
   onBackToMenu?: () => void;
 }
 
@@ -21,11 +21,11 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
   onBackToMenu = () => {}
 }) => {
   const isMobile = useIsMobile();
-  const [ahRegistrado, setAhRegistrado] = useState<Record<string, boolean>>({});
-  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
-  const [modalAberto, setModalAberto] = useState(false);
+  const [modalAberto, setModalAberto] = React.useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = React.useState<any | null>(null);
+  const [ahRegistrado, setAhRegistrado] = React.useState<Record<string, boolean>>({});
   
-  const handleSelecionarAluno = (aluno: Aluno) => {
+  const handleSelecionarAluno = (aluno: any) => {
     console.log("Aluno selecionado para correção AH:", aluno.nome);
     setAlunoSelecionado(aluno);
     setModalAberto(true);
@@ -42,7 +42,7 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
       [alunoId]: true
     }));
   };
-  
+
   return (
     <>
       <div className="border-b border-orange-100 pb-2 mb-3">

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { BookText, CheckCircle } from "lucide-react";
+import { BookOpen, CheckCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno } from '@/hooks/use-professor-turmas';
@@ -67,7 +67,7 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
                         {ahRegistrado[aluno.id] ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
-                          <BookText className="h-4 w-4" />
+                          <BookOpen className="h-4 w-4" />
                         )}
                       </Button>
                     </TooltipTrigger>
