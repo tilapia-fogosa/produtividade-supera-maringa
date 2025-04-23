@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Brain } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useAlunoDevolutiva, PeriodoFiltro } from '@/hooks/use-aluno-devolutiva';
 import {
   Select,
@@ -22,6 +21,11 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
   { value: 'mes', label: 'Último mês' },
@@ -37,6 +41,7 @@ const DevolutivaAluno = () => {
   const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes');
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
   const [textoDevolutiva, setTextoDevolutiva] = useState(aluno?.texto_devolutiva || '');
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleVoltar = () => {
     navigate(-1);
@@ -126,7 +131,6 @@ const DevolutivaAluno = () => {
       </div>
 
       <div className="space-y-6">
-        {/* Tabela Ábaco - Mensal */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
           <Table>
             <TableHeader>
@@ -158,7 +162,6 @@ const DevolutivaAluno = () => {
           </Table>
         </div>
 
-        {/* Tabela Abrindo Horizontes - Mensal */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
           <Table>
             <TableHeader>
@@ -204,25 +207,43 @@ const DevolutivaAluno = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-azul-500">Informativo Personalizado</h2>
-        <Textarea
-          placeholder="Digite aqui sua mensagem para o aluno ou responsável..."
-          value={textoDevolutiva}
-          onChange={(e) => setTextoDevolutiva(e.target.value)}
-          className="min-h-[200px]"
-        />
-        <Button onClick={handleSalvarDevolutiva} className="w-full">
-          Salvar Informativo
-        </Button>
-      </div>
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full space-y-2"
+      >
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="outline"
+            className="flex items-center justify-between w-full"
+          >
+            <span>Informativo Personalizado</span>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${
+                isOpen ? "transform rotate-180" : ""
+              }`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4">
+          <Textarea
+            placeholder="Digite aqui sua mensagem para o aluno ou responsável..."
+            value={textoDevolutiva}
+            onChange={(e) => setTextoDevolutiva(e.target.value)}
+            className="min-h-[200px]"
+          />
+          <Button onClick={handleSalvarDevolutiva} className="w-full">
+            Salvar Informativo
+          </Button>
 
-      {textoDevolutiva && (
-        <div className="bg-white p-4 rounded-lg border border-orange-200">
-          <h3 className="font-semibold mb-2">Informativo Atual:</h3>
-          <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
-        </div>
-      )}
+          {textoDevolutiva && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h3 className="font-semibold mb-2">Informativo Atual:</h3>
+              <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
