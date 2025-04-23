@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { Turma } from '@/hooks/use-turmas-por-dia';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface DayTurmasListProps {
   turmas: Turma[];
@@ -17,6 +17,8 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
   serviceType = 'produtividade'
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const dia = location.state?.dia;
 
   const handleTurmaClick = (turmaId: string) => {
     console.log("Clicou na turma:", turmaId, "Service type:", serviceType);
@@ -25,15 +27,15 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
       navigate(`/devolutivas/turma/${turmaId}`);
     } else if (serviceType === 'abrindo_horizontes') {
       navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
-        state: { turmaId, serviceType }
+        state: { turmaId, serviceType, dia }
       });
     } else if (serviceType === 'produtividade') {
       navigate(`/turma/${turmaId}/produtividade`, { 
-        state: { turmaId, serviceType }
+        state: { turmaId, serviceType, dia }
       });
     } else if (serviceType === 'diario') {
       navigate(`/turma/${turmaId}/diario`, {
-        state: { turmaId, serviceType }
+        state: { turmaId, serviceType, dia }
       });
     }
   };
