@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
@@ -85,7 +84,6 @@ const ProdutividadeTurma = () => {
     setAlunoSelecionado(null);
   };
 
-  // Função para lidar com o sucesso do registro de produtividade
   const handleSuccessModal = (alunoId: string) => {
     atualizarProdutividadeRegistrada(alunoId);
   };
@@ -114,7 +112,7 @@ const ProdutividadeTurma = () => {
     <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
       <div className="container mx-auto py-4 px-2">
         <ProdutividadeScreen
-          turma={turma}
+          turma={turma!}
           alunos={alunos}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
@@ -125,7 +123,7 @@ const ProdutividadeTurma = () => {
           <ProdutividadeModal 
             isOpen={modalAberto} 
             aluno={alunoSelecionado} 
-            turma={turma} 
+            turma={turma!} 
             onClose={handleFecharModal} 
             onSuccess={handleSuccessModal}
           />
