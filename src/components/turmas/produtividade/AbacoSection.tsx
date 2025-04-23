@@ -278,7 +278,10 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                 <SelectItem value="2">Nível 2</SelectItem>
                 <SelectItem value="3">Nível 3</SelectItem>
                 <SelectItem value="4">Nível 4</SelectItem>
-                <SelectItem value="5">Nível 5</SelectItem>
+                <SelectItem value="arrepio">Arrepio</SelectItem>
+                <SelectItem value="ccl">CCL</SelectItem>
+                <SelectItem value="bpa">BPA</SelectItem>
+                <SelectItem value="linguagem">Linguagem</SelectItem>
               </SelectContent>
             </Select>
           </div>
