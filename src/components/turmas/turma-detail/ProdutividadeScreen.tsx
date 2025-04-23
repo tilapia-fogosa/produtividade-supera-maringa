@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import ReposicaoButton from './ReposicaoButton';
 import AlunosListaTable from './AlunosListaTable';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface ProdutividadeScreenProps {
   turma: Turma;
@@ -24,6 +24,14 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
   produtividadeRegistrada = {}
 }) => {
   const navigate = useNavigate();
+  const { turmaId } = useParams();
+
+  const verDiario = () => {
+    console.log('Navegando para o diário da turma:', turmaId);
+    navigate(`/turma/${turmaId}/diario`, {
+      state: { turmaId, serviceType: 'diario' }
+    });
+  };
 
   return (
     <>
@@ -31,10 +39,7 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
         <ReposicaoButton onClick={onReposicaoAula} />
         <Button 
           variant="outline"
-          onClick={() => {
-            console.log('Navegando para o diário');
-            navigate('/diario');
-          }}
+          onClick={verDiario}
           className="ml-2"
         >
           Ver Diário
