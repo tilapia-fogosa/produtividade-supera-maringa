@@ -12,16 +12,28 @@ import { cn } from "@/lib/utils";
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
 import { useTurmaDetalhes } from '@/hooks/use-turma-detalhes';
+import { useNavigate } from 'react-router-dom';
 
 const DiarioPage = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [selectedTurmaId, setSelectedTurmaId] = useState<string>("");
+  const navigate = useNavigate();
   
   // Hook customizado para buscar todas as turmas
   const { turmas, loading: turmasLoading, error } = useTodasTurmas();
   
   // Hook para buscar detalhes da turma selecionada
   const { turma, alunos } = useTurmaDetalhes(selectedTurmaId);
+
+  // Função para navegar para a tela de turmas no dia selecionado
+  const handleVerTodasTurmas = () => {
+    navigate('/turmas/dia', { 
+      state: { 
+        serviceType: 'diario_turma',
+        data: date
+      }
+    });
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -51,13 +63,14 @@ const DiarioPage = () => {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-50 bg-white" align="start">
                 <Calendar
                   mode="single"
                   selected={date}
                   onSelect={(date) => date && setDate(date)}
-                  className={cn("p-3 pointer-events-auto")}
+                  initialFocus
                   locale={ptBR}
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
@@ -69,10 +82,10 @@ const DiarioPage = () => {
               Turma
             </label>
             <Select value={selectedTurmaId} onValueChange={setSelectedTurmaId}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Selecione uma turma" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {turmasLoading ? (
                   <SelectItem disabled value="loading">Carregando turmas...</SelectItem>
                 ) : error ? (
@@ -89,6 +102,16 @@ const DiarioPage = () => {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button 
+            variant="outline"
+            onClick={handleVerTodasTurmas}
+            className="text-azul-500 border-orange-200"
+          >
+            Ver todas turmas do dia
+          </Button>
         </div>
       </Card>
 
