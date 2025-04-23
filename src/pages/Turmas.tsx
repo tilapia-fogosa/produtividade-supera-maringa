@@ -60,11 +60,19 @@ const Turmas = () => {
     
     // Se tiver uma data específica, usar essa informação
     if (data && serviceType === 'diario_turma') {
-      return `${serviceName} - ${format(new Date(data), "dd 'de' MMMM", { locale: ptBR })}`;
+      try {
+        // Garantir que data é um objeto Date válido
+        const dateObj = data instanceof Date ? data : new Date(data);
+        if (!isNaN(dateObj.getTime())) {
+          return `${serviceName} - ${format(dateObj, "dd 'de' MMMM", { locale: ptBR })}`;
+        }
+      } catch (err) {
+        console.error("Erro ao formatar data:", err);
+      }
     }
     
-    // Caso contrário, usar o dia da semana
-    return `${serviceName} - ${dayText}`;
+    // Caso contrário, usar o dia da semana ou texto padrão
+    return dayText ? `${serviceName} - ${dayText}` : serviceName;
   };
   
   return (
