@@ -17,11 +17,17 @@ const Turmas = () => {
   
   const { turmas, loading } = useTurmasPorDia();
 
-  // Atualizado para lidar com o retorno específico para cada tipo de serviço
   const handleVoltar = () => {
+    // Se for devolutiva, voltar para a página de devolutivas
     if (serviceType === 'devolutiva') {
       navigate('/devolutivas');
-    } else {
+    } 
+    // Se for diário de turma, voltar para a página de diário
+    else if (serviceType === 'diario_turma') {
+      navigate('/diario');
+    }
+    // Caso contrário, voltar para a página de dias de lançamento
+    else {
       navigate('/dias-lancamento', { 
         state: { 
           serviceType 
@@ -42,7 +48,10 @@ const Turmas = () => {
         </Button>
         
         <h1 className="text-xl font-bold mb-4">
-          {serviceType === 'abrindo_horizontes' ? 'Turmas para Abrindo Horizontes - ' : 'Turmas de '}
+          {serviceType === 'abrindo_horizontes' ? 'Turmas para Abrindo Horizontes - ' :
+           serviceType === 'devolutiva' ? 'Turmas para Devolutivas - ' :
+           serviceType === 'diario_turma' ? 'Turmas para Diário - ' : 
+           'Turmas de '}
           {dia === 'segunda' ? 'Segunda-feira' : 
            dia === 'terca' ? 'Terça-feira' : 
            dia === 'quarta' ? 'Quarta-feira' : 

@@ -58,7 +58,11 @@ const DevolutivaTurma = () => {
   }, [turmaId]);
 
   const handleVoltar = () => {
-    navigate('/devolutivas/turmas');
+    navigate('/devolutivas/turmas', {
+      state: { 
+        serviceType: 'devolutiva'
+      }
+    });
   };
 
   if (loading) {
