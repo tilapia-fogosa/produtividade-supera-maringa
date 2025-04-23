@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -21,8 +20,6 @@ const DiasLancamento = () => {
   
   const titulo = serviceType === 'abrindo_horizontes' 
     ? 'Lançar Abrindo Horizontes' 
-    : serviceType === 'diario_turma'
-    ? 'Diário de Turma'
     : 'Lançar Produtividade de Sala';
 
   const handleDiaClick = (dia: string) => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
@@ -21,16 +20,10 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
   const dia = location.state?.dia;
 
   const handleTurmaClick = (turmaId: string) => {
-    console.log("Clicou na turma:", turmaId, "Service type:", serviceType);
-    
     if (serviceType === 'devolutiva') {
       navigate(`/devolutivas/turma/${turmaId}`);
     } else if (serviceType === 'abrindo_horizontes') {
       navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
-        state: { dia, serviceType }
-      });
-    } else if (serviceType === 'diario_turma') {
-      navigate(`/turma/${turmaId}/diario`, {
         state: { dia, serviceType }
       });
     } else {
