@@ -1,78 +1,65 @@
-
 import React from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import AbindoHorizontesScreen from '@/components/turmas/turma-detail/AbindoHorizontesScreen';
-import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
+import { useLocation } from 'react-router-dom';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
-import { Turma } from '@/hooks/use-turmas-por-dia';
+import AbindoHorizontesScreen from '@/components/turmas/turma-detail/AbindoHorizontesScreen';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
 
 const DiarioTurma = () => {
   const location = useLocation();
-  const params = useParams();
   const navigate = useNavigate();
-  
-  // Usar o ID da turma do parâmetro da URL
-  const turmaId = params.turmaId;
-  
-  // Garantir que serviceType tenha um valor padrão
-  const serviceType = location.state?.serviceType || 'diario';
-
-  console.log("DiarioTurma - ID da turma:", turmaId);
-  console.log("DiarioTurma - Service Type:", serviceType);
-  
   const { turmas } = useProfessorTurmas();
   const { alunos } = useAlunos();
+  
+  const turmaId = location.state?.turmaId;
+  const serviceType = location.state?.serviceType;
+  const dia = location.state?.dia;
+  
+  const turma = turmas.find(t => t.id === turmaId);
+  
+  if (!turma) {
+    return <div>Turma não encontrada</div>;
+  }
 
-  // Função para voltar para a página anterior
-  const voltarParaTurmas = () => {
-    navigate(-1); // Volta para a página anterior usando o histórico do navegador
+  const handleVoltar = () => {
+    navigate('/turmas/dia', { 
+      state: { 
+        dia,
+        serviceType 
+      }
+    });
   };
 
-  // Verificamos se não temos uma turma selecionada e mostramos um estado de carregamento
-  if (!turmaId) {
+  // Se o tipo de serviço for abrindo_horizontes, mostra a tela específica
+  if (serviceType === 'abrindo_horizontes') {
     return (
-      <div className="container mx-auto py-4 px-2 text-center">
-        <p>Carregando...</p>
+      <div className="container mx-auto p-4">
+        <AbindoHorizontesScreen 
+          turma={turma}
+          onBack={handleVoltar}
+          alunos={alunos}
+        />
       </div>
     );
   }
 
-  // Criamos um objeto de turma básico com o ID fornecido
-  const turmaAtual: Turma = {
-    id: turmaId,
-    nome: 'Turma', // Valor padrão
-    dia_semana: 'segunda', // Usando type assertion para garantir o tipo correto
-    horario: '00:00',
-    professor_id: '',
-  };
-
-  // Renderiza a tela apropriada com base no serviceType
-  const renderScreen = () => {
-    if (serviceType === 'abrindo_horizontes') {
-      return (
-        <AbindoHorizontesScreen
-          turma={turmaAtual}
-          alunos={alunos}
-          onBack={voltarParaTurmas}
-        />
-      );
-    } else {
-      // Padrão: diario
-      return (
-        <DiarioTurmaScreen
-          turma={turmaAtual}
-          alunos={alunos}
-          onBack={voltarParaTurmas}
-        />
-      );
-    }
-  };
-
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
       <div className="container mx-auto py-4 px-2">
-        {renderScreen()}
+        <Button 
+          onClick={handleVoltar} 
+          variant="outline" 
+          className="mb-4 text-azul-500 border-orange-200"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+        </Button>
+        
+        <h1 className="text-xl font-bold mb-4">Diário da Turma - {turma.nome}</h1>
+        
+        <DiarioTurmaScreen turma={turma} onBack={handleVoltar} />
       </div>
     </div>
   );
