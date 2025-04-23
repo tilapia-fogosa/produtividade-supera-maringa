@@ -27,15 +27,15 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
       navigate(`/devolutivas/turma/${turmaId}`);
     } else if (serviceType === 'abrindo_horizontes') {
       navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
-        state: { turmaId, serviceType, dia }
+        state: { dia, serviceType }
       });
     } else if (serviceType === 'produtividade') {
-      navigate(`/turma/${turmaId}/produtividade`, { 
-        state: { turmaId, serviceType, dia }
+      navigate(`/turma/${turmaId}/produtividade`, {
+        state: { dia, serviceType }
       });
     } else if (serviceType === 'diario') {
       navigate(`/turma/${turmaId}/diario`, {
-        state: { turmaId, serviceType, dia }
+        state: { dia, serviceType }
       });
     }
   };
