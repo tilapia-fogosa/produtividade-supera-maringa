@@ -23,8 +23,15 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
     
     if (serviceType === 'devolutiva') {
       navigate(`/devolutivas/turma/${turmaId}`);
+    } else if (serviceType === 'abrindo_horizontes') {
+      navigate(`/diario/${turmaId}`, { 
+        state: { 
+          turmaSelecionada: turmaId,
+          serviceType 
+        }
+      });
     } else {
-      // Para lançamentos de produtividade (ábaco) e abrindo horizontes
+      // Para lançamentos de produtividade (ábaco)
       navigate(`/diario/${turmaId}`, { 
         state: { 
           turmaSelecionada: turmaId,
