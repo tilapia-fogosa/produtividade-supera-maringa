@@ -141,12 +141,12 @@ function extractDataFromRows(rows, headerRow, columnIndexes) {
 function getDiaSemanaFromTurmaNome(turmaNome: string): "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo" {
   const nomeLowerCase = turmaNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   
+  if (nomeLowerCase.startsWith('S') || nomeLowerCase.includes('sabado')) return 'sabado';
   if (nomeLowerCase.startsWith('2')) return 'segunda';
   if (nomeLowerCase.startsWith('3')) return 'terca';
   if (nomeLowerCase.startsWith('4')) return 'quarta';
   if (nomeLowerCase.startsWith('5')) return 'quinta';
   if (nomeLowerCase.startsWith('6')) return 'sexta';
-  if (nomeLowerCase.startsWith('sab') || nomeLowerCase.includes('sabado')) return 'sabado';
   
   console.log(`Nome de turma não reconhecido para dia da semana: ${turmaNome}. Usando segunda como padrão.`);
   return 'segunda'; // fallback para manter compatibilidade
