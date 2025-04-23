@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-turmas-por-dia';
 import { toast } from '@/hooks/use-toast';
 import { Aluno } from '@/hooks/use-professor-turmas';
+import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 
 const ProdutividadeTurma = () => {
   const location = useLocation();
@@ -16,12 +17,16 @@ const ProdutividadeTurma = () => {
   
   const [loading, setLoading] = useState(true);
   const [turma, setTurma] = useState<Turma | null>(null);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
+  
   const { 
     alunos, 
     handleTurmaSelecionada, 
-    handleRegistrarPresenca, 
+    handleRegistrarPresenca,
     produtividadeRegistrada,
-    carregandoAlunos 
+    carregandoAlunos,
+    atualizarProdutividadeRegistrada
   } = useAlunos();
 
   // Efeito para buscar os detalhes da turma
@@ -68,10 +73,21 @@ const ProdutividadeTurma = () => {
     });
   };
 
-  // Adaptar a função handleRegistrarPresenca para receber um objeto Aluno
-  // e extrair o ID antes de chamar a função original
-  const handleRegistrarPresencaAdapter = (aluno: Aluno) => {
-    return handleRegistrarPresenca(aluno.id);
+  // Função para abrir o modal de produtividade
+  const handleClickRegistrarPresenca = (aluno: Aluno) => {
+    setAlunoSelecionado(aluno);
+    setModalAberto(true);
+  };
+  
+  // Função para fechar o modal
+  const handleFecharModal = () => {
+    setModalAberto(false);
+    setAlunoSelecionado(null);
+  };
+
+  // Função para lidar com o sucesso do registro de produtividade
+  const handleSuccessModal = (alunoId: string) => {
+    atualizarProdutividadeRegistrada(alunoId);
   };
 
   if (loading || carregandoAlunos) {
@@ -101,9 +117,19 @@ const ProdutividadeTurma = () => {
           turma={turma}
           alunos={alunos}
           onBack={voltarParaTurmas}
-          onRegistrarPresenca={handleRegistrarPresencaAdapter}
+          onRegistrarPresenca={handleClickRegistrarPresenca}
           produtividadeRegistrada={produtividadeRegistrada}
         />
+        
+        {alunoSelecionado && (
+          <ProdutividadeModal 
+            isOpen={modalAberto} 
+            aluno={alunoSelecionado} 
+            turma={turma} 
+            onClose={handleFecharModal} 
+            onSuccess={handleSuccessModal}
+          />
+        )}
       </div>
     </div>
   );

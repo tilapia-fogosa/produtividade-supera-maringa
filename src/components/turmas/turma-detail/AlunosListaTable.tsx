@@ -1,74 +1,59 @@
 
 import React from 'react';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, CheckCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Check } from "lucide-react";
 import { Aluno } from '@/hooks/use-professor-turmas';
 
 interface AlunosListaTableProps {
   alunos: Aluno[];
-  onRegistrarPresenca: (aluno: Aluno) => void;
-  produtividadeRegistrada: Record<string, boolean>;
+  onRegistrarPresenca?: (aluno: Aluno) => void;
+  produtividadeRegistrada?: Record<string, boolean>;
 }
 
-const AlunosListaTable: React.FC<AlunosListaTableProps> = ({ 
-  alunos, 
-  onRegistrarPresenca, 
-  produtividadeRegistrada
+const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
+  alunos = [],
+  onRegistrarPresenca,
+  produtividadeRegistrada = {}
 }) => {
-  const isMobile = useIsMobile();
-
   if (alunos.length === 0) {
-    return (
-      <div className="text-center py-3">
-        <p className={isMobile ? "text-sm" : ""}>Não há alunos cadastrados nesta turma.</p>
-      </div>
-    );
+    return <p className="text-center my-4">Nenhum aluno encontrado nesta turma.</p>;
   }
 
   return (
-    <div className="overflow-x-auto w-full">
+    <div className="rounded-md border border-orange-200 overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Nome</TableHead>
-            <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Último Nível</TableHead>
-            <TableHead className={`w-20 text-right ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Ação</TableHead>
+          <TableRow className="bg-orange-50">
+            <TableHead className="w-[200px] font-medium">Nome</TableHead>
+            <TableHead className="text-right font-medium">Ação</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunos.map((aluno, index) => (
-            <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
-              <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                <div className="truncate max-w-[150px]">{aluno.nome}</div>
-              </TableCell>
-              <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                {aluno.ultimo_nivel || '-'}
-              </TableCell>
-              <TableCell className={`text-right ${isMobile ? "px-2 py-1.5" : ""}`}>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => onRegistrarPresenca(aluno)} 
-                        className="h-8 w-8 p-0"
-                      >
-                        {produtividadeRegistrada[aluno.id] ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <TrendingUp className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {produtividadeRegistrada[aluno.id] ? "Produtividade já registrada hoje" : "Registrar produtividade"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+          {alunos.map((aluno) => (
+            <TableRow key={aluno.id} className="even:bg-orange-50/50">
+              <TableCell className="font-medium">{aluno.nome}</TableCell>
+              <TableCell className="text-right">
+                {produtividadeRegistrada[aluno.id] ? (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 text-green-600"
+                    disabled
+                  >
+                    <Check className="mr-1 h-4 w-4" />
+                    Registrado
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 border-orange-200 hover:bg-orange-100"
+                    onClick={() => onRegistrarPresenca && onRegistrarPresenca(aluno)}
+                  >
+                    Registrar
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
