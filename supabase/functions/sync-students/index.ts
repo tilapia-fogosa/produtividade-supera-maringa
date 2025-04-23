@@ -1,3 +1,4 @@
+
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
@@ -211,7 +212,7 @@ async function syncProfessors(rawData) {
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
         unit_id: defaultUnitId  // Agora usando unit_id em vez de unidade_id
-      }))
+      })))
       .select();
     
     if (insertError) {
