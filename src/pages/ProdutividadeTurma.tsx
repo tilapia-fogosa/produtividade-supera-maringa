@@ -1,13 +1,12 @@
 
 import React from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import AbindoHorizontesScreen from '@/components/turmas/turma-detail/AbindoHorizontesScreen';
-import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
+import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
 import { Turma } from '@/hooks/use-turmas-por-dia';
 
-const DiarioTurma = () => {
+const ProdutividadeTurma = () => {
   const location = useLocation();
   const params = useParams();
   const navigate = useNavigate();
@@ -15,14 +14,8 @@ const DiarioTurma = () => {
   // Usar o ID da turma do parâmetro da URL
   const turmaId = params.turmaId;
   
-  // Garantir que serviceType tenha um valor padrão
-  const serviceType = location.state?.serviceType || 'diario';
-
-  console.log("DiarioTurma - ID da turma:", turmaId);
-  console.log("DiarioTurma - Service Type:", serviceType);
-  
   const { turmas } = useProfessorTurmas();
-  const { alunos } = useAlunos();
+  const { alunos, handleRegistrarPresenca, produtividadeRegistrada } = useAlunos();
 
   // Função para voltar para a página anterior
   const voltarParaTurmas = () => {
@@ -47,35 +40,24 @@ const DiarioTurma = () => {
     professor_id: '',
   };
 
-  // Renderiza a tela apropriada com base no serviceType
-  const renderScreen = () => {
-    if (serviceType === 'abrindo_horizontes') {
-      return (
-        <AbindoHorizontesScreen
-          turma={turmaAtual}
-          alunos={alunos}
-          onBack={voltarParaTurmas}
-        />
-      );
-    } else {
-      // Padrão: diario
-      return (
-        <DiarioTurmaScreen
-          turma={turmaAtual}
-          alunos={alunos}
-          onBack={voltarParaTurmas}
-        />
-      );
-    }
+  // Função adaptada para receber um objeto Aluno e extrair o ID
+  const handleRegistrarPresencaAdapter = (aluno: any) => {
+    return handleRegistrarPresenca(aluno.id);
   };
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
       <div className="container mx-auto py-4 px-2">
-        {renderScreen()}
+        <ProdutividadeScreen
+          turma={turmaAtual}
+          alunos={alunos}
+          onBack={voltarParaTurmas}
+          onRegistrarPresenca={handleRegistrarPresencaAdapter}
+          produtividadeRegistrada={produtividadeRegistrada}
+        />
       </div>
     </div>
   );
 };
 
-export default DiarioTurma;
+export default ProdutividadeTurma;

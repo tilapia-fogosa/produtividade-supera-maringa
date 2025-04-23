@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Turmas from "./pages/Turmas";
 import DiarioTurma from "./pages/DiarioTurma";
+import ProdutividadeTurma from "./pages/ProdutividadeTurma";
 import NotFound from "./pages/NotFound";
 import PainelPedagogico from "./pages/PainelPedagogico";
 import Estoque from "./pages/Estoque";
@@ -37,7 +38,7 @@ const App = () => (
                     <Route path="/" element={<Navigate to="/lancamentos" />} />
                     <Route path="/dias-lancamento" element={<DiasLancamento />} />
                     <Route path="/turmas/dia" element={<Turmas />} />
-                    <Route path="/turma/:turmaId/produtividade" element={<DiarioTurma />} />
+                    <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
                     <Route path="/turma/:turmaId/abrindo-horizontes" element={<DiarioTurma />} />
                     <Route path="/turma/:turmaId/diario" element={<DiarioTurma />} />
                     <Route path="/painel-pedagogico" element={<PainelPedagogico />} />

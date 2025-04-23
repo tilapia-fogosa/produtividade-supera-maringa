@@ -5,6 +5,7 @@ import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import ReposicaoButton from './ReposicaoButton';
 import AlunosListaTable from './AlunosListaTable';
 import { useNavigate, useParams } from 'react-router-dom';
+import TurmaHeader from './TurmaHeader';
 
 interface ProdutividadeScreenProps {
   turma: Turma;
@@ -35,6 +36,10 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
 
   return (
     <>
+      <TurmaHeader
+        turma={turma}
+        onBack={onBack}
+      />
       <div className="flex justify-between items-center mb-3">
         <ReposicaoButton onClick={onReposicaoAula} />
         <Button 
