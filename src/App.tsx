@@ -50,6 +50,7 @@ const App = () => (
                     <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                     <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
                     <Route path="/lancamentos" element={<Lancamentos />} />
+                    <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>

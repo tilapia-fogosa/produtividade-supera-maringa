@@ -21,6 +21,8 @@ const DiasLancamento = () => {
   
   const titulo = serviceType === 'abrindo_horizontes' 
     ? 'Lançar Abrindo Horizontes' 
+    : serviceType === 'diario_turma'
+    ? 'Diário de Turma'
     : 'Lançar Produtividade de Sala';
 
   const handleDiaClick = (dia: string) => {
@@ -47,11 +49,11 @@ const DiasLancamento = () => {
               key={dia.id}
               size="lg"
               className={`py-8 text-lg ${
-                serviceType === 'abrindo_horizontes'
+                serviceType === 'abrindo_horizontes' || serviceType === 'diario_turma'
                   ? 'border-orange-300 text-azul-500 hover:bg-orange-100'
                   : 'bg-supera hover:bg-supera-600'
               }`}
-              variant={serviceType === 'abrindo_horizontes' ? 'outline' : 'default'}
+              variant={serviceType === 'abrindo_horizontes' || serviceType === 'diario_turma' ? 'outline' : 'default'}
               onClick={() => handleDiaClick(dia.id)}
             >
               <CalendarDays className="mr-2 h-6 w-6" />

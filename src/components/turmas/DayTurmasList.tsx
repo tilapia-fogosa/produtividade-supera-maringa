@@ -29,12 +29,12 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
       navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
         state: { dia, serviceType }
       });
-    } else if (serviceType === 'produtividade') {
-      navigate(`/turma/${turmaId}/produtividade`, {
+    } else if (serviceType === 'diario_turma') {
+      navigate(`/turma/${turmaId}/diario`, {
         state: { dia, serviceType }
       });
-    } else if (serviceType === 'diario') {
-      navigate(`/turma/${turmaId}/diario`, {
+    } else {
+      navigate(`/turma/${turmaId}/produtividade`, {
         state: { dia, serviceType }
       });
     }
