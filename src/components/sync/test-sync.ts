@@ -2,7 +2,19 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-export async function testStudentSync() {
+export interface SyncResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  statistics?: {
+    professores: number;
+    turmas: number;
+    novosAlunos: number;
+    totalRegistrosProcessados: number;
+  };
+}
+
+export async function testStudentSync(): Promise<SyncResponse> {
   try {
     console.log('Iniciando teste de sincronização manual...');
     
@@ -17,36 +29,32 @@ export async function testStudentSync() {
 
     if (response.error) {
       console.error('Erro na sincronização:', response.error);
-      toast({
-        title: "Erro na Sincronização",
-        description: response.error.message,
-        variant: "destructive"
-      });
-      return;
+      return {
+        success: false,
+        error: response.error.message
+      };
     }
 
     if (response.data && !response.data.success) {
       console.error('Falha na sincronização:', response.data.error);
-      toast({
-        title: "Falha na Sincronização",
-        description: response.data.error,
-        variant: "destructive"
-      });
-      return;
+      return {
+        success: false,
+        error: response.data.error
+      };
     }
 
     console.log('Sincronização concluída com sucesso');
-    toast({
-      title: "Sincronização Concluída",
-      description: response.data?.message || "Dados sincronizados com sucesso"
-    });
+    return {
+      success: true,
+      message: response.data?.message || "Dados sincronizados com sucesso",
+      statistics: response.data?.statistics
+    };
 
   } catch (error) {
     console.error('Erro inesperado na sincronização:', error);
-    toast({
-      title: "Erro Inesperado",
-      description: "Não foi possível realizar a sincronização",
-      variant: "destructive"
-    });
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Não foi possível realizar a sincronização"
+    };
   }
 }
