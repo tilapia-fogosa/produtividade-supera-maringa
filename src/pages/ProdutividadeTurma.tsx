@@ -16,8 +16,15 @@ const ProdutividadeTurma = () => {
   
   const [loading, setLoading] = useState(true);
   const [turma, setTurma] = useState<Turma | null>(null);
-  const { alunos, handleRegistrarPresenca, produtividadeRegistrada } = useAlunos();
+  const { 
+    alunos, 
+    handleTurmaSelecionada, 
+    handleRegistrarPresenca, 
+    produtividadeRegistrada,
+    carregandoAlunos 
+  } = useAlunos();
 
+  // Efeito para buscar os detalhes da turma
   useEffect(() => {
     const fetchTurma = async () => {
       try {
@@ -33,6 +40,9 @@ const ProdutividadeTurma = () => {
         
         if (data) {
           setTurma(data as Turma);
+          
+          // Iniciar carregamento dos alunos assim que tivermos os dados da turma
+          handleTurmaSelecionada(data.id);
         }
       } catch (error) {
         console.error('Erro ao buscar turma:', error);
@@ -64,11 +74,11 @@ const ProdutividadeTurma = () => {
     return handleRegistrarPresenca(aluno.id);
   };
 
-  if (loading) {
+  if (loading || carregandoAlunos) {
     return (
       <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
         <div className="container mx-auto py-4 px-2 text-center">
-          <p>Carregando...</p>
+          <p>Carregando{carregandoAlunos ? ' alunos' : ''}...</p>
         </div>
       </div>
     );
