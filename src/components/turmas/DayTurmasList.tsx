@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
@@ -24,19 +23,16 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
     if (serviceType === 'devolutiva') {
       navigate(`/devolutivas/turma/${turmaId}`);
     } else if (serviceType === 'abrindo_horizontes') {
-      navigate(`/diario/${turmaId}`, { 
-        state: { 
-          turmaSelecionada: turmaId,
-          serviceType 
-        }
+      navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
+        state: { turmaId, serviceType }
       });
-    } else {
-      // Para lançamentos de produtividade (ábaco)
-      navigate(`/diario/${turmaId}`, { 
-        state: { 
-          turmaSelecionada: turmaId,
-          serviceType 
-        }
+    } else if (serviceType === 'produtividade') {
+      navigate(`/turma/${turmaId}/produtividade`, { 
+        state: { turmaId, serviceType }
+      });
+    } else if (serviceType === 'diario') {
+      navigate(`/turma/${turmaId}/diario`, {
+        state: { turmaId, serviceType }
       });
     }
   };
