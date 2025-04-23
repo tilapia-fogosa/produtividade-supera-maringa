@@ -12,12 +12,7 @@ const Turmas = () => {
   const dia = location.state?.dia;
   const serviceType = location.state?.serviceType;
   
-  console.log("Página Turmas - Dia recebido:", dia);
-  
-  // Usando o hook com o valor do dia
   const { turmas, loading } = useTurmasPorDia();
-  
-  console.log("Turmas encontradas:", turmas);
 
   const handleVoltar = () => {
     navigate('/dias-lancamento', { 
@@ -47,7 +42,11 @@ const Turmas = () => {
                     dia === 'sabado' ? 'Sábado' : 'Domingo'}
         </h1>
         
-        <DayTurmasList turmas={turmas} loading={loading} />
+        <DayTurmasList 
+          turmas={turmas} 
+          loading={loading} 
+          serviceType={serviceType}
+        />
       </div>
     </div>
   );
