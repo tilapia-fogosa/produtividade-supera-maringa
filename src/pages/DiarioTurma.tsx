@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import AbindoHorizontesScreen from '@/components/turmas/turma-detail/AbindoHorizontesScreen';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
@@ -8,13 +8,22 @@ import { useAlunos } from '@/hooks/use-alunos';
 
 const DiarioTurma = () => {
   const location = useLocation();
+  const params = useParams();
   const serviceType = location.state?.serviceType || 'produtividade';
+  
+  // Usar o ID da turma do parâmetro da URL ou do state
+  const turmaIdFromParams = params.turmaId;
+  const turmaIdFromState = location.state?.turmaSelecionada;
+  const turmaSelecionada = turmaIdFromParams || turmaIdFromState;
+
+  console.log("DiarioTurma - ID da turma:", turmaSelecionada);
+  console.log("DiarioTurma - Service Type:", serviceType);
   
   const { turmas } = useProfessorTurmas();
   const {
     alunos,
     todosAlunos,
-    turmaSelecionada,
+    turmaSelecionada: turmaNoHook,
     produtividadeRegistrada,
     handleRegistrarPresenca,
     voltarParaTurmas,

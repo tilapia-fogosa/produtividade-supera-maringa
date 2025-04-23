@@ -12,6 +12,9 @@ const Turmas = () => {
   const dia = location.state?.dia;
   const serviceType = location.state?.serviceType;
   
+  console.log("Turmas - Dia selecionado:", dia);
+  console.log("Turmas - Service Type:", serviceType);
+  
   const { turmas, loading } = useTurmasPorDia();
 
   const handleVoltar = () => {

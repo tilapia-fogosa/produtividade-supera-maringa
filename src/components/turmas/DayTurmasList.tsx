@@ -27,6 +27,7 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
       // Para lançamentos de produtividade (ábaco) e abrindo horizontes
       navigate(`/diario/${turmaId}`, { 
         state: { 
+          turmaSelecionada: turmaId,
           serviceType 
         }
       });
