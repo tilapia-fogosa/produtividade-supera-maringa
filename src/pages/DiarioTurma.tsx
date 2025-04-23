@@ -35,7 +35,7 @@ const DiarioTurma = () => {
   const turmaAtual = {
     id: turmaSelecionada,
     nome: 'Turma', // Valor padrão
-    dia_semana: 'segunda',
+    dia_semana: 'segunda' as 'segunda', // Usando type assertion para garantir o tipo correto
     horario: '00:00',
     professor_id: '',
   };
