@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useTurmasPorDia } from '@/hooks/use-turmas-por-dia';
+import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
 import { useTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 
@@ -18,7 +18,7 @@ const DiarioPage = () => {
   const [selectedTurmaId, setSelectedTurmaId] = useState<string>("");
   
   // Hook customizado para buscar todas as turmas
-  const { turmas, loading: turmasLoading } = useTurmasPorDia();
+  const { turmas, loading: turmasLoading, error } = useTodasTurmas();
   
   // Hook para buscar detalhes da turma selecionada
   const { turma, alunos } = useTurmaDetalhes(selectedTurmaId);
@@ -73,11 +73,19 @@ const DiarioPage = () => {
                 <SelectValue placeholder="Selecione uma turma" />
               </SelectTrigger>
               <SelectContent>
-                {turmas.map((turma) => (
-                  <SelectItem key={turma.id} value={turma.id}>
-                    {turma.nome} - {turma.horario.substring(0, 5)}
-                  </SelectItem>
-                ))}
+                {turmasLoading ? (
+                  <SelectItem disabled value="loading">Carregando turmas...</SelectItem>
+                ) : error ? (
+                  <SelectItem disabled value="error">Erro ao carregar turmas</SelectItem>
+                ) : turmas.length === 0 ? (
+                  <SelectItem disabled value="empty">Nenhuma turma encontrada</SelectItem>
+                ) : (
+                  turmas.map((turma) => (
+                    <SelectItem key={turma.id} value={turma.id}>
+                      {turma.nome} - {turma.horario.substring(0, 5)} ({turma.dia_semana})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
