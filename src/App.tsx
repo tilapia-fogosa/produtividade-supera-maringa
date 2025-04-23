@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,6 +19,7 @@ import Lancamentos from "./pages/Lancamentos";
 import DiasLancamento from "./pages/DiasLancamento";
 import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
+import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +41,7 @@ const App = () => (
                     <Route path="/dias-lancamento" element={<DiasLancamento />} />
                     <Route path="/turmas/dia" element={<Turmas />} />
                     <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
-                    <Route path="/turma/:turmaId/abrindo-horizontes" element={<DiarioTurma />} />
+                    <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
                     <Route path="/turma/:turmaId/diario" element={<DiarioTurma />} />
                     <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
                     <Route path="/estoque" element={<Estoque />} />
