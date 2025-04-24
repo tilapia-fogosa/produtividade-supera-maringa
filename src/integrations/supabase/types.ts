@@ -423,6 +423,7 @@ export type Database = {
           status: string
           unit_id: string | null
           updated_at: string
+          valorization_confirmed: boolean | null
         }
         Insert: {
           active?: boolean
@@ -447,6 +448,7 @@ export type Database = {
           status?: string
           unit_id?: string | null
           updated_at?: string
+          valorization_confirmed?: boolean | null
         }
         Update: {
           active?: boolean
@@ -471,6 +473,7 @@ export type Database = {
           status?: string
           unit_id?: string | null
           updated_at?: string
+          valorization_confirmed?: boolean | null
         }
         Relationships: [
           {
@@ -1698,6 +1701,24 @@ export type Database = {
         }
         Relationships: []
       }
+      temp_produtividade_abaco: {
+        Row: {
+          fez_desafio: boolean | null
+          id: string
+          presente: boolean | null
+        }
+        Insert: {
+          fez_desafio?: boolean | null
+          id: string
+          presente?: boolean | null
+        }
+        Update: {
+          fez_desafio?: boolean | null
+          id?: string
+          presente?: boolean | null
+        }
+        Relationships: []
+      }
       turmas: {
         Row: {
           created_at: string
@@ -2085,6 +2106,51 @@ export type Database = {
         }
         Returns: string
       }
+      get_activity_funnel_stats: {
+        Args: {
+          p_unit_id: string
+          p_start_date: string
+          p_end_date: string
+          p_previous_start_date: string
+          p_previous_end_date: string
+        }
+        Returns: Json
+      }
+      get_daily_activities_by_type: {
+        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Returns: {
+          date: string
+          tipo_atividade: string
+          source: string
+          count: number
+        }[]
+      }
+      get_daily_new_clients: {
+        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Returns: {
+          date: string
+          lead_source: string
+          count: number
+        }[]
+      }
+      get_daily_scheduled_activities: {
+        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Returns: {
+          date: string
+          source: string
+          count: number
+        }[]
+      }
+      get_dashboard_activity_funnel_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_prev_start_date: string
+          p_prev_end_date: string
+          p_unit_ids: string[]
+        }
+        Returns: Json
+      }
       get_user_access_info: {
         Args: { user_id: string }
         Returns: {
@@ -2136,6 +2202,16 @@ export type Database = {
       retry_failed_webhooks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      rpc_funnel_conversion: {
+        Args: { data_inicio: string; data_fim: string; unit_ids: string[] }
+        Returns: {
+          leads: number
+          contatos_efetivos: number
+          agendamentos: number
+          atendimentos: number
+          matriculas: number
+        }[]
       }
       unpublish_update: {
         Args: { p_update_id: string }

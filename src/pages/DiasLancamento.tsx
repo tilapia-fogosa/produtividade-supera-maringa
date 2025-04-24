@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ArrowLeft } from "lucide-react";
 
 const diasSemana = [
   { id: 'segunda', nome: 'Segunda-feira' },
@@ -32,8 +32,20 @@ const DiasLancamento = () => {
     });
   };
 
+  const handleVoltar = () => {
+    navigate('/lancamentos');
+  };
+
   return (
     <div className="container mx-auto p-4">
+      <Button 
+        onClick={handleVoltar} 
+        variant="outline" 
+        className="mb-4 text-azul-500 border-orange-200"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+      </Button>
+      
       <h1 className="text-2xl font-bold mb-6 text-azul-500">{titulo}</h1>
       
       <Card className="border-orange-200 bg-white">
