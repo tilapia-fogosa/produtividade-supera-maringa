@@ -2,14 +2,15 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { ProdutividadeAbaco } from '@/types/produtividade';
 
-interface ProdutividadeAbaco {
+interface ProdutividadeInput {
   aluno_id?: string;
   presente: boolean;
   apostila?: string;
-  pagina?: number;
-  exercicios?: number;
-  erros?: number;
+  pagina?: number | string;
+  exercicios?: number | string;
+  erros?: number | string;
   fez_desafio?: boolean;
   comentario?: string;
   data_aula: string;
@@ -56,7 +57,7 @@ export const useProdutividade = (alunoId: string) => {
     }
   };
 
-  const registrarProdutividade = async (dados: ProdutividadeAbaco) => {
+  const registrarProdutividade = async (dados: ProdutividadeInput) => {
     try {
       setIsLoading(true);
 
@@ -126,9 +127,115 @@ export const useProdutividade = (alunoId: string) => {
     }
   };
 
+  // Nova função para excluir registro de produtividade
+  const excluirProdutividade = async (registroId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Chamar a edge function para excluir
+      const { data, error } = await supabase.functions.invoke('register-productivity', {
+        body: { 
+          action: 'delete',
+          id: registroId
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Registro removido com sucesso",
+        variant: "default"
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao excluir produtividade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o registro",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Nova função para atualizar registro de produtividade
+  const atualizarProdutividade = async (registroId: string, dados: ProdutividadeInput) => {
+    try {
+      setIsLoading(true);
+      
+      // Garantir que aluno_id existe
+      const dadosCompletos = {
+        ...dados,
+        aluno_id: alunoId
+      };
+
+      // Converter exercicios e erros para número se forem string
+      const exercicios = typeof dadosCompletos.exercicios === 'string' && dadosCompletos.exercicios 
+        ? Number(dadosCompletos.exercicios) 
+        : dadosCompletos.exercicios;
+        
+      const erros = typeof dadosCompletos.erros === 'string' && dadosCompletos.erros 
+        ? Number(dadosCompletos.erros) 
+        : dadosCompletos.erros;
+      
+      // Converter página para número se for string
+      const pagina = typeof dadosCompletos.pagina === 'string' && dadosCompletos.pagina 
+        ? Number(dadosCompletos.pagina) 
+        : dadosCompletos.pagina;
+
+      // Preparar dados para a edge function
+      const produtividadeData = {
+        id: registroId,
+        aluno_id: alunoId,
+        presente: dadosCompletos.presente,
+        apostila: dadosCompletos.apostila,
+        pagina: pagina ? String(pagina) : undefined,
+        exercicios: exercicios ? String(exercicios) : undefined,
+        erros: erros ? String(erros) : undefined,
+        fez_desafio: dadosCompletos.fez_desafio,
+        comentario: dadosCompletos.comentario,
+        data_aula: dadosCompletos.data_aula
+      };
+      
+      // Chamar a edge function
+      const { data, error } = await supabase.functions.invoke('register-productivity', {
+        body: { 
+          action: 'update',
+          data: produtividadeData
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Registro atualizado com sucesso",
+        variant: "default"
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar produtividade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o registro",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     registrarPresenca,
-    registrarProdutividade
+    registrarProdutividade,
+    excluirProdutividade,
+    atualizarProdutividade
   };
 };

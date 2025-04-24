@@ -132,3 +132,62 @@ export async function registrarProdutividade(
     return false;
   }
 }
+
+// Nova função para excluir registro de produtividade
+export async function excluirProdutividade(
+  supabaseClient: any,
+  registroId: string
+): Promise<boolean> {
+  try {
+    console.log('Excluindo registro de produtividade:', registroId);
+    
+    const { error } = await supabaseClient
+      .from('produtividade_abaco')
+      .delete()
+      .eq('id', registroId);
+    
+    if (error) {
+      console.error('Erro ao excluir produtividade:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Erro ao excluir produtividade:", error);
+    return false;
+  }
+}
+
+// Nova função para atualizar registro de produtividade
+export async function atualizarProdutividade(
+  supabaseClient: any,
+  data: any
+): Promise<boolean> {
+  try {
+    console.log('Atualizando registro de produtividade:', data.id);
+    
+    const { error } = await supabaseClient
+      .from('produtividade_abaco')
+      .update({
+        presente: data.presente,
+        apostila: data.apostila,
+        pagina: data.pagina,
+        exercicios: data.exercicios ? parseInt(data.exercicios) : null,
+        erros: data.erros ? parseInt(data.erros) : null,
+        fez_desafio: data.fez_desafio,
+        comentario: data.comentario,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', data.id);
+    
+    if (error) {
+      console.error('Erro ao atualizar produtividade:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar produtividade:", error);
+    return false;
+  }
+}

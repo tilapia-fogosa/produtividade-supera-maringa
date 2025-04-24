@@ -6,7 +6,7 @@ export interface ProdutividadeAbaco {
   presente: boolean;
   is_reposicao: boolean;
   apostila: string | null;
-  pagina: number | null; // Alterado de string para number
+  pagina: number | null;
   exercicios: number | null;
   erros: number | null;
   fez_desafio: boolean;

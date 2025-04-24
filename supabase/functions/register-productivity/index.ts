@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { ProdutividadeData } from "./types.ts";
-import { createSupabaseClient, registrarDadosAluno, registrarProdutividade } from "./database-service.ts";
+import { createSupabaseClient, registrarDadosAluno, registrarProdutividade, excluirProdutividade, atualizarProdutividade } from "./database-service.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 serve(async (req) => {
@@ -42,6 +42,48 @@ serve(async (req) => {
 
     // Obter os dados da solicitação
     const requestData = await req.json();
+    
+    // Criar um cliente Supabase com o contexto de autenticação do usuário logado
+    const supabaseClient = createSupabaseClient(req.headers.get('Authorization')!);
+    
+    // Verificar a ação solicitada
+    if (requestData.action === 'delete') {
+      console.log('Solicitação de exclusão recebida:', requestData.id);
+      
+      const sucessoExclusao = await excluirProdutividade(supabaseClient, requestData.id);
+      
+      if (!sucessoExclusao) {
+        return new Response(
+          JSON.stringify({ error: 'Erro ao excluir registro de produtividade' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ success: true, message: 'Registro excluído com sucesso!' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (requestData.action === 'update') {
+      console.log('Solicitação de atualização recebida:', requestData.data);
+      
+      const sucessoAtualizacao = await atualizarProdutividade(supabaseClient, requestData.data);
+      
+      if (!sucessoAtualizacao) {
+        return new Response(
+          JSON.stringify({ error: 'Erro ao atualizar registro de produtividade' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ success: true, message: 'Registro atualizado com sucesso!' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Processamento padrão para registro de produtividade
     const data = requestData.data;
     
     console.log('Dados recebidos:', JSON.stringify(data, null, 2));
@@ -52,9 +94,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-
-    // Criar um cliente Supabase com o contexto de autenticação do usuário logado
-    const supabaseClient = createSupabaseClient(req.headers.get('Authorization')!);
 
     // Registrar dados do aluno no banco
     const sucessoBanco = await registrarDadosAluno(supabaseClient, data);
