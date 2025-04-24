@@ -47,7 +47,7 @@ export function useAlunos() {
       const dataHoje = new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
-        .from('presencas')
+        .from('produtividade_abaco')
         .select('aluno_id')
         .eq('data_aula', dataHoje);
         
