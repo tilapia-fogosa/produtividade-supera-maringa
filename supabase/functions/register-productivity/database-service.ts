@@ -65,50 +65,9 @@ export async function registrarProdutividade(
   try {
     console.log('Registrando produtividade para aluno:', data.aluno_id);
     
-    // Registrar na tabela de presença
-    // Permitindo múltiplos registros por dia (removendo a validação que impedia isso)
+    // Se aluno estiver presente, registrar produtividade do ábaco
     if (data.presente !== undefined) {
       console.log(`Registrando ${data.presente ? 'presença' : 'falta'} para o aluno:`, data.aluno_id);
-      
-      const { error: presencaError } = await supabaseClient
-        .from('presencas')
-        .insert({
-          aluno_id: data.aluno_id,
-          data_aula: data.data_registro,
-          presente: data.presente,
-          observacao: data.motivo_falta,
-          is_reposicao: data.is_reposicao || false
-        });
-      
-      if (presencaError) {
-        console.error('Erro ao registrar presença:', presencaError);
-        console.error('Detalhes do erro:', JSON.stringify(presencaError));
-        return false;
-      }
-      
-      // Se for falta, registrar na tabela de faltas
-      if (!data.presente && data.motivo_falta) {
-        console.log('Registrando falta com motivo para o aluno:', data.aluno_id);
-        
-        const { error: faltaError } = await supabaseClient
-          .from('faltas_alunos')
-          .insert({
-            aluno_id: data.aluno_id,
-            data_falta: data.data_registro,
-            motivo: data.motivo_falta
-          });
-        
-        if (faltaError) {
-          console.error('Erro ao registrar falta:', faltaError);
-          return false;
-        }
-      }
-    }
-    
-    // Se aluno estiver presente, registrar produtividade do ábaco
-    // Permitindo múltiplos registros por dia (removendo a validação que impedia isso)
-    if (data.presente) {
-      console.log('Registrando produtividade do ábaco para o aluno:', data.aluno_id);
       
       // Usar apostila_abaco se fornecida, caso contrário usar a apostila_atual
       const apostilaFinal = data.apostila_abaco || data.apostila_atual;
@@ -151,7 +110,7 @@ export async function registrarProdutividade(
         exercicios: data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
         erros: data.erros_abaco ? parseInt(data.erros_abaco) : null,
         fez_desafio: data.fez_desafio || false,
-        comentario: data.comentario
+        comentario: data.motivo_falta || data.comentario // Usando motivo_falta como comentário se existir
       };
       
       console.log('Dados de produtividade a salvar:', produtividadeData);
