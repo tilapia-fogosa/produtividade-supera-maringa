@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
-import { Turma } from '@/hooks/use-turmas-por-dia';
+import { Turma } from '@/hooks/use-professor-turmas';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface DayTurmasListProps {
