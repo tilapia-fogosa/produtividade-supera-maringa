@@ -43,6 +43,11 @@ const DevolutivaAluno = () => {
   const [textoDevolutiva, setTextoDevolutiva] = useState(aluno?.texto_devolutiva || '');
   const [isOpen, setIsOpen] = useState(false);
 
+  const getPrimeiroNome = (nomeCompleto: string) => {
+    const nomeSplit = nomeCompleto.trim().split(' ');
+    return nomeSplit[0];
+  };
+
   const handleVoltar = () => {
     navigate(-1);
   };
@@ -70,6 +75,13 @@ const DevolutivaAluno = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const formatarTextoInformativo = (texto: string | null, nomeAluno: string) => {
+    const primeiroNome = getPrimeiroNome(nomeAluno);
+    return texto 
+      ? `Querido(a) ${primeiroNome},\n\n${texto}` 
+      : `Querido(a) ${primeiroNome},\n\n`;
   };
 
   if (loading) {
@@ -200,9 +212,13 @@ const DevolutivaAluno = () => {
         </h2>
         <div className="bg-gray-50 p-4 rounded-lg border border-orange-200">
           {textoDevolutiva ? (
-            <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
+            <p className="whitespace-pre-wrap">
+              {formatarTextoInformativo(textoDevolutiva, aluno.nome)}
+            </p>
           ) : (
-            <p className="whitespace-pre-wrap">{aluno?.texto_geral || 'Não há informativo disponível.'}</p>
+            <p className="whitespace-pre-wrap">
+              {formatarTextoInformativo(aluno?.texto_geral, aluno.nome)}
+            </p>
           )}
         </div>
       </div>
