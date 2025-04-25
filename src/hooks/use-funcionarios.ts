@@ -36,7 +36,17 @@ export function useFuncionarios() {
       }
 
       console.log('Funcionários encontrados:', funcionariosData);
-      setFuncionarios(funcionariosData || []);
+      
+      // Transforma os dados para garantir que correspondam à interface Funcionario
+      const funcionariosFormatados = funcionariosData?.map(item => {
+        return {
+          ...item,
+          // Se turma for um erro ou undefined, definimos como null
+          turma: item.turma && typeof item.turma === 'object' && !('error' in item.turma) ? item.turma : null
+        } as Funcionario;
+      }) || [];
+      
+      setFuncionarios(funcionariosFormatados);
     } catch (error) {
       console.error('Erro ao buscar funcionários:', error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
