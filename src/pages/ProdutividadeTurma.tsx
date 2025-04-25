@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import { useAlunos } from '@/hooks/use-alunos';
 import { supabase } from "@/integrations/supabase/client";
-import { Turma as TurmaPorDia } from '@/hooks/use-turmas-por-dia';
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { toast } from '@/hooks/use-toast';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';

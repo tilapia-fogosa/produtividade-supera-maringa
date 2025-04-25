@@ -30,16 +30,10 @@ export function useDevolutivas() {
           return;
         }
         
+        // Modificado para fazer somente a busca de turmas inicialmente
         const { data: turmasData, error } = await supabase
           .from('turmas')
-          .select(`
-            *,
-            alunos (
-              id,
-              nome,
-              texto_devolutiva
-            )
-          `)
+          .select('*')
           .eq('dia_semana', dia);
 
         if (error) {

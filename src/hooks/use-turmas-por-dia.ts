@@ -2,16 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
-
-// Defina o tipo Turma com as mesmas propriedades que a interface em use-professor-turmas.tsx
-export interface Turma {
-  id: string;
-  nome: string;
-  dia_semana: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
-  horario: string;
-  professor_id: string;
-  sala: string;
-}
+import { Turma } from './use-professor-turmas';
 
 export function useTurmasPorDia() {
   const [turmas, setTurmas] = useState<Turma[]>([]);

@@ -16,7 +16,7 @@ export interface Turma {
   professor_id: string;
   horario: string;
   sala: string;
-  dia_semana?: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
+  dia_semana: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
 }
 
 export interface Aluno {
@@ -71,7 +71,8 @@ export function useProfessorTurmas() {
         // Garantir que as turmas tenham o campo sala
         const turmasCompletas: Turma[] = (turmasData || []).map(turma => ({
           ...turma,
-          sala: turma.sala || ''
+          sala: turma.sala || '',
+          dia_semana: turma.dia_semana || 'segunda' // Default para garantir que dia_semana não seja undefined
         }));
         
         setProfessor(professorCompleto);
