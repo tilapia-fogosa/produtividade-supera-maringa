@@ -208,6 +208,9 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           />
 
           <div>
+            <p className="text-sm text-muted-foreground mb-1">
+              Agendado Retenção (caso tenha)
+            </p>
             <Input
               type="datetime-local"
               value={dataRetencao}
@@ -215,9 +218,6 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               placeholder="Data da Retenção"
               className="w-full"
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              Agendado Retenção (caso tenha)
-            </p>
           </div>
 
           <div className="flex justify-end space-x-2">
