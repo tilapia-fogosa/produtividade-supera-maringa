@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import { useAlunos } from '@/hooks/use-alunos';
 import { supabase } from "@/integrations/supabase/client";
-import { Turma } from '@/hooks/use-turmas-por-dia';
+import { Turma as TurmaPorDia } from '@/hooks/use-turmas-por-dia';
+import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { toast } from '@/hooks/use-toast';
-import { Aluno } from '@/hooks/use-professor-turmas';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 
 const ProdutividadeTurma = () => {
@@ -43,7 +44,13 @@ const ProdutividadeTurma = () => {
         if (error) throw error;
         
         if (data) {
-          setTurma(data as Turma);
+          // Converter de TurmaPorDia para Turma
+          const turmaData: Turma = {
+            ...data,
+            sala: data.sala || '' // Adicionando a propriedade sala se não existir
+          };
+          
+          setTurma(turmaData);
           
           // Iniciar carregamento dos alunos assim que tivermos os dados da turma
           handleTurmaSelecionada(data.id);
@@ -112,7 +119,7 @@ const ProdutividadeTurma = () => {
     <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
       <div className="container mx-auto py-4 px-2">
         <ProdutividadeScreen
-          turma={turma!}
+          turma={turma}
           alunos={alunos}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
@@ -123,7 +130,7 @@ const ProdutividadeTurma = () => {
           <ProdutividadeModal 
             isOpen={modalAberto} 
             aluno={alunoSelecionado} 
-            turma={turma!} 
+            turma={turma} 
             onClose={handleFecharModal} 
             onSuccess={handleSuccessModal}
           />

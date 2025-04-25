@@ -28,6 +28,12 @@ export function useTurmaDetalhes(turmaId?: string) {
 
         if (turmaError) throw turmaError;
         
+        // Definindo a sala como string vazia se não existir no banco de dados
+        const turmaCompleta: Turma = {
+          ...turmaData,
+          sala: turmaData.sala || ''
+        };
+        
         // Buscar alunos da turma
         const { data: alunosData, error: alunosError } = await supabase
           .from('alunos')
@@ -38,7 +44,7 @@ export function useTurmaDetalhes(turmaId?: string) {
 
         if (alunosError) throw alunosError;
 
-        setTurma(turmaData);
+        setTurma(turmaCompleta);
         setAlunos(alunosData || []);
       } catch (err) {
         console.error('Erro ao carregar turma:', err);
