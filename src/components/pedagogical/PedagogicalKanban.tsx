@@ -2,16 +2,29 @@
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
-import { Loader2 } from "lucide-react";
+import { Loader2, Bell, MessageSquare, Calendar, Check } from "lucide-react";
 
 interface PedagogicalKanbanProps {
   type: 'evasions' | 'absences';
 }
 
 const columns = {
-  'todo': 'A Fazer',
-  'doing': 'Em Andamento',
-  'done': 'Concluído'
+  'todo': {
+    title: 'Alerta criado',
+    icon: Bell
+  },
+  'doing': {
+    title: 'Em negociação',
+    icon: MessageSquare
+  },
+  'scheduled': {
+    title: 'Retenção agendada',
+    icon: Calendar
+  },
+  'done': {
+    title: 'Concluída',
+    icon: Check
+  }
 };
 
 export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
@@ -39,15 +52,16 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       <DragDropContext onDragEnd={handleDragEnd}>
-        {Object.entries(columns).map(([id, title]) => {
+        {Object.entries(columns).map(([id, { title, icon: Icon }]) => {
           const columnCards = cards.filter(card => card.column_id === id);
           
           return (
             <div key={id} className="flex-shrink-0 w-72">
               <div className="bg-orange-50 rounded-lg p-3">
-                <h3 className="font-medium text-sm mb-3 text-azul-500">
+                <div className="font-medium text-sm mb-3 text-azul-500 flex items-center gap-2">
+                  <Icon className="h-4 w-4" />
                   {title} ({columnCards.length})
-                </h3>
+                </div>
                 
                 <Droppable droppableId={id}>
                   {(provided) => (
