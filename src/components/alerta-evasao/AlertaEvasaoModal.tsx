@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAlunos } from "@/hooks/use-alunos";
 import { Button } from "@/components/ui/button";
@@ -206,16 +207,18 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
             onChange={(e) => setResponsavel(e.target.value)}
           />
 
-          <Input
-            type="datetime-local"
-            value={dataRetencao}
-            onChange={(e) => setDataRetencao(e.target.value)}
-            placeholder="Data da Retenção (opcional)"
-            className="w-full"
-          />
-          <p className="text-sm text-muted-foreground mt-1">
-            Agendado Retenção (caso tenha)
-          </p>
+          <div>
+            <Input
+              type="datetime-local"
+              value={dataRetencao}
+              onChange={(e) => setDataRetencao(e.target.value)}
+              placeholder="Data da Retenção"
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Agendado Retenção (caso tenha)
+            </p>
+          </div>
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={onClose}>
