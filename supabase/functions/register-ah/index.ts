@@ -73,6 +73,32 @@ serve(async (req) => {
       // Continuar mesmo com erro na busca de dados adicionais
     }
 
+    // Buscar nome do professor/corretor
+    console.log('Buscando nome do corretor...');
+    let nomeCorretor = data.professor_correcao; // fallback para o ID caso não encontre
+
+    // Tentar buscar primeiro na tabela de professores
+    const { data: professorData } = await supabase
+      .from('professores')
+      .select('nome')
+      .eq('id', data.professor_correcao)
+      .maybeSingle();
+
+    if (professorData?.nome) {
+      nomeCorretor = professorData.nome;
+    } else {
+      // Se não encontrou nos professores, tentar nos estagiários
+      const { data: estagiarioData } = await supabase
+        .from('estagiarios')
+        .select('nome')
+        .eq('id', data.professor_correcao)
+        .maybeSingle();
+      
+      if (estagiarioData?.nome) {
+        nomeCorretor = estagiarioData.nome;
+      }
+    }
+
     // Preparar payload para o webhook
     const webhookPayload = {
       aluno_id: data.aluno_id,
@@ -83,7 +109,7 @@ serve(async (req) => {
       apostila: data.apostila,
       exercicios: data.exercicios,
       erros: data.erros,
-      professor_correcao: data.professor_correcao,
+      professor_correcao: nomeCorretor,
       comentario: data.comentario,
       data_registro: new Date().toISOString()
     };
@@ -171,3 +197,4 @@ serve(async (req) => {
     );
   }
 });
+
