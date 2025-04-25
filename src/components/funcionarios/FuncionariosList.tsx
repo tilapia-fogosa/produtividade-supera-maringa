@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useFuncionarios, Funcionario } from '@/hooks/use-funcionarios';
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,7 @@ const FuncionariosForm = ({
             <SelectValue placeholder="Selecione uma turma" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="">Nenhuma</SelectItem>
             {turmas.map((turma) => (
               <SelectItem key={turma.id} value={turma.id}>
                 {turma.nome}
@@ -230,7 +232,7 @@ const FuncionariosList = () => {
                     <TableCell>{funcionario.email || '-'}</TableCell>
                     <TableCell>{funcionario.telefone || '-'}</TableCell>
                     <TableCell>{funcionario.cargo || '-'}</TableCell>
-                    <TableCell>{(funcionario as any).turma?.nome || '-'}</TableCell>
+                    <TableCell>{funcionario.turma?.nome || '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
