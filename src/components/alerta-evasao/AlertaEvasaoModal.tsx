@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,13 +26,16 @@ interface AlertaEvasaoModalProps {
   onClose: () => void;
 }
 
+// Tipo para garantir que usamos os valores corretos do enum
+type OrigemAlerta = 'conversa_indireta' | 'aviso_recepcao' | 'aviso_professor_coordenador' | 'aviso_whatsapp' | 'inadimplencia' | 'outro';
+
 const origensAlerta = [
-  { value: 'conversa_indireta', label: 'Conversa Indireta (entre alunos)' },
-  { value: 'aviso_recepcao', label: 'Avisou na Recepção' },
-  { value: 'aviso_professor_coordenador', label: 'Avisou ao Professor / Coordenador' },
-  { value: 'aviso_whatsapp', label: 'Avisou no Whatsapp' },
-  { value: 'inadimplencia', label: 'Inadimplência (2 Meses ou Mais)' },
-  { value: 'outro', label: 'Outro' }
+  { value: 'conversa_indireta' as OrigemAlerta, label: 'Conversa Indireta (entre alunos)' },
+  { value: 'aviso_recepcao' as OrigemAlerta, label: 'Avisou na Recepção' },
+  { value: 'aviso_professor_coordenador' as OrigemAlerta, label: 'Avisou ao Professor / Coordenador' },
+  { value: 'aviso_whatsapp' as OrigemAlerta, label: 'Avisou no Whatsapp' },
+  { value: 'inadimplencia' as OrigemAlerta, label: 'Inadimplência (2 Meses ou Mais)' },
+  { value: 'outro' as OrigemAlerta, label: 'Outro' }
 ];
 
 export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
@@ -41,7 +43,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
   const [filtroAluno, setFiltroAluno] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
   const [dataAlerta, setDataAlerta] = useState('');
-  const [origemAlerta, setOrigemAlerta] = useState<string | null>(null);
+  const [origemAlerta, setOrigemAlerta] = useState<OrigemAlerta | null>(null);
   const [descritivo, setDescritivo] = useState('');
   const [responsavel, setResponsavel] = useState('');
   const [dataRetencao, setDataRetencao] = useState('');
@@ -142,7 +144,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
             />
           </div>
 
-          <Select value={origemAlerta || ''} onValueChange={setOrigemAlerta}>
+          <Select value={origemAlerta || ''} onValueChange={setOrigemAlerta as (value: string) => void}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione a origem do alerta" />
             </SelectTrigger>
