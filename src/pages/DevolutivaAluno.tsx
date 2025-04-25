@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, Brain } from "lucide-react";
@@ -26,6 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 
 const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
   { value: 'mes', label: 'Último mês' },
@@ -42,6 +43,7 @@ const DevolutivaAluno = () => {
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
   const [textoDevolutiva, setTextoDevolutiva] = useState(aluno?.texto_devolutiva || '');
   const [isOpen, setIsOpen] = useState(false);
+  const [desafiosFeitos, setDesafiosFeitos] = useState<number>(0);
 
   const getPrimeiroNome = (nomeCompleto: string) => {
     const nomeSplit = nomeCompleto.trim().split(' ');
@@ -50,6 +52,31 @@ const DevolutivaAluno = () => {
 
   const handleVoltar = () => {
     navigate(-1);
+  };
+
+  const handleSalvarDesafios = async () => {
+    if (!alunoId) return;
+
+    try {
+      const { error } = await supabase
+        .from('alunos')
+        .update({ niveldesafio: desafiosFeitos })
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Desafios atualizados",
+        description: "O número de desafios foi atualizado com sucesso.",
+      });
+    } catch (err) {
+      console.error('Erro ao salvar desafios:', err);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível atualizar o número de desafios.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSalvarDevolutiva = async () => {
@@ -83,6 +110,13 @@ const DevolutivaAluno = () => {
       ? `Querido(a) ${primeiroNome},\n\n${texto}` 
       : `Querido(a) ${primeiroNome},\n\n`;
   };
+
+  useEffect(() => {
+    if (aluno) {
+      setDesafiosFeitos(aluno.desafios_feitos);
+      setTextoDevolutiva(aluno.texto_devolutiva || '');
+    }
+  }, [aluno]);
 
   if (loading) {
     return (
@@ -133,13 +167,29 @@ const DevolutivaAluno = () => {
         </h1>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
+      <div className="bg-white p-4 rounded-lg border border-orange-200 text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <Brain className="h-6 w-6 text-orange-500" />
-          <span className="text-xl font-semibold text-azul-500">
-            {aluno.desafios_feitos} Desafios Realizados
-          </span>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min="0"
+              value={desafiosFeitos}
+              onChange={(e) => setDesafiosFeitos(Number(e.target.value))}
+              className="w-20 text-center"
+            />
+            <span className="text-xl font-semibold text-azul-500">
+              Desafios Realizados
+            </span>
+          </div>
         </div>
+        <Button 
+          onClick={handleSalvarDesafios}
+          variant="outline"
+          className="text-orange-500 border-orange-200"
+        >
+          Salvar Desafios
+        </Button>
       </div>
 
       <div className="space-y-6">
