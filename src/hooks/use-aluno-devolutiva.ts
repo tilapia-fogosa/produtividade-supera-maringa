@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths, format, parseISO, isWithinInterval } from 'date-fns';
+import { subMonths, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface DesempenhoMensalItem {
@@ -22,6 +21,7 @@ export interface AlunoDevolutiva {
   nome: string;
   desafios_feitos: number;
   texto_devolutiva: string | null;
+  texto_geral: string | null;
   desempenho_abaco: DesempenhoMensalAbaco[];
   desempenho_ah: DesempenhoMensalAH[];
   abaco_total_exercicios: number;
@@ -44,6 +44,7 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AlunoDevolutiva | null>(null);
+  const [textoGeral, setTextoGeral] = useState<string | null>(null);
   const [mesesDisponiveis, setMesesDisponiveis] = useState<string[]>([]);
 
   const getPeriodoData = (periodo: PeriodoFiltro) => {
@@ -99,7 +100,17 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
 
         const dataInicial = getPeriodoData(periodo);
 
-        // Buscar dados básicos do aluno
+        const { data: configData, error: configError } = await supabase
+          .from('devolutivas_config')
+          .select('texto_geral')
+          .single();
+
+        if (configError) {
+          console.error('Erro ao buscar texto geral:', configError);
+        } else {
+          setTextoGeral(configData?.texto_geral || null);
+        }
+
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('id, nome, texto_devolutiva')
@@ -108,7 +119,6 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
 
         if (alunoError) throw alunoError;
 
-        // Buscar dados do Ábaco
         const { data: abacoData, error: abacoError } = await supabase
           .from('produtividade_abaco')
           .select('*')
@@ -118,7 +128,6 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
 
         if (abacoError) throw abacoError;
 
-        // Buscar dados do AH
         const { data: ahData, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
@@ -128,11 +137,9 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
 
         if (ahError) throw ahError;
 
-        // Processar dados por mês
         const desempenhoAbaco = agruparPorMes(abacoData, 'data_aula');
         const desempenhoAH = agruparPorMes(ahData, 'created_at');
 
-        // Calcular totais gerais
         const abacoTotais = desempenhoAbaco.reduce(
           (acc, curr) => ({
             exercicios: acc.exercicios + curr.exercicios,
@@ -149,12 +156,12 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           { exercicios: 0, erros: 0 }
         );
 
-        // Montar objeto final
         setData({
           id: alunoId,
           nome: alunoData.nome,
-          desafios_feitos: abacoData.filter(item => item.fez_desafio).length,
+          texto_geral: configData?.texto_geral || null,
           texto_devolutiva: alunoData.texto_devolutiva,
+          desafios_feitos: abacoData.filter(item => item.fez_desafio).length,
           desempenho_abaco: desempenhoAbaco,
           desempenho_ah: desempenhoAH,
           abaco_total_exercicios: abacoTotais.exercicios,
@@ -169,7 +176,6 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
             : 0
         });
 
-        // Coletar meses disponíveis
         const meses = [...new Set([
           ...abacoData.map(item => format(new Date(item.data_aula), 'yyyy-MM')),
           ...ahData.map(item => format(new Date(item.created_at), 'yyyy-MM'))

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -200,11 +199,11 @@ const DevolutivaAluno = () => {
           Informativo Oficial - {new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
         </h2>
         <div className="bg-gray-50 p-4 rounded-lg border border-orange-200">
-          <p>
-            Prezados pais e/ou responsáveis, 
-            Este é o relatório mensal do desempenho do(a) aluno(a) em nossas atividades.
-            Os dados acima refletem o progresso nas atividades de Ábaco e Abrindo Horizontes.
-          </p>
+          {textoDevolutiva ? (
+            <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
+          ) : (
+            <p className="whitespace-pre-wrap">{aluno?.texto_geral || 'Não há informativo disponível.'}</p>
+          )}
         </div>
       </div>
 

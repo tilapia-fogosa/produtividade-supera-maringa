@@ -1,4 +1,3 @@
-
 export interface ProdutividadeAbaco {
   id: string;
   aluno_id: string;
@@ -33,4 +32,20 @@ export interface ProdutividadeAH {
   comentario: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface AlunoDevolutiva {
+  id: string;
+  nome: string;
+  texto_geral: string | null;
+  texto_devolutiva: string | null;
+  desafios_feitos: number;
+  desempenho_abaco: DesempenhoMensalAbaco[];
+  desempenho_ah: DesempenhoMensalAH[];
+  abaco_total_exercicios: number;
+  abaco_total_erros: number;
+  abaco_percentual_total: number;
+  ah_total_exercicios: number;
+  ah_total_erros: number;
+  ah_percentual_total: number;
 }
