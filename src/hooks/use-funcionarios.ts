@@ -9,6 +9,7 @@ export interface Funcionario {
   email: string | null;
   telefone: string | null;
   cargo: string | null;
+  turma_id: string | null;
   active: boolean;
   created_at: string;
 }
@@ -24,7 +25,7 @@ export function useFuncionarios() {
       
       const { data: funcionariosData, error } = await supabase
         .from('funcionarios')
-        .select('*')
+        .select('*, turma:turmas(id, nome)')
         .order('nome');
 
       if (error) {

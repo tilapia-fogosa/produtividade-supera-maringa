@@ -1,13 +1,14 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFuncionarios, Funcionario } from '@/hooks/use-funcionarios';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Pencil, Trash2, UserPlus, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const FuncionariosForm = ({
   funcionario,
@@ -25,11 +26,35 @@ const FuncionariosForm = ({
     email: funcionario?.email || '',
     telefone: funcionario?.telefone || '',
     cargo: funcionario?.cargo || '',
+    turma_id: funcionario?.turma_id || '',
   });
+  const [turmas, setTurmas] = useState<{ id: string; nome: string }[]>([]);
+
+  useEffect(() => {
+    const fetchTurmas = async () => {
+      const { data, error } = await supabase
+        .from('turmas')
+        .select('id, nome')
+        .order('nome');
+        
+      if (error) {
+        console.error('Erro ao buscar turmas:', error);
+        return;
+      }
+      
+      setTurmas(data || []);
+    };
+
+    fetchTurmas();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTurmaChange = (value: string) => {
+    setFormData(prev => ({ ...prev, turma_id: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -79,6 +104,22 @@ const FuncionariosForm = ({
           value={formData.cargo} 
           onChange={handleChange} 
         />
+      </div>
+
+      <div>
+        <Label htmlFor="turma">Turma</Label>
+        <Select onValueChange={handleTurmaChange} value={formData.turma_id}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione uma turma" />
+          </SelectTrigger>
+          <SelectContent>
+            {turmas.map((turma) => (
+              <SelectItem key={turma.id} value={turma.id}>
+                {turma.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       <DialogFooter>
@@ -178,6 +219,7 @@ const FuncionariosList = () => {
                   <TableHead>Email</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Cargo</TableHead>
+                  <TableHead>Turma</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -188,6 +230,7 @@ const FuncionariosList = () => {
                     <TableCell>{funcionario.email || '-'}</TableCell>
                     <TableCell>{funcionario.telefone || '-'}</TableCell>
                     <TableCell>{funcionario.cargo || '-'}</TableCell>
+                    <TableCell>{(funcionario as any).turma?.nome || '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
