@@ -12,6 +12,7 @@ export interface Funcionario {
   turma_id: string | null;
   active: boolean;
   created_at: string;
+  turma?: { id: string; nome: string } | null;
 }
 
 export function useFuncionarios() {
