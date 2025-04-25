@@ -93,28 +93,36 @@ export function useAlunos() {
         throw errorRegulares;
       }
       
-      // Buscar funcionários (que são considerados alunos especiais)
+      // Verificar se há funcionários marcados como alunos especiais que ainda estão ativos
       const { data: funcionariosComoAlunos, error: errorFuncionarios } = await supabase
         .from('alunos')
         .select('*')
         .eq('is_funcionario', true)
-        .eq('active', true)
+        .eq('active', true)  // Garantir que apenas funcionários ativos sejam listados
+        .eq('turma_id', turmaId)  // Filtrar funcionários apenas da turma atual
         .order('nome');
         
       if (errorFuncionarios) {
         throw errorFuncionarios;
       }
       
-      // Combinar alunos regulares e funcionários
+      console.log('Alunos regulares encontrados:', alunosRegulares?.length || 0);
+      console.log('Funcionários como alunos encontrados:', funcionariosComoAlunos?.length || 0);
+      
+      // Combinar alunos regulares e funcionários ativos da turma
       const todosAlunosDaTurma = [...(alunosRegulares || [])];
       
-      // Adicionar funcionários apenas se estamos na visualização de "todos os alunos"
-      // ou se a turma selecionada for específica para funcionários (se aplicável)
-      if (funcionariosComoAlunos) {
-        // Podemos adicionar lógica para verificar se deve mostrar funcionários
-        // Por exemplo, se turmaId for igual a uma "turmaFuncionariosId" específica
-        todosAlunosDaTurma.push(...funcionariosComoAlunos);
+      // Adicionar apenas funcionários que estão ativos e pertencem à turma atual
+      if (funcionariosComoAlunos && funcionariosComoAlunos.length > 0) {
+        // Verificamos cada funcionário para evitar duplicações
+        funcionariosComoAlunos.forEach(funcionario => {
+          if (!todosAlunosDaTurma.some(aluno => aluno.id === funcionario.id)) {
+            todosAlunosDaTurma.push(funcionario);
+          }
+        });
       }
+      
+      console.log('Total de alunos na turma após combinação:', todosAlunosDaTurma.length);
       
       // Converter para o tipo Aluno
       const alunosTyped: Aluno[] = todosAlunosDaTurma;

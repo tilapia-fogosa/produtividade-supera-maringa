@@ -16,7 +16,10 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
   onRegistrarPresenca,
   produtividadeRegistrada = {}
 }) => {
-  if (alunos.length === 0) {
+  // Filtrar apenas os alunos ativos para garantir
+  const alunosAtivos = alunos.filter(aluno => aluno.active);
+
+  if (alunosAtivos.length === 0) {
     return <p className="text-center my-4">Nenhum aluno encontrado nesta turma.</p>;
   }
 
@@ -30,7 +33,7 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunos.map((aluno) => (
+          {alunosAtivos.map((aluno) => (
             <TableRow key={aluno.id} className="even:bg-orange-50/50">
               <TableCell className="font-medium">{aluno.nome}</TableCell>
               <TableCell className="text-right">

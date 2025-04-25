@@ -20,8 +20,11 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
   ahRegistrado = {}
 }) => {
   const isMobile = useIsMobile();
+  
+  // Filtrar apenas os alunos ativos
+  const alunosAtivos = alunos.filter(aluno => aluno.active);
 
-  if (alunos.length === 0) {
+  if (alunosAtivos.length === 0) {
     return (
       <div className="text-center py-3">
         <p className={isMobile ? "text-sm" : ""}>Não há alunos cadastrados nesta turma.</p>
@@ -46,7 +49,7 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunos.map((aluno, index) => (
+          {alunosAtivos.map((aluno, index) => (
             <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
               <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
                 <div className="truncate max-w-[150px]">{aluno.nome}</div>
