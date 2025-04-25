@@ -73,6 +73,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     }
 
     try {
+      // Primeiro salvar no banco de dados
       const { error } = await supabase
         .from('alerta_evasao')
         .insert({
@@ -85,6 +86,43 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
         });
 
       if (error) throw error;
+
+      // Encontrar os dados do aluno selecionado
+      const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
+
+      // Enviar para o webhook
+      const webhookUrl = 'https://hook.us1.make.com/v8b7u98lehutsqqk9tox27b2bn7x1mmx';
+      
+      try {
+        const webhookResponse = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            aluno: {
+              id: alunoSelecionado,
+              nome: aluno?.nome,
+              codigo: aluno?.codigo,
+              email: aluno?.email,
+              telefone: aluno?.telefone
+            },
+            alerta: {
+              data: new Date(dataAlerta).toISOString(),
+              origem: origemAlerta,
+              descritivo,
+              responsavel,
+              data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null
+            }
+          })
+        });
+
+        if (!webhookResponse.ok) {
+          console.error('Erro ao enviar para webhook:', await webhookResponse.text());
+        }
+      } catch (webhookError) {
+        console.error('Erro ao enviar para webhook:', webhookError);
+      }
 
       toast({
         title: "Sucesso",
