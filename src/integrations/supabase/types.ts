@@ -1129,20 +1129,26 @@ export type Database = {
       professores: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           nome: string
+          telefone: string | null
           unit_id: string
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           nome: string
+          telefone?: string | null
           unit_id: string
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           nome?: string
+          telefone?: string | null
           unit_id?: string
         }
         Relationships: [
@@ -1704,6 +1710,7 @@ export type Database = {
           id: string
           nome: string
           professor_id: string
+          sala: string | null
         }
         Insert: {
           created_at?: string
@@ -1712,6 +1719,7 @@ export type Database = {
           id?: string
           nome: string
           professor_id: string
+          sala?: string | null
         }
         Update: {
           created_at?: string
@@ -1720,6 +1728,7 @@ export type Database = {
           id?: string
           nome?: string
           professor_id?: string
+          sala?: string | null
         }
         Relationships: [
           {

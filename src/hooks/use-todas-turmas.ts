@@ -29,7 +29,7 @@ export function useTodasTurmas() {
         // Garantir que cada turma tenha o campo sala
         const turmasCompletas = turmasData?.map(turma => ({
           ...turma,
-          sala: turma.sala || ''
+          sala: turma.sala || null
         })) || [];
         
         setTurmas(turmasCompletas);

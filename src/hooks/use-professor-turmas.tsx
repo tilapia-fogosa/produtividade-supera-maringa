@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Professor {
   id: string;
   nome: string;
-  email: string;
-  telefone: string;
+  email: string | null;
+  telefone: string | null;
+  unit_id: string;
 }
 
 export interface Turma {
@@ -15,7 +15,7 @@ export interface Turma {
   nome: string;
   professor_id: string;
   horario: string;
-  sala: string;
+  sala: string | null;
   dia_semana: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
 }
 
@@ -33,7 +33,6 @@ export interface Aluno {
   ultima_correcao_ah?: string;
 }
 
-// Função useProfessorTurmas
 export function useProfessorTurmas() {
   const navigate = useNavigate();
   const [professor, setProfessor] = useState<Professor | null>(null);
@@ -45,7 +44,6 @@ export function useProfessorTurmas() {
       try {
         setLoading(true);
         
-        // Obtém o professor
         const { data: professorData, error: professorError } = await supabase
           .from('professores')
           .select('*')
@@ -53,7 +51,6 @@ export function useProfessorTurmas() {
           
         if (professorError) throw professorError;
         
-        // Obtém as turmas do professor
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
           .select('*')
@@ -61,18 +58,16 @@ export function useProfessorTurmas() {
           
         if (turmasError) throw turmasError;
         
-        // Garantir que o professor tenha todos os campos necessários
         const professorCompleto: Professor = {
           ...professorData,
           email: professorData.email || '',
           telefone: professorData.telefone || ''
         };
         
-        // Garantir que as turmas tenham o campo sala
         const turmasCompletas: Turma[] = (turmasData || []).map(turma => ({
           ...turma,
           sala: turma.sala || '',
-          dia_semana: turma.dia_semana || 'segunda' // Default para garantir que dia_semana não seja undefined
+          dia_semana: turma.dia_semana || 'segunda'
         }));
         
         setProfessor(professorCompleto);
