@@ -81,18 +81,43 @@ export function useAlunos() {
     setCarregandoAlunos(true);
     
     try {
-      const { data, error } = await supabase
+      // Buscar alunos regulares da turma
+      const { data: alunosRegulares, error: errorRegulares } = await supabase
         .from('alunos')
         .select('*')
         .eq('turma_id', turmaId)
+        .eq('active', true)
         .order('nome');
         
-      if (error) {
-        throw error;
+      if (errorRegulares) {
+        throw errorRegulares;
+      }
+      
+      // Buscar funcionários (que são considerados alunos especiais)
+      const { data: funcionariosComoAlunos, error: errorFuncionarios } = await supabase
+        .from('alunos')
+        .select('*')
+        .eq('is_funcionario', true)
+        .eq('active', true)
+        .order('nome');
+        
+      if (errorFuncionarios) {
+        throw errorFuncionarios;
+      }
+      
+      // Combinar alunos regulares e funcionários
+      const todosAlunosDaTurma = [...(alunosRegulares || [])];
+      
+      // Adicionar funcionários apenas se estamos na visualização de "todos os alunos"
+      // ou se a turma selecionada for específica para funcionários (se aplicável)
+      if (funcionariosComoAlunos) {
+        // Podemos adicionar lógica para verificar se deve mostrar funcionários
+        // Por exemplo, se turmaId for igual a uma "turmaFuncionariosId" específica
+        todosAlunosDaTurma.push(...funcionariosComoAlunos);
       }
       
       // Converter para o tipo Aluno
-      const alunosTyped: Aluno[] = data || [];
+      const alunosTyped: Aluno[] = todosAlunosDaTurma;
       setAlunos(alunosTyped);
       
       // Verificar quais alunos já tiveram produtividade registrada hoje

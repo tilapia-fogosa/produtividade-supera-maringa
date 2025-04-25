@@ -68,6 +68,7 @@ export type Database = {
           id: string
           idade: number | null
           indice: string | null
+          is_funcionario: boolean | null
           matricula: string | null
           niveldesafio: number | null
           nome: string
@@ -91,6 +92,7 @@ export type Database = {
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
           niveldesafio?: number | null
           nome: string
@@ -114,6 +116,7 @@ export type Database = {
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
           niveldesafio?: number | null
           nome?: string
@@ -734,6 +737,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      funcionarios: {
+        Row: {
+          active: boolean
+          cargo: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          active?: boolean
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          active?: boolean
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
       }
       kit_types: {
         Row: {
