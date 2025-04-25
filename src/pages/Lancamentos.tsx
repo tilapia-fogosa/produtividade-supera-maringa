@@ -1,12 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen } from "lucide-react";
+import { TrendingUp, BookOpen, AlertTriangle } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
+import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
 
 const Lancamentos = () => {
   const navigate = useNavigate();
+  const [showAlertaModal, setShowAlertaModal] = useState(false);
 
   const handleProdutividadeClick = () => {
     navigate('/dias-lancamento', { state: { serviceType: 'produtividade' } });
@@ -42,7 +44,21 @@ const Lancamentos = () => {
           <BookOpen className="mr-2 h-6 w-6" />
           Lançar Abrindo Horizontes
         </Button>
+
+        <Button 
+          size="lg" 
+          className="py-8 text-lg bg-red-500 hover:bg-red-600 text-white"
+          onClick={() => setShowAlertaModal(true)}
+        >
+          <AlertTriangle className="mr-2 h-6 w-6" />
+          Lançar Alerta de Evasão
+        </Button>
       </div>
+
+      <AlertaEvasaoModal 
+        isOpen={showAlertaModal} 
+        onClose={() => setShowAlertaModal(false)} 
+      />
     </div>
   );
 };
