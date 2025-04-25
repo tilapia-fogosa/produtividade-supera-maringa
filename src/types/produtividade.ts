@@ -1,3 +1,4 @@
+
 export interface ProdutividadeAbaco {
   id: string;
   aluno_id: string;
@@ -33,6 +34,17 @@ export interface ProdutividadeAH {
   created_at: string;
   updated_at: string;
 }
+
+export interface DesempenhoMensalItem {
+  mes: string;
+  livro: string;
+  exercicios: number;
+  erros: number;
+  percentual_acerto: number;
+}
+
+export interface DesempenhoMensalAH extends DesempenhoMensalItem {}
+export interface DesempenhoMensalAbaco extends DesempenhoMensalItem {}
 
 export interface AlunoDevolutiva {
   id: string;
