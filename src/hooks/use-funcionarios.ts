@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -27,10 +26,9 @@ export function useFuncionarios() {
     try {
       setLoading(true);
       
-      // Simplificamos a consulta para não tentar fazer join com a tabela turmas
       const { data: funcionariosData, error } = await supabase
         .from('funcionarios')
-        .select('*')
+        .select('*, turma:turmas(id, nome)')
         .order('nome');
 
       if (error) {
@@ -40,39 +38,21 @@ export function useFuncionarios() {
       }
 
       console.log('Funcionários encontrados:', funcionariosData);
-      
-      // Carregamos as turmas separadamente
-      const { data: turmasData, error: turmasError } = await supabase
-        .from('turmas')
-        .select('id, nome');
-        
-      if (turmasError) {
-        console.error('Erro ao buscar turmas:', turmasError);
-      }
-      
-      // Criamos um mapa para facilitar a busca de turmas por id
-      const turmasMap = new Map();
-      if (turmasData) {
-        turmasData.forEach(turma => {
-          turmasMap.set(turma.id, turma);
-        });
-      }
-      
-      // Formatamos os funcionários manualmente associando a turma quando possível
+
+      // Transforma os dados para garantir que correspondam à interface Funcionario
       const funcionariosFormatados = funcionariosData?.map(item => {
-        let turma = null;
-        
-        if (item.turma_id && turmasMap.has(item.turma_id)) {
-          const turmaDados = turmasMap.get(item.turma_id);
-          turma = {
-            id: turmaDados.id,
-            nome: turmaDados.nome
-          };
-        }
-        
+        const turmaData = item.turma;
+        const turmaValida = turmaData && 
+                          typeof turmaData === 'object' && 
+                          !('error' in turmaData) && 
+                          'id' in turmaData && 
+                          'nome' in turmaData
+                          ? turmaData
+                          : null;
+
         return {
           ...item,
-          turma
+          turma: turmaValida
         } as Funcionario;
       }) || [];
       

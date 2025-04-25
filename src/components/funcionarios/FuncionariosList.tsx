@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useFuncionarios, Funcionario } from '@/hooks/use-funcionarios';
 import { Button } from "@/components/ui/button";

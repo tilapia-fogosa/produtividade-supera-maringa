@@ -747,6 +747,7 @@ export type Database = {
           id: string
           nome: string
           telefone: string | null
+          turma_id: string | null
         }
         Insert: {
           active?: boolean
@@ -756,6 +757,7 @@ export type Database = {
           id?: string
           nome: string
           telefone?: string | null
+          turma_id?: string | null
         }
         Update: {
           active?: boolean
@@ -765,8 +767,17 @@ export type Database = {
           id?: string
           nome?: string
           telefone?: string | null
+          turma_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kit_types: {
         Row: {
