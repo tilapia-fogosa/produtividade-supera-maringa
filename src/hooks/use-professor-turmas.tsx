@@ -1,4 +1,8 @@
 
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
 export interface Professor {
   id: string;
   nome: string;
@@ -29,7 +33,7 @@ export interface Aluno {
   ultima_correcao_ah?: string;
 }
 
-// Criando a função useProfessorTurmas que está faltando
+// Função useProfessorTurmas
 export function useProfessorTurmas() {
   const navigate = useNavigate();
   const [professor, setProfessor] = useState<Professor | null>(null);
@@ -57,8 +61,21 @@ export function useProfessorTurmas() {
           
         if (turmasError) throw turmasError;
         
-        setProfessor(professorData);
-        setTurmas(turmasData || []);
+        // Garantir que o professor tenha todos os campos necessários
+        const professorCompleto: Professor = {
+          ...professorData,
+          email: professorData.email || '',
+          telefone: professorData.telefone || ''
+        };
+        
+        // Garantir que as turmas tenham o campo sala
+        const turmasCompletas: Turma[] = (turmasData || []).map(turma => ({
+          ...turma,
+          sala: turma.sala || ''
+        }));
+        
+        setProfessor(professorCompleto);
+        setTurmas(turmasCompletas);
       } catch (error) {
         console.error('Erro ao carregar professor e turmas:', error);
       } finally {
@@ -71,7 +88,3 @@ export function useProfessorTurmas() {
 
   return { professor, turmas, loading, navigate };
 }
-
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';

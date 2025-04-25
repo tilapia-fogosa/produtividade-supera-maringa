@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from 'react-router-dom';
-import { Turma } from './use-turmas-por-dia';
+import { Turma } from './use-professor-turmas';
 
 export interface AlunoDevolutiva {
   id: string;
@@ -48,7 +48,14 @@ export function useDevolutivas() {
         }
 
         console.log('Turmas encontradas:', turmasData);
-        setTurmas(turmasData || []);
+        
+        // Garantir que cada turma tenha o campo sala
+        const turmasCompletas = turmasData?.map(turma => ({
+          ...turma,
+          sala: turma.sala || ''
+        })) || [];
+        
+        setTurmas(turmasCompletas);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
       } finally {

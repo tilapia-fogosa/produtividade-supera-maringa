@@ -44,7 +44,7 @@ const ProdutividadeTurma = () => {
         if (error) throw error;
         
         if (data) {
-          // Converter de TurmaPorDia para Turma
+          // Garantir que o objeto turma tenha a propriedade sala
           const turmaData: Turma = {
             ...data,
             sala: data.sala || '' // Adicionando a propriedade sala se não existir

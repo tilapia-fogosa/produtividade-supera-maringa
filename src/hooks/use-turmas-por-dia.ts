@@ -44,7 +44,14 @@ export function useTurmasPorDia() {
         }
 
         console.log('Turmas encontradas:', turmasData);
-        setTurmas(turmasData || []);
+        
+        // Adicionar a propriedade sala com valor vazio se não existir
+        const turmasComSala = turmasData?.map(turma => ({
+          ...turma,
+          sala: turma.sala || ''
+        })) || [];
+        
+        setTurmas(turmasComSala);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
       } finally {
