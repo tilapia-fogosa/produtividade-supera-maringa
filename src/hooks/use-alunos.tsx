@@ -19,15 +19,23 @@ export function useAlunos() {
         const { data, error } = await supabase
           .from('alunos')
           .select('*')
+          .eq('active', true)  // Filtrar apenas alunos ativos
           .order('nome');
           
         if (error) {
           throw error;
         }
         
-        // Converter para o tipo Aluno
-        const alunosTyped: Aluno[] = data || [];
-        setTodosAlunos(alunosTyped);
+        // Remover duplicatas baseado no ID
+        const alunosUnicos = data.reduce((acc: Aluno[], current) => {
+          const existe = acc.find(aluno => aluno.id === current.id);
+          if (!existe) {
+            acc.push(current);
+          }
+          return acc;
+        }, []);
+        
+        setTodosAlunos(alunosUnicos);
       } catch (error) {
         console.error('Erro ao buscar todos os alunos:', error);
         toast({
