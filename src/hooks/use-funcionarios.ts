@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -12,7 +11,10 @@ export interface Funcionario {
   turma_id: string | null;
   active: boolean;
   created_at: string;
-  turma?: { id: string; nome: string } | null;
+  turma?: {
+    id: string;
+    nome: string;
+  } | null;
 }
 
 export function useFuncionarios() {
@@ -39,10 +41,18 @@ export function useFuncionarios() {
       
       // Transforma os dados para garantir que correspondam à interface Funcionario
       const funcionariosFormatados = funcionariosData?.map(item => {
+        const turmaData = item.turma;
+        const turmaValida = turmaData && 
+                          typeof turmaData === 'object' && 
+                          !('error' in turmaData) && 
+                          'id' in turmaData && 
+                          'nome' in turmaData
+                          ? turmaData
+                          : null;
+
         return {
           ...item,
-          // Se turma for um erro ou undefined, definimos como null
-          turma: item.turma && typeof item.turma === 'object' && !('error' in item.turma) ? item.turma : null
+          turma: turmaValida
         } as Funcionario;
       }) || [];
       
