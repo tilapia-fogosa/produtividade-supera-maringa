@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -29,6 +30,7 @@ export function useFuncionarios() {
       const { data: funcionariosData, error } = await supabase
         .from('funcionarios')
         .select('*, turma:turmas(id, nome)')
+        .eq('active', true) // Garantir que só recuperamos funcionários ativos
         .order('nome');
 
       if (error) {
@@ -112,12 +114,19 @@ export function useFuncionarios() {
 
   const atualizarFuncionario = async (id: string, dados: Partial<Funcionario>) => {
     try {
+      console.log('Atualizando funcionário:', id, dados);
+      
+      // Remover o campo turma para evitar problemas na atualização
+      const dadosParaEnviar = { ...dados };
+      delete dadosParaEnviar.turma;
+      
       const { error } = await supabase
         .from('funcionarios')
-        .update(dados)
+        .update(dadosParaEnviar)
         .eq('id', id);
 
       if (error) {
+        console.error('Erro de atualização:', error);
         toast({
           title: "Erro",
           description: `Não foi possível atualizar o funcionário: ${error.message}`,
@@ -149,6 +158,8 @@ export function useFuncionarios() {
 
   const removerFuncionario = async (id: string) => {
     try {
+      console.log('Removendo funcionário:', id);
+      
       // Em vez de excluir, apenas marca como inativo
       const { error } = await supabase
         .from('funcionarios')
@@ -156,6 +167,7 @@ export function useFuncionarios() {
         .eq('id', id);
 
       if (error) {
+        console.error('Erro ao remover:', error);
         toast({
           title: "Erro",
           description: `Não foi possível remover o funcionário: ${error.message}`,

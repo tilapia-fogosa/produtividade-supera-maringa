@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useFuncionarios, Funcionario } from '@/hooks/use-funcionarios';
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,19 @@ const FuncionariosForm = ({
 
     fetchTurmas();
   }, []);
+
+  // Atualiza formData quando o funcionario prop muda (importante para edição)
+  useEffect(() => {
+    if (funcionario) {
+      setFormData({
+        nome: funcionario.nome || '',
+        email: funcionario.email || '',
+        telefone: funcionario.telefone || '',
+        cargo: funcionario.cargo || '',
+        turma_id: funcionario.turma_id || '',
+      });
+    }
+  }, [funcionario]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -108,12 +122,12 @@ const FuncionariosForm = ({
 
       <div>
         <Label htmlFor="turma">Turma</Label>
-        <Select onValueChange={handleTurmaChange} value={formData.turma_id}>
+        <Select onValueChange={handleTurmaChange} value={formData.turma_id || ""}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma turma" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Nenhuma</SelectItem>
+            <SelectItem value="null">Nenhuma</SelectItem>
             {turmas.map((turma) => (
               <SelectItem key={turma.id} value={turma.id}>
                 {turma.nome}
@@ -165,9 +179,12 @@ const FuncionariosList = () => {
     
     try {
       if (currentFuncionario?.id) {
-        await atualizarFuncionario(currentFuncionario.id, data);
+        // Converte null string para null real
+        const turma_id = data.turma_id === 'null' ? null : data.turma_id;
+        await atualizarFuncionario(currentFuncionario.id, {...data, turma_id});
       } else {
-        await adicionarFuncionario(data as Omit<Funcionario, 'id' | 'created_at' | 'active'>);
+        const turma_id = data.turma_id === 'null' ? null : data.turma_id;
+        await adicionarFuncionario({...data, turma_id} as Omit<Funcionario, 'id' | 'created_at' | 'active'>);
       }
       handleCloseDialog();
     } finally {
