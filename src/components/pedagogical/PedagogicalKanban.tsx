@@ -1,12 +1,13 @@
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
-import { Loader2, Bell, MessageSquare, Calendar, Check } from "lucide-react";
+import { Loader2, Bell, MessageSquare, Calendar, Check, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 interface PedagogicalKanbanProps {
   type: 'evasions' | 'absences';
   showHibernating?: boolean;
+  searchQuery?: string;
 }
 
 const columns = {
@@ -25,11 +26,27 @@ const columns = {
   'done': {
     title: 'Concluída',
     icon: Check
+  },
+  'hibernating': {
+    title: 'Hibernando',
+    icon: Clock
   }
 };
 
-export function PedagogicalKanban({ type, showHibernating = false }: PedagogicalKanbanProps) {
+export function PedagogicalKanban({ type, showHibernating = false, searchQuery = "" }: PedagogicalKanbanProps) {
   const { cards, isLoading, updateCardColumn, updateCard } = useKanbanCards(showHibernating);
+
+  const filteredCards = cards.filter(card => {
+    const matchesSearch = searchQuery 
+      ? card.aluno_nome?.toLowerCase().includes(searchQuery.toLowerCase()) 
+      : true;
+    
+    if (showHibernating) {
+      return card.column_id === 'hibernating' && matchesSearch;
+    }
+    
+    return card.column_id !== 'hibernating' && matchesSearch;
+  });
 
   const handleDragEnd = (result: DropResult) => {
     console.log("Drag finalizado:", result);
@@ -86,11 +103,17 @@ export function PedagogicalKanban({ type, showHibernating = false }: Pedagogical
     );
   }
 
+  const columnsToShow = showHibernating 
+    ? { hibernating: columns.hibernating }
+    : Object.fromEntries(
+        Object.entries(columns).filter(([key]) => key !== 'hibernating')
+      );
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       <DragDropContext onDragEnd={handleDragEnd}>
-        {Object.entries(columns).map(([id, { title, icon: Icon }]) => {
-          const columnCards = cards.filter(card => card.column_id === id);
+        {Object.entries(columnsToShow).map(([id, { title, icon: Icon }]) => {
+          const columnCards = filteredCards.filter(card => card.column_id === id);
           
           return (
             <div key={id} className="flex-shrink-0 w-72">
