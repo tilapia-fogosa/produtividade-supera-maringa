@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAlunos } from "@/hooks/use-alunos";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,10 +47,53 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
   const [descritivo, setDescritivo] = useState('');
   const [responsavel, setResponsavel] = useState('');
   const [dataRetencao, setDataRetencao] = useState('');
+  const [historicoAlertas, setHistoricoAlertas] = useState<string | null>(null);
+  const [alertasAnteriores, setAlertasAnteriores] = useState<any[]>([]);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
 
   const alunosFiltrados = todosAlunos.filter(aluno => 
     aluno.nome.toLowerCase().includes(filtroAluno.toLowerCase())
   );
+
+  // Buscar alertas anteriores quando o aluno é selecionado
+  useEffect(() => {
+    const buscarAlertasAnteriores = async () => {
+      if (!alunoSelecionado) {
+        setAlertasAnteriores([]);
+        setHistoricoAlertas(null);
+        return;
+      }
+
+      setCarregandoHistorico(true);
+      try {
+        const { data, error } = await supabase
+          .from('alerta_evasao')
+          .select('*')
+          .eq('aluno_id', alunoSelecionado)
+          .order('data_alerta', { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setAlertasAnteriores(data);
+          
+          // Construir texto de histórico
+          const textoHistorico = data.map(alerta => {
+            const data = new Date(alerta.data_alerta).toLocaleDateString();
+            return `${data} - ${alerta.origem_alerta}: ${alerta.descritivo || 'Sem descrição'}`;
+          }).join('\n\n');
+          
+          setHistoricoAlertas(textoHistorico);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar alertas anteriores:', error);
+      } finally {
+        setCarregandoHistorico(false);
+      }
+    };
+
+    buscarAlertasAnteriores();
+  }, [alunoSelecionado]);
 
   const resetForm = () => {
     setAlunoSelecionado(null);
@@ -59,6 +103,8 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     setResponsavel('');
     setDataRetencao('');
     setFiltroAluno('');
+    setHistoricoAlertas(null);
+    setAlertasAnteriores([]);
   };
 
   const handleSubmit = async () => {
@@ -72,8 +118,11 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     }
 
     try {
+      // Determinar a coluna inicial com base na presença de data de retenção
+      const initialColumn = dataRetencao ? 'scheduled' : 'todo';
+      
       // Primeiro salvar no banco de dados
-      const { error } = await supabase
+      const { data: alertaData, error } = await supabase
         .from('alerta_evasao')
         .insert({
           aluno_id: alunoSelecionado,
@@ -82,14 +131,52 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           descritivo,
           responsavel,
           data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
-        });
+          kanban_status: initialColumn, // Define a coluna inicial
+        })
+        .select();
 
       if (error) throw error;
 
       // Encontrar os dados do aluno selecionado
       const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
 
-      // Enviar para o webhook
+      // Se temos uma data de retenção, enviar para o webhook de agendamento
+      if (dataRetencao && alertaData && alertaData.length > 0) {
+        const alertaId = alertaData[0].id;
+        
+        // Buscar o card criado pelo trigger
+        const { data: cardData, error: cardError } = await supabase
+          .from('kanban_cards')
+          .select('*')
+          .eq('alerta_evasao_id', alertaId)
+          .single();
+        
+        if (cardError) {
+          console.error('Erro ao buscar card criado:', cardError);
+        } else if (cardData) {
+          // Enviar para o webhook de retenção agendada
+          try {
+            const webhookUrl = 'https://hook.us1.make.com/0t4vimtrmnqu3wtpfskf7ooydbjsh300';
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                cardId: cardData.id,
+                aluno: aluno?.nome,
+                descricao: descritivo,
+                dataRetencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
+                responsavel: responsavel
+              })
+            });
+          } catch (webhookError) {
+            console.error('Erro ao enviar para webhook de retenção:', webhookError);
+          }
+        }
+      }
+
+      // Sempre envia para o webhook geral de alertas
       const webhookUrl = 'https://hook.us1.make.com/v8b7u98lehutsqqk9tox27b2bn7x1mmx';
       
       try {
@@ -111,7 +198,8 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               origem: origemAlerta,
               descritivo,
               responsavel,
-              data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null
+              data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
+              historico: historicoAlertas
             }
           })
         });
@@ -222,6 +310,23 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               className="w-full"
             />
           </div>
+
+          {alertasAnteriores.length > 0 && (
+            <div className="border rounded-md p-3 bg-orange-50">
+              <p className="text-sm font-medium mb-2">
+                Histórico de alertas anteriores ({alertasAnteriores.length})
+              </p>
+              {carregandoHistorico ? (
+                <p className="text-xs text-gray-500">Carregando histórico...</p>
+              ) : (
+                <Textarea
+                  className="h-24 text-xs"
+                  readOnly
+                  value={historicoAlertas || ''}
+                />
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={onClose}>
