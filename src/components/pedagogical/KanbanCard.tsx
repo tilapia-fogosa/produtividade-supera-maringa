@@ -7,6 +7,7 @@ import { EditKanbanCardModal } from "./EditKanbanCardModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HistoricoView } from "./HistoricoView";
+import { format } from "date-fns";
 
 interface KanbanCardProps {
   id: string;
@@ -21,12 +22,14 @@ interface KanbanCardProps {
   tags?: string[];
   historico?: string | null;
   column_id: string;
+  retention_date?: string | null;
   onEdit: (values: { 
     title: string; 
     description: string; 
     responsavel: string;
     priority?: string;
     due_date?: string | null;
+    retention_date?: string | null;
     tags?: string[];
     column_id?: string;
   }) => void;
@@ -51,6 +54,7 @@ export function KanbanCard({
   tags = [],
   historico,
   column_id,
+  retention_date,
   onEdit
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -95,6 +99,13 @@ export function KanbanCard({
           
           {description && (
             <p className="text-xs text-gray-600 line-clamp-2">{description}</p>
+          )}
+          
+          {retention_date && (
+            <div className="flex items-center gap-1 text-xs text-orange-600">
+              <CalendarClock className="h-3 w-3" />
+              <span>Retenção: {format(new Date(retention_date), "dd/MM/yyyy")}</span>
+            </div>
           )}
           
           <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
@@ -142,6 +153,7 @@ export function KanbanCard({
           responsavel, 
           priority,
           due_date,
+          retention_date,
           tags,
           historico,
           column_id

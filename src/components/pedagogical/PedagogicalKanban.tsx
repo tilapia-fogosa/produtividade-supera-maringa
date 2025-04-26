@@ -56,15 +56,43 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
     }
     
     const { draggableId, destination } = result;
+    const card = cards.find(c => c.id === draggableId);
     
-    console.log(`Movendo card ${draggableId} para ${destination.droppableId}`);
+    if (destination.droppableId === 'scheduled' && (!card?.retention_date)) {
+      toast.error("É necessário preencher a data de retenção antes de mover para Retenção agendada");
+      return;
+    }
     
     updateCardColumn.mutate({
       cardId: draggableId,
       newColumnId: destination.droppableId
     }, {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success("Card movido com sucesso!");
+
+        if (destination.droppableId === 'scheduled') {
+          try {
+            const response = await fetch('https://hook.us1.make.com/0t4vimtrmnqu3wtpfskf7ooydbjsh300', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                cardId: draggableId,
+                aluno: card?.aluno_nome,
+                descricao: card?.description,
+                dataRetencao: card?.retention_date,
+                responsavel: card?.responsavel
+              })
+            });
+
+            if (!response.ok) {
+              console.error('Erro ao enviar webhook');
+            }
+          } catch (error) {
+            console.error('Erro ao enviar webhook:', error);
+          }
+        }
       },
       onError: (error) => {
         console.error("Erro ao mover card:", error);

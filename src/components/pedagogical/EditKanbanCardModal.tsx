@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -28,6 +27,7 @@ interface EditKanbanCardModalProps {
     historico?: string | null;
     priority?: string;
     due_date?: string | null;
+    retention_date?: string | null;
     tags?: string[];
     column_id?: string;
   };
@@ -37,6 +37,7 @@ interface EditKanbanCardModalProps {
     responsavel: string;
     priority?: string;
     due_date?: string | null;
+    retention_date?: string | null;
     tags?: string[];
     column_id?: string;
   }) => void;
@@ -67,6 +68,7 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
     responsavel: card.responsavel || "",
     priority: card.priority || "medium",
     due_date: card.due_date ? new Date(card.due_date) : null,
+    retention_date: card.retention_date ? new Date(card.retention_date) : null,
     tags: card.tags || [],
     column_id: card.column_id || "todo"
   });
@@ -74,10 +76,10 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
   const [newTag, setNewTag] = useState("");
 
   const handleSave = () => {
-    // Converte a data para string ISO antes de salvar
     onSave({
       ...values,
-      due_date: values.due_date ? values.due_date.toISOString() : null
+      due_date: values.due_date ? values.due_date.toISOString() : null,
+      retention_date: values.retention_date ? values.retention_date.toISOString() : null
     });
     onClose();
   };
@@ -192,6 +194,33 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
                   mode="single"
                   selected={values.due_date || undefined}
                   onSelect={(date) => setValues({ ...values, due_date: date })}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data de Retenção</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  {values.retention_date ? (
+                    format(values.retention_date, "PPP", { locale: ptBR })
+                  ) : (
+                    <span>Selecione uma data de retenção</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={values.retention_date || undefined}
+                  onSelect={(date) => setValues({ ...values, retention_date: date })}
                   initialFocus
                   className="p-3 pointer-events-auto"
                 />
