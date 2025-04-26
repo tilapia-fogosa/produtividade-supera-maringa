@@ -11,7 +11,7 @@ interface ProdutividadeScreenProps {
   turma: Turma;
   onBack: () => void;
   alunos?: Aluno[];
-  onRegistrarPresenca?: (aluno: Aluno) => void;
+  onRegistrarPresenca?: (alunoId: string) => void;
   onReposicaoAula?: () => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }

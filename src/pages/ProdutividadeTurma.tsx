@@ -1,139 +1,107 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
+
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
-import { supabase } from "@/integrations/supabase/client";
-import { Aluno, Turma } from '@/hooks/use-professor-turmas';
-import { toast } from '@/hooks/use-toast';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
+import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
+import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
 
 const ProdutividadeTurma = () => {
-  const location = useLocation();
-  const params = useParams();
+  const { turmaId } = useParams<{ turmaId: string }>();
   const navigate = useNavigate();
-  const dia = location.state?.dia;
-  
-  const [loading, setLoading] = useState(true);
-  const [turma, setTurma] = useState<Turma | null>(null);
-  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
-  const [modalAberto, setModalAberto] = useState(false);
-  
+  const { getTurma } = useProfessorTurmas();
   const { 
-    alunos, 
-    handleTurmaSelecionada, 
-    handleRegistrarPresenca,
-    produtividadeRegistrada,
+    alunos,
+    todosAlunos,
     carregandoAlunos,
+    produtividadeRegistrada,
+    handleTurmaSelecionada,
+    handleRegistrarPresenca,
     atualizarProdutividadeRegistrada
   } = useAlunos();
 
-  // Efeito para buscar os detalhes da turma
-  useEffect(() => {
-    const fetchTurma = async () => {
-      try {
-        if (!params.turmaId) return;
-        
-        const { data, error } = await supabase
-          .from('turmas')
-          .select('*')
-          .eq('id', params.turmaId)
-          .single();
+  const [mostrandoReposicao, setMostrandoReposicao] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
+  
+  const turma = getTurma(turmaId || '');
+  
+  React.useEffect(() => {
+    if (turmaId) {
+      handleTurmaSelecionada(turmaId);
+    }
+  }, [turmaId, handleTurmaSelecionada]);
 
-        if (error) throw error;
-        
-        if (data) {
-          // Garantir que o objeto turma tenha a propriedade sala
-          const turmaData: Turma = {
-            ...data,
-            sala: data.sala || '' // Adicionando a propriedade sala se não existir
-          };
-          
-          setTurma(turmaData);
-          
-          // Iniciar carregamento dos alunos assim que tivermos os dados da turma
-          handleTurmaSelecionada(data.id);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar turma:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os dados da turma",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTurma();
-  }, [params.turmaId]);
-
-  const voltarParaTurmas = () => {
-    navigate('/turmas/dia', { 
-      state: { 
-        dia,
-        serviceType: 'produtividade'
-      }
-    });
-  };
-
-  // Função para abrir o modal de produtividade
-  const handleClickRegistrarPresenca = (aluno: Aluno) => {
-    setAlunoSelecionado(aluno);
-    setModalAberto(true);
+  const handleVoltarParaTurmas = () => {
+    navigate('/turmas/dia');
   };
   
-  // Função para fechar o modal
+  const handleRegistrarPresencaAluno = (alunoId: string) => {
+    setAlunoSelecionado(alunoId);
+  };
+  
   const handleFecharModal = () => {
-    setModalAberto(false);
     setAlunoSelecionado(null);
   };
-
-  const handleSuccessModal = (alunoId: string) => {
-    atualizarProdutividadeRegistrada(alunoId);
+  
+  const handleRegistrarPresencaCompleto = () => {
+    if (alunoSelecionado) {
+      atualizarProdutividadeRegistrada(alunoSelecionado);
+    }
+    setAlunoSelecionado(null);
   };
-
-  if (loading || carregandoAlunos) {
-    return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
-        <div className="container mx-auto py-4 px-2 text-center">
-          <p>Carregando{carregandoAlunos ? ' alunos' : ''}...</p>
-        </div>
-      </div>
-    );
-  }
-
+  
+  const handleAbrirReposicaoModal = () => {
+    setMostrandoReposicao(true);
+  };
+  
+  const handleFecharReposicaoModal = () => {
+    setMostrandoReposicao(false);
+  };
+  
   if (!turma) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
-        <div className="container mx-auto py-4 px-2 text-center">
-          <p>Turma não encontrada</p>
+      <div className="container mx-auto p-4">
+        <Button variant="outline" onClick={handleVoltarParaTurmas}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+        </Button>
+        <div className="mt-8 text-center">
+          <p>Turma não encontrada.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
-      <div className="container mx-auto py-4 px-2">
-        <ProdutividadeScreen
-          turma={turma}
-          alunos={alunos}
-          onBack={voltarParaTurmas}
-          onRegistrarPresenca={handleClickRegistrarPresenca}
-          produtividadeRegistrada={produtividadeRegistrada}
+    <div className="container mx-auto p-4">
+      <ProdutividadeScreen
+        turma={turma}
+        onBack={handleVoltarParaTurmas}
+        alunos={alunos}
+        onRegistrarPresenca={handleRegistrarPresencaAluno}
+        onReposicaoAula={handleAbrirReposicaoModal}
+        produtividadeRegistrada={produtividadeRegistrada}
+      />
+      
+      {alunoSelecionado && (
+        <ProdutividadeModal
+          turmaId={turmaId || ''}
+          alunoId={alunoSelecionado}
+          onClose={handleFecharModal}
+          onRegister={handleRegistrarPresencaCompleto}
         />
-        
-        {alunoSelecionado && (
-          <ProdutividadeModal 
-            isOpen={modalAberto} 
-            aluno={alunoSelecionado} 
-            turma={turma} 
-            onClose={handleFecharModal} 
-            onSuccess={handleSuccessModal}
-          />
-        )}
-      </div>
+      )}
+
+      {mostrandoReposicao && turma && (
+        <ReposicaoAulaModal
+          isOpen={true}
+          turma={turma}
+          todosAlunos={todosAlunos}
+          onClose={handleFecharReposicaoModal}
+        />
+      )}
     </div>
   );
 };

@@ -13,7 +13,12 @@ const ReposicaoButton: React.FC<ReposicaoButtonProps> = ({ onClick }) => {
   
   return (
     <div className="mb-3">
-      <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={onClick} className="w-full text-azul-500 border-orange-200 hover:bg-orange-100">
+      <Button 
+        variant="outline" 
+        size={isMobile ? "sm" : "default"} 
+        onClick={onClick} 
+        className="w-full text-azul-500 border-orange-200 hover:bg-orange-100"
+      >
         <RefreshCw className={`mr-1.5 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
         <span className={isMobile ? "text-xs" : ""}>Registrar Reposição de Aula</span>
       </Button>
