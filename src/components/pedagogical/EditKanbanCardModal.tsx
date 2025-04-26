@@ -64,7 +64,11 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
   const [newTag, setNewTag] = useState("");
 
   const handleSave = () => {
-    onSave(values);
+    // Converte a data para string ISO antes de salvar
+    onSave({
+      ...values,
+      due_date: values.due_date ? values.due_date.toISOString() : null
+    });
     onClose();
   };
 
@@ -158,6 +162,7 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
                   selected={values.due_date || undefined}
                   onSelect={(date) => setValues({ ...values, due_date: date })}
                   initialFocus
+                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
