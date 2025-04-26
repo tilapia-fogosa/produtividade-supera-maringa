@@ -19,6 +19,7 @@ interface KanbanCardProps {
   due_date?: string | null;
   tags?: string[];
   historico?: string | null;
+  column_id: string;
   onEdit: (values: { 
     title: string; 
     description: string; 
@@ -26,6 +27,7 @@ interface KanbanCardProps {
     priority?: string;
     due_date?: string | null;
     tags?: string[];
+    column_id?: string;
   }) => void;
 }
 
@@ -47,6 +49,7 @@ export function KanbanCard({
   due_date,
   tags = [],
   historico,
+  column_id,
   onEdit
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -121,7 +124,8 @@ export function KanbanCard({
           priority,
           due_date,
           tags,
-          historico
+          historico,
+          column_id
         }}
         onSave={onEdit}
       />

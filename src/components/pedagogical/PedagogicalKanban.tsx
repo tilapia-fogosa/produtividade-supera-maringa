@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
 import { Loader2, Bell, MessageSquare, Calendar, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface PedagogicalKanbanProps {
   type: 'evasions' | 'absences';
@@ -31,13 +32,27 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
   const { cards, isLoading, updateCardColumn, updateCard } = useKanbanCards();
 
   const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+    console.log("Drag finalizado:", result);
+    if (!result.destination) {
+      console.log("Sem destino válido, ignorando drag");
+      return;
+    }
     
     const { draggableId, destination } = result;
+    
+    console.log(`Movendo card ${draggableId} para ${destination.droppableId}`);
     
     updateCardColumn.mutate({
       cardId: draggableId,
       newColumnId: destination.droppableId
+    }, {
+      onSuccess: () => {
+        toast.success("Card movido com sucesso!");
+      },
+      onError: (error) => {
+        console.error("Erro ao mover card:", error);
+        toast.error("Erro ao mover card");
+      }
     });
   };
 
@@ -48,8 +63,19 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
     priority?: string;
     due_date?: string | null;
     tags?: string[];
+    column_id?: string;
   }) => {
-    updateCard.mutate({ cardId, ...values });
+    console.log(`Editando card ${cardId} com valores:`, values);
+    
+    updateCard.mutate({ cardId, ...values }, {
+      onSuccess: () => {
+        toast.success("Card atualizado com sucesso!");
+      },
+      onError: (error) => {
+        console.error("Erro ao atualizar card:", error);
+        toast.error("Erro ao atualizar card");
+      }
+    });
   };
 
   if (isLoading) {
@@ -79,7 +105,7 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
                     <div 
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="space-y-2"
+                      className="space-y-2 min-h-[100px]"
                     >
                       {columnCards.map((card, index) => (
                         <Draggable 
@@ -105,6 +131,7 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
                                 due_date={card.due_date}
                                 tags={card.tags}
                                 historico={card.historico}
+                                column_id={card.column_id}
                                 onEdit={handleCardEdit(card.id)}
                               />
                             </div>

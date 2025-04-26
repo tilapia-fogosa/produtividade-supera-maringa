@@ -38,21 +38,35 @@ export const useKanbanCards = () => {
         throw error;
       }
 
+      console.log('Cards carregados:', data);
       return data as KanbanCard[];
     }
   });
 
   const updateCardColumn = useMutation({
     mutationFn: async ({ cardId, newColumnId }: { cardId: string; newColumnId: string }) => {
-      const { error } = await supabase
+      console.log(`Atualizando card ${cardId} para coluna ${newColumnId}`);
+      
+      const { error, data } = await supabase
         .from('kanban_cards')
         .update({ column_id: newColumnId })
-        .eq('id', cardId);
+        .eq('id', cardId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar coluna:', error);
+        throw error;
+      }
+      
+      console.log('Atualização concluída:', data);
+      return data;
     },
     onSuccess: () => {
+      console.log('Invalidando cache após atualização de coluna');
       queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+    },
+    onError: (error) => {
+      console.error('Erro na mutação de atualização de coluna:', error);
     }
   });
 
@@ -65,27 +79,34 @@ export const useKanbanCards = () => {
       priority?: string;
       due_date?: string | null;
       tags?: string[];
+      column_id?: string;
       comments?: any[];
       attached_files?: any[];
     }) => {
-      const { error } = await supabase
+      console.log('Atualizando card:', updateData);
+      
+      const { cardId, ...dataToUpdate } = updateData;
+      
+      const { error, data } = await supabase
         .from('kanban_cards')
-        .update({
-          title: updateData.title,
-          description: updateData.description,
-          responsavel: updateData.responsavel,
-          priority: updateData.priority,
-          due_date: updateData.due_date,
-          tags: updateData.tags,
-          comments: updateData.comments,
-          attached_files: updateData.attached_files
-        })
-        .eq('id', updateData.cardId);
+        .update(dataToUpdate)
+        .eq('id', cardId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar card:', error);
+        throw error;
+      }
+      
+      console.log('Card atualizado:', data);
+      return data;
     },
     onSuccess: () => {
+      console.log('Invalidando cache após atualização de card');
       queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+    },
+    onError: (error) => {
+      console.error('Erro na mutação de atualização de card:', error);
     }
   });
 

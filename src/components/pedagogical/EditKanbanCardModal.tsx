@@ -29,6 +29,7 @@ interface EditKanbanCardModalProps {
     priority?: string;
     due_date?: string | null;
     tags?: string[];
+    column_id?: string;
   };
   onSave: (values: {
     title: string;
@@ -37,6 +38,7 @@ interface EditKanbanCardModalProps {
     priority?: string;
     due_date?: string | null;
     tags?: string[];
+    column_id?: string;
   }) => void;
 }
 
@@ -44,6 +46,13 @@ const priorityOptions = [
   { value: 'low', label: 'Baixa', color: 'bg-green-500' },
   { value: 'medium', label: 'Média', color: 'bg-yellow-500' },
   { value: 'high', label: 'Alta', color: 'bg-red-500' }
+];
+
+const columnOptions = [
+  { value: 'todo', label: 'Alerta criado' },
+  { value: 'doing', label: 'Em negociação' },
+  { value: 'scheduled', label: 'Retenção agendada' },
+  { value: 'done', label: 'Concluída' }
 ];
 
 const tagSuggestions = [
@@ -58,7 +67,8 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
     responsavel: card.responsavel || "",
     priority: card.priority || "medium",
     due_date: card.due_date ? new Date(card.due_date) : null,
-    tags: card.tags || []
+    tags: card.tags || [],
+    column_id: card.column_id || "todo"
   });
 
   const [newTag, setNewTag] = useState("");
@@ -119,26 +129,47 @@ export function EditKanbanCardModal({ isOpen, onClose, card, onSave }: EditKanba
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Prioridade</label>
-            <Select 
-              value={values.priority} 
-              onValueChange={(value) => setValues({ ...values, priority: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {priorityOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${option.color}`} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Prioridade</label>
+              <Select 
+                value={values.priority} 
+                onValueChange={(value) => setValues({ ...values, priority: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {priorityOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select 
+                value={values.column_id} 
+                onValueChange={(value) => setValues({ ...values, column_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {columnOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
                       {option.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
