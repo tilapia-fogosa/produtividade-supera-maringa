@@ -41,7 +41,14 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
     });
   };
 
-  const handleCardEdit = (cardId: string) => (values: { title: string; description: string; responsavel: string }) => {
+  const handleCardEdit = (cardId: string) => (values: { 
+    title: string; 
+    description: string; 
+    responsavel: string;
+    priority?: string;
+    due_date?: string | null;
+    tags?: string[];
+  }) => {
     updateCard.mutate({ cardId, ...values });
   };
 
@@ -94,6 +101,10 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
                                 origem={card.origem}
                                 responsavel={card.responsavel}
                                 createdAt={card.created_at}
+                                priority={card.priority}
+                                due_date={card.due_date}
+                                tags={card.tags}
+                                historico={card.historico}
                                 onEdit={handleCardEdit(card.id)}
                               />
                             </div>

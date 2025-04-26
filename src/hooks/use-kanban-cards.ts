@@ -14,6 +14,12 @@ interface KanbanCard {
   created_at: string;
   updated_at: string;
   historico?: string | null;
+  priority?: string;
+  due_date?: string | null;
+  attached_files?: any[];
+  comments?: any[];
+  tags?: string[];
+  last_activity?: string;
 }
 
 export const useKanbanCards = () => {
@@ -56,13 +62,23 @@ export const useKanbanCards = () => {
       title: string;
       description: string;
       responsavel: string;
+      priority?: string;
+      due_date?: string | null;
+      tags?: string[];
+      comments?: any[];
+      attached_files?: any[];
     }) => {
       const { error } = await supabase
         .from('kanban_cards')
         .update({
           title: updateData.title,
           description: updateData.description,
-          responsavel: updateData.responsavel
+          responsavel: updateData.responsavel,
+          priority: updateData.priority,
+          due_date: updateData.due_date,
+          tags: updateData.tags,
+          comments: updateData.comments,
+          attached_files: updateData.attached_files
         })
         .eq('id', updateData.cardId);
 
