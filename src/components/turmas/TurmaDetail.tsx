@@ -71,14 +71,6 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
       setConfigError("Configuração incompleta: O administrador precisa configurar as credenciais do Google Service Account");
     }
   };
-
-  // Adaptador para converter string para objeto Aluno
-  const handleProdutividadeScreenRegistrarPresenca = (alunoId: string) => {
-    const aluno = alunos.find(a => a.id === alunoId);
-    if (aluno) {
-      handleClickRegistrarPresenca(aluno);
-    }
-  };
   
   return (
     <div className="w-full px-1 text-azul-500">
@@ -96,7 +88,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
             turma={turma}
             onBack={() => {}} // Não usado, mas necessário para tipagem
             alunos={alunos}
-            onRegistrarPresenca={handleProdutividadeScreenRegistrarPresenca}
+            onRegistrarPresenca={handleClickRegistrarPresenca}
             onReposicaoAula={handleClickReposicaoAula}
             produtividadeRegistrada={produtividadeRegistrada}
           />

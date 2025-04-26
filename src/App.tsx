@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -21,7 +22,6 @@ import DevolutivaAluno from "./pages/DevolutivaAluno";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import Diario from "./pages/Diario";
 import Funcionarios from "./pages/Funcionarios";
-import Reposicao from "./pages/Reposicao";
 
 const queryClient = new QueryClient();
 
@@ -55,7 +55,6 @@ const App = () => (
                     <Route path="/diario" element={<Diario />} />
                     <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
                     <Route path="/funcionarios" element={<Funcionarios />} />
-                    <Route path="/reposicao" element={<Reposicao />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>

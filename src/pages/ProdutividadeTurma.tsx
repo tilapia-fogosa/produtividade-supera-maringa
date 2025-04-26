@@ -1,109 +1,139 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useProfessorTurmas, Turma } from '@/hooks/use-professor-turmas';
-import { useAlunos } from '@/hooks/use-alunos';
-import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
-import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
+import { useAlunos } from '@/hooks/use-alunos';
+import { supabase } from "@/integrations/supabase/client";
+import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { toast } from '@/hooks/use-toast';
+import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 
 const ProdutividadeTurma = () => {
-  const { turmaId } = useParams<{ turmaId: string }>();
+  const location = useLocation();
+  const params = useParams();
   const navigate = useNavigate();
-  const { turmas } = useProfessorTurmas();
+  const dia = location.state?.dia;
+  
+  const [loading, setLoading] = useState(true);
+  const [turma, setTurma] = useState<Turma | null>(null);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
+  
   const { 
-    alunos,
-    todosAlunos,
-    carregandoAlunos,
-    produtividadeRegistrada,
-    handleTurmaSelecionada,
+    alunos, 
+    handleTurmaSelecionada, 
     handleRegistrarPresenca,
+    produtividadeRegistrada,
+    carregandoAlunos,
     atualizarProdutividadeRegistrada
   } = useAlunos();
 
-  const [mostrandoReposicao, setMostrandoReposicao] = useState(false);
-  const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
-  
-  // Encontrar a turma pelo ID em vez de usar getTurma
-  const turma = turmas.find(t => t.id === turmaId);
-  
+  // Efeito para buscar os detalhes da turma
   useEffect(() => {
-    if (turmaId) {
-      handleTurmaSelecionada(turmaId);
-    }
-  }, [turmaId, handleTurmaSelecionada]);
+    const fetchTurma = async () => {
+      try {
+        if (!params.turmaId) return;
+        
+        const { data, error } = await supabase
+          .from('turmas')
+          .select('*')
+          .eq('id', params.turmaId)
+          .single();
 
-  const handleVoltarParaTurmas = () => {
-    navigate('/turmas/dia');
+        if (error) throw error;
+        
+        if (data) {
+          // Garantir que o objeto turma tenha a propriedade sala
+          const turmaData: Turma = {
+            ...data,
+            sala: data.sala || '' // Adicionando a propriedade sala se não existir
+          };
+          
+          setTurma(turmaData);
+          
+          // Iniciar carregamento dos alunos assim que tivermos os dados da turma
+          handleTurmaSelecionada(data.id);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar turma:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados da turma",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTurma();
+  }, [params.turmaId]);
+
+  const voltarParaTurmas = () => {
+    navigate('/turmas/dia', { 
+      state: { 
+        dia,
+        serviceType: 'produtividade'
+      }
+    });
+  };
+
+  // Função para abrir o modal de produtividade
+  const handleClickRegistrarPresenca = (aluno: Aluno) => {
+    setAlunoSelecionado(aluno);
+    setModalAberto(true);
   };
   
-  const handleRegistrarPresencaAluno = (alunoId: string) => {
-    setAlunoSelecionado(alunoId);
-  };
-  
+  // Função para fechar o modal
   const handleFecharModal = () => {
+    setModalAberto(false);
     setAlunoSelecionado(null);
   };
-  
-  const handleRegistrarPresencaCompleto = () => {
-    if (alunoSelecionado) {
-      atualizarProdutividadeRegistrada(alunoSelecionado);
-    }
-    setAlunoSelecionado(null);
+
+  const handleSuccessModal = (alunoId: string) => {
+    atualizarProdutividadeRegistrada(alunoId);
   };
-  
-  const handleAbrirReposicaoModal = () => {
-    setMostrandoReposicao(true);
-  };
-  
-  const handleFecharReposicaoModal = () => {
-    setMostrandoReposicao(false);
-  };
+
+  if (loading || carregandoAlunos) {
+    return (
+      <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+        <div className="container mx-auto py-4 px-2 text-center">
+          <p>Carregando{carregandoAlunos ? ' alunos' : ''}...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!turma) {
     return (
-      <div className="container mx-auto p-4">
-        <Button variant="outline" onClick={handleVoltarParaTurmas}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-        </Button>
-        <div className="mt-8 text-center">
-          <p>Turma não encontrada.</p>
+      <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+        <div className="container mx-auto py-4 px-2 text-center">
+          <p>Turma não encontrada</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <ProdutividadeScreen
-        turma={turma}
-        onBack={handleVoltarParaTurmas}
-        alunos={alunos}
-        onRegistrarPresenca={handleRegistrarPresencaAluno}
-        onReposicaoAula={handleAbrirReposicaoModal}
-        produtividadeRegistrada={produtividadeRegistrada}
-      />
-      
-      {alunoSelecionado && (
-        <ProdutividadeModal
-          isOpen={true}
-          aluno={alunos.find(a => a.id === alunoSelecionado)!}
+    <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+      <div className="container mx-auto py-4 px-2">
+        <ProdutividadeScreen
           turma={turma}
-          onClose={handleFecharModal}
-          onSuccess={handleRegistrarPresencaCompleto}
+          alunos={alunos}
+          onBack={voltarParaTurmas}
+          onRegistrarPresenca={handleClickRegistrarPresenca}
+          produtividadeRegistrada={produtividadeRegistrada}
         />
-      )}
-
-      {mostrandoReposicao && turma && (
-        <ReposicaoAulaModal 
-          isOpen={true}
-          turma={turma}
-          todosAlunos={todosAlunos}
-          onClose={handleFecharReposicaoModal}
-        />
-      )}
+        
+        {alunoSelecionado && (
+          <ProdutividadeModal 
+            isOpen={modalAberto} 
+            aluno={alunoSelecionado} 
+            turma={turma} 
+            onClose={handleFecharModal} 
+            onSuccess={handleSuccessModal}
+          />
+        )}
+      </div>
     </div>
   );
 };
