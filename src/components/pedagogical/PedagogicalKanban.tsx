@@ -1,8 +1,7 @@
-
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
-import { Loader2, Bell, MessageSquare, Calendar, Check, Clock } from "lucide-react";
+import { Loader2, Bell, MessageSquare, Calendar, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface PedagogicalKanbanProps {
@@ -26,10 +25,6 @@ const columns = {
   'done': {
     title: 'Concluída',
     icon: Check
-  },
-  'hibernating': {
-    title: 'Hibernando',
-    icon: Clock
   }
 };
 
