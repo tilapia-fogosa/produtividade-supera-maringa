@@ -745,32 +745,74 @@ export type Database = {
         Row: {
           active: boolean
           cargo: string | null
+          codigo: string | null
           created_at: string
+          curso: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
           email: string | null
           id: string
+          idade: number | null
+          indice: string | null
+          matricula: string | null
+          niveldesafio: number | null
           nome: string
           telefone: string | null
+          texto_devolutiva: string | null
           turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          vencimento_contrato: string | null
         }
         Insert: {
           active?: boolean
           cargo?: string | null
+          codigo?: string | null
           created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
           email?: string | null
           id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
+          niveldesafio?: number | null
           nome: string
           telefone?: string | null
+          texto_devolutiva?: string | null
           turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
         }
         Update: {
           active?: boolean
           cargo?: string | null
+          codigo?: string | null
           created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
           email?: string | null
           id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
+          niveldesafio?: number | null
           nome?: string
           telefone?: string | null
+          texto_devolutiva?: string | null
           turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
         }
         Relationships: [
           {

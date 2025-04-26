@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -13,21 +12,40 @@ export function useAlunos() {
   const [produtividadeRegistrada, setProdutividadeRegistrada] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Carregar todos os alunos para uso na reposição de aula
     const fetchTodosAlunos = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: alunosData, error: alunosError } = await supabase
           .from('alunos')
           .select('*')
-          .eq('active', true)  // Filtrar apenas alunos ativos
+          .eq('active', true)
           .order('nome');
           
-        if (error) {
-          throw error;
+        if (alunosError) {
+          throw alunosError;
+        }
+
+        const { data: funcionariosData, error: funcionariosError } = await supabase
+          .from('funcionarios')
+          .select('*')
+          .eq('active', true)
+          .order('nome');
+
+        if (funcionariosError) {
+          throw funcionariosError;
         }
         
-        // Remover duplicatas baseado no ID
-        const alunosUnicos = data.reduce((acc: Aluno[], current) => {
+        const funcionariosComoAlunos = funcionariosData?.map(func => ({
+          ...func,
+          id: func.id,
+          nome: func.nome,
+          turma_id: func.turma_id,
+          is_funcionario: true,
+          active: true
+        })) || [];
+
+        const todosRegistros = [...(alunosData || []), ...funcionariosComoAlunos];
+        
+        const registrosUnicos = todosRegistros.reduce((acc: Aluno[], current) => {
           const existe = acc.find(aluno => aluno.id === current.id);
           if (!existe) {
             acc.push(current);
@@ -35,7 +53,7 @@ export function useAlunos() {
           return acc;
         }, []);
         
-        setTodosAlunos(alunosUnicos);
+        setTodosAlunos(registrosUnicos);
       } catch (error) {
         console.error('Erro ao buscar todos os alunos:', error);
         toast({
@@ -51,7 +69,6 @@ export function useAlunos() {
 
   const verificarProdutividadeHoje = async (alunosLista: Aluno[]) => {
     try {
-      // Obter a data de hoje no formato YYYY-MM-DD
       const dataHoje = new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
@@ -63,7 +80,6 @@ export function useAlunos() {
         throw error;
       }
       
-      // Criar um mapa para fácil verificação
       const alunosComPresenca: Record<string, boolean> = {};
       data?.forEach(registro => {
         alunosComPresenca[registro.aluno_id] = true;
@@ -81,7 +97,6 @@ export function useAlunos() {
     setCarregandoAlunos(true);
     
     try {
-      // Buscar alunos regulares da turma
       const { data: alunosRegulares, error: errorRegulares } = await supabase
         .from('alunos')
         .select('*')
@@ -93,43 +108,36 @@ export function useAlunos() {
         throw errorRegulares;
       }
       
-      // Verificar se há funcionários marcados como alunos especiais que ainda estão ativos
-      const { data: funcionariosComoAlunos, error: errorFuncionarios } = await supabase
-        .from('alunos')
+      const { data: funcionarios, error: errorFuncionarios } = await supabase
+        .from('funcionarios')
         .select('*')
-        .eq('is_funcionario', true)
-        .eq('active', true)  // Garantir que apenas funcionários ativos sejam listados
-        .eq('turma_id', turmaId)  // Filtrar funcionários apenas da turma atual
+        .eq('active', true)
+        .eq('turma_id', turmaId)
         .order('nome');
         
       if (errorFuncionarios) {
         throw errorFuncionarios;
       }
       
-      console.log('Alunos regulares encontrados:', alunosRegulares?.length || 0);
-      console.log('Funcionários como alunos encontrados:', funcionariosComoAlunos?.length || 0);
+      const funcionariosComoAlunos = funcionarios?.map(func => ({
+        ...func,
+        id: func.id,
+        nome: func.nome,
+        turma_id: func.turma_id,
+        is_funcionario: true,
+        active: true
+      })) || [];
       
-      // Combinar alunos regulares e funcionários ativos da turma
-      const todosAlunosDaTurma = [...(alunosRegulares || [])];
+      const todosAlunosDaTurma = [
+        ...(alunosRegulares || []),
+        ...funcionariosComoAlunos
+      ];
       
-      // Adicionar apenas funcionários que estão ativos e pertencem à turma atual
-      if (funcionariosComoAlunos && funcionariosComoAlunos.length > 0) {
-        // Verificamos cada funcionário para evitar duplicações
-        funcionariosComoAlunos.forEach(funcionario => {
-          if (!todosAlunosDaTurma.some(aluno => aluno.id === funcionario.id)) {
-            todosAlunosDaTurma.push(funcionario);
-          }
-        });
-      }
+      console.log('Total de registros na turma:', todosAlunosDaTurma.length);
       
-      console.log('Total de alunos na turma após combinação:', todosAlunosDaTurma.length);
+      setAlunos(todosAlunosDaTurma);
       
-      // Converter para o tipo Aluno
-      const alunosTyped: Aluno[] = todosAlunosDaTurma;
-      setAlunos(alunosTyped);
-      
-      // Verificar quais alunos já tiveram produtividade registrada hoje
-      await verificarProdutividadeHoje(alunosTyped);
+      await verificarProdutividadeHoje(todosAlunosDaTurma);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
       toast({
@@ -143,7 +151,6 @@ export function useAlunos() {
   };
 
   const handleRegistrarPresenca = async (alunoId: string) => {
-    // Implementação futura
     toast({
       title: "Funcionalidade em desenvolvimento",
       description: "O registro de presença será implementado em breve.",
@@ -151,7 +158,6 @@ export function useAlunos() {
   };
 
   const atualizarProdutividadeRegistrada = async (alunoId: string) => {
-    // Atualizar o estado local após registrar a presença
     setProdutividadeRegistrada(prev => ({
       ...prev,
       [alunoId]: true
