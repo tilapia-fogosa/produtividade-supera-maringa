@@ -5,12 +5,14 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
+import { useAlunos } from '@/hooks/use-alunos';
 import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
 import { Turma } from '@/hooks/use-professor-turmas';
 
 const Reposicao = () => {
   const navigate = useNavigate();
   const { turmas, loading } = useTodasTurmas();
+  const { todosAlunos } = useAlunos();
   const [turmaSelecionada, setTurmaSelecionada] = useState<Turma | null>(null);
 
   const handleVoltar = () => {
@@ -55,6 +57,7 @@ const Reposicao = () => {
         <ReposicaoAulaModal
           isOpen={true}
           turma={turmaSelecionada}
+          todosAlunos={todosAlunos}
           onClose={() => setTurmaSelecionada(null)}
         />
       )}
