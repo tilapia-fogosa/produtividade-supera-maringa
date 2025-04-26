@@ -1,11 +1,12 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { AlertTriangle, CalendarClock, User, Clock } from "lucide-react";
+import { AlertTriangle, CalendarClock, User, Clock, History } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EditKanbanCardModal } from "./EditKanbanCardModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { HistoricoView } from "./HistoricoView";
 
 interface KanbanCardProps {
   id: string;
@@ -53,6 +54,7 @@ export function KanbanCard({
   onEdit
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showHistorico, setShowHistorico] = useState(false);
 
   const priorityColor = priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium;
 
@@ -108,7 +110,24 @@ export function KanbanCard({
                 </div>
               )}
             </div>
-            {responsavel && <span className="text-orange-600">{responsavel}</span>}
+            {historico && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 px-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowHistorico(true);
+                }}
+              >
+                <History className="h-3 w-3 mr-1" />
+                Histórico
+              </Button>
+            )}
+          </div>
+          
+          <div className="text-xs text-orange-600">
+            {responsavel}
           </div>
         </div>
       </Card>
@@ -129,6 +148,13 @@ export function KanbanCard({
         }}
         onSave={onEdit}
       />
+
+      {showHistorico && historico && (
+        <HistoricoView 
+          historico={historico} 
+          onVoltar={() => setShowHistorico(false)} 
+        />
+      )}
     </>
   );
 }

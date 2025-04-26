@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,16 +21,23 @@ interface KanbanCard {
   last_activity?: string;
 }
 
-export const useKanbanCards = () => {
+export const useKanbanCards = (showHibernating: boolean = false) => {
   const queryClient = useQueryClient();
 
   const { data: cards = [], isLoading } = useQuery({
-    queryKey: ['kanban-cards'],
+    queryKey: ['kanban-cards', { showHibernating }],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('kanban_cards')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      if (showHibernating) {
+        query = query.eq('column_id', 'hibernating');
+      } else {
+        query = query.neq('column_id', 'hibernating');
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao buscar cards:', error);
