@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { PedagogicalKanban } from "@/components/pedagogical/PedagogicalKanban";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder, Archive, Clock } from "lucide-react";
+import { Folder, Clock } from "lucide-react";
 
 const PainelPedagogico = () => {
   return (
@@ -33,11 +33,6 @@ const PainelPedagogico = () => {
               <PedagogicalKanban type="evasions" showHibernating={true} />
             </TabsContent>
           </Tabs>
-        </Card>
-
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-4 text-azul-500">Controle de Faltas</h2>
-          <PedagogicalKanban type="absences" />
         </Card>
       </div>
     </div>
