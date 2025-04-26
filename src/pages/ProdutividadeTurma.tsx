@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { toast } from '@/hooks/use-toast';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
+import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
 
 const ProdutividadeTurma = () => {
   const location = useLocation();
@@ -17,9 +18,11 @@ const ProdutividadeTurma = () => {
   const [turma, setTurma] = useState<Turma | null>(null);
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
-  
+  const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
+
   const { 
     alunos, 
+    todosAlunos,
     handleTurmaSelecionada, 
     handleRegistrarPresenca,
     produtividadeRegistrada,
@@ -27,7 +30,6 @@ const ProdutividadeTurma = () => {
     atualizarProdutividadeRegistrada
   } = useAlunos();
 
-  // Efeito para buscar os detalhes da turma
   useEffect(() => {
     const fetchTurma = async () => {
       try {
@@ -42,15 +44,12 @@ const ProdutividadeTurma = () => {
         if (error) throw error;
         
         if (data) {
-          // Garantir que o objeto turma tenha a propriedade sala
           const turmaData: Turma = {
             ...data,
-            sala: data.sala || '' // Adicionando a propriedade sala se não existir
+            sala: data.sala || ''
           };
           
           setTurma(turmaData);
-          
-          // Iniciar carregamento dos alunos assim que tivermos os dados da turma
           handleTurmaSelecionada(data.id);
         }
       } catch (error) {
@@ -77,20 +76,43 @@ const ProdutividadeTurma = () => {
     });
   };
 
-  // Função para abrir o modal de produtividade
   const handleClickRegistrarPresenca = (aluno: Aluno) => {
     setAlunoSelecionado(aluno);
     setModalAberto(true);
   };
   
-  // Função para fechar o modal
   const handleFecharModal = () => {
     setModalAberto(false);
     setAlunoSelecionado(null);
   };
 
+  const handleReposicaoAula = () => {
+    setReposicaoModalAberto(true);
+  };
+
+  const handleFecharReposicaoModal = () => {
+    setReposicaoModalAberto(false);
+  };
+
   const handleSuccessModal = (alunoId: string) => {
     atualizarProdutividadeRegistrada(alunoId);
+  };
+
+  const handleModalError = (errorMessage: string) => {
+    if (errorMessage.includes("credenciais do Google") || 
+        errorMessage.includes("Google Service Account")) {
+      toast({
+        title: "Erro de configuração",
+        description: "Configuração incompleta: O administrador precisa configurar as credenciais do Google Service Account",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading || carregandoAlunos) {
@@ -121,6 +143,7 @@ const ProdutividadeTurma = () => {
           alunos={alunos}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
+          onReposicaoAula={handleReposicaoAula}
           produtividadeRegistrada={produtividadeRegistrada}
         />
         
@@ -131,8 +154,17 @@ const ProdutividadeTurma = () => {
             turma={turma} 
             onClose={handleFecharModal} 
             onSuccess={handleSuccessModal}
+            onError={handleModalError}
           />
         )}
+
+        <ReposicaoAulaModal 
+          isOpen={reposicaoModalAberto}
+          turma={turma}
+          todosAlunos={todosAlunos}
+          onClose={handleFecharReposicaoModal}
+          onError={handleModalError}
+        />
       </div>
     </div>
   );
