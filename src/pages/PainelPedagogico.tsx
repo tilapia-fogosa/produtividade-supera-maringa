@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { PedagogicalKanban } from "@/components/pedagogical/PedagogicalKanban";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder, Archive } from "lucide-react";
+import { Folder, Archive, ClockHistory } from "lucide-react";
 
 const PainelPedagogico = () => {
   return (
@@ -20,7 +20,7 @@ const PainelPedagogico = () => {
                 <span>Ativos</span>
               </TabsTrigger>
               <TabsTrigger value="hibernando" className="flex items-center gap-2">
-                <Archive className="h-4 w-4" />
+                <ClockHistory className="h-4 w-4" />
                 <span>Hibernando</span>
               </TabsTrigger>
             </TabsList>

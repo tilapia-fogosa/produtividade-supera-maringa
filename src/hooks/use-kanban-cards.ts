@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface KanbanCard {
   id: string;
   alerta_evasao_id: string;
-  column_id: string;  // 'todo' | 'doing' | 'scheduled' | 'done'
+  column_id: string;  // 'todo' | 'doing' | 'scheduled' | 'done' | 'hibernating'
   title: string;
   description: string | null;
   aluno_nome: string | null;

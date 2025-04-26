@@ -2,11 +2,12 @@
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
-import { Loader2, Bell, MessageSquare, Calendar, Check } from "lucide-react";
+import { Loader2, Bell, MessageSquare, Calendar, Check, ClockHistory } from "lucide-react";
 import { toast } from "sonner";
 
 interface PedagogicalKanbanProps {
   type: 'evasions' | 'absences';
+  showHibernating?: boolean;
 }
 
 const columns = {
@@ -25,11 +26,15 @@ const columns = {
   'done': {
     title: 'Concluída',
     icon: Check
+  },
+  'hibernating': {
+    title: 'Hibernando',
+    icon: ClockHistory
   }
 };
 
-export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
-  const { cards, isLoading, updateCardColumn, updateCard } = useKanbanCards();
+export function PedagogicalKanban({ type, showHibernating = false }: PedagogicalKanbanProps) {
+  const { cards, isLoading, updateCardColumn, updateCard } = useKanbanCards(showHibernating);
 
   const handleDragEnd = (result: DropResult) => {
     console.log("Drag finalizado:", result);
