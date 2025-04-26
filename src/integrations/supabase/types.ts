@@ -789,6 +789,7 @@ export type Database = {
           column_id: string
           created_at: string
           description: string | null
+          historico: string | null
           id: string
           origem: string | null
           responsavel: string | null
@@ -802,6 +803,7 @@ export type Database = {
           column_id?: string
           created_at?: string
           description?: string | null
+          historico?: string | null
           id?: string
           origem?: string | null
           responsavel?: string | null
@@ -815,6 +817,7 @@ export type Database = {
           column_id?: string
           created_at?: string
           description?: string | null
+          historico?: string | null
           id?: string
           origem?: string | null
           responsavel?: string | null
