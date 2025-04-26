@@ -61,7 +61,7 @@ const ProdutividadeTurma = () => {
   const handleFecharReposicaoModal = () => {
     setMostrandoReposicao(false);
   };
-  
+
   if (!turma) {
     return (
       <div className="container mx-auto p-4">
@@ -92,12 +92,12 @@ const ProdutividadeTurma = () => {
           aluno={alunos.find(a => a.id === alunoSelecionado)!}
           turma={turma}
           onClose={handleFecharModal}
-          onSuccess={() => handleRegistrarPresencaCompleto()}
+          onSuccess={handleRegistrarPresencaCompleto}
         />
       )}
 
       {mostrandoReposicao && turma && (
-        <ReposicaoAulaModal
+        <ReposicaoAulaModal 
           isOpen={true}
           turma={turma}
           todosAlunos={todosAlunos}
