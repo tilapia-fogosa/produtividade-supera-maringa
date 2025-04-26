@@ -49,9 +49,7 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
   });
 
   const handleDragEnd = (result: DropResult) => {
-    console.log("Drag finalizado:", result);
     if (!result.destination) {
-      console.log("Sem destino válido, ignorando drag");
       return;
     }
     

@@ -792,6 +792,7 @@ export type Database = {
           id: string
           origem: string | null
           responsavel: string | null
+          retention_date: string | null
           title: string
           updated_at: string
         }
@@ -804,6 +805,7 @@ export type Database = {
           id?: string
           origem?: string | null
           responsavel?: string | null
+          retention_date?: string | null
           title: string
           updated_at?: string
         }
@@ -816,6 +818,7 @@ export type Database = {
           id?: string
           origem?: string | null
           responsavel?: string | null
+          retention_date?: string | null
           title?: string
           updated_at?: string
         }

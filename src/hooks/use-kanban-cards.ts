@@ -19,6 +19,7 @@ interface KanbanCard {
   comments?: any[];
   tags?: string[];
   last_activity?: string;
+  retention_date?: string | null;
 }
 
 export const useKanbanCards = (showHibernating: boolean = false) => {
