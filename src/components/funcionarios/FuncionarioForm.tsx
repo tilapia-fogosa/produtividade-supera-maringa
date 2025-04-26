@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Funcionario } from '@/hooks/use-funcionarios';
 import { Loader2 } from "lucide-react";
+import { useTodasTurmas } from '@/hooks/use-todas-turmas';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FuncionarioFormProps {
   funcionario?: Partial<Funcionario>;
@@ -19,11 +27,13 @@ export const FuncionarioForm = ({
   onCancel,
   isSubmitting
 }: FuncionarioFormProps) => {
+  const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
     telefone: '',
     cargo: '',
+    turma_id: '',
   });
 
   useEffect(() => {
@@ -33,6 +43,7 @@ export const FuncionarioForm = ({
         email: funcionario.email || '',
         telefone: funcionario.telefone || '',
         cargo: funcionario.cargo || '',
+        turma_id: funcionario.turma_id || '',
       });
     }
   }, [funcionario]);
@@ -40,6 +51,10 @@ export const FuncionarioForm = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTurmaChange = (value: string) => {
+    setFormData(prev => ({ ...prev, turma_id: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -89,6 +104,27 @@ export const FuncionarioForm = ({
           value={formData.cargo}
           onChange={handleChange}
         />
+      </div>
+
+      <div>
+        <Label htmlFor="turma">Turma</Label>
+        <Select
+          value={formData.turma_id}
+          onValueChange={handleTurmaChange}
+          disabled={loadingTurmas}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione uma turma" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Sem turma</SelectItem>
+            {turmas.map((turma) => (
+              <SelectItem key={turma.id} value={turma.id}>
+                {turma.nome} - {turma.horario}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="flex justify-end gap-2">
