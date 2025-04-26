@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAlunos } from "@/hooks/use-alunos";
 import { Button } from "@/components/ui/button";
@@ -174,7 +173,11 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           </div>
 
           <div>
+            <label htmlFor="data-alerta" className="block text-sm font-medium text-gray-700 mb-1">
+              Data do Alerta
+            </label>
             <Input
+              id="data-alerta"
               type="datetime-local"
               value={dataAlerta}
               onChange={(e) => setDataAlerta(e.target.value)}
