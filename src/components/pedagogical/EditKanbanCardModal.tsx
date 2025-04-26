@@ -42,6 +42,7 @@ interface EditKanbanCardModalProps {
     retention_date?: string | null;
     tags?: string[];
     column_id?: string;
+    historico?: string | null;
   }) => void;
 }
 
