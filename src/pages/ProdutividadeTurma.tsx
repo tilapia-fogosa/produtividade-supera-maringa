@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
+import { useProfessorTurmas, Turma } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
@@ -12,7 +12,7 @@ import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
 const ProdutividadeTurma = () => {
   const { turmaId } = useParams<{ turmaId: string }>();
   const navigate = useNavigate();
-  const { getTurma } = useProfessorTurmas();
+  const { turmas } = useProfessorTurmas();
   const { 
     alunos,
     todosAlunos,
@@ -26,9 +26,10 @@ const ProdutividadeTurma = () => {
   const [mostrandoReposicao, setMostrandoReposicao] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
   
-  const turma = getTurma(turmaId || '');
+  // Encontrar a turma pelo ID em vez de usar getTurma
+  const turma = turmas.find(t => t.id === turmaId);
   
-  React.useEffect(() => {
+  useEffect(() => {
     if (turmaId) {
       handleTurmaSelecionada(turmaId);
     }
@@ -87,10 +88,11 @@ const ProdutividadeTurma = () => {
       
       {alunoSelecionado && (
         <ProdutividadeModal
-          turmaId={turmaId || ''}
-          alunoId={alunoSelecionado}
+          isOpen={true}
+          aluno={alunos.find(a => a.id === alunoSelecionado)!}
+          turma={turma}
           onClose={handleFecharModal}
-          onRegister={handleRegistrarPresencaCompleto}
+          onSuccess={() => handleRegistrarPresencaCompleto()}
         />
       )}
 

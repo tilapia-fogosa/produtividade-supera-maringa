@@ -34,6 +34,13 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
     });
   };
 
+  // Adaptador para converter alunoId para função que recebe aluno completo
+  const handleRegistrarPresenca = (aluno: Aluno) => {
+    if (onRegistrarPresenca) {
+      onRegistrarPresenca(aluno.id);
+    }
+  };
+
   return (
     <>
       <TurmaHeader
@@ -53,7 +60,7 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
       
       <AlunosListaTable 
         alunos={alunos}
-        onRegistrarPresenca={onRegistrarPresenca}
+        onRegistrarPresenca={handleRegistrarPresenca}
         produtividadeRegistrada={produtividadeRegistrada}
       />
     </>
