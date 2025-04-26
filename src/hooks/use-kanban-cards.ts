@@ -87,8 +87,7 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       due_date?: string | null;
       tags?: string[];
       column_id?: string;
-      comments?: any[];
-      attached_files?: any[];
+      historico?: string | null;
     }) => {
       console.log('Atualizando card:', updateData);
       
