@@ -28,7 +28,7 @@ const columns = {
 };
 
 export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
-  const { cards, isLoading, updateCardColumn } = useKanbanCards();
+  const { cards, isLoading, updateCardColumn, updateCard } = useKanbanCards();
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -39,6 +39,10 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
       cardId: draggableId,
       newColumnId: destination.droppableId
     });
+  };
+
+  const handleCardEdit = (cardId: string) => (values: { title: string; description: string; responsavel: string }) => {
+    updateCard.mutate({ cardId, ...values });
   };
 
   if (isLoading) {
@@ -83,12 +87,14 @@ export function PedagogicalKanban({ type }: PedagogicalKanbanProps) {
                               {...provided.dragHandleProps}
                             >
                               <KanbanCard
+                                id={card.id}
                                 title={card.title}
                                 description={card.description}
                                 alunoNome={card.aluno_nome}
                                 origem={card.origem}
                                 responsavel={card.responsavel}
                                 createdAt={card.created_at}
+                                onEdit={handleCardEdit(card.id)}
                               />
                             </div>
                           )}

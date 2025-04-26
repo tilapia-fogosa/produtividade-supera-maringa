@@ -13,6 +13,7 @@ interface KanbanCard {
   responsavel: string | null;
   created_at: string;
   updated_at: string;
+  historico?: string | null;
 }
 
 export const useKanbanCards = () => {
@@ -49,9 +50,33 @@ export const useKanbanCards = () => {
     }
   });
 
+  const updateCard = useMutation({
+    mutationFn: async (updateData: { 
+      cardId: string; 
+      title: string;
+      description: string;
+      responsavel: string;
+    }) => {
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update({
+          title: updateData.title,
+          description: updateData.description,
+          responsavel: updateData.responsavel
+        })
+        .eq('id', updateData.cardId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+    }
+  });
+
   return {
     cards,
     isLoading,
-    updateCardColumn
+    updateCardColumn,
+    updateCard
   };
 };
