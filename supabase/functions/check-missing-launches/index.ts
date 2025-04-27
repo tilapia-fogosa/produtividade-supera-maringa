@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const WEBHOOK_URL = 'https://hook.us1.make.com/0t4vimtrmnqu3wtpfskf7ooydbjsh300';
+const WEBHOOK_URL = 'https://hook.us1.make.com/piv9marlfbof9g9ekfwt3gsc296ld64m';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,7 +20,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Executar a função que verifica os lançamentos pendentes
+    // Executa a função que verifica os lançamentos pendentes
     const { error } = await supabase.rpc('check_lancamentos_pendentes')
     
     if (error) throw error
@@ -93,3 +93,4 @@ serve(async (req) => {
     })
   }
 })
+
