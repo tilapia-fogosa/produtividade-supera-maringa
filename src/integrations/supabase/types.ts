@@ -59,6 +59,57 @@ export type Database = {
           },
         ]
       }
+      alertas_lancamento: {
+        Row: {
+          arquivado_em: string | null
+          arquivado_por: string | null
+          created_at: string
+          data_aula: string
+          id: string
+          professor_id: string
+          status: string
+          turma_id: string
+          webhook_enviado: boolean | null
+        }
+        Insert: {
+          arquivado_em?: string | null
+          arquivado_por?: string | null
+          created_at?: string
+          data_aula: string
+          id?: string
+          professor_id: string
+          status?: string
+          turma_id: string
+          webhook_enviado?: boolean | null
+        }
+        Update: {
+          arquivado_em?: string | null
+          arquivado_por?: string | null
+          created_at?: string
+          data_aula?: string
+          id?: string
+          professor_id?: string
+          status?: string
+          turma_id?: string
+          webhook_enviado?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_lancamento_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_lancamento_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alunos: {
         Row: {
           active: boolean
@@ -2202,6 +2253,10 @@ export type Database = {
       change_initial_password: {
         Args: { user_id: string; new_password: string }
         Returns: boolean
+      }
+      check_lancamentos_pendentes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       count_draft_updates: {
         Args: Record<PropertyKey, never>

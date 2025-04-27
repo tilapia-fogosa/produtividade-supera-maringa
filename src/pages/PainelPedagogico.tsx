@@ -2,9 +2,10 @@
 import { Card } from "@/components/ui/card";
 import { PedagogicalKanban } from "@/components/pedagogical/PedagogicalKanban";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder, Clock, Search } from "lucide-react";
+import { Folder, Clock, Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { AlertasLancamento } from "@/components/pedagogical/AlertasLancamento";
 
 const PainelPedagogico = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,19 +16,6 @@ const PainelPedagogico = () => {
       
       <div className="grid grid-cols-1 gap-4">
         <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-4 text-azul-500">Controle de Evasões</h2>
-          
-          <div className="mb-4 flex items-center gap-2">
-            <Search className="h-4 w-4 text-gray-500" />
-            <Input
-              type="text"
-              placeholder="Filtrar por nome do aluno..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-
           <Tabs defaultValue="ativos">
             <TabsList>
               <TabsTrigger value="ativos" className="flex items-center gap-2">
@@ -38,14 +26,33 @@ const PainelPedagogico = () => {
                 <Clock className="h-4 w-4" />
                 <span>Inativos</span>
               </TabsTrigger>
+              <TabsTrigger value="alertas" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                <span>Alertas de Lançamento</span>
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="ativos" className="mt-4">
+            <div className="mb-4 flex items-center gap-2 mt-4">
+              <Search className="h-4 w-4 text-gray-500" />
+              <Input
+                type="text"
+                placeholder="Filtrar por nome do aluno..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+
+            <TabsContent value="ativos">
               <PedagogicalKanban type="evasions" showHibernating={false} searchQuery={searchQuery} />
             </TabsContent>
 
-            <TabsContent value="inativos" className="mt-4">
+            <TabsContent value="inativos">
               <PedagogicalKanban type="evasions" showHibernating={true} searchQuery={searchQuery} />
+            </TabsContent>
+
+            <TabsContent value="alertas">
+              <AlertasLancamento />
             </TabsContent>
           </Tabs>
         </Card>

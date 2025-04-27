@@ -1,41 +1,8 @@
 
 project_id = "hkvjdxxndapxpslovrlc"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
+[functions.check-missing-launches]
+verify_jwt = false
 
-[db]
-port = 54322
-shadow_port = 54320
-major_version = 15
-
-[studio]
-enabled = true
-port = 54323
-api_url = "http://localhost"
-
-[inbucket]
-enabled = true
-port = 54324
-
-[storage]
-enabled = true
-port = 54325
-
-[auth]
-enabled = true
-port = 54326
-
-[vector]
-enabled = true
-port = 54327
-
-[realtime]
-enabled = true
-port = 54328
-
-[functions]
-[functions.register-ah]
-verify_jwt = true
+[calendar.check-missing-launches]
+schedule = "0 1 * * *"  # Executar todos os dias à 01:00
