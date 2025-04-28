@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +33,7 @@ export interface Aluno {
   ultima_pagina?: number;
   niveldesafio?: number;
   ultima_correcao_ah?: string;
+  unit_id?: string;
 }
 
 export function useProfessorTurmas() {
