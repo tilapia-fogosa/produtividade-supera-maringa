@@ -1,143 +1,41 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Aluno } from './use-professor-turmas';
+
+export interface Aluno {
+  id: string;
+  nome: string;
+  data_onboarding: string | null;
+  coordenador_responsavel: string | null;
+  motivo_procura: string | null;
+  percepcao_coordenador: string | null;
+  avaliacao_abaco: string | null;
+  avaliacao_ah: string | null;
+  pontos_atencao: string | null;
+  active: boolean;
+}
 
 export function useAlunos() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [todosAlunos, setTodosAlunos] = useState<Aluno[]>([]);
-  const [turmaSelecionada, setTurmaSelecionada] = useState<string | null>(null);
   const [alunoDetalhes, setAlunoDetalhes] = useState<Aluno | null>(null);
-  const [carregandoAlunos, setCarregandoAlunos] = useState(false);
-  const [produtividadeRegistrada, setProdutividadeRegistrada] = useState<Record<string, boolean>>({});
+  const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    const fetchTodosAlunos = async () => {
-      try {
-        const { data: alunosData, error: alunosError } = await supabase
-          .from('alunos')
-          .select('*')
-          .eq('active', true)
-          .order('nome');
-          
-        if (alunosError) {
-          throw alunosError;
-        }
-
-        const { data: funcionariosData, error: funcionariosError } = await supabase
-          .from('funcionarios')
-          .select('*')
-          .eq('active', true)
-          .order('nome');
-
-        if (funcionariosError) {
-          throw funcionariosError;
-        }
-        
-        const funcionariosComoAlunos = funcionariosData?.map(func => ({
-          ...func,
-          id: func.id,
-          nome: func.nome,
-          turma_id: func.turma_id,
-          is_funcionario: true,
-          active: true
-        })) || [];
-
-        const todosRegistros = [...(alunosData || []), ...funcionariosComoAlunos];
-        
-        const registrosUnicos = todosRegistros.reduce((acc: Aluno[], current) => {
-          const existe = acc.find(aluno => aluno.id === current.id);
-          if (!existe) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
-        
-        setTodosAlunos(registrosUnicos);
-      } catch (error) {
-        console.error('Erro ao buscar todos os alunos:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar a lista completa de alunos.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    fetchTodosAlunos();
+    buscarAlunos();
   }, []);
 
-  const verificarProdutividadeHoje = async (alunosLista: Aluno[]) => {
+  const buscarAlunos = async () => {
     try {
-      const dataHoje = new Date().toISOString().split('T')[0];
-      
-      const { data, error } = await supabase
-        .from('produtividade_abaco')
-        .select('aluno_id')
-        .eq('data_aula', dataHoje);
-        
-      if (error) {
-        throw error;
-      }
-      
-      const alunosComPresenca: Record<string, boolean> = {};
-      data?.forEach(registro => {
-        alunosComPresenca[registro.aluno_id] = true;
-      });
-      
-      setProdutividadeRegistrada(alunosComPresenca);
-    } catch (error) {
-      console.error('Erro ao verificar produtividade:', error);
-    }
-  };
-
-  const handleTurmaSelecionada = async (turmaId: string) => {
-    setTurmaSelecionada(turmaId);
-    setAlunoDetalhes(null);
-    setCarregandoAlunos(true);
-    
-    try {
-      const { data: alunosRegulares, error: errorRegulares } = await supabase
+      setCarregando(true);
+      const { data: alunosData, error } = await supabase
         .from('alunos')
         .select('*')
-        .eq('turma_id', turmaId)
         .eq('active', true)
         .order('nome');
-        
-      if (errorRegulares) {
-        throw errorRegulares;
-      }
-      
-      const { data: funcionarios, error: errorFuncionarios } = await supabase
-        .from('funcionarios')
-        .select('*')
-        .eq('active', true)
-        .eq('turma_id', turmaId)
-        .order('nome');
-        
-      if (errorFuncionarios) {
-        throw errorFuncionarios;
-      }
-      
-      const funcionariosComoAlunos = funcionarios?.map(func => ({
-        ...func,
-        id: func.id,
-        nome: func.nome,
-        turma_id: func.turma_id,
-        is_funcionario: true,
-        active: true
-      })) || [];
-      
-      const todosAlunosDaTurma = [
-        ...(alunosRegulares || []),
-        ...funcionariosComoAlunos
-      ];
-      
-      console.log('Total de registros na turma:', todosAlunosDaTurma.length);
-      
-      setAlunos(todosAlunosDaTurma);
-      
-      await verificarProdutividadeHoje(todosAlunosDaTurma);
+
+      if (error) throw error;
+      setAlunos(alunosData);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
       toast({
@@ -146,22 +44,8 @@ export function useAlunos() {
         variant: "destructive"
       });
     } finally {
-      setCarregandoAlunos(false);
+      setCarregando(false);
     }
-  };
-
-  const handleRegistrarPresenca = async (alunoId: string) => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "O registro de presença será implementado em breve.",
-    });
-  };
-
-  const atualizarProdutividadeRegistrada = async (alunoId: string) => {
-    setProdutividadeRegistrada(prev => ({
-      ...prev,
-      [alunoId]: true
-    }));
   };
 
   const mostrarDetalhesAluno = (aluno: Aluno) => {
@@ -172,23 +56,11 @@ export function useAlunos() {
     setAlunoDetalhes(null);
   };
 
-  const voltarParaTurmas = () => {
-    setTurmaSelecionada(null);
-    setAlunoDetalhes(null);
-  };
-
   return {
     alunos,
-    todosAlunos,
-    turmaSelecionada,
     alunoDetalhes,
-    carregandoAlunos,
-    produtividadeRegistrada,
-    handleTurmaSelecionada,
-    handleRegistrarPresenca,
+    carregando,
     mostrarDetalhesAluno,
-    fecharDetalhesAluno,
-    voltarParaTurmas,
-    atualizarProdutividadeRegistrada
+    fecharDetalhesAluno
   };
 }

@@ -113,9 +113,13 @@ export type Database = {
       alunos: {
         Row: {
           active: boolean
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           codigo: string | null
+          coordenador_responsavel: string | null
           created_at: string
           curso: string | null
+          data_onboarding: string | null
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
@@ -124,8 +128,11 @@ export type Database = {
           indice: string | null
           is_funcionario: boolean | null
           matricula: string | null
+          motivo_procura: string | null
           niveldesafio: number | null
           nome: string
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string
@@ -137,9 +144,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
@@ -148,8 +159,11 @@ export type Database = {
           indice?: string | null
           is_funcionario?: boolean | null
           matricula?: string | null
+          motivo_procura?: string | null
           niveldesafio?: number | null
           nome: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id: string
@@ -161,9 +175,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
@@ -172,8 +190,11 @@ export type Database = {
           indice?: string | null
           is_funcionario?: boolean | null
           matricula?: string | null
+          motivo_procura?: string | null
           niveldesafio?: number | null
           nome?: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string
