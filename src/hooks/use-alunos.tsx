@@ -14,7 +14,7 @@ export interface Aluno {
   avaliacao_ah: string | null;
   pontos_atencao: string | null;
   active: boolean;
-  turma_id: string; // Alterado de opcional para obrigatório para manter compatibilidade com use-professor-turmas.tsx
+  turma_id: string; 
   codigo?: string;
   email?: string;
   telefone?: string;
@@ -22,6 +22,7 @@ export interface Aluno {
   ultima_pagina?: number;
   niveldesafio?: number;
   ultima_correcao_ah?: string;
+  unit_id: string; // Adicionado para refletir a nova coluna
 }
 
 export function useAlunos() {

@@ -34,13 +34,13 @@ export function useTurmaDetalhes(turmaId?: string) {
           sala: turmaData.sala || ''
         };
         
-        // Buscar alunos da turma
+        // Buscar alunos da turma, usando unit_id para filtrar corretamente
         const { data: alunosData, error: alunosError } = await supabase
           .from('alunos')
           .select('*')
           .eq('turma_id', turmaId)
           .eq('active', true)
-          .eq('unit_id', turmaData.unit_id) // Filtrando alunos pela unidade da turma
+          .eq('unit_id', turmaData.unit_id) // Filtrar pela unit_id da turma
           .order('nome');
 
         if (alunosError) throw alunosError;
