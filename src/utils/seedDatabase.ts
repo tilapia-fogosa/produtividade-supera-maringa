@@ -6,7 +6,7 @@ export const seedChristianeStudents = async () => {
     // Buscar ID da Christiane
     const { data: professorData, error: professorError } = await supabase
       .from('professores')
-      .select('id')
+      .select('id, unit_id')
       .eq('nome', 'Christiane')
       .single();
 
@@ -16,11 +16,12 @@ export const seedChristianeStudents = async () => {
     }
 
     const professorId = professorData.id;
+    const unitId = professorData.unit_id; // Obter unit_id do professor
 
     // Buscar turmas da Christiane
     const { data: turmasData, error: turmasError } = await supabase
       .from('turmas')
-      .select('id, nome')
+      .select('id, nome, unit_id')
       .eq('professor_id', professorId);
 
     if (turmasError) {
@@ -31,16 +32,18 @@ export const seedChristianeStudents = async () => {
     // Definir alunos para cada turma
     const turmaIdosos = turmasData.find(t => t.nome === 'Idosos')?.id;
     const turmaCriancas = turmasData.find(t => t.nome === 'Crianças')?.id;
+    const unitIdIdosos = turmasData.find(t => t.nome === 'Idosos')?.unit_id || unitId;
+    const unitIdCriancas = turmasData.find(t => t.nome === 'Crianças')?.unit_id || unitId;
 
     if (turmaIdosos) {
       // Adicionar alunos da turma de Idosos
       const alunosIdosos = [
-        { nome: 'Maria da Silva', turma_id: turmaIdosos },
-        { nome: 'José Oliveira', turma_id: turmaIdosos },
-        { nome: 'Ana Paula', turma_id: turmaIdosos },
-        { nome: 'Carlos Eduardo', turma_id: turmaIdosos },
-        { nome: 'Terezinha Lima', turma_id: turmaIdosos },
-        { nome: 'Antônio Costa', turma_id: turmaIdosos }
+        { nome: 'Maria da Silva', turma_id: turmaIdosos, unit_id: unitIdIdosos },
+        { nome: 'José Oliveira', turma_id: turmaIdosos, unit_id: unitIdIdosos },
+        { nome: 'Ana Paula', turma_id: turmaIdosos, unit_id: unitIdIdosos },
+        { nome: 'Carlos Eduardo', turma_id: turmaIdosos, unit_id: unitIdIdosos },
+        { nome: 'Terezinha Lima', turma_id: turmaIdosos, unit_id: unitIdIdosos },
+        { nome: 'Antônio Costa', turma_id: turmaIdosos, unit_id: unitIdIdosos }
       ];
 
       const { error: erroInsercaoIdosos } = await supabase
@@ -55,11 +58,11 @@ export const seedChristianeStudents = async () => {
     if (turmaCriancas) {
       // Adicionar alunos da turma de Crianças
       const alunosCriancas = [
-        { nome: 'Bernardo Diniz Kolln', turma_id: turmaCriancas },
-        { nome: 'Gabriel Agustinho Tadeu', turma_id: turmaCriancas },
-        { nome: 'Gabriela Malerba Fertonani', turma_id: turmaCriancas },
-        { nome: 'Maria Luiza Marques', turma_id: turmaCriancas },
-        { nome: 'Melissa Harumi Kami', turma_id: turmaCriancas }
+        { nome: 'Bernardo Diniz Kolln', turma_id: turmaCriancas, unit_id: unitIdCriancas },
+        { nome: 'Gabriel Agustinho Tadeu', turma_id: turmaCriancas, unit_id: unitIdCriancas },
+        { nome: 'Gabriela Malerba Fertonani', turma_id: turmaCriancas, unit_id: unitIdCriancas },
+        { nome: 'Maria Luiza Marques', turma_id: turmaCriancas, unit_id: unitIdCriancas },
+        { nome: 'Melissa Harumi Kami', turma_id: turmaCriancas, unit_id: unitIdCriancas }
       ];
 
       const { error: erroInsercaoCriancas } = await supabase
