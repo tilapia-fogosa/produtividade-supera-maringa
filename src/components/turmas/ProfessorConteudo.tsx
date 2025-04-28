@@ -38,6 +38,7 @@ const ProfessorConteudo: React.FC<ProfessorConteudoProps> = ({
 }) => {
   // Adiciona log para depuração
   console.log('Turmas recebidas no ProfessorConteudo:', turmas);
+  console.log('Alunos recebidos no ProfessorConteudo:', alunos?.length);
   
   return (
     <CardContent className="bg-orange-50/50 rounded-b-lg p-3 md:p-6 text-azul-500">

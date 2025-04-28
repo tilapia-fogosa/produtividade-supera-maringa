@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
@@ -27,7 +28,8 @@ const ProdutividadeTurma = () => {
     handleRegistrarPresenca,
     produtividadeRegistrada,
     carregandoAlunos,
-    atualizarProdutividadeRegistrada
+    atualizarProdutividadeRegistrada,
+    buscarAlunosPorTurma
   } = useAlunos();
 
   useEffect(() => {
@@ -50,7 +52,8 @@ const ProdutividadeTurma = () => {
           };
           
           setTurma(turmaData);
-          handleTurmaSelecionada(data.id);
+          // Após obter a turma, carregamos os alunos específicos dessa turma
+          buscarAlunosPorTurma(data.id);
         }
       } catch (error) {
         console.error('Erro ao buscar turma:', error);
@@ -65,7 +68,7 @@ const ProdutividadeTurma = () => {
     };
 
     fetchTurma();
-  }, [params.turmaId]);
+  }, [params.turmaId, buscarAlunosPorTurma]);
 
   const voltarParaTurmas = () => {
     navigate('/turmas/dia', { 

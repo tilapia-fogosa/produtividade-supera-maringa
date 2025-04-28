@@ -22,7 +22,7 @@ export interface Aluno {
   ultima_pagina?: number;
   niveldesafio?: number;
   ultima_correcao_ah?: string;
-  unit_id: string; // Adicionado para refletir a nova coluna
+  unit_id: string;
 }
 
 export function useAlunos() {
@@ -38,6 +38,12 @@ export function useAlunos() {
     buscarAlunos();
     buscarTodosAlunos();
   }, []);
+
+  useEffect(() => {
+    if (turmaSelecionada) {
+      buscarAlunosPorTurma(turmaSelecionada);
+    }
+  }, [turmaSelecionada]);
 
   const buscarAlunos = async () => {
     try {
@@ -59,6 +65,44 @@ export function useAlunos() {
       });
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const buscarAlunosPorTurma = async (turmaId: string) => {
+    try {
+      setCarregandoAlunos(true);
+      
+      // Primeiro, obter o unit_id da turma
+      const { data: turmaData, error: turmaError } = await supabase
+        .from('turmas')
+        .select('unit_id')
+        .eq('id', turmaId)
+        .single();
+      
+      if (turmaError) throw turmaError;
+      
+      // Buscar alunos específicos para esta turma e unidade
+      const { data: alunosData, error } = await supabase
+        .from('alunos')
+        .select('*')
+        .eq('turma_id', turmaId)
+        .eq('unit_id', turmaData.unit_id)
+        .eq('active', true)
+        .order('nome');
+
+      if (error) throw error;
+      
+      console.log(`Encontrados ${alunosData.length} alunos para turma ${turmaId} da unidade ${turmaData.unit_id}`);
+      setAlunos(alunosData);
+    } catch (error) {
+      console.error('Erro ao buscar alunos por turma:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de alunos desta turma.",
+        variant: "destructive"
+      });
+    } finally {
+      setCarregandoAlunos(false);
     }
   };
 
@@ -87,8 +131,6 @@ export function useAlunos() {
   const handleTurmaSelecionada = (turmaId: string) => {
     setTurmaSelecionada(turmaId);
     setCarregandoAlunos(true);
-    // Lógica adicional conforme necessário
-    setCarregandoAlunos(false);
   };
 
   const handleRegistrarPresenca = (alunoId: string) => {
@@ -120,6 +162,7 @@ export function useAlunos() {
     handleTurmaSelecionada,
     handleRegistrarPresenca,
     voltarParaTurmas,
-    atualizarProdutividadeRegistrada
+    atualizarProdutividadeRegistrada,
+    buscarAlunosPorTurma
   };
 }
