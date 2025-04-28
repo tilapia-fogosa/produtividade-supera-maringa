@@ -96,13 +96,12 @@ export function useAlunos() {
       console.log(`Encontrados ${alunosData.length} alunos para turma ${turmaId} da unidade ${turmaData.unit_id}`);
       setAlunos(alunosData);
       
-      // Verificar registros de produtividade para o dia atual
+      // Verificar registros de produtividade para o dia atual (usando a tabela correta)
       const hoje = new Date().toISOString().split('T')[0];
       const { data: registrosData, error: registrosError } = await supabase
-        .from('produtividade')
+        .from('produtividade_abaco')
         .select('aluno_id')
-        .eq('turma_id', turmaId)
-        .eq('data_registro', hoje);
+        .eq('data_aula', hoje);
         
       if (registrosError) throw registrosError;
       
@@ -177,6 +176,7 @@ export function useAlunos() {
     if (hoje !== dataRegistroProdutividade) {
       // Se for um novo dia, resetamos todos os registros
       setDataRegistroProdutividade(hoje);
+      // Aqui não resetamos mais o estado completo, pois isso será feito no useEffect
     }
   };
 

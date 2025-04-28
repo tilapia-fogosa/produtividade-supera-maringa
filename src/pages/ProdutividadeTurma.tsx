@@ -21,6 +21,8 @@ const ProdutividadeTurma = () => {
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
+  // Referência para controlar a data última verificada
+  const ultimaDataVerificadaRef = useRef<string>('');
 
   const { 
     alunos, 
@@ -56,7 +58,7 @@ const ProdutividadeTurma = () => {
           // Carregamos os alunos apenas uma vez quando a turma é carregada
           if (!alunosCarregadosRef.current) {
             console.log("Carregando alunos pela primeira vez para a turma:", data.id);
-            buscarAlunosPorTurma(data.id);
+            await buscarAlunosPorTurma(data.id);
             alunosCarregadosRef.current = true;
           }
         }
@@ -74,21 +76,25 @@ const ProdutividadeTurma = () => {
 
     fetchTurma();
     
-    // Verificar se a data mudou comparando com a dataRegistroProdutividade
-    const hoje = new Date().toISOString().split('T')[0];
-    if (dataRegistroProdutividade && dataRegistroProdutividade !== hoje && alunosCarregadosRef.current) {
-      // Se a data mudou e já carregamos alunos antes, recarregar para resetar
-      if (turma) {
-        console.log("Recarregando alunos pois a data mudou:", hoje, "anterior:", dataRegistroProdutividade);
-        buscarAlunosPorTurma(turma.id);
-      }
-    }
-    
     // Limpa o estado ao desmontar
     return () => {
       alunosCarregadosRef.current = false;
     };
-  }, [params.turmaId, buscarAlunosPorTurma, dataRegistroProdutividade, turma]);
+  }, [params.turmaId, buscarAlunosPorTurma]);
+
+  // Efeito separado para verificar mudanças na data
+  useEffect(() => {
+    // Verificar se a data mudou e se precisamos atualizar
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    // Só recarrega se: a data de hoje for diferente da última data de verificação,
+    // a turma estiver carregada e os alunos já foram carregados pelo menos uma vez
+    if (hoje !== ultimaDataVerificadaRef.current && turma && alunosCarregadosRef.current) {
+      console.log("Verificando produtividade para nova data:", hoje);
+      buscarAlunosPorTurma(turma.id);
+      ultimaDataVerificadaRef.current = hoje;
+    }
+  }, [turma, buscarAlunosPorTurma, dataRegistroProdutividade]);
 
   const voltarParaTurmas = () => {
     navigate('/turmas/dia', { 
