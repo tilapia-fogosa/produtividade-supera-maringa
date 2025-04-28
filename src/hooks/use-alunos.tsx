@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -34,6 +34,9 @@ export function useAlunos() {
   const [carregandoAlunos, setCarregandoAlunos] = useState(false);
   const [produtividadeRegistrada, setProdutividadeRegistrada] = useState<Record<string, boolean>>({});
   const [dataRegistroProdutividade, setDataRegistroProdutividade] = useState<string>('');
+  
+  // Ref para armazenar a última data verificada e evitar consultas repetidas
+  const ultimaDataVerificadaRef = useRef<string>('');
 
   useEffect(() => {
     buscarAlunos();
@@ -42,6 +45,7 @@ export function useAlunos() {
     // Definir a data atual como data de registro
     const hoje = new Date().toISOString().split('T')[0];
     setDataRegistroProdutividade(hoje);
+    ultimaDataVerificadaRef.current = hoje;
   }, []);
 
   // Removemos o useEffect que monitora turmaSelecionada para evitar cargas duplicadas
@@ -115,6 +119,7 @@ export function useAlunos() {
       
       setProdutividadeRegistrada(novoEstado);
       setDataRegistroProdutividade(hoje);
+      ultimaDataVerificadaRef.current = hoje;
       
     } catch (error) {
       console.error('Erro ao buscar alunos por turma:', error);
@@ -174,9 +179,9 @@ export function useAlunos() {
     // Verificar se a data atual é diferente da data armazenada
     const hoje = new Date().toISOString().split('T')[0];
     if (hoje !== dataRegistroProdutividade) {
-      // Se for um novo dia, resetamos todos os registros
+      // Se for um novo dia, atualizamos a data de registro
       setDataRegistroProdutividade(hoje);
-      // Aqui não resetamos mais o estado completo, pois isso será feito no useEffect
+      // Não resetamos o estado completo aqui, pois isso será feito no componente
     }
   };
 

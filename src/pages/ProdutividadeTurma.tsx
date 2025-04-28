@@ -16,13 +16,14 @@ const ProdutividadeTurma = () => {
   const dia = location.state?.dia;
   const alunosCarregadosRef = useRef(false);
   
+  // Referência para controlar a data última verificada
+  const ultimaDataVerificadaRef = useRef<string>('');
+  
   const [loading, setLoading] = useState(true);
   const [turma, setTurma] = useState<Turma | null>(null);
   const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
-  // Referência para controlar a data última verificada
-  const ultimaDataVerificadaRef = useRef<string>('');
 
   const { 
     alunos, 
