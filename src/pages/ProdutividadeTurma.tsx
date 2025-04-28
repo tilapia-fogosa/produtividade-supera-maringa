@@ -26,6 +26,7 @@ const ProdutividadeTurma = () => {
     alunos, 
     todosAlunos,
     produtividadeRegistrada,
+    dataRegistroProdutividade,
     carregandoAlunos,
     atualizarProdutividadeRegistrada,
     buscarAlunosPorTurma
@@ -73,11 +74,21 @@ const ProdutividadeTurma = () => {
 
     fetchTurma();
     
+    // Verificar se a data mudou comparando com a dataRegistroProdutividade
+    const hoje = new Date().toISOString().split('T')[0];
+    if (dataRegistroProdutividade && dataRegistroProdutividade !== hoje && alunosCarregadosRef.current) {
+      // Se a data mudou e já carregamos alunos antes, recarregar para resetar
+      if (turma) {
+        console.log("Recarregando alunos pois a data mudou:", hoje, "anterior:", dataRegistroProdutividade);
+        buscarAlunosPorTurma(turma.id);
+      }
+    }
+    
     // Limpa o estado ao desmontar
     return () => {
       alunosCarregadosRef.current = false;
     };
-  }, [params.turmaId, buscarAlunosPorTurma]);
+  }, [params.turmaId, buscarAlunosPorTurma, dataRegistroProdutividade, turma]);
 
   const voltarParaTurmas = () => {
     navigate('/turmas/dia', { 

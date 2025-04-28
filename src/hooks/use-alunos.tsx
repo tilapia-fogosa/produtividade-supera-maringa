@@ -33,10 +33,15 @@ export function useAlunos() {
   const [turmaSelecionada, setTurmaSelecionada] = useState<string | null>(null);
   const [carregandoAlunos, setCarregandoAlunos] = useState(false);
   const [produtividadeRegistrada, setProdutividadeRegistrada] = useState<Record<string, boolean>>({});
+  const [dataRegistroProdutividade, setDataRegistroProdutividade] = useState<string>('');
 
   useEffect(() => {
     buscarAlunos();
     buscarTodosAlunos();
+    
+    // Definir a data atual como data de registro
+    const hoje = new Date().toISOString().split('T')[0];
+    setDataRegistroProdutividade(hoje);
   }, []);
 
   // Removemos o useEffect que monitora turmaSelecionada para evitar cargas duplicadas
@@ -90,6 +95,28 @@ export function useAlunos() {
       
       console.log(`Encontrados ${alunosData.length} alunos para turma ${turmaId} da unidade ${turmaData.unit_id}`);
       setAlunos(alunosData);
+      
+      // Verificar registros de produtividade para o dia atual
+      const hoje = new Date().toISOString().split('T')[0];
+      const { data: registrosData, error: registrosError } = await supabase
+        .from('produtividade')
+        .select('aluno_id')
+        .eq('turma_id', turmaId)
+        .eq('data_registro', hoje);
+        
+      if (registrosError) throw registrosError;
+      
+      // Resetar o estado da produtividade registrada
+      const novoEstado: Record<string, boolean> = {};
+      if (registrosData && registrosData.length > 0) {
+        registrosData.forEach(registro => {
+          novoEstado[registro.aluno_id] = true;
+        });
+      }
+      
+      setProdutividadeRegistrada(novoEstado);
+      setDataRegistroProdutividade(hoje);
+      
     } catch (error) {
       console.error('Erro ao buscar alunos por turma:', error);
       toast({
@@ -144,6 +171,13 @@ export function useAlunos() {
       ...prev,
       [alunoId]: registrado
     }));
+    
+    // Verificar se a data atual é diferente da data armazenada
+    const hoje = new Date().toISOString().split('T')[0];
+    if (hoje !== dataRegistroProdutividade) {
+      // Se for um novo dia, resetamos todos os registros
+      setDataRegistroProdutividade(hoje);
+    }
   };
 
   return {
@@ -154,6 +188,7 @@ export function useAlunos() {
     turmaSelecionada,
     carregandoAlunos,
     produtividadeRegistrada,
+    dataRegistroProdutividade,
     mostrarDetalhesAluno,
     fecharDetalhesAluno,
     handleTurmaSelecionada,
