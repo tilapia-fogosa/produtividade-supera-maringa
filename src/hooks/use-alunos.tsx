@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -39,11 +39,7 @@ export function useAlunos() {
     buscarTodosAlunos();
   }, []);
 
-  useEffect(() => {
-    if (turmaSelecionada) {
-      buscarAlunosPorTurma(turmaSelecionada);
-    }
-  }, [turmaSelecionada]);
+  // Removemos o useEffect que monitora turmaSelecionada para evitar cargas duplicadas
 
   const buscarAlunos = async () => {
     try {
@@ -68,7 +64,7 @@ export function useAlunos() {
     }
   };
 
-  const buscarAlunosPorTurma = async (turmaId: string) => {
+  const buscarAlunosPorTurma = useCallback(async (turmaId: string) => {
     try {
       setCarregandoAlunos(true);
       
@@ -104,7 +100,7 @@ export function useAlunos() {
     } finally {
       setCarregandoAlunos(false);
     }
-  };
+  }, []);
 
   const buscarTodosAlunos = async () => {
     try {
@@ -128,10 +124,11 @@ export function useAlunos() {
     setAlunoDetalhes(null);
   };
 
-  const handleTurmaSelecionada = (turmaId: string) => {
+  // Modificamos handleTurmaSelecionada para chamar buscarAlunosPorTurma diretamente
+  const handleTurmaSelecionada = useCallback((turmaId: string) => {
     setTurmaSelecionada(turmaId);
-    setCarregandoAlunos(true);
-  };
+    buscarAlunosPorTurma(turmaId);
+  }, [buscarAlunosPorTurma]);
 
   const handleRegistrarPresenca = (alunoId: string) => {
     // Implemente a lógica conforme necessário

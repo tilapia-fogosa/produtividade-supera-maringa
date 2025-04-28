@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import { useAlunos } from '@/hooks/use-alunos';
@@ -14,6 +14,7 @@ const ProdutividadeTurma = () => {
   const params = useParams();
   const navigate = useNavigate();
   const dia = location.state?.dia;
+  const alunosCarregadosRef = useRef(false);
   
   const [loading, setLoading] = useState(true);
   const [turma, setTurma] = useState<Turma | null>(null);
@@ -24,8 +25,6 @@ const ProdutividadeTurma = () => {
   const { 
     alunos, 
     todosAlunos,
-    handleTurmaSelecionada, 
-    handleRegistrarPresenca,
     produtividadeRegistrada,
     carregandoAlunos,
     atualizarProdutividadeRegistrada,
@@ -52,8 +51,13 @@ const ProdutividadeTurma = () => {
           };
           
           setTurma(turmaData);
-          // Após obter a turma, carregamos os alunos específicos dessa turma
-          buscarAlunosPorTurma(data.id);
+          
+          // Carregamos os alunos apenas uma vez quando a turma é carregada
+          if (!alunosCarregadosRef.current) {
+            console.log("Carregando alunos pela primeira vez para a turma:", data.id);
+            buscarAlunosPorTurma(data.id);
+            alunosCarregadosRef.current = true;
+          }
         }
       } catch (error) {
         console.error('Erro ao buscar turma:', error);
@@ -68,6 +72,11 @@ const ProdutividadeTurma = () => {
     };
 
     fetchTurma();
+    
+    // Limpa o estado ao desmontar
+    return () => {
+      alunosCarregadosRef.current = false;
+    };
   }, [params.turmaId, buscarAlunosPorTurma]);
 
   const voltarParaTurmas = () => {
@@ -143,7 +152,7 @@ const ProdutividadeTurma = () => {
       <div className="container mx-auto py-4 px-2">
         <ProdutividadeScreen
           turma={turma}
-          alunos={alunos as Aluno[]} // Adicionado type casting para resolver o problema de tipagem
+          alunos={alunos as Aluno[]}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
           onReposicaoAula={handleReposicaoAula}
@@ -164,7 +173,7 @@ const ProdutividadeTurma = () => {
         <ReposicaoAulaModal 
           isOpen={reposicaoModalAberto}
           turma={turma}
-          todosAlunos={todosAlunos as Aluno[]} // Adicionado type casting para resolver o problema de tipagem
+          todosAlunos={todosAlunos as Aluno[]}
           onClose={handleFecharReposicaoModal}
           onError={handleModalError}
         />
