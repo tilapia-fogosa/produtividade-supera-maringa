@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
+import { useProfessorTurmas, Aluno } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -49,7 +48,7 @@ const DiarioTurma = () => {
         
         <h1 className="text-xl font-bold mb-4">Diário da Turma - {turma.nome}</h1>
         
-        <DiarioTurmaScreen turma={turma} onBack={handleVoltar} alunos={alunos} />
+        <DiarioTurmaScreen turma={turma} onBack={handleVoltar} alunos={alunos as Aluno[]} />
       </div>
     </div>
   );

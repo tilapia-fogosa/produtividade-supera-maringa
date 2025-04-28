@@ -14,8 +14,7 @@ export interface Aluno {
   avaliacao_ah: string | null;
   pontos_atencao: string | null;
   active: boolean;
-  // Campos adicionais necessários para compatibilidade com outros componentes
-  turma_id?: string; // Opcional para manter compatibilidade
+  turma_id: string; // Alterado de opcional para obrigatório para manter compatibilidade com use-professor-turmas.tsx
   codigo?: string;
   email?: string;
   telefone?: string;

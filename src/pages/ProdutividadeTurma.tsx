@@ -95,7 +95,7 @@ const ProdutividadeTurma = () => {
   };
 
   const handleSuccessModal = (alunoId: string) => {
-    atualizarProdutividadeRegistrada(alunoId);
+    atualizarProdutividadeRegistrada(alunoId, true);
   };
 
   const handleModalError = (errorMessage: string) => {
@@ -140,7 +140,7 @@ const ProdutividadeTurma = () => {
       <div className="container mx-auto py-4 px-2">
         <ProdutividadeScreen
           turma={turma}
-          alunos={alunos}
+          alunos={alunos as Aluno[]} // Adicionado type casting para resolver o problema de tipagem
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
           onReposicaoAula={handleReposicaoAula}
@@ -161,7 +161,7 @@ const ProdutividadeTurma = () => {
         <ReposicaoAulaModal 
           isOpen={reposicaoModalAberto}
           turma={turma}
-          todosAlunos={todosAlunos}
+          todosAlunos={todosAlunos as Aluno[]} // Adicionado type casting para resolver o problema de tipagem
           onClose={handleFecharReposicaoModal}
           onError={handleModalError}
         />
