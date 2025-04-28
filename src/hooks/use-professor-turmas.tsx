@@ -17,6 +17,7 @@ export interface Turma {
   horario: string;
   sala: string | null;
   dia_semana: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
+  unit_id: string;
 }
 
 export interface Aluno {
@@ -54,7 +55,8 @@ export function useProfessorTurmas() {
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
           .select('*')
-          .eq('professor_id', professorData.id);
+          .eq('professor_id', professorData.id)
+          .eq('unit_id', professorData.unit_id);
           
         if (turmasError) throw turmasError;
         

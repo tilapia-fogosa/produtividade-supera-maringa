@@ -19,7 +19,7 @@ export function useTurmaDetalhes(turmaId?: string) {
       try {
         setLoading(true);
         
-        // Buscar turma
+        // Buscar turma e professor
         const { data: turmaData, error: turmaError } = await supabase
           .from('turmas')
           .select('*, professor:professores(nome)')
@@ -40,6 +40,7 @@ export function useTurmaDetalhes(turmaId?: string) {
           .select('*')
           .eq('turma_id', turmaId)
           .eq('active', true)
+          .eq('unit_id', turmaData.unit_id) // Filtrando alunos pela unidade da turma
           .order('nome');
 
         if (alunosError) throw alunosError;
