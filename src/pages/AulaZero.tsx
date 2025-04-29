@@ -91,8 +91,9 @@ const AulaZero = () => {
   const sendToWebhook = async (data: AulaZeroData, alunoNome: string) => {
     setWebhookSending(true);
     try {
-      // Preparar os dados para enviar ao webhook - enviando campo a campo separadamente
-      const webhookData = {
+      // Enviar dados para o webhook no mesmo formato dos outros serviços
+      const dataAtual = new Date().toISOString();
+      console.log('Dados enviados para o webhook:', {
         tipo: "Aula Zero",
         aluno_nome: alunoNome,
         percepcao_coordenador: data.percepcao_coordenador,
@@ -100,23 +101,28 @@ const AulaZero = () => {
         avaliacao_abaco: data.avaliacao_abaco,
         avaliacao_ah: data.avaliacao_ah,
         pontos_atencao: data.pontos_atencao,
-        data_registro: new Date().toISOString()
-      };
-
+        data_registro: dataAtual
+      });
+      
       // Enviar dados para o webhook
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(webhookData),
+        body: JSON.stringify({
+          tipo: "Aula Zero",
+          aluno_nome: alunoNome,
+          percepcao_coordenador: data.percepcao_coordenador,
+          motivo_procura: data.motivo_procura,
+          avaliacao_abaco: data.avaliacao_abaco,
+          avaliacao_ah: data.avaliacao_ah,
+          pontos_atencao: data.pontos_atencao,
+          data_registro: dataAtual
+        }),
         mode: 'no-cors' // Necessário para evitar problemas de CORS
       });
 
-      console.log('Dados enviados para o webhook:', webhookData);
-
-      // Como estamos usando mode: 'no-cors', não podemos verificar a resposta diretamente
-      // Então assumimos que foi bem-sucedido
       toast({
         title: 'Webhook Enviado',
         description: 'Os dados foram enviados para o sistema externo',
