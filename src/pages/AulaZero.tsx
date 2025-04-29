@@ -93,40 +93,50 @@ const AulaZero = () => {
   const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
     setWebhookSending(true);
     try {
-      // Estrutura corrigida para o envio direto de dados ao webhook (sem objeto "value")
+      // Estrutura para envio sem encapsulamento
       const dataAtual = new Date().toISOString();
       
-      // Criando o objeto com estrutura de coleções separadas sem encapsulamento adicional
-      const webhookData = {
-        aluno: {
-          id: alunoSelecionado.id,
-          nome: alunoSelecionado.nome,
-          codigo: alunoSelecionado.codigo || '',
-          email: alunoSelecionado.email || '',
-          telefone: alunoSelecionado.telefone || ''
-        },
-        aula_zero: {
-          percepcao_coordenador: data.percepcao_coordenador,
-          motivo_procura: data.motivo_procura,
-          avaliacao_abaco: data.avaliacao_abaco,
-          avaliacao_ah: data.avaliacao_ah,
-          pontos_atencao: data.pontos_atencao,
-          data_registro: dataAtual
-        }
+      // Dados estruturados diretamente - sem objetos aninhados extras
+      const alunoData = {
+        id: alunoSelecionado.id,
+        nome: alunoSelecionado.nome,
+        codigo: alunoSelecionado.codigo || '',
+        email: alunoSelecionado.email || '',
+        telefone: alunoSelecionado.telefone || ''
       };
       
-      // Log para depuração dos dados que serão enviados
-      console.log('Enviando dados para webhook com estrutura de coleções:', webhookData);
+      const aulaZeroData = {
+        percepcao_coordenador: data.percepcao_coordenador,
+        motivo_procura: data.motivo_procura,
+        avaliacao_abaco: data.avaliacao_abaco,
+        avaliacao_ah: data.avaliacao_ah,
+        pontos_atencao: data.pontos_atencao,
+        data_registro: dataAtual
+      };
       
-      // Enviar dados diretamente ao webhook sem nenhum encapsulamento adicional
+      // Imprimimos os dados para depuração - dados finais que serão enviados
+      console.log('Enviando ao webhook - aluno:', alunoData);
+      console.log('Enviando ao webhook - aula_zero:', aulaZeroData);
+      
+      // Enviamos DIRETAMENTE os objetos separados sem nenhum objeto wrapper
+      // Make.com está esperando exatamente esse formato
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(webhookData),
-        mode: 'no-cors' // Necessário para evitar problemas de CORS
+        body: JSON.stringify({
+          aluno: alunoData, 
+          aula_zero: aulaZeroData
+        }),
+        mode: 'no-cors'
       });
+      
+      // Verificação explícita do envio
+      console.log('Payload enviado ao webhook:', JSON.stringify({
+        aluno: alunoData, 
+        aula_zero: aulaZeroData
+      }, null, 2));
 
       toast({
         title: 'Webhook Enviado',
@@ -181,7 +191,7 @@ const AulaZero = () => {
 
       if (error) throw error;
       
-      // Enviar para o webhook
+      // Enviar para o webhook com o aluno completo
       await sendToWebhook(data, alunoCompleto);
       
       toast({
