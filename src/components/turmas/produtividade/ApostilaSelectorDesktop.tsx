@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Book } from 'lucide-react';
-import { ApostilaItem } from '@/hooks/use-apostilas';
+import { Apostila } from '@/hooks/use-apostilas';
 import { 
   Select, 
   SelectContent, 
@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ApostilaSelectorDesktopProps {
   apostilaAbaco: string;
-  apostilas: ApostilaItem[];
+  apostilas: Apostila[];
   carregando: boolean;
   erro: string | null;
   onApostilaChange: (value: string) => void;

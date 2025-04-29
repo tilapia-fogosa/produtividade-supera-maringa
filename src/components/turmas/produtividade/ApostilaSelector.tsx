@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { Book, ChevronRight, Check, Search, X } from 'lucide-react';
-import { ApostilaItem } from '@/hooks/use-apostilas';
+import { Apostila } from '@/hooks/use-apostilas';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 
 interface ApostilaSelectorProps {
   apostilaAbaco: string;
-  apostilas: ApostilaItem[];
+  apostilas: Apostila[];
   carregando: boolean;
   erro: string | null;
   totalPaginas: number;
