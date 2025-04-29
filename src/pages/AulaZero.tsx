@@ -37,11 +37,14 @@ interface AulaZeroData {
   pontos_atencao: string;
 }
 
+const WEBHOOK_URL = "https://hook.us1.make.com/rhla45qk19cwlcq3jnekoirj1zatazfn";
+
 const AulaZero = () => {
   const navigate = useNavigate();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [webhookSending, setWebhookSending] = useState<boolean>(false);
   
   const form = useForm<AulaZeroData>({
     defaultValues: {
@@ -85,9 +88,61 @@ const AulaZero = () => {
     aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const sendToWebhook = async (data: AulaZeroData, alunoNome: string) => {
+    setWebhookSending(true);
+    try {
+      // Preparar os dados para enviar ao webhook
+      const webhookData = {
+        aluno_id: data.alunoId,
+        aluno_nome: alunoNome,
+        percepcao_coordenador: data.percepcao_coordenador,
+        motivo_procura: data.motivo_procura,
+        avaliacao_abaco: data.avaliacao_abaco,
+        avaliacao_ah: data.avaliacao_ah,
+        pontos_atencao: data.pontos_atencao,
+        data_registro: new Date().toISOString()
+      };
+
+      // Enviar dados para o webhook
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+        mode: 'no-cors' // Necessário para evitar problemas de CORS
+      });
+
+      console.log('Dados enviados para o webhook:', webhookData);
+
+      // Como estamos usando mode: 'no-cors', não podemos verificar a resposta diretamente
+      // Então assumimos que foi bem-sucedido
+      toast({
+        title: 'Webhook Enviado',
+        description: 'Os dados foram enviados para o sistema externo',
+      });
+    } catch (error) {
+      console.error('Erro ao enviar dados para o webhook:', error);
+      toast({
+        title: 'Atenção',
+        description: 'Os dados foram salvos, mas houve um erro ao enviá-los para o sistema externo',
+        variant: 'destructive',
+      });
+    } finally {
+      setWebhookSending(false);
+    }
+  };
+
   const onSubmit = async (data: AulaZeroData) => {
     setIsLoading(true);
     try {
+      // Obter o nome do aluno selecionado
+      const alunoSelecionado = alunos.find(aluno => aluno.id === data.alunoId);
+      if (!alunoSelecionado) {
+        throw new Error('Aluno não encontrado');
+      }
+
+      // Salvar os dados no Supabase
       const { error } = await supabase
         .from('alunos')
         .update({
@@ -100,6 +155,9 @@ const AulaZero = () => {
         .eq('id', data.alunoId);
 
       if (error) throw error;
+      
+      // Enviar para o webhook
+      await sendToWebhook(data, alunoSelecionado.nome);
       
       toast({
         title: 'Sucesso!',
@@ -281,9 +339,13 @@ const AulaZero = () => {
             />
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading} className="bg-supera hover:bg-supera-600">
+              <Button 
+                type="submit" 
+                disabled={isLoading || webhookSending} 
+                className="bg-supera hover:bg-supera-600"
+              >
                 <Save className="mr-2 h-4 w-4" />
-                {isLoading ? 'Salvando...' : 'Salvar'}
+                {isLoading || webhookSending ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
           </form>
