@@ -55,7 +55,7 @@ const Lancamentos = () => {
           onClick={handleAula0Click}
         >
           <School className="mr-2 h-6 w-6" />
-          Lançar Aula 0
+          Lançar Aula Zero
         </Button>
 
         <Button 

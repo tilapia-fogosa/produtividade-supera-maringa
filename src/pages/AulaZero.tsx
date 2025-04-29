@@ -91,9 +91,9 @@ const AulaZero = () => {
   const sendToWebhook = async (data: AulaZeroData, alunoNome: string) => {
     setWebhookSending(true);
     try {
-      // Preparar os dados para enviar ao webhook
+      // Preparar os dados para enviar ao webhook - enviando campo a campo separadamente
       const webhookData = {
-        aluno_id: data.alunoId,
+        tipo: "Aula Zero",
         aluno_nome: alunoNome,
         percepcao_coordenador: data.percepcao_coordenador,
         motivo_procura: data.motivo_procura,
@@ -161,13 +161,13 @@ const AulaZero = () => {
       
       toast({
         title: 'Sucesso!',
-        description: 'Informações da Aula 0 registradas com sucesso!',
+        description: 'Informações da Aula Zero registradas com sucesso!',
       });
       
       // Resetar o formulário
       form.reset();
     } catch (error) {
-      console.error('Erro ao salvar dados da Aula 0:', error);
+      console.error('Erro ao salvar dados da Aula Zero:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível salvar as informações',
@@ -193,7 +193,7 @@ const AulaZero = () => {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold text-azul-500">Lançamento de Aula 0</h1>
+        <h1 className="text-2xl font-bold text-azul-500">Lançamento de Aula Zero</h1>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm max-w-2xl mx-auto">
