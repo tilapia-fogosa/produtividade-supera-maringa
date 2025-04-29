@@ -95,8 +95,8 @@ export const useProdutividade = (alunoId: string) => {
         data_registro: new Date().toISOString().split('T')[0],
         data_aula: dadosCompletos.data_aula,
         data_ultima_correcao_ah: new Date().toISOString(),
-        apostila_atual: dadosCompletos.apostila,
-        ultima_pagina: pagina ? String(pagina) : undefined,
+        apostila_atual: dadosCompletos.apostila, // Importante: enviar apostila atual
+        ultima_pagina: pagina ? String(pagina) : undefined, // Importante: enviar página atual
         is_reposicao: dadosCompletos.is_reposicao || false
       };
       

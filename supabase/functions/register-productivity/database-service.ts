@@ -21,10 +21,22 @@ export async function registrarDadosAluno(
     if (data.presente) {
       const updateData: any = {};
       
-      // Adicionar campos básicos
-      if (data.apostila_atual && data.ultima_pagina) {
+      // Verificar se há dados da apostila e página para atualizar
+      if (data.apostila_abaco) {
+        updateData.ultimo_nivel = data.apostila_abaco;
+        console.log('Atualizando último nível do aluno para:', data.apostila_abaco);
+      } else if (data.apostila_atual) {
         updateData.ultimo_nivel = data.apostila_atual;
+        console.log('Usando apostila_atual:', data.apostila_atual);
+      }
+      
+      // Verificar se há dados da página para atualizar
+      if (data.pagina_abaco) {
+        updateData.ultima_pagina = data.pagina_abaco;
+        console.log('Atualizando última página do aluno para:', data.pagina_abaco);
+      } else if (data.ultima_pagina) {
         updateData.ultima_pagina = data.ultima_pagina;
+        console.log('Usando ultima_pagina existente:', data.ultima_pagina);
       }
       
       // Adicionar última correção AH, se houver
@@ -34,19 +46,27 @@ export async function registrarDadosAluno(
       
       // Adicionar nível do desafio, se houver e se fez desafio
       if (data.fez_desafio && data.nivel_desafio) {
-        updateData.niveldesafio = parseInt(data.nivel_desafio);
+        updateData.niveldesafio = data.nivel_desafio;
+        console.log('Atualizando nível de desafio do aluno para:', data.nivel_desafio);
       }
       
-      console.log('Atualizando dados do aluno:', updateData);
-      
-      const { error: updateError } = await supabaseClient
-        .from('alunos')
-        .update(updateData)
-        .eq('id', data.aluno_id);
+      // Só atualiza se houver algum dado para atualizar
+      if (Object.keys(updateData).length > 0) {
+        console.log('Atualizando dados do aluno:', updateData);
+        
+        const { error: updateError } = await supabaseClient
+          .from('alunos')
+          .update(updateData)
+          .eq('id', data.aluno_id);
 
-      if (updateError) {
-        console.error('Erro ao atualizar dados do aluno:', updateError);
-        return false;
+        if (updateError) {
+          console.error('Erro ao atualizar dados do aluno:', updateError);
+          return false;
+        }
+        
+        console.log('Dados do aluno atualizados com sucesso!');
+      } else {
+        console.log('Nenhum dado para atualizar na tabela alunos');
       }
     }
     
@@ -102,7 +122,7 @@ export async function registrarProdutividade(
       
       const produtividadeData = {
         aluno_id: data.aluno_id,
-        data_aula: data.data_registro,
+        data_aula: data.data_aula || data.data_registro,
         presente: data.presente,
         is_reposicao: data.is_reposicao || false,
         apostila: apostila,
@@ -166,6 +186,7 @@ export async function atualizarProdutividade(
   try {
     console.log('Atualizando registro de produtividade:', data.id);
     
+    // Primeiro atualiza o registro de produtividade
     const { error } = await supabaseClient
       .from('produtividade_abaco')
       .update({
@@ -185,9 +206,32 @@ export async function atualizarProdutividade(
       return false;
     }
     
+    // Em seguida, também atualiza os dados do aluno se necessário
+    if (data.presente && data.apostila && data.pagina) {
+      const updateData = {
+        ultimo_nivel: data.apostila,
+        ultima_pagina: data.pagina
+      };
+      
+      console.log('Atualizando dados do aluno após edição:', updateData);
+      
+      const { error: updateError } = await supabaseClient
+        .from('alunos')
+        .update(updateData)
+        .eq('id', data.aluno_id);
+        
+      if (updateError) {
+        console.error('Erro ao atualizar dados do aluno após edição:', updateError);
+        // Não falha completamente se apenas a atualização do aluno falhar
+      } else {
+        console.log('Dados do aluno atualizados com sucesso após edição!');
+      }
+    }
+    
     return true;
   } catch (error) {
     console.error("Erro ao atualizar produtividade:", error);
     return false;
   }
 }
+

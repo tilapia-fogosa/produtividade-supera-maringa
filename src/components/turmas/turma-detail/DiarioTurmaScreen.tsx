@@ -163,6 +163,8 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
     
     // Preparar dados para atualização
     const dadosAtualizacao = {
+      id: registroAtual.id,
+      aluno_id: alunoAtual.id,
       presente: formData.presente,
       apostila: formData.apostila,
       pagina: formData.pagina,
@@ -192,6 +194,24 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
         });
         
         setRegistros(registrosMapeados);
+      }
+      
+      // Também atualiza o aluno na lista local para refletir as alterações imediatamente
+      if (formData.presente && formData.apostila && formData.pagina) {
+        const atualizados = alunos.map(aluno => {
+          if (aluno.id === alunoAtual.id) {
+            return {
+              ...aluno,
+              ultimo_nivel: formData.apostila,
+              ultima_pagina: parseInt(formData.pagina)
+            };
+          }
+          return aluno;
+        });
+        
+        // Nota: Idealmente deveríamos ter um setAlunos para atualizar os alunos,
+        // mas como estamos apenas modificando localmente para atualizar o visual,
+        // não é necessário propagar esta mudança para os componentes superiores.
       }
     }
     

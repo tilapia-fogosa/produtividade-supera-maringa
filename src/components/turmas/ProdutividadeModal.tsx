@@ -142,8 +142,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         data_registro: new Date().toISOString().split('T')[0], // Data em que o registro está sendo feito (hoje)
         data_aula: dataAulaFormatada, // Data da aula que pode ser diferente da data do registro
         data_ultima_correcao_ah: new Date().toISOString(),
-        apostila_atual: aluno.ultimo_nivel, // Sempre enviando a apostila atual como fallback
-        ultima_pagina: aluno.ultima_pagina?.toString(), // Sempre enviando a última página como fallback
+        apostila_atual: presente === "sim" ? apostilaAbaco : aluno.ultimo_nivel, // Enviar a apostila atual selecionada
+        ultima_pagina: presente === "sim" ? paginaAbaco : aluno.ultima_pagina?.toString(), // Enviar a página atual selecionada
         is_reposicao: false
       };
 
