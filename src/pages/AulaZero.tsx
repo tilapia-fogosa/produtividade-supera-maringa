@@ -91,11 +91,23 @@ const AulaZero = () => {
   const sendToWebhook = async (data: AulaZeroData, alunoNome: string) => {
     setWebhookSending(true);
     try {
-      // Preparar os dados para o webhook enviando cada campo diretamente
+      // Preparar os dados para o webhook - não encapsular em um objeto
       const dataAtual = new Date().toISOString();
       
-      // Enviar dados para o webhook
-      const response = await fetch(WEBHOOK_URL, {
+      // Log para depuração dos dados que serão enviados
+      console.log('Preparando dados para envio ao webhook:', {
+        tipo: "Aula Zero",
+        aluno_nome: alunoNome,
+        percepcao_coordenador: data.percepcao_coordenador,
+        motivo_procura: data.motivo_procura,
+        avaliacao_abaco: data.avaliacao_abaco,
+        avaliacao_ah: data.avaliacao_ah,
+        pontos_atencao: data.pontos_atencao,
+        data_registro: dataAtual
+      });
+      
+      // Enviar dados diretamente sem encapsulamento adicional
+      await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,17 +123,6 @@ const AulaZero = () => {
           data_registro: dataAtual
         }),
         mode: 'no-cors' // Necessário para evitar problemas de CORS
-      });
-      
-      console.log('Dados enviados para o webhook:', {
-        tipo: "Aula Zero",
-        aluno_nome: alunoNome,
-        percepcao_coordenador: data.percepcao_coordenador,
-        motivo_procura: data.motivo_procura,
-        avaliacao_abaco: data.avaliacao_abaco,
-        avaliacao_ah: data.avaliacao_ah,
-        pontos_atencao: data.pontos_atencao,
-        data_registro: dataAtual
       });
 
       toast({
