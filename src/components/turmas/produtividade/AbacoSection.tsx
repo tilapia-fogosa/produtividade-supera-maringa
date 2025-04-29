@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Book, AlertCircle, Check, ChevronRight } from 'lucide-react';
+import { Book, AlertCircle, Check, ChevronRight, Search, X } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useApostilas } from '@/hooks/use-apostilas';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -52,6 +53,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
   const isMobile = useIsMobile();
   const [valorOriginalApostila, setValorOriginalApostila] = useState<string>(apostilaAbaco);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
     console.log('[AbacoSection] Hooks carregados - apostilasDisponiveis:', apostilasDisponiveis);
@@ -87,6 +89,19 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
     }
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  const clearSearch = () => {
+    setSearchTerm('');
+  };
+
+  // Filtrar as apostilas com base no termo de busca
+  const filteredApostilas = apostilasDisponiveis.filter(apostila =>
+    apostila.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const renderApostilaSelector = () => {
     if (isMobile) {
       return (
@@ -103,42 +118,69 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
               </div>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="max-h-[80vh] overflow-hidden">
-            <div className="flex flex-col h-full max-h-full">
-              <div className="sticky top-0 z-10 bg-background pb-2 mb-2 border-b">
-                <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
-              </div>
+          <SheetContent side="bottom" className="max-h-[80vh] flex flex-col pb-0">
+            <div className="sticky top-0 z-10 bg-background pb-2 mb-2 border-b">
+              <h3 className="text-lg font-semibold px-1">Selecione a apostila</h3>
               
-              <div className="flex-1 overflow-y-auto overscroll-contain -mx-6 px-6 pb-16">
-                {carregandoApostila ? (
-                  <div className="p-4 text-center text-gray-500">
-                    Carregando apostilas...
-                  </div>
-                ) : apostilasDisponiveis.length > 0 ? (
-                  <div className="space-y-1">
-                    {apostilasDisponiveis.map((apostila) => (
-                      <div 
-                        key={apostila.nome} 
-                        className={`flex items-center p-3 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
-                        onClick={() => handleApostilaChange(apostila.nome)}
-                      >
-                        <Book className="mr-3 h-5 w-5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{apostila.nome}</div>
-                          <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
-                        </div>
-                        {apostilaAbaco === apostila.nome && (
-                          <Check className="ml-2 h-5 w-5 text-primary flex-shrink-0" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 text-center text-gray-500">
-                    {erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
+              {/* Campo de busca */}
+              <div className="mt-2 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Buscar apostila..."
+                  className="pl-10 pr-10"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                />
+                {searchTerm && (
+                  <div 
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    onClick={clearSearch}
+                  >
+                    <X className="h-4 w-4 text-gray-400" />
                   </div>
                 )}
               </div>
+              
+              {/* Contador de resultados */}
+              {searchTerm && (
+                <div className="text-xs text-muted-foreground mt-1 px-1">
+                  Encontradas {filteredApostilas.length} apostilas
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1 overflow-y-auto overscroll-contain -mx-6 px-6 pb-16 touch-pan-y">
+              {carregandoApostila ? (
+                <div className="p-4 text-center text-gray-500">
+                  Carregando apostilas...
+                </div>
+              ) : filteredApostilas.length > 0 ? (
+                <div className="space-y-1">
+                  {filteredApostilas.map((apostila) => (
+                    <div 
+                      key={apostila.nome} 
+                      className={`flex items-center p-4 rounded-md ${apostilaAbaco === apostila.nome ? 'bg-accent' : 'hover:bg-muted'}`}
+                      onClick={() => handleApostilaChange(apostila.nome)}
+                    >
+                      <Book className="mr-3 h-5 w-5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{apostila.nome}</div>
+                        <div className="text-xs text-muted-foreground">{apostila.total_paginas} páginas</div>
+                      </div>
+                      {apostilaAbaco === apostila.nome && (
+                        <Check className="ml-2 h-5 w-5 text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  {searchTerm ? 'Nenhuma apostila encontrada. Tente outro termo.' : erroApostila ? 'Erro ao carregar apostilas' : 'Nenhuma apostila disponível'}
+                </div>
+              )}
             </div>
           </SheetContent>
         </Sheet>
@@ -154,9 +196,18 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
             <SelectValue placeholder="Selecione a apostila" />
           </SelectTrigger>
           <SelectContent className="max-h-[300px]">
+            <div className="p-2 pb-0">
+              <Input
+                type="text"
+                placeholder="Buscar apostila..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="mb-2"
+              />
+            </div>
             <ScrollArea className="h-[200px]">
-              {apostilasDisponiveis.length > 0 ? (
-                apostilasDisponiveis.map((apostila) => (
+              {filteredApostilas.length > 0 ? (
+                filteredApostilas.map((apostila) => (
                   <SelectItem key={apostila.nome} value={apostila.nome} className="py-2">
                     <div className="flex items-center">
                       <Book className="mr-2 h-4 w-4" />
@@ -166,7 +217,7 @@ const AbacoSection: React.FC<AbacoSectionProps> = ({
                 ))
               ) : (
                 <div className="px-2 py-1 text-sm text-gray-500 text-center">
-                  {carregandoApostila ? 'Carregando apostilas...' : 'Nenhuma apostila disponível'}
+                  {searchTerm ? 'Nenhuma apostila encontrada' : carregandoApostila ? 'Carregando apostilas...' : 'Nenhuma apostila disponível'}
                 </div>
               )}
             </ScrollArea>
