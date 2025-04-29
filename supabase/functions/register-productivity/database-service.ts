@@ -31,12 +31,25 @@ export async function registrarDadosAluno(
       }
       
       // Verificar se há dados da página para atualizar
+      // CORREÇÃO: Converter o valor da página para inteiro antes de salvar
       if (data.pagina_abaco) {
-        updateData.ultima_pagina = data.pagina_abaco;
-        console.log('Atualizando última página do aluno para:', data.pagina_abaco);
+        // Converter para número inteiro usando parseInt
+        const paginaInt = parseInt(data.pagina_abaco, 10);
+        if (!isNaN(paginaInt)) {
+          updateData.ultima_pagina = paginaInt;
+          console.log('Atualizando última página do aluno para:', paginaInt);
+        } else {
+          console.error('Erro: valor de pagina_abaco não é um número válido:', data.pagina_abaco);
+        }
       } else if (data.ultima_pagina) {
-        updateData.ultima_pagina = data.ultima_pagina;
-        console.log('Usando ultima_pagina existente:', data.ultima_pagina);
+        // Converter para número inteiro usando parseInt
+        const paginaInt = parseInt(data.ultima_pagina, 10);
+        if (!isNaN(paginaInt)) {
+          updateData.ultima_pagina = paginaInt;
+          console.log('Usando ultima_pagina existente (convertida para inteiro):', paginaInt);
+        } else {
+          console.error('Erro: valor de ultima_pagina não é um número válido:', data.ultima_pagina);
+        }
       }
       
       // Adicionar última correção AH, se houver
@@ -186,19 +199,22 @@ export async function atualizarProdutividade(
   try {
     console.log('Atualizando registro de produtividade:', data.id);
     
+    // Preparar dados para atualização de produtividade
+    const updateData = {
+      presente: data.presente,
+      apostila: data.apostila,
+      pagina: data.pagina,
+      exercicios: data.exercicios ? parseInt(data.exercicios) : null,
+      erros: data.erros ? parseInt(data.erros) : null,
+      fez_desafio: data.fez_desafio,
+      comentario: data.comentario,
+      updated_at: new Date().toISOString()
+    };
+    
     // Primeiro atualiza o registro de produtividade
     const { error } = await supabaseClient
       .from('produtividade_abaco')
-      .update({
-        presente: data.presente,
-        apostila: data.apostila,
-        pagina: data.pagina,
-        exercicios: data.exercicios ? parseInt(data.exercicios) : null,
-        erros: data.erros ? parseInt(data.erros) : null,
-        fez_desafio: data.fez_desafio,
-        comentario: data.comentario,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', data.id);
     
     if (error) {
@@ -210,7 +226,7 @@ export async function atualizarProdutividade(
     if (data.presente && data.apostila && data.pagina) {
       const updateData = {
         ultimo_nivel: data.apostila,
-        ultima_pagina: data.pagina
+        ultima_pagina: parseInt(data.pagina, 10) // Convertendo para inteiro
       };
       
       console.log('Atualizando dados do aluno após edição:', updateData);
@@ -234,4 +250,3 @@ export async function atualizarProdutividade(
     return false;
   }
 }
-
