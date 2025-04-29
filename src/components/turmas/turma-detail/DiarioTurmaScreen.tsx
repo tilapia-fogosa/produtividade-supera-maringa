@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronLeft, ChevronRight, Search, Check, X, CalendarIcon, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,40 +10,11 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Aluno, Turma } from '@/hooks/use-professor-turmas';
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useProdutividade } from '@/hooks/use-produtividade';
-import { ProdutividadeAbaco } from '@/types/produtividade';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-
-interface RegistroProdutividade {
-  id: string;
-  aluno_id: string;
-  data_aula: string;
-  presente: boolean;
-  is_reposicao: boolean;
-  apostila: string;
-  pagina: string;
-  exercicios: number;
-  erros: number;
-  fez_desafio: boolean;
-  comentario: string;
-  created_at: string;
-  updated_at: string;
-  nivel_desafio?: number;
-}
+import DiarioTabela, { RegistroProdutividade } from './diario/DiarioTabela';
+import EditRegistroModal from './diario/EditRegistroModal';
+import DeleteRegistroDialog from './diario/DeleteRegistroDialog';
 
 interface DiarioTurmaScreenProps {
   turma: Turma;
@@ -195,24 +166,6 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
         
         setRegistros(registrosMapeados);
       }
-      
-      // Também atualiza o aluno na lista local para refletir as alterações imediatamente
-      if (formData.presente && formData.apostila && formData.pagina) {
-        const atualizados = alunos.map(aluno => {
-          if (aluno.id === alunoAtual.id) {
-            return {
-              ...aluno,
-              ultimo_nivel: formData.apostila,
-              ultima_pagina: parseInt(formData.pagina)
-            };
-          }
-          return aluno;
-        });
-        
-        // Nota: Idealmente deveríamos ter um setAlunos para atualizar os alunos,
-        // mas como estamos apenas modificando localmente para atualizar o visual,
-        // não é necessário propagar esta mudança para os componentes superiores.
-      }
     }
     
     setEditModalOpen(false);
@@ -297,245 +250,34 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Aluno</TableHead>
-              <TableHead>Presença</TableHead>
-              <TableHead>Apostila</TableHead>
-              <TableHead>Página</TableHead>
-              <TableHead>Exercícios</TableHead>
-              <TableHead>Erros</TableHead>
-              <TableHead>Desafio</TableHead>
-              <TableHead>Nível</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {alunosFiltrados.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
-                  {carregando ? "Carregando..." : "Nenhum aluno encontrado"}
-                </TableCell>
-              </TableRow>
-            ) : (
-              alunosFiltrados.map((aluno) => {
-                const registro = registros[aluno.id];
-                return (
-                  <TableRow key={aluno.id}>
-                    <TableCell className="font-medium">{aluno.nome}</TableCell>
-                    <TableCell>
-                      {registro ? (
-                        registro.presente ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Check className="h-4 w-4 text-green-500" />
-                              </TooltipTrigger>
-                              <TooltipContent>Presente</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <X className="h-4 w-4 text-red-500" />
-                              </TooltipTrigger>
-                              <TooltipContent>Ausente</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )
-                      ) : ("-")}
-                    </TableCell>
-                    <TableCell>{registro?.apostila || "-"}</TableCell>
-                    <TableCell>{registro?.pagina || "-"}</TableCell>
-                    <TableCell>{registro?.exercicios || "-"}</TableCell>
-                    <TableCell>{registro?.erros || "-"}</TableCell>
-                    <TableCell>
-                      {registro ? (
-                        registro.fez_desafio ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Check className="h-4 w-4 text-green-500" />
-                              </TooltipTrigger>
-                              <TooltipContent>Fez o desafio</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <X className="h-4 w-4 text-red-500" />
-                              </TooltipTrigger>
-                              <TooltipContent>Não fez desafio</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )
-                      ) : ("-")}
-                    </TableCell>
-                    <TableCell>{aluno.niveldesafio || "-"}</TableCell>
-                    <TableCell>
-                      {registro ? (
-                        <div className="flex space-x-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => handleEditClick(registro, aluno)}
-                                >
-                                  <Edit className="h-4 w-4 text-blue-500" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Editar registro</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => handleDeleteClick(registro, aluno)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Excluir registro</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DiarioTabela 
+        alunosFiltrados={alunosFiltrados}
+        registros={registros}
+        carregando={carregando}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
+      />
       
       {/* Modal de edição */}
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Registro</DialogTitle>
-            <DialogDescription>
-              {alunoAtual ? `Editando o registro de ${alunoAtual.nome}` : 'Editando registro'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="flex items-center gap-4">
-              <Label htmlFor="presente">Presente</Label>
-              <input
-                type="checkbox"
-                id="presente"
-                name="presente"
-                checked={formData.presente}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="apostila">Apostila</Label>
-              <Input
-                id="apostila"
-                name="apostila"
-                value={formData.apostila}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="pagina">Página</Label>
-              <Input
-                id="pagina"
-                name="pagina"
-                value={formData.pagina}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="exercicios">Exercícios</Label>
-              <Input
-                id="exercicios"
-                name="exercicios"
-                type="number"
-                value={formData.exercicios}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="erros">Erros</Label>
-              <Input
-                id="erros"
-                name="erros"
-                type="number"
-                value={formData.erros}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <Label htmlFor="fez_desafio">Fez Desafio</Label>
-              <input
-                type="checkbox"
-                id="fez_desafio"
-                name="fez_desafio"
-                checked={formData.fez_desafio}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="comentario">Comentário</Label>
-              <textarea
-                id="comentario"
-                name="comentario"
-                className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.comentario}
-                onChange={handleTextareaChange}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditModalOpen(false)}>Cancelar</Button>
-            <Button type="submit" onClick={handleUpdate} disabled={isLoading}>
-              {isLoading ? "Salvando..." : "Salvar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditRegistroModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleUpdate}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleTextareaChange={handleTextareaChange}
+        isLoading={isLoading}
+        alunoNome={alunoAtual?.nome}
+      />
       
       {/* Diálogo de confirmação de exclusão */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir este registro de produtividade?
-              {alunoAtual && <p className="font-medium mt-2">Aluno: {alunoAtual.nome}</p>}
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              {isLoading ? "Excluindo..." : "Excluir"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteRegistroDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        isLoading={isLoading}
+        aluno={alunoAtual}
+      />
     </>
   );
 };

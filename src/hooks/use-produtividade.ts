@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { ProdutividadeAbaco } from '@/types/produtividade';
 
 interface ProdutividadeInput {
   aluno_id?: string;
@@ -15,7 +14,16 @@ interface ProdutividadeInput {
   comentario?: string;
   data_aula: string;
   is_reposicao?: boolean;
+  nivel_desafio?: string;
 }
+
+// Helper para converter valores para número
+const convertToNumber = (value: string | number | undefined) => {
+  if (typeof value === 'string' && value) {
+    return Number(value);
+  }
+  return value;
+};
 
 export const useProdutividade = (alunoId: string) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -68,19 +76,10 @@ export const useProdutividade = (alunoId: string) => {
         aluno_id: alunoId
       };
 
-      // Converter exercicios e erros para número se forem string
-      const exercicios = typeof dadosCompletos.exercicios === 'string' && dadosCompletos.exercicios 
-        ? Number(dadosCompletos.exercicios) 
-        : dadosCompletos.exercicios;
-        
-      const erros = typeof dadosCompletos.erros === 'string' && dadosCompletos.erros 
-        ? Number(dadosCompletos.erros) 
-        : dadosCompletos.erros;
-      
-      // Converter página para número se for string
-      const pagina = typeof dadosCompletos.pagina === 'string' && dadosCompletos.pagina 
-        ? Number(dadosCompletos.pagina) 
-        : dadosCompletos.pagina;
+      // Converter valores para número
+      const exercicios = convertToNumber(dadosCompletos.exercicios);
+      const erros = convertToNumber(dadosCompletos.erros);
+      const pagina = convertToNumber(dadosCompletos.pagina);
 
       // Preparar dados para a edge function
       const produtividadeData = {
@@ -97,7 +96,8 @@ export const useProdutividade = (alunoId: string) => {
         data_ultima_correcao_ah: new Date().toISOString(),
         apostila_atual: dadosCompletos.apostila, // Importante: enviar apostila atual
         ultima_pagina: pagina ? String(pagina) : undefined, // Importante: enviar página atual
-        is_reposicao: dadosCompletos.is_reposicao || false
+        is_reposicao: dadosCompletos.is_reposicao || false,
+        nivel_desafio: dadosCompletos.nivel_desafio // Adicionado o nível do desafio
       };
       
       // Chamar a edge function
@@ -129,7 +129,6 @@ export const useProdutividade = (alunoId: string) => {
     }
   };
 
-  // Nova função para excluir registro de produtividade
   const excluirProdutividade = async (registroId: string) => {
     try {
       setIsLoading(true);
@@ -164,7 +163,6 @@ export const useProdutividade = (alunoId: string) => {
     }
   };
   
-  // Nova função para atualizar registro de produtividade
   const atualizarProdutividade = async (registroId: string, dados: ProdutividadeInput) => {
     try {
       setIsLoading(true);
@@ -175,19 +173,10 @@ export const useProdutividade = (alunoId: string) => {
         aluno_id: alunoId
       };
 
-      // Converter exercicios e erros para número se forem string
-      const exercicios = typeof dadosCompletos.exercicios === 'string' && dadosCompletos.exercicios 
-        ? Number(dadosCompletos.exercicios) 
-        : dadosCompletos.exercicios;
-        
-      const erros = typeof dadosCompletos.erros === 'string' && dadosCompletos.erros 
-        ? Number(dadosCompletos.erros) 
-        : dadosCompletos.erros;
-      
-      // Converter página para número se for string
-      const pagina = typeof dadosCompletos.pagina === 'string' && dadosCompletos.pagina 
-        ? Number(dadosCompletos.pagina) 
-        : dadosCompletos.pagina;
+      // Converter valores para número
+      const exercicios = convertToNumber(dadosCompletos.exercicios);
+      const erros = convertToNumber(dadosCompletos.erros);
+      const pagina = convertToNumber(dadosCompletos.pagina);
 
       // Preparar dados para a edge function
       const produtividadeData = {
@@ -200,7 +189,8 @@ export const useProdutividade = (alunoId: string) => {
         erros: erros ? String(erros) : undefined,
         fez_desafio: dadosCompletos.fez_desafio,
         comentario: dadosCompletos.comentario,
-        data_aula: dadosCompletos.data_aula
+        data_aula: dadosCompletos.data_aula,
+        nivel_desafio: dadosCompletos.nivel_desafio // Adicionado o nível do desafio
       };
       
       // Chamar a edge function
