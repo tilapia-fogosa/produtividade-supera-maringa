@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, AlertTriangle } from "lucide-react";
+import { TrendingUp, BookOpen, AlertTriangle, School } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
 
@@ -16,6 +16,10 @@ const Lancamentos = () => {
 
   const handleAHClick = () => {
     navigate('/dias-lancamento', { state: { serviceType: 'abrindo_horizontes' } });
+  };
+
+  const handleAula0Click = () => {
+    navigate('/aula-zero');
   };
 
   return (
@@ -43,6 +47,15 @@ const Lancamentos = () => {
         >
           <BookOpen className="mr-2 h-6 w-6" />
           Lançar Abrindo Horizontes
+        </Button>
+
+        <Button 
+          size="lg" 
+          className="py-8 text-lg bg-green-500 hover:bg-green-600 text-white"
+          onClick={handleAula0Click}
+        >
+          <School className="mr-2 h-6 w-6" />
+          Lançar Aula 0
         </Button>
 
         <Button 
