@@ -93,12 +93,11 @@ const AulaZero = () => {
   const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
     setWebhookSending(true);
     try {
-      // Preparar os dados para o webhook com a estrutura correta de coleções separadas
+      // Estrutura corrigida para o envio direto de dados ao webhook (sem objeto "value")
       const dataAtual = new Date().toISOString();
       
-      // Estrutura dos dados para envio ao webhook
+      // Criando o objeto com estrutura de coleções separadas sem encapsulamento adicional
       const webhookData = {
-        // Coleção de dados do aluno
         aluno: {
           id: alunoSelecionado.id,
           nome: alunoSelecionado.nome,
@@ -106,7 +105,6 @@ const AulaZero = () => {
           email: alunoSelecionado.email || '',
           telefone: alunoSelecionado.telefone || ''
         },
-        // Coleção de dados da aula zero
         aula_zero: {
           percepcao_coordenador: data.percepcao_coordenador,
           motivo_procura: data.motivo_procura,
@@ -120,8 +118,8 @@ const AulaZero = () => {
       // Log para depuração dos dados que serão enviados
       console.log('Enviando dados para webhook com estrutura de coleções:', webhookData);
       
-      // Enviar dados estruturados para o webhook
-      await fetch(WEBHOOK_URL, {
+      // Enviar dados diretamente ao webhook sem nenhum encapsulamento adicional
+      const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
