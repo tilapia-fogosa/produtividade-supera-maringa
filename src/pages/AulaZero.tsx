@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -68,7 +69,7 @@ const AulaZero = () => {
     try {
       const { data, error } = await supabase
         .from('alunos')
-        .select('id, nome, codigo, email, telefone') // Adicionados os campos necessários
+        .select('id, nome, codigo, email, telefone')
         .eq('active', true)
         .order('nome');
 
@@ -93,10 +94,8 @@ const AulaZero = () => {
   const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
     setWebhookSending(true);
     try {
-      // Estrutura para envio sem encapsulamento
       const dataAtual = new Date().toISOString();
       
-      // Dados estruturados diretamente - sem objetos aninhados extras
       const alunoData = {
         id: alunoSelecionado.id,
         nome: alunoSelecionado.nome,
@@ -114,29 +113,25 @@ const AulaZero = () => {
         data_registro: dataAtual
       };
       
-      // Imprimimos os dados para depuração - dados finais que serão enviados
-      console.log('Enviando ao webhook - aluno:', alunoData);
-      console.log('Enviando ao webhook - aula_zero:', aulaZeroData);
+      // Preparação do payload
+      const webhookPayload = {
+        aluno: alunoData,
+        aula_zero: aulaZeroData
+      };
       
-      // Enviamos DIRETAMENTE os objetos separados sem nenhum objeto wrapper
-      // Make.com está esperando exatamente esse formato
+      // Log para depuração dos dados que serão enviados
+      console.log('Enviando dados para webhook:', webhookPayload);
+      
+      // Enviar dados diretamente ao webhook SEM a opção no-cors
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          aluno: alunoData, 
-          aula_zero: aulaZeroData
-        }),
-        mode: 'no-cors'
+        body: JSON.stringify(webhookPayload)
       });
       
-      // Verificação explícita do envio
-      console.log('Payload enviado ao webhook:', JSON.stringify({
-        aluno: alunoData, 
-        aula_zero: aulaZeroData
-      }, null, 2));
+      console.log('Resposta do webhook:', response);
 
       toast({
         title: 'Webhook Enviado',
