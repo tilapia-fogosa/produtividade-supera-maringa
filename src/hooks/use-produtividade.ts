@@ -33,7 +33,8 @@ export const useProdutividade = (alunoId: string) => {
         aluno_id: alunoId,
         presente: presente,
         motivo_falta: motivoFalta,
-        data_registro: data
+        data_registro: new Date().toISOString().split('T')[0],
+        data_aula: data
       };
       
       // Chamar a edge function
@@ -91,7 +92,8 @@ export const useProdutividade = (alunoId: string) => {
         erros_abaco: erros ? String(erros) : undefined,
         fez_desafio: dadosCompletos.fez_desafio,
         comentario: dadosCompletos.comentario,
-        data_registro: dadosCompletos.data_aula,
+        data_registro: new Date().toISOString().split('T')[0],
+        data_aula: dadosCompletos.data_aula,
         data_ultima_correcao_ah: new Date().toISOString(),
         apostila_atual: dadosCompletos.apostila,
         ultima_pagina: pagina ? String(pagina) : undefined,

@@ -18,6 +18,11 @@ import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
 import { useApostilas } from '@/hooks/use-apostilas';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Edit } from "lucide-react";
 
 interface ProdutividadeModalProps {
   isOpen: boolean;
@@ -51,6 +56,10 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const [fezDesafio, setFezDesafio] = useState<"sim" | "não">("não");
   const [comentario, setComentario] = useState("");
   const [nivelDesafio, setNivelDesafio] = useState<string>("");
+  
+  // Novo estado para a data da aula
+  const [dataAula, setDataAula] = useState<Date>(new Date());
+  const [editandoData, setEditandoData] = useState(false);
 
   useEffect(() => {
     if (isOpen && aluno) {
@@ -92,6 +101,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       setFezDesafio("não");
       setComentario("");
       setNivelDesafio("");
+      setDataAula(new Date());
+      setEditandoData(false);
     }
   }, [isOpen]);
 
@@ -110,7 +121,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
     try {
       setIsSubmitting(true);
       
-      const dataHoje = new Date().toISOString().split('T')[0];
+      // Formatar data para o formato ISO (YYYY-MM-DD)
+      const dataAulaFormatada = dataAula.toISOString().split('T')[0];
 
       // Preparar os dados para enviar para a Edge Function
       const produtividadeData = {
@@ -127,7 +139,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
         nivel_desafio: presente === "sim" && fezDesafio === "sim" ? nivelDesafio : undefined,
         comentario: presente === "sim" ? comentario : undefined,
-        data_registro: dataHoje,
+        data_registro: new Date().toISOString().split('T')[0], // Data em que o registro está sendo feito (hoje)
+        data_aula: dataAulaFormatada, // Data da aula que pode ser diferente da data do registro
         data_ultima_correcao_ah: new Date().toISOString(),
         apostila_atual: aluno.ultimo_nivel, // Sempre enviando a apostila atual como fallback
         ultima_pagina: aluno.ultima_pagina?.toString(), // Sempre enviando a última página como fallback
@@ -201,6 +214,56 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
             <AlunoProgressoCard alunoId={aluno.id} />
             
             <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+              {/* Seletor de data da aula */}
+              <div className="bg-muted/30 p-3 rounded-md">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="text-sm font-medium">Data da aula:</p>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setEditandoData(!editandoData)}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1" />
+                    Alterar data
+                  </Button>
+                </div>
+                
+                {editandoData ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(dataAula, "dd 'de' MMMM 'de' yyyy", { locale: pt })}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dataAula}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDataAula(date);
+                            setEditandoData(false);
+                          }
+                        }}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <div className="bg-background border rounded-md px-3 py-2">
+                    {format(dataAula, "dd 'de' MMMM 'de' yyyy", { locale: pt })}
+                  </div>
+                )}
+              </div>
+              
               <PresencaSection 
                 presente={presente}
                 setPresente={setPresente}
