@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -26,6 +25,9 @@ import { supabase } from '@/integrations/supabase/client';
 interface Aluno {
   id: string;
   nome: string;
+  codigo?: string;
+  email?: string;
+  telefone?: string;
 }
 
 interface AulaZeroData {
@@ -66,7 +68,7 @@ const AulaZero = () => {
     try {
       const { data, error } = await supabase
         .from('alunos')
-        .select('id, nome')
+        .select('id, nome, codigo, email, telefone') // Adicionados os campos necessários
         .eq('active', true)
         .order('nome');
 
@@ -88,40 +90,43 @@ const AulaZero = () => {
     aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const sendToWebhook = async (data: AulaZeroData, alunoNome: string) => {
+  const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
     setWebhookSending(true);
     try {
-      // Preparar os dados para o webhook - não encapsular em um objeto
+      // Preparar os dados para o webhook com a estrutura correta de coleções separadas
       const dataAtual = new Date().toISOString();
       
-      // Log para depuração dos dados que serão enviados
-      console.log('Preparando dados para envio ao webhook:', {
-        tipo: "Aula Zero",
-        aluno_nome: alunoNome,
-        percepcao_coordenador: data.percepcao_coordenador,
-        motivo_procura: data.motivo_procura,
-        avaliacao_abaco: data.avaliacao_abaco,
-        avaliacao_ah: data.avaliacao_ah,
-        pontos_atencao: data.pontos_atencao,
-        data_registro: dataAtual
-      });
-      
-      // Enviar dados diretamente sem encapsulamento adicional
-      await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Estrutura dos dados para envio ao webhook
+      const webhookData = {
+        // Coleção de dados do aluno
+        aluno: {
+          id: alunoSelecionado.id,
+          nome: alunoSelecionado.nome,
+          codigo: alunoSelecionado.codigo || '',
+          email: alunoSelecionado.email || '',
+          telefone: alunoSelecionado.telefone || ''
         },
-        body: JSON.stringify({
-          tipo: "Aula Zero",
-          aluno_nome: alunoNome,
+        // Coleção de dados da aula zero
+        aula_zero: {
           percepcao_coordenador: data.percepcao_coordenador,
           motivo_procura: data.motivo_procura,
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
           pontos_atencao: data.pontos_atencao,
           data_registro: dataAtual
-        }),
+        }
+      };
+      
+      // Log para depuração dos dados que serão enviados
+      console.log('Enviando dados para webhook com estrutura de coleções:', webhookData);
+      
+      // Enviar dados estruturados para o webhook
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
         mode: 'no-cors' // Necessário para evitar problemas de CORS
       });
 
@@ -144,10 +149,24 @@ const AulaZero = () => {
   const onSubmit = async (data: AulaZeroData) => {
     setIsLoading(true);
     try {
-      // Obter o nome do aluno selecionado
+      // Obter o aluno selecionado com seus dados completos
       const alunoSelecionado = alunos.find(aluno => aluno.id === data.alunoId);
       if (!alunoSelecionado) {
         throw new Error('Aluno não encontrado');
+      }
+
+      // Buscar dados completos do aluno, caso não tenhamos todos os campos
+      let alunoCompleto = alunoSelecionado;
+      if (!alunoSelecionado.codigo || !alunoSelecionado.email || !alunoSelecionado.telefone) {
+        const { data: alunoData, error } = await supabase
+          .from('alunos')
+          .select('id, nome, codigo, email, telefone')
+          .eq('id', data.alunoId)
+          .single();
+          
+        if (!error && alunoData) {
+          alunoCompleto = alunoData;
+        }
       }
 
       // Salvar os dados no Supabase
@@ -165,7 +184,7 @@ const AulaZero = () => {
       if (error) throw error;
       
       // Enviar para o webhook
-      await sendToWebhook(data, alunoSelecionado.nome);
+      await sendToWebhook(data, alunoCompleto);
       
       toast({
         title: 'Sucesso!',
