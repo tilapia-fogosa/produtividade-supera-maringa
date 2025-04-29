@@ -27,6 +27,13 @@ const Estoque = () => {
     { nome: "Lápis", quantidade: 0 },
     { nome: "Borracha", quantidade: 0 },
   ]);
+  const [estoqueKits, setEstoqueKits] = useState<EstoqueItem[]>([
+    { nome: "Kit 1", quantidade: 0 },
+    { nome: "Kit 2", quantidade: 0 },
+    { nome: "Kit 3", quantidade: 0 },
+    { nome: "Kit 5", quantidade: 0 },
+    { nome: "Kit 6", quantidade: 0 },
+  ]);
 
   useEffect(() => {
     const fetchApostilas = async () => {
@@ -46,12 +53,13 @@ const Estoque = () => {
     fetchApostilas();
   }, []);
 
-  const alterarQuantidade = (tipo: 'abaco' | 'ah' | 'jogos' | 'items', index: number, incremento: number) => {
+  const alterarQuantidade = (tipo: 'abaco' | 'ah' | 'jogos' | 'items' | 'kits', index: number, incremento: number) => {
     const setEstoque = {
       'abaco': setEstoqueAbaco,
       'ah': setEstoqueAH,
       'jogos': setEstoqueJogos,
-      'items': setEstoqueItems
+      'items': setEstoqueItems,
+      'kits': setEstoqueKits
     }[tipo];
     
     setEstoque(estoqueAtual => {
@@ -61,7 +69,7 @@ const Estoque = () => {
     });
   };
 
-  const TabelaEstoque = ({ items, tipo }: { items: EstoqueItem[], tipo: 'abaco' | 'ah' | 'jogos' | 'items' }) => (
+  const TabelaEstoque = ({ items, tipo }: { items: EstoqueItem[], tipo: 'abaco' | 'ah' | 'jogos' | 'items' | 'kits' }) => (
     <Table>
       <TableBody>
         {items.map((item, index) => (
@@ -126,6 +134,11 @@ const Estoque = () => {
         <Card className="p-2">
           <h2 className="text-sm font-semibold mb-2">Items</h2>
           <TabelaEstoque items={estoqueItems} tipo="items" />
+        </Card>
+        
+        <Card className="p-2">
+          <h2 className="text-sm font-semibold mb-2">Kits de Material</h2>
+          <TabelaEstoque items={estoqueKits} tipo="kits" />
         </Card>
       </div>
     </div>
