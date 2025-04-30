@@ -49,19 +49,16 @@ const Estoque = () => {
   };
 
   const alterarQuantidade = async (id: string, incremento: number) => {
-    // Encontrar o item atual no estado
     const itemIndex = estoqueItems.findIndex(item => item.id === id);
     if (itemIndex === -1) return;
     
     const item = estoqueItems[itemIndex];
     const novaQuantidade = Math.max(0, item.quantidade + incremento);
     
-    // Atualizar o estado localmente primeiro para resposta imediata na UI
     const novosItems = [...estoqueItems];
     novosItems[itemIndex] = { ...item, quantidade: novaQuantidade };
     setEstoqueItems(novosItems);
     
-    // Atualizar no banco de dados
     try {
       const { error } = await supabase
         .from('estoque')
@@ -70,7 +67,6 @@ const Estoque = () => {
       
       if (error) {
         console.error('Erro ao atualizar quantidade:', error);
-        // Reverter alteração no estado em caso de erro
         setEstoqueItems(estoqueItems);
         toast({
           variant: "destructive",
@@ -80,11 +76,10 @@ const Estoque = () => {
       }
     } catch (error) {
       console.error('Erro ao atualizar quantidade:', error);
-      setEstoqueItems(estoqueItems); // Reverter em caso de erro
+      setEstoqueItems(estoqueItems);
     }
   };
 
-  // Agrupar itens por tipo
   const itemsPorTipo = estoqueItems.reduce((acc, item) => {
     const tipo = item.tipo_item;
     if (!acc[tipo]) {
