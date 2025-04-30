@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -42,12 +41,15 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
     );
   }
 
+  // Ordenar turmas alfabeticamente pelo nome
+  const turmasOrdenadas = [...turmas].sort((a, b) => a.nome.localeCompare(b.nome));
+
   return (
     <div className="grid grid-cols-1 gap-3">
-      {turmas.length === 0 ? (
+      {turmasOrdenadas.length === 0 ? (
         <p className="text-center text-gray-500">Nenhuma turma encontrada para este dia.</p>
       ) : (
-        turmas.map((turma) => (
+        turmasOrdenadas.map((turma) => (
           <Button
             key={turma.id}
             variant="outline"
@@ -56,10 +58,6 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
           >
             <div className="flex flex-col items-start">
               <span className="font-medium text-azul-500">{turma.nome}</span>
-              <div className="flex items-center text-azul-400 mt-1 text-sm">
-                <Clock className="h-3.5 w-3.5 mr-1" />
-                <span>{turma.horario.substring(0, 5)}</span>
-              </div>
             </div>
           </Button>
         ))

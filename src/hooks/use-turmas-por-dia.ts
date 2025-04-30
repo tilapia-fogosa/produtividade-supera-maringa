@@ -27,7 +27,8 @@ export function useTurmasPorDia() {
         const { data: turmasData, error } = await supabase
           .from('turmas')
           .select('*')
-          .eq('dia_semana', dia);
+          .eq('dia_semana', dia)
+          .order('nome', { ascending: true }); // Ordenar pelo nome alfabeticamente
 
         if (error) {
           console.error('Erro ao buscar turmas:', error);

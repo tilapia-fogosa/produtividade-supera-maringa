@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const diasSemanaFormatados = {
@@ -12,10 +12,6 @@ const diasSemanaFormatados = {
   'sexta': 'Sexta-feira',
   'sabado': 'Sábado',
   'domingo': 'Domingo'
-};
-
-const formatarHorario = (horario: string) => {
-  return horario.substring(0, 5);
 };
 
 const diasSemanaAbreviados = {
@@ -39,13 +35,16 @@ const TurmasList: React.FC<{
 }> = ({ turmas, onTurmaSelecionada }) => {
   const isMobile = useIsMobile();
   
+  // Ordenar turmas alfabeticamente pelo nome
+  const turmasOrdenadas = [...turmas].sort((a, b) => a.nome.localeCompare(b.nome));
+  
   return (
     <div className="p-2 bg-orange-50 rounded-lg">
       <h2 className="text-center font-bold mb-4 text-azul-500 border-b border-orange-200 pb-2">
         Turmas Disponíveis
       </h2>
       <div className="grid gap-3">
-        {turmas.map((turma) => (
+        {turmasOrdenadas.map((turma) => (
           <Button
             key={turma.id}
             variant="outline"
@@ -57,8 +56,6 @@ const TurmasList: React.FC<{
               <div className={`flex items-center text-azul-400 mt-1 ${isMobile ? "text-xs" : "text-sm"}`}>
                 <Calendar className={`${isMobile ? "h-3 w-3 mr-0.5" : "h-3.5 w-3.5 mr-1"}`} />
                 <span>{isMobile ? diasSemanaAbreviados[turma.dia_semana] : diasSemanaFormatados[turma.dia_semana]}</span>
-                <Clock className={`${isMobile ? "h-3 w-3 ml-2 mr-0.5" : "h-3.5 w-3.5 ml-3 mr-1"}`} />
-                <span>{formatarHorario(turma.horario)}</span>
               </div>
             </div>
             <ArrowLeft className={`rotate-180 text-azul-400 ${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
