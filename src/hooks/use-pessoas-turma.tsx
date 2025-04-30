@@ -17,7 +17,7 @@ export interface PessoaTurma {
   codigo?: string;
   ultimo_nivel?: string;
   ultima_pagina?: number;
-  niveldesafio?: number;
+  niveldesafio?: string; // Alterado para string
   ultima_correcao_ah?: string;
   data_onboarding?: string | null;
   cargo?: string | null;
@@ -80,14 +80,14 @@ export function usePessoasTurma() {
       const alunosConvertidos: PessoaTurma[] = alunosData.map(aluno => ({
         ...aluno,
         origem: 'aluno' as const
-      }));
+      })) as PessoaTurma[];
       
       // Converter funcionários para o formato comum
       const funcionariosConvertidos: PessoaTurma[] = funcionariosData.map(funcionario => ({
         ...funcionario,
         unit_id: turmaData.unit_id, // Adicionamos o unit_id da turma para manter compatibilidade
         origem: 'funcionario' as const
-      }));
+      })) as PessoaTurma[];
       
       // Combinar ambas as listas
       const todasPessoas = [...alunosConvertidos, ...funcionariosConvertidos].sort((a, b) => 
@@ -155,13 +155,13 @@ export function usePessoasTurma() {
       const alunosConvertidos: PessoaTurma[] = alunosData.map(aluno => ({
         ...aluno,
         origem: 'aluno' as const
-      }));
+      })) as PessoaTurma[];
       
       // Converter funcionários para o formato comum
       const funcionariosConvertidos: PessoaTurma[] = funcionariosData.map(funcionario => ({
         ...funcionario,
         origem: 'funcionario' as const
-      }));
+      })) as PessoaTurma[];
       
       // Combinar ambas as listas e ordenar por nome
       const todasPessoas = [...alunosConvertidos, ...funcionariosConvertidos].sort((a, b) => 

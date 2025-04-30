@@ -21,7 +21,7 @@ export interface Funcionario {
   codigo?: string;
   ultimo_nivel?: string;
   ultima_pagina?: number;
-  niveldesafio?: number;
+  niveldesafio?: string; // Alterado para string
   ultima_correcao_ah?: string;
   data_onboarding?: string | null;
 }

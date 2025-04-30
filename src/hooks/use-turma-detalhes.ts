@@ -46,7 +46,7 @@ export function useTurmaDetalhes(turmaId?: string) {
         if (alunosError) throw alunosError;
 
         setTurma(turmaCompleta);
-        setAlunos(alunosData || []);
+        setAlunos(alunosData as Aluno[] || []);
       } catch (err) {
         console.error('Erro ao carregar turma:', err);
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados da turma');

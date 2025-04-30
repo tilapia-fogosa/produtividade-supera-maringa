@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -20,7 +19,7 @@ export interface Aluno {
   telefone?: string;
   ultimo_nivel?: string;
   ultima_pagina?: number;
-  niveldesafio?: number;
+  niveldesafio?: string;
   ultima_correcao_ah?: string;
   unit_id: string;
 }
@@ -60,7 +59,7 @@ export function useAlunos() {
         .order('nome');
 
       if (error) throw error;
-      setAlunos(alunosData);
+      setAlunos(alunosData as Aluno[]);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
       toast({
@@ -98,7 +97,7 @@ export function useAlunos() {
       if (error) throw error;
       
       console.log(`Encontrados ${alunosData.length} alunos para turma ${turmaId} da unidade ${turmaData.unit_id}`);
-      setAlunos(alunosData);
+      setAlunos(alunosData as Aluno[]);
       
       // Verificar registros de produtividade para o dia atual (usando a tabela correta)
       const hoje = new Date().toISOString().split('T')[0];
@@ -156,7 +155,7 @@ export function useAlunos() {
       const alunosUnicos = Array.from(alunosMap.values());
       
       console.log(`Encontrados ${alunosData.length} alunos totais, filtrados para ${alunosUnicos.length} únicos`);
-      setTodosAlunos(alunosUnicos);
+      setTodosAlunos(alunosUnicos as Aluno[]);
     } catch (error) {
       console.error('Erro ao buscar todos os alunos:', error);
     }

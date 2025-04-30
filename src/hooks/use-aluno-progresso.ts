@@ -15,7 +15,7 @@ interface AlunoProgresso {
   previsao_conclusao: string | null;
   media_paginas_por_aula: number | null;
   media_exercicios_por_aula: number | null;
-  ultimo_desafio: number | null;
+  ultimo_desafio: string | null; // Alterado para string
   texto_devolutiva: string | null;
 }
 
