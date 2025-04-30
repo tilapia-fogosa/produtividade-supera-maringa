@@ -44,7 +44,7 @@ const DiarioTurma = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#1A1F2C] text-laranja-DEFAULT">
+    <div className="w-full min-h-screen text-laranja-DEFAULT">
       <div className="container mx-auto py-4 px-2">
         <Button 
           onClick={handleVoltar} 

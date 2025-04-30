@@ -43,7 +43,7 @@ const DiarioPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 bg-[#1A1F2C] min-h-screen">
+    <div className="container mx-auto p-4 min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-laranja-DEFAULT">Diário de Turma</h1>
       
       <Card className="border-laranja-DEFAULT bg-white p-4 mb-6">
