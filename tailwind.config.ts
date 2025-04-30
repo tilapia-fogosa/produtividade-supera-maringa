@@ -64,29 +64,45 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         },
         supera: {
-          DEFAULT: '#F47321', // Laranja Supera
+          DEFAULT: '#F47321', // Laranja Supera principal
           50: '#FFF5EB',
           100: '#FEEDDC',
           200: '#FCDAB9',
           300: '#FAC796',
           400: '#F89F54',
-          500: '#F47321',
-          600: '#DC5E0B',
-          700: '#A84708',
-          800: '#742F06',
-          900: '#3B1803',
+          500: '#F47321', // PANTONE 2018 XCG (FF7C00)
+          600: '#E45E00',
+          700: '#B24800',
+          800: '#7F3300',
+          900: '#4C1F00',
           foreground: '#FFFFFF'
         },
+        laranja: {
+          DEFAULT: '#F09B00', // PANTONE 2012 XGC
+          light: '#FF7C00', // PANTONE 2018 XCG
+          medium: '#ED8B00', // PANTONE 144 C
+          dark: '#E25E4A', // Cor avermelhada da paleta
+        },
+        roxo: {
+          DEFAULT: '#311D64', // PANTONE 2112 XGC
+          light: '#4E2CA3', // PANTONE 2098 XGC
+          medium: '#685BC7', // PANTONE 2725 C
+        },
+        cinza: {
+          DEFAULT: '#3D3C38', // PANTONE BLACK 7 XGC
+          medium: '#707327', // PANTONE 424 C
+          light: '#E8E7EA', // PANTONE 663 XGC
+        },
         azul: {
-          // Tons de azul para texto
-          50: '#E6F2FF',   // Azul muito claro
-          100: '#B3E0FF',  // Azul claro
-          200: '#66C2FF',  // Azul médio-claro
-          300: '#1E90FF',  // Azul médio (dodger blue)
-          400: '#0066CC',  // Azul médio-escuro
-          500: '#003366',  // Azul escuro
-          600: '#001A33',  // Azul muito escuro
-          foreground: '#003366' // Cor padrão para texto
+          // Mantendo cores azuis para compatibilidade
+          50: '#E6F2FF',
+          100: '#B3E0FF',
+          200: '#66C2FF',
+          300: '#1E90FF',
+          400: '#0066CC',
+          500: '#003366',
+          600: '#001A33',
+          foreground: '#003366'
         },
         'vivid-purple': '#8B5CF6',
         'secondary-purple': '#7E69AB',

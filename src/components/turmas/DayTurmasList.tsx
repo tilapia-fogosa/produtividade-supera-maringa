@@ -36,7 +36,7 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
   if (loading) {
     return (
       <div className="text-center p-4">
-        <p>Carregando turmas...</p>
+        <p className="text-muted-foreground">Carregando turmas...</p>
       </div>
     );
   }
@@ -47,17 +47,17 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
   return (
     <div className="grid grid-cols-1 gap-3">
       {turmasOrdenadas.length === 0 ? (
-        <p className="text-center text-gray-500">Nenhuma turma encontrada para este dia.</p>
+        <p className="text-center text-muted-foreground">Nenhuma turma encontrada para este dia.</p>
       ) : (
         turmasOrdenadas.map((turma) => (
           <Button
             key={turma.id}
             variant="outline"
-            className="w-full justify-between text-left h-auto border-orange-200 hover:bg-orange-100"
+            className="w-full justify-between text-left h-auto border-laranja-DEFAULT hover:bg-laranja-DEFAULT/10 dark:border-laranja-DEFAULT dark:hover:bg-laranja-DEFAULT/20"
             onClick={() => handleTurmaClick(turma.id)}
           >
             <div className="flex flex-col items-start">
-              <span className="font-medium text-azul-500">{turma.nome}</span>
+              <span className="font-medium text-roxo-DEFAULT dark:text-laranja-light">{turma.nome}</span>
             </div>
           </Button>
         ))

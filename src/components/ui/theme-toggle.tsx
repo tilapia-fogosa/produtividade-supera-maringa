@@ -23,12 +23,12 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       variant="outline"
       size="icon"
-      className="fixed bottom-4 right-4 rounded-full bg-background/80 backdrop-blur-sm border-orange-200 hover:bg-orange-100 dark:border-orange-800 dark:hover:bg-orange-950 transition-all duration-200 z-50"
+      className="fixed bottom-4 right-4 rounded-full bg-background/80 backdrop-blur-sm border-laranja-DEFAULT hover:bg-laranja-DEFAULT/20 dark:border-laranja-DEFAULT dark:hover:bg-roxo-DEFAULT/50 transition-all duration-200 z-50"
     >
       {isDark ? (
-        <Sun className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+        <Sun className="h-5 w-5 text-laranja-DEFAULT dark:text-laranja-light" />
       ) : (
-        <Moon className="h-5 w-5 text-orange-600" />
+        <Moon className="h-5 w-5 text-roxo-DEFAULT" />
       )}
       <span className="sr-only">Alternar tema</span>
     </Button>
