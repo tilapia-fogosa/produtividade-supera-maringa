@@ -156,6 +156,7 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
         </div>
       )}
 
+      {/* Corrigi aqui passando as props corretas para os modais */}
       {editRegistroModalAberto && (
         <EditRegistroModal
           isOpen={editRegistroModalAberto}
@@ -163,7 +164,7 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
             setEditRegistroModalAberto(false);
             setRegistroSelecionado(null);
           }}
-          registro={registroSelecionado}
+          registroSelecionado={registroSelecionado}
           dataSelecionada={dataSelecionada}
           turma={turma}
           onSuccess={onRefresh}
@@ -178,7 +179,7 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
             setDeleteRegistroDialogAberto(false);
             setRegistroSelecionado(null);
           }}
-          registro={registroSelecionado}
+          registroSelecionado={registroSelecionado}
           onSuccess={onRefresh}
         />
       )}

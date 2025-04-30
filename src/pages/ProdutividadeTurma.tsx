@@ -4,10 +4,11 @@ import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import { useAlunos } from '@/hooks/use-alunos';
 import { supabase } from "@/integrations/supabase/client";
-import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { Turma } from '@/hooks/use-professor-turmas';
 import { toast } from '@/hooks/use-toast';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 
 const ProdutividadeTurma = () => {
   const location = useLocation();
@@ -21,7 +22,7 @@ const ProdutividadeTurma = () => {
   
   const [loading, setLoading] = useState(true);
   const [turma, setTurma] = useState<Turma | null>(null);
-  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<PessoaTurma | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
 
@@ -106,7 +107,7 @@ const ProdutividadeTurma = () => {
     });
   };
 
-  const handleClickRegistrarPresenca = (aluno: Aluno) => {
+  const handleClickRegistrarPresenca = (aluno: PessoaTurma) => {
     setAlunoSelecionado(aluno);
     setModalAberto(true);
   };
@@ -170,7 +171,7 @@ const ProdutividadeTurma = () => {
       <div className="container mx-auto py-4 px-2">
         <ProdutividadeScreen
           turma={turma}
-          alunos={alunos as Aluno[]}
+          alunos={alunos as PessoaTurma[]}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
           onReposicaoAula={handleReposicaoAula}
@@ -191,7 +192,7 @@ const ProdutividadeTurma = () => {
         <ReposicaoAulaModal 
           isOpen={reposicaoModalAberto}
           turma={turma}
-          todosAlunos={todosAlunos as Aluno[]}
+          todosAlunos={todosAlunos as PessoaTurma[]}
           onClose={handleFecharReposicaoModal}
           onError={handleModalError}
         />

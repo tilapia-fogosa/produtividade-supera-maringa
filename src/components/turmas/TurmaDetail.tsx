@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { Turma } from '@/hooks/use-professor-turmas';
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 import { TelaModo } from './turma-detail/types';
 import TurmaHeader from './turma-detail/TurmaHeader';
 import ConfigErrorMessage from './turma-detail/ConfigErrorMessage';
@@ -13,10 +14,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TurmaDetailProps {
   turma: Turma;
-  alunos: Aluno[];
-  todosAlunos: Aluno[];
+  alunos: PessoaTurma[];
+  todosAlunos: PessoaTurma[];
   onVoltar: () => void;
-  onShowAlunoDetails: (aluno: Aluno) => void;
+  onShowAlunoDetails: (aluno: PessoaTurma) => void;
   onRegistrarPresenca: (alunoId: string) => void;
   produtividadeRegistrada?: Record<string, boolean>;
   initialServiceType?: string;
@@ -34,7 +35,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<PessoaTurma | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
@@ -47,7 +48,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
     onVoltar();
   };
 
-  const handleClickRegistrarPresenca = (aluno: Aluno) => {
+  const handleClickRegistrarPresenca = (aluno: PessoaTurma) => {
     setAlunoSelecionado(aluno);
     setModalAberto(true);
   };

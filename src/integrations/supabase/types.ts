@@ -827,19 +827,27 @@ export type Database = {
       funcionarios: {
         Row: {
           active: boolean
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           cargo: string | null
           codigo: string | null
+          coordenador_responsavel: string | null
           created_at: string
           curso: string | null
+          data_onboarding: string | null
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
           id: string
           idade: number | null
           indice: string | null
+          is_funcionario: boolean | null
           matricula: string | null
+          motivo_procura: string | null
           niveldesafio: number | null
           nome: string
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -847,23 +855,32 @@ export type Database = {
           ultima_falta: string | null
           ultima_pagina: number | null
           ultimo_nivel: string | null
+          unit_id: string
           vencimento_contrato: string | null
         }
         Insert: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           cargo?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
+          motivo_procura?: string | null
           niveldesafio?: number | null
           nome: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -871,23 +888,32 @@ export type Database = {
           ultima_falta?: string | null
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
+          unit_id: string
           vencimento_contrato?: string | null
         }
         Update: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           cargo?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
+          motivo_procura?: string | null
           niveldesafio?: number | null
           nome?: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -895,6 +921,7 @@ export type Database = {
           ultima_falta?: string | null
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
+          unit_id?: string
           vencimento_contrato?: string | null
         }
         Relationships: [
