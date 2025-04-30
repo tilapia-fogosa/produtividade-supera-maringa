@@ -129,7 +129,7 @@ export type Database = {
           is_funcionario: boolean | null
           matricula: string | null
           motivo_procura: string | null
-          niveldesafio: number | null
+          niveldesafio: string | null
           nome: string
           percepcao_coordenador: string | null
           pontos_atencao: string | null
@@ -161,7 +161,7 @@ export type Database = {
           is_funcionario?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: number | null
+          niveldesafio?: string | null
           nome: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
@@ -193,7 +193,7 @@ export type Database = {
           is_funcionario?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: number | null
+          niveldesafio?: string | null
           nome?: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
@@ -844,7 +844,7 @@ export type Database = {
           is_funcionario: boolean | null
           matricula: string | null
           motivo_procura: string | null
-          niveldesafio: number | null
+          niveldesafio: string | null
           nome: string
           percepcao_coordenador: string | null
           pontos_atencao: string | null
@@ -877,7 +877,7 @@ export type Database = {
           is_funcionario?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: number | null
+          niveldesafio?: string | null
           nome: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
@@ -910,7 +910,7 @@ export type Database = {
           is_funcionario?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: number | null
+          niveldesafio?: string | null
           nome?: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
