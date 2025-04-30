@@ -20,3 +20,13 @@ export const APOSTILAS_AH = [
   "AH IV Avançar",
   "AH Alta Performance"
 ];
+
+// Lista de professores para seleção
+export const PROFESSORES = [
+  "Prof. Daniel",
+  "Prof. Fernando",
+  "Prof. Luana",
+  "Prof. Mariana",
+  "Estagiário João",
+  "Estagiária Ana"
+];

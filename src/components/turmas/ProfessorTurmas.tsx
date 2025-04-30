@@ -4,8 +4,9 @@ import { useLocation } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import ProfessorHeader from './ProfessorHeader';
 import ProfessorConteudo from './ProfessorConteudo';
-import { useProfessorTurmas, Aluno as ProfessorAluno } from '@/hooks/use-professor-turmas';
+import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { useAlunos } from '@/hooks/use-alunos';
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 
 const ProfessorTurmas = () => {
   const { professor, turmas, loading, navigate } = useProfessorTurmas();
@@ -39,8 +40,14 @@ const ProfessorTurmas = () => {
     );
   }
 
-  // Usamos casting de tipo para resolver o problema de compatibilidade entre 
-  // os tipos de Aluno do hook useAlunos e do hook useProfessorTurmas
+  // Convertemos os alunos para o formato PessoaTurma para compatibilidade
+  const convertToPessoaTurma = (alunos: any[]): PessoaTurma[] => {
+    return alunos.map(aluno => ({
+      ...aluno,
+      origem: 'aluno'
+    })) as PessoaTurma[];
+  };
+
   return (
     <div className="container mx-auto py-4 px-2 md:py-8 md:px-4">
       <ProfessorHeader 
@@ -53,13 +60,13 @@ const ProfessorTurmas = () => {
         <ProfessorConteudo 
           turmas={turmas}
           turmaSelecionada={turmaSelecionada}
-          alunos={alunos as ProfessorAluno[]}
-          todosAlunos={todosAlunos as ProfessorAluno[]}
-          alunoDetalhes={alunoDetalhes as ProfessorAluno}
+          alunos={convertToPessoaTurma(alunos)}
+          todosAlunos={convertToPessoaTurma(todosAlunos)}
+          alunoDetalhes={alunoDetalhes ? {...alunoDetalhes, origem: 'aluno' as const} : null}
           produtividadeRegistrada={produtividadeRegistrada}
           onTurmaSelecionada={handleTurmaSelecionada}
           onRegistrarPresenca={handleRegistrarPresenca}
-          onShowAlunoDetails={mostrarDetalhesAluno as (aluno: ProfessorAluno) => void}
+          onShowAlunoDetails={mostrarDetalhesAluno as (aluno: PessoaTurma) => void}
           onVoltarParaTurmas={voltarParaTurmas}
           onFecharDetalhesAluno={fecharDetalhesAluno}
           initialServiceType={initialServiceType}
