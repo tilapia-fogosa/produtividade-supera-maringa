@@ -48,6 +48,13 @@ const ProfessorTurmas = () => {
     })) as PessoaTurma[];
   };
 
+  // Criamos um wrapper para a função mostrarDetalhesAluno que aceita PessoaTurma
+  const handleShowAlunoDetails = (pessoaTurma: PessoaTurma) => {
+    // Como PessoaTurma já contém todas as propriedades necessárias de Aluno,
+    // podemos passar diretamente para mostrarDetalhesAluno
+    mostrarDetalhesAluno(pessoaTurma as any);
+  };
+
   return (
     <div className="container mx-auto py-4 px-2 md:py-8 md:px-4">
       <ProfessorHeader 
@@ -66,7 +73,7 @@ const ProfessorTurmas = () => {
           produtividadeRegistrada={produtividadeRegistrada}
           onTurmaSelecionada={handleTurmaSelecionada}
           onRegistrarPresenca={handleRegistrarPresenca}
-          onShowAlunoDetails={mostrarDetalhesAluno as (aluno: PessoaTurma) => void}
+          onShowAlunoDetails={handleShowAlunoDetails}
           onVoltarParaTurmas={voltarParaTurmas}
           onFecharDetalhesAluno={fecharDetalhesAluno}
           initialServiceType={initialServiceType}
