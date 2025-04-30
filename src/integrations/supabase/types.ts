@@ -744,6 +744,36 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          quantidade: number
+          tipo_item: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          quantidade?: number
+          tipo_item: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          quantidade?: number
+          tipo_item?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       financial_responsibles: {
         Row: {
           birth_date: string
