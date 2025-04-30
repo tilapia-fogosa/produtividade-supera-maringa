@@ -115,17 +115,17 @@ const Estoque = () => {
   const getTipoColor = (tipo: string): string => {
     switch (tipo) {
       case 'apostila_abaco':
-        return 'bg-laranja-DEFAULT border-laranja-light';
+        return 'bg-laranja-DEFAULT/90 border-laranja-DEFAULT dark:bg-laranja-DEFAULT/70 dark:border-laranja-light';
       case 'apostila_ah':
-        return 'bg-laranja-light border-laranja-DEFAULT';
+        return 'bg-laranja-light/90 border-laranja-DEFAULT dark:bg-laranja-light/70 dark:border-laranja-DEFAULT';
       case 'jogo':
-        return 'bg-roxo-DEFAULT border-roxo-light';
+        return 'bg-roxo-DEFAULT/90 border-roxo-light dark:bg-roxo-DEFAULT/70 dark:border-roxo-light';
       case 'kit':
-        return 'bg-roxo-light border-roxo-DEFAULT';
+        return 'bg-roxo-light/90 border-roxo-DEFAULT dark:bg-roxo-light/70 dark:border-roxo-DEFAULT';
       case 'item':
-        return 'bg-cinza-DEFAULT border-cinza-medium';
+        return 'bg-cinza-DEFAULT/90 border-cinza-medium dark:bg-cinza-medium/50 dark:border-cinza-light';
       default:
-        return 'bg-supera-500 border-supera-600';
+        return 'bg-supera-500/90 border-supera-600 dark:bg-supera-500/70 dark:border-supera-400';
     }
   };
 
@@ -135,21 +135,23 @@ const Estoque = () => {
         {items.map((item) => (
           <TableRow 
             key={item.id}
-            className={items.indexOf(item) % 2 === 0 ? 'bg-white dark:bg-roxo-DEFAULT/20' : 'bg-gray-50 dark:bg-roxo-DEFAULT/10'}
+            className={items.indexOf(item) % 2 === 0 
+              ? 'bg-white dark:bg-roxo-DEFAULT/30' 
+              : 'bg-gray-50 dark:bg-roxo-DEFAULT/20'}
           >
             <TableCell className="py-1 text-xs">
-              <span className="font-medium">{item.nome}</span>
+              <span className="font-medium text-foreground dark:text-white">{item.nome}</span>
             </TableCell>
             <TableCell className="py-1 text-right">
               <div className="flex items-center justify-end space-x-1">
-                <span className="px-2 py-1 bg-laranja-DEFAULT/20 dark:bg-laranja-DEFAULT/30 rounded text-xs min-w-[2rem] text-center">
+                <span className="px-2 py-1 bg-laranja-DEFAULT/20 dark:bg-laranja-DEFAULT/40 rounded text-xs min-w-[2rem] text-center font-medium text-foreground dark:text-white">
                   {item.quantidade}
                 </span>
                 <div className="flex space-x-1">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-5 w-5 border-laranja-DEFAULT text-laranja-DEFAULT hover:bg-laranja-DEFAULT hover:text-white"
+                    className="h-5 w-5 border-laranja-DEFAULT text-laranja-DEFAULT hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:hover:bg-laranja-DEFAULT"
                     onClick={() => alterarQuantidade(item.id, -1)}
                   >
                     <Minus className="h-2 w-2" />
@@ -157,7 +159,7 @@ const Estoque = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-5 w-5 border-laranja-DEFAULT text-laranja-DEFAULT hover:bg-laranja-DEFAULT hover:text-white"
+                    className="h-5 w-5 border-laranja-DEFAULT text-laranja-DEFAULT hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:hover:bg-laranja-DEFAULT"
                     onClick={() => alterarQuantidade(item.id, 1)}
                   >
                     <Plus className="h-2 w-2" />
@@ -174,20 +176,20 @@ const Estoque = () => {
   if (loading) {
     return (
       <div className="container mx-auto p-2">
-        <h1 className="text-xl font-bold mb-4 text-roxo-DEFAULT">Estoque</h1>
-        <p className="text-center py-8 text-muted-foreground">Carregando itens...</p>
+        <h1 className="text-xl font-bold mb-4 text-roxo-DEFAULT dark:text-primary">Estoque</h1>
+        <p className="text-center py-8 text-muted-foreground dark:text-white/70">Carregando itens...</p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-2">
-      <h1 className="text-xl font-bold mb-4 text-roxo-DEFAULT">Estoque</h1>
+      <h1 className="text-xl font-bold mb-4 text-roxo-DEFAULT dark:text-primary">Estoque</h1>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         {Object.entries(itemsPorTipo).map(([tipo, items]) => (
           <Card key={tipo} className={`p-2 border-2 ${getTipoColor(tipo)}`}>
-            <h2 className="text-sm font-semibold mb-2 text-foreground">{getTipoTitle(tipo)}</h2>
+            <h2 className="text-sm font-semibold mb-2 text-foreground dark:text-white">{getTipoTitle(tipo)}</h2>
             <TabelaEstoque items={items} />
           </Card>
         ))}
