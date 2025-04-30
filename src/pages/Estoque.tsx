@@ -150,7 +150,7 @@ const Estoque = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center"
+                    className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT bg-white hover:bg-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center"
                     onClick={() => alterarQuantidade(item.id, -1)}
                   >
                     <Minus className="h-2 w-2 stroke-[3]" />
@@ -158,7 +158,7 @@ const Estoque = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center"
+                    className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT bg-white hover:bg-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center"
                     onClick={() => alterarQuantidade(item.id, 1)}
                   >
                     <Plus className="h-2 w-2 stroke-[3]" />
