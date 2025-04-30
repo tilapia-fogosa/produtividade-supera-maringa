@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -151,18 +150,18 @@ const Estoque = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0"
+                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center"
                     onClick={() => alterarQuantidade(item.id, -1)}
                   >
-                    <Minus className="h-2 w-2" />
+                    <Minus className="h-2 w-2 stroke-[3]" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0"
+                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center"
                     onClick={() => alterarQuantidade(item.id, 1)}
                   >
-                    <Plus className="h-2 w-2" />
+                    <Plus className="h-2 w-2 stroke-[3]" />
                   </Button>
                 </div>
               </div>
