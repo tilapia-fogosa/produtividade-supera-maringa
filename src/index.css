@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -45,14 +46,14 @@
   }
 
   .dark {
-    /* Tema escuro com contraste melhorado */
-    --background: 270 30% 10%;
+    /* Tema escuro com contraste melhorado para o estoque */
+    --background: 20 60% 10%; /* Fundo marrom escuro */
     --foreground: 0 0% 98%;
 
-    --card: 270 25% 15%;
+    --card: 22 50% 15%; /* Cartões em tom marrom mais escuro */
     --card-foreground: 0 0% 98%;
 
-    --popover: 270 25% 15%;
+    --popover: 22 50% 15%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 32 95% 60%;
@@ -61,17 +62,17 @@
     --secondary: 261 55% 40%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 270 25% 20%;
+    --muted: 22 30% 20%;
     --muted-foreground: 0 0% 85%;
 
-    --accent: 258 55% 70%;
+    --accent: 32 80% 55%; /* Laranja mais forte como destaque */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 25% 30%;
-    --input: 270 25% 30%;
+    --border: 32 50% 30%; /* Bordas mais visíveis */
+    --input: 32 50% 30%;
     --ring: 32 95% 60%;
 
     --sidebar-background: 261 55% 35%;
