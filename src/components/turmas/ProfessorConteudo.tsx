@@ -5,18 +5,19 @@ import TurmasList from './TurmasList';
 import TurmaDetail from './TurmaDetail';
 import AlunoDetail from './AlunoDetail';
 import TurmasVazia from './TurmasVazia';
-import { Turma, Aluno } from '@/hooks/use-professor-turmas';
+import { Turma } from '@/hooks/use-professor-turmas';
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 
 interface ProfessorConteudoProps {
   turmas: Turma[];
   turmaSelecionada: string | null;
-  alunos: Aluno[];
-  todosAlunos: Aluno[];
-  alunoDetalhes: Aluno | null;
+  alunos: PessoaTurma[];
+  todosAlunos: PessoaTurma[];
+  alunoDetalhes: PessoaTurma | null;
   produtividadeRegistrada?: Record<string, boolean>;
   onTurmaSelecionada: (turmaId: string) => void;
   onRegistrarPresenca: (alunoId: string) => void;
-  onShowAlunoDetails: (aluno: Aluno) => void;
+  onShowAlunoDetails: (aluno: PessoaTurma) => void;
   onVoltarParaTurmas: () => void;
   onFecharDetalhesAluno: () => void;
   initialServiceType?: string;

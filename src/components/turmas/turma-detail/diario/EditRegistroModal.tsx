@@ -15,10 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { usePessoasTurma } from '@/hooks/use-pessoas-turma';
-import { DatePicker } from '@/components/ui/calendar';
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { apostilas } from '@/components/constants/apostilas';
+import { APOSTILAS_AH as apostilas } from '@/components/constants/apostilas';
 
 export interface EditRegistroModalProps {
   isOpen: boolean;
@@ -183,7 +183,8 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
 
           <div className="grid grid-cols-1 gap-2">
             <Label htmlFor="data_aula">Data</Label>
-            <DatePicker
+            <Calendar
+              mode="single"
               selected={formData.data_aula}
               onSelect={(date) => date && handleChange('data_aula', date)}
               disabled={modo === 'editar'}

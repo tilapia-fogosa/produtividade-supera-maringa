@@ -1,3 +1,4 @@
+
 // Constantes para apostilas
 export const APOSTILAS_AH = [
   "AH 1",
@@ -18,13 +19,4 @@ export const APOSTILAS_AH = [
   "AH III Persistir",
   "AH IV Avançar",
   "AH Alta Performance"
-];
-
-export const PROFESSORES = [
-  "João Silva",
-  "Maria Souza",
-  "Pedro Santos",
-  "Ana Oliveira",
-  "Carla Ribeiro",
-  "Lucas Pereira"
 ];

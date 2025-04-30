@@ -3,12 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
 import { useAlunos } from '@/hooks/use-alunos';
+import { usePessoasTurma, PessoaTurma } from '@/hooks/use-pessoas-turma';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { toast } from '@/hooks/use-toast';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
-import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 
 const ProdutividadeTurma = () => {
   const location = useLocation();
@@ -26,15 +26,16 @@ const ProdutividadeTurma = () => {
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
 
+  // Use o hook usePessoasTurma em vez do useAlunos para obter dados de alunos e funcionários
   const { 
-    alunos, 
-    todosAlunos,
-    produtividadeRegistrada,
+    pessoasTurma: alunos, 
+    todasPessoas: todosAlunos, 
+    produtividadeRegistrada, 
     dataRegistroProdutividade,
-    carregandoAlunos,
+    carregandoPessoas: carregandoAlunos,
     atualizarProdutividadeRegistrada,
-    buscarAlunosPorTurma
-  } = useAlunos();
+    buscarPessoasPorTurma
+  } = usePessoasTurma();
 
   useEffect(() => {
     const fetchTurma = async () => {
@@ -59,8 +60,8 @@ const ProdutividadeTurma = () => {
           
           // Carregamos os alunos apenas uma vez quando a turma é carregada
           if (!alunosCarregadosRef.current) {
-            console.log("Carregando alunos pela primeira vez para a turma:", data.id);
-            await buscarAlunosPorTurma(data.id);
+            console.log("Carregando pessoas pela primeira vez para a turma:", data.id);
+            await buscarPessoasPorTurma(data.id);
             alunosCarregadosRef.current = true;
           }
         }
@@ -82,7 +83,7 @@ const ProdutividadeTurma = () => {
     return () => {
       alunosCarregadosRef.current = false;
     };
-  }, [params.turmaId, buscarAlunosPorTurma]);
+  }, [params.turmaId, buscarPessoasPorTurma]);
 
   // Efeito separado para verificar mudanças na data
   useEffect(() => {
@@ -93,10 +94,10 @@ const ProdutividadeTurma = () => {
     // a turma estiver carregada e os alunos já foram carregados pelo menos uma vez
     if (hoje !== ultimaDataVerificadaRef.current && turma && alunosCarregadosRef.current) {
       console.log("Verificando produtividade para nova data:", hoje);
-      buscarAlunosPorTurma(turma.id);
+      buscarPessoasPorTurma(turma.id);
       ultimaDataVerificadaRef.current = hoje;
     }
-  }, [turma, buscarAlunosPorTurma, dataRegistroProdutividade]);
+  }, [turma, buscarPessoasPorTurma, dataRegistroProdutividade]);
 
   const voltarParaTurmas = () => {
     navigate('/turmas/dia', { 
@@ -150,7 +151,7 @@ const ProdutividadeTurma = () => {
     return (
       <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
         <div className="container mx-auto py-4 px-2 text-center">
-          <p>Carregando{carregandoAlunos ? ' alunos' : ''}...</p>
+          <p>Carregando{carregandoAlunos ? ' pessoas' : ''}...</p>
         </div>
       </div>
     );
@@ -171,7 +172,7 @@ const ProdutividadeTurma = () => {
       <div className="container mx-auto py-4 px-2">
         <ProdutividadeScreen
           turma={turma}
-          alunos={alunos as PessoaTurma[]}
+          alunos={alunos}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
           onReposicaoAula={handleReposicaoAula}
@@ -192,7 +193,7 @@ const ProdutividadeTurma = () => {
         <ReposicaoAulaModal 
           isOpen={reposicaoModalAberto}
           turma={turma}
-          todosAlunos={todosAlunos as PessoaTurma[]}
+          todosAlunos={todosAlunos}
           onClose={handleFecharReposicaoModal}
           onError={handleModalError}
         />

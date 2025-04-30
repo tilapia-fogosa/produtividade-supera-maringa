@@ -16,6 +16,14 @@ export interface Funcionario {
     id: string;
     nome: string;
   } | null;
+  unit_id: string;
+  // Campos adicionados após migração
+  codigo?: string;
+  ultimo_nivel?: string;
+  ultima_pagina?: number;
+  niveldesafio?: number;
+  ultima_correcao_ah?: string;
+  data_onboarding?: string | null;
 }
 
 export function useFuncionarios() {
