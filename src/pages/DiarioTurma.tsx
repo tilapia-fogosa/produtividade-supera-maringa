@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { useProfessorTurmas, Aluno } from '@/hooks/use-professor-turmas';
-import { useAlunos } from '@/hooks/use-alunos';
+import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
+import { usePessoasTurma } from '@/hooks/use-pessoas-turma';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
@@ -11,7 +12,14 @@ const DiarioTurma = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { turmas } = useProfessorTurmas();
-  const { alunos } = useAlunos();
+  const { pessoasTurma, buscarPessoasPorTurma } = usePessoasTurma();
+  
+  // Busca as pessoas (alunos e funcionários) quando o componente é montado
+  React.useEffect(() => {
+    if (turmaId) {
+      buscarPessoasPorTurma(turmaId);
+    }
+  }, [turmaId, buscarPessoasPorTurma]);
   
   const dia = location.state?.dia;
   const serviceType = location.state?.serviceType || 'diario';
@@ -48,7 +56,11 @@ const DiarioTurma = () => {
         
         <h1 className="text-xl font-bold mb-4">Diário da Turma - {turma.nome}</h1>
         
-        <DiarioTurmaScreen turma={turma} onBack={handleVoltar} alunos={alunos as Aluno[]} />
+        <DiarioTurmaScreen 
+          turma={turma} 
+          alunos={pessoasTurma} 
+          onBack={handleVoltar} 
+        />
       </div>
     </div>
   );

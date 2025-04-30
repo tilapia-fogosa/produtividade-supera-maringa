@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { Turma } from '@/hooks/use-professor-turmas';
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 import ReposicaoButton from './ReposicaoButton';
 import AlunosListaTable from './AlunosListaTable';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,8 +11,8 @@ import TurmaHeader from './TurmaHeader';
 interface ProdutividadeScreenProps {
   turma: Turma;
   onBack: () => void;
-  alunos?: Aluno[];
-  onRegistrarPresenca?: (aluno: Aluno) => void;
+  alunos?: PessoaTurma[];
+  onRegistrarPresenca?: (aluno: PessoaTurma) => void;
   onReposicaoAula?: () => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }

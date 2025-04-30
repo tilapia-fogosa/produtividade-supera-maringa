@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +7,7 @@ import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import DiarioTurmaScreen from '@/components/turmas/turma-detail/DiarioTurmaScreen';
 import { useTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 import { useNavigate } from 'react-router-dom';
+import { usePessoasTurma } from '@/hooks/use-pessoas-turma';
 
 const DiarioPage = () => {
   const [selectedTurmaId, setSelectedTurmaId] = useState<string>("");
@@ -19,7 +20,17 @@ const DiarioPage = () => {
   const { turmas, loading: turmasLoading, error } = useTodasTurmas();
   
   // Hook para buscar detalhes da turma selecionada
-  const { turma, alunos } = useTurmaDetalhes(selectedTurmaId);
+  const { turma } = useTurmaDetalhes(selectedTurmaId);
+
+  // Hook para buscar pessoas (alunos e funcionários)
+  const { pessoasTurma, buscarPessoasPorTurma } = usePessoasTurma();
+
+  // Buscar pessoas quando a turma é selecionada
+  useEffect(() => {
+    if (selectedTurmaId) {
+      buscarPessoasPorTurma(selectedTurmaId);
+    }
+  }, [selectedTurmaId, buscarPessoasPorTurma]);
 
   // Função para navegar para a tela de turmas no dia selecionado
   const handleVerTodasTurmas = () => {
@@ -80,7 +91,7 @@ const DiarioPage = () => {
       {selectedTurmaId && turma && (
         <DiarioTurmaScreen
           turma={turma}
-          alunos={alunos}
+          alunos={pessoasTurma}
           onBack={() => setSelectedTurmaId("")}
         />
       )}

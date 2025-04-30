@@ -1,166 +1,187 @@
 
-import React from 'react';
-import { Check, Edit, Trash2, X } from "lucide-react";
-import { Aluno } from '@/hooks/use-professor-turmas';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import React, { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-export interface RegistroProdutividade {
-  id: string;
-  aluno_id: string;
-  data_aula: string;
-  presente: boolean;
-  is_reposicao: boolean;
-  apostila: string;
-  pagina: string;
-  exercicios: number;
-  erros: number;
-  fez_desafio: boolean;
-  comentario: string;
-  created_at: string;
-  updated_at: string;
-  nivel_desafio?: number;
-}
+import { PlusCircle, Edit, Trash2, RefreshCcw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Turma } from '@/hooks/use-professor-turmas';
+import EditRegistroModal from './EditRegistroModal';
+import DeleteRegistroDialog from './DeleteRegistroDialog';
 
 interface DiarioTabelaProps {
-  alunosFiltrados: Aluno[];
-  registros: Record<string, RegistroProdutividade>;
+  registros: any[];
   carregando: boolean;
-  onEditClick: (registro: RegistroProdutividade, aluno: Aluno) => void;
-  onDeleteClick: (registro: RegistroProdutividade, aluno: Aluno) => void;
+  onRefresh: () => void;
+  dataSelecionada: Date;
+  turma: Turma;
 }
 
 const DiarioTabela: React.FC<DiarioTabelaProps> = ({
-  alunosFiltrados,
   registros,
   carregando,
-  onEditClick,
-  onDeleteClick
+  onRefresh,
+  dataSelecionada,
+  turma
 }) => {
+  const [editRegistroModalAberto, setEditRegistroModalAberto] = useState(false);
+  const [deleteRegistroDialogAberto, setDeleteRegistroDialogAberto] = useState(false);
+  const [registroSelecionado, setRegistroSelecionado] = useState<any | null>(null);
+  const [modalModo, setModalModo] = useState<'editar' | 'criar'>('criar');
+
+  const handleNovoRegistro = () => {
+    setRegistroSelecionado(null);
+    setModalModo('criar');
+    setEditRegistroModalAberto(true);
+  };
+
+  const handleEditarRegistro = (registro: any) => {
+    setRegistroSelecionado(registro);
+    setModalModo('editar');
+    setEditRegistroModalAberto(true);
+  };
+
+  const handleExcluirRegistro = (registro: any) => {
+    setRegistroSelecionado(registro);
+    setDeleteRegistroDialogAberto(true);
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Aluno</TableHead>
-            <TableHead>Presença</TableHead>
-            <TableHead>Apostila</TableHead>
-            <TableHead>Página</TableHead>
-            <TableHead>Exercícios</TableHead>
-            <TableHead>Erros</TableHead>
-            <TableHead>Desafio</TableHead>
-            <TableHead>Nível</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {alunosFiltrados.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={9} className="h-24 text-center">
-                {carregando ? "Carregando..." : "Nenhum aluno encontrado"}
-              </TableCell>
-            </TableRow>
-          ) : (
-            alunosFiltrados.map((aluno) => {
-              const registro = registros[aluno.id];
-              return (
-                <TableRow key={aluno.id}>
-                  <TableCell className="font-medium">{aluno.nome}</TableCell>
-                  <TableCell>
-                    {registro ? (
-                      registro.presente ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Check className="h-4 w-4 text-green-500" />
-                            </TooltipTrigger>
-                            <TooltipContent>Presente</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <X className="h-4 w-4 text-red-500" />
-                            </TooltipTrigger>
-                            <TooltipContent>Ausente</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )
-                    ) : ("-")}
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            className="mr-2"
+            disabled={carregando}
+          >
+            <RefreshCcw className="h-4 w-4 mr-1" />
+            Atualizar
+          </Button>
+        </div>
+        
+        <Button onClick={handleNovoRegistro} size="sm">
+          <PlusCircle className="h-4 w-4 mr-1" />
+          Novo Registro
+        </Button>
+      </div>
+
+      {carregando ? (
+        <div className="text-center py-8">
+          <p>Carregando registros...</p>
+        </div>
+      ) : registros.length === 0 ? (
+        <div className="text-center py-8 border rounded-md bg-slate-50">
+          <p>Nenhum registro encontrado para esta data.</p>
+          <Button 
+            variant="link" 
+            onClick={handleNovoRegistro}
+            className="mt-2"
+          >
+            Adicionar registro
+          </Button>
+        </div>
+      ) : (
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Origem</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Apostila</TableHead>
+                <TableHead>Página</TableHead>
+                <TableHead>Exercícios</TableHead>
+                <TableHead>Erros</TableHead>
+                <TableHead>Comentário</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {registros.map((registro) => (
+                <TableRow key={registro.id}>
+                  <TableCell className="font-medium">
+                    {registro.pessoa?.nome || "Aluno não encontrado"}
                   </TableCell>
-                  <TableCell>{registro?.apostila || "-"}</TableCell>
-                  <TableCell>{registro?.pagina || "-"}</TableCell>
-                  <TableCell>{registro?.exercicios || "-"}</TableCell>
-                  <TableCell>{registro?.erros || "-"}</TableCell>
                   <TableCell>
-                    {registro ? (
-                      registro.fez_desafio ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Check className="h-4 w-4 text-green-500" />
-                            </TooltipTrigger>
-                            <TooltipContent>Fez o desafio</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <X className="h-4 w-4 text-red-500" />
-                            </TooltipTrigger>
-                            <TooltipContent>Não fez desafio</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )
-                    ) : ("-")}
+                    <Badge variant={registro.origem === 'funcionario' ? "secondary" : "default"}>
+                      {registro.origem === 'funcionario' ? 'Funcionário' : 'Aluno'}
+                    </Badge>
                   </TableCell>
-                  <TableCell>{aluno.niveldesafio || "-"}</TableCell>
                   <TableCell>
-                    {registro ? (
-                      <div className="flex space-x-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => onEditClick(registro, aluno)}
-                              >
-                                <Edit className="h-4 w-4 text-blue-500" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Editar registro</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => onDeleteClick(registro, aluno)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Excluir registro</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
+                    {registro.presente ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100">Presente</Badge>
                     ) : (
-                      "-"
+                      <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-100">Ausente</Badge>
                     )}
                   </TableCell>
+                  <TableCell>{registro.apostila || "-"}</TableCell>
+                  <TableCell>{registro.pagina || "-"}</TableCell>
+                  <TableCell>{registro.exercicios || "-"}</TableCell>
+                  <TableCell>{registro.erros || "-"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {registro.comentario || "-"}
+                  </TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleEditarRegistro(registro)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleExcluirRegistro(registro)}
+                      className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Excluir</span>
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {editRegistroModalAberto && (
+        <EditRegistroModal
+          isOpen={editRegistroModalAberto}
+          onClose={() => {
+            setEditRegistroModalAberto(false);
+            setRegistroSelecionado(null);
+          }}
+          registro={registroSelecionado}
+          dataSelecionada={dataSelecionada}
+          turma={turma}
+          onSuccess={onRefresh}
+          modo={modalModo}
+        />
+      )}
+
+      {deleteRegistroDialogAberto && registroSelecionado && (
+        <DeleteRegistroDialog
+          isOpen={deleteRegistroDialogAberto}
+          onClose={() => {
+            setDeleteRegistroDialogAberto(false);
+            setRegistroSelecionado(null);
+          }}
+          registro={registroSelecionado}
+          onSuccess={onRefresh}
+        />
+      )}
     </div>
   );
 };

@@ -1,58 +1,84 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
+import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
-import { Aluno } from '@/hooks/use-professor-turmas';
 
 interface AlunosListaTableProps {
-  alunos: Aluno[];
-  onRegistrarPresenca?: (aluno: Aluno) => void;
+  alunos: PessoaTurma[];
+  onRegistrarPresenca: (aluno: PessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }
 
 const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
-  alunos = [],
+  alunos,
   onRegistrarPresenca,
   produtividadeRegistrada = {}
 }) => {
-  // Filtrar apenas os alunos ativos para garantir
-  const alunosAtivos = alunos.filter(aluno => aluno.active);
-
-  if (alunosAtivos.length === 0) {
-    return <p className="text-center my-4">Nenhum aluno encontrado nesta turma.</p>;
+  if (alunos.length === 0) {
+    return (
+      <div className="text-center py-8 bg-slate-50 rounded-md">
+        <p className="text-gray-500">Nenhuma pessoa encontrada nesta turma</p>
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-md border border-orange-200 overflow-hidden">
+    <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-orange-50">
-            <TableHead className="w-[200px] font-medium">Nome</TableHead>
-            <TableHead className="text-right font-medium">Ação</TableHead>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Origem</TableHead>
+            <TableHead>Último registro</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunosAtivos.map((aluno) => (
-            <TableRow key={aluno.id} className="even:bg-orange-50/50">
-              <TableCell className="font-medium">{aluno.nome}</TableCell>
+          {alunos.map((aluno) => (
+            <TableRow key={aluno.id}>
+              <TableCell className="font-medium">
+                {aluno.nome}
+              </TableCell>
+              <TableCell>
+                <Badge variant={aluno.origem === 'funcionario' ? "secondary" : "default"}>
+                  {aluno.origem === 'funcionario' ? 'Funcionário' : 'Aluno'}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {aluno.ultima_pagina ? (
+                  <span>
+                    {aluno.ultima_pagina} 
+                    {aluno.ultimo_nivel ? ` (${aluno.ultimo_nivel})` : ''}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">Sem registro</span>
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 {produtividadeRegistrada[aluno.id] ? (
                   <Button 
-                    size="sm" 
                     variant="ghost" 
-                    className="h-8 text-green-600"
+                    className="text-green-600 hover:text-green-700 cursor-default"
                     disabled
                   >
-                    <Check className="mr-1 h-4 w-4" />
+                    <Check className="h-4 w-4 mr-1" />
                     Registrado
                   </Button>
                 ) : (
                   <Button 
-                    size="sm" 
+                    onClick={() => onRegistrarPresenca(aluno)}
                     variant="outline" 
-                    className="h-8 border-orange-200 hover:bg-orange-100"
-                    onClick={() => onRegistrarPresenca && onRegistrarPresenca(aluno)}
+                    className="hover:bg-orange-100"
                   >
                     Registrar
                   </Button>
