@@ -25,14 +25,14 @@ const Lancamentos = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-azul-500">Lançamentos</h1>
+        <h1 className="text-2xl font-bold text-roxo-DEFAULT dark:text-foreground">Lançamentos</h1>
         <GoogleSheetsSync />
       </div>
       
       <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
         <Button 
           size="lg" 
-          className="py-8 text-lg bg-supera hover:bg-supera-600"
+          className="py-8 text-lg bg-supera hover:bg-supera-600 dark:bg-primary dark:hover:bg-primary/80"
           onClick={handleProdutividadeClick}
         >
           <TrendingUp className="mr-2 h-6 w-6" />
@@ -41,7 +41,7 @@ const Lancamentos = () => {
 
         <Button 
           size="lg" 
-          className="py-8 text-lg border-orange-300 text-azul-500 hover:bg-orange-100"
+          className="py-8 text-lg border-orange-300 text-roxo-DEFAULT hover:bg-orange-100 dark:border-primary dark:text-foreground dark:hover:bg-primary/20"
           onClick={handleAHClick}
           variant="outline"
         >
@@ -51,7 +51,7 @@ const Lancamentos = () => {
 
         <Button 
           size="lg" 
-          className="py-8 text-lg bg-green-500 hover:bg-green-600 text-white"
+          className="py-8 text-lg bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700"
           onClick={handleAula0Click}
         >
           <School className="mr-2 h-6 w-6" />
@@ -60,7 +60,7 @@ const Lancamentos = () => {
 
         <Button 
           size="lg" 
-          className="py-8 text-lg bg-red-500 hover:bg-red-600 text-white"
+          className="py-8 text-lg bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700"
           onClick={() => setShowAlertaModal(true)}
         >
           <AlertTriangle className="mr-2 h-6 w-6" />

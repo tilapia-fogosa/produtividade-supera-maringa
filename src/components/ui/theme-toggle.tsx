@@ -23,10 +23,10 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       variant="outline"
       size="icon"
-      className="fixed bottom-4 right-4 rounded-full bg-background/80 backdrop-blur-sm border-laranja-DEFAULT hover:bg-laranja-DEFAULT/20 dark:border-laranja-DEFAULT dark:hover:bg-roxo-DEFAULT/50 transition-all duration-200 z-50"
+      className="fixed bottom-4 right-4 rounded-full bg-background/80 backdrop-blur-sm border-primary hover:bg-primary/20 transition-all duration-200 z-50"
     >
       {isDark ? (
-        <Sun className="h-5 w-5 text-laranja-DEFAULT dark:text-laranja-light" />
+        <Sun className="h-5 w-5 text-primary" />
       ) : (
         <Moon className="h-5 w-5 text-roxo-DEFAULT" />
       )}

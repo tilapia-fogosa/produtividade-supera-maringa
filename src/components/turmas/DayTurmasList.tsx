@@ -53,11 +53,13 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
           <Button
             key={turma.id}
             variant="outline"
-            className="w-full justify-between text-left h-auto border-laranja-DEFAULT hover:bg-laranja-DEFAULT/10 dark:border-laranja-DEFAULT dark:hover:bg-laranja-DEFAULT/20"
+            className="w-full justify-between text-left h-auto border-laranja-DEFAULT hover:bg-laranja-DEFAULT/10 dark:border-primary dark:hover:bg-primary/20"
             onClick={() => handleTurmaClick(turma.id)}
           >
             <div className="flex flex-col items-start">
-              <span className="font-medium text-roxo-DEFAULT dark:text-laranja-light">{turma.nome}</span>
+              <span className="font-medium text-roxo-DEFAULT dark:text-primary">
+                {turma.nome}
+              </span>
             </div>
           </Button>
         ))

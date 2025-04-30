@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -41,16 +42,16 @@ const DiasLancamento = () => {
       <Button 
         onClick={handleVoltar} 
         variant="outline" 
-        className="mb-4 text-azul-500 border-orange-200"
+        className="mb-4 dark:border-primary dark:text-foreground"
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
       </Button>
       
-      <h1 className="text-2xl font-bold mb-6 text-azul-500">{titulo}</h1>
+      <h1 className="text-2xl font-bold mb-6 text-roxo-DEFAULT dark:text-foreground">{titulo}</h1>
       
-      <Card className="border-orange-200 bg-white">
-        <CardHeader className="border-b border-orange-100">
-          <CardTitle className="text-azul-500">Selecione o dia da semana</CardTitle>
+      <Card className="border-orange-200 bg-white dark:bg-card dark:border-border">
+        <CardHeader className="border-b border-orange-100 dark:border-border">
+          <CardTitle className="text-roxo-DEFAULT dark:text-foreground">Selecione o dia da semana</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 p-6">
           {diasSemana.map((dia) => (
@@ -59,8 +60,8 @@ const DiasLancamento = () => {
               size="lg"
               className={`py-8 text-lg ${
                 serviceType === 'abrindo_horizontes' || serviceType === 'diario_turma'
-                  ? 'border-orange-300 text-azul-500 hover:bg-orange-100'
-                  : 'bg-supera hover:bg-supera-600'
+                  ? 'border-orange-300 text-roxo-DEFAULT hover:bg-orange-100 dark:border-primary dark:text-foreground dark:hover:bg-primary/20'
+                  : 'bg-supera hover:bg-supera-600 dark:bg-primary dark:hover:bg-primary/80'
               }`}
               variant={serviceType === 'abrindo_horizontes' || serviceType === 'diario_turma' ? 'outline' : 'default'}
               onClick={() => handleDiaClick(dia.id)}
