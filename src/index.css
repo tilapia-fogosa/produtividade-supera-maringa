@@ -46,14 +46,14 @@
   }
 
   .dark {
-    /* Tema escuro com preto azulado sólido em vez de degradê */
-    --background: 222 30% 10%; /* Preto azulado sólido */
+    /* Tema escuro com contraste melhorado para o estoque */
+    --background: 20 60% 10%; /* Fundo marrom escuro */
     --foreground: 0 0% 98%;
 
-    --card: 222 25% 15%; /* Tons levemente mais claros de preto azulado para cartões */
+    --card: 22 50% 15%; /* Cartões em tom marrom mais escuro */
     --card-foreground: 0 0% 98%;
 
-    --popover: 222 25% 15%;
+    --popover: 22 50% 15%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 32 95% 60%;
@@ -62,7 +62,7 @@
     --secondary: 261 55% 40%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 222 30% 20%;
+    --muted: 22 30% 20%;
     --muted-foreground: 0 0% 85%;
 
     --accent: 32 80% 55%; /* Laranja mais forte como destaque */

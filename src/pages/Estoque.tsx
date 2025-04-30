@@ -8,7 +8,7 @@ const Estoque = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-2">
+      <div className="container mx-auto p-2 dark:bg-[#2A120B]">
         <h1 className="text-xl font-bold mb-4 text-laranja-DEFAULT dark:text-laranja-light">Estoque</h1>
         <p className="text-center py-8 text-muted-foreground dark:text-white">Carregando itens...</p>
       </div>
@@ -16,7 +16,7 @@ const Estoque = () => {
   }
 
   return (
-    <div className="container mx-auto p-2 min-h-screen">
+    <div className="container mx-auto p-2 dark:bg-[#2A120B] min-h-screen">
       <h1 className="text-xl font-bold mb-2 text-laranja-DEFAULT dark:text-laranja-light">Estoque</h1>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
