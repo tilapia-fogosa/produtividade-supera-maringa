@@ -139,10 +139,10 @@ const Estoque = () => {
               ? 'bg-white dark:bg-[#221000] dark:border-laranja-DEFAULT/30' 
               : 'bg-gray-50 dark:bg-[#2A1300] dark:border-laranja-DEFAULT/30'}
           >
-            <TableCell className="py-1 text-xs">
+            <TableCell className="py-1 text-xs w-[65%] max-w-[180px]">
               <span className="font-medium text-foreground dark:text-white">{item.nome}</span>
             </TableCell>
-            <TableCell className="py-1 text-right">
+            <TableCell className="py-1 text-right w-[35%] max-w-[100px]">
               <div className="flex items-center justify-end space-x-1">
                 <span className="px-2 py-1 bg-laranja-DEFAULT/20 dark:bg-laranja-DEFAULT text-foreground dark:text-white rounded text-xs min-w-[2rem] text-center font-medium">
                   {item.quantidade}
