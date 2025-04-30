@@ -15,7 +15,7 @@ const AbrindoHorizontes = () => {
   
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+      <div className="w-full min-h-screen text-azul-500 dark:text-orange-100">
         <div className="container mx-auto p-4 text-center">
           <p>Carregando...</p>
         </div>
@@ -25,7 +25,7 @@ const AbrindoHorizontes = () => {
   
   if (!turma) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+      <div className="w-full min-h-screen text-azul-500 dark:text-orange-100">
         <div className="container mx-auto p-4 text-center">
           <p>Turma não encontrada</p>
         </div>
@@ -43,7 +43,7 @@ const AbrindoHorizontes = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+    <div className="w-full min-h-screen text-azul-500 dark:text-orange-100">
       <div className="container mx-auto p-4">
         <AbindoHorizontesScreen 
           turma={turma}
