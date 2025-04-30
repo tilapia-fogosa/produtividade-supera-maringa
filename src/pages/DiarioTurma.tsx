@@ -44,17 +44,17 @@ const DiarioTurma = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+    <div className="w-full min-h-screen bg-gradient-to-b from-[#3A1008] to-[#220804] text-laranja-DEFAULT">
       <div className="container mx-auto py-4 px-2">
         <Button 
           onClick={handleVoltar} 
           variant="outline" 
-          className="mb-4 text-azul-500 border-orange-200"
+          className="mb-4 text-laranja-DEFAULT border-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
         </Button>
         
-        <h1 className="text-xl font-bold mb-4">Diário da Turma - {turma.nome}</h1>
+        <h1 className="text-xl font-bold mb-4 text-laranja-DEFAULT">Diário da Turma - {turma.nome}</h1>
         
         <DiarioTurmaScreen 
           turma={turma} 

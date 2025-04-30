@@ -43,18 +43,18 @@ const DiarioPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-azul-500">Diário de Turma</h1>
+    <div className="container mx-auto p-4 bg-gradient-to-b from-[#3A1008] to-[#220804] min-h-screen">
+      <h1 className="text-2xl font-bold mb-6 text-laranja-DEFAULT">Diário de Turma</h1>
       
-      <Card className="border-orange-200 bg-white p-4 mb-6">
+      <Card className="border-laranja-DEFAULT bg-white p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Turma Select */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-azul-500 mb-2">
+            <label className="block text-sm font-medium text-laranja-DEFAULT mb-2">
               Turma
             </label>
             <Select value={selectedTurmaId} onValueChange={setSelectedTurmaId}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-white border-laranja-DEFAULT">
                 <SelectValue placeholder="Selecione uma turma" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -80,7 +80,7 @@ const DiarioPage = () => {
           <Button 
             variant="outline"
             onClick={handleVerTodasTurmas}
-            className="text-azul-500 border-orange-200"
+            className="text-laranja-DEFAULT border-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
           >
             Ver todas turmas do dia
           </Button>

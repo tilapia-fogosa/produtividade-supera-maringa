@@ -78,11 +78,11 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
   };
 
   return (
-    <div className="mt-4 bg-white rounded-lg shadow p-4">
+    <div className="mt-4 bg-white rounded-lg shadow p-4 border border-laranja-DEFAULT/30">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-shrink-0 w-full md:w-80">
-          <h3 className="text-lg font-medium mb-4 text-azul-500">Calendário</h3>
-          <div className="p-2 border rounded-md">
+          <h3 className="text-lg font-medium mb-4 text-laranja-DEFAULT">Calendário</h3>
+          <div className="p-2 border rounded-md border-laranja-DEFAULT/20">
             <Calendar
               mode="single"
               selected={dataSelecionada}
@@ -93,7 +93,7 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
         </div>
         
         <div className="flex-1">
-          <h3 className="text-lg font-medium mb-4 text-azul-500">
+          <h3 className="text-lg font-medium mb-4 text-laranja-DEFAULT">
             Registros de {dataSelecionada.toLocaleDateString('pt-BR')}
           </h3>
           

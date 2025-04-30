@@ -60,7 +60,7 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
             variant="outline"
             size="sm"
             onClick={onRefresh}
-            className="mr-2"
+            className="mr-2 border-laranja-DEFAULT text-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
             disabled={carregando}
           >
             <RefreshCcw className="h-4 w-4 mr-1" />
@@ -68,7 +68,11 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
           </Button>
         </div>
         
-        <Button onClick={handleNovoRegistro} size="sm">
+        <Button 
+          onClick={handleNovoRegistro} 
+          size="sm"
+          className="bg-laranja-DEFAULT hover:bg-laranja-DEFAULT/90 text-white"
+        >
           <PlusCircle className="h-4 w-4 mr-1" />
           Novo Registro
         </Button>
@@ -79,48 +83,48 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
           <p>Carregando registros...</p>
         </div>
       ) : registros.length === 0 ? (
-        <div className="text-center py-8 border rounded-md bg-slate-50">
-          <p>Nenhum registro encontrado para esta data.</p>
+        <div className="text-center py-8 border rounded-md bg-slate-50 border-laranja-DEFAULT/20">
+          <p className="text-laranja-DEFAULT/80">Nenhum registro encontrado para esta data.</p>
           <Button 
             variant="link" 
             onClick={handleNovoRegistro}
-            className="mt-2"
+            className="mt-2 text-laranja-DEFAULT"
           >
             Adicionar registro
           </Button>
         </div>
       ) : (
-        <div className="border rounded-md overflow-hidden">
+        <div className="border rounded-md overflow-hidden border-laranja-DEFAULT/20">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-laranja-DEFAULT/10">
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Origem</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Apostila</TableHead>
-                <TableHead>Página</TableHead>
-                <TableHead>Exercícios</TableHead>
-                <TableHead>Erros</TableHead>
-                <TableHead>Comentário</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Nome</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Origem</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Status</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Apostila</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Página</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Exercícios</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Erros</TableHead>
+                <TableHead className="text-laranja-DEFAULT">Comentário</TableHead>
+                <TableHead className="text-right text-laranja-DEFAULT">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {registros.map((registro) => (
-                <TableRow key={registro.id}>
+                <TableRow key={registro.id} className="hover:bg-laranja-DEFAULT/5">
                   <TableCell className="font-medium">
                     {registro.pessoa?.nome || "Aluno não encontrado"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={registro.origem === 'funcionario' ? "secondary" : "default"}>
+                    <Badge variant={registro.origem === 'funcionario' ? "secondary" : "outline"} className="bg-laranja-DEFAULT/10 text-laranja-DEFAULT border-laranja-DEFAULT/30 hover:bg-laranja-DEFAULT/20">
                       {registro.origem === 'funcionario' ? 'Funcionário' : 'Aluno'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     {registro.presente ? (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100">Presente</Badge>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">Presente</Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-100">Ausente</Badge>
+                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100">Ausente</Badge>
                     )}
                   </TableCell>
                   <TableCell>{registro.apostila || "-"}</TableCell>
@@ -135,6 +139,7 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
                       variant="ghost" 
                       size="icon"
                       onClick={() => handleEditarRegistro(registro)}
+                      className="text-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
                     >
                       <Edit className="h-4 w-4" />
                       <span className="sr-only">Editar</span>
@@ -156,7 +161,6 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
         </div>
       )}
 
-      {/* Corrigi aqui passando as props corretas para os modais */}
       {editRegistroModalAberto && (
         <EditRegistroModal
           isOpen={editRegistroModalAberto}

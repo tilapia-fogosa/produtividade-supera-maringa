@@ -26,6 +26,10 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
       navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
         state: { dia, serviceType }
       });
+    } else if (serviceType === 'diario_turma') {
+      navigate(`/turma/${turmaId}/diario`, {
+        state: { dia, serviceType }
+      });
     } else {
       navigate(`/turma/${turmaId}/produtividade`, {
         state: { dia, serviceType }
@@ -57,7 +61,7 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
             onClick={() => handleTurmaClick(turma.id)}
           >
             <div className="flex flex-col items-start">
-              <span className="font-medium text-roxo-DEFAULT dark:text-primary">
+              <span className="font-medium text-laranja-DEFAULT dark:text-primary">
                 {turma.nome}
               </span>
             </div>
