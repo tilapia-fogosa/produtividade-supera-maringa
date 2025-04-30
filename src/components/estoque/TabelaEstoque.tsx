@@ -23,10 +23,10 @@ export function TabelaEstoque({
                   {item.quantidade}
                 </span>
                 <div className="flex space-x-0.5">
-                  <Button variant="outline" size="icon" onClick={() => alterarQuantidade(item.id, -1)} className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light p-0 flex items-center justify-center bg-violet-50">
+                  <Button variant="outline" size="icon" onClick={() => alterarQuantidade(item.id, -1)} className="h-4 w-4 border-roxo-DEFAULT dark:border-laranja-light p-0 flex items-center justify-center bg-violet-50 text-purple-950">
                     <Minus className="h-2 w-2 stroke-[3]" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => alterarQuantidade(item.id, 1)} className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light p-0 flex items-center justify-center bg-violet-50">
+                  <Button variant="outline" size="icon" onClick={() => alterarQuantidade(item.id, 1)} className="h-4 w-4 border-roxo-DEFAULT dark:border-laranja-light p-0 flex items-center justify-center bg-violet-50 text-purple-950">
                     <Plus className="h-2 w-2 stroke-[3]" />
                   </Button>
                 </div>
