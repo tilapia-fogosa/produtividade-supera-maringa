@@ -84,19 +84,19 @@ const Devolutivas = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-azul-500">Devolutivas</h1>
+    <div className="container mx-auto p-4 bg-background dark:bg-background">
+      <h1 className="text-2xl font-bold mb-6 text-azul-500 dark:text-orange-100">Devolutivas</h1>
       
-      <Card className="border-orange-200 bg-white mb-6">
-        <CardHeader className="border-b border-orange-100">
-          <CardTitle className="text-azul-500">Selecione o dia da semana</CardTitle>
+      <Card className="border-orange-200 bg-white dark:bg-card mb-6">
+        <CardHeader className="border-b border-orange-100 dark:border-orange-900/30">
+          <CardTitle className="text-azul-500 dark:text-orange-100">Selecione o dia da semana</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 p-6">
           {diasSemana.map((dia) => (
             <Button 
               key={dia.id}
               size="lg"
-              className="py-8 text-lg border-orange-300 text-azul-500 hover:bg-orange-100"
+              className="py-8 text-lg border-orange-300 text-azul-500 dark:text-orange-100 hover:bg-orange-100 dark:hover:bg-orange-900/20"
               variant="outline"
               onClick={() => handleDiaClick(dia.id)}
             >
@@ -107,9 +107,9 @@ const Devolutivas = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-orange-200 bg-white">
-        <CardHeader className="border-b border-orange-100">
-          <CardTitle className="text-azul-500">Texto Geral da Devolutiva</CardTitle>
+      <Card className="border-orange-200 bg-white dark:bg-card">
+        <CardHeader className="border-b border-orange-100 dark:border-orange-900/30">
+          <CardTitle className="text-azul-500 dark:text-orange-100">Texto Geral da Devolutiva</CardTitle>
         </CardHeader>
         <CardContent className="p-4">
           <Textarea

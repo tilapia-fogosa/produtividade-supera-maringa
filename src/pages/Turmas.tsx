@@ -76,7 +76,7 @@ const Turmas = () => {
   };
   
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
+    <div className="w-full min-h-screen bg-background dark:bg-background text-azul-500 dark:text-orange-100">
       <div className="container mx-auto py-4 px-2">
         <Button 
           onClick={handleVoltar} 

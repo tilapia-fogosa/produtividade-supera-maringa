@@ -67,39 +67,39 @@ const DevolutivaTurma = () => {
 
   if (loading) {
     return (
-      <div className="text-center p-6">
+      <div className="text-center p-6 bg-background dark:bg-background">
         <p>Carregando dados da turma...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-4 px-2">
+    <div className="container mx-auto py-4 px-2 bg-background dark:bg-background min-h-screen">
       <Button 
         onClick={handleVoltar} 
         variant="outline" 
-        className="mb-4 text-azul-500 border-orange-200"
+        className="mb-4 text-azul-500 dark:text-orange-100 border-orange-200"
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
       </Button>
       
-      <h1 className="text-xl font-bold mb-4 text-azul-500">
+      <h1 className="text-xl font-bold mb-4 text-azul-500 dark:text-orange-100">
         Lista de Alunos - {turma?.nome}
       </h1>
       
       <div className="space-y-4">
         {alunos.length === 0 ? (
-          <p className="text-center text-gray-500 p-4">
+          <p className="text-center text-gray-500 dark:text-gray-400 p-4">
             Nenhum aluno encontrado nesta turma.
           </p>
         ) : (
           alunos.map((aluno) => (
             <div 
               key={aluno.id} 
-              className="p-4 border rounded-lg border-orange-200 bg-white hover:bg-orange-50 cursor-pointer transition-colors"
+              className="p-4 border rounded-lg border-orange-200 bg-white dark:bg-card hover:bg-orange-50 dark:hover:bg-card/80 cursor-pointer transition-colors"
               onClick={() => navigate(`/devolutivas/aluno/${aluno.id}`)}
             >
-              <h3 className="text-md text-azul-500">{aluno.nome}</h3>
+              <h3 className="text-md text-azul-500 dark:text-orange-100">{aluno.nome}</h3>
             </div>
           ))
         )}

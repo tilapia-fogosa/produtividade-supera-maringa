@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ const DevolutivaAluno = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-4 px-2">
+      <div className="container mx-auto py-4 px-2 bg-background dark:bg-background">
         <p className="text-center">Carregando dados do aluno...</p>
       </div>
     );
@@ -94,7 +95,7 @@ const DevolutivaAluno = () => {
 
   if (error || !aluno) {
     return (
-      <div className="container mx-auto py-4 px-2">
+      <div className="container mx-auto py-4 px-2 bg-background dark:bg-background">
         <p className="text-center text-red-500">
           {error || 'Erro ao carregar dados do aluno'}
         </p>
@@ -103,12 +104,12 @@ const DevolutivaAluno = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 space-y-6">
+    <div className="container mx-auto py-4 px-2 space-y-6 bg-background dark:bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <Button 
           onClick={handleVoltar} 
           variant="outline" 
-          className="text-azul-500 border-orange-200"
+          className="text-azul-500 dark:text-orange-100 border-orange-200"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
         </Button>
