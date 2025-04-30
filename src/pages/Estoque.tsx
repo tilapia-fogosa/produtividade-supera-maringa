@@ -139,19 +139,19 @@ const Estoque = () => {
               ? 'bg-white dark:bg-[#221000] dark:border-laranja-DEFAULT/30' 
               : 'bg-gray-50 dark:bg-[#2A1300] dark:border-laranja-DEFAULT/30'}
           >
-            <TableCell className="py-1 text-xs w-[65%] max-w-[180px]">
-              <span className="font-medium text-foreground dark:text-white">{item.nome}</span>
+            <TableCell className="py-0.5 text-xs w-[60%] max-w-[150px] truncate">
+              <span className="font-medium text-foreground dark:text-white text-xs">{item.nome}</span>
             </TableCell>
-            <TableCell className="py-1 text-right w-[35%] max-w-[100px]">
+            <TableCell className="py-0.5 text-right w-[40%] max-w-[90px]">
               <div className="flex items-center justify-end space-x-1">
-                <span className="px-2 py-1 bg-laranja-DEFAULT/20 dark:bg-laranja-DEFAULT text-foreground dark:text-white rounded text-xs min-w-[2rem] text-center font-medium">
+                <span className="px-1 py-0.5 bg-laranja-DEFAULT/20 dark:bg-laranja-DEFAULT text-foreground dark:text-white rounded text-xs min-w-[1.5rem] text-center font-medium">
                   {item.quantidade}
                 </span>
-                <div className="flex space-x-1">
+                <div className="flex space-x-0.5">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-5 w-5 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT"
+                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0"
                     onClick={() => alterarQuantidade(item.id, -1)}
                   >
                     <Minus className="h-2 w-2" />
@@ -159,7 +159,7 @@ const Estoque = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-5 w-5 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT"
+                    className="h-4 w-4 border-laranja-DEFAULT text-laranja-DEFAULT bg-white hover:bg-laranja-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0"
                     onClick={() => alterarQuantidade(item.id, 1)}
                   >
                     <Plus className="h-2 w-2" />
@@ -184,12 +184,12 @@ const Estoque = () => {
 
   return (
     <div className="container mx-auto p-2 dark:bg-[#2A120B] min-h-screen">
-      <h1 className="text-xl font-bold mb-4 text-laranja-DEFAULT dark:text-laranja-light">Estoque</h1>
+      <h1 className="text-xl font-bold mb-2 text-laranja-DEFAULT dark:text-laranja-light">Estoque</h1>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {Object.entries(itemsPorTipo).map(([tipo, items]) => (
-          <Card key={tipo} className={`p-2 border-2 ${getTipoColor(tipo)}`}>
-            <h2 className="text-sm font-semibold mb-2">{getTipoTitle(tipo)}</h2>
+          <Card key={tipo} className={`p-1 border-2 ${getTipoColor(tipo)}`}>
+            <h2 className="text-sm font-semibold mb-1 px-1">{getTipoTitle(tipo)}</h2>
             <TabelaEstoque items={items} />
           </Card>
         ))}
