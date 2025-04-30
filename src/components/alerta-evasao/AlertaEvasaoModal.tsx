@@ -50,49 +50,66 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
   const [historicoAlertas, setHistoricoAlertas] = useState<string | null>(null);
   const [alertasAnteriores, setAlertasAnteriores] = useState<any[]>([]);
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+  const [dadosAulaZero, setDadosAulaZero] = useState<any | null>(null);
 
   const alunosFiltrados = todosAlunos.filter(aluno => 
     aluno.nome.toLowerCase().includes(filtroAluno.toLowerCase())
   );
 
-  // Buscar alertas anteriores quando o aluno é selecionado
+  // Buscar alertas anteriores e dados da aula zero quando o aluno é selecionado
   useEffect(() => {
-    const buscarAlertasAnteriores = async () => {
+    const buscarDadosAluno = async () => {
       if (!alunoSelecionado) {
         setAlertasAnteriores([]);
         setHistoricoAlertas(null);
+        setDadosAulaZero(null);
         return;
       }
 
       setCarregandoHistorico(true);
       try {
-        const { data, error } = await supabase
+        // Buscar alertas anteriores
+        const { data: alertasData, error: alertasError } = await supabase
           .from('alerta_evasao')
           .select('*')
           .eq('aluno_id', alunoSelecionado)
           .order('data_alerta', { ascending: false });
 
-        if (error) throw error;
+        if (alertasError) throw alertasError;
 
-        if (data && data.length > 0) {
-          setAlertasAnteriores(data);
+        // Buscar dados da aula zero do aluno
+        const { data: alunoData, error: alunoError } = await supabase
+          .from('alunos')
+          .select('motivo_procura, percepcao_coordenador, avaliacao_abaco, avaliacao_ah, pontos_atencao')
+          .eq('id', alunoSelecionado)
+          .single();
+
+        if (alunoError) throw alunoError;
+
+        // Processar alertas anteriores
+        if (alertasData && alertasData.length > 0) {
+          setAlertasAnteriores(alertasData);
           
           // Construir texto de histórico
-          const textoHistorico = data.map(alerta => {
+          const textoHistorico = alertasData.map(alerta => {
             const data = new Date(alerta.data_alerta).toLocaleDateString();
             return `${data} - ${alerta.origem_alerta}: ${alerta.descritivo || 'Sem descrição'}`;
           }).join('\n\n');
           
           setHistoricoAlertas(textoHistorico);
         }
+
+        // Salvar dados da aula zero
+        setDadosAulaZero(alunoData);
+
       } catch (error) {
-        console.error('Erro ao buscar alertas anteriores:', error);
+        console.error('Erro ao buscar dados do aluno:', error);
       } finally {
         setCarregandoHistorico(false);
       }
     };
 
-    buscarAlertasAnteriores();
+    buscarDadosAluno();
   }, [alunoSelecionado]);
 
   const resetForm = () => {
@@ -105,6 +122,43 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     setFiltroAluno('');
     setHistoricoAlertas(null);
     setAlertasAnteriores([]);
+    setDadosAulaZero(null);
+  };
+
+  const construirHistoricoCompleto = () => {
+    let historicoTexto = historicoAlertas || '';
+    
+    // Adicionar dados da aula zero se existirem
+    if (dadosAulaZero) {
+      let aulaZeroTexto = '\n\n=== DADOS DA AULA ZERO ===\n';
+      
+      if (dadosAulaZero.motivo_procura) {
+        aulaZeroTexto += `\nMotivo da procura: ${dadosAulaZero.motivo_procura}`;
+      }
+      
+      if (dadosAulaZero.percepcao_coordenador) {
+        aulaZeroTexto += `\nPercepção do coordenador: ${dadosAulaZero.percepcao_coordenador}`;
+      }
+      
+      if (dadosAulaZero.avaliacao_abaco) {
+        aulaZeroTexto += `\nAvaliação no Ábaco: ${dadosAulaZero.avaliacao_abaco}`;
+      }
+      
+      if (dadosAulaZero.avaliacao_ah) {
+        aulaZeroTexto += `\nAvaliação no AH: ${dadosAulaZero.avaliacao_ah}`;
+      }
+      
+      if (dadosAulaZero.pontos_atencao) {
+        aulaZeroTexto += `\nPontos de atenção: ${dadosAulaZero.pontos_atencao}`;
+      }
+      
+      // Só adicionar a seção se algum dos campos tiver dados
+      if (aulaZeroTexto !== '\n\n=== DADOS DA AULA ZERO ===\n') {
+        historicoTexto += aulaZeroTexto;
+      }
+    }
+    
+    return historicoTexto;
   };
 
   const handleSubmit = async () => {
@@ -120,6 +174,9 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     try {
       // Determinar a coluna inicial com base na presença de data de retenção
       const initialColumn = dataRetencao ? 'scheduled' : 'todo';
+      
+      // Construir o histórico completo com dados da aula zero se disponíveis
+      const historicoCompleto = construirHistoricoCompleto();
       
       // Primeiro salvar no banco de dados
       const { data: alertaData, error } = await supabase
@@ -154,6 +211,18 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
         if (cardError) {
           console.error('Erro ao buscar card criado:', cardError);
         } else if (cardData) {
+          // Atualizamos o histórico do card para incluir dados da aula zero
+          const { error: updateError } = await supabase
+            .from('kanban_cards')
+            .update({ 
+              historico: historicoCompleto
+            })
+            .eq('id', cardData.id);
+            
+          if (updateError) {
+            console.error('Erro ao atualizar histórico do card:', updateError);
+          }
+          
           // Enviar para o webhook de retenção agendada
           try {
             const webhookUrl = 'https://hook.us1.make.com/0t4vimtrmnqu3wtpfskf7ooydbjsh300';
@@ -199,7 +268,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               descritivo,
               responsavel,
               data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
-              historico: historicoAlertas
+              historico: historicoCompleto
             }
           })
         });
@@ -325,6 +394,31 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
                   value={historicoAlertas || ''}
                 />
               )}
+            </div>
+          )}
+
+          {dadosAulaZero && (
+            <div className="border rounded-md p-3 bg-blue-50">
+              <p className="text-sm font-medium mb-2">
+                Dados da Aula Zero
+              </p>
+              <div className="text-xs space-y-1">
+                {dadosAulaZero.motivo_procura && (
+                  <p><span className="font-medium">Motivo da procura:</span> {dadosAulaZero.motivo_procura}</p>
+                )}
+                {dadosAulaZero.percepcao_coordenador && (
+                  <p><span className="font-medium">Percepção do coordenador:</span> {dadosAulaZero.percepcao_coordenador}</p>
+                )}
+                {dadosAulaZero.avaliacao_abaco && (
+                  <p><span className="font-medium">Avaliação no Ábaco:</span> {dadosAulaZero.avaliacao_abaco}</p>
+                )}
+                {dadosAulaZero.avaliacao_ah && (
+                  <p><span className="font-medium">Avaliação no AH:</span> {dadosAulaZero.avaliacao_ah}</p>
+                )}
+                {dadosAulaZero.pontos_atencao && (
+                  <p><span className="font-medium">Pontos de atenção:</span> {dadosAulaZero.pontos_atencao}</p>
+                )}
+              </div>
             </div>
           )}
 

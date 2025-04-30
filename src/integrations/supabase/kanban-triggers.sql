@@ -7,6 +7,9 @@ AS $function$
 DECLARE
   aluno_nome_var TEXT;
   column_id_var TEXT;
+  historico_var TEXT;
+  aula_zero_dados record;
+  aula_zero_texto TEXT := '';
 BEGIN
   -- Busca o nome do aluno
   SELECT nome INTO aluno_nome_var FROM alunos WHERE id = NEW.aluno_id;
@@ -18,6 +21,72 @@ BEGIN
     column_id_var := 'todo';
   END IF;
   
+  -- Constrói o histórico com alertas anteriores do mesmo aluno
+  WITH alertas_anteriores AS (
+    SELECT 
+      TO_CHAR(data_alerta, 'DD/MM/YYYY HH24:MI') as data_formatada,
+      origem_alerta::TEXT,
+      descritivo
+    FROM alerta_evasao
+    WHERE 
+      aluno_id = NEW.aluno_id 
+      AND id != NEW.id -- Exclui o alerta atual
+    ORDER BY data_alerta DESC
+  )
+  SELECT STRING_AGG(
+    data_formatada || ' - ' || origem_alerta || ': ' || COALESCE(descritivo, 'Sem descrição'),
+    E'\n\n'
+  ) INTO historico_var
+  FROM alertas_anteriores;
+  
+  -- Buscar dados da Aula Zero do aluno
+  SELECT 
+    motivo_procura,
+    percepcao_coordenador,
+    avaliacao_abaco,
+    avaliacao_ah,
+    pontos_atencao
+  INTO aula_zero_dados
+  FROM alunos
+  WHERE id = NEW.aluno_id;
+  
+  -- Construir texto com dados da Aula Zero se disponíveis
+  IF aula_zero_dados IS NOT NULL THEN
+    aula_zero_texto := E'\n\n=== DADOS DA AULA ZERO ===\n';
+    
+    IF aula_zero_dados.motivo_procura IS NOT NULL THEN
+      aula_zero_texto := aula_zero_texto || E'\nMotivo da procura: ' || aula_zero_dados.motivo_procura;
+    END IF;
+    
+    IF aula_zero_dados.percepcao_coordenador IS NOT NULL THEN
+      aula_zero_texto := aula_zero_texto || E'\nPercepção do coordenador: ' || aula_zero_dados.percepcao_coordenador;
+    END IF;
+    
+    IF aula_zero_dados.avaliacao_abaco IS NOT NULL THEN
+      aula_zero_texto := aula_zero_texto || E'\nAvaliação no Ábaco: ' || aula_zero_dados.avaliacao_abaco;
+    END IF;
+    
+    IF aula_zero_dados.avaliacao_ah IS NOT NULL THEN
+      aula_zero_texto := aula_zero_texto || E'\nAvaliação no AH: ' || aula_zero_dados.avaliacao_ah;
+    END IF;
+    
+    IF aula_zero_dados.pontos_atencao IS NOT NULL THEN
+      aula_zero_texto := aula_zero_texto || E'\nPontos de atenção: ' || aula_zero_dados.pontos_atencao;
+    END IF;
+    
+    -- Só adiciona se tiver algum dado
+    IF aula_zero_texto = E'\n\n=== DADOS DA AULA ZERO ===\n' THEN
+      aula_zero_texto := '';
+    END IF;
+  END IF;
+  
+  -- Combinar histórico de alertas e dados da aula zero
+  IF historico_var IS NOT NULL THEN
+    historico_var := historico_var || aula_zero_texto;
+  ELSE
+    historico_var := aula_zero_texto;
+  END IF;
+  
   -- Cria um novo cartão no kanban para o alerta
   INSERT INTO kanban_cards (
     alerta_evasao_id,
@@ -27,7 +96,8 @@ BEGIN
     aluno_nome,
     origem,
     responsavel,
-    retention_date
+    retention_date,
+    historico
   ) VALUES (
     NEW.id,
     column_id_var,
@@ -36,7 +106,8 @@ BEGIN
     aluno_nome_var,
     NEW.origem_alerta::TEXT,
     NEW.responsavel,
-    NEW.data_retencao
+    NEW.data_retencao,
+    historico_var
   );
   
   RETURN NEW;
