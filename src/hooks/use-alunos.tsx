@@ -138,10 +138,25 @@ export function useAlunos() {
       const { data: alunosData, error } = await supabase
         .from('alunos')
         .select('*')
+        .eq('active', true) // Garantir que apenas alunos ativos sejam incluídos
         .order('nome');
 
       if (error) throw error;
-      setTodosAlunos(alunosData);
+      
+      // Filtrando alunos duplicados (mesmo ID)
+      const alunosMap = new Map<string, Aluno>();
+      
+      // Para cada aluno, armazenamos apenas a última ocorrência no Map,
+      // garantindo que cada ID seja único
+      alunosData.forEach(aluno => {
+        alunosMap.set(aluno.id, aluno);
+      });
+      
+      // Convertemos o Map de volta para array
+      const alunosUnicos = Array.from(alunosMap.values());
+      
+      console.log(`Encontrados ${alunosData.length} alunos totais, filtrados para ${alunosUnicos.length} únicos`);
+      setTodosAlunos(alunosUnicos);
     } catch (error) {
       console.error('Erro ao buscar todos os alunos:', error);
     }
