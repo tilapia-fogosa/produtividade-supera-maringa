@@ -26,7 +26,7 @@ export function TabelaEstoque({
                   <Button variant="outline" size="icon" onClick={() => alterarQuantidade(item.id, -1)} className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light p-0 flex items-center justify-center bg-violet-50">
                     <Minus className="h-2 w-2 stroke-[3]" />
                   </Button>
-                  <Button variant="outline" size="icon" className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT bg-white hover:bg-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light dark:bg-[#3D1800] dark:hover:bg-laranja-DEFAULT p-0 flex items-center justify-center" onClick={() => alterarQuantidade(item.id, 1)}>
+                  <Button variant="outline" size="icon" onClick={() => alterarQuantidade(item.id, 1)} className="h-4 w-4 border-roxo-DEFAULT text-roxo-DEFAULT hover:text-white dark:border-laranja-light dark:text-laranja-light p-0 flex items-center justify-center bg-violet-50">
                     <Plus className="h-2 w-2 stroke-[3]" />
                   </Button>
                 </div>
