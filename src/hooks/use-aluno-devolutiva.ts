@@ -70,10 +70,8 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           throw new Error('Nenhum dado encontrado para o aluno');
         }
 
-        // Converter o resultado para um objeto tipado adequadamente
-        // O tipo Json do Supabase pode ser qualquer um dos tipos na união, então precisamos
-        // fazer uma conversão explícita para um tipo que podemos acessar as propriedades
-        const dadosDevolutiva = devolutivaData as unknown as Record<string, any>;
+        // Converter a resposta JSON para um objeto que podemos acessar com segurança
+        const dadosDevolutiva = JSON.parse(JSON.stringify(devolutivaData));
         
         // Definir os meses disponíveis
         if (dadosDevolutiva.meses_disponiveis) {
