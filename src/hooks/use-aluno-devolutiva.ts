@@ -70,29 +70,31 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           throw new Error('Nenhum dado encontrado para o aluno');
         }
 
-        // Utilizando type assertion para dizer ao TypeScript que devolutivaData é do tipo AlunoDevolutiva
-        const tipoDevolutivaData = devolutivaData as unknown as Record<string, any>;
+        // Converter o resultado para um objeto tipado adequadamente
+        // O tipo Json do Supabase pode ser qualquer um dos tipos na união, então precisamos
+        // fazer uma conversão explícita para um tipo que podemos acessar as propriedades
+        const dadosDevolutiva = devolutivaData as unknown as Record<string, any>;
         
         // Definir os meses disponíveis
-        if (tipoDevolutivaData.meses_disponiveis) {
-          setMesesDisponiveis(tipoDevolutivaData.meses_disponiveis || []);
+        if (dadosDevolutiva.meses_disponiveis) {
+          setMesesDisponiveis(dadosDevolutiva.meses_disponiveis || []);
         }
 
-        // Processar os dados retornados
+        // Processar os dados retornados e construir objeto AlunoDevolutiva
         const alunoDevolutiva: AlunoDevolutiva = {
-          id: tipoDevolutivaData.id,
-          nome: tipoDevolutivaData.nome,
-          texto_devolutiva: tipoDevolutivaData.texto_devolutiva,
-          texto_geral: tipoDevolutivaData.texto_geral,
-          desafios_feitos: tipoDevolutivaData.desafios_feitos || 0,
-          desempenho_abaco: tipoDevolutivaData.desempenho_abaco || [],
-          desempenho_ah: tipoDevolutivaData.desempenho_ah || [],
-          abaco_total_exercicios: tipoDevolutivaData.abaco_total_exercicios || 0,
-          abaco_total_erros: tipoDevolutivaData.abaco_total_erros || 0,
-          abaco_percentual_total: tipoDevolutivaData.abaco_percentual_total || 0,
-          ah_total_exercicios: tipoDevolutivaData.ah_total_exercicios || 0,
-          ah_total_erros: tipoDevolutivaData.ah_total_erros || 0,
-          ah_percentual_total: tipoDevolutivaData.ah_percentual_total || 0,
+          id: dadosDevolutiva.id || alunoId,
+          nome: dadosDevolutiva.nome || '',
+          texto_devolutiva: dadosDevolutiva.texto_devolutiva,
+          texto_geral: dadosDevolutiva.texto_geral,
+          desafios_feitos: dadosDevolutiva.desafios_feitos || 0,
+          desempenho_abaco: dadosDevolutiva.desempenho_abaco || [],
+          desempenho_ah: dadosDevolutiva.desempenho_ah || [],
+          abaco_total_exercicios: dadosDevolutiva.abaco_total_exercicios || 0,
+          abaco_total_erros: dadosDevolutiva.abaco_total_erros || 0,
+          abaco_percentual_total: dadosDevolutiva.abaco_percentual_total || 0,
+          ah_total_exercicios: dadosDevolutiva.ah_total_exercicios || 0,
+          ah_total_erros: dadosDevolutiva.ah_total_erros || 0,
+          ah_percentual_total: dadosDevolutiva.ah_percentual_total || 0,
         };
 
         setData(alunoDevolutiva);
