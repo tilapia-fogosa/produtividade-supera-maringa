@@ -2398,6 +2398,14 @@ export type Database = {
         }
         Returns: Json
       }
+      get_aluno_desempenho: {
+        Args: {
+          p_aluno_id: string
+          p_data_inicial: string
+          p_data_final?: string
+        }
+        Returns: Json
+      }
       get_commercial_unit_stats: {
         Args: {
           p_start_date: string
@@ -2482,6 +2490,10 @@ export type Database = {
       get_leads_stats: {
         Args: { p_unit_ids: string[] }
         Returns: Json
+      }
+      get_periodo_data: {
+        Args: { p_periodo: string }
+        Returns: string
       }
       get_registration_stats: {
         Args: {

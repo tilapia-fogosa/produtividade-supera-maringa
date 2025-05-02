@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths, format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface DesempenhoMensalItem {
@@ -32,65 +33,11 @@ export interface AlunoDevolutiva {
   ah_percentual_total: number;
 }
 
-interface AgrupamentoMensal {
-  [key: string]: {
-    exercicios: number;
-    erros: number;
-    livros: Set<string>;
-  };
-}
-
 export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'mes') => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AlunoDevolutiva | null>(null);
-  const [textoGeral, setTextoGeral] = useState<string | null>(null);
   const [mesesDisponiveis, setMesesDisponiveis] = useState<string[]>([]);
-
-  const getPeriodoData = (periodo: PeriodoFiltro) => {
-    const hoje = new Date();
-    const mesesAnteriores = {
-      mes: 1,
-      trimestre: 3,
-      quadrimestre: 4,
-      semestre: 6,
-      ano: 12
-    };
-    return subMonths(hoje, mesesAnteriores[periodo]);
-  };
-
-  const agruparPorMes = (dados: any[], dataField: string): DesempenhoMensalItem[] => {
-    const agrupamento: AgrupamentoMensal = {};
-    
-    dados.forEach(item => {
-      const data = typeof item[dataField] === 'string' ? parseISO(item[dataField]) : item[dataField];
-      const mesKey = format(data, 'yyyy-MM');
-      
-      if (!agrupamento[mesKey]) {
-        agrupamento[mesKey] = {
-          exercicios: 0,
-          erros: 0,
-          livros: new Set()
-        };
-      }
-      
-      agrupamento[mesKey].exercicios += item.exercicios || 0;
-      agrupamento[mesKey].erros += item.erros || 0;
-      if (item.apostila) agrupamento[mesKey].livros.add(item.apostila);
-    });
-
-    return Object.entries(agrupamento).map(([mesKey, dados]) => ({
-      mes: format(parseISO(mesKey + '-01'), 'MMMM yyyy', { locale: ptBR }),
-      livro: Array.from(dados.livros).join(', '),
-      exercicios: dados.exercicios,
-      erros: dados.erros,
-      percentual_acerto: dados.exercicios > 0 ? ((dados.exercicios - dados.erros) / dados.exercicios) * 100 : 0
-    })).sort((a, b) => {
-      const mesA = parseISO(a.mes.split(' ')[0] + '-01-' + a.mes.split(' ')[1]);
-      const mesB = parseISO(b.mes.split(' ')[0] + '-01-' + b.mes.split(' ')[1]);
-      return mesB.getTime() - mesA.getTime();
-    });
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,90 +45,54 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         setLoading(true);
         setError(null);
 
-        const dataInicial = getPeriodoData(periodo);
+        // Primeiro, obter a data inicial com base no período selecionado
+        const { data: dataInicial, error: dataInicialError } = await supabase
+          .rpc('get_periodo_data', { p_periodo: periodo });
 
-        const { data: configData, error: configError } = await supabase
-          .from('devolutivas_config')
-          .select('texto_geral')
-          .single();
-
-        if (configError) {
-          console.error('Erro ao buscar texto geral:', configError);
-        } else {
-          setTextoGeral(configData?.texto_geral || null);
+        if (dataInicialError) {
+          console.error('Erro ao calcular data inicial:', dataInicialError);
+          throw new Error('Erro ao calcular período de datas');
         }
 
-        const { data: alunoData, error: alunoError } = await supabase
-          .from('alunos')
-          .select('id, nome, texto_devolutiva')
-          .eq('id', alunoId)
-          .single();
+        // Agora chamar a função principal para obter todos os dados de desempenho
+        const { data: devolutivaData, error: devolutivaError } = await supabase
+          .rpc('get_aluno_desempenho', {
+            p_aluno_id: alunoId,
+            p_data_inicial: dataInicial,
+          });
 
-        if (alunoError) throw alunoError;
+        if (devolutivaError) {
+          console.error('Erro ao buscar dados da devolutiva:', devolutivaError);
+          throw devolutivaError;
+        }
 
-        const { data: abacoData, error: abacoError } = await supabase
-          .from('produtividade_abaco')
-          .select('*')
-          .eq('aluno_id', alunoId)
-          .gte('data_aula', dataInicial.toISOString())
-          .order('data_aula', { ascending: true });
+        if (!devolutivaData) {
+          throw new Error('Nenhum dado encontrado para o aluno');
+        }
 
-        if (abacoError) throw abacoError;
+        // Definir os meses disponíveis
+        if (devolutivaData.meses_disponiveis) {
+          setMesesDisponiveis(devolutivaData.meses_disponiveis || []);
+        }
 
-        const { data: ahData, error: ahError } = await supabase
-          .from('produtividade_ah')
-          .select('*')
-          .eq('aluno_id', alunoId)
-          .gte('created_at', dataInicial.toISOString())
-          .order('created_at', { ascending: true });
+        // Processar os dados retornados
+        const alunoDevolutiva: AlunoDevolutiva = {
+          id: devolutivaData.id,
+          nome: devolutivaData.nome,
+          texto_devolutiva: devolutivaData.texto_devolutiva,
+          texto_geral: devolutivaData.texto_geral,
+          desafios_feitos: devolutivaData.desafios_feitos || 0,
+          desempenho_abaco: devolutivaData.desempenho_abaco || [],
+          desempenho_ah: devolutivaData.desempenho_ah || [],
+          abaco_total_exercicios: devolutivaData.abaco_total_exercicios || 0,
+          abaco_total_erros: devolutivaData.abaco_total_erros || 0,
+          abaco_percentual_total: devolutivaData.abaco_percentual_total || 0,
+          ah_total_exercicios: devolutivaData.ah_total_exercicios || 0,
+          ah_total_erros: devolutivaData.ah_total_erros || 0,
+          ah_percentual_total: devolutivaData.ah_percentual_total || 0,
+        };
 
-        if (ahError) throw ahError;
-
-        const desempenhoAbaco = agruparPorMes(abacoData, 'data_aula');
-        const desempenhoAH = agruparPorMes(ahData, 'created_at');
-
-        const abacoTotais = desempenhoAbaco.reduce(
-          (acc, curr) => ({
-            exercicios: acc.exercicios + curr.exercicios,
-            erros: acc.erros + curr.erros
-          }),
-          { exercicios: 0, erros: 0 }
-        );
-
-        const ahTotais = desempenhoAH.reduce(
-          (acc, curr) => ({
-            exercicios: acc.exercicios + curr.exercicios,
-            erros: acc.erros + curr.erros
-          }),
-          { exercicios: 0, erros: 0 }
-        );
-
-        setData({
-          id: alunoId,
-          nome: alunoData.nome,
-          texto_geral: configData?.texto_geral || null,
-          texto_devolutiva: alunoData.texto_devolutiva,
-          desafios_feitos: abacoData.filter(item => item.fez_desafio).length,
-          desempenho_abaco: desempenhoAbaco,
-          desempenho_ah: desempenhoAH,
-          abaco_total_exercicios: abacoTotais.exercicios,
-          abaco_total_erros: abacoTotais.erros,
-          abaco_percentual_total: abacoTotais.exercicios 
-            ? ((abacoTotais.exercicios - abacoTotais.erros) / abacoTotais.exercicios) * 100 
-            : 0,
-          ah_total_exercicios: ahTotais.exercicios,
-          ah_total_erros: ahTotais.erros,
-          ah_percentual_total: ahTotais.exercicios 
-            ? ((ahTotais.exercicios - ahTotais.erros) / ahTotais.exercicios) * 100 
-            : 0
-        });
-
-        const meses = [...new Set([
-          ...abacoData.map(item => format(new Date(item.data_aula), 'yyyy-MM')),
-          ...ahData.map(item => format(new Date(item.created_at), 'yyyy-MM'))
-        ])].sort();
-        
-        setMesesDisponiveis(meses);
+        setData(alunoDevolutiva);
 
       } catch (err) {
         console.error('Erro ao buscar dados da devolutiva:', err);
