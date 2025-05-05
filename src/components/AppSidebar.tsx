@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { GraduationCap, Package, MessageCircle, CalendarDays, ClipboardList, User } from "lucide-react";
+import { GraduationCap, Package, MessageCircle, CalendarDays, ClipboardList, User, FileText } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +38,11 @@ const menuItems = [
     icon: MessageCircle,
   },
   {
+    title: "Fichas",
+    path: "/fichas",
+    icon: FileText,
+  },
+  {
     title: "Funcionários",
     path: "/funcionarios",
     icon: User,
@@ -72,4 +77,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-

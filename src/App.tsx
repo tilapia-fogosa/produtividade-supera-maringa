@@ -24,6 +24,7 @@ import Diario from "./pages/Diario";
 import Funcionarios from "./pages/Funcionarios";
 import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
+import Fichas from "./pages/Fichas";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
                     <Route path="/devolutivas/turmas" element={<Turmas />} />
                     <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                     <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
+                    <Route path="/fichas" element={<Fichas />} />
                     <Route path="/lancamentos" element={<Lancamentos />} />
                     <Route path="/diario" element={<Diario />} />
                     <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />

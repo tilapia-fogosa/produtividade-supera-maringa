@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTurmasPorDia } from '@/hooks/use-turmas-por-dia';
 import DayTurmasList from '@/components/turmas/DayTurmasList';
@@ -7,23 +7,35 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const diasSemana = [
+  { id: 'segunda', nome: 'Segunda-feira' },
+  { id: 'terca', nome: 'Terça-feira' },
+  { id: 'quarta', nome: 'Quarta-feira' },
+  { id: 'quinta', nome: 'Quinta-feira' },
+  { id: 'sexta', nome: 'Sexta-feira' },
+  { id: 'sabado', nome: 'Sábado' },
+];
 
 const Turmas = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dia = location.state?.dia;
+  const initialDia = location.state?.dia;
   const serviceType = location.state?.serviceType;
   const data = location.state?.data;
   
-  console.log("Turmas - Dia selecionado:", dia);
+  const [diaSelecionado, setDiaSelecionado] = useState<string | null>(initialDia);
+  
+  console.log("Turmas - Dia selecionado:", diaSelecionado);
   console.log("Turmas - Service Type:", serviceType);
   console.log("Turmas - Data selecionada:", data);
   
-  const { turmas, loading } = useTurmasPorDia();
+  const { turmas, loading } = useTurmasPorDia(diaSelecionado);
 
   const handleVoltar = () => {
     // Se for devolutiva, voltar para a página de devolutivas
-    if (serviceType === 'devolutiva') {
+    if (serviceType === 'devolutiva' || serviceType === 'ficha_impressao') {
       navigate('/devolutivas');
     } 
     // Se for diário de turma, voltar para a página de diário
@@ -40,22 +52,35 @@ const Turmas = () => {
     }
   };
 
+  const handleDiaClick = (dia: string) => {
+    setDiaSelecionado(dia);
+    // Atualizar o estado da rota para manter o serviceType
+    navigate(location.pathname, {
+      state: {
+        ...location.state,
+        dia: dia
+      },
+      replace: true
+    });
+  };
+
   // Formatar o texto do título com base nas informações disponíveis
   const getTituloTexto = () => {
     let serviceName = '';
     if (serviceType === 'abrindo_horizontes') serviceName = 'Turmas para Abrindo Horizontes';
     else if (serviceType === 'devolutiva') serviceName = 'Turmas para Devolutivas';
+    else if (serviceType === 'ficha_impressao') serviceName = 'Turmas para Fichas de Acompanhamento';
     else if (serviceType === 'diario_turma') serviceName = 'Turmas para Diário';
     else serviceName = 'Turmas de';
 
     let dayText = '';
-    if (dia) {
-      dayText = dia === 'segunda' ? 'Segunda-feira' : 
-               dia === 'terca' ? 'Terça-feira' : 
-               dia === 'quarta' ? 'Quarta-feira' : 
-               dia === 'quinta' ? 'Quinta-feira' : 
-               dia === 'sexta' ? 'Sexta-feira' : 
-               dia === 'sabado' ? 'Sábado' : 'Domingo';
+    if (diaSelecionado) {
+      dayText = diaSelecionado === 'segunda' ? 'Segunda-feira' : 
+               diaSelecionado === 'terca' ? 'Terça-feira' : 
+               diaSelecionado === 'quarta' ? 'Quarta-feira' : 
+               diaSelecionado === 'quinta' ? 'Quinta-feira' : 
+               diaSelecionado === 'sexta' ? 'Sexta-feira' : 
+               diaSelecionado === 'sabado' ? 'Sábado' : 'Domingo';
     }
     
     // Se tiver uma data específica, usar essa informação
@@ -89,12 +114,49 @@ const Turmas = () => {
         <h1 className="text-xl font-bold mb-4">
           {getTituloTexto()}
         </h1>
+
+        {/* Seletor de dias da semana */}
+        {!diaSelecionado && (
+          <Card className="border-orange-200 bg-white mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-azul-500">Selecione o dia da semana</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-4">
+              {diasSemana.map((dia) => (
+                <Button 
+                  key={dia.id}
+                  onClick={() => handleDiaClick(dia.id)}
+                  className="w-full bg-azul-500 hover:bg-azul-600 text-white"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dia.nome}
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+        )}
         
-        <DayTurmasList 
-          turmas={turmas} 
-          loading={loading} 
-          serviceType={serviceType}
-        />
+        {/* Mostrar lista de turmas somente se um dia for selecionado */}
+        {diaSelecionado && (
+          <>
+            <DayTurmasList 
+              turmas={turmas} 
+              loading={loading} 
+              serviceType={serviceType}
+            />
+            
+            {/* Botão para voltar à seleção de dia */}
+            {turmas.length > 0 && (
+              <Button 
+                onClick={() => setDiaSelecionado(null)}
+                variant="outline" 
+                className="mt-4 border-orange-200 text-azul-500"
+              >
+                Selecionar outro dia
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

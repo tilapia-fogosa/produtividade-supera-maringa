@@ -1,0 +1,225 @@
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 1cm;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .ficha-container table {
+    page-break-inside: avoid;
+    border-collapse: collapse;
+    width: 100%;
+  }
+}
+
+/* Estilos gerais da ficha */
+.ficha-container {
+  font-family: Arial, sans-serif;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 10px;
+  font-size: 9pt;
+}
+
+/* Estilos do cabeçalho */
+.ficha-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 10px;
+}
+
+.ficha-info {
+  display: flex;
+  gap: 20px;
+}
+
+.ficha-campo {
+  display: flex;
+  gap: 5px;
+}
+
+.ficha-label {
+  font-weight: bold;
+}
+
+.ficha-navegacao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ficha-setas {
+  display: flex;
+  gap: 5px;
+}
+
+.seta-pagina {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+/* Estilos da tabela */
+.ficha-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+  table-layout: fixed;
+}
+
+.ficha-tabela th,
+.ficha-tabela td {
+  border: 1px solid #000;
+  padding: 2px;
+  vertical-align: middle;
+  text-align: center;
+  height: 18px; /* Reduzimos um pouco a altura para caber os 15 alunos */
+}
+
+/* Dimensionamento das colunas */
+.ficha-coluna-nome {
+  width: 20%;
+}
+
+.ficha-coluna-faltas {
+  text-align: center;
+}
+
+.ficha-subcoluna-falta {
+  width: 2%;
+}
+
+.ficha-coluna-semana {
+  text-align: center;
+}
+
+.ficha-subcoluna {
+  width: 2.5%;
+  font-size: 8pt;
+}
+
+/* Cores das bordas para as colunas */
+.borda-faltas {
+  border-left: 3px solid #aaadb0 !important; /* Cinza para faltas */
+  border-right: 3px solid #aaadb0 !important;
+}
+
+.borda-semana-1 {
+  border-left: 3px solid #ea384c !important; /* Vermelho */
+  border-right: 3px solid #ea384c !important;
+}
+
+.borda-semana-2 {
+  border-left: 3px solid #F97316 !important; /* Laranja */
+  border-right: 3px solid #F97316 !important;
+}
+
+.borda-semana-3 {
+  border-left: 3px solid #0EA5E9 !important; /* Azul */
+  border-right: 3px solid #0EA5E9 !important;
+}
+
+.borda-semana-4 {
+  border-left: 3px solid #9b87f5 !important; /* Roxo */
+  border-right: 3px solid #9b87f5 !important;
+}
+
+.borda-semana-5 {
+  border-left: 3px solid #33C3F0 !important; /* Azul céu */
+  border-right: 3px solid #33C3F0 !important;
+}
+
+/* Headers de semana e faltas */
+.semana-header,
+.faltas-header {
+  font-weight: bold;
+  font-size: 9pt;
+}
+
+/* Estilos da célula do nome do aluno */
+.ficha-celula-nome {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-align: left !important;
+  padding-left: 5px !important;
+}
+
+.ficha-aluno-numero {
+  font-weight: bold;
+  text-align: center;
+  background-color: #eee;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 8pt;
+}
+
+.ficha-aluno-nome {
+  font-size: 9pt;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estilos da coluna de faltas */
+.ficha-celula-falta {
+  padding: 0 !important;
+}
+
+.falta-campo {
+  height: 18px; /* Reduzimos para combinar com a altura da célula */
+  width: 100%;
+}
+
+/* Estilos das células de semana */
+.ficha-celula-semana {
+  padding: 0 !important;
+}
+
+.semana-campo-valor {
+  height: 18px; /* Reduzimos para combinar com a altura da célula */
+  width: 100%;
+  background-color: #fff;
+}
+
+/* Rodapé */
+.ficha-rodape {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ccc;
+}
+
+.ficha-logo {
+  font-weight: bold;
+  font-style: italic;
+  font-size: 10pt;
+}

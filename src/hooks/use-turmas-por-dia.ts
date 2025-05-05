@@ -4,11 +4,12 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from './use-professor-turmas';
 
-export function useTurmasPorDia() {
+export function useTurmasPorDia(diaParam?: string | null) {
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  const dia = location.state?.dia;
+  // Usar o dia fornecido como parâmetro, ou buscar do location state como fallback
+  const dia = diaParam || location.state?.dia;
   const serviceType = location.state?.serviceType;
 
   useEffect(() => {
