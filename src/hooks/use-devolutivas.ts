@@ -10,11 +10,11 @@ export interface AlunoDevolutiva {
   texto_devolutiva: string | null;
 }
 
-export function useDevolutivas() {
+export function useDevolutivas(diaParam?: string | null) {
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  const dia = location.state?.dia;
+  const dia = diaParam || location.state?.dia;
   const serviceType = location.state?.serviceType;
 
   useEffect(() => {

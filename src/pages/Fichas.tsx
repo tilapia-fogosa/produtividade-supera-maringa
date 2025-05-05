@@ -43,7 +43,10 @@ const Fichas = () => {
         
         <Card className="p-4 print:p-0 print:border-none print:shadow-none">
           {turmaSelecionada && turma ? (
-            <FichaTurmaImprimivel turma={turma} alunos={alunos} />
+            <FichaTurmaImprimivel 
+              turma={turma} 
+              alunos={alunos.map(a => ({ id: a.id, nome: a.nome }))} 
+            />
           ) : (
             <SelecionarTurma onTurmaSelecionada={setTurmaSelecionada} />
           )}
