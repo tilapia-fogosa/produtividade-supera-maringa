@@ -48,22 +48,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
     }
   };
 
-  // Obter o nome do professor da turma (pode ser um objeto ou uma string)
-  const professorNome = typeof turma.professor === 'string' 
-    ? turma.professor 
+  // Obter o nome do professor da turma
+  const professorNome = typeof turma.professor_id === 'string' 
+    ? turma.professor_id 
     : turma.professor?.nome || 'Professor não especificado';
-
-  // Cada semana terá campos para: Apostila, Página, Exercícios, Erros, Desafio, Observações
-  const renderCamposSemana = () => (
-    <div className="semana-campos">
-      <div className="semana-campo">Ap.</div>
-      <div className="semana-campo">Página</div>
-      <div className="semana-campo">Ex.</div>
-      <div className="semana-campo">Er.</div>
-      <div className="semana-campo">Des.</div>
-      <div className="semana-campo">Obs.</div>
-    </div>
-  );
 
   return (
     <div className="ficha-container">
@@ -96,13 +84,38 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
       <Table className="ficha-tabela">
         <TableHeader>
           <TableRow>
-            <TableHead className="ficha-coluna-nome">Nome do Aluno</TableHead>
-            <TableHead className="ficha-coluna-faltas">Faltas</TableHead>
-            <TableHead className="ficha-coluna-semana semana-1">Semana 1</TableHead>
-            <TableHead className="ficha-coluna-semana semana-2">Semana 2</TableHead>
-            <TableHead className="ficha-coluna-semana semana-3">Semana 3</TableHead>
-            <TableHead className="ficha-coluna-semana semana-4">Semana 4</TableHead>
-            <TableHead className="ficha-coluna-semana semana-5">Semana 5</TableHead>
+            <TableHead className="ficha-coluna-nome" rowSpan={2}>Nome do Aluno</TableHead>
+            <TableHead className="ficha-coluna-faltas" colSpan={5}>
+              <div className="faltas-header">Faltas</div>
+            </TableHead>
+            {[1, 2, 3, 4, 5].map((semana) => (
+              <TableHead 
+                key={`semana-${semana}`} 
+                className={`ficha-coluna-semana semana-${semana}`}
+                colSpan={5}
+              >
+                <div className="semana-header">Semana {semana}</div>
+              </TableHead>
+            ))}
+          </TableRow>
+          <TableRow>
+            {/* Subcolunas de Faltas */}
+            {[1, 2, 3, 4, 5].map((dia) => (
+              <TableHead key={`falta-${dia}`} className="ficha-subcoluna-falta">
+                {dia}
+              </TableHead>
+            ))}
+            
+            {/* Subcolunas para cada semana */}
+            {[1, 2, 3, 4, 5].map((semana) => (
+              <React.Fragment key={`subheader-semana-${semana}`}>
+                <TableHead className="ficha-subcoluna">Ap.</TableHead>
+                <TableHead className="ficha-subcoluna">Pág.</TableHead>
+                <TableHead className="ficha-subcoluna">Ex.</TableHead>
+                <TableHead className="ficha-subcoluna">Er.</TableHead>
+                <TableHead className="ficha-subcoluna">Des.</TableHead>
+              </React.Fragment>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -112,50 +125,33 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
                 <span className="ficha-aluno-numero">{(paginaAtual - 1) * alunosPorPagina + index + 1}</span>
                 <span className="ficha-aluno-nome">{aluno.nome}</span>
               </TableCell>
-              <TableCell className="ficha-celula-faltas">
-                <div className="faltas-container">
-                  <div className="faltas-legenda">
-                    <div>P = Presente</div>
-                    <div>F = Falta</div>
-                    <div>D = Desafio</div>
-                  </div>
-                  <div className="faltas-datas">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="faltas-data"></div>
-                    ))}
-                  </div>
-                </div>
-              </TableCell>
-              {/* Colunas de semanas */}
-              {[1, 2, 3, 4, 5].map((semana) => (
-                <TableCell key={semana} className={`ficha-celula-semana semana-${semana}`}>
-                  <div className="semana-conteudo">
-                    <div className="semana-campo-grupo">
-                      <div className="semana-campo-label">Ap.</div>
-                      <div className="semana-campo-valor"></div>
-                    </div>
-                    <div className="semana-campo-grupo">
-                      <div className="semana-campo-label">Página</div>
-                      <div className="semana-campo-valor"></div>
-                    </div>
-                    <div className="semana-campo-grupo">
-                      <div className="semana-campo-label">Ex.</div>
-                      <div className="semana-campo-valor"></div>
-                    </div>
-                    <div className="semana-campo-grupo">
-                      <div className="semana-campo-label">Er.</div>
-                      <div className="semana-campo-valor"></div>
-                    </div>
-                    <div className="semana-campo-grupo">
-                      <div className="semana-campo-label">Des.</div>
-                      <div className="semana-campo-valor"></div>
-                    </div>
-                    <div className="semana-campo-grupo campo-obs">
-                      <div className="semana-campo-label">Obs.</div>
-                      <div className="semana-campo-valor"></div>
-                    </div>
-                  </div>
+              
+              {/* Células para faltas (5 dias) */}
+              {[1, 2, 3, 4, 5].map((dia) => (
+                <TableCell key={`falta-${aluno.id}-${dia}`} className="ficha-celula-falta">
+                  <div className="falta-campo"></div>
                 </TableCell>
+              ))}
+              
+              {/* Células para cada semana (5 subcolunas por semana) */}
+              {[1, 2, 3, 4, 5].map((semana) => (
+                <React.Fragment key={`semana-${aluno.id}-${semana}`}>
+                  <TableCell className="ficha-celula-semana">
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className="ficha-celula-semana">
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className="ficha-celula-semana">
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className="ficha-celula-semana">
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className="ficha-celula-semana">
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                </React.Fragment>
               ))}
             </TableRow>
           ))}
