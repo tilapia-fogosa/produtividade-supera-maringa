@@ -22,7 +22,7 @@ interface FichaTurmaImprimivelProps {
 
 const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alunos }) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const alunosPorPagina = 15;
+  const alunosPorPagina = 18;
   
   // Ordenar alunos por nome
   const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
@@ -142,6 +142,44 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
               {/* Células para cada semana (5 subcolunas por semana) */}
               {[1, 2, 3, 4, 5].map((semana) => (
                 <React.Fragment key={`semana-${aluno.id}-${semana}`}>
+                  <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                  <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
+                    <div className="semana-campo-valor"></div>
+                  </TableCell>
+                </React.Fragment>
+              ))}
+            </TableRow>
+          ))}
+          
+          {/* Adicionar linhas vazias para completar a tabela quando não tiver alunos suficientes */}
+          {alunosPagina.length < alunosPorPagina && Array.from({ length: alunosPorPagina - alunosPagina.length }).map((_, index) => (
+            <TableRow key={`empty-row-${index}`}>
+              <TableCell className="ficha-celula-nome">
+                <span className="ficha-aluno-numero">{alunosPagina.length + index + 1}</span>
+                <span className="ficha-aluno-nome"></span>
+              </TableCell>
+              
+              {/* Células para faltas (5 dias) */}
+              {[1, 2, 3, 4, 5].map((dia) => (
+                <TableCell key={`empty-falta-${index}-${dia}`} className="ficha-celula-falta borda-faltas">
+                  <div className="falta-campo"></div>
+                </TableCell>
+              ))}
+              
+              {/* Células para cada semana (5 subcolunas por semana) */}
+              {[1, 2, 3, 4, 5].map((semana) => (
+                <React.Fragment key={`empty-semana-${index}-${semana}`}>
                   <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
                     <div className="semana-campo-valor"></div>
                   </TableCell>
