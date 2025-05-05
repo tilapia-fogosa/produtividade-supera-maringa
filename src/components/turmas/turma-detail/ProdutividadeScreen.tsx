@@ -7,6 +7,7 @@ import ReposicaoButton from './ReposicaoButton';
 import AlunosListaTable from './AlunosListaTable';
 import { useNavigate, useParams } from 'react-router-dom';
 import TurmaHeader from './TurmaHeader';
+import { FileText } from 'lucide-react';
 
 interface ProdutividadeScreenProps {
   turma: Turma;
@@ -35,6 +36,10 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
     });
   };
 
+  const irParaFichas = () => {
+    navigate('/fichas');
+  };
+
   return (
     <>
       <TurmaHeader
@@ -42,11 +47,21 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
         onBack={onBack}
       />
       <div className="flex justify-between items-center mb-3">
-        <ReposicaoButton onClick={onReposicaoAula} />
+        <div className="flex gap-2">
+          <ReposicaoButton onClick={onReposicaoAula} />
+          <Button 
+            variant="outline"
+            onClick={irParaFichas}
+            className="border-orange-200 text-azul-500"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Fichas
+          </Button>
+        </div>
         <Button 
           variant="outline"
           onClick={verDiario}
-          className="ml-2"
+          className="border-orange-200 text-azul-500"
         >
           Ver Diário
         </Button>
