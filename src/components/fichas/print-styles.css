@@ -33,7 +33,7 @@
   max-width: 100%;
   margin: 0 auto;
   padding: 10px;
-  font-size: 9pt;
+  font-size: 11pt; /* Aumentado de 9pt para 11pt */
 }
 
 /* Estilos do cabeçalho */
@@ -41,23 +41,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 18px; /* Aumentado de 15px para 18px */
   border-bottom: 1px solid #000;
-  padding-bottom: 10px;
+  padding-bottom: 12px; /* Aumentado de 10px para 12px */
 }
 
 .ficha-info {
   display: flex;
-  gap: 20px;
+  gap: 24px; /* Aumentado de 20px para 24px */
 }
 
 .ficha-campo {
   display: flex;
-  gap: 5px;
+  gap: 8px; /* Aumentado de 5px para 8px */
 }
 
 .ficha-label {
   font-weight: bold;
+  font-size: 15pt; /* Aumentado em 50% de 10pt para 15pt */
+}
+
+.ficha-valor {
+  font-size: 15pt; /* Aumentado em 50% para corresponder ao label */
 }
 
 .ficha-navegacao {
@@ -93,10 +98,10 @@
 .ficha-tabela th,
 .ficha-tabela td {
   border: 1px solid #000;
-  padding: 2px;
+  padding: 3px; /* Aumentado de 2px para 3px */
   vertical-align: middle;
   text-align: center;
-  height: 18px; /* Reduzimos um pouco a altura para caber os 15 alunos */
+  height: 22px; /* Aumentado de 18px para 22px para maior espaçamento entre linhas */
 }
 
 /* Dimensionamento das colunas */
@@ -118,7 +123,7 @@
 
 .ficha-subcoluna {
   width: 2.5%;
-  font-size: 8pt;
+  font-size: 9pt; /* Aumentado de 8pt para 9pt */
 }
 
 /* Cores das bordas para as colunas */
@@ -156,34 +161,34 @@
 .semana-header,
 .faltas-header {
   font-weight: bold;
-  font-size: 9pt;
+  font-size: 11pt; /* Aumentado de 9pt para 11pt */
 }
 
 /* Estilos da célula do nome do aluno */
 .ficha-celula-nome {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px; /* Aumentado de 5px para 8px */
   text-align: left !important;
-  padding-left: 5px !important;
+  padding-left: 6px !important; /* Aumentado de 5px para 6px */
 }
 
 .ficha-aluno-numero {
   font-weight: bold;
   text-align: center;
   background-color: #eee;
-  width: 18px;
-  height: 18px;
+  width: 22px; /* Aumentado de 18px para 22px */
+  height: 22px; /* Aumentado de 18px para 22px */
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   flex-shrink: 0;
-  font-size: 8pt;
+  font-size: 9pt; /* Aumentado de 8pt para 9pt */
 }
 
 .ficha-aluno-nome {
-  font-size: 9pt;
+  font-size: 11pt; /* Aumentado de 9pt para 11pt */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -195,7 +200,7 @@
 }
 
 .falta-campo {
-  height: 18px; /* Reduzimos para combinar com a altura da célula */
+  height: 22px; /* Aumentado de 18px para 22px */
   width: 100%;
 }
 
@@ -205,7 +210,7 @@
 }
 
 .semana-campo-valor {
-  height: 18px; /* Reduzimos para combinar com a altura da célula */
+  height: 22px; /* Aumentado de 18px para 22px */
   width: 100%;
   background-color: #fff;
 }
@@ -213,13 +218,13 @@
 /* Rodapé */
 .ficha-rodape {
   text-align: center;
-  margin-top: 20px;
-  padding-top: 10px;
+  margin-top: 24px; /* Aumentado de 20px para 24px */
+  padding-top: 12px; /* Aumentado de 10px para 12px */
   border-top: 1px solid #ccc;
 }
 
 .ficha-logo {
   font-weight: bold;
   font-style: italic;
-  font-size: 10pt;
+  font-size: 12pt; /* Aumentado de 10pt para 12pt */
 }
