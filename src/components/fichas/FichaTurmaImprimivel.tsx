@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import './print-styles.css';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface FichaTurmaImprimivelProps {
   turma: Turma;
@@ -12,92 +13,135 @@ interface FichaTurmaImprimivelProps {
 }
 
 const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alunos }) => {
-  // Formatar o dia da semana
-  const formatarDiaSemana = (dia: string) => {
-    switch (dia) {
-      case 'segunda': return 'Segunda-feira';
-      case 'terca': return 'Terça-feira';
-      case 'quarta': return 'Quarta-feira';
-      case 'quinta': return 'Quinta-feira';
-      case 'sexta': return 'Sexta-feira';
-      case 'sabado': return 'Sábado';
-      case 'domingo': return 'Domingo';
-      default: return dia;
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const alunosPorPagina = 8;
+  
+  // Ordenar alunos por nome
+  const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
+  
+  // Calcular total de páginas
+  const totalPaginas = Math.ceil(alunosOrdenados.length / alunosPorPagina);
+  
+  // Obter alunos para a página atual
+  const alunosPagina = alunosOrdenados.slice(
+    (paginaAtual - 1) * alunosPorPagina, 
+    paginaAtual * alunosPorPagina
+  );
+  
+  // Preencher até 8 alunos com espaços vazios se necessário
+  const alunosExibidos = [...alunosPagina];
+  while (alunosExibidos.length < alunosPorPagina) {
+    alunosExibidos.push({ id: `vazio-${alunosExibidos.length}`, nome: '' });
+  }
+
+  const paginaAnterior = () => {
+    if (paginaAtual > 1) {
+      setPaginaAtual(paginaAtual - 1);
     }
   };
 
-  // Formatar o horário
-  const formatarHorario = (horario: string) => {
-    if (!horario) return '';
-    try {
-      const date = new Date(`2000-01-01T${horario}`);
-      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return horario;
+  const proximaPagina = () => {
+    if (paginaAtual < totalPaginas) {
+      setPaginaAtual(paginaAtual + 1);
     }
   };
-  
-  // Ordenar alunos por nome para fácil localização
-  const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
-    <div className="ficha-turma-container p-4">
-      <div className="ficha-header mb-6 text-center">
-        <h1 className="text-2xl font-bold text-azul-500">FICHA DE CONTROLE - TURMA</h1>
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="text-left">
-            <p className="font-semibold">Turma: <span className="font-normal">{turma.nome}</span></p>
-            <p className="font-semibold">Dia: <span className="font-normal">{formatarDiaSemana(turma.dia_semana)}</span></p>
+    <div className="registro-semanal-container">
+      {/* Cabeçalho */}
+      <div className="registro-cabecalho">
+        <div className="registro-info">
+          <div className="registro-campo">
+            <span className="registro-label">Turma:</span>
+            <span className="registro-valor">{turma.nome}</span>
           </div>
-          <div className="text-left">
-            <p className="font-semibold">Sala: <span className="font-normal">{turma.sala || '---'}</span></p>
-            <p className="font-semibold">Horário: <span className="font-normal">{formatarHorario(turma.horario)}</span></p>
+          <div className="registro-campo">
+            <span className="registro-label">Professor:</span>
+            <span className="registro-valor">{turma.professor_id}</span>
+          </div>
+        </div>
+        <div className="registro-navegacao">
+          <span className="registro-pagina">Página: {paginaAtual}</span>
+          <div className="registro-setas no-print">
+            <button onClick={paginaAnterior} disabled={paginaAtual <= 1} className="seta-pagina">
+              <ArrowLeft size={16} />
+            </button>
+            <button onClick={proximaPagina} disabled={paginaAtual >= totalPaginas} className="seta-pagina">
+              <ArrowRight size={16} />
+            </button>
           </div>
         </div>
       </div>
 
-      <table className="w-full border-collapse mt-4 print:border print:border-black">
-        <thead>
-          <tr>
-            <th className="border border-gray-400 p-2 w-1/3">Nome do Aluno</th>
-            <th className="border border-gray-400 p-2">Faltas</th>
-            <th className="border border-gray-400 p-2">Semana 1</th>
-            <th className="border border-gray-400 p-2">Semana 2</th>
-            <th className="border border-gray-400 p-2">Semana 3</th>
-            <th className="border border-gray-400 p-2">Semana 4</th>
-            <th className="border border-gray-400 p-2">Semana 5</th>
-          </tr>
-        </thead>
-        <tbody>
-          {alunosOrdenados.map((aluno) => (
-            <tr key={aluno.id}>
-              <td className="border border-gray-400 p-2">{aluno.nome}</td>
-              <td className="border border-gray-400 p-2">
-                <div className="min-h-[40px]"></div>
-              </td>
-              <td className="border border-gray-400 p-2">
-                <div className="min-h-[40px]"></div>
-              </td>
-              <td className="border border-gray-400 p-2">
-                <div className="min-h-[40px]"></div>
-              </td>
-              <td className="border border-gray-400 p-2">
-                <div className="min-h-[40px]"></div>
-              </td>
-              <td className="border border-gray-400 p-2">
-                <div className="min-h-[40px]"></div>
-              </td>
-              <td className="border border-gray-400 p-2">
-                <div className="min-h-[40px]"></div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Lista de alunos */}
+      <div className="registro-alunos-lista">
+        {alunosExibidos.map((aluno, index) => (
+          <div key={aluno.id} className="registro-aluno-item">
+            <div className="registro-aluno-numero">{index + 1}</div>
+            <div className="registro-aluno-nome">{aluno.nome}</div>
+          </div>
+        ))}
+      </div>
 
-      <div className="mt-8 page-break-inside-avoid">
-        <h2 className="text-xl font-bold text-azul-500 mb-4">Observações</h2>
-        <div className="border border-gray-400 min-h-[150px] p-2"></div>
+      {/* Tabela de presenças e semanas */}
+      <div className="registro-tabela-container">
+        {/* Coluna de presenças */}
+        <div className="registro-coluna-presencas">
+          <div className="registro-presencas-header">Presenças/Faltas</div>
+          <div className="registro-presencas-legenda">
+            <div>P = Presente</div>
+            <div>F = Falta</div>
+            <div>D = Desafio</div>
+          </div>
+          <div className="registro-presencas-datas">
+            <div className="registro-datas-header">Datas:</div>
+            <div className="registro-datas-campos">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="registro-data-campo"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Blocos de semanas */}
+        <div className="registro-semanas">
+          {['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4', 'Semana 5'].map((semana, index) => (
+            <div key={semana} className={`registro-semana semana-${index + 1}`}>
+              <div className="registro-semana-header">{semana}</div>
+              <div className="registro-semana-campos">
+                <div className="registro-campo-grupo">
+                  <div className="registro-campo-label">Ap.</div>
+                  <div className="registro-campo-valor"></div>
+                </div>
+                <div className="registro-campo-grupo">
+                  <div className="registro-campo-label">Página</div>
+                  <div className="registro-campo-valor"></div>
+                </div>
+                <div className="registro-campo-grupo">
+                  <div className="registro-campo-label">Ex.</div>
+                  <div className="registro-campo-valor"></div>
+                </div>
+                <div className="registro-campo-grupo">
+                  <div className="registro-campo-label">Er.</div>
+                  <div className="registro-campo-valor"></div>
+                </div>
+                <div className="registro-campo-grupo">
+                  <div className="registro-campo-label">Des.</div>
+                  <div className="registro-campo-valor"></div>
+                </div>
+                <div className="registro-campo-grupo campo-obs">
+                  <div className="registro-campo-label">Obs.</div>
+                  <div className="registro-campo-valor"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Rodapé */}
+      <div className="registro-rodape">
+        <div className="registro-logo">Supera – Ginástica para o Cérebro</div>
       </div>
     </div>
   );
