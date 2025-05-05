@@ -1,17 +1,8 @@
-
 import React, { useState } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
-} from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import './print-styles.css';
-
 interface FichaTurmaImprimivelProps {
   turma: Turma;
   alunos: {
@@ -19,29 +10,26 @@ interface FichaTurmaImprimivelProps {
     nome: string;
   }[];
 }
-
-const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alunos }) => {
+const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
+  turma,
+  alunos
+}) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const alunosPorPagina = 18;
-  
+
   // Ordenar alunos por nome
   const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
-  
+
   // Calcular total de páginas
   const totalPaginas = Math.ceil(alunosOrdenados.length / alunosPorPagina);
-  
-  // Obter alunos para a página atual
-  const alunosPagina = alunosOrdenados.slice(
-    (paginaAtual - 1) * alunosPorPagina, 
-    paginaAtual * alunosPorPagina
-  );
 
+  // Obter alunos para a página atual
+  const alunosPagina = alunosOrdenados.slice((paginaAtual - 1) * alunosPorPagina, paginaAtual * alunosPorPagina);
   const paginaAnterior = () => {
     if (paginaAtual > 1) {
       setPaginaAtual(paginaAtual - 1);
     }
   };
-
   const proximaPagina = () => {
     if (paginaAtual < totalPaginas) {
       setPaginaAtual(paginaAtual + 1);
@@ -49,17 +37,13 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
   };
 
   // Obter o nome do professor da turma
-  const professorNome = typeof turma.professor_id === 'string' 
-    ? turma.professor_id 
-    : 'Professor não especificado';
-
-  return (
-    <div className="ficha-container">
+  const professorNome = typeof turma.professor_id === 'string' ? turma.professor_id : 'Professor não especificado';
+  return <div className="ficha-container">
       {/* Cabeçalho da ficha */}
       <div className="ficha-cabecalho">
         <div className="ficha-info">
           <div className="ficha-campo">
-            <span className="ficha-label">Turma:</span>
+            <span className="ficha-label font-bold">Turma:</span>
             <span className="ficha-valor">{turma.nome}</span>
           </div>
           <div className="ficha-campo">
@@ -106,42 +90,34 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
           </TableRow>
           <TableRow>
             {/* Subcolunas de Faltas */}
-            {[1, 2, 3, 4, 5].map((dia) => (
-              <TableHead key={`falta-${dia}`} className="ficha-subcoluna-falta borda-faltas">
+            {[1, 2, 3, 4, 5].map(dia => <TableHead key={`falta-${dia}`} className="ficha-subcoluna-falta borda-faltas">
                 {dia}
-              </TableHead>
-            ))}
+              </TableHead>)}
             
             {/* Subcolunas para cada semana */}
-            {[1, 2, 3, 4, 5].map((semana) => (
-              <React.Fragment key={`subheader-semana-${semana}`}>
+            {[1, 2, 3, 4, 5].map(semana => <React.Fragment key={`subheader-semana-${semana}`}>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Ap.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Pág.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Ex.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Er.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Des.</TableHead>
-              </React.Fragment>
-            ))}
+              </React.Fragment>)}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunosPagina.map((aluno, index) => (
-            <TableRow key={aluno.id}>
+          {alunosPagina.map((aluno, index) => <TableRow key={aluno.id}>
               <TableCell className="ficha-celula-nome">
                 <span className="ficha-aluno-numero">{(paginaAtual - 1) * alunosPorPagina + index + 1}</span>
                 <span className="ficha-aluno-nome">{aluno.nome}</span>
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[1, 2, 3, 4, 5].map((dia) => (
-                <TableCell key={`falta-${aluno.id}-${dia}`} className="ficha-celula-falta borda-faltas">
+              {[1, 2, 3, 4, 5].map(dia => <TableCell key={`falta-${aluno.id}-${dia}`} className="ficha-celula-falta borda-faltas">
                   <div className="falta-campo"></div>
-                </TableCell>
-              ))}
+                </TableCell>)}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
-              {[1, 2, 3, 4, 5].map((semana) => (
-                <React.Fragment key={`semana-${aluno.id}-${semana}`}>
+              {[1, 2, 3, 4, 5].map(semana => <React.Fragment key={`semana-${aluno.id}-${semana}`}>
                   <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
                     <div className="semana-campo-valor"></div>
                   </TableCell>
@@ -157,29 +133,25 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
                   <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
                     <div className="semana-campo-valor"></div>
                   </TableCell>
-                </React.Fragment>
-              ))}
-            </TableRow>
-          ))}
+                </React.Fragment>)}
+            </TableRow>)}
           
           {/* Adicionar linhas vazias para completar a tabela quando não tiver alunos suficientes */}
-          {alunosPagina.length < alunosPorPagina && Array.from({ length: alunosPorPagina - alunosPagina.length }).map((_, index) => (
-            <TableRow key={`empty-row-${index}`}>
+          {alunosPagina.length < alunosPorPagina && Array.from({
+          length: alunosPorPagina - alunosPagina.length
+        }).map((_, index) => <TableRow key={`empty-row-${index}`}>
               <TableCell className="ficha-celula-nome">
                 <span className="ficha-aluno-numero">{alunosPagina.length + index + 1}</span>
                 <span className="ficha-aluno-nome"></span>
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[1, 2, 3, 4, 5].map((dia) => (
-                <TableCell key={`empty-falta-${index}-${dia}`} className="ficha-celula-falta borda-faltas">
+              {[1, 2, 3, 4, 5].map(dia => <TableCell key={`empty-falta-${index}-${dia}`} className="ficha-celula-falta borda-faltas">
                   <div className="falta-campo"></div>
-                </TableCell>
-              ))}
+                </TableCell>)}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
-              {[1, 2, 3, 4, 5].map((semana) => (
-                <React.Fragment key={`empty-semana-${index}-${semana}`}>
+              {[1, 2, 3, 4, 5].map(semana => <React.Fragment key={`empty-semana-${index}-${semana}`}>
                   <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
                     <div className="semana-campo-valor"></div>
                   </TableCell>
@@ -195,10 +167,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
                   <TableCell className={`ficha-celula-semana borda-semana-${semana}`}>
                     <div className="semana-campo-valor"></div>
                   </TableCell>
-                </React.Fragment>
-              ))}
-            </TableRow>
-          ))}
+                </React.Fragment>)}
+            </TableRow>)}
         </TableBody>
       </Table>
 
@@ -206,8 +176,6 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
       <div className="ficha-rodape">
         <div className="ficha-logo">Supera – Ginástica para o Cérebro</div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default FichaTurmaImprimivel;
