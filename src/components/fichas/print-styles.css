@@ -33,7 +33,7 @@
   max-width: 100%;
   margin: 0 auto;
   padding: 10px;
-  font-size: 11pt; /* Aumentado de 9pt para 11pt */
+  font-size: 13pt; /* Aumentado de 11pt para 13pt */
 }
 
 /* Estilos do cabeçalho */
@@ -58,11 +58,11 @@
 
 .ficha-label {
   font-weight: bold;
-  font-size: 15pt; /* Aumentado em 50% de 10pt para 15pt */
+  font-size: 25pt; /* Aumentado de 15pt para 25pt */
 }
 
 .ficha-valor {
-  font-size: 15pt; /* Aumentado em 50% para corresponder ao label */
+  font-size: 25pt; /* Aumentado de 15pt para 25pt */
 }
 
 .ficha-navegacao {
@@ -161,7 +161,7 @@
 .semana-header,
 .faltas-header {
   font-weight: bold;
-  font-size: 11pt; /* Aumentado de 9pt para 11pt */
+  font-size: 13pt; /* Aumentado de 11pt para 13pt */
 }
 
 /* Estilos da célula do nome do aluno */
@@ -188,7 +188,7 @@
 }
 
 .ficha-aluno-nome {
-  font-size: 11pt; /* Aumentado de 9pt para 11pt */
+  font-size: 13pt; /* Aumentado de 11pt para 13pt */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
