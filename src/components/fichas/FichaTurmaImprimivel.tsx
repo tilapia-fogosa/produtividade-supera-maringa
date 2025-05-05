@@ -46,6 +46,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
     }
   };
 
+  const professorNome = typeof turma.professor === 'string' 
+    ? turma.professor 
+    : turma.professor_id;
+
   return (
     <div className="registro-semanal-container">
       {/* Cabeçalho */}
@@ -57,11 +61,11 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
           </div>
           <div className="registro-campo">
             <span className="registro-label">Professor:</span>
-            <span className="registro-valor">{turma.professor_id}</span>
+            <span className="registro-valor">{professorNome}</span>
           </div>
         </div>
         <div className="registro-navegacao">
-          <span className="registro-pagina">Página: {paginaAtual}</span>
+          <span className="registro-pagina">Página: {paginaAtual} de {totalPaginas}</span>
           <div className="registro-setas no-print">
             <button onClick={paginaAnterior} disabled={paginaAtual <= 1} className="seta-pagina">
               <ArrowLeft size={16} />
@@ -77,7 +81,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
       <div className="registro-alunos-lista">
         {alunosExibidos.map((aluno, index) => (
           <div key={aluno.id} className="registro-aluno-item">
-            <div className="registro-aluno-numero">{index + 1}</div>
+            <div className="registro-aluno-numero">{(paginaAtual - 1) * alunosPorPagina + index + 1}</div>
             <div className="registro-aluno-nome">{aluno.nome}</div>
           </div>
         ))}

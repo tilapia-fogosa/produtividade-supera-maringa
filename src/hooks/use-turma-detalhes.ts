@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma, Aluno } from './use-professor-turmas';
 
-export function useTurmaDetalhes(turmaId?: string) {
+export function useTurmaDetalhes(turmaId?: string | null) {
   const [turma, setTurma] = useState<Turma | null>(null);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,12 +12,18 @@ export function useTurmaDetalhes(turmaId?: string) {
   useEffect(() => {
     if (!turmaId) {
       setLoading(false);
+      setTurma(null);
+      setAlunos([]);
+      setError(null);
       return;
     }
 
     const fetchTurmaEAlunos = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('Carregando detalhes da turma:', turmaId);
         
         // Buscar turma e professor
         const { data: turmaData, error: turmaError } = await supabase
@@ -45,6 +51,8 @@ export function useTurmaDetalhes(turmaId?: string) {
 
         if (alunosError) throw alunosError;
 
+        console.log(`Encontrados ${alunosData?.length || 0} alunos para a turma ${turmaData.nome}`);
+        
         setTurma(turmaCompleta);
         setAlunos(alunosData as Aluno[] || []);
       } catch (err) {

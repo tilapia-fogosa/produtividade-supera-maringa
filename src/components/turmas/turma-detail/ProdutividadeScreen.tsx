@@ -37,7 +37,9 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
   };
 
   const irParaFichas = () => {
-    navigate('/fichas');
+    console.log('Navegando para a página de fichas...');
+    // Usamos state para garantir que possamos voltar para esta página
+    navigate('/fichas', { state: { origem: 'produtividade', turmaId } });
   };
 
   return (
