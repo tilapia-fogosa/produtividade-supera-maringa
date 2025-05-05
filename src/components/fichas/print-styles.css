@@ -20,15 +20,15 @@
     display: block !important;
   }
   
-  .ficha-turma-container table {
+  .ficha-container table {
     page-break-inside: avoid;
     border-collapse: collapse;
     width: 100%;
   }
 }
 
-/* Estilos gerais do registro semanal */
-.registro-semanal-container {
+/* Estilos gerais da ficha */
+.ficha-container {
   font-family: Arial, sans-serif;
   max-width: 100%;
   margin: 0 auto;
@@ -37,7 +37,7 @@
 }
 
 /* Estilos do cabeçalho */
-.registro-cabecalho {
+.ficha-cabecalho {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -46,27 +46,27 @@
   padding-bottom: 10px;
 }
 
-.registro-info {
+.ficha-info {
   display: flex;
   gap: 20px;
 }
 
-.registro-campo {
+.ficha-campo {
   display: flex;
   gap: 5px;
 }
 
-.registro-label {
+.ficha-label {
   font-weight: bold;
 }
 
-.registro-navegacao {
+.ficha-navegacao {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.registro-setas {
+.ficha-setas {
   display: flex;
   gap: 5px;
 }
@@ -82,106 +82,34 @@
   padding: 2px;
 }
 
-/* Estilos da lista de alunos */
-.registro-alunos-lista {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 10px;
+/* Estilos da tabela */
+.ficha-tabela {
+  width: 100%;
+  border-collapse: collapse;
   margin-bottom: 15px;
 }
 
-.registro-aluno-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.registro-aluno-numero {
-  font-weight: bold;
-  text-align: center;
-  background-color: #eee;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  margin-bottom: 5px;
-}
-
-.registro-aluno-nome {
-  text-align: center;
-  border-bottom: 1px dotted #999;
-  width: 100%;
-  min-height: 20px;
-  font-size: 9pt;
-}
-
-/* Estilos da tabela de presenças e semanas */
-.registro-tabela-container {
-  display: flex;
+.ficha-tabela th,
+.ficha-tabela td {
   border: 1px solid #000;
-  margin-bottom: 20px;
+  padding: 4px;
+  vertical-align: top;
 }
 
-/* Coluna de presenças */
-.registro-coluna-presencas {
+/* Dimensionamento das colunas */
+.ficha-coluna-nome {
   width: 15%;
-  border-right: 1px solid #000;
-  padding: 5px;
 }
 
-.registro-presencas-header {
-  font-weight: bold;
-  text-align: center;
-  padding: 5px;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #000;
+.ficha-coluna-faltas {
+  width: 10%;
 }
 
-.registro-presencas-legenda {
-  font-size: 8pt;
-  margin: 5px 0;
-  padding: 5px;
+.ficha-coluna-semana {
+  width: 15%;
 }
 
-.registro-presencas-datas {
-  margin-top: 10px;
-}
-
-.registro-datas-header {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.registro-datas-campos {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.registro-data-campo {
-  border: 1px solid #ccc;
-  height: 20px;
-}
-
-/* Blocos de semanas */
-.registro-semanas {
-  display: flex;
-  flex-direction: column;
-  width: 85%;
-}
-
-.registro-semana {
-  border-bottom: 1px solid #000;
-  padding: 5px;
-}
-
-.registro-semana:last-child {
-  border-bottom: none;
-}
-
-/* Cores das semanas */
+/* Cores das semanas nos cabeçalhos */
 .semana-1 {
   border-top: 3px solid #ea384c; /* Vermelho */
 }
@@ -202,47 +130,90 @@
   border-top: 3px solid #F97316; /* Laranja */
 }
 
-.registro-semana-header {
-  font-weight: bold;
-  margin-bottom: 5px;
-  text-align: center;
-}
-
-.registro-semana-campos {
+/* Estilos da célula do nome do aluno */
+.ficha-celula-nome {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  align-items: center;
+  gap: 5px;
 }
 
-.registro-campo-grupo {
-  flex: 1;
-}
-
-.campo-obs {
-  flex: 2;
-}
-
-.registro-campo-label {
+.ficha-aluno-numero {
   font-weight: bold;
-  font-size: 8pt;
   text-align: center;
+  background-color: #eee;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.ficha-aluno-nome {
+  font-size: 9pt;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Estilos da coluna de faltas */
+.faltas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.faltas-legenda {
+  font-size: 8pt;
+  margin-bottom: 5px;
+}
+
+.faltas-datas {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.faltas-data {
+  border: 1px solid #ccc;
+  height: 20px;
+}
+
+/* Estilos das semanas */
+.semana-conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.semana-campo-grupo {
   margin-bottom: 2px;
 }
 
-.registro-campo-valor {
+.semana-campo-label {
+  font-weight: bold;
+  font-size: 8pt;
+  margin-bottom: 2px;
+}
+
+.semana-campo-valor {
   border: 1px solid #ccc;
-  height: 25px;
+  height: 16px;
+  background-color: #fff;
+}
+
+.campo-obs .semana-campo-valor {
+  height: 32px;
 }
 
 /* Rodapé */
-.registro-rodape {
+.ficha-rodape {
   text-align: center;
   margin-top: 20px;
   padding-top: 10px;
   border-top: 1px solid #ccc;
 }
 
-.registro-logo {
+.ficha-logo {
   font-weight: bold;
   font-style: italic;
 }

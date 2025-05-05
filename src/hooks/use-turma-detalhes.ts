@@ -28,7 +28,7 @@ export function useTurmaDetalhes(turmaId?: string | null) {
         // Buscar turma e professor
         const { data: turmaData, error: turmaError } = await supabase
           .from('turmas')
-          .select('*, professor:professores(nome)')
+          .select('*, professor:professores(id, nome)')
           .eq('id', turmaId)
           .single();
 
@@ -37,7 +37,9 @@ export function useTurmaDetalhes(turmaId?: string | null) {
         // Definindo a sala como string vazia se não existir no banco de dados
         const turmaCompleta: Turma = {
           ...turmaData,
-          sala: turmaData.sala || ''
+          sala: turmaData.sala || '',
+          // Garantir que temos o nome do professor
+          professor: turmaData.professor?.nome || ''
         };
         
         // Buscar alunos da turma, usando unit_id para filtrar corretamente
