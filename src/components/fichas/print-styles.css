@@ -121,25 +121,35 @@
   font-size: 8pt;
 }
 
-/* Cores das semanas nos cabeçalhos */
-.semana-1 {
-  border-top: 3px solid #ea384c; /* Vermelho */
+/* Cores das bordas para as colunas */
+.borda-faltas {
+  border-left: 3px solid #aaadb0 !important; /* Cinza para faltas */
+  border-right: 3px solid #aaadb0 !important;
 }
 
-.semana-2 {
-  border-top: 3px solid #F97316; /* Laranja */
+.borda-semana-1 {
+  border-left: 3px solid #ea384c !important; /* Vermelho */
+  border-right: 3px solid #ea384c !important;
 }
 
-.semana-3 {
-  border-top: 3px solid #FEF7CD; /* Amarelo claro */
+.borda-semana-2 {
+  border-left: 3px solid #F97316 !important; /* Laranja */
+  border-right: 3px solid #F97316 !important;
 }
 
-.semana-4 {
-  border-top: 3px solid #ea384c; /* Vermelho */
+.borda-semana-3 {
+  border-left: 3px solid #0EA5E9 !important; /* Azul */
+  border-right: 3px solid #0EA5E9 !important;
 }
 
-.semana-5 {
-  border-top: 3px solid #F97316; /* Laranja */
+.borda-semana-4 {
+  border-left: 3px solid #9b87f5 !important; /* Roxo */
+  border-right: 3px solid #9b87f5 !important;
+}
+
+.borda-semana-5 {
+  border-left: 3px solid #33C3F0 !important; /* Azul céu */
+  border-right: 3px solid #33C3F0 !important;
 }
 
 /* Headers de semana e faltas */

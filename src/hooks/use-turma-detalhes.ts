@@ -38,8 +38,8 @@ export function useTurmaDetalhes(turmaId?: string | null) {
         const turmaCompleta: Turma = {
           ...turmaData,
           sala: turmaData.sala || '',
-          // Garantir que temos o nome do professor
-          professor: turmaData.professor?.nome || ''
+          // Garantimos que o professor_id contenha o nome para exibição
+          professor_id: turmaData.professor?.nome || turmaData.professor_id
         };
         
         // Buscar alunos da turma, usando unit_id para filtrar corretamente
