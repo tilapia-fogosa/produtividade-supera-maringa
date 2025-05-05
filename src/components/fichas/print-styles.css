@@ -96,7 +96,7 @@
   padding: 2px;
   vertical-align: middle;
   text-align: center;
-  height: 20px;
+  height: 18px; /* Reduzimos um pouco a altura para caber os 15 alunos */
 }
 
 /* Dimensionamento das colunas */
@@ -195,7 +195,7 @@
 }
 
 .falta-campo {
-  height: 20px;
+  height: 18px; /* Reduzimos para combinar com a altura da célula */
   width: 100%;
 }
 
@@ -205,7 +205,7 @@
 }
 
 .semana-campo-valor {
-  height: 20px;
+  height: 18px; /* Reduzimos para combinar com a altura da célula */
   width: 100%;
   background-color: #fff;
 }

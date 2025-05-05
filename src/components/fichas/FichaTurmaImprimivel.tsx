@@ -22,7 +22,7 @@ interface FichaTurmaImprimivelProps {
 
 const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alunos }) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const alunosPorPagina = 8;
+  const alunosPorPagina = 15;
   
   // Ordenar alunos por nome
   const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
