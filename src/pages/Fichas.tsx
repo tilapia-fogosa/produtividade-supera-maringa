@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 import FichaTurmaImprimivel from '@/components/fichas/FichaTurmaImprimivel';
 
@@ -13,11 +13,11 @@ const Fichas = () => {
   const { turma, alunos, loading } = useTurmaDetalhes(turmaSelecionada);
 
   const handleVoltar = () => {
-    navigate('/devolutivas');
-  };
-
-  const handleImprimir = () => {
-    window.print();
+    if (turmaSelecionada) {
+      setTurmaSelecionada(null);
+    } else {
+      navigate('/devolutivas');
+    }
   };
 
   return (
@@ -30,14 +30,6 @@ const Fichas = () => {
             className="text-azul-500 border-orange-200"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-          </Button>
-          
-          <Button 
-            onClick={handleImprimir} 
-            variant="default"
-            className="bg-azul-500 hover:bg-azul-600"
-          >
-            <Printer className="mr-2 h-4 w-4" /> Imprimir
           </Button>
         </div>
         

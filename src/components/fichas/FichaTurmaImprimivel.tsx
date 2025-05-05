@@ -29,20 +29,13 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
   // Formatar o horário
   const formatarHorario = (horario: string) => {
     if (!horario) return '';
-    // Se o horário for um objeto Date ou string no formato ISO, converter para string HH:MM
-    if (typeof horario === 'object' || horario.includes('T')) {
-      try {
-        const date = new Date(horario);
-        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      } catch (e) {
-        return horario;
-      }
+    try {
+      const date = new Date(`2000-01-01T${horario}`);
+      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return horario;
     }
-    return horario;
   };
-
-  // Criar 5 semanas para o mês
-  const semanas = [1, 2, 3, 4, 5];
   
   // Ordenar alunos por nome para fácil localização
   const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
@@ -50,7 +43,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
   return (
     <div className="ficha-turma-container p-4">
       <div className="ficha-header mb-6 text-center">
-        <h1 className="text-2xl font-bold text-azul-500">FICHA DE ACOMPANHAMENTO DE TURMA</h1>
+        <h1 className="text-2xl font-bold text-azul-500">FICHA DE CONTROLE - TURMA</h1>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="text-left">
             <p className="font-semibold">Turma: <span className="font-normal">{turma.nome}</span></p>
@@ -67,22 +60,36 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
         <thead>
           <tr>
             <th className="border border-gray-400 p-2 w-1/3">Nome do Aluno</th>
-            {semanas.map((semana) => (
-              <th key={`semana-${semana}`} className="border border-gray-400 p-2">
-                Semana {semana}
-              </th>
-            ))}
+            <th className="border border-gray-400 p-2">Faltas</th>
+            <th className="border border-gray-400 p-2">Semana 1</th>
+            <th className="border border-gray-400 p-2">Semana 2</th>
+            <th className="border border-gray-400 p-2">Semana 3</th>
+            <th className="border border-gray-400 p-2">Semana 4</th>
+            <th className="border border-gray-400 p-2">Semana 5</th>
           </tr>
         </thead>
         <tbody>
           {alunosOrdenados.map((aluno) => (
             <tr key={aluno.id}>
               <td className="border border-gray-400 p-2">{aluno.nome}</td>
-              {semanas.map((semana) => (
-                <td key={`${aluno.id}-semana-${semana}`} className="border border-gray-400 p-2">
-                  <div className="min-h-[40px]"></div>
-                </td>
-              ))}
+              <td className="border border-gray-400 p-2">
+                <div className="min-h-[40px]"></div>
+              </td>
+              <td className="border border-gray-400 p-2">
+                <div className="min-h-[40px]"></div>
+              </td>
+              <td className="border border-gray-400 p-2">
+                <div className="min-h-[40px]"></div>
+              </td>
+              <td className="border border-gray-400 p-2">
+                <div className="min-h-[40px]"></div>
+              </td>
+              <td className="border border-gray-400 p-2">
+                <div className="min-h-[40px]"></div>
+              </td>
+              <td className="border border-gray-400 p-2">
+                <div className="min-h-[40px]"></div>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -90,7 +97,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({ turma, alun
 
       <div className="mt-8 page-break-inside-avoid">
         <h2 className="text-xl font-bold text-azul-500 mb-4">Observações</h2>
-        <div className="border border-gray-400 min-h-[200px] p-2"></div>
+        <div className="border border-gray-400 min-h-[150px] p-2"></div>
       </div>
     </div>
   );

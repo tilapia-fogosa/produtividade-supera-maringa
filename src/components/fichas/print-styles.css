@@ -29,9 +29,16 @@
   table td, table th {
     border: 1px solid #000;
   }
+
+  .ficha-turma-container {
+    font-size: 11pt;
+  }
 }
 
-.rotate-270 {
-  transform: rotate(270deg);
-  white-space: nowrap;
+.ficha-turma-container table {
+  table-layout: fixed;
+}
+
+.ficha-turma-container th:first-child {
+  width: 25%;
 }
