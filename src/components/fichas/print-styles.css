@@ -1,4 +1,3 @@
-
 @media print {
   @page {
     size: landscape;
@@ -34,6 +33,193 @@
   /* Exceto a última ficha */
   .ficha-container:last-of-type {
     page-break-after: auto;
+  }
+
+  /* Garantindo que TODAS as bordas internas sejam finas durante a impressão */
+  .ficha-tabela th,
+  .ficha-tabela td {
+    border: 0.5px solid #999 !important;
+  }
+  
+  /* Bordas grossas para as colunas principais com cores específicas */
+  .borda-faltas,
+  .ficha-tabela .borda-faltas,
+  th.borda-faltas,
+  td.borda-faltas {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .borda-semana-1,
+  .ficha-tabela .borda-semana-1,
+  th.borda-semana-1,
+  td.borda-semana-1 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .borda-semana-2,
+  .ficha-tabela .borda-semana-2,
+  th.borda-semana-2,
+  td.borda-semana-2 {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .borda-semana-3,
+  .ficha-tabela .borda-semana-3,
+  th.borda-semana-3,
+  td.borda-semana-3 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .borda-semana-4,
+  .ficha-tabela .borda-semana-4,
+  th.borda-semana-4,
+  td.borda-semana-4 {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .borda-semana-5,
+  .ficha-tabela .borda-semana-5,
+  th.borda-semana-5,
+  td.borda-semana-5 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Regra específica para garantir que as bordas internas das subcolunas sejam sempre finas */
+  .ficha-subcoluna-falta:not(:first-of-type):not(:last-of-type),
+  .ficha-subcoluna:not(:first-of-type):not(:last-of-type) {
+    border-left: 0.5px solid #999 !important;
+    border-right: 0.5px solid #999 !important;
+  }
+  
+  /* Garantir que apenas as subcolunas nas extremidades tenham bordas grossas */
+  .ficha-subcoluna-falta:first-of-type {
+    border-left: 2px solid !important;
+    border-left-color: inherit !important;
+    border-right: 0.5px solid #999 !important;
+  }
+  
+  .ficha-subcoluna-falta:last-of-type {
+    border-right: 2px solid !important;
+    border-right-color: inherit !important;
+    border-left: 0.5px solid #999 !important;
+  }
+  
+  .ficha-subcoluna.borda-semana-1:first-of-type,
+  .ficha-subcoluna.borda-semana-2:first-of-type,
+  .ficha-subcoluna.borda-semana-3:first-of-type,
+  .ficha-subcoluna.borda-semana-4:first-of-type,
+  .ficha-subcoluna.borda-semana-5:first-of-type {
+    border-left: 2px solid !important;
+    border-left-color: inherit !important;
+    border-right: 0.5px solid #999 !important;
+  }
+  
+  .ficha-subcoluna.borda-semana-1:last-of-type,
+  .ficha-subcoluna.borda-semana-2:last-of-type,
+  .ficha-subcoluna.borda-semana-3:last-of-type,
+  .ficha-subcoluna.borda-semana-4:last-of-type,
+  .ficha-subcoluna.borda-semana-5:last-of-type {
+    border-right: 2px solid !important;
+    border-right-color: inherit !important;
+    border-left: 0.5px solid #999 !important;
+  }
+  
+  /* Remover qualquer estilo que possa estar interferindo nas bordas entre subcolunas */
+  .ficha-subcoluna + .ficha-subcoluna,
+  .ficha-subcoluna-falta + .ficha-subcoluna-falta {
+    border-left: 0.5px solid #999 !important;
+  }
+  
+  /* Forçar o background e cores a serem impressos - Regra mais específica */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Estilos específicos para cabeçalhos coloridos - adicionados seletores mais específicos */
+  .borda-semana-1, 
+  [class*="borda-semana-1"] * {
+    border-color: #ea384c !important;
+    color: #ea384c !important;
+  }
+  
+  .borda-semana-2, 
+  [class*="borda-semana-2"] * {
+    border-color: #000000 !important;
+    color: #000000 !important;
+  }
+  
+  .borda-semana-3, 
+  [class*="borda-semana-3"] * {
+    border-color: #ea384c !important;
+    color: #ea384c !important;
+  }
+  
+  .borda-semana-4, 
+  [class*="borda-semana-4"] * {
+    border-color: #000000 !important;
+    color: #000000 !important;
+  }
+  
+  .borda-semana-5, 
+  [class*="borda-semana-5"] * {
+    border-color: #ea384c !important;
+    color: #ea384c !important;
+  }
+  
+  /* Adicionar força extra às bordas e cores */
+  .ficha-tabela th.borda-faltas,
+  .ficha-tabela td.borda-faltas {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+  }
+  
+  .ficha-tabela th.borda-semana-1,
+  .ficha-tabela td.borda-semana-1 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+  }
+  
+  .ficha-tabela th.borda-semana-2,
+  .ficha-tabela td.borda-semana-2 {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+  }
+  
+  .ficha-tabela th.borda-semana-3,
+  .ficha-tabela td.borda-semana-3 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+  }
+  
+  .ficha-tabela th.borda-semana-4,
+  .ficha-tabela td.borda-semana-4 {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+  }
+  
+  .ficha-tabela th.borda-semana-5,
+  .ficha-tabela td.borda-semana-5 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
   }
 }
 
@@ -118,18 +304,113 @@
   table-layout: fixed;
 }
 
+/* Configuração base para todas as células - bordas finas */
 .ficha-tabela th,
 .ficha-tabela td {
-  border: 1px solid #000;
+  border: 0.5px solid #999;
   padding: 2px; /* Reduzido de 3px para 2px */
   vertical-align: middle;
   text-align: center;
   height: 20px; /* Reduzido ligeiramente de 22px para 20px */
 }
 
+/* As bordas laterais das colunas principais são grossas */
+/* Bordas laterais da coluna de faltas */
+.ficha-coluna-faltas {
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+}
+
+/* Bordas laterais específicas para subcolunas */
+.ficha-subcoluna-falta.borda-faltas {
+  border-right: 0.5px solid #999;
+}
+
+.ficha-subcoluna-falta.borda-faltas:first-of-type {
+  border-left: 2px solid #000000 !important;
+}
+
+.ficha-subcoluna-falta.borda-faltas:last-of-type {
+  border-right: 2px solid #000000 !important;
+}
+
+/* Bordas laterais para as colunas de semanas */
+.ficha-coluna-semana {
+  border-left: 2px solid;
+  border-right: 2px solid;
+}
+
+/* Bordas específicas para subcolunas de semanas */
+.ficha-subcoluna.borda-semana-1:first-of-type {
+  border-left: 2px solid #ea384c !important;
+}
+.ficha-subcoluna.borda-semana-1:last-of-type {
+  border-right: 2px solid #ea384c !important;
+}
+
+.ficha-subcoluna.borda-semana-2:first-of-type {
+  border-left: 2px solid #000000 !important;
+}
+.ficha-subcoluna.borda-semana-2:last-of-type {
+  border-right: 2px solid #000000 !important;
+}
+
+.ficha-subcoluna.borda-semana-3:first-of-type {
+  border-left: 2px solid #ea384c !important;
+}
+.ficha-subcoluna.borda-semana-3:last-of-type {
+  border-right: 2px solid #ea384c !important;
+}
+
+.ficha-subcoluna.borda-semana-4:first-of-type {
+  border-left: 2px solid #000000 !important;
+}
+.ficha-subcoluna.borda-semana-4:last-of-type {
+  border-right: 2px solid #000000 !important;
+}
+
+.ficha-subcoluna.borda-semana-5:first-of-type {
+  border-left: 2px solid #ea384c !important;
+}
+.ficha-subcoluna.borda-semana-5:last-of-type {
+  border-right: 2px solid #ea384c !important;
+}
+
+/* Estilização para os headers das colunas principais que são spans múltiplos */
+.borda-faltas {
+  border-left: 2px solid #000000 !important;
+  border-right: 2px solid #000000 !important;
+}
+
+.borda-semana-1 {
+  border-left: 2px solid #ea384c !important;
+  border-right: 2px solid #ea384c !important;
+}
+
+.borda-semana-2 {
+  border-left: 2px solid #000000 !important;
+  border-right: 2px solid #000000 !important;
+}
+
+.borda-semana-3 {
+  border-left: 2px solid #ea384c !important;
+  border-right: 2px solid #ea384c !important;
+}
+
+.borda-semana-4 {
+  border-left: 2px solid #000000 !important;
+  border-right: 2px solid #000000 !important;
+}
+
+.borda-semana-5 {
+  border-left: 2px solid #ea384c !important;
+  border-right: 2px solid #ea384c !important;
+}
+
 /* Dimensionamento das colunas */
 .ficha-coluna-nome {
   width: 20%;
+  border-right: 2px solid #000;
 }
 
 .ficha-coluna-faltas {
@@ -138,9 +419,11 @@
 
 /* Subcolunas de falta ajustadas para mostrar apenas o dia */
 .ficha-subcoluna-falta {
-  width: 2.8%; /* Reduzido de 3.2% para 2.8% já que agora mostramos só o dia */
-  font-size: 11pt; /* Aumentado um pouco, já que temos mais espaço */
+  width: 2.8%; 
+  font-size: 11pt;
   font-weight: bold;
+  border-left: 0.5px solid #999;
+  border-right: 0.5px solid #999;
 }
 
 .ficha-coluna-semana {
@@ -150,37 +433,8 @@
 .ficha-subcoluna {
   width: 2.5%;
   font-size: 9pt;
-}
-
-/* Cores das bordas para as colunas */
-.borda-faltas {
-  border-left: 3px solid #000000 !important; /* Preto para faltas */
-  border-right: 3px solid #000000 !important;
-}
-
-.borda-semana-1 {
-  border-left: 3px solid #ea384c !important; /* Vermelho */
-  border-right: 3px solid #ea384c !important;
-}
-
-.borda-semana-2 {
-  border-left: 3px solid #000000 !important; /* Preto */
-  border-right: 3px solid #000000 !important;
-}
-
-.borda-semana-3 {
-  border-left: 3px solid #ea384c !important; /* Vermelho */
-  border-right: 3px solid #ea384c !important;
-}
-
-.borda-semana-4 {
-  border-left: 3px solid #000000 !important; /* Preto */
-  border-right: 3px solid #000000 !important;
-}
-
-.borda-semana-5 {
-  border-left: 3px solid #ea384c !important; /* Vermelho */
-  border-right: 3px solid #ea384c !important;
+  border-left: 0.5px solid #999;
+  border-right: 0.5px solid #999;
 }
 
 /* Headers de semana e faltas */
