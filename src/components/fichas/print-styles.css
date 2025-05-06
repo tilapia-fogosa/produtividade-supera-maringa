@@ -118,41 +118,17 @@
   table-layout: fixed;
 }
 
+/* MODIFICAÇÃO: Ajustando a espessura das linhas de subcolunas para mais finas */
 .ficha-tabela th,
 .ficha-tabela td {
-  border: 1px solid #000;
+  border: 0.5px solid #999; /* Linha mais fina para subcolunas */
   padding: 2px; /* Reduzido de 3px para 2px */
   vertical-align: middle;
   text-align: center;
   height: 20px; /* Reduzido ligeiramente de 22px para 20px */
 }
 
-/* Dimensionamento das colunas */
-.ficha-coluna-nome {
-  width: 20%;
-}
-
-.ficha-coluna-faltas {
-  text-align: center;
-}
-
-/* Subcolunas de falta ajustadas para mostrar apenas o dia */
-.ficha-subcoluna-falta {
-  width: 2.8%; /* Reduzido de 3.2% para 2.8% já que agora mostramos só o dia */
-  font-size: 11pt; /* Aumentado um pouco, já que temos mais espaço */
-  font-weight: bold;
-}
-
-.ficha-coluna-semana {
-  text-align: center;
-}
-
-.ficha-subcoluna {
-  width: 2.5%;
-  font-size: 9pt;
-}
-
-/* Cores das bordas para as colunas */
+/* Mantendo as bordas principais com espessura original */
 .borda-faltas {
   border-left: 3px solid #000000 !important; /* Preto para faltas */
   border-right: 3px solid #000000 !important;
@@ -181,6 +157,31 @@
 .borda-semana-5 {
   border-left: 3px solid #ea384c !important; /* Vermelho */
   border-right: 3px solid #ea384c !important;
+}
+
+/* Dimensionamento das colunas */
+.ficha-coluna-nome {
+  width: 20%;
+}
+
+.ficha-coluna-faltas {
+  text-align: center;
+}
+
+/* Subcolunas de falta ajustadas para mostrar apenas o dia */
+.ficha-subcoluna-falta {
+  width: 2.8%; /* Reduzido de 3.2% para 2.8% já que agora mostramos só o dia */
+  font-size: 11pt; /* Aumentado um pouco, já que temos mais espaço */
+  font-weight: bold;
+}
+
+.ficha-coluna-semana {
+  text-align: center;
+}
+
+.ficha-subcoluna {
+  width: 2.5%;
+  font-size: 9pt;
 }
 
 /* Headers de semana e faltas */
