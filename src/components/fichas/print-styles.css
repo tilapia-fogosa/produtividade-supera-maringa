@@ -1,3 +1,4 @@
+
 @media print {
   @page {
     size: landscape;
@@ -35,125 +36,125 @@
     page-break-after: auto;
   }
 
-  /* BASE: Todas as células têm borda fina por padrão */
+  /* BASE: Todas as células têm borda muito fina por padrão */
   .ficha-tabela th,
   .ficha-tabela td {
-    border: 0.5px solid #999 !important;
+    border: 0.25px solid #cccccc !important;
   }
   
   /* COLUNAS PRINCIPAIS: Apenas as bordas laterais EXTERNAS das colunas principais são grossas */
-  /* Bordas da coluna de faltas */
+  /* Bordas da coluna de faltas - agora cinza claro */
   .borda-faltas {
-    border-left: 2px solid #000000 !important;
-    border-right: 2px solid #000000 !important;
+    border-left: 2px solid #aaadb0 !important;
+    border-right: 2px solid #aaadb0 !important;
   }
   
-  /* Bordas das colunas de semanas */
+  /* Bordas das colunas de semanas - alternando entre rosa claro e cinza */
   .borda-semana-1 {
-    border-left: 2px solid #ea384c !important;
-    border-right: 2px solid #ea384c !important;
+    border-left: 2px solid #ffdee2 !important;
+    border-right: 2px solid #ffdee2 !important;
   }
   
   .borda-semana-2 {
-    border-left: 2px solid #000000 !important;
-    border-right: 2px solid #000000 !important;
+    border-left: 2px solid #aaadb0 !important;
+    border-right: 2px solid #aaadb0 !important;
   }
   
   .borda-semana-3 {
-    border-left: 2px solid #ea384c !important;
-    border-right: 2px solid #ea384c !important;
+    border-left: 2px solid #ffdee2 !important;
+    border-right: 2px solid #ffdee2 !important;
   }
   
   .borda-semana-4 {
-    border-left: 2px solid #000000 !important;
-    border-right: 2px solid #000000 !important;
+    border-left: 2px solid #aaadb0 !important;
+    border-right: 2px solid #aaadb0 !important;
   }
   
   .borda-semana-5 {
-    border-left: 2px solid #ea384c !important;
-    border-right: 2px solid #ea384c !important;
+    border-left: 2px solid #ffdee2 !important;
+    border-right: 2px solid #ffdee2 !important;
   }
 
-  /* SUBCOLUNAS: Todas as bordas internas entre subcolunas são sempre finas */
+  /* SUBCOLUNAS: Todas as bordas internas entre subcolunas são sempre bem finas */
   .ficha-subcoluna,
   .ficha-subcoluna-falta {
-    border-left: 0.5px solid #999 !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   /* PRIMEIRA SUBCOLUNA: Apenas a borda esquerda é grossa */
   .ficha-subcoluna-falta:first-child {
-    border-left: 2px solid #000000 !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 2px solid #aaadb0 !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   .ficha-subcoluna.borda-semana-1:first-child {
-    border-left: 2px solid #ea384c !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 2px solid #ffdee2 !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   .ficha-subcoluna.borda-semana-2:first-child {
-    border-left: 2px solid #000000 !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 2px solid #aaadb0 !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   .ficha-subcoluna.borda-semana-3:first-child {
-    border-left: 2px solid #ea384c !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 2px solid #ffdee2 !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   .ficha-subcoluna.borda-semana-4:first-child {
-    border-left: 2px solid #000000 !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 2px solid #aaadb0 !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   .ficha-subcoluna.borda-semana-5:first-child {
-    border-left: 2px solid #ea384c !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 2px solid #ffdee2 !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   /* ÚLTIMA SUBCOLUNA: Apenas a borda direita é grossa */
   .ficha-subcoluna-falta:last-child {
-    border-left: 0.5px solid #999 !important;
-    border-right: 2px solid #000000 !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 2px solid #aaadb0 !important;
   }
   
   .ficha-subcoluna.borda-semana-1:last-child {
-    border-left: 0.5px solid #999 !important;
-    border-right: 2px solid #ea384c !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 2px solid #ffdee2 !important;
   }
   
   .ficha-subcoluna.borda-semana-2:last-child {
-    border-left: 0.5px solid #999 !important;
-    border-right: 2px solid #000000 !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 2px solid #aaadb0 !important;
   }
   
   .ficha-subcoluna.borda-semana-3:last-child {
-    border-left: 0.5px solid #999 !important;
-    border-right: 2px solid #ea384c !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 2px solid #ffdee2 !important;
   }
   
   .ficha-subcoluna.borda-semana-4:last-child {
-    border-left: 0.5px solid #999 !important;
-    border-right: 2px solid #000000 !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 2px solid #aaadb0 !important;
   }
   
   .ficha-subcoluna.borda-semana-5:last-child {
-    border-left: 0.5px solid #999 !important;
-    border-right: 2px solid #ea384c !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 2px solid #ffdee2 !important;
   }
   
-  /* CÉLULAS INTERMEDIÁRIAS: Somente bordas finas */
+  /* CÉLULAS INTERMEDIÁRIAS: Somente bordas muito finas */
   .ficha-subcoluna:not(:first-child):not(:last-child),
   .ficha-subcoluna-falta:not(:first-child):not(:last-child) {
-    border-left: 0.5px solid #999 !important;
-    border-right: 0.5px solid #999 !important;
+    border-left: 0.25px solid #cccccc !important;
+    border-right: 0.25px solid #cccccc !important;
   }
   
   /* Garantir que não existam bordas grossas acidentais entre subcolunas adjacentes */
   .ficha-subcoluna + .ficha-subcoluna,
   .ficha-subcoluna-falta + .ficha-subcoluna-falta {
-    border-left: 0.5px solid #999 !important;
+    border-left: 0.25px solid #cccccc !important;
   }
 }
 
@@ -241,7 +242,7 @@
 /* BASE: Configuração base para todas as células - bordas finas */
 .ficha-tabela th,
 .ficha-tabela td {
-  border: 0.5px solid #999;
+  border: 0.25px solid #cccccc;
   padding: 2px;
   vertical-align: middle;
   text-align: center;
@@ -249,124 +250,124 @@
 }
 
 /* COLUNAS PRINCIPAIS: Bordas laterais externas grossas */
-/* Bordas laterais da coluna de faltas */
+/* Bordas laterais da coluna de faltas - agora em cinza claro */
 .borda-faltas {
-  border-left: 2px solid #000000 !important;
-  border-right: 2px solid #000000 !important;
+  border-left: 2px solid #aaadb0;
+  border-right: 2px solid #aaadb0;
 }
 
-/* Bordas laterais para as colunas de semanas */
+/* Bordas laterais para as colunas de semanas - alternando entre rosa claro e cinza */
 .borda-semana-1 {
-  border-left: 2px solid #ea384c !important;
-  border-right: 2px solid #ea384c !important;
+  border-left: 2px solid #ffdee2;
+  border-right: 2px solid #ffdee2;
 }
 
 .borda-semana-2 {
-  border-left: 2px solid #000000 !important;
-  border-right: 2px solid #000000 !important;
+  border-left: 2px solid #aaadb0;
+  border-right: 2px solid #aaadb0;
 }
 
 .borda-semana-3 {
-  border-left: 2px solid #ea384c !important;
-  border-right: 2px solid #ea384c !important;
+  border-left: 2px solid #ffdee2;
+  border-right: 2px solid #ffdee2;
 }
 
 .borda-semana-4 {
-  border-left: 2px solid #000000 !important;
-  border-right: 2px solid #000000 !important;
+  border-left: 2px solid #aaadb0;
+  border-right: 2px solid #aaadb0;
 }
 
 .borda-semana-5 {
-  border-left: 2px solid #ea384c !important;
-  border-right: 2px solid #ea384c !important;
+  border-left: 2px solid #ffdee2;
+  border-right: 2px solid #ffdee2;
 }
 
 /* SUBCOLUNAS: Todas as bordas internas entre subcolunas são sempre finas */
 .ficha-subcoluna,
 .ficha-subcoluna-falta {
-  border-left: 0.5px solid #999;
-  border-right: 0.5px solid #999;
+  border-left: 0.25px solid #cccccc;
+  border-right: 0.25px solid #cccccc;
 }
 
 /* PRIMEIRA SUBCOLUNA: Apenas a borda esquerda é grossa */
 .ficha-subcoluna-falta:first-child {
-  border-left: 2px solid #000000;
-  border-right: 0.5px solid #999;
+  border-left: 2px solid #aaadb0;
+  border-right: 0.25px solid #cccccc;
 }
 
 .ficha-subcoluna.borda-semana-1:first-child {
-  border-left: 2px solid #ea384c;
-  border-right: 0.5px solid #999;
+  border-left: 2px solid #ffdee2;
+  border-right: 0.25px solid #cccccc;
 }
 
 .ficha-subcoluna.borda-semana-2:first-child {
-  border-left: 2px solid #000000;
-  border-right: 0.5px solid #999;
+  border-left: 2px solid #aaadb0;
+  border-right: 0.25px solid #cccccc;
 }
 
 .ficha-subcoluna.borda-semana-3:first-child {
-  border-left: 2px solid #ea384c;
-  border-right: 0.5px solid #999;
+  border-left: 2px solid #ffdee2;
+  border-right: 0.25px solid #cccccc;
 }
 
 .ficha-subcoluna.borda-semana-4:first-child {
-  border-left: 2px solid #000000;
-  border-right: 0.5px solid #999;
+  border-left: 2px solid #aaadb0;
+  border-right: 0.25px solid #cccccc;
 }
 
 .ficha-subcoluna.borda-semana-5:first-child {
-  border-left: 2px solid #ea384c;
-  border-right: 0.5px solid #999;
+  border-left: 2px solid #ffdee2;
+  border-right: 0.25px solid #cccccc;
 }
 
 /* ÚLTIMA SUBCOLUNA: Apenas a borda direita é grossa */
 .ficha-subcoluna-falta:last-child {
-  border-left: 0.5px solid #999;
-  border-right: 2px solid #000000;
+  border-left: 0.25px solid #cccccc;
+  border-right: 2px solid #aaadb0;
 }
 
 .ficha-subcoluna.borda-semana-1:last-child {
-  border-left: 0.5px solid #999;
-  border-right: 2px solid #ea384c;
+  border-left: 0.25px solid #cccccc;
+  border-right: 2px solid #ffdee2;
 }
 
 .ficha-subcoluna.borda-semana-2:last-child {
-  border-left: 0.5px solid #999;
-  border-right: 2px solid #000000;
+  border-left: 0.25px solid #cccccc;
+  border-right: 2px solid #aaadb0;
 }
 
 .ficha-subcoluna.borda-semana-3:last-child {
-  border-left: 0.5px solid #999;
-  border-right: 2px solid #ea384c;
+  border-left: 0.25px solid #cccccc;
+  border-right: 2px solid #ffdee2;
 }
 
 .ficha-subcoluna.borda-semana-4:last-child {
-  border-left: 0.5px solid #999;
-  border-right: 2px solid #000000;
+  border-left: 0.25px solid #cccccc;
+  border-right: 2px solid #aaadb0;
 }
 
 .ficha-subcoluna.borda-semana-5:last-child {
-  border-left: 0.5px solid #999;
-  border-right: 2px solid #ea384c;
+  border-left: 0.25px solid #cccccc;
+  border-right: 2px solid #ffdee2;
 }
 
 /* CÉLULAS INTERMEDIÁRIAS: Somente bordas finas */
 .ficha-subcoluna:not(:first-child):not(:last-child),
 .ficha-subcoluna-falta:not(:first-child):not(:last-child) {
-  border-left: 0.5px solid #999;
-  border-right: 0.5px solid #999;
+  border-left: 0.25px solid #cccccc;
+  border-right: 0.25px solid #cccccc;
 }
 
 /* Garantir que não existam bordas grossas acidentais entre subcolunas adjacentes */
 .ficha-subcoluna + .ficha-subcoluna,
 .ficha-subcoluna-falta + .ficha-subcoluna-falta {
-  border-left: 0.5px solid #999;
+  border-left: 0.25px solid #cccccc;
 }
 
 /* Dimensionamento das colunas */
 .ficha-coluna-nome {
   width: 20%;
-  border-right: 2px solid #000;
+  border-right: 2px solid #aaadb0;
 }
 
 .ficha-coluna-faltas {
