@@ -1,4 +1,3 @@
-
 @media print {
   @page {
     size: landscape;
@@ -126,11 +125,11 @@
   text-align: center;
 }
 
-/* Aumentando o tamanho das subcolunas de falta para acomodar as datas */
+/* Subcolunas de falta ajustadas para mostrar apenas o dia */
 .ficha-subcoluna-falta {
-  width: 3.2%; /* Aumentado de 2% para 3.2% */
-  font-size: 10pt;
-  white-space: nowrap;
+  width: 2.8%; /* Reduzido de 3.2% para 2.8% já que agora mostramos só o dia */
+  font-size: 11pt; /* Aumentado um pouco, já que temos mais espaço */
+  font-weight: bold;
 }
 
 .ficha-coluna-semana {

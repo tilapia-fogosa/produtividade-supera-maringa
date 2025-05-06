@@ -88,8 +88,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   // Obter datas das aulas
   const datasAulas = gerarDatasAulas();
 
-  // Formatar data para exibição (DD/MM)
-  const formatarData = (data: Date) => format(data, 'dd/MM', { locale: ptBR });
+  // Formatar data para exibição (DD/MM) - Modificado para mostrar apenas o dia (DD)
+  const formatarData = (data: Date) => format(data, 'dd', { locale: ptBR });
 
   // Função para renderizar a tabela com os dados necessários
   const renderizarTabela = (tipoTabela: 'principal' | 'reposicao') => {
