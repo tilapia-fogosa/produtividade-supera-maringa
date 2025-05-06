@@ -4,7 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Turma } from './use-professor-turmas';
 
 export interface TurmaDetalhes {
-  turma: Turma;
+  turma: Turma & { 
+    professorNome?: string;
+    professores?: {
+      nome: string;
+    }
+  };
   alunos: {
     id: string;
     nome: string;
