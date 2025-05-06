@@ -1,4 +1,3 @@
-
 @media print {
   @page {
     size: landscape;
@@ -36,13 +35,13 @@
     page-break-after: auto;
   }
 
-  /* Garantindo que as bordas internas permaneçam finas durante a impressão */
+  /* Garantindo que TODAS as bordas internas sejam finas durante a impressão */
   .ficha-tabela th,
   .ficha-tabela td {
     border: 0.5px solid #999 !important;
   }
   
-  /* Definir bordas grossas apenas para as laterais das colunas principais */
+  /* Definir bordas grossas APENAS para as bordas LATERAIS das colunas principais */
   .borda-faltas {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
@@ -73,8 +72,26 @@
     border-right: 2px solid #ea384c !important;
   }
 
-  /* Estilos para células de subcoluna */
-  .ficha-subcoluna-falta:first-of-type,
+  /* Regra específica para garantir que as bordas internas das subcolunas sejam sempre finas */
+  .ficha-subcoluna-falta:not(:first-of-type):not(:last-of-type),
+  .ficha-subcoluna:not(:first-of-type):not(:last-of-type) {
+    border-left: 0.5px solid #999 !important;
+    border-right: 0.5px solid #999 !important;
+  }
+  
+  /* Garantir que apenas as subcolunas nas extremidades tenham bordas grossas */
+  .ficha-subcoluna-falta:first-of-type {
+    border-left: 2px solid !important;
+    border-left-color: inherit !important;
+    border-right: 0.5px solid #999 !important;
+  }
+  
+  .ficha-subcoluna-falta:last-of-type {
+    border-right: 2px solid !important;
+    border-right-color: inherit !important;
+    border-left: 0.5px solid #999 !important;
+  }
+  
   .ficha-subcoluna.borda-semana-1:first-of-type,
   .ficha-subcoluna.borda-semana-2:first-of-type,
   .ficha-subcoluna.borda-semana-3:first-of-type,
@@ -82,9 +99,9 @@
   .ficha-subcoluna.borda-semana-5:first-of-type {
     border-left: 2px solid !important;
     border-left-color: inherit !important;
+    border-right: 0.5px solid #999 !important;
   }
   
-  .ficha-subcoluna-falta:last-of-type,
   .ficha-subcoluna.borda-semana-1:last-of-type,
   .ficha-subcoluna.borda-semana-2:last-of-type,
   .ficha-subcoluna.borda-semana-3:last-of-type,
@@ -92,6 +109,13 @@
   .ficha-subcoluna.borda-semana-5:last-of-type {
     border-right: 2px solid !important;
     border-right-color: inherit !important;
+    border-left: 0.5px solid #999 !important;
+  }
+  
+  /* Remover qualquer estilo que possa estar interferindo nas bordas entre subcolunas */
+  .ficha-subcoluna + .ficha-subcoluna,
+  .ficha-subcoluna-falta + .ficha-subcoluna-falta {
+    border-left: 0.5px solid #999 !important;
   }
 }
 
@@ -291,9 +315,11 @@
 
 /* Subcolunas de falta ajustadas para mostrar apenas o dia */
 .ficha-subcoluna-falta {
-  width: 2.8%; /* Reduzido de 3.2% para 2.8% já que agora mostramos só o dia */
-  font-size: 11pt; /* Aumentado um pouco, já que temos mais espaço */
+  width: 2.8%; 
+  font-size: 11pt;
   font-weight: bold;
+  border-left: 0.5px solid #999;
+  border-right: 0.5px solid #999;
 }
 
 .ficha-coluna-semana {
@@ -303,6 +329,8 @@
 .ficha-subcoluna {
   width: 2.5%;
   font-size: 9pt;
+  border-left: 0.5px solid #999;
+  border-right: 0.5px solid #999;
 }
 
 /* Headers de semana e faltas */
