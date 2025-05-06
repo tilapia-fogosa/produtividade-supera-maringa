@@ -91,6 +91,15 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   // Formatar data para exibição (DD/MM) - Modificado para mostrar apenas o dia (DD)
   const formatarData = (data: Date) => format(data, 'dd', { locale: ptBR });
 
+  // Cores específicas para as semanas para garantir a consistência
+  const coresSemanas = {
+    1: '#ea384c', // Vermelho
+    2: '#000000', // Preto
+    3: '#ea384c', // Vermelho
+    4: '#000000', // Preto
+    5: '#ea384c'  // Vermelho
+  };
+
   // Função para renderizar a tabela com os dados necessários
   const renderizarTabela = (tipoTabela: 'principal' | 'reposicao') => {
     const linhasMax = tipoTabela === 'principal' ? alunosPorPagina : alunosReposicaoPorPagina;
@@ -102,22 +111,22 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead className="ficha-coluna-nome" rowSpan={2}>Nome do Aluno</TableHead>
-            <TableHead className="ficha-coluna-faltas borda-faltas" colSpan={5}>
+            <TableHead className="ficha-coluna-faltas borda-faltas" colSpan={5} style={{borderColor: '#000000', color: '#000000'}}>
               <div className="faltas-header">Faltas</div>
             </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-1" colSpan={5}>
+            <TableHead className="ficha-coluna-semana borda-semana-1" colSpan={5} style={{borderColor: coresSemanas[1], color: coresSemanas[1]}}>
               <div className="semana-header">{datasAulas[0] ? `Semana 1 (${formatarData(datasAulas[0])})` : 'Semana 1'}</div>
             </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-2" colSpan={5}>
+            <TableHead className="ficha-coluna-semana borda-semana-2" colSpan={5} style={{borderColor: coresSemanas[2], color: coresSemanas[2]}}>
               <div className="semana-header">{datasAulas[1] ? `Semana 2 (${formatarData(datasAulas[1])})` : 'Semana 2'}</div>
             </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-3" colSpan={5}>
+            <TableHead className="ficha-coluna-semana borda-semana-3" colSpan={5} style={{borderColor: coresSemanas[3], color: coresSemanas[3]}}>
               <div className="semana-header">{datasAulas[2] ? `Semana 3 (${formatarData(datasAulas[2])})` : 'Semana 3'}</div>
             </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-4" colSpan={5}>
+            <TableHead className="ficha-coluna-semana borda-semana-4" colSpan={5} style={{borderColor: coresSemanas[4], color: coresSemanas[4]}}>
               <div className="semana-header">{datasAulas[3] ? `Semana 4 (${formatarData(datasAulas[3])})` : 'Semana 4'}</div>
             </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-5" colSpan={5}>
+            <TableHead className="ficha-coluna-semana borda-semana-5" colSpan={5} style={{borderColor: coresSemanas[5], color: coresSemanas[5]}}>
               <div className="semana-header">{datasAulas[4] ? `Semana 5 (${formatarData(datasAulas[4])})` : 'Semana 5'}</div>
             </TableHead>
           </TableRow>
@@ -127,6 +136,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               <TableHead 
                 key={`falta-${index}`} 
                 className={`ficha-subcoluna-falta borda-faltas ${idx === 0 ? 'first-subcol' : ''} ${idx === 4 ? 'last-subcol' : ''}`}
+                style={{borderColor: '#000000'}}
               >
                 {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
               </TableHead>
@@ -135,11 +145,36 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
             {/* Subcolunas para cada semana */}
             {[1, 2, 3, 4, 5].map(semana => (
               <React.Fragment key={`subheader-semana-${semana}`}>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana} first-subcol`}>Ap.</TableHead>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Pág.</TableHead>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Ex.</TableHead>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Er.</TableHead>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana} last-subcol`}>Des.</TableHead>
+                <TableHead 
+                  className={`ficha-subcoluna borda-semana-${semana} first-subcol`}
+                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
+                >
+                  Ap.
+                </TableHead>
+                <TableHead 
+                  className={`ficha-subcoluna borda-semana-${semana}`}
+                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
+                >
+                  Pág.
+                </TableHead>
+                <TableHead 
+                  className={`ficha-subcoluna borda-semana-${semana}`}
+                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
+                >
+                  Ex.
+                </TableHead>
+                <TableHead 
+                  className={`ficha-subcoluna borda-semana-${semana}`}
+                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
+                >
+                  Er.
+                </TableHead>
+                <TableHead 
+                  className={`ficha-subcoluna borda-semana-${semana} last-subcol`}
+                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
+                >
+                  Des.
+                </TableHead>
               </React.Fragment>
             ))}
           </TableRow>
