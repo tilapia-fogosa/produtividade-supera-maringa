@@ -15,6 +15,13 @@ interface FichaTurmaImprimivelProps {
   }[];
 }
 
+// Definir cores constantes para garantir consistência
+const CORES = {
+  vermelho: '#ea384c',
+  preto: '#000000',
+  cinza: '#999999'
+};
+
 const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   turma,
   alunos
@@ -93,11 +100,26 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
 
   // Cores específicas para as semanas para garantir a consistência
   const coresSemanas = {
-    1: '#ea384c', // Vermelho
-    2: '#000000', // Preto
-    3: '#ea384c', // Vermelho
-    4: '#000000', // Preto
-    5: '#ea384c'  // Vermelho
+    1: CORES.vermelho,
+    2: CORES.preto,
+    3: CORES.vermelho,
+    4: CORES.preto,
+    5: CORES.vermelho
+  };
+
+  // Estilos inline para garantir que as cores sejam impressas corretamente
+  const getSemanaBorderStyle = (semana: number) => {
+    const cor = semana % 2 === 1 ? CORES.vermelho : CORES.preto;
+    return {
+      borderLeft: `2px solid ${cor}`,
+      borderRight: `2px solid ${cor}`,
+      borderLeftColor: cor,
+      borderRightColor: cor,
+      color: cor,
+      WebkitPrintColorAdjust: 'exact',
+      printColorAdjust: 'exact',
+      colorAdjust: 'exact'
+    };
   };
 
   // Função para renderizar a tabela com os dados necessários
@@ -111,24 +133,32 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead className="ficha-coluna-nome" rowSpan={2}>Nome do Aluno</TableHead>
-            <TableHead className="ficha-coluna-faltas borda-faltas" colSpan={5} style={{borderColor: '#000000', color: '#000000'}}>
+            <TableHead 
+              className="ficha-coluna-faltas borda-faltas" 
+              colSpan={5} 
+              style={{
+                borderLeft: `2px solid ${CORES.preto}`,
+                borderRight: `2px solid ${CORES.preto}`,
+                color: CORES.preto,
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact',
+                colorAdjust: 'exact'
+              }}
+            >
               <div className="faltas-header">Faltas</div>
             </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-1" colSpan={5} style={{borderColor: coresSemanas[1], color: coresSemanas[1]}}>
-              <div className="semana-header">{datasAulas[0] ? `Semana 1 (${formatarData(datasAulas[0])})` : 'Semana 1'}</div>
-            </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-2" colSpan={5} style={{borderColor: coresSemanas[2], color: coresSemanas[2]}}>
-              <div className="semana-header">{datasAulas[1] ? `Semana 2 (${formatarData(datasAulas[1])})` : 'Semana 2'}</div>
-            </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-3" colSpan={5} style={{borderColor: coresSemanas[3], color: coresSemanas[3]}}>
-              <div className="semana-header">{datasAulas[2] ? `Semana 3 (${formatarData(datasAulas[2])})` : 'Semana 3'}</div>
-            </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-4" colSpan={5} style={{borderColor: coresSemanas[4], color: coresSemanas[4]}}>
-              <div className="semana-header">{datasAulas[3] ? `Semana 4 (${formatarData(datasAulas[3])})` : 'Semana 4'}</div>
-            </TableHead>
-            <TableHead className="ficha-coluna-semana borda-semana-5" colSpan={5} style={{borderColor: coresSemanas[5], color: coresSemanas[5]}}>
-              <div className="semana-header">{datasAulas[4] ? `Semana 5 (${formatarData(datasAulas[4])})` : 'Semana 5'}</div>
-            </TableHead>
+            {[1, 2, 3, 4, 5].map(semana => (
+              <TableHead 
+                key={`semana-header-${semana}`}
+                className={`ficha-coluna-semana borda-semana-${semana}`} 
+                colSpan={5} 
+                style={getSemanaBorderStyle(semana)}
+              >
+                <div className="semana-header">
+                  {datasAulas[semana-1] ? `Semana ${semana} (${formatarData(datasAulas[semana-1])})` : `Semana ${semana}`}
+                </div>
+              </TableHead>
+            ))}
           </TableRow>
           <TableRow>
             {/* Subcolunas de Faltas - Datas específicas */}
@@ -136,47 +166,49 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               <TableHead 
                 key={`falta-${index}`} 
                 className={`ficha-subcoluna-falta borda-faltas ${idx === 0 ? 'first-subcol' : ''} ${idx === 4 ? 'last-subcol' : ''}`}
-                style={{borderColor: '#000000'}}
+                style={{
+                  borderColor: CORES.preto,
+                  color: CORES.preto,
+                  borderLeft: idx === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                  borderRight: idx === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact',
+                  colorAdjust: 'exact'
+                }}
               >
                 {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
               </TableHead>
             ))}
             
             {/* Subcolunas para cada semana */}
-            {[1, 2, 3, 4, 5].map(semana => (
-              <React.Fragment key={`subheader-semana-${semana}`}>
-                <TableHead 
-                  className={`ficha-subcoluna borda-semana-${semana} first-subcol`}
-                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
-                >
-                  Ap.
-                </TableHead>
-                <TableHead 
-                  className={`ficha-subcoluna borda-semana-${semana}`}
-                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
-                >
-                  Pág.
-                </TableHead>
-                <TableHead 
-                  className={`ficha-subcoluna borda-semana-${semana}`}
-                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
-                >
-                  Ex.
-                </TableHead>
-                <TableHead 
-                  className={`ficha-subcoluna borda-semana-${semana}`}
-                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
-                >
-                  Er.
-                </TableHead>
-                <TableHead 
-                  className={`ficha-subcoluna borda-semana-${semana} last-subcol`}
-                  style={{borderColor: coresSemanas[semana as keyof typeof coresSemanas]}}
-                >
-                  Des.
-                </TableHead>
-              </React.Fragment>
-            ))}
+            {[1, 2, 3, 4, 5].map(semana => {
+              const corSemana = semana % 2 === 1 ? CORES.vermelho : CORES.preto;
+              return (
+                <React.Fragment key={`subheader-semana-${semana}`}>
+                  {['Ap.', 'Pág.', 'Ex.', 'Er.', 'Des.'].map((label, idx) => {
+                    const isFirst = idx === 0;
+                    const isLast = idx === 4;
+                    return (
+                      <TableHead 
+                        key={`subheader-semana-${semana}-${idx}`}
+                        className={`ficha-subcoluna borda-semana-${semana} ${isFirst ? 'first-subcol' : ''} ${isLast ? 'last-subcol' : ''}`}
+                        style={{
+                          borderColor: corSemana,
+                          color: corSemana,
+                          borderLeft: isFirst ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                          borderRight: isLast ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                          WebkitPrintColorAdjust: 'exact',
+                          printColorAdjust: 'exact',
+                          colorAdjust: 'exact'
+                        }}
+                      >
+                        {label}
+                      </TableHead>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -188,51 +220,48 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map(index => (
+              {[0, 1, 2, 3, 4].map((idx, i) => (
                 <TableCell 
-                  key={`falta-${aluno.id}-${index}`} 
+                  key={`falta-${aluno.id}-${idx}`} 
                   className="ficha-celula-falta borda-faltas"
-                  style={{ opacity: datasAulas[index] ? 1 : 0.3 }}
+                  style={{ 
+                    opacity: datasAulas[idx] ? 1 : 0.3,
+                    borderLeft: i === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                    borderRight: i === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                    WebkitPrintColorAdjust: 'exact',
+                    printColorAdjust: 'exact',
+                    colorAdjust: 'exact'
+                  }}
                 >
                   <div className="falta-campo"></div>
                 </TableCell>
               ))}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
-              {[0, 1, 2, 3, 4].map(semanaIndex => (
-                <React.Fragment key={`semana-${aluno.id}-${semanaIndex}`}>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                </React.Fragment>
-              ))}
+              {[1, 2, 3, 4, 5].map(semana => {
+                const corSemana = semana % 2 === 1 ? CORES.vermelho : CORES.preto;
+                return (
+                  <React.Fragment key={`semana-${aluno.id}-${semana}`}>
+                    {[0, 1, 2, 3, 4].map((subIdx, i) => (
+                      <TableCell 
+                        key={`semana-${aluno.id}-${semana}-${subIdx}`}
+                        className={`ficha-celula-semana borda-semana-${semana}`}
+                        style={{ 
+                          opacity: datasAulas[semana-1] ? 1 : 0.3,
+                          borderLeft: i === 0 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                          borderRight: i === 4 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                          borderColor: corSemana,
+                          WebkitPrintColorAdjust: 'exact',
+                          printColorAdjust: 'exact',
+                          colorAdjust: 'exact'
+                        }}
+                      >
+                        <div className="semana-campo-valor"></div>
+                      </TableCell>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
             </TableRow>
           ))}
           
@@ -245,51 +274,48 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map(dayIndex => (
+              {[0, 1, 2, 3, 4].map((idx, i) => (
                 <TableCell 
-                  key={`empty-falta-${index}-${dayIndex}`} 
+                  key={`empty-falta-${index}-${idx}`} 
                   className="ficha-celula-falta borda-faltas"
-                  style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
+                  style={{ 
+                    opacity: datasAulas[idx] ? 1 : 0.3,
+                    borderLeft: i === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                    borderRight: i === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                    WebkitPrintColorAdjust: 'exact',
+                    printColorAdjust: 'exact',
+                    colorAdjust: 'exact'
+                  }}
                 >
                   <div className="falta-campo"></div>
                 </TableCell>
               ))}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
-              {[0, 1, 2, 3, 4].map(semanaIndex => (
-                <React.Fragment key={`empty-semana-${index}-${semanaIndex}`}>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                </React.Fragment>
-              ))}
+              {[1, 2, 3, 4, 5].map(semana => {
+                const corSemana = semana % 2 === 1 ? CORES.vermelho : CORES.preto;
+                return (
+                  <React.Fragment key={`empty-semana-${index}-${semana}`}>
+                    {[0, 1, 2, 3, 4].map((subIdx, i) => (
+                      <TableCell 
+                        key={`empty-semana-${index}-${semana}-${subIdx}`}
+                        className={`ficha-celula-semana borda-semana-${semana}`}
+                        style={{ 
+                          opacity: datasAulas[semana-1] ? 1 : 0.3,
+                          borderLeft: i === 0 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                          borderRight: i === 4 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                          borderColor: corSemana,
+                          WebkitPrintColorAdjust: 'exact',
+                          printColorAdjust: 'exact',
+                          colorAdjust: 'exact'
+                        }}
+                      >
+                        <div className="semana-campo-valor"></div>
+                      </TableCell>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
             </TableRow>
           ))}
         </TableBody>

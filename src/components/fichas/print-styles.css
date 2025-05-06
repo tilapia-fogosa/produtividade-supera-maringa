@@ -1,3 +1,4 @@
+
 @media print {
   @page {
     size: landscape;
@@ -42,65 +43,71 @@
     border: 0.5px solid #999 !important;
   }
   
-  /* Definir bordas grossas APENAS para as bordas LATERAIS das colunas principais */
-  .borda-faltas {
+  /* Bordas grossas para as colunas principais com cores específicas */
+  .borda-faltas,
+  .ficha-tabela .borda-faltas,
+  th.borda-faltas,
+  td.borda-faltas {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    print-color-adjust: economy; /* Tenta otimizar a impressão de cores */
-    color: #000000 !important; /* Força a cor preta para texto */
   }
   
-  .borda-semana-1 {
+  .borda-semana-1,
+  .ficha-tabela .borda-semana-1,
+  th.borda-semana-1,
+  td.borda-semana-1 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    print-color-adjust: economy; /* Tenta otimizar a impressão de cores */
-    color: #ea384c !important; /* Força a cor vermelha para texto */
   }
   
-  .borda-semana-2 {
+  .borda-semana-2,
+  .ficha-tabela .borda-semana-2,
+  th.borda-semana-2,
+  td.borda-semana-2 {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    print-color-adjust: economy; /* Tenta otimizar a impressão de cores */
-    color: #000000 !important; /* Força a cor preta para texto */
   }
   
-  .borda-semana-3 {
+  .borda-semana-3,
+  .ficha-tabela .borda-semana-3,
+  th.borda-semana-3,
+  td.borda-semana-3 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    print-color-adjust: economy; /* Tenta otimizar a impressão de cores */
-    color: #ea384c !important; /* Força a cor vermelha para texto */
   }
   
-  .borda-semana-4 {
+  .borda-semana-4,
+  .ficha-tabela .borda-semana-4,
+  th.borda-semana-4,
+  td.borda-semana-4 {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    print-color-adjust: economy; /* Tenta otimizar a impressão de cores */
-    color: #000000 !important; /* Força a cor preta para texto */
   }
   
-  .borda-semana-5 {
+  .borda-semana-5,
+  .ficha-tabela .borda-semana-5,
+  th.borda-semana-5,
+  td.borda-semana-5 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    print-color-adjust: economy; /* Tenta otimizar a impressão de cores */
-    color: #ea384c !important; /* Força a cor vermelha para texto */
   }
 
   /* Regra específica para garantir que as bordas internas das subcolunas sejam sempre finas */
@@ -149,37 +156,79 @@
     border-left: 0.5px solid #999 !important;
   }
   
-  /* Forçar o background e cores a serem impressos */
+  /* Forçar o background e cores a serem impressos - Regra mais específica */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
   
-  /* Estilos específicos para cabeçalhos coloridos */
-  .borda-semana-1, [class*="borda-semana-1"] * {
+  /* Estilos específicos para cabeçalhos coloridos - adicionados seletores mais específicos */
+  .borda-semana-1, 
+  [class*="borda-semana-1"] * {
     border-color: #ea384c !important;
+    color: #ea384c !important;
   }
   
-  .borda-semana-2, [class*="borda-semana-2"] * {
+  .borda-semana-2, 
+  [class*="borda-semana-2"] * {
     border-color: #000000 !important;
+    color: #000000 !important;
   }
   
-  .borda-semana-3, [class*="borda-semana-3"] * {
+  .borda-semana-3, 
+  [class*="borda-semana-3"] * {
     border-color: #ea384c !important;
+    color: #ea384c !important;
   }
   
-  .borda-semana-4, [class*="borda-semana-4"] * {
+  .borda-semana-4, 
+  [class*="borda-semana-4"] * {
     border-color: #000000 !important;
+    color: #000000 !important;
   }
   
-  .borda-semana-5, [class*="borda-semana-5"] * {
+  .borda-semana-5, 
+  [class*="borda-semana-5"] * {
     border-color: #ea384c !important;
+    color: #ea384c !important;
   }
   
-  /* Reforçar cores para impressora */
-  .semana-header {
-    color: inherit !important;
+  /* Adicionar força extra às bordas e cores */
+  .ficha-tabela th.borda-faltas,
+  .ficha-tabela td.borda-faltas {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+  }
+  
+  .ficha-tabela th.borda-semana-1,
+  .ficha-tabela td.borda-semana-1 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+  }
+  
+  .ficha-tabela th.borda-semana-2,
+  .ficha-tabela td.borda-semana-2 {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+  }
+  
+  .ficha-tabela th.borda-semana-3,
+  .ficha-tabela td.borda-semana-3 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
+  }
+  
+  .ficha-tabela th.borda-semana-4,
+  .ficha-tabela td.borda-semana-4 {
+    border-left: 2px solid #000000 !important;
+    border-right: 2px solid #000000 !important;
+  }
+  
+  .ficha-tabela th.borda-semana-5,
+  .ficha-tabela td.borda-semana-5 {
+    border-left: 2px solid #ea384c !important;
+    border-right: 2px solid #ea384c !important;
   }
 }
 
