@@ -122,20 +122,14 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
           </TableRow>
           <TableRow>
             {/* Subcolunas de Faltas - Datas específicas */}
-            {[0, 1, 2, 3, 4].map((index, idx) => {
-              const isFirst = idx === 0;
-              const isLast = idx === 4;
-              const className = `ficha-subcoluna-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`;
-              
-              return (
-                <TableHead 
-                  key={`falta-${index}`} 
-                  className={className}
-                >
-                  {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
-                </TableHead>
-              );
-            })}
+            {[0, 1, 2, 3, 4].map((index, idx) => (
+              <TableHead 
+                key={`falta-${index}`} 
+                className={`ficha-subcoluna-falta borda-faltas ${idx === 0 ? 'first-child' : ''} ${idx === 4 ? 'last-child' : ''}`}
+              >
+                {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
+              </TableHead>
+            ))}
             
             {/* Subcolunas para cada semana */}
             {[1, 2, 3, 4, 5].map(semana => (
@@ -158,21 +152,15 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map((dayIndex, idx) => {
-                const isFirst = idx === 0;
-                const isLast = idx === 4;
-                const className = `ficha-celula-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`;
-                
-                return (
-                  <TableCell 
-                    key={`falta-${aluno.id}-${dayIndex}`} 
-                    className={className}
-                    style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="falta-campo"></div>
-                  </TableCell>
-                );
-              })}
+              {[0, 1, 2, 3, 4].map((index, idx) => (
+                <TableCell 
+                  key={`falta-${aluno.id}-${index}`} 
+                  className={`ficha-celula-falta borda-faltas ${idx === 0 ? 'first-child' : ''} ${idx === 4 ? 'last-child' : ''}`}
+                  style={{ opacity: datasAulas[index] ? 1 : 0.3 }}
+                >
+                  <div className="falta-campo"></div>
+                </TableCell>
+              ))}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
               {[0, 1, 2, 3, 4].map(semanaIndex => {
@@ -224,21 +212,15 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map((dayIndex, idx) => {
-                const isFirst = idx === 0;
-                const isLast = idx === 4;
-                const className = `ficha-celula-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`;
-                
-                return (
-                  <TableCell 
-                    key={`empty-falta-${index}-${dayIndex}`} 
-                    className={className}
-                    style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="falta-campo"></div>
-                  </TableCell>
-                );
-              })}
+              {[0, 1, 2, 3, 4].map((dayIndex, idx) => (
+                <TableCell 
+                  key={`empty-falta-${index}-${dayIndex}`} 
+                  className={`ficha-celula-falta borda-faltas ${idx === 0 ? 'first-child' : ''} ${idx === 4 ? 'last-child' : ''}`}
+                  style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
+                >
+                  <div className="falta-campo"></div>
+                </TableCell>
+              ))}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
               {[0, 1, 2, 3, 4].map(semanaIndex => {
