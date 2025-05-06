@@ -123,10 +123,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
           </TableRow>
           <TableRow>
             {/* Subcolunas de Faltas - Datas específicas */}
-            {[0, 1, 2, 3, 4].map(index => (
+            {[0, 1, 2, 3, 4].map((index, idx) => (
               <TableHead 
                 key={`falta-${index}`} 
-                className="ficha-subcoluna-falta borda-faltas"
+                className={`ficha-subcoluna-falta borda-faltas ${idx === 0 ? 'first-subcol' : ''} ${idx === 4 ? 'last-subcol' : ''}`}
               >
                 {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
               </TableHead>
@@ -135,11 +135,11 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
             {/* Subcolunas para cada semana */}
             {[1, 2, 3, 4, 5].map(semana => (
               <React.Fragment key={`subheader-semana-${semana}`}>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Ap.</TableHead>
+                <TableHead className={`ficha-subcoluna borda-semana-${semana} first-subcol`}>Ap.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Pág.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Ex.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Er.</TableHead>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Des.</TableHead>
+                <TableHead className={`ficha-subcoluna borda-semana-${semana} last-subcol`}>Des.</TableHead>
               </React.Fragment>
             ))}
           </TableRow>

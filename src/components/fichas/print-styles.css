@@ -1,4 +1,3 @@
-
 @media print {
   @page {
     size: landscape;
@@ -34,6 +33,17 @@
   /* Exceto a última ficha */
   .ficha-container:last-of-type {
     page-break-after: auto;
+  }
+
+  /* Garantindo que as bordas internas permaneçam finas durante a impressão */
+  .ficha-tabela th:not(:first-child):not(.first-subcol),
+  .ficha-tabela td:not(:first-child):not(.first-subcol) {
+    border-left: 0.5px solid #999 !important;
+  }
+  
+  .ficha-tabela th:not(:last-child):not(.last-subcol),
+  .ficha-tabela td:not(:last-child):not(.last-subcol) {
+    border-right: 0.5px solid #999 !important;
   }
 }
 
@@ -118,7 +128,7 @@
   table-layout: fixed;
 }
 
-/* MODIFICAÇÃO: Ajustando a espessura das linhas de subcolunas para mais finas */
+/* Configuração base para todas as células - bordas finas */
 .ficha-tabela th,
 .ficha-tabela td {
   border: 0.5px solid #999; /* Linha mais fina para subcolunas */
@@ -128,34 +138,80 @@
   height: 20px; /* Reduzido ligeiramente de 22px para 20px */
 }
 
-/* Mantendo as bordas principais com espessura original */
-.borda-faltas {
+/* As bordas laterais das colunas principais são grossas */
+/* Bordas laterais da coluna de faltas */
+.ficha-subcoluna-falta.borda-faltas {
   border-left: 3px solid #000000 !important; /* Preto para faltas */
+  border-right: 0.5px solid #999 !important; /* Interna continua fina */
+}
+.ficha-subcoluna-falta.borda-faltas:last-of-type {
+  border-right: 3px solid #000000 !important; /* A última subcoluna tem borda direita grossa */
+}
+
+/* Bordas laterais da coluna de semanas */
+.ficha-subcoluna.borda-semana-1:first-of-type {
+  border-left: 3px solid #ea384c !important; /* Vermelho */
+}
+.ficha-subcoluna.borda-semana-1:last-of-type {
+  border-right: 3px solid #ea384c !important;
+}
+
+.ficha-subcoluna.borda-semana-2:first-of-type {
+  border-left: 3px solid #000000 !important; /* Preto */
+}
+.ficha-subcoluna.borda-semana-2:last-of-type {
+  border-right: 3px solid #000000 !important;
+}
+
+.ficha-subcoluna.borda-semana-3:first-of-type {
+  border-left: 3px solid #ea384c !important; /* Vermelho */
+}
+.ficha-subcoluna.borda-semana-3:last-of-type {
+  border-right: 3px solid #ea384c !important;
+}
+
+.ficha-subcoluna.borda-semana-4:first-of-type {
+  border-left: 3px solid #000000 !important; /* Preto */
+}
+.ficha-subcoluna.borda-semana-4:last-of-type {
+  border-right: 3px solid #000000 !important;
+}
+
+.ficha-subcoluna.borda-semana-5:first-of-type {
+  border-left: 3px solid #ea384c !important; /* Vermelho */
+}
+.ficha-subcoluna.borda-semana-5:last-of-type {
+  border-right: 3px solid #ea384c !important;
+}
+
+/* Estilização para os headers das colunas principais que são spans múltiplos */
+.borda-faltas {
+  border-left: 3px solid #000000 !important;
   border-right: 3px solid #000000 !important;
 }
 
 .borda-semana-1 {
-  border-left: 3px solid #ea384c !important; /* Vermelho */
+  border-left: 3px solid #ea384c !important;
   border-right: 3px solid #ea384c !important;
 }
 
 .borda-semana-2 {
-  border-left: 3px solid #000000 !important; /* Preto */
+  border-left: 3px solid #000000 !important;
   border-right: 3px solid #000000 !important;
 }
 
 .borda-semana-3 {
-  border-left: 3px solid #ea384c !important; /* Vermelho */
+  border-left: 3px solid #ea384c !important;
   border-right: 3px solid #ea384c !important;
 }
 
 .borda-semana-4 {
-  border-left: 3px solid #000000 !important; /* Preto */
+  border-left: 3px solid #000000 !important;
   border-right: 3px solid #000000 !important;
 }
 
 .borda-semana-5 {
-  border-left: 3px solid #ea384c !important; /* Vermelho */
+  border-left: 3px solid #ea384c !important;
   border-right: 3px solid #ea384c !important;
 }
 
