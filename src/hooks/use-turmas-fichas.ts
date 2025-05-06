@@ -5,8 +5,8 @@ import { Turma } from './use-professor-turmas';
 
 export interface TurmaDetalhes {
   turma: Turma & { 
-    created_at?: string;
-    professorNome?: string;
+    created_at: string;
+    professorNome: string;
     professores?: {
       nome: string;
     }
@@ -57,7 +57,8 @@ export function useTurmasFichas() {
           return {
             turma: {
               ...turma,
-              professorNome: turma.professores?.nome || 'Professor não especificado'
+              professorNome: turma.professores?.nome || 'Professor não especificado',
+              created_at: turma.created_at || new Date().toISOString()
             },
             alunos: alunosData || []
           };
