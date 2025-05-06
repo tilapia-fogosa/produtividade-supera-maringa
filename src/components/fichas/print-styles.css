@@ -1,3 +1,4 @@
+
 @media print {
   @page {
     size: landscape;
@@ -9,6 +10,7 @@
     padding: 0;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .no-print {
@@ -45,31 +47,49 @@
   .borda-faltas {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .borda-semana-1 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .borda-semana-2 {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .borda-semana-3 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .borda-semana-4 {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   .borda-semana-5 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
   /* Regra específica para garantir que as bordas internas das subcolunas sejam sempre finas */
@@ -116,6 +136,13 @@
   .ficha-subcoluna + .ficha-subcoluna,
   .ficha-subcoluna-falta + .ficha-subcoluna-falta {
     border-left: 0.5px solid #999 !important;
+  }
+  
+  /* Forçar o background e cores a serem impressos */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }
 
