@@ -1,6 +1,4 @@
 
-
-
 @media print {
   @page {
     size: landscape;
@@ -128,8 +126,11 @@
   text-align: center;
 }
 
+/* Aumentando o tamanho das subcolunas de falta para acomodar as datas */
 .ficha-subcoluna-falta {
-  width: 2%;
+  width: 3.2%; /* Aumentado de 2% para 3.2% */
+  font-size: 10pt;
+  white-space: nowrap;
 }
 
 .ficha-coluna-semana {
@@ -254,4 +255,3 @@
   font-style: italic;
   font-size: 12pt;
 }
-
