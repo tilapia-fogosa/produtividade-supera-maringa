@@ -1,4 +1,3 @@
-
 @media print {
   @page {
     size: landscape;
@@ -10,7 +9,6 @@
     padding: 0;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   .no-print {
@@ -52,7 +50,6 @@
     border-right: 2px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   .borda-semana-1,
@@ -63,7 +60,6 @@
     border-right: 2px solid #ea384c !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   .borda-semana-2,
@@ -74,7 +70,6 @@
     border-right: 2px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   .borda-semana-3,
@@ -85,7 +80,6 @@
     border-right: 2px solid #ea384c !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   .borda-semana-4,
@@ -96,7 +90,6 @@
     border-right: 2px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   .borda-semana-5,
@@ -107,7 +100,6 @@
     border-right: 2px solid #ea384c !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
 
   /* Regra específica para garantir que as bordas internas das subcolunas sejam sempre finas */
@@ -160,7 +152,6 @@
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
   
   /* Estilos específicos para cabeçalhos coloridos - adicionados seletores mais específicos */

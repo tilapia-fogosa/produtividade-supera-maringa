@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -116,9 +115,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
       borderLeftColor: cor,
       borderRightColor: cor,
       color: cor,
-      WebkitPrintColorAdjust: 'exact',
-      printColorAdjust: 'exact',
-      colorAdjust: 'exact'
+      WebkitPrintColorAdjust: 'exact' as 'exact',
+      printColorAdjust: 'exact' as 'exact',
     };
   };
 
@@ -140,9 +138,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                 borderLeft: `2px solid ${CORES.preto}`,
                 borderRight: `2px solid ${CORES.preto}`,
                 color: CORES.preto,
-                WebkitPrintColorAdjust: 'exact',
-                printColorAdjust: 'exact',
-                colorAdjust: 'exact'
+                WebkitPrintColorAdjust: 'exact' as 'exact',
+                printColorAdjust: 'exact' as 'exact',
               }}
             >
               <div className="faltas-header">Faltas</div>
@@ -171,9 +168,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                   color: CORES.preto,
                   borderLeft: idx === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
                   borderRight: idx === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
-                  WebkitPrintColorAdjust: 'exact',
-                  printColorAdjust: 'exact',
-                  colorAdjust: 'exact'
+                  WebkitPrintColorAdjust: 'exact' as 'exact',
+                  printColorAdjust: 'exact' as 'exact',
                 }}
               >
                 {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
@@ -197,9 +193,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                           color: corSemana,
                           borderLeft: isFirst ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
                           borderRight: isLast ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
-                          WebkitPrintColorAdjust: 'exact',
-                          printColorAdjust: 'exact',
-                          colorAdjust: 'exact'
+                          WebkitPrintColorAdjust: 'exact' as 'exact',
+                          printColorAdjust: 'exact' as 'exact',
                         }}
                       >
                         {label}
@@ -228,9 +223,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                     opacity: datasAulas[idx] ? 1 : 0.3,
                     borderLeft: i === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
                     borderRight: i === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
-                    WebkitPrintColorAdjust: 'exact',
-                    printColorAdjust: 'exact',
-                    colorAdjust: 'exact'
+                    WebkitPrintColorAdjust: 'exact' as 'exact',
+                    printColorAdjust: 'exact' as 'exact',
                   }}
                 >
                   <div className="falta-campo"></div>
@@ -251,9 +245,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                           borderLeft: i === 0 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
                           borderRight: i === 4 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
                           borderColor: corSemana,
-                          WebkitPrintColorAdjust: 'exact',
-                          printColorAdjust: 'exact',
-                          colorAdjust: 'exact'
+                          WebkitPrintColorAdjust: 'exact' as 'exact',
+                          printColorAdjust: 'exact' as 'exact',
                         }}
                       >
                         <div className="semana-campo-valor"></div>
@@ -282,9 +275,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                     opacity: datasAulas[idx] ? 1 : 0.3,
                     borderLeft: i === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
                     borderRight: i === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
-                    WebkitPrintColorAdjust: 'exact',
-                    printColorAdjust: 'exact',
-                    colorAdjust: 'exact'
+                    WebkitPrintColorAdjust: 'exact' as 'exact',
+                    printColorAdjust: 'exact' as 'exact',
                   }}
                 >
                   <div className="falta-campo"></div>
@@ -305,9 +297,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                           borderLeft: i === 0 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
                           borderRight: i === 4 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
                           borderColor: corSemana,
-                          WebkitPrintColorAdjust: 'exact',
-                          printColorAdjust: 'exact',
-                          colorAdjust: 'exact'
+                          WebkitPrintColorAdjust: 'exact' as 'exact',
+                          printColorAdjust: 'exact' as 'exact',
                         }}
                       >
                         <div className="semana-campo-valor"></div>
