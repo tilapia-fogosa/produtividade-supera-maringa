@@ -25,6 +25,16 @@
     border-collapse: collapse;
     width: 100%;
   }
+  
+  /* Garantir que cada ficha comece em uma nova página */
+  .ficha-container {
+    page-break-after: always;
+  }
+  
+  /* Exceto a última ficha */
+  .ficha-container:last-of-type {
+    page-break-after: auto;
+  }
 }
 
 /* Estilos gerais da ficha */

@@ -1,54 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Printer } from "lucide-react";
-import { useTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 import FichaTurmaImprimivel from '@/components/fichas/FichaTurmaImprimivel';
 import { toast } from '@/hooks/use-toast';
+import { useTurmasFichas } from '@/hooks/use-turmas-fichas';
 
 const Fichas = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [turmaSelecionada, setTurmaSelecionada] = useState<string | null>(null);
-  const { turma, alunos, loading, error } = useTurmaDetalhes(turmaSelecionada);
-  
-  // Recuperamos o ID da turma se vier da página de produtividade
-  useEffect(() => {
-    const state = location.state as any;
-    if (state?.turmaId) {
-      console.log('Turma ID recebido na página de Fichas:', state.turmaId);
-      setTurmaSelecionada(state.turmaId);
-    }
-  }, [location.state]);
+  const { turmasDetalhes, loading, error } = useTurmasFichas();
 
   const handleVoltar = () => {
-    if (location.state?.origem === 'produtividade' && location.state?.turmaId) {
-      // Voltar para a página de produtividade se veio de lá
-      navigate(`/turma/${location.state.turmaId}/produtividade`);
-    } else if (turmaSelecionada) {
-      // Se tiver uma turma selecionada, volta para a seleção
-      setTurmaSelecionada(null);
-    } else {
-      // Caso contrário, volta para devolutivas
-      navigate('/devolutivas');
-    }
+    navigate('/devolutivas');
   };
 
   const handlePrint = () => {
     window.print();
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (error) {
       toast({
-        title: "Erro ao carregar turma",
+        title: "Erro ao carregar turmas",
         description: error,
         variant: "destructive"
       });
     }
   }, [error]);
+
+  // Ordenar as turmas por nome
+  const turmasOrdenadas = [...turmasDetalhes].sort((a, b) => 
+    a.turma.nome.localeCompare(b.turma.nome)
+  );
 
   return (
     <div className="w-full min-h-screen bg-background">
@@ -62,12 +47,12 @@ const Fichas = () => {
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
           </Button>
           
-          {turmaSelecionada && turma && (
+          {turmasOrdenadas.length > 0 && (
             <Button 
               onClick={handlePrint}
               className="bg-azul-500 hover:bg-azul-600 text-white"
             >
-              <Printer className="mr-2 h-4 w-4" /> Imprimir
+              <Printer className="mr-2 h-4 w-4" /> Imprimir Todas
             </Button>
           )}
         </div>
@@ -75,41 +60,33 @@ const Fichas = () => {
         <Card className="p-4 print:p-0 print:border-none print:shadow-none">
           {loading ? (
             <div className="flex justify-center items-center p-8">
-              <p className="text-azul-500">Carregando dados da turma...</p>
+              <p className="text-azul-500">Carregando fichas de todas as turmas...</p>
             </div>
-          ) : turmaSelecionada && turma ? (
-            <FichaTurmaImprimivel 
-              turma={turma} 
-              alunos={alunos.map(a => ({ id: a.id, nome: a.nome }))} 
-            />
+          ) : turmasOrdenadas.length > 0 ? (
+            <div>
+              <h2 className="text-xl font-bold mb-4 text-azul-500 print:hidden">
+                Fichas de Acompanhamento - {turmasOrdenadas.length} Turmas
+              </h2>
+              
+              {turmasOrdenadas.map((item, index) => (
+                <div key={item.turma.id} className={`mb-8 ${index > 0 ? 'print:mt-10' : ''}`}>
+                  <FichaTurmaImprimivel 
+                    turma={item.turma} 
+                    alunos={item.alunos}
+                  />
+                  {index < turmasOrdenadas.length - 1 && (
+                    <div className="print:page-break-after print:mb-0 mb-12"></div>
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
-            <SelecionarTurma onTurmaSelecionada={setTurmaSelecionada} />
+            <div className="text-center py-8">
+              <p className="text-azul-500">Nenhuma turma encontrada. Verifique se existem turmas cadastradas no sistema.</p>
+            </div>
           )}
         </Card>
       </div>
-    </div>
-  );
-};
-
-// Componente para selecionar a turma
-const SelecionarTurma = ({ onTurmaSelecionada }: { onTurmaSelecionada: (turmaId: string) => void }) => {
-  const navigate = useNavigate();
-  
-  const irParaSelecionarTurma = () => {
-    navigate('/devolutivas/turmas', { 
-      state: { serviceType: 'ficha_impressao' } 
-    });
-  };
-
-  return (
-    <div className="text-center py-8">
-      <h2 className="text-lg font-semibold mb-4 text-azul-500">Selecione uma turma para gerar a ficha</h2>
-      <Button 
-        onClick={irParaSelecionarTurma}
-        className="bg-azul-500 hover:bg-azul-600 text-white"
-      >
-        Selecionar Turma
-      </Button>
     </div>
   );
 };
