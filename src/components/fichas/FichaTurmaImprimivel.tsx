@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -88,7 +87,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   // Obter datas das aulas
   const datasAulas = gerarDatasAulas();
 
-  // Formatar data para exibição (DD/MM) - Modificado para mostrar apenas o dia (DD)
+  // Formatar data para exibição (apenas o dia - DD)
   const formatarData = (data: Date) => format(data, 'dd', { locale: ptBR });
 
   // Função para renderizar a tabela com os dados necessários
@@ -126,7 +125,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
             {[0, 1, 2, 3, 4].map((index, idx) => (
               <TableHead 
                 key={`falta-${index}`} 
-                className={`ficha-subcoluna-falta borda-faltas ${idx === 0 ? 'first-subcol' : ''} ${idx === 4 ? 'last-subcol' : ''}`}
+                className={`ficha-subcoluna-falta borda-faltas ${idx === 0 ? 'first-child' : ''} ${idx === 4 ? 'last-child' : ''}`}
               >
                 {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
               </TableHead>
@@ -135,11 +134,11 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
             {/* Subcolunas para cada semana */}
             {[1, 2, 3, 4, 5].map(semana => (
               <React.Fragment key={`subheader-semana-${semana}`}>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana} first-subcol`}>Ap.</TableHead>
+                <TableHead className={`ficha-subcoluna borda-semana-${semana} first-child`}>Ap.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Pág.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Ex.</TableHead>
                 <TableHead className={`ficha-subcoluna borda-semana-${semana}`}>Er.</TableHead>
-                <TableHead className={`ficha-subcoluna borda-semana-${semana} last-subcol`}>Des.</TableHead>
+                <TableHead className={`ficha-subcoluna borda-semana-${semana} last-child`}>Des.</TableHead>
               </React.Fragment>
             ))}
           </TableRow>
@@ -153,10 +152,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map(index => (
+              {[0, 1, 2, 3, 4].map((index, idx) => (
                 <TableCell 
                   key={`falta-${aluno.id}-${index}`} 
-                  className="ficha-celula-falta borda-faltas"
+                  className={`ficha-celula-falta borda-faltas ${idx === 0 ? 'first-child' : ''} ${idx === 4 ? 'last-child' : ''}`}
                   style={{ opacity: datasAulas[index] ? 1 : 0.3 }}
                 >
                   <div className="falta-campo"></div>
@@ -164,40 +163,43 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               ))}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
-              {[0, 1, 2, 3, 4].map(semanaIndex => (
-                <React.Fragment key={`semana-${aluno.id}-${semanaIndex}`}>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                </React.Fragment>
-              ))}
+              {[0, 1, 2, 3, 4].map(semanaIndex => {
+                const semanaNum = semanaIndex + 1;
+                return (
+                  <React.Fragment key={`semana-${aluno.id}-${semanaIndex}`}>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum} first-child`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum}`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum}`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum}`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum} last-child`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                  </React.Fragment>
+                );
+              })}
             </TableRow>
           ))}
           
@@ -210,10 +212,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               </TableCell>
               
               {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map(dayIndex => (
+              {[0, 1, 2, 3, 4].map((dayIndex, idx) => (
                 <TableCell 
                   key={`empty-falta-${index}-${dayIndex}`} 
-                  className="ficha-celula-falta borda-faltas"
+                  className={`ficha-celula-falta borda-faltas ${idx === 0 ? 'first-child' : ''} ${idx === 4 ? 'last-child' : ''}`}
                   style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
                 >
                   <div className="falta-campo"></div>
@@ -221,40 +223,43 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               ))}
               
               {/* Células para cada semana (5 subcolunas por semana) */}
-              {[0, 1, 2, 3, 4].map(semanaIndex => (
-                <React.Fragment key={`empty-semana-${index}-${semanaIndex}`}>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                  <TableCell 
-                    className={`ficha-celula-semana borda-semana-${semanaIndex+1}`}
-                    style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
-                  >
-                    <div className="semana-campo-valor"></div>
-                  </TableCell>
-                </React.Fragment>
-              ))}
+              {[0, 1, 2, 3, 4].map(semanaIndex => {
+                const semanaNum = semanaIndex + 1;
+                return (
+                  <React.Fragment key={`empty-semana-${index}-${semanaIndex}`}>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum} first-child`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum}`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum}`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum}`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                    <TableCell 
+                      className={`ficha-celula-semana borda-semana-${semanaNum} last-child`}
+                      style={{ opacity: datasAulas[semanaIndex] ? 1 : 0.3 }}
+                    >
+                      <div className="semana-campo-valor"></div>
+                    </TableCell>
+                  </React.Fragment>
+                );
+              })}
             </TableRow>
           ))}
         </TableBody>
