@@ -65,7 +65,7 @@ export function useTurmasFichas() {
         });
 
         const resultados = await Promise.all(detalhesPromises);
-        // Necessário corrigir a verificação do tipo para que corresponda à interface TurmaDetalhes
+        // Corrigindo a verificação de tipo para garantir compatibilidade com a interface TurmaDetalhes
         const turmasValidas = resultados.filter((item): item is TurmaDetalhes => item !== null);
         setTurmasDetalhes(turmasValidas);
       } catch (error) {
