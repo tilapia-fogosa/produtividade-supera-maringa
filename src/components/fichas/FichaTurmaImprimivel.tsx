@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -126,10 +125,12 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
             {[0, 1, 2, 3, 4].map((index, idx) => {
               const isFirst = idx === 0;
               const isLast = idx === 4;
+              const className = `ficha-subcoluna-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`;
+              
               return (
                 <TableHead 
                   key={`falta-${index}`} 
-                  className={`ficha-subcoluna-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`}
+                  className={className}
                 >
                   {datasAulas[index] ? formatarData(datasAulas[index]) : '-'}
                 </TableHead>
@@ -160,10 +161,12 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               {[0, 1, 2, 3, 4].map((dayIndex, idx) => {
                 const isFirst = idx === 0;
                 const isLast = idx === 4;
+                const className = `ficha-celula-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`;
+                
                 return (
                   <TableCell 
                     key={`falta-${aluno.id}-${dayIndex}`} 
-                    className={`ficha-celula-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`}
+                    className={className}
                     style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
                   >
                     <div className="falta-campo"></div>
@@ -224,10 +227,12 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               {[0, 1, 2, 3, 4].map((dayIndex, idx) => {
                 const isFirst = idx === 0;
                 const isLast = idx === 4;
+                const className = `ficha-celula-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`;
+                
                 return (
                   <TableCell 
                     key={`empty-falta-${index}-${dayIndex}`} 
-                    className={`ficha-celula-falta borda-faltas ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''}`}
+                    className={className}
                     style={{ opacity: datasAulas[dayIndex] ? 1 : 0.3 }}
                   >
                     <div className="falta-campo"></div>
