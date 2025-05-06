@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './print-styles.css';
 
@@ -11,6 +12,7 @@ interface FichaTurmaImprimivelProps {
   alunos: {
     id: string;
     nome: string;
+    created_at: string; // Adicionado created_at para verificar tempo de matrícula
   }[];
 }
 
@@ -18,7 +20,8 @@ interface FichaTurmaImprimivelProps {
 const CORES = {
   vermelho: '#ea384c',
   preto: '#000000',
-  cinza: '#999999'
+  cinza: '#999999',
+  amareloClaro: '#FEF7CD' // Cor para destacar alunos recentes (menos de 90 dias)
 };
 
 const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
@@ -28,6 +31,15 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   const [paginaAtual, setPaginaAtual] = useState(1);
   const alunosPorPagina = 14; // 14 alunos na tabela principal
   const alunosReposicaoPorPagina = 5; // 5 linhas para reposições
+
+  // Função para verificar se um aluno tem menos de 90 dias de matrícula
+  const isAlunoRecente = (dataCriacao: string) => {
+    if (!dataCriacao) return false;
+    const dataMatricula = new Date(dataCriacao);
+    const hoje = new Date();
+    const diasMatriculado = differenceInDays(hoje, dataMatricula);
+    return diasMatriculado < 90;
+  };
 
   // Ordenar alunos por nome
   const alunosOrdenados = [...alunos].sort((a, b) => a.nome.localeCompare(b.nome));
@@ -207,56 +219,68 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunosAtivos.map((aluno, index) => (
-            <TableRow key={aluno.id}>
-              <TableCell className="ficha-celula-nome">
-                <span className="ficha-aluno-numero">{(paginaAtual - 1) * alunosPorPagina + index + 1}</span>
-                <span className="ficha-aluno-nome">{aluno.nome}</span>
-              </TableCell>
-              
-              {/* Células para faltas (5 dias) */}
-              {[0, 1, 2, 3, 4].map((idx, i) => (
+          {alunosAtivos.map((aluno, index) => {
+            // Verificar se o aluno tem menos de 90 dias de matrícula
+            const alunoRecente = isAlunoRecente(aluno.created_at);
+            
+            return (
+              <TableRow key={aluno.id}>
                 <TableCell 
-                  key={`falta-${aluno.id}-${idx}`} 
-                  className="ficha-celula-falta borda-faltas"
-                  style={{ 
-                    opacity: datasAulas[idx] ? 1 : 0.3,
-                    borderLeft: i === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
-                    borderRight: i === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                  className="ficha-celula-nome"
+                  style={{
+                    backgroundColor: alunoRecente ? CORES.amareloClaro : 'transparent',
                     WebkitPrintColorAdjust: 'exact' as 'exact',
                     printColorAdjust: 'exact' as 'exact',
                   }}
                 >
-                  <div className="falta-campo"></div>
+                  <span className="ficha-aluno-numero">{(paginaAtual - 1) * alunosPorPagina + index + 1}</span>
+                  <span className="ficha-aluno-nome">{aluno.nome}</span>
                 </TableCell>
-              ))}
-              
-              {/* Células para cada semana (5 subcolunas por semana) */}
-              {[1, 2, 3, 4, 5].map(semana => {
-                const corSemana = semana % 2 === 1 ? CORES.vermelho : CORES.preto;
-                return (
-                  <React.Fragment key={`semana-${aluno.id}-${semana}`}>
-                    {[0, 1, 2, 3, 4].map((subIdx, i) => (
-                      <TableCell 
-                        key={`semana-${aluno.id}-${semana}-${subIdx}`}
-                        className={`ficha-celula-semana borda-semana-${semana}`}
-                        style={{ 
-                          opacity: datasAulas[semana-1] ? 1 : 0.3,
-                          borderLeft: i === 0 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
-                          borderRight: i === 4 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
-                          borderColor: corSemana,
-                          WebkitPrintColorAdjust: 'exact' as 'exact',
-                          printColorAdjust: 'exact' as 'exact',
-                        }}
-                      >
-                        <div className="semana-campo-valor"></div>
-                      </TableCell>
-                    ))}
-                  </React.Fragment>
-                );
-              })}
-            </TableRow>
-          ))}
+                
+                {/* Células para faltas (5 dias) */}
+                {[0, 1, 2, 3, 4].map((idx, i) => (
+                  <TableCell 
+                    key={`falta-${aluno.id}-${idx}`} 
+                    className="ficha-celula-falta borda-faltas"
+                    style={{ 
+                      opacity: datasAulas[idx] ? 1 : 0.3,
+                      borderLeft: i === 0 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                      borderRight: i === 4 ? `2px solid ${CORES.preto}` : `0.5px solid ${CORES.cinza}`,
+                      WebkitPrintColorAdjust: 'exact' as 'exact',
+                      printColorAdjust: 'exact' as 'exact',
+                    }}
+                  >
+                    <div className="falta-campo"></div>
+                  </TableCell>
+                ))}
+                
+                {/* Células para cada semana (5 subcolunas por semana) */}
+                {[1, 2, 3, 4, 5].map(semana => {
+                  const corSemana = semana % 2 === 1 ? CORES.vermelho : CORES.preto;
+                  return (
+                    <React.Fragment key={`semana-${aluno.id}-${semana}`}>
+                      {[0, 1, 2, 3, 4].map((subIdx, i) => (
+                        <TableCell 
+                          key={`semana-${aluno.id}-${semana}-${subIdx}`}
+                          className={`ficha-celula-semana borda-semana-${semana}`}
+                          style={{ 
+                            opacity: datasAulas[semana-1] ? 1 : 0.3,
+                            borderLeft: i === 0 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                            borderRight: i === 4 ? `2px solid ${corSemana}` : `0.5px solid ${CORES.cinza}`,
+                            borderColor: corSemana,
+                            WebkitPrintColorAdjust: 'exact' as 'exact',
+                            printColorAdjust: 'exact' as 'exact',
+                          }}
+                        >
+                          <div className="semana-campo-valor"></div>
+                        </TableCell>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+              </TableRow>
+            );
+          })}
           
           {/* Adicionar linhas vazias para completar a tabela quando não tiver alunos suficientes */}
           {Array.from({ length: linhasVazias }).map((_, index) => (
