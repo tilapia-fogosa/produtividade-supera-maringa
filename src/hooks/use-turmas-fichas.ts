@@ -65,8 +65,8 @@ export function useTurmasFichas() {
         });
 
         const resultados = await Promise.all(detalhesPromises);
-        // Corrigindo a verificação de tipo para garantir compatibilidade com a interface TurmaDetalhes
-        const turmasValidas = resultados.filter((item): item is TurmaDetalhes => item !== null);
+        // Usando uma type guard personalizada para filtrar valores null
+        const turmasValidas = resultados.filter((item): item is NonNullable<typeof item> => item !== null);
         setTurmasDetalhes(turmasValidas);
       } catch (error) {
         console.error('Erro ao buscar turmas e alunos:', error);
