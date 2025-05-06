@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -12,7 +11,8 @@ interface FichaTurmaImprimivelProps {
   alunos: {
     id: string;
     nome: string;
-    created_at: string; // Adicionado created_at para verificar tempo de matrícula
+    created_at: string;
+    dias_supera: number | null; // Adicionado campo dias_supera para verificar tempo de matrícula
   }[];
 }
 
@@ -32,13 +32,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   const alunosPorPagina = 14; // 14 alunos na tabela principal
   const alunosReposicaoPorPagina = 5; // 5 linhas para reposições
 
-  // Função para verificar se um aluno tem menos de 90 dias de matrícula
-  const isAlunoRecente = (dataCriacao: string) => {
-    if (!dataCriacao) return false;
-    const dataMatricula = new Date(dataCriacao);
-    const hoje = new Date();
-    const diasMatriculado = differenceInDays(hoje, dataMatricula);
-    return diasMatriculado < 90;
+  // Função para verificar se um aluno tem menos de 90 dias na Supera
+  const isAlunoRecente = (diasSupera: number | null) => {
+    if (diasSupera === null) return false;
+    return diasSupera < 90;
   };
 
   // Ordenar alunos por nome
@@ -220,8 +217,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
         </TableHeader>
         <TableBody>
           {alunosAtivos.map((aluno, index) => {
-            // Verificar se o aluno tem menos de 90 dias de matrícula
-            const alunoRecente = isAlunoRecente(aluno.created_at);
+            // Verificar se o aluno tem menos de 90 dias na Supera
+            const alunoRecente = isAlunoRecente(aluno.dias_supera);
             
             return (
               <TableRow key={aluno.id}>
