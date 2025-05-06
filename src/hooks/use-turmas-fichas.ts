@@ -5,6 +5,7 @@ import { Turma } from './use-professor-turmas';
 
 export interface TurmaDetalhes {
   turma: Turma & { 
+    created_at?: string;
     professorNome?: string;
     professores?: {
       nome: string;
