@@ -32,7 +32,7 @@
   font-family: Arial, sans-serif;
   max-width: 100%;
   margin: 0 auto;
-  padding: 10px;
+  padding: 8px; /* Reduzido de 10px para 8px */
   font-size: 13pt;
 }
 
@@ -41,19 +41,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 12px; /* Reduzido de 18px para 12px */
   border-bottom: 1px solid #000;
-  padding-bottom: 12px;
+  padding-bottom: 8px; /* Reduzido de 12px para 8px */
 }
 
 .ficha-info {
   display: flex;
-  gap: 24px;
+  gap: 18px; /* Reduzido de 24px para 18px */
 }
 
 .ficha-campo {
   display: flex;
-  gap: 8px;
+  gap: 6px; /* Reduzido de 8px para 6px */
 }
 
 .ficha-label {
@@ -68,7 +68,7 @@
 /* Título do mês e ano */
 .ficha-mes-ano {
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px; /* Reduzido de 15px para 10px */
 }
 
 .ficha-mes-ano h2 {
@@ -81,12 +81,12 @@
 .ficha-navegacao {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px; /* Reduzido de 10px para 8px */
 }
 
 .ficha-setas {
   display: flex;
-  gap: 5px;
+  gap: 3px; /* Reduzido de 5px para 3px */
 }
 
 .seta-pagina {
@@ -104,17 +104,17 @@
 .ficha-tabela {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 15px;
+  margin-bottom: 10px; /* Reduzido de 15px para 10px */
   table-layout: fixed;
 }
 
 .ficha-tabela th,
 .ficha-tabela td {
   border: 1px solid #000;
-  padding: 3px;
+  padding: 2px; /* Reduzido de 3px para 2px */
   vertical-align: middle;
   text-align: center;
-  height: 22px;
+  height: 20px; /* Reduzido ligeiramente de 22px para 20px */
 }
 
 /* Dimensionamento das colunas */
@@ -184,17 +184,17 @@
 .ficha-celula-nome {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px; /* Reduzido de 8px para 6px */
   text-align: left !important;
-  padding-left: 6px !important;
+  padding-left: 4px !important; /* Reduzido de 6px para 4px */
 }
 
 .ficha-aluno-numero {
   font-weight: bold;
   text-align: center;
   background-color: #eee;
-  width: 22px;
-  height: 22px;
+  width: 20px; /* Reduzido de 22px para 20px */
+  height: 20px; /* Reduzido de 22px para 20px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,7 +216,7 @@
 }
 
 .falta-campo {
-  height: 22px;
+  height: 20px; /* Reduzido de 22px para 20px */
   width: 100%;
 }
 
@@ -226,15 +226,15 @@
 }
 
 .semana-campo-valor {
-  height: 22px;
+  height: 20px; /* Reduzido de 22px para 20px */
   width: 100%;
   background-color: #fff;
 }
 
 /* Título da seção de reposições */
 .ficha-reposicoes-titulo {
-  margin: 24px 0 16px 0;
-  padding: 8px 0;
+  margin: 18px 0 12px 0; /* Reduzido de 24px 0 16px 0 para 18px 0 12px 0 */
+  padding: 6px 0; /* Reduzido de 8px 0 para 6px 0 */
   text-align: center;
   font-size: 16pt; /* Reduzido de 18pt para 16pt */
   font-weight: bold;
@@ -245,8 +245,8 @@
 /* Rodapé */
 .ficha-rodape {
   text-align: center;
-  margin-top: 24px;
-  padding-top: 12px;
+  margin-top: 18px; /* Reduzido de 24px para 18px */
+  padding-top: 8px; /* Reduzido de 12px para 8px */
   border-top: 1px solid #ccc;
 }
 
