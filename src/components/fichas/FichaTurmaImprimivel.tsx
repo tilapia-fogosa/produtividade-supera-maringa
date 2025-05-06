@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import './print-styles.css';
 
 interface FichaTurmaImprimivelProps {
-  turma: Turma;
+  turma: Turma & { professorNome?: string };
   alunos: {
     id: string;
     nome: string;
@@ -45,7 +45,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   };
 
   // Obter o nome do professor da turma
-  const professorNome = typeof turma.professor_id === 'string' ? turma.professor_id : 'Professor não especificado';
+  const professorNome = turma.professorNome || 'Professor não especificado';
 
   // Função para gerar as datas das aulas para o mês atual
   const gerarDatasAulas = () => {

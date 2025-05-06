@@ -21,10 +21,10 @@ export function useTurmasFichas() {
       try {
         setLoading(true);
         
-        // Buscar todas as turmas
+        // Buscar todas as turmas com informações do professor
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
-          .select('*')
+          .select('*, professores!turmas_professor_id_fkey(nome)')
           .order('nome');
 
         if (turmasError) {
@@ -49,13 +49,17 @@ export function useTurmasFichas() {
           }
 
           return {
-            turma,
+            turma: {
+              ...turma,
+              professorNome: turma.professores?.nome || 'Professor não especificado'
+            },
             alunos: alunosData || []
           };
         });
 
         const resultados = await Promise.all(detalhesPromises);
-        setTurmasDetalhes(resultados.filter((item): item is TurmaDetalhes => item !== null));
+        const turmasValidas = resultados.filter((item): item is TurmaDetalhes => item !== null);
+        setTurmasDetalhes(turmasValidas);
       } catch (error) {
         console.error('Erro ao buscar turmas e alunos:', error);
         setError(error instanceof Error ? error.message : 'Erro desconhecido');
