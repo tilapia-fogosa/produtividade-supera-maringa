@@ -21,6 +21,9 @@ export interface PessoaTurma {
   ultima_correcao_ah?: string;
   data_onboarding?: string | null;
   cargo?: string | null;
+  // Novos campos para último registro
+  data_ultimo_registro?: string;
+  ultimo_registro_id?: string;
   // Campos comuns adicionais que podem ser necessários
 }
 
@@ -95,6 +98,43 @@ export function usePessoasTurma() {
       );
       
       console.log(`Encontrados ${alunosData.length} alunos e ${funcionariosData.length} funcionários para turma ${turmaId}`);
+      
+      // Buscar os últimos registros de produtividade de cada pessoa
+      const pessoasIds = todasPessoas.map(pessoa => pessoa.id);
+      
+      // Buscar último registro de produtividade para cada pessoa
+      const { data: ultimosRegistros, error: ultimosRegistrosError } = await supabase
+        .from('produtividade_abaco')
+        .select('id, aluno_id, created_at, data_aula')
+        .in('aluno_id', pessoasIds)
+        .order('created_at', { ascending: false });
+        
+      if (ultimosRegistrosError) throw ultimosRegistrosError;
+      
+      // Associar os últimos registros às pessoas
+      if (ultimosRegistros && ultimosRegistros.length > 0) {
+        // Criar um objeto com o último registro de cada aluno
+        const ultimosPorAluno: Record<string, { id: string, created_at: string, data_aula: string }> = {};
+        ultimosRegistros.forEach(registro => {
+          if (!ultimosPorAluno[registro.aluno_id]) {
+            ultimosPorAluno[registro.aluno_id] = {
+              id: registro.id,
+              created_at: registro.created_at,
+              data_aula: registro.data_aula
+            };
+          }
+        });
+        
+        // Adicionar informações do último registro a cada pessoa
+        todasPessoas.forEach(pessoa => {
+          const ultimoRegistro = ultimosPorAluno[pessoa.id];
+          if (ultimoRegistro) {
+            pessoa.data_ultimo_registro = ultimoRegistro.data_aula;
+            pessoa.ultimo_registro_id = ultimoRegistro.id;
+          }
+        });
+      }
+      
       setPessoasTurma(todasPessoas);
       
       // Verificar registros de produtividade para o dia atual
@@ -218,6 +258,14 @@ export function usePessoasTurma() {
     }
   };
 
+  // Atualizar a lista depois de excluir um registro
+  const recarregarDadosAposExclusao = (pessoaId: string) => {
+    // Se temos uma turma selecionada, recarregar os dados dessa turma
+    if (turmaSelecionada) {
+      buscarPessoasPorTurma(turmaSelecionada);
+    }
+  };
+
   return {
     pessoasTurma,
     todasPessoas,
@@ -233,6 +281,7 @@ export function usePessoasTurma() {
     handleRegistrarPresenca,
     voltarParaTurmas,
     atualizarProdutividadeRegistrada,
-    buscarPessoasPorTurma
+    buscarPessoasPorTurma,
+    recarregarDadosAposExclusao
   };
 }

@@ -14,6 +14,7 @@ interface ProdutividadeScreenProps {
   onBack: () => void;
   alunos?: PessoaTurma[];
   onRegistrarPresenca?: (aluno: PessoaTurma) => void;
+  onExcluirRegistro?: (aluno: PessoaTurma) => void;
   onReposicaoAula?: () => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }
@@ -23,6 +24,7 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
   onBack,
   alunos = [],
   onRegistrarPresenca = () => {},
+  onExcluirRegistro,
   onReposicaoAula = () => {},
   produtividadeRegistrada = {}
 }) => {
@@ -72,6 +74,7 @@ const ProdutividadeScreen: React.FC<ProdutividadeScreenProps> = ({
       <AlunosListaTable 
         alunos={alunos}
         onRegistrarPresenca={onRegistrarPresenca}
+        onExcluirRegistro={onExcluirRegistro}
         produtividadeRegistrada={produtividadeRegistrada}
       />
     </>

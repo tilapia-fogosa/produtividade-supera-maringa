@@ -7,8 +7,10 @@ import { usePessoasTurma, PessoaTurma } from '@/hooks/use-pessoas-turma';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { toast } from '@/hooks/use-toast';
+import { useProdutividade } from '@/hooks/use-produtividade';
 import ProdutividadeModal from '@/components/turmas/ProdutividadeModal';
 import ReposicaoAulaModal from '@/components/turmas/ReposicaoAulaModal';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const ProdutividadeTurma = () => {
   const location = useLocation();
@@ -25,6 +27,8 @@ const ProdutividadeTurma = () => {
   const [alunoSelecionado, setAlunoSelecionado] = useState<PessoaTurma | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [alunoParaExcluir, setAlunoParaExcluir] = useState<PessoaTurma | null>(null);
 
   // Use o hook usePessoasTurma em vez do useAlunos para obter dados de alunos e funcionários
   const { 
@@ -34,8 +38,12 @@ const ProdutividadeTurma = () => {
     dataRegistroProdutividade,
     carregandoPessoas: carregandoAlunos,
     atualizarProdutividadeRegistrada,
-    buscarPessoasPorTurma
+    buscarPessoasPorTurma,
+    recarregarDadosAposExclusao
   } = usePessoasTurma();
+
+  // Hook para lidar com produtividade
+  const { excluirProdutividade, isLoading: excluindoProdutividade } = useProdutividade('');
 
   useEffect(() => {
     const fetchTurma = async () => {
@@ -130,6 +138,48 @@ const ProdutividadeTurma = () => {
     atualizarProdutividadeRegistrada(alunoId, true);
   };
 
+  const handleClickExcluirRegistro = (aluno: PessoaTurma) => {
+    setAlunoParaExcluir(aluno);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmExclusao = async () => {
+    if (!alunoParaExcluir || !alunoParaExcluir.ultimo_registro_id) {
+      setConfirmDialogOpen(false);
+      return;
+    }
+    
+    try {
+      const sucesso = await excluirProdutividade(alunoParaExcluir.ultimo_registro_id);
+      
+      if (sucesso) {
+        toast({
+          title: "Sucesso",
+          description: "Último registro excluído com sucesso",
+          variant: "default"
+        });
+        
+        // Remover o registro da lista de produtividade registrada se for do mesmo dia
+        if (produtividadeRegistrada[alunoParaExcluir.id]) {
+          atualizarProdutividadeRegistrada(alunoParaExcluir.id, false);
+        }
+        
+        // Recarregar dados após exclusão
+        recarregarDadosAposExclusao(alunoParaExcluir.id);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir registro:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o registro",
+        variant: "destructive"
+      });
+    }
+    
+    setConfirmDialogOpen(false);
+    setAlunoParaExcluir(null);
+  };
+
   const handleModalError = (errorMessage: string) => {
     if (errorMessage.includes("credenciais do Google") || 
         errorMessage.includes("Google Service Account")) {
@@ -147,11 +197,11 @@ const ProdutividadeTurma = () => {
     }
   };
 
-  if (loading || carregandoAlunos) {
+  if (loading || carregandoAlunos || excluindoProdutividade) {
     return (
       <div className="w-full min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 text-azul-500 dark:text-orange-100">
         <div className="container mx-auto py-4 px-2 text-center">
-          <p>Carregando{carregandoAlunos ? ' pessoas' : ''}...</p>
+          <p>Carregando{carregandoAlunos ? ' pessoas' : excluindoProdutividade ? ' excluindo registro' : ''}...</p>
         </div>
       </div>
     );
@@ -175,6 +225,7 @@ const ProdutividadeTurma = () => {
           alunos={alunos}
           onBack={voltarParaTurmas}
           onRegistrarPresenca={handleClickRegistrarPresenca}
+          onExcluirRegistro={handleClickExcluirRegistro}
           onReposicaoAula={handleReposicaoAula}
           produtividadeRegistrada={produtividadeRegistrada}
         />
@@ -197,6 +248,23 @@ const ProdutividadeTurma = () => {
           onClose={handleFecharReposicaoModal}
           onError={handleModalError}
         />
+
+        <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir registro</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o último registro de produtividade de {alunoParaExcluir?.nome}? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmExclusao} className="bg-red-600 hover:bg-red-700">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
