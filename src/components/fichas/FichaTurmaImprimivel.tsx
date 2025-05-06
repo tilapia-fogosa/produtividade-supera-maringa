@@ -18,7 +18,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   alunos
 }) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const alunosPorPagina = 12; // Alterado para 12 alunos na tabela principal
+  const alunosPorPagina = 14; // Alterado para 14 alunos na tabela principal
   const alunosReposicaoPorPagina = 5; // 5 linhas para reposições
 
   // Ordenar alunos por nome
@@ -202,7 +202,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
         </div>
       </div>
 
-      {/* Tabela principal da ficha (12 alunos) */}
+      {/* Tabela principal da ficha (14 alunos) */}
       {renderizarTabela('principal')}
 
       {/* Título da seção de reposições */}
