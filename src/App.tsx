@@ -25,6 +25,7 @@ import Funcionarios from "./pages/Funcionarios";
 import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
+import TestSlackButton from "./components/TestSlackButton";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,10 @@ const App = () => (
               <main className="flex-1">
                 <div className="p-4">
                   <SidebarTrigger className="mb-4" />
+                  {/* Botão temporário para testar mensagens do Slack */}
+                  <div className="mb-4 flex justify-center">
+                    <TestSlackButton />
+                  </div>
                   <Routes>
                     <Route path="/" element={<Navigate to="/lancamentos" />} />
                     <Route path="/dias-lancamento" element={<DiasLancamento />} />

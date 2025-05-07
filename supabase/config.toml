@@ -1,5 +1,4 @@
 
-
 project_id = "hkvjdxxndapxpslovrlc"
 
 [functions.check-missing-launches]
@@ -14,3 +13,5 @@ verify_jwt = false
 [calendar.check-missing-attendance]
 schedule = "0 8 * * *"  # Executar todos os dias às 08:00
 
+[functions.test-slack-message]
+verify_jwt = false
