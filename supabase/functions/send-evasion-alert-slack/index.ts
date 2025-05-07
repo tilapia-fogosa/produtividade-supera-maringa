@@ -37,7 +37,7 @@ serve(async (req) => {
       );
     }
 
-    // Obter detalhes completos do alerta e do aluno
+    // Obter detalhes completos do alerta e do aluno, incluindo telefone e turma
     const { data: alertaDetalhes, error: alertaError } = await supabase
       .from('alerta_evasao')
       .select(`
@@ -49,7 +49,19 @@ serve(async (req) => {
         data_retencao,
         responsavel,
         alunos:aluno_id (
-          nome
+          nome,
+          telefone,
+          turma_id,
+          codigo,
+          email,
+          ultimo_nivel,
+          ultima_pagina,
+          niveldesafio,
+          motivo_procura,
+          percepcao_coordenador
+        ),
+        turmas:alunos(
+          turma:turma_id(nome, dia_semana, horario)
         )
       `)
       .eq('id', record.id)
@@ -65,6 +77,31 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    // Buscar histórico de alertas anteriores do mesmo aluno
+    const { data: alertasAnteriores, error: alertasError } = await supabase
+      .from('alerta_evasao')
+      .select(`
+        id,
+        descritivo,
+        data_alerta,
+        origem_alerta,
+        data_retencao,
+        responsavel
+      `)
+      .eq('aluno_id', alertaDetalhes.aluno_id)
+      .neq('id', alertaDetalhes.id) // Excluir o alerta atual
+      .order('data_alerta', { ascending: false })
+      .limit(3); // Limitar para os 3 alertas mais recentes
+    
+    let historicoAlertas = '';
+    if (alertasAnteriores && alertasAnteriores.length > 0) {
+      historicoAlertas = '\n\n*Histórico de Alertas Anteriores:*\n';
+      alertasAnteriores.forEach(alerta => {
+        const dataFormatada = new Date(alerta.data_alerta).toLocaleDateString('pt-BR');
+        historicoAlertas += `• ${dataFormatada} - ${alerta.origem_alerta}: ${alerta.descritivo || 'Sem descrição'}\n`;
+      });
+    }
     
     // Formatar data para exibição
     const dataAlerta = new Date(alertaDetalhes.data_alerta).toLocaleDateString('pt-BR');
@@ -72,15 +109,51 @@ serve(async (req) => {
       ? new Date(alertaDetalhes.data_retencao).toLocaleDateString('pt-BR')
       : '';
 
-    // Montar texto da mensagem
-    const mensagem = `:batedor::batedor: ALERTA: Farejei uma possível Evasão :batedor::batedor:
-Aluno: ${alertaDetalhes.alunos.nome}
-Data do Aviso: ${dataAlerta}
-Responsável Alerta: ${alertaDetalhes.responsavel || 'Não especificado'}
-Informações: ${alertaDetalhes.descritivo || 'Sem informações adicionais'}
-Origem do Alerta: ${alertaDetalhes.origem_alerta}
-*Retenção agendada? ${dataRetencao ? `Data: ${dataRetencao}` : 'Não agendada'}*
-@Chris Kulza para acompanhamento.`;
+    // Informações do aluno e da turma
+    const aluno = alertaDetalhes.alunos;
+    const telefoneLimpo = aluno.telefone ? aluno.telefone.replace(/[^\d]/g, '') : '';
+    const linkWhatsapp = telefoneLimpo ? `https://wa.me/55${telefoneLimpo}` : '';
+    
+    // Informações da turma
+    let turmaInfo = 'Turma não encontrada';
+    if (alertaDetalhes.turmas && alertaDetalhes.turmas.length > 0 && alertaDetalhes.turmas[0].turma) {
+      const turma = alertaDetalhes.turmas[0].turma;
+      turmaInfo = `${turma.nome} (${turma.dia_semana} - ${turma.horario})`;
+    }
+
+    // Seção de informações do aluno
+    let infoAluno = '';
+    if (aluno) {
+      infoAluno = `*Informações do Aluno:*
+Código: ${aluno.codigo || 'N/A'}
+Email: ${aluno.email || 'N/A'}
+Telefone: ${aluno.telefone || 'N/A'} ${linkWhatsapp ? `(<${linkWhatsapp}|Whatsapp>)` : ''}
+Turma: ${turmaInfo}
+Último Nível: ${aluno.ultimo_nivel || 'N/A'}
+Última Página: ${aluno.ultima_pagina || 'N/A'}
+Nível Desafio: ${aluno.niveldesafio || 'N/A'}`;
+    }
+
+    // Seção de informações da Aula Zero, se disponível
+    let aulaZeroInfo = '';
+    if (aluno && (aluno.motivo_procura || aluno.percepcao_coordenador)) {
+      aulaZeroInfo = `\n\n*Dados da Aula Zero:*
+${aluno.motivo_procura ? `Motivo da Procura: ${aluno.motivo_procura}` : ''}
+${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_coordenador}` : ''}`;
+    }
+
+    // Montar texto da mensagem com o novo formato
+    const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
+*Aluno:* ${alertaDetalhes.alunos.nome}
+*Data do Aviso:* ${dataAlerta}
+*Responsável Alerta:* ${alertaDetalhes.responsavel || 'Não especificado'}
+*Informações:* ${alertaDetalhes.descritivo || 'Sem informações adicionais'}
+*Origem do Alerta:* ${alertaDetalhes.origem_alerta}
+*Retenção agendada?* ${dataRetencao ? `Data: ${dataRetencao}` : 'Não agendada'}
+
+${infoAluno}${aulaZeroInfo}${historicoAlertas}
+
+<@chriskulza> para acompanhamento.`;
     
     // Enviar para a API do Slack
     const response = await fetch('https://slack.com/api/chat.postMessage', {
@@ -104,12 +177,6 @@ Origem do Alerta: ${alertaDetalhes.origem_alerta}
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
-    
-    // Atualizar o registro com o ID da mensagem do Slack se precisar rastrear
-    // const { error: updateError } = await supabase
-    //   .from('alerta_evasao')
-    //   .update({ slack_mensagem_id: responseData.ts })
-    //   .eq('id', record.id);
     
     return new Response(
       JSON.stringify({ 
