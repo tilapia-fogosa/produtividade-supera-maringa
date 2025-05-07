@@ -6,3 +6,9 @@ verify_jwt = false
 
 [calendar.check-missing-launches]
 schedule = "0 1 * * *"  # Executar todos os dias à 01:00
+
+[functions.check-missing-attendance]
+verify_jwt = false
+
+[calendar.check-missing-attendance]
+schedule = "0 8 * * *"  # Executar todos os dias às 08:00
