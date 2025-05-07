@@ -37,7 +37,8 @@ serve(async (req) => {
       );
     }
 
-    // Obter detalhes completos do alerta e do aluno, incluindo telefone e turma
+    // Obter detalhes completos do alerta e do aluno, incluindo telefone
+    // Corrigindo a consulta removendo a relação incorreta entre alunos e turma_id
     const { data: alertaDetalhes, error: alertaError } = await supabase
       .from('alerta_evasao')
       .select(`
@@ -59,9 +60,6 @@ serve(async (req) => {
           niveldesafio,
           motivo_procura,
           percepcao_coordenador
-        ),
-        turmas:alunos(
-          turma:turma_id(nome, dia_semana, horario)
         )
       `)
       .eq('id', record.id)
@@ -76,6 +74,21 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
+    }
+
+    // Agora buscamos os dados da turma separadamente
+    const { data: turmaDados, error: turmaError } = alertaDetalhes.alunos?.turma_id ? await supabase
+      .from('turmas')
+      .select(`
+        nome,
+        dia_semana,
+        horario
+      `)
+      .eq('id', alertaDetalhes.alunos.turma_id)
+      .single() : { data: null, error: null };
+    
+    if (turmaError) {
+      console.error('Erro ao buscar turma:', turmaError);
     }
 
     // Buscar histórico de alertas anteriores do mesmo aluno
@@ -111,14 +124,13 @@ serve(async (req) => {
 
     // Informações do aluno e da turma
     const aluno = alertaDetalhes.alunos;
-    const telefoneLimpo = aluno.telefone ? aluno.telefone.replace(/[^\d]/g, '') : '';
+    const telefoneLimpo = aluno?.telefone ? aluno.telefone.replace(/[^\d]/g, '') : '';
     const linkWhatsapp = telefoneLimpo ? `https://wa.me/55${telefoneLimpo}` : '';
     
     // Informações da turma
     let turmaInfo = 'Turma não encontrada';
-    if (alertaDetalhes.turmas && alertaDetalhes.turmas.length > 0 && alertaDetalhes.turmas[0].turma) {
-      const turma = alertaDetalhes.turmas[0].turma;
-      turmaInfo = `${turma.nome} (${turma.dia_semana} - ${turma.horario})`;
+    if (turmaDados) {
+      turmaInfo = `${turmaDados.nome} (${turmaDados.dia_semana} - ${turmaDados.horario})`;
     }
 
     // Seção de informações do aluno
@@ -144,7 +156,7 @@ ${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_c
 
     // Montar texto da mensagem com o novo formato
     const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
-*Aluno:* ${alertaDetalhes.alunos.nome}
+*Aluno:* ${alertaDetalhes.alunos?.nome}
 *Data do Aviso:* ${dataAlerta}
 *Responsável Alerta:* ${alertaDetalhes.responsavel || 'Não especificado'}
 *Informações:* ${alertaDetalhes.descritivo || 'Sem informações adicionais'}
