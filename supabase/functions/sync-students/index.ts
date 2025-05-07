@@ -277,6 +277,19 @@ async function syncTurmas(rawData, professors) {
     existingTurmas.map(t => [t.nome.toLowerCase().trim(), t])
   );
   
+  // Obter o ID da unidade padrão para novas turmas
+  const { data: validUnit, error: unitError } = await supabase
+    .from('units')
+    .select('id')
+    .limit(1);
+    
+  if (unitError || !validUnit || validUnit.length === 0) {
+    throw new Error(`Erro ao buscar unidade válida: ${unitError?.message || "Nenhuma unidade encontrada"}`);
+  }
+  
+  const defaultUnitId = validUnit[0].id;
+  console.log(`Usando unidade ID: ${defaultUnitId} para novas turmas`);
+  
   // Prepare turmas to add or update
   const turmasToAdd = [];
   const turmasToUpdate = [];
@@ -292,7 +305,8 @@ async function syncTurmas(rawData, professors) {
         nome: turma.nome,
         professor_id: professorId,
         dia_semana: turma.dia_semana, // Using the detected weekday
-        horario: '14:00:00'    // Default value, can be updated later
+        horario: '14:00:00',    // Default value, can be updated later
+        unit_id: defaultUnitId  // Adicionando o unit_id aqui
       });
     } else if (
       professorId && existingTurma.professor_id !== professorId ||
@@ -302,7 +316,8 @@ async function syncTurmas(rawData, professors) {
       turmasToUpdate.push({
         id: existingTurma.id,
         professor_id: professorId,
-        dia_semana: turma.dia_semana
+        dia_semana: turma.dia_semana,
+        unit_id: existingTurma.unit_id || defaultUnitId  // Garantindo que unit_id seja mantido ou adicionado
       });
     }
   }
@@ -330,7 +345,8 @@ async function syncTurmas(rawData, professors) {
       .from('turmas')
       .update({ 
         professor_id: turma.professor_id,
-        dia_semana: turma.dia_semana
+        dia_semana: turma.dia_semana,
+        unit_id: turma.unit_id  // Garantindo que unit_id seja atualizado se necessário
       })
       .eq('id', turma.id);
     
@@ -360,6 +376,18 @@ async function syncStudents(rawData, turmas) {
     turmas.map(t => [t.nome.toLowerCase().trim(), t.id])
   );
   
+  // Obter o ID da unidade padrão para novos alunos
+  const { data: validUnit, error: unitError } = await supabase
+    .from('units')
+    .select('id')
+    .limit(1);
+    
+  if (unitError || !validUnit || validUnit.length === 0) {
+    throw new Error(`Erro ao buscar unidade válida: ${unitError?.message || "Nenhuma unidade encontrada"}`);
+  }
+  
+  const defaultUnitId = validUnit[0].id;
+  
   // Prepare student data with turma_id
   const studentsData = rawData.map(row => {
     const turmaId = turmaMap.get(row.turma_nome.toLowerCase().trim());
@@ -372,6 +400,7 @@ async function syncStudents(rawData, turmas) {
     return {
       nome: row.nome,
       turma_id: turmaId,
+      unit_id: defaultUnitId,  // Adicionando unit_id para alunos
       codigo: row.codigo || null,
       telefone: row.telefone || null,
       email: row.email || null,
