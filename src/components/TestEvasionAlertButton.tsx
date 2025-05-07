@@ -21,7 +21,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       const { data: alertaData, error: alertaError } = await supabase
         .from('alerta_evasao')
         .insert({
-          aluno_id: alunoId || '6f60e30a-0e1e-4a0c-9a45-1cd023ac196e', // ID de aluno padrão se não for fornecido
+          aluno_id: alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e', // ID de aluno válido da base de dados
           descritivo: 'Este é um alerta de teste enviado para o Slack',
           origem_alerta: 'outro', // Alterado de 'teste' para 'outro', que é um valor válido do enum
           responsavel: 'Sistema de Teste'
