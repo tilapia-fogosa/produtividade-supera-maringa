@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -224,11 +225,12 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
               <TableRow key={aluno.id}>
                 <TableCell 
                   className="ficha-celula-nome"
-                  style={{
-                    backgroundColor: alunoRecente ? CORES.amareloClaro : 'transparent',
+                  style={alunoRecente ? {
+                    backgroundColor: CORES.amareloClaro,
                     WebkitPrintColorAdjust: 'exact' as 'exact',
                     printColorAdjust: 'exact' as 'exact',
-                  }}
+                    colorAdjust: 'exact' as 'exact'
+                  } : {}}
                 >
                   <span className="ficha-aluno-numero">{(paginaAtual - 1) * alunosPorPagina + index + 1}</span>
                   <span className="ficha-aluno-nome">{aluno.nome}</span>

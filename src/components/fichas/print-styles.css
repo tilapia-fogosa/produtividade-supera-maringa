@@ -230,8 +230,8 @@
     color-adjust: exact !important;
   }
   
-  /* Regra específica para alunos recentes com fundo amarelo */
-  .ficha-celula-nome[style*="background-color"] {
+  /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
+  .ficha-celula-nome[style*="background-color: rgb(254, 247, 205)"] {
     background-color: #FEF7CD !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
