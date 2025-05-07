@@ -15,3 +15,7 @@ schedule = "0 8 * * *"  # Executar todos os dias às 08:00
 
 [functions.test-slack-message]
 verify_jwt = false
+
+[functions.send-evasion-alert-slack]
+verify_jwt = false
+

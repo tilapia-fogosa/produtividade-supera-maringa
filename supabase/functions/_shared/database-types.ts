@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -10,45 +9,134 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      alerta_evasao: {
+      abrindo_horizontes: {
         Row: {
-          aluno_id: string
+          aluno_id: string | null
+          avaliacao_ah: string | null
           created_at: string
-          data_alerta: string
-          data_retencao: string | null
-          descritivo: string | null
           id: string
-          kanban_status: string
-          origem_alerta: string
-          responsavel: string | null
-          status: string
+          turma_id: string | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          avaliacao_ah?: string | null
+          created_at?: string
+          id?: string
+          turma_id?: string | null
+        }
+        Update: {
+          aluno_id?: string | null
+          avaliacao_ah?: string | null
+          created_at?: string
+          id?: string
+          turma_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abrindo_horizontes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "abrindo_horizontes_turma_id_fkey"
+            columns: ["turma_id"]
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      alunos: {
+        Row: {
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          created_at: string
+          data_nascimento: string | null
+          id: string
+          matricula: string | null
+          motivo_procura: string | null
+          nome: string | null
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          turma_id: string | null
           updated_at: string
         }
         Insert: {
-          aluno_id: string
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           created_at?: string
-          data_alerta?: string
-          data_retencao?: string | null
-          descritivo?: string | null
+          data_nascimento?: string | null
           id?: string
-          kanban_status?: string
-          origem_alerta: string
-          responsavel?: string | null
-          status?: string
+          matricula?: string | null
+          motivo_procura?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          turma_id?: string | null
           updated_at?: string
         }
         Update: {
-          aluno_id?: string
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           created_at?: string
-          data_alerta?: string
-          data_retencao?: string | null
-          descritivo?: string | null
+          data_nascimento?: string | null
           id?: string
-          kanban_status?: string
-          origem_alerta?: string
-          responsavel?: string | null
-          status?: string
+          matricula?: string | null
+          motivo_procura?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          turma_id?: string | null
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alunos_turma_id_fkey"
+            columns: ["turma_id"]
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      alerta_evasao: {
+        Row: {
+          id: string
+          aluno_id: string
+          descritivo: string | null
+          data_alerta: string
+          origem_alerta: string
+          data_retencao: string | null
+          responsavel: string | null
+          created_at: string
+          updated_at: string
+          status: string
+          kanban_status: string
+        }
+        Insert: {
+          id?: string
+          aluno_id: string
+          descritivo?: string | null
+          data_alerta?: string
+          origem_alerta: string
+          data_retencao?: string | null
+          responsavel?: string | null
+          created_at?: string
+          updated_at?: string
+          status?: string
+          kanban_status?: string
+        }
+        Update: {
+          id?: string
+          aluno_id?: string
+          descritivo?: string | null
+          data_alerta?: string
+          origem_alerta?: string
+          data_retencao?: string | null
+          responsavel?: string | null
+          created_at?: string
+          updated_at?: string
+          status?: string
+          kanban_status?: string
         }
         Relationships: [
           {
@@ -58,327 +146,425 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
-      },
-      alertas_falta: {
+      }
+      alertas_lancamento: {
         Row: {
-          aluno_id: string
+          arquivado_em: string | null
+          arquivado_por: string | null
           created_at: string
-          data_alerta: string
-          data_falta: string
-          detalhes: Json | null
+          data_aula: string | null
           id: string
-          professor_id: string
-          resolvido_em: string | null
-          resolvido_por: string | null
-          slack_mensagem_id: string | null
-          status: string
-          tipo_criterio: string
-          turma_id: string
-          unit_id: string
-          updated_at: string
+          professor_id: string | null
+          status: string | null
+          turma_id: string | null
         }
         Insert: {
-          aluno_id: string
+          arquivado_em?: string | null
+          arquivado_por?: string | null
           created_at?: string
-          data_alerta?: string
-          data_falta: string
-          detalhes?: Json | null
+          data_aula?: string | null
           id?: string
-          professor_id: string
-          resolvido_em?: string | null
-          resolvido_por?: string | null
-          slack_mensagem_id?: string | null
-          status?: string
-          tipo_criterio: string
-          turma_id: string
-          unit_id: string
-          updated_at?: string
+          professor_id?: string | null
+          status?: string | null
+          turma_id?: string | null
         }
         Update: {
-          aluno_id?: string
+          arquivado_em?: string | null
+          arquivado_por?: string | null
           created_at?: string
-          data_alerta?: string
-          data_falta?: string
-          detalhes?: Json | null
+          data_aula?: string | null
           id?: string
-          professor_id?: string
-          resolvido_em?: string | null
-          resolvido_por?: string | null
-          slack_mensagem_id?: string | null
-          status?: string
-          tipo_criterio?: string
-          turma_id?: string
-          unit_id?: string
-          updated_at?: string
+          professor_id?: string | null
+          status?: string | null
+          turma_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "alertas_falta_aluno_id_fkey"
-            columns: ["aluno_id"]
-            referencedRelation: "alunos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "alertas_falta_professor_id_fkey"
+            foreignKeyName: "alertas_lancamento_professor_id_fkey"
             columns: ["professor_id"]
             referencedRelation: "professores"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "alertas_falta_resolvido_por_fkey"
-            columns: ["resolvido_por"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "alertas_falta_turma_id_fkey"
+            foreignKeyName: "alertas_lancamento_turma_id_fkey"
             columns: ["turma_id"]
             referencedRelation: "turmas"
             referencedColumns: ["id"]
+          }
+        ]
+      }
+      aula_experimental: {
+        Row: {
+          aluno_id: string | null
+          created_at: string
+          data_aula: string | null
+          id: string
+          observacoes: string | null
+          professor_id: string | null
+          turma_id: string | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          created_at?: string
+          data_aula?: string | null
+          id?: string
+          observacoes?: string | null
+          professor_id?: string | null
+          turma_id?: string | null
+        }
+        Update: {
+          aluno_id?: string | null
+          created_at?: string
+          data_aula?: string | null
+          id?: string
+          observacoes?: string | null
+          professor_id?: string | null
+          turma_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aula_experimental_aluno_id_fkey"
+            columns: ["aluno_id"]
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "alertas_falta_unit_id_fkey"
-            columns: ["unit_id"]
-            referencedRelation: "unidades"
+            foreignKeyName: "aula_experimental_professor_id_fkey"
+            columns: ["professor_id"]
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aula_experimental_turma_id_fkey"
+            columns: ["turma_id"]
+            referencedRelation: "turmas"
             referencedColumns: ["id"]
           }
         ]
-      },
-      alunos: {
+      }
+      aula_zero: {
         Row: {
-          active: boolean
+          aluno_id: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
-          codigo: string | null
-          coordenador_responsavel: string | null
           created_at: string
-          curso: string | null
-          data_onboarding: string | null
-          dias_apostila: number | null
-          dias_supera: number | null
-          email: string | null
           id: string
-          idade: number | null
-          indice: string | null
-          is_funcionario: boolean | null
-          matricula: string | null
           motivo_procura: string | null
-          niveldesafio: string | null
-          nome: string
+          observacoes: string | null
           percepcao_coordenador: string | null
           pontos_atencao: string | null
-          telefone: string | null
-          texto_devolutiva: string | null
-          turma_id: string
-          ultima_correcao_ah: string | null
-          ultima_falta: string | null
-          ultima_pagina: number | null
-          ultimo_nivel: string | null
-          unit_id: string
-          vencimento_contrato: string | null
+          turma_id: string | null
         }
         Insert: {
-          active?: boolean
+          aluno_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
-          codigo?: string | null
-          coordenador_responsavel?: string | null
           created_at?: string
-          curso?: string | null
-          data_onboarding?: string | null
-          dias_apostila?: number | null
-          dias_supera?: number | null
-          email?: string | null
           id?: string
-          idade?: number | null
-          indice?: string | null
-          is_funcionario?: boolean | null
-          matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: string | null
-          nome: string
+          observacoes?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
-          telefone?: string | null
-          texto_devolutiva?: string | null
-          turma_id: string
-          ultima_correcao_ah?: string | null
-          ultima_falta?: string | null
-          ultima_pagina?: number | null
-          ultimo_nivel?: string | null
-          unit_id: string
-          vencimento_contrato?: string | null
+          turma_id?: string | null
         }
         Update: {
-          active?: boolean
+          aluno_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
-          codigo?: string | null
-          coordenador_responsavel?: string | null
           created_at?: string
-          curso?: string | null
-          data_onboarding?: string | null
-          dias_apostila?: number | null
-          dias_supera?: number | null
-          email?: string | null
           id?: string
-          idade?: number | null
-          indice?: string | null
-          is_funcionario?: boolean | null
-          matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: string | null
-          nome?: string
+          observacoes?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
-          telefone?: string | null
-          texto_devolutiva?: string | null
-          turma_id?: string
-          ultima_correcao_ah?: string | null
-          ultima_falta?: string | null
-          ultima_pagina?: number | null
-          ultimo_nivel?: string | null
-          unit_id?: string
-          vencimento_contrato?: string | null
+          turma_id?: string | null
         }
-        Relationships: []
-      },
+        Relationships: [
+          {
+            foreignKeyName: "aula_zero_aluno_id_fkey"
+            columns: ["aluno_id"]
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aula_zero_turma_id_fkey"
+            columns: ["turma_id"]
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       dados_importantes: {
         Row: {
+          created_at: string
           data: string | null
-          id: number
-          key: string
+          id: string
+          key: string | null
         }
         Insert: {
+          created_at?: string
           data?: string | null
-          id?: number
-          key: string
+          id?: string
+          key?: string | null
         }
         Update: {
+          created_at?: string
           data?: string | null
-          id?: number
-          key?: string
+          id?: string
+          key?: string | null
         }
         Relationships: []
-      },
-      professores: {
+      }
+      devolutivas: {
+        Row: {
+          aluno_id: string | null
+          conteudo: string | null
+          created_at: string
+          id: string
+          turma_id: string | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          turma_id?: string | null
+        }
+        Update: {
+          aluno_id?: string | null
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          turma_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devolutivas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devolutivas_turma_id_fkey"
+            columns: ["turma_id"]
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      diario_turma: {
+        Row: {
+          conteudo: string | null
+          created_at: string
+          data_aula: string | null
+          id: string
+          professor_id: string | null
+          turma_id: string | null
+        }
+        Insert: {
+          conteudo?: string | null
+          created_at?: string
+          data_aula?: string | null
+          id?: string
+          professor_id?: string | null
+          turma_id?: string | null
+        }
+        Update: {
+          conteudo?: string | null
+          created_at?: string
+          data_aula?: string | null
+          id?: string
+          professor_id?: string | null
+          turma_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_turma_professor_id_fkey"
+            columns: ["professor_id"]
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_turma_turma_id_fkey"
+            columns: ["turma_id"]
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      funcionarios: {
         Row: {
           created_at: string
+          data_nascimento: string | null
           email: string | null
           id: string
-          nome: string
-          slack_username: string | null
+          nome: string | null
           telefone: string | null
-          unit_id: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          nome: string
-          slack_username?: string | null
-          telefone?: string | null
-          unit_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          nome?: string
-          slack_username?: string | null
-          telefone?: string | null
-          unit_id?: string
-        }
-        Relationships: []
-      },
-      produtividade_abaco: {
-        Row: {
-          aluno_id: string
-          apostila: string | null
-          comentario: string | null
-          created_at: string
-          data_aula: string
-          erros: number | null
-          exercicios: number | null
-          fez_desafio: boolean | null
-          id: string
-          is_reposicao: boolean
-          pagina: string | null
-          presente: boolean
           updated_at: string
         }
         Insert: {
-          aluno_id: string
-          apostila?: string | null
-          comentario?: string | null
           created_at?: string
-          data_aula: string
-          erros?: number | null
-          exercicios?: number | null
-          fez_desafio?: boolean | null
+          data_nascimento?: string | null
+          email?: string | null
           id?: string
-          is_reposicao?: boolean
-          pagina?: string | null
-          presente?: boolean
+          nome?: string | null
+          telefone?: string | null
           updated_at?: string
         }
         Update: {
-          aluno_id?: string
-          apostila?: string | null
-          comentario?: string | null
           created_at?: string
-          data_aula?: string
-          erros?: number | null
-          exercicios?: number | null
-          fez_desafio?: boolean | null
+          data_nascimento?: string | null
+          email?: string | null
           id?: string
-          is_reposicao?: boolean
-          pagina?: string | null
-          presente?: boolean
+          nome?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      kanban_cards: {
+        Row: {
+          alerta_evasao_id: string | null
+          aluno_nome: string | null
+          attached_files: Json[] | null
+          column_id: string | null
+          comments: Json[] | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          historico: string | null
+          id: string
+          last_activity: string | null
+          origem: string | null
+          priority: string | null
+          responsavel: string | null
+          retention_date: string | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          alerta_evasao_id?: string | null
+          aluno_nome?: string | null
+          attached_files?: Json[] | null
+          column_id?: string | null
+          comments?: Json[] | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          historico?: string | null
+          id?: string
+          last_activity?: string | null
+          origem?: string | null
+          priority?: string | null
+          responsavel?: string | null
+          retention_date?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alerta_evasao_id?: string | null
+          aluno_nome?: string | null
+          attached_files?: Json[] | null
+          column_id?: string | null
+          comments?: Json[] | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          historico?: string | null
+          id?: string
+          last_activity?: string | null
+          origem?: string | null
+          priority?: string | null
+          responsavel?: string | null
+          retention_date?: string | null
+          tags?: string[] | null
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "produtividade_abaco_aluno_id_fkey"
-            columns: ["aluno_id"]
-            referencedRelation: "alunos"
+            foreignKeyName: "kanban_cards_alerta_evasao_id_fkey"
+            columns: ["alerta_evasao_id"]
+            referencedRelation: "alerta_evasao"
             referencedColumns: ["id"]
           }
         ]
-      },
-      turmas: {
+      }
+      professores: {
         Row: {
           created_at: string
-          dia_semana: string
-          horario: string
+          data_nascimento: string | null
+          email: string | null
           id: string
-          nome: string
-          professor_id: string
-          sala: string | null
-          unit_id: string
+          nome: string | null
+          telefone: string | null
+          updated_at: string
         }
         Insert: {
           created_at?: string
-          dia_semana: string
-          horario: string
+          data_nascimento?: string | null
+          email?: string | null
           id?: string
-          nome: string
-          professor_id: string
-          sala?: string | null
-          unit_id: string
+          nome?: string | null
+          telefone?: string | null
+          updated_at?: string
         }
         Update: {
           created_at?: string
-          dia_semana?: string
-          horario?: string
+          data_nascimento?: string | null
+          email?: string | null
           id?: string
-          nome?: string
-          professor_id?: string
-          sala?: string | null
-          unit_id?: string
+          nome?: string | null
+          telefone?: string | null
+          updated_at?: string
         }
         Relationships: []
-      },
+      }
+      turmas: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string | null
+          professor_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome?: string | null
+          professor_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string | null
+          professor_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turmas_professor_id_fkey"
+            columns: ["professor_id"]
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
