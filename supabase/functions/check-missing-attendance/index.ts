@@ -396,7 +396,7 @@ async function buscarCoordenadorResponsavel(supabase: any, alunoId: string) {
 }
 
 // Função para enviar alerta para o Slack
-async function enviarAlertaParaSlack(webhook_url: string, alerta: any): Promise<boolean> {
+async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, slackChannelId: string, alerta: any): Promise<boolean> {
   try {
     // Formatar a mensagem para o Slack
     let titulo = `:warning: Alerta de Falta`;
@@ -449,58 +449,51 @@ async function enviarAlertaParaSlack(webhook_url: string, alerta: any): Promise<
     const mencaoCoordenador = coordenador ? `@${coordenador} para acompanhamento.` : '';
     
     // Construir o payload para o Slack
-    const mensagem = {
-      attachments: [
-        {
-          color: corMensagem,
-          blocks: [
-            {
-              type: "header",
-              text: {
-                type: "plain_text",
-                text: titulo,
-                emoji: true
-              }
-            },
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `Professor: ${alerta.professor_nome} ${alerta.professor_slack ? `\n@${alerta.professor_slack}` : ''}`
-              }
-            },
-            {
-              type: "section",
-              fields: [
-                {
-                  type: "mrkdwn",
-                  text: `*Aluno:*\n${alerta.aluno_nome}`
-                },
-                {
-                  type: "mrkdwn",
-                  text: `*Tempo de Supera:*\n${alerta.dias_supera || "Não disponível"}`
-                },
-                {
-                  type: "mrkdwn",
-                  text: `*Data:*\n${dataFormatada}`
-                }
-              ]
-            },
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: detalheMensagem
-              }
-            }
-          ]
+    const blocks = [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: titulo,
+          emoji: true
         }
-      ]
-    };
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Professor: ${alerta.professor_nome} ${alerta.professor_slack ? `\n@${alerta.professor_slack}` : ''}`
+        }
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*Aluno:*\n${alerta.aluno_nome}`
+          },
+          {
+            type: "mrkdwn",
+            text: `*Tempo de Supera:*\n${alerta.dias_supera || "Não disponível"}`
+          },
+          {
+            type: "mrkdwn",
+            text: `*Data:*\n${dataFormatada}`
+          }
+        ]
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: detalheMensagem
+        }
+      }
+    ];
     
     // Adicionar motivo da falta se disponível
     if (alerta.motivo_ultima_falta) {
-      mensagem.attachments[0].blocks.push({
+      blocks.push({
         type: "section",
         text: {
           type: "mrkdwn",
@@ -511,7 +504,7 @@ async function enviarAlertaParaSlack(webhook_url: string, alerta: any): Promise<
     
     // Adicionar menção ao coordenador se disponível
     if (mencaoCoordenador) {
-      mensagem.attachments[0].blocks.push({
+      blocks.push({
         type: "section",
         text: {
           type: "mrkdwn",
@@ -520,18 +513,24 @@ async function enviarAlertaParaSlack(webhook_url: string, alerta: any): Promise<
       });
     }
     
-    // Enviar para o webhook do Slack
-    const response = await fetch(webhook_url, {
+    // Enviar para a API do Slack
+    const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json;charset=utf-8',
+        'Authorization': `Bearer ${slackToken}`
       },
-      body: JSON.stringify(mensagem)
+      body: JSON.stringify({
+        channel: slackChannelId,
+        blocks: blocks,
+        text: titulo // Fallback text
+      })
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro ao enviar alerta para o Slack: ${response.status} ${errorText}`);
+    const responseData = await response.json();
+    
+    if (!responseData.ok) {
+      console.error(`Erro ao enviar mensagem para o Slack: ${responseData.error}`);
       return false;
     }
     
@@ -552,9 +551,41 @@ serve(async (req) => {
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const slackToken = Deno.env.get('SLACK_BOT_TOKEN')!;
+
+    if (!slackToken) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token do Slack não configurado.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
     
     console.log('Iniciando verificação de alertas de falta...');
+    
+    // Buscar ID do canal do Slack da tabela dados_importantes
+    const { data: canalData, error: canalError } = await supabase
+      .from('dados_importantes')
+      .select('data')
+      .eq('key', 'slack_channel_id_alertas_falta')
+      .single();
+    
+    if (canalError || !canalData || !canalData.data) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'ID do canal do Slack não configurado na tabela dados_importantes' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      );
+    }
+    
+    const slackChannelId = canalData.data;
+    console.log('ID do canal do Slack encontrado:', slackChannelId);
     
     // Buscar URL do webhook do Slack da tabela dados_importantes
     const { data: webhookData, error: webhookError } = await supabase
@@ -621,7 +652,7 @@ serve(async (req) => {
       }
       
       // Enviar para o Slack
-      const slackEnviado = await enviarAlertaParaSlack(webhookUrl, alerta);
+      const slackEnviado = await enviarAlertaParaSlack(webhookUrl, slackToken, slackChannelId, alerta);
       
       if (slackEnviado) {
         console.log(`Alerta enviado com sucesso para o Slack: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);
