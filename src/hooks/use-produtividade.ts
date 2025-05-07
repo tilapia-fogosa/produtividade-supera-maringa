@@ -24,6 +24,7 @@ export function useProdutividade(alunoId: string) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [alunoProdutividade, setAlunoProdutividade] = useState<Produtividade[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const buscarProdutividade = async () => {
@@ -103,11 +104,105 @@ export function useProdutividade(alunoId: string) {
     }
   };
 
+  // Nova função para registrar produtividade
+  const registrarProdutividade = async (produtividadeData: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('produtividade_abaco')
+        .insert([produtividadeData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Erro ao registrar produtividade:", error);
+        setError(error.message);
+        toast({
+          title: "Erro",
+          description: "Não foi possível registrar a produtividade.",
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Produtividade registrada com sucesso!",
+      });
+      
+      // Atualizar a lista de produtividade
+      await buscarProdutividade();
+      
+      return data;
+    } catch (error: any) {
+      console.error("Erro inesperado ao registrar produtividade:", error);
+      setError(error.message || "Erro ao registrar produtividade");
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao registrar a produtividade.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Nova função para excluir o último registro de produtividade
+  const excluirProdutividade = async (registroId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { error } = await supabase
+        .from('produtividade_abaco')
+        .delete()
+        .eq('id', registroId);
+      
+      if (error) {
+        console.error("Erro ao excluir registro de produtividade:", error);
+        setError(error.message);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o registro de produtividade.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Registro de produtividade excluído com sucesso!",
+      });
+      
+      // Atualizar a lista de produtividade
+      await buscarProdutividade();
+      
+      return true;
+    } catch (error: any) {
+      console.error("Erro inesperado ao excluir produtividade:", error);
+      setError(error.message || "Erro ao excluir produtividade");
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao excluir o registro de produtividade.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     registrando,
     error,
     success,
+    isLoading,
     registrarPresenca,
+    registrarProdutividade,
+    excluirProdutividade,
     alunoProdutividade,
     buscarProdutividade
   };
