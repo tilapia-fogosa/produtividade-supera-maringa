@@ -25,29 +25,22 @@ import Funcionarios from "./pages/Funcionarios";
 import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
-import TestSlackButton from "./components/TestSlackButton";
-import TestEvasionAlertButton from "./components/TestEvasionAlertButton";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <div className="bg-gradient-to-b from-orange-50 to-white dark:from-orange-950 dark:to-slate-950 min-h-screen text-azul-500 dark:text-orange-100">
+      <div className="bg-background min-h-screen text-foreground">
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <SidebarProvider>
-            <div className="flex min-h-screen w-full">
+            <div className="flex min-h-screen w-full overflow-hidden">
               <AppSidebar />
-              <main className="flex-1">
-                <div className="p-4">
-                  <SidebarTrigger className="mb-4" />
-                  {/* Botões temporários para testes */}
-                  <div className="mb-4 flex justify-center gap-3">
-                    <TestSlackButton />
-                    <TestEvasionAlertButton />
-                  </div>
+              <main className="flex-1 overflow-auto">
+                <div className="p-2 md:p-4">
+                  <SidebarTrigger className="mb-2 md:mb-4" />
                   <Routes>
                     <Route path="/" element={<Navigate to="/lancamentos" />} />
                     <Route path="/dias-lancamento" element={<DiasLancamento />} />
@@ -75,7 +68,9 @@ const App = () => (
             </div>
           </SidebarProvider>
         </BrowserRouter>
-        <ThemeToggle />
+        <div className="fixed bottom-4 right-4">
+          <ThemeToggle />
+        </div>
       </div>
     </TooltipProvider>
   </QueryClientProvider>
