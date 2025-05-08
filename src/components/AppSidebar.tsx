@@ -58,13 +58,10 @@ export function AppSidebar() {
     <Sidebar 
       variant="floating" 
       className="border-sidebar-border bg-sidebar"
-      // Removendo as propriedades incompatíveis
-      // collapsedSize="60px"
-      // expandedSize="240px"
     >
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground">Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground font-medium">Menu</SidebarGroupLabel>
           <SidebarMenu>
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -76,12 +73,12 @@ export function AppSidebar() {
                     tooltip={item.title}
                     className={cn(
                       "text-sidebar-foreground transition-colors duration-200",
-                      "hover:bg-[#FF6B00] hover:text-white",
-                      isActive && "bg-white/20 text-white hover:bg-[#FF6B00]"
+                      "hover:bg-sidebar-primary hover:text-sidebar-primary-foreground",
+                      isActive && "bg-white/20 text-white hover:bg-sidebar-primary"
                     )}
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.title}</span>
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );

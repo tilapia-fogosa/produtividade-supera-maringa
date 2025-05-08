@@ -10,21 +10,23 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 dark:bg-destructive dark:text-destructive-foreground dark:hover:bg-destructive/80",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background hover:bg-primary/10 hover:text-primary dark:border-border dark:bg-background dark:text-foreground dark:hover:bg-primary/20",
+          "border border-input bg-background hover:bg-primary/10 hover:text-primary",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-secondary dark:text-secondary-foreground dark:hover:bg-secondary/70",
-        ghost: "hover:bg-accent/20 hover:text-accent-foreground dark:hover:bg-accent/20 dark:hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline dark:text-primary",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent/20 hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        // Adicionando tamanho específico para mobile
+        mobile: "h-12 w-full rounded-md px-4 py-3 text-base",
       },
     },
     defaultVariants: {
