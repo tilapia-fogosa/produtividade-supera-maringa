@@ -157,12 +157,197 @@ export async function registrarProdutividade(
         console.error('Detalhes do erro produtividade:', JSON.stringify(produtividadeError));
         return false;
       }
+      
+      // Se foi registrada uma falta, verificar critérios de alerta
+      if (!data.presente) {
+        const alertasGerados = await verificarAlertasFalta(supabaseClient, data.aluno_id);
+        if (alertasGerados > 0) {
+          console.log(`Foram gerados ${alertasGerados} alertas de falta para o aluno ${data.aluno_id}`);
+        }
+      }
     }
     
     return true;
   } catch (error) {
     console.error("Erro ao registrar produtividade:", error);
     return false;
+  }
+}
+
+// Nova função para verificar alertas de falta
+export async function verificarAlertasFalta(
+  supabaseClient: any,
+  alunoId: string
+): Promise<number> {
+  try {
+    console.log('Verificando critérios de alerta de falta para aluno:', alunoId);
+
+    // Chamar a função RPC para verificar critérios de alerta
+    const { data: criterios, error } = await supabaseClient.rpc(
+      'verificar_criterios_alerta_falta',
+      { p_aluno_id: alunoId }
+    );
+
+    if (error) {
+      console.error('Erro ao verificar critérios de alerta de falta:', error);
+      return 0;
+    }
+
+    if (!criterios || criterios.length === 0) {
+      console.log('Nenhum critério de alerta encontrado para o aluno', alunoId);
+      return 0;
+    }
+
+    console.log(`Encontrados ${criterios.length} critérios de alerta para o aluno ${alunoId}:`, criterios);
+
+    // Para cada critério encontrado, criar alerta e enviar para Slack
+    let alertasGerados = 0;
+    for (const criterio of criterios) {
+      const { success, slack_mensagem_id } = await criarAlertaEEnviarSlack(supabaseClient, criterio);
+      if (success) alertasGerados++;
+    }
+
+    return alertasGerados;
+  } catch (error) {
+    console.error('Erro ao verificar alertas de falta:', error);
+    return 0;
+  }
+}
+
+// Nova função para criar alerta no banco e enviar para o Slack
+export async function criarAlertaEEnviarSlack(
+  supabaseClient: any,
+  criterio: any
+): Promise<{ success: boolean, slack_mensagem_id?: string }> {
+  try {
+    console.log('Criando alerta de falta para critério:', criterio.tipo_criterio);
+    
+    // Buscar token do Slack
+    const { data: configData, error: configError } = await supabaseClient
+      .from('dados_importantes')
+      .select('data')
+      .eq('key', 'SLACK_BOT_TOKEN')
+      .single();
+      
+    if (configError || !configData || !configData.data) {
+      console.error('Erro ao buscar token do Slack:', configError || 'Token não encontrado');
+      return { success: false };
+    }
+    
+    const slackToken = configData.data;
+    
+    // Buscar canal do Slack para alertas
+    const { data: canalData, error: canalError } = await supabaseClient
+      .from('dados_importantes')
+      .select('data')
+      .eq('key', 'canal_alertas_falta')
+      .single();
+      
+    const SLACK_CHANNEL_ID = canalData && canalData.data ? canalData.data : "C05UB69SDU7"; // Canal padrão se não configurado
+    
+    // Formatar mensagem com base no tipo de critério
+    let tituloAlerta = 'Alerta de Falta';
+    let descricaoAlerta = '';
+    
+    switch (criterio.tipo_criterio) {
+      case 'consecutiva':
+        tituloAlerta = '🚨 Alerta: Faltas Consecutivas';
+        descricaoAlerta = `O aluno ${criterio.aluno_nome} faltou ${criterio.detalhes.num_faltas_consecutivas} vezes consecutivas.`;
+        break;
+      case 'frequencia_baixa':
+        tituloAlerta = '📉 Alerta: Frequência Baixa';
+        descricaoAlerta = `O aluno ${criterio.aluno_nome} tem frequência baixa: ${criterio.detalhes.percentual_faltas}% de faltas (${criterio.detalhes.total_faltas} faltas em ${criterio.detalhes.total_aulas} aulas) no ${criterio.detalhes.periodo}.`;
+        break;
+      case 'primeira_apos_periodo':
+        tituloAlerta = '⚠️ Alerta: Primeira Falta após Período';
+        descricaoAlerta = `O aluno ${criterio.aluno_nome} faltou após ${criterio.detalhes.dias_sem_falta} dias sem faltar.`;
+        break;
+      case 'aluno_recente':
+        tituloAlerta = '🆕 Alerta: Aluno Recente com Falta';
+        descricaoAlerta = `O aluno ${criterio.aluno_nome} é novo (${criterio.detalhes.dias_na_supera} dias) e registrou uma falta.`;
+        break;
+    }
+    
+    // Informações adicionais para a mensagem
+    const dataFaltaFormatada = criterio.data_falta ? new Date(criterio.data_falta).toLocaleDateString('pt-BR') : 'Não informada';
+    const motivoFalta = criterio.motivo_falta || 'Não especificado';
+    
+    // Montar mensagem para o Slack
+    const mencoes = [];
+    if (criterio.professor_slack) {
+      mencoes.push(`<@${criterio.professor_slack}>`);
+    }
+    mencoes.push('<@chriskulza>'); // Adicionar responsável padrão
+    
+    const mensagem = `${tituloAlerta}
+*Aluno:* ${criterio.aluno_nome}
+*Data da falta:* ${dataFaltaFormatada}
+*Motivo:* ${motivoFalta}
+
+${descricaoAlerta}
+
+${mencoes.join(' e ')} para acompanhamento.`;
+    
+    // Salvar alerta no banco de dados
+    const { data: alertaData, error: alertaError } = await supabaseClient
+      .from('alertas_falta')
+      .insert({
+        aluno_id: criterio.aluno_id,
+        turma_id: criterio.turma_id,
+        professor_id: criterio.professor_id,
+        unit_id: criterio.unit_id,
+        data_falta: criterio.data_falta,
+        tipo_criterio: criterio.tipo_criterio,
+        detalhes: criterio.detalhes,
+        status: 'enviado'
+      })
+      .select()
+      .single();
+      
+    if (alertaError) {
+      console.error('Erro ao salvar alerta de falta:', alertaError);
+      return { success: false };
+    }
+    
+    // Enviar para o Slack
+    try {
+      console.log('Enviando alerta para o Slack...');
+      const response = await fetch('https://slack.com/api/chat.postMessage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${slackToken}`
+        },
+        body: JSON.stringify({
+          channel: SLACK_CHANNEL_ID,
+          text: mensagem
+        })
+      });
+      
+      const responseData = await response.json();
+      
+      if (!responseData.ok) {
+        console.error('Erro ao enviar mensagem para o Slack:', responseData.error);
+        return { success: true, slack_mensagem_id: null };
+      }
+      
+      // Atualizar o alerta com o ID da mensagem do Slack
+      if (responseData.ts) {
+        await supabaseClient
+          .from('alertas_falta')
+          .update({ slack_mensagem_id: responseData.ts })
+          .eq('id', alertaData.id);
+      }
+      
+      console.log('Alerta enviado com sucesso para o Slack');
+      return { success: true, slack_mensagem_id: responseData.ts };
+    } catch (slackError) {
+      console.error('Erro ao enviar para o Slack:', slackError);
+      return { success: true, slack_mensagem_id: null };
+    }
+  } catch (error) {
+    console.error('Erro ao criar alerta e enviar para o Slack:', error);
+    return { success: false };
   }
 }
 
