@@ -25,6 +25,8 @@ import Funcionarios from "./pages/Funcionarios";
 import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
+import TestSlackButton from "./components/TestSlackButton";
+import TestEvasionAlertButton from "./components/TestEvasionAlertButton";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,11 @@ const App = () => (
               <main className="flex-1">
                 <div className="p-4">
                   <SidebarTrigger className="mb-4" />
+                  {/* Botões temporários para testes */}
+                  <div className="mb-4 flex justify-center gap-3">
+                    <TestSlackButton />
+                    <TestEvasionAlertButton />
+                  </div>
                   <Routes>
                     <Route path="/" element={<Navigate to="/lancamentos" />} />
                     <Route path="/dias-lancamento" element={<DiasLancamento />} />

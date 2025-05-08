@@ -14,6 +14,8 @@ export interface TurmaDetalhes {
   alunos: {
     id: string;
     nome: string;
+    created_at: string;
+    dias_supera: number | null; // Adicionado campo dias_supera para verificar tempo de matrícula
   }[];
 }
 
@@ -44,7 +46,7 @@ export function useTurmasFichas() {
         const detalhesPromises = turmasData.map(async (turma) => {
           const { data: alunosData, error: alunosError } = await supabase
             .from('alunos')
-            .select('id, nome')
+            .select('id, nome, created_at, dias_supera') // Adicionado dias_supera para verificar tempo de matrícula
             .eq('turma_id', turma.id)
             .eq('active', true)
             .order('nome');

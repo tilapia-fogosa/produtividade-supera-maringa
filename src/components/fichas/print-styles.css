@@ -152,6 +152,7 @@
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   /* Estilos específicos para cabeçalhos coloridos - adicionados seletores mais específicos */
@@ -220,6 +221,21 @@
   .ficha-tabela td.borda-semana-5 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
+  }
+  
+  /* Garantir que as células com fundo amarelo para alunos recentes sejam impressas corretamente */
+  .ficha-celula-nome {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
+  .ficha-celula-nome[style*="background-color: rgb(254, 247, 205)"] {
+    background-color: #FEF7CD !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }
 

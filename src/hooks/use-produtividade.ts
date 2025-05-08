@@ -1,220 +1,192 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface ProdutividadeInput {
-  aluno_id?: string;
-  presente: boolean;
-  apostila?: string;
-  pagina?: number | string;
-  exercicios?: number | string;
-  erros?: number | string;
-  fez_desafio?: boolean;
-  comentario?: string;
+export interface Produtividade {
+  id: string;
+  aluno_id: string;
   data_aula: string;
-  is_reposicao?: boolean;
-  nivel_desafio?: string;
+  presente: boolean;
+  apostila: string | null;
+  pagina: string | null;
+  exercicios: number | null;
+  erros: number | null;
+  fez_desafio: boolean | null;
+  comentario: string | null;
+  is_reposicao: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-// Helper para converter valores para número
-const convertToNumber = (value: string | number | undefined) => {
-  if (typeof value === 'string' && value) {
-    return Number(value);
-  }
-  return value;
-};
-
-export const useProdutividade = (alunoId: string) => {
+export function useProdutividade(alunoId: string) {
+  const [registrando, setRegistrando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [alunoProdutividade, setAlunoProdutividade] = useState<Produtividade[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const registrarPresenca = async (
-    presente: boolean,
-    data: string,
-    motivoFalta?: string
-  ) => {
+  const buscarProdutividade = async () => {
     try {
-      setIsLoading(true);
-      
-      // Preparar dados para a edge function
-      const produtividadeData = {
-        aluno_id: alunoId,
-        presente: presente,
-        motivo_falta: motivoFalta,
-        data_registro: new Date().toISOString().split('T')[0],
-        data_aula: data
-      };
-      
-      // Chamar a edge function
-      const { data: responseData, error } = await supabase.functions.invoke('register-productivity', {
-        body: { data: produtividadeData }
-      });
-      
-      if (error) throw error;
-      
-      return true;
-    } catch (error) {
-      console.error('Erro ao registrar presença:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível registrar a presença",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const { data, error } = await supabase
+        .from('produtividade_abaco')
+        .select('*')
+        .eq('aluno_id', alunoId)
+        .order('data_aula', { ascending: false });
 
-  const registrarProdutividade = async (dados: ProdutividadeInput) => {
-    try {
-      setIsLoading(true);
-
-      // Garantir que aluno_id existe
-      const dadosCompletos = {
-        ...dados,
-        aluno_id: alunoId
-      };
-
-      // Converter valores para número
-      const exercicios = convertToNumber(dadosCompletos.exercicios);
-      const erros = convertToNumber(dadosCompletos.erros);
-      const pagina = convertToNumber(dadosCompletos.pagina);
-
-      // Preparar dados para a edge function
-      const produtividadeData = {
-        aluno_id: alunoId,
-        presente: dadosCompletos.presente,
-        apostila_abaco: dadosCompletos.apostila,
-        pagina_abaco: pagina ? String(pagina) : undefined,
-        exercicios_abaco: exercicios ? String(exercicios) : undefined,
-        erros_abaco: erros ? String(erros) : undefined,
-        fez_desafio: dadosCompletos.fez_desafio,
-        comentario: dadosCompletos.comentario,
-        data_registro: new Date().toISOString().split('T')[0],
-        data_aula: dadosCompletos.data_aula,
-        data_ultima_correcao_ah: new Date().toISOString(),
-        apostila_atual: dadosCompletos.apostila, // Importante: enviar apostila atual
-        ultima_pagina: pagina ? String(pagina) : undefined, // Importante: enviar página atual
-        is_reposicao: dadosCompletos.is_reposicao || false,
-        nivel_desafio: dadosCompletos.nivel_desafio // Adicionado o nível do desafio
-      };
-      
-      // Chamar a edge function
-      const { data, error } = await supabase.functions.invoke('register-productivity', {
-        body: { data: produtividadeData }
-      });
-      
-      if (error) throw error;
-      
-      if (data && data.webhookError) {
-        toast({
-          title: "Parcialmente concluído",
-          description: data.message || "Dados salvos no banco, mas não sincronizados com webhook externo.",
-          variant: "default"
-        });
+      if (error) {
+        console.error("Erro ao buscar produtividade:", error);
+        setError(error.message);
+        return;
       }
 
-      return true;
-    } catch (error) {
-      console.error('Erro ao registrar produtividade:', error);
+      setAlunoProdutividade(data || []);
+    } catch (error: any) {
+      console.error("Erro inesperado ao buscar produtividade:", error);
+      setError(error.message || "Erro ao buscar produtividade");
+    }
+  };
+
+  const registrarPresenca = async (presente: boolean, dataAula: string) => {
+    try {
+      // Se o aluno está ausente (falta), atualizamos o campo ultima_falta
+      if (!presente) {
+        const { error: updateError } = await supabase
+          .from('alunos')
+          .update({ ultima_falta: dataAula })
+          .eq('id', alunoId);
+          
+        if (updateError) {
+          console.error('Erro ao atualizar data da última falta:', updateError);
+        }
+      }
+      
+      setRegistrando(true);
+      setError(null);
+      setSuccess(null);
+
+      const { data, error } = await supabase
+        .from('produtividade_abaco')
+        .insert([
+          { aluno_id: alunoId, data_aula: dataAula, presente: presente }
+        ]);
+
+      if (error) {
+        console.error("Erro ao registrar presença:", error);
+        setError(error.message);
+        toast({
+          title: "Erro",
+          description: "Não foi possível registrar a presença.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSuccess("Presença registrada com sucesso!");
+      toast({
+        title: "Sucesso",
+        description: "Presença registrada com sucesso!",
+      });
+
+      // Após registrar a presença, buscar novamente a produtividade do aluno
+      await buscarProdutividade();
+    } catch (error: any) {
+      console.error("Erro inesperado ao registrar presença:", error);
+      setError(error.message || "Erro ao registrar presença");
       toast({
         title: "Erro",
-        description: "Não foi possível registrar a produtividade",
+        description: "Ocorreu um erro ao registrar a presença.",
         variant: "destructive"
       });
-      throw error;
+    } finally {
+      setRegistrando(false);
+    }
+  };
+
+  // Nova função para registrar produtividade
+  const registrarProdutividade = async (produtividadeData: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('produtividade_abaco')
+        .insert([produtividadeData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Erro ao registrar produtividade:", error);
+        setError(error.message);
+        toast({
+          title: "Erro",
+          description: "Não foi possível registrar a produtividade.",
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Produtividade registrada com sucesso!",
+      });
+      
+      // Atualizar a lista de produtividade
+      await buscarProdutividade();
+      
+      return data;
+    } catch (error: any) {
+      console.error("Erro inesperado ao registrar produtividade:", error);
+      setError(error.message || "Erro ao registrar produtividade");
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao registrar a produtividade.",
+        variant: "destructive"
+      });
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Nova função para excluir o último registro de produtividade
   const excluirProdutividade = async (registroId: string) => {
     try {
       setIsLoading(true);
+      setError(null);
       
-      // Chamar a edge function para excluir
-      const { data, error } = await supabase.functions.invoke('register-productivity', {
-        body: { 
-          action: 'delete',
-          id: registroId
-        }
-      });
+      const { error } = await supabase
+        .from('produtividade_abaco')
+        .delete()
+        .eq('id', registroId);
       
-      if (error) throw error;
-      
-      toast({
-        title: "Sucesso",
-        description: "Registro removido com sucesso",
-        variant: "default"
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Erro ao excluir produtividade:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o registro",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const atualizarProdutividade = async (registroId: string, dados: ProdutividadeInput) => {
-    try {
-      setIsLoading(true);
-      
-      // Garantir que aluno_id existe
-      const dadosCompletos = {
-        ...dados,
-        aluno_id: alunoId
-      };
-
-      // Converter valores para número
-      const exercicios = convertToNumber(dadosCompletos.exercicios);
-      const erros = convertToNumber(dadosCompletos.erros);
-      const pagina = convertToNumber(dadosCompletos.pagina);
-
-      // Preparar dados para a edge function
-      const produtividadeData = {
-        id: registroId,
-        aluno_id: alunoId,
-        presente: dadosCompletos.presente,
-        apostila: dadosCompletos.apostila,
-        pagina: pagina ? String(pagina) : undefined,
-        exercicios: exercicios ? String(exercicios) : undefined,
-        erros: erros ? String(erros) : undefined,
-        fez_desafio: dadosCompletos.fez_desafio,
-        comentario: dadosCompletos.comentario,
-        data_aula: dadosCompletos.data_aula,
-        nivel_desafio: dadosCompletos.nivel_desafio // Adicionado o nível do desafio
-      };
-      
-      // Chamar a edge function
-      const { data, error } = await supabase.functions.invoke('register-productivity', {
-        body: { 
-          action: 'update',
-          data: produtividadeData
-        }
-      });
-      
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao excluir registro de produtividade:", error);
+        setError(error.message);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o registro de produtividade.",
+          variant: "destructive"
+        });
+        return false;
+      }
       
       toast({
         title: "Sucesso",
-        description: "Registro atualizado com sucesso",
-        variant: "default"
+        description: "Registro de produtividade excluído com sucesso!",
       });
       
+      // Atualizar a lista de produtividade
+      await buscarProdutividade();
+      
       return true;
-    } catch (error) {
-      console.error('Erro ao atualizar produtividade:', error);
+    } catch (error: any) {
+      console.error("Erro inesperado ao excluir produtividade:", error);
+      setError(error.message || "Erro ao excluir produtividade");
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o registro",
+        description: "Ocorreu um erro ao excluir o registro de produtividade.",
         variant: "destructive"
       });
       return false;
@@ -224,10 +196,14 @@ export const useProdutividade = (alunoId: string) => {
   };
 
   return {
+    registrando,
+    error,
+    success,
     isLoading,
     registrarPresenca,
     registrarProdutividade,
     excluirProdutividade,
-    atualizarProdutividade
+    alunoProdutividade,
+    buscarProdutividade
   };
-};
+}

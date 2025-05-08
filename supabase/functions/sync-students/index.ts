@@ -153,6 +153,57 @@ function getDiaSemanaFromTurmaNome(turmaNome: string): "segunda" | "terca" | "qu
   return 'segunda'; // fallback para manter compatibilidade
 }
 
+// Função para obter o ID da unidade de Maringá
+async function getMaringaUnitId() {
+  console.log("Obtendo ID da unidade de Maringá...");
+  
+  // Buscando unidade pelo nome (ajuste o nome exato se necessário)
+  const { data: unidadeData, error: unidadeError } = await supabase
+    .from('units')
+    .select('id')
+    .eq('name', 'Maringá')
+    .maybeSingle();
+    
+  if (unidadeError) {
+    console.error("Erro ao buscar unidade de Maringá:", unidadeError.message);
+    
+    // Tentar buscar por qualquer unidade disponível como fallback
+    const { data: qualquerUnidade, error: fallbackError } = await supabase
+      .from('units')
+      .select('id')
+      .limit(1)
+      .single();
+      
+    if (fallbackError || !qualquerUnidade) {
+      throw new Error(`Não foi possível encontrar nenhuma unidade no sistema: ${fallbackError?.message || "Nenhum registro encontrado"}`);
+    }
+    
+    console.log(`Usando unidade ID alternativa: ${qualquerUnidade.id} (fallback)`);
+    return qualquerUnidade.id;
+  }
+  
+  if (!unidadeData) {
+    console.warn("Unidade de Maringá não encontrada. Buscando qualquer unidade disponível.");
+    
+    // Tentar buscar por qualquer unidade disponível como fallback
+    const { data: qualquerUnidade, error: fallbackError } = await supabase
+      .from('units')
+      .select('id')
+      .limit(1)
+      .single();
+      
+    if (fallbackError || !qualquerUnidade) {
+      throw new Error(`Não foi possível encontrar nenhuma unidade no sistema: ${fallbackError?.message || "Nenhum registro encontrado"}`);
+    }
+    
+    console.log(`Usando unidade ID alternativa: ${qualquerUnidade.id} (fallback)`);
+    return qualquerUnidade.id;
+  }
+  
+  console.log(`Unidade de Maringá encontrada com ID: ${unidadeData.id}`);
+  return unidadeData.id;
+}
+
 // STEP 1: Extract unique professors from spreadsheet and sync to database
 async function syncProfessors(rawData) {
   console.log("Sincronizando professores...");
@@ -193,25 +244,15 @@ async function syncProfessors(rawData) {
   
   // Add new professors to database
   if (professorsToAdd.length > 0) {
-    // Obter o ID da unidade (usando 'units' em vez de 'unidades')
-    const { data: validUnit, error: unitError } = await supabase
-      .from('units')
-      .select('id')
-      .limit(1);
-      
-    if (unitError || !validUnit || validUnit.length === 0) {
-      throw new Error(`Erro ao buscar unidade válida: ${unitError?.message || "Nenhuma unidade encontrada"}`);
-    }
-    
-    const defaultUnitId = validUnit[0].id;
-    console.log(`Usando unidade ID: ${defaultUnitId} para novos professores`);
+    // Obter o ID da unidade de Maringá
+    const maringaUnitId = await getMaringaUnitId();
     
     // Atualizar para usar o nome correto da coluna (unit_id)
     const { data: insertedProfessors, error: insertError } = await supabase
       .from('professores')
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
-        unit_id: defaultUnitId  // Agora usando unit_id em vez de unidade_id
+        unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
       })))
       .select();
     
@@ -277,6 +318,10 @@ async function syncTurmas(rawData, professors) {
     existingTurmas.map(t => [t.nome.toLowerCase().trim(), t])
   );
   
+  // Obter o ID da unidade de Maringá
+  const maringaUnitId = await getMaringaUnitId();
+  console.log(`Usando unidade de Maringá ID: ${maringaUnitId} para todas as turmas`);
+  
   // Prepare turmas to add or update
   const turmasToAdd = [];
   const turmasToUpdate = [];
@@ -292,7 +337,8 @@ async function syncTurmas(rawData, professors) {
         nome: turma.nome,
         professor_id: professorId,
         dia_semana: turma.dia_semana, // Using the detected weekday
-        horario: '14:00:00'    // Default value, can be updated later
+        horario: '14:00:00',    // Default value, can be updated later
+        unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
       });
     } else if (
       professorId && existingTurma.professor_id !== professorId ||
@@ -302,7 +348,8 @@ async function syncTurmas(rawData, professors) {
       turmasToUpdate.push({
         id: existingTurma.id,
         professor_id: professorId,
-        dia_semana: turma.dia_semana
+        dia_semana: turma.dia_semana,
+        unit_id: maringaUnitId  // Sempre atualizar para a unidade de Maringá
       });
     }
   }
@@ -330,7 +377,8 @@ async function syncTurmas(rawData, professors) {
       .from('turmas')
       .update({ 
         professor_id: turma.professor_id,
-        dia_semana: turma.dia_semana
+        dia_semana: turma.dia_semana,
+        unit_id: turma.unit_id  // Garantindo que unit_id seja atualizado para Maringá
       })
       .eq('id', turma.id);
     
@@ -360,6 +408,10 @@ async function syncStudents(rawData, turmas) {
     turmas.map(t => [t.nome.toLowerCase().trim(), t.id])
   );
   
+  // Obter o ID da unidade de Maringá
+  const maringaUnitId = await getMaringaUnitId();
+  console.log(`Usando unidade de Maringá ID: ${maringaUnitId} para todos os alunos`);
+  
   // Prepare student data with turma_id
   const studentsData = rawData.map(row => {
     const turmaId = turmaMap.get(row.turma_nome.toLowerCase().trim());
@@ -372,6 +424,7 @@ async function syncStudents(rawData, turmas) {
     return {
       nome: row.nome,
       turma_id: turmaId,
+      unit_id: maringaUnitId,  // Usando o ID da unidade de Maringá para todos os alunos
       codigo: row.codigo || null,
       telefone: row.telefone || null,
       email: row.email || null,
