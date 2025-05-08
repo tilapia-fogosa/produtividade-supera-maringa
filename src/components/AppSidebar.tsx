@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -54,23 +55,36 @@ export function AppSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar variant="floating">
+    <Sidebar 
+      variant="floating" 
+      className="border-sidebar-border bg-sidebar"
+      collapsedSize="60px"
+      expandedSize="240px"
+    >
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground">Menu</SidebarGroupLabel>
           <SidebarMenu>
-            {menuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  onClick={() => navigate(item.path)}
-                  isActive={location.pathname === item.path}
-                  tooltip={item.title}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.path)}
+                    isActive={isActive}
+                    tooltip={item.title}
+                    className={cn(
+                      "text-sidebar-foreground transition-colors duration-200",
+                      "hover:bg-[#FF6B00] hover:text-white",
+                      isActive && "bg-white/20 text-white hover:bg-[#FF6B00]"
+                    )}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

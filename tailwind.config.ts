@@ -64,13 +64,13 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         },
         supera: {
-          DEFAULT: '#F47321', // Laranja Supera principal
+          DEFAULT: '#FF9500', // Laranja Supera principal atualizado
           50: '#FFF5EB',
           100: '#FEEDDC',
           200: '#FCDAB9',
           300: '#FAC796',
           400: '#F89F54',
-          500: '#F47321', // PANTONE 2018 XCG (FF7C00)
+          500: '#FF9500', // PANTONE principal atualizado
           600: '#E45E00',
           700: '#B24800',
           800: '#7F3300',
@@ -78,20 +78,20 @@ export default {
           foreground: '#FFFFFF'
         },
         laranja: {
-          DEFAULT: '#F09B00', // PANTONE 2012 XGC
-          light: '#FF7C00', // PANTONE 2018 XCG
-          medium: '#ED8B00', // PANTONE 144 C
-          dark: '#E25E4A', // Cor avermelhada da paleta
+          DEFAULT: '#FF9500', // Atualizado para o novo laranja primário
+          light: '#FF6B00', // Usado intercambiavelmente com o DEFAULT
+          medium: '#FF9500',
+          dark: '#E25E4A',
         },
         roxo: {
-          DEFAULT: '#311D64', // PANTONE 2112 XGC
-          light: '#4E2CA3', // PANTONE 2098 XGC
-          medium: '#685BC7', // PANTONE 2725 C
+          DEFAULT: '#4F46E5', // Roxo profundo atualizado
+          light: '#4F46E5', // Mais claro
+          medium: '#311D64', // Roxo sidebar
         },
         cinza: {
-          DEFAULT: '#3D3C38', // PANTONE BLACK 7 XGC
-          medium: '#707327', // PANTONE 424 C
-          light: '#E8E7EA', // PANTONE 663 XGC
+          DEFAULT: '#0F172A', // Text dark atualizado
+          medium: '#64748b',
+          light: '#f1f5f9',
         },
         azul: {
           // Mantendo cores azuis para compatibilidade
@@ -104,8 +104,17 @@ export default {
           600: '#001A33',
           foreground: '#003366'
         },
-        'vivid-purple': '#8B5CF6',
+        'vivid-purple': '#4F46E5',
         'secondary-purple': '#7E69AB',
+        // Adicionando cores para visualização de dados
+        chart: {
+          primary: '#4361ee',
+          secondary: [
+            '#ef476f', '#06d6a0', '#ffd166', '#118ab2', '#ff9f1c', 
+            '#7209b7', '#2b9348', '#e07a5f', '#3a86ff', '#bc4749', 
+            '#0077b6', '#fb8500', '#7b2cbf', '#3f8efc', '#55a630'
+          ],
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
