@@ -58,8 +58,9 @@ export function AppSidebar() {
     <Sidebar 
       variant="floating" 
       className="border-sidebar-border bg-sidebar"
-      collapsedSize="60px"
-      expandedSize="240px"
+      // Removendo as propriedades incompatíveis
+      // collapsedSize="60px"
+      // expandedSize="240px"
     >
       <SidebarContent>
         <SidebarGroup>
