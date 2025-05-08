@@ -37,8 +37,7 @@ serve(async (req) => {
       );
     }
 
-    // Obter detalhes completos do alerta e do aluno, incluindo telefone
-    // Corrigindo a consulta removendo a relação incorreta entre alunos e turma_id
+    // Obter detalhes completos do alerta e do aluno
     const { data: alertaDetalhes, error: alertaError } = await supabase
       .from('alerta_evasao')
       .select(`
@@ -53,7 +52,6 @@ serve(async (req) => {
           nome,
           telefone,
           turma_id,
-          codigo,
           email,
           ultimo_nivel,
           ultima_pagina,
@@ -81,8 +79,6 @@ serve(async (req) => {
       .from('turmas')
       .select(`
         nome,
-        dia_semana,
-        horario,
         professor_id
       `)
       .eq('id', alertaDetalhes.alunos.turma_id)
@@ -144,17 +140,16 @@ serve(async (req) => {
     const telefoneLimpo = aluno?.telefone ? aluno.telefone.replace(/[^\d]/g, '') : '';
     const linkWhatsapp = telefoneLimpo ? `https://wa.me/55${telefoneLimpo}` : '';
     
-    // Informações da turma
+    // Informações da turma - apenas nome conforme solicitado
     let turmaInfo = 'Turma não encontrada';
     if (turmaDados) {
-      turmaInfo = `${turmaDados.nome} (${turmaDados.dia_semana} - ${turmaDados.horario})`;
+      turmaInfo = turmaDados.nome;
     }
 
     // Seção de informações do aluno
     let infoAluno = '';
     if (aluno) {
       infoAluno = `*Informações do Aluno:*
-Código: ${aluno.codigo || 'N/A'}
 Email: ${aluno.email || 'N/A'}
 Telefone: ${aluno.telefone || 'N/A'} ${linkWhatsapp ? `(<${linkWhatsapp}|Whatsapp>)` : ''}
 Turma: ${turmaInfo}
