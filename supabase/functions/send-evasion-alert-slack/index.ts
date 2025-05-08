@@ -82,13 +82,30 @@ serve(async (req) => {
       .select(`
         nome,
         dia_semana,
-        horario
+        horario,
+        professor_id
       `)
       .eq('id', alertaDetalhes.alunos.turma_id)
       .single() : { data: null, error: null };
     
     if (turmaError) {
       console.error('Erro ao buscar turma:', turmaError);
+    }
+    
+    // Buscar dados do professor para menção no Slack
+    let professorSlackUsername = null;
+    if (turmaDados?.professor_id) {
+      const { data: professorDados, error: professorError } = await supabase
+        .from('professores')
+        .select('nome, slack_username')
+        .eq('id', turmaDados.professor_id)
+        .single();
+      
+      if (professorError) {
+        console.error('Erro ao buscar professor:', professorError);
+      } else if (professorDados) {
+        professorSlackUsername = professorDados.slack_username;
+      }
     }
 
     // Buscar histórico de alertas anteriores do mesmo aluno
@@ -154,6 +171,13 @@ ${aluno.motivo_procura ? `Motivo da Procura: ${aluno.motivo_procura}` : ''}
 ${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_coordenador}` : ''}`;
     }
 
+    // Preparar menções para o Slack
+    const mencoes = ['<@chriskulza>'];
+    if (professorSlackUsername) {
+      mencoes.push(`<@${professorSlackUsername}>`);
+    }
+    const mencoesTxt = mencoes.join(' e ');
+
     // Montar texto da mensagem com o novo formato
     const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
 *Aluno:* ${alertaDetalhes.alunos?.nome}
@@ -165,7 +189,7 @@ ${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_c
 
 ${infoAluno}${aulaZeroInfo}${historicoAlertas}
 
-<@chriskulza> para acompanhamento.`;
+${mencoesTxt} para acompanhamento.`;
     
     // Enviar para a API do Slack
     const response = await fetch('https://slack.com/api/chat.postMessage', {
