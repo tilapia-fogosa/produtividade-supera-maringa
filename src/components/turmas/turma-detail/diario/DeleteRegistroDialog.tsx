@@ -10,10 +10,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface DeleteRegistroDialogProps {
+interface DeleteRegistroDialogProps {
   isOpen: boolean;
   onClose: () => void;
   registroSelecionado: any;
@@ -28,27 +29,18 @@ const DeleteRegistroDialog: React.FC<DeleteRegistroDialogProps> = ({
 }) => {
   const [excluindo, setExcluindo] = useState(false);
 
-  const handleConfirmDelete = async () => {
+  const handleExcluir = async () => {
     try {
       setExcluindo(true);
       
-      // Chamar a função do Supabase para excluir
-      const response = await fetch('/functions/v1/register-productivity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
-          action: 'delete',
-          id: registroSelecionado.id
-        })
-      });
+      console.log('Excluindo registro:', registroSelecionado.id);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao excluir registro');
-      }
+      const { error } = await supabase
+        .from('produtividade_abaco')
+        .delete()
+        .eq('id', registroSelecionado.id);
+      
+      if (error) throw error;
       
       toast({
         title: "Sucesso",
@@ -69,17 +61,20 @@ const DeleteRegistroDialog: React.FC<DeleteRegistroDialogProps> = ({
     }
   };
 
-  if (!registroSelecionado) {
-    return null;
-  }
+  if (!registroSelecionado) return null;
+
+  const aluno = registroSelecionado.pessoa?.nome || "Aluno não encontrado";
+  const data = new Date(registroSelecionado.data_aula).toLocaleDateString('pt-BR');
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogTitle>Excluir registro</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir o registro de <strong>{aluno}</strong> do dia <strong>{data}</strong>?
+            <br />
+            Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -87,12 +82,13 @@ const DeleteRegistroDialog: React.FC<DeleteRegistroDialogProps> = ({
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
-              handleConfirmDelete();
+              handleExcluir();
             }}
             disabled={excluindo}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
           >
-            {excluindo ? <Loader2 className="h-4 w-4 animate-spin" /> : "Excluir"}
+            {excluindo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Excluir
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

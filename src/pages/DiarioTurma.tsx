@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useProfessorTurmas } from '@/hooks/use-professor-turmas';
 import { usePessoasTurma } from '@/hooks/use-pessoas-turma';
@@ -11,12 +11,13 @@ const DiarioTurma = () => {
   const { turmaId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { turmas } = useProfessorTurmas();
-  const { pessoasTurma, buscarPessoasPorTurma } = usePessoasTurma();
+  const { turmas, loading: turmasLoading } = useProfessorTurmas();
+  const { pessoasTurma, buscarPessoasPorTurma, carregandoPessoas: pessoasLoading } = usePessoasTurma();
   
   // Busca as pessoas (alunos e funcionários) quando o componente é montado
-  React.useEffect(() => {
+  useEffect(() => {
     if (turmaId) {
+      console.log("Buscando pessoas para a turma:", turmaId);
       buscarPessoasPorTurma(turmaId);
     }
   }, [turmaId, buscarPessoasPorTurma]);
@@ -26,10 +27,25 @@ const DiarioTurma = () => {
   
   const turma = turmas.find(t => t.id === turmaId);
   
+  if (turmasLoading) {
+    return (
+      <div className="container mx-auto py-4 px-2 text-center">
+        <p>Carregando informações da turma...</p>
+      </div>
+    );
+  }
+
   if (!turma) {
     return (
       <div className="container mx-auto py-4 px-2 text-center">
         <p>Turma não encontrada</p>
+        <Button 
+          onClick={() => navigate('/diario')}
+          variant="outline" 
+          className="mt-4 text-laranja-DEFAULT border-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Diário
+        </Button>
       </div>
     );
   }
@@ -56,11 +72,17 @@ const DiarioTurma = () => {
         
         <h1 className="text-xl font-bold mb-4 text-laranja-DEFAULT">Diário da Turma - {turma.nome}</h1>
         
-        <DiarioTurmaScreen 
-          turma={turma} 
-          alunos={pessoasTurma} 
-          onBack={handleVoltar} 
-        />
+        {pessoasLoading ? (
+          <div className="text-center py-8">
+            <p>Carregando alunos...</p>
+          </div>
+        ) : (
+          <DiarioTurmaScreen 
+            turma={turma} 
+            alunos={pessoasTurma} 
+            onBack={handleVoltar} 
+          />
+        )}
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { APOSTILAS_AH as apostilas } from '@/components/constants/apostilas';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface EditRegistroModalProps {
   isOpen: boolean;
@@ -39,8 +40,14 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
   onSuccess,
   modo
 }) => {
-  const { pessoasTurma } = usePessoasTurma();
+  const { pessoasTurma, buscarPessoasPorTurma } = usePessoasTurma();
   const [enviando, setEnviando] = useState(false);
+  
+  useEffect(() => {
+    if (isOpen && turma?.id) {
+      buscarPessoasPorTurma(turma.id);
+    }
+  }, [isOpen, turma?.id, buscarPessoasPorTurma]);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -111,27 +118,33 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
       // Formatar a data para YYYY-MM-DD
       const dataFormatada = formData.data_aula.toISOString().split('T')[0];
       
-      const payload = {
-        action: modo === 'editar' ? 'update' : 'create',
-        data: {
-          ...formData,
-          data_aula: dataFormatada
-        }
+      const registroData = {
+        aluno_id: formData.aluno_id,
+        data_aula: dataFormatada,
+        presente: formData.presente,
+        apostila: formData.apostila,
+        pagina: formData.pagina,
+        exercicios: formData.exercicios ? parseInt(formData.exercicios) : null,
+        erros: formData.erros ? parseInt(formData.erros) : null,
+        comentario: formData.comentario,
+        fez_desafio: formData.fez_desafio
       };
       
-      // Chamar a função do Supabase
-      const response = await fetch('/functions/v1/register-productivity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify(payload)
-      });
+      console.log('Salvando registro:', registroData);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao salvar registro');
+      if (modo === 'editar' && formData.id) {
+        const { data, error } = await supabase
+          .from('produtividade_abaco')
+          .update(registroData)
+          .eq('id', formData.id);
+          
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('produtividade_abaco')
+          .insert(registroData);
+          
+        if (error) throw error;
       }
       
       toast({

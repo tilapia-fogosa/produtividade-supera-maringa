@@ -26,7 +26,7 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (dataSelecionada) {
+    if (dataSelecionada && turma.id) {
       buscarRegistrosDiario(dataSelecionada);
     }
   }, [dataSelecionada, turma.id]);
@@ -36,21 +36,27 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
       setCarregando(true);
       
       const dataFormatada = data.toISOString().split('T')[0];
+      console.log(`Buscando registros para data ${dataFormatada} na turma ${turma.id}`);
       
-      // Buscar registros de produtividade para a data selecionada
+      // Buscar registros de produtividade para a data selecionada e para a turma específica
       const { data: produtividadeData, error: produtividadeError } = await supabase
         .from('produtividade_abaco')
         .select('*')
         .eq('data_aula', dataFormatada);
       
-      if (produtividadeError) throw produtividadeError;
+      if (produtividadeError) {
+        console.error('Erro ao buscar produtividade:', produtividadeError);
+        throw produtividadeError;
+      }
+      
+      console.log(`Registros encontrados (total): ${produtividadeData?.length || 0}`);
       
       // Filtrar registros por alunos da turma
       const pessoasIds = alunos.map(pessoa => pessoa.id);
       
-      const registrosFiltrados = produtividadeData.filter(registro => 
+      const registrosFiltrados = produtividadeData?.filter(registro => 
         pessoasIds.includes(registro.aluno_id)
-      );
+      ) || [];
       
       // Adicionar informações da pessoa (aluno ou funcionário) aos registros
       const registrosComPessoa = registrosFiltrados.map(registro => {
@@ -62,7 +68,7 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
         };
       });
       
-      console.log(`Encontrados ${registrosComPessoa.length} registros para ${dataFormatada}`);
+      console.log(`Encontrados ${registrosComPessoa.length} registros para ${dataFormatada} na turma ${turma.nome}`);
       setRegistros(registrosComPessoa);
       
     } catch (error) {
