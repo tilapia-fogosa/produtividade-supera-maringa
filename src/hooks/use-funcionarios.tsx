@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -35,7 +36,7 @@ export function useFuncionarios() {
       setLoading(true);
       const { data, error } = await supabase
         .from('funcionarios')
-        .select('*')
+        .select('*, turma:turmas(id, nome)')
         .eq('active', true)
         .order('nome');
 
