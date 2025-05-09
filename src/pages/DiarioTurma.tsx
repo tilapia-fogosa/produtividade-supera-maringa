@@ -12,7 +12,7 @@ const DiarioTurma = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { turmas, loading: turmasLoading } = useProfessorTurmas();
-  const { pessoasTurma, buscarPessoasPorTurma, loading: pessoasLoading } = usePessoasTurma();
+  const { pessoasTurma, buscarPessoasPorTurma, carregandoPessoas: pessoasLoading } = usePessoasTurma();
   
   // Busca as pessoas (alunos e funcionários) quando o componente é montado
   useEffect(() => {
