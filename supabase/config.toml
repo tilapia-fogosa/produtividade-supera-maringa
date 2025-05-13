@@ -19,3 +19,8 @@ verify_jwt = false
 [functions.send-evasion-alert-slack]
 verify_jwt = false
 
+[functions.check-hibernating-cards]
+verify_jwt = false
+
+[calendar.check-hibernating-cards]
+schedule = "0 3 * * *"  # Executar todos os dias às 03:00
