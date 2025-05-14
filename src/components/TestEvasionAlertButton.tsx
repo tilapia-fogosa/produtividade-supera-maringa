@@ -23,7 +23,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         .insert({
           aluno_id: alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e', // ID de aluno válido da base de dados
           descritivo: 'Este é um alerta de teste enviado para o Slack',
-          origem_alerta: 'outro', // Alterado de 'teste' para 'outro', que é um valor válido do enum
+          origem_alerta: 'outro', // Valor válido do enum
           responsavel: 'Sistema de Teste'
         })
         .select('id')

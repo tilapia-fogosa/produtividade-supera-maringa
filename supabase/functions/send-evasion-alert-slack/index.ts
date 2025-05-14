@@ -3,8 +3,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from "../_shared/cors.ts";
 
-const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal fixo para alertas de evasão
-
 serve(async (req) => {
   // Tratamento de CORS para requisições preflight
   if (req.method === 'OPTIONS') {
@@ -15,8 +13,25 @@ serve(async (req) => {
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const slackToken = Deno.env.get('SLACK_BOT_TOKEN')!;
-
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Buscar o token do Slack da tabela dados_importantes
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('dados_importantes')
+      .select('data')
+      .eq('key', 'SLACK_BOT_TOKEN')
+      .single();
+    
+    if (tokenError || !tokenData || !tokenData.data) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token do Slack não configurado na tabela dados_importantes' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    const slackToken = tokenData.data;
+    
     if (!slackToken) {
       console.error('Token do Slack não configurado');
       return new Response(
@@ -24,8 +39,28 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Buscar o ID do canal do Slack da tabela dados_importantes
+    const { data: canalData, error: canalError } = await supabase
+      .from('dados_importantes')
+      .select('data')
+      .eq('key', 'canal_alertas_evasao')
+      .single();
+    
+    if (canalError || !canalData || !canalData.data) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'ID do canal do Slack para alertas de evasão não configurado na tabela dados_importantes' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      );
+    }
+    
+    const SLACK_CHANNEL_ID = canalData.data; // Usa o canal da tabela em vez de valor fixo
     
     // Obtém dados do corpo da requisição
     const { record } = await req.json();
