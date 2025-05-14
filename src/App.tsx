@@ -1,12 +1,12 @@
 
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { ThemeProvider } from "./components/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider"
 import { useTheme } from 'next-themes'
 import { Toaster } from "@/components/ui/toaster"
 import AppSidebar from './components/AppSidebar'
-import NotFound from './pages/NotFound'
 import LoadingFallback from './components/LoadingFallback'
+import NotFound from './pages/not-found'
 
 function App() {
   const [isMounted, setIsMounted] = useState(false)
@@ -38,7 +38,6 @@ function App() {
             <Route path="/lancamentos" element={<Suspense fallback={<LoadingFallback />}><Lancamentos /></Suspense>} />
             <Route path="/dias-lancamento" element={<Suspense fallback={<LoadingFallback />}><DiasLancamento /></Suspense>} />
             <Route path="/aula-zero" element={<Suspense fallback={<LoadingFallback />}><AulaZero /></Suspense>} />
-            <Route path="/test-slack" element={<Suspense fallback={<LoadingFallback />}><TestSlack /></Suspense>} />
             <Route path="/turma/:turmaId" element={<Suspense fallback={<LoadingFallback />}><TurmaDetail /></Suspense>} />
             <Route path="/turma/:turmaId/diario" element={<Suspense fallback={<LoadingFallback />}><DiarioTurma /></Suspense>} />
             <Route path="/professor/:professorId" element={<Suspense fallback={<LoadingFallback />}><ProfessorTurmas /></Suspense>} />
@@ -63,8 +62,7 @@ const Corretores = lazy(() => import('./pages/Corretores'))
 const Lancamentos = lazy(() => import('./pages/Lancamentos'))
 const DiasLancamento = lazy(() => import('./pages/DiasLancamento'))
 const AulaZero = lazy(() => import('./pages/AulaZero'))
-const TestSlack = lazy(() => import('./pages/TestSlack'))
-const TurmaDetail = lazy(() => import('./pages/TurmaDetail'))
-const DiarioTurma = lazy(() => import('./pages/DiarioTurma'))
-const ProfessorTurmas = lazy(() => import('./pages/ProfessorTurmas'))
+const TurmaDetail = lazy(() => import('./components/turmas/TurmaDetail'))
+const DiarioTurma = lazy(() => import('./components/turmas/DiarioTurma'))
+const ProfessorTurmas = lazy(() => import('./components/turmas/ProfessorTurmas'))
 const Fichas = lazy(() => import('./pages/Fichas'))
