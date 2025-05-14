@@ -1,3 +1,4 @@
+
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from "@/components/theme-provider"
@@ -41,7 +42,6 @@ function App() {
             <Route path="/turma/:turmaId/diario" element={<Suspense fallback={<LoadingFallback />}><DiarioTurma /></Suspense>} />
             <Route path="/professor/:professorId" element={<Suspense fallback={<LoadingFallback />}><ProfessorTurmas /></Suspense>} />
             <Route path="/fichas" element={<Suspense fallback={<LoadingFallback />}><Fichas /></Suspense>} />
-            <Route path="/test-slack" element={<Suspense fallback={<LoadingFallback />}><TestSlack /></Suspense>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
@@ -66,4 +66,3 @@ const TurmaDetail = lazy(() => import('./components/turmas/TurmaDetail'))
 const DiarioTurma = lazy(() => import('./components/turmas/DiarioTurma'))
 const ProfessorTurmas = lazy(() => import('./components/turmas/ProfessorTurmas'))
 const Fichas = lazy(() => import('./pages/Fichas'))
-const TestSlack = lazy(() => import('./pages/TestSlack'));
