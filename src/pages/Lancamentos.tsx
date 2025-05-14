@@ -2,10 +2,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, AlertTriangle, School, FlaskConical } from "lucide-react";
+import { TrendingUp, BookOpen, AlertTriangle, School } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
-import TestSlackButtons from '@/components/TestSlackButtons';
 
 const Lancamentos = () => {
   const navigate = useNavigate();
@@ -67,17 +66,6 @@ const Lancamentos = () => {
           <AlertTriangle className="mr-2 h-6 w-6" />
           Lançar Alerta de Evasão
         </Button>
-      </div>
-
-      {/* Seção de botões de teste */}
-      <div className="mt-10 max-w-md mx-auto">
-        <div className="border-t border-gray-300 dark:border-gray-700 pt-4 mb-4">
-          <div className="flex items-center gap-2 mb-4">
-            <FlaskConical className="h-5 w-5 text-yellow-500" />
-            <h2 className="text-lg font-medium text-yellow-500">Área de Testes (Temporário)</h2>
-          </div>
-          <TestSlackButtons />
-        </div>
       </div>
 
       <AlertaEvasaoModal 

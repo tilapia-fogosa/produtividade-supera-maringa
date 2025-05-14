@@ -1,68 +1,79 @@
 
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { ThemeProvider } from "@/components/theme-provider"
-import { useTheme } from 'next-themes'
-import { Toaster } from "@/components/ui/toaster"
-import AppSidebar from './components/AppSidebar'
-import LoadingFallback from './components/LoadingFallback'
-import NotFound from './pages/not-found'
+import React from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import Turmas from "./pages/Turmas";
+import DiarioTurma from "./pages/DiarioTurma";
+import ProdutividadeTurma from "./pages/ProdutividadeTurma";
+import NotFound from "./pages/NotFound";
+import PainelPedagogico from "./pages/PainelPedagogico";
+import Estoque from "./pages/Estoque";
+import Devolutivas from "./pages/Devolutivas";
+import Lancamentos from "./pages/Lancamentos";
+import DiasLancamento from "./pages/DiasLancamento";
+import DevolutivaTurma from "./pages/DevolutivaTurma";
+import DevolutivaAluno from "./pages/DevolutivaAluno";
+import AbrindoHorizontes from "./pages/AbrindoHorizontes";
+import Diario from "./pages/Diario";
+import Funcionarios from "./pages/Funcionarios";
+import Alunos from "./pages/Alunos";
+import AulaZero from "./pages/AulaZero";
+import Fichas from "./pages/Fichas";
 
-function App() {
-  const [isMounted, setIsMounted] = useState(false)
-  const { setTheme } = useTheme()
+const queryClient = new QueryClient();
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  // Auto mudar tema para dark ao iniciar
-  useEffect(() => {
-    if (isMounted) {
-      setTheme('dark')
-    }
-  }, [isMounted, setTheme])
-  
-  return (
-    <ThemeProvider>
-      <Router>
-        <AppSidebar />
-        <main className="flex-1 overflow-auto bg-background">
-          <Routes>
-            <Route path="/" element={<Navigate replace to="/dashboard" />} />
-            <Route path="/dashboard" element={<Suspense fallback={<LoadingFallback />}><Dashboard /></Suspense>} />
-            <Route path="/turmas" element={<Suspense fallback={<LoadingFallback />}><Turmas /></Suspense>} />
-            <Route path="/alunos" element={<Suspense fallback={<LoadingFallback />}><Alunos /></Suspense>} />
-            <Route path="/professores" element={<Suspense fallback={<LoadingFallback />}><Professores /></Suspense>} />
-            <Route path="/corretores" element={<Suspense fallback={<LoadingFallback />}><Corretores /></Suspense>} />
-            <Route path="/lancamentos" element={<Suspense fallback={<LoadingFallback />}><Lancamentos /></Suspense>} />
-            <Route path="/dias-lancamento" element={<Suspense fallback={<LoadingFallback />}><DiasLancamento /></Suspense>} />
-            <Route path="/aula-zero" element={<Suspense fallback={<LoadingFallback />}><AulaZero /></Suspense>} />
-            <Route path="/turma/:turmaId" element={<Suspense fallback={<LoadingFallback />}><TurmaDetail /></Suspense>} />
-            <Route path="/turma/:turmaId/diario" element={<Suspense fallback={<LoadingFallback />}><DiarioTurma /></Suspense>} />
-            <Route path="/professor/:professorId" element={<Suspense fallback={<LoadingFallback />}><ProfessorTurmas /></Suspense>} />
-            <Route path="/fichas" element={<Suspense fallback={<LoadingFallback />}><Fichas /></Suspense>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <div className="bg-background min-h-screen text-foreground">
         <Toaster />
-      </Router>
-    </ThemeProvider>
-  );
-}
+        <Sonner />
+        <BrowserRouter>
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full overflow-hidden">
+              <AppSidebar />
+              <main className="flex-1 overflow-auto">
+                <div className="p-2 md:p-4">
+                  <SidebarTrigger className="mb-2 md:mb-4" />
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/lancamentos" />} />
+                    <Route path="/dias-lancamento" element={<DiasLancamento />} />
+                    <Route path="/turmas/dia" element={<Turmas />} />
+                    <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
+                    <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
+                    <Route path="/turma/:turmaId/diario" element={<DiarioTurma />} />
+                    <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
+                    <Route path="/estoque" element={<Estoque />} />
+                    <Route path="/devolutivas" element={<Devolutivas />} />
+                    <Route path="/devolutivas/turmas" element={<Turmas />} />
+                    <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
+                    <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
+                    <Route path="/fichas" element={<Fichas />} />
+                    <Route path="/lancamentos" element={<Lancamentos />} />
+                    <Route path="/diario" element={<Diario />} />
+                    <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
+                    <Route path="/funcionarios" element={<Funcionarios />} />
+                    <Route path="/alunos" element={<Alunos />} />
+                    <Route path="/aula-zero" element={<AulaZero />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
+              </main>
+            </div>
+          </SidebarProvider>
+        </BrowserRouter>
+        <div className="fixed bottom-4 right-4">
+          <ThemeToggle />
+        </div>
+      </div>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-export default App
-
-// Lazy loading dos componentes
-const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Turmas = lazy(() => import('./pages/Turmas'))
-const Alunos = lazy(() => import('./pages/Alunos'))
-const Professores = lazy(() => import('./pages/Professores'))
-const Corretores = lazy(() => import('./pages/Corretores'))
-const Lancamentos = lazy(() => import('./pages/Lancamentos'))
-const DiasLancamento = lazy(() => import('./pages/DiasLancamento'))
-const AulaZero = lazy(() => import('./pages/AulaZero'))
-const TurmaDetail = lazy(() => import('./components/turmas/TurmaDetail'))
-const DiarioTurma = lazy(() => import('./components/turmas/DiarioTurma'))
-const ProfessorTurmas = lazy(() => import('./components/turmas/ProfessorTurmas'))
-const Fichas = lazy(() => import('./pages/Fichas'))
+export default App;
