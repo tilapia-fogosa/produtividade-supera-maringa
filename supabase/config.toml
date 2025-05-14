@@ -10,9 +10,6 @@ schedule = "0 1 * * *"  # Executar todos os dias à 01:00
 [functions.check-missing-attendance]
 verify_jwt = false
 
-[calendar.check-missing-attendance]
-schedule = "0 8 * * *"  # Executar todos os dias às 08:00
-
 [functions.test-slack-message]
 verify_jwt = false
 
