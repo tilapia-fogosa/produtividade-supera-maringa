@@ -1,12 +1,12 @@
 
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "./components/theme-provider"
 import { useTheme } from 'next-themes'
 import { Toaster } from "@/components/ui/toaster"
 import AppSidebar from './components/AppSidebar'
+import NotFound from './pages/NotFound'
 import LoadingFallback from './components/LoadingFallback'
-import NotFound from './pages/not-found'
 
 function App() {
   const [isMounted, setIsMounted] = useState(false)
