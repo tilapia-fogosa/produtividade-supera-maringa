@@ -1,6 +1,10 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from "../_shared/cors.ts";
+
+// Canal fixo para uso no Slack - não depende mais da tabela dados_importantes
+const SLACK_CHANNEL_ID = "C06N9EWJXMG"; // Canal fixo para alertas de evasão
 
 serve(async (req) => {
   // Tratamento de CORS para requisições preflight
@@ -36,30 +40,8 @@ serve(async (req) => {
     const slackToken = tokenData.data;
     console.log("Token do Slack obtido com sucesso");
     
-    // ATENÇÃO: Busca do ID do canal ocorre SEMPRE aqui dentro da função Edge (centralizado)
-    //    Não depende mais do trigger/banco passar isso no payload.
-    const { data: canalData, error: canalError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'canal_alertas_evasao')
-      .single();
-    
-    if (canalError || !canalData || !canalData.data) {
-      console.error('ID do canal não encontrado:', canalError?.message || 'Dados não encontrados');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'ID do canal do Slack para alertas de evasão não configurado na tabela dados_importantes' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      );
-    }
-    
-    const SLACK_CHANNEL_ID = canalData.data;
-    console.log("ID do canal do Slack obtido:", SLACK_CHANNEL_ID);
+    // IMPORTANTE: Canal agora é fixo, não buscamos mais da tabela
+    console.log("Usando canal do Slack fixo:", SLACK_CHANNEL_ID);
     
     // Obtém dados do corpo da requisição
     console.log("Obtendo dados do corpo da requisição");
@@ -219,6 +201,44 @@ ${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_c
     }
     const mencoesTxt = mencoes.join(' e ');
 
+    // Formatar data para exibição
+    console.log("Formatando dados para a mensagem");
+    const dataAlerta = new Date(alertaDetalhes.data_alerta).toLocaleDateString('pt-BR');
+    const dataRetencao = alertaDetalhes.data_retencao 
+      ? new Date(alertaDetalhes.data_retencao).toLocaleDateString('pt-BR')
+      : '';
+
+    // Informações do aluno e da turma
+    const aluno = alertaDetalhes.alunos;
+    const telefoneLimpo = aluno?.telefone ? aluno.telefone.replace(/[^\d]/g, '') : '';
+    const linkWhatsapp = telefoneLimpo ? `https://wa.me/55${telefoneLimpo}` : '';
+    
+    // Informações da turma - apenas nome conforme solicitado
+    let turmaInfo = 'Turma não encontrada';
+    if (turmaDados) {
+      turmaInfo = turmaDados.nome;
+    }
+
+    // Seção de informações do aluno
+    let infoAluno = '';
+    if (aluno) {
+      infoAluno = `*Informações do Aluno:*
+Email: ${aluno.email || 'N/A'}
+Telefone: ${aluno.telefone || 'N/A'} ${linkWhatsapp ? `(<${linkWhatsapp}|Whatsapp>)` : ''}
+Turma: ${turmaInfo}
+Último Nível: ${aluno.ultimo_nivel || 'N/A'}
+Última Página: ${aluno.ultima_pagina || 'N/A'}
+Nível Desafio: ${aluno.niveldesafio || 'N/A'}`;
+    }
+
+    // Seção de informações da Aula Zero, se disponível
+    let aulaZeroInfo = '';
+    if (aluno && (aluno.motivo_procura || aluno.percepcao_coordenador)) {
+      aulaZeroInfo = `\n\n*Dados da Aula Zero:*
+${aluno.motivo_procura ? `Motivo da Procura: ${aluno.motivo_procura}` : ''}
+${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_coordenador}` : ''}`;
+    }
+
     // Montar texto da mensagem com o novo formato
     const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
 *Aluno:* ${alertaDetalhes.alunos?.nome}
@@ -235,7 +255,7 @@ ${mencoesTxt} para acompanhamento.`;
     console.log("Mensagem preparada, enviando para o Slack");
     
     // Enviar para a API do Slack
-    console.log("Chamando API do Slack");
+    console.log("Chamando API do Slack com canal fixo:", SLACK_CHANNEL_ID);
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: {
@@ -243,7 +263,7 @@ ${mencoesTxt} para acompanhamento.`;
         'Authorization': `Bearer ${slackToken}`
       },
       body: JSON.stringify({
-        channel: SLACK_CHANNEL_ID,
+        channel: SLACK_CHANNEL_ID, // Usando canal fixo, não mais buscado do banco
         text: mensagem
       })
     });
