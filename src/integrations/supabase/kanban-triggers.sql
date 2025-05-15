@@ -113,3 +113,84 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+-- Função para notificar sobre alertas de evasão via Slack (versão corrigida)
+CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  anon_key TEXT;
+  response_data jsonb;
+  response_status integer;
+  canal_id TEXT;
+BEGIN
+  RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
+  
+  -- Buscar a chave anônima da tabela dados_importantes
+  SELECT data INTO anon_key
+  FROM dados_importantes
+  WHERE key = 'SUPABASE_ANON_KEY';
+  
+  -- Buscar o ID do canal do Slack
+  SELECT data INTO canal_id
+  FROM dados_importantes
+  WHERE key = 'canal_alertas_evasao';
+  
+  -- Verificar se as chaves foram encontradas
+  IF anon_key IS NULL THEN
+    RAISE WARNING 'SUPABASE_ANON_KEY não encontrada na tabela dados_importantes';
+    -- Ainda cria o card do kanban, mas não envia para o Slack
+    RETURN NEW;
+  END IF;
+  
+  IF canal_id IS NULL THEN
+    RAISE WARNING 'canal_alertas_evasao não encontrado na tabela dados_importantes';
+    -- Ainda cria o card do kanban, mas não envia para o Slack
+    RETURN NEW;
+  END IF;
+  
+  RAISE NOTICE 'Chaves encontradas. Preparando para chamar a edge function';
+  
+  -- Chamar a edge function via HTTP usando a sintaxe correta do pg_net
+  SELECT 
+    status, response_body::jsonb
+  INTO 
+    response_status, response_data
+  FROM 
+    net.http_post(
+      url := 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || anon_key
+      ),
+      body := jsonb_build_object(
+        'record', row_to_json(NEW)
+      )::text
+    );
+
+  -- Log do resultado da chamada
+  RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_data;
+  
+  RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Em caso de erro, registrar o erro mas permitir que o fluxo continue
+    RAISE WARNING 'Erro ao enviar alerta para Slack: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+    
+    -- Verificar se é um erro específico da extensão pg_net
+    IF SQLSTATE = '58P01' THEN
+      RAISE WARNING 'Erro da extensão pg_net. Verifique se a extensão está habilitada no banco de dados.';
+    END IF;
+    
+    RETURN NEW;
+END;
+$function$;
+
+-- Recriar o trigger para garantir que ele use a função corrigida
+DROP TRIGGER IF EXISTS trigger_notify_evasion_alert ON alerta_evasao;
+
+CREATE TRIGGER trigger_notify_evasion_alert
+AFTER INSERT ON alerta_evasao
+FOR EACH ROW
+EXECUTE FUNCTION notify_evasion_alert();
