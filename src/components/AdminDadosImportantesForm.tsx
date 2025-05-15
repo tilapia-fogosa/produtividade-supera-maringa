@@ -14,6 +14,13 @@ interface DadosImportante {
   data: string;
 }
 
+// Interface para representar os dados como são retornados pelo Supabase 
+interface DadosImportanteDB {
+  id: number;
+  key: string;
+  data: string;
+}
+
 const AdminDadosImportantesForm = () => {
   const [dados, setDados] = useState<DadosImportante[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +41,13 @@ const AdminDadosImportantesForm = () => {
       
       if (error) throw error;
       
-      setDados(data || []);
+      // Convertendo o id de number para string
+      const dadosConvertidos: DadosImportante[] = (data || []).map((item: DadosImportanteDB) => ({
+        ...item,
+        id: String(item.id)
+      }));
+      
+      setDados(dadosConvertidos);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast({
@@ -87,7 +100,7 @@ const AdminDadosImportantesForm = () => {
           const { error } = await supabase
             .from('dados_importantes')
             .update({ key: item.key, data: item.data })
-            .eq('id', item.id);
+            .eq('id', parseInt(item.id)); // Convertendo string para number ao fazer a query
           
           if (error) throw error;
         }

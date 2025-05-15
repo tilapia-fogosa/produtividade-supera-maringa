@@ -1,4 +1,6 @@
 
-import { useToast } from "@/components/ui/use-toast";
+import { toast as sonnerToast, useToast as useSonnerToast } from "sonner";
 
-export { useToast, toast } from "@/components/ui/use-toast";
+// Re-exportamos os hooks com aliases para evitar a circularidade
+export const useToast = useSonnerToast;
+export const toast = sonnerToast;
