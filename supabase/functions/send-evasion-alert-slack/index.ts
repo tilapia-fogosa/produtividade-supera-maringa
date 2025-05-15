@@ -10,10 +10,13 @@ serve(async (req) => {
   }
   
   try {
+    console.log("Iniciando função send-evasion-alert-slack");
+    
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
+    console.log("Conectando ao Supabase URL:", supabaseUrl);
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Buscar o token do Slack da tabela dados_importantes
@@ -24,6 +27,7 @@ serve(async (req) => {
       .single();
     
     if (tokenError || !tokenData || !tokenData.data) {
+      console.error('Token do Slack não configurado:', tokenError?.message || 'Dados não encontrados');
       return new Response(
         JSON.stringify({ success: false, error: 'Token do Slack não configurado na tabela dados_importantes' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -31,14 +35,7 @@ serve(async (req) => {
     }
     
     const slackToken = tokenData.data;
-    
-    if (!slackToken) {
-      console.error('Token do Slack não configurado');
-      return new Response(
-        JSON.stringify({ success: false, error: 'Token do Slack não configurado.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
+    console.log("Token do Slack obtido com sucesso");
     
     // Buscar o ID do canal do Slack da tabela dados_importantes
     const { data: canalData, error: canalError } = await supabase
@@ -48,6 +45,7 @@ serve(async (req) => {
       .single();
     
     if (canalError || !canalData || !canalData.data) {
+      console.error('ID do canal não encontrado:', canalError?.message || 'Dados não encontrados');
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -61,18 +59,24 @@ serve(async (req) => {
     }
     
     const SLACK_CHANNEL_ID = canalData.data; // Usa o canal da tabela em vez de valor fixo
+    console.log("ID do canal do Slack obtido:", SLACK_CHANNEL_ID);
     
     // Obtém dados do corpo da requisição
+    console.log("Obtendo dados do corpo da requisição");
     const { record } = await req.json();
     
     if (!record || !record.id) {
+      console.error('Dados do alerta não fornecidos');
       return new Response(
         JSON.stringify({ success: false, error: 'Dados do alerta não fornecidos.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
+    console.log("Record recebido:", JSON.stringify(record));
+
     // Obter detalhes completos do alerta e do aluno
+    console.log("Buscando detalhes completos do alerta");
     const { data: alertaDetalhes, error: alertaError } = await supabase
       .from('alerta_evasao')
       .select(`
@@ -99,7 +103,7 @@ serve(async (req) => {
       .single();
     
     if (alertaError || !alertaDetalhes) {
-      console.error('Erro ao buscar detalhes do alerta:', alertaError);
+      console.error('Erro ao buscar detalhes do alerta:', alertaError?.message || 'Alerta não encontrado');
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -108,6 +112,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    console.log("Detalhes do alerta obtidos:", JSON.stringify(alertaDetalhes));
 
     // Agora buscamos os dados da turma separadamente
     const { data: turmaDados, error: turmaError } = alertaDetalhes.alunos?.turma_id ? await supabase
@@ -124,6 +130,7 @@ serve(async (req) => {
     }
     
     // Buscar dados do professor para menção no Slack
+    console.log("Buscando dados do professor");
     let professorSlackUsername = null;
     if (turmaDados?.professor_id) {
       const { data: professorDados, error: professorError } = await supabase
@@ -136,10 +143,12 @@ serve(async (req) => {
         console.error('Erro ao buscar professor:', professorError);
       } else if (professorDados) {
         professorSlackUsername = professorDados.slack_username;
+        console.log("Username do Slack do professor:", professorSlackUsername);
       }
     }
 
     // Buscar histórico de alertas anteriores do mesmo aluno
+    console.log("Buscando histórico de alertas anteriores");
     const { data: alertasAnteriores, error: alertasError } = await supabase
       .from('alerta_evasao')
       .select(`
@@ -165,6 +174,7 @@ serve(async (req) => {
     }
     
     // Formatar data para exibição
+    console.log("Formatando dados para a mensagem");
     const dataAlerta = new Date(alertaDetalhes.data_alerta).toLocaleDateString('pt-BR');
     const dataRetencao = alertaDetalhes.data_retencao 
       ? new Date(alertaDetalhes.data_retencao).toLocaleDateString('pt-BR')
@@ -202,6 +212,7 @@ ${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_c
     }
 
     // Preparar menções para o Slack
+    console.log("Preparando menções para o Slack");
     const mencoes = ['<@chriskulza>'];
     if (professorSlackUsername) {
       mencoes.push(`<@${professorSlackUsername}>`);
@@ -221,7 +232,10 @@ ${infoAluno}${aulaZeroInfo}${historicoAlertas}
 
 ${mencoesTxt} para acompanhamento.`;
     
+    console.log("Mensagem preparada, enviando para o Slack");
+    
     // Enviar para a API do Slack
+    console.log("Chamando API do Slack");
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: {
@@ -235,6 +249,7 @@ ${mencoesTxt} para acompanhamento.`;
     });
     
     const responseData = await response.json();
+    console.log("Resposta da API do Slack:", JSON.stringify(responseData));
     
     if (!responseData.ok) {
       console.error(`Erro ao enviar mensagem para o Slack: ${responseData.error}`);
@@ -244,6 +259,7 @@ ${mencoesTxt} para acompanhamento.`;
       );
     }
     
+    console.log("Mensagem enviada com sucesso para o Slack");
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -253,7 +269,7 @@ ${mencoesTxt} para acompanhamento.`;
     );
     
   } catch (error) {
-    console.error('Erro ao processar o alerta de evasão:', error);
+    console.error('Erro ao processar o alerta de evasão:', error.message);
     
     return new Response(
       JSON.stringify({ success: false, error: error.message }),

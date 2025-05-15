@@ -21,6 +21,26 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         description: "Criando alerta de teste e enviando para o Slack",
       });
 
+      // Verificar se as configurações necessárias estão presentes
+      const { data: configData, error: configError } = await supabase
+        .from('dados_importantes')
+        .select('key, data')
+        .in('key', ['SLACK_BOT_TOKEN', 'canal_alertas_evasao', 'SUPABASE_ANON_KEY']);
+      
+      if (configError) {
+        throw new Error(`Erro ao verificar configurações: ${configError.message}`);
+      }
+      
+      // Verificar se todas as configurações necessárias estão presentes
+      const configs = configData || [];
+      const missingConfigs = ['SLACK_BOT_TOKEN', 'canal_alertas_evasao', 'SUPABASE_ANON_KEY'].filter(
+        key => !configs.some(config => config.key === key && config.data)
+      );
+      
+      if (missingConfigs.length > 0) {
+        throw new Error(`Configurações ausentes: ${missingConfigs.join(', ')}. Por favor, configure-as em Administração > Configurações.`);
+      }
+      
       // Criar um alerta de evasão de teste
       const { data: alertaData, error: alertaError } = await supabase
         .from('alerta_evasao')
@@ -41,7 +61,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       // que por sua vez chamará a edge function send-evasion-alert-slack
       
       // Aguardar um tempo para garantir que o trigger e a função sejam executados
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2500)); // Aumentado para 2.5 segundos
       
       toast({
         title: "Sucesso",
