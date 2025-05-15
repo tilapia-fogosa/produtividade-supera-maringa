@@ -25,7 +25,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       const { data: configData, error: configError } = await supabase
         .from('dados_importantes')
         .select('key, data')
-        .in('key', ['SLACK_BOT_TOKEN', 'canal_alertas_evasao', 'SUPABASE_ANON_KEY']);
+        .in('key', ['SLACK_BOT_TOKEN', 'SUPABASE_ANON_KEY']);
       
       if (configError) {
         throw new Error(`Erro ao verificar configurações: ${configError.message}`);
@@ -33,7 +33,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       
       // Verificar se todas as configurações necessárias estão presentes
       const configs = configData || [];
-      const missingConfigs = ['SLACK_BOT_TOKEN', 'canal_alertas_evasao', 'SUPABASE_ANON_KEY'].filter(
+      const missingConfigs = ['SLACK_BOT_TOKEN', 'SUPABASE_ANON_KEY'].filter(
         key => !configs.some(config => config.key === key && config.data)
       );
       
@@ -85,6 +85,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       variant="outline"
       className="bg-red-500 hover:bg-red-600 text-white border-none"
       disabled={isSending}
+      size="mobile"
     >
       {isSending ? (
         <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
