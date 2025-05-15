@@ -134,7 +134,7 @@ BEGIN
     RAISE WARNING 'SUPABASE_ANON_KEY não encontrada na tabela dados_importantes';
     RETURN NEW;
   END IF;
-  
+
   RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
   -- Chamar a edge function via HTTP usando o pg_net
