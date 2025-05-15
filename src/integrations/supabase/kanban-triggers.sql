@@ -1,4 +1,3 @@
-
 -- Função para criar um kanban card a partir de um alerta de evasão
 CREATE OR REPLACE FUNCTION public.create_kanban_card_from_alert()
  RETURNS trigger
@@ -114,7 +113,7 @@ BEGIN
 END;
 $function$;
 
--- Função para notificar sobre alertas de evasão via Slack (versão corrigida)
+-- Função para notificar sobre alertas de evasão via Slack (NÃO depende mais do canal em dados_importantes)
 CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -123,7 +122,6 @@ DECLARE
   anon_key TEXT;
   response_data jsonb;
   response_status integer;
-  canal_id TEXT;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
@@ -132,27 +130,14 @@ BEGIN
   FROM dados_importantes
   WHERE key = 'SUPABASE_ANON_KEY';
   
-  -- Buscar o ID do canal do Slack
-  SELECT data INTO canal_id
-  FROM dados_importantes
-  WHERE key = 'canal_alertas_evasao';
-  
-  -- Verificar se as chaves foram encontradas
   IF anon_key IS NULL THEN
     RAISE WARNING 'SUPABASE_ANON_KEY não encontrada na tabela dados_importantes';
-    -- Ainda cria o card do kanban, mas não envia para o Slack
     RETURN NEW;
   END IF;
   
-  IF canal_id IS NULL THEN
-    RAISE WARNING 'canal_alertas_evasao não encontrado na tabela dados_importantes';
-    -- Ainda cria o card do kanban, mas não envia para o Slack
-    RETURN NEW;
-  END IF;
+  RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
-  RAISE NOTICE 'Chaves encontradas. Preparando para chamar a edge function';
-  
-  -- Chamar a edge function via HTTP usando a sintaxe correta do pg_net
+  -- Chamar a edge function via HTTP usando o pg_net
   SELECT 
     status, response_body::jsonb
   INTO 
@@ -177,17 +162,11 @@ EXCEPTION
   WHEN OTHERS THEN
     -- Em caso de erro, registrar o erro mas permitir que o fluxo continue
     RAISE WARNING 'Erro ao enviar alerta para Slack: %, SQLSTATE: %', SQLERRM, SQLSTATE;
-    
-    -- Verificar se é um erro específico da extensão pg_net
-    IF SQLSTATE = '58P01' THEN
-      RAISE WARNING 'Erro da extensão pg_net. Verifique se a extensão está habilitada no banco de dados.';
-    END IF;
-    
     RETURN NEW;
 END;
 $function$;
 
--- Recriar o trigger para garantir que ele use a função corrigida
+-- Recriar o trigger para garantir uso da função atualizada
 DROP TRIGGER IF EXISTS trigger_notify_evasion_alert ON alerta_evasao;
 
 CREATE TRIGGER trigger_notify_evasion_alert
