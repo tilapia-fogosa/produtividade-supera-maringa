@@ -51,6 +51,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
   const [alertasAnteriores, setAlertasAnteriores] = useState<any[]>([]);
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
   const [dadosAulaZero, setDadosAulaZero] = useState<any | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const alunosFiltrados = todosAlunos.filter(aluno => 
     aluno.nome.toLowerCase().includes(filtroAluno.toLowerCase())
@@ -172,27 +173,38 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     }
 
     try {
+      setIsSubmitting(true);
+      
       // Determinar a coluna inicial com base na presença de data de retenção
       const initialColumn = dataRetencao ? 'scheduled' : 'todo';
       
       // Construir o histórico completo com dados da aula zero se disponíveis
       const historicoCompleto = construirHistoricoCompleto();
       
+      // Formatar a data do alerta para ser apenas a data, sem hora
+      const dataAlertaFormatada = dataAlerta ? new Date(dataAlerta).toISOString().split('T')[0] : null;
+      
+      // Formatar a data de retenção, se existir
+      const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
+      
       // Primeiro salvar no banco de dados
       const { data: alertaData, error } = await supabase
         .from('alerta_evasao')
         .insert({
           aluno_id: alunoSelecionado,
-          data_alerta: new Date(dataAlerta).toISOString(),
+          data_alerta: dataAlertaFormatada,
           origem_alerta: origemAlerta,
           descritivo,
           responsavel,
-          data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
+          data_retencao: dataRetencaoFormatada,
           kanban_status: initialColumn, // Define a coluna inicial
         })
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao salvar alerta:", error);
+        throw error;
+      }
 
       // Encontrar os dados do aluno selecionado
       const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
@@ -263,11 +275,11 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               telefone: aluno?.telefone
             },
             alerta: {
-              data: new Date(dataAlerta).toISOString(),
+              data: dataAlertaFormatada,
               origem: origemAlerta,
               descritivo,
               responsavel,
-              data_retencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
+              data_retencao: dataRetencaoFormatada,
               historico: historicoCompleto
             }
           })
@@ -294,6 +306,8 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
         description: "Não foi possível salvar o alerta de evasão.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -335,7 +349,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
             </label>
             <Input
               id="data-alerta"
-              type="datetime-local"
+              type="date"
               value={dataAlerta}
               onChange={(e) => setDataAlerta(e.target.value)}
               className="w-full"
@@ -372,7 +386,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               Agendado Retenção (caso tenha)
             </p>
             <Input
-              type="datetime-local"
+              type="date"
               value={dataRetencao}
               onChange={(e) => setDataRetencao(e.target.value)}
               placeholder="Data da Retenção"
@@ -423,11 +437,11 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           )}
 
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit}>
-              Salvar
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </div>
