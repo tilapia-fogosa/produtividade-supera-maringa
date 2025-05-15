@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from "../_shared/cors.ts";
@@ -37,7 +36,8 @@ serve(async (req) => {
     const slackToken = tokenData.data;
     console.log("Token do Slack obtido com sucesso");
     
-    // Buscar o ID do canal do Slack da tabela dados_importantes
+    // ATENÇÃO: Busca do ID do canal ocorre SEMPRE aqui dentro da função Edge (centralizado)
+    //    Não depende mais do trigger/banco passar isso no payload.
     const { data: canalData, error: canalError } = await supabase
       .from('dados_importantes')
       .select('data')
@@ -58,7 +58,7 @@ serve(async (req) => {
       );
     }
     
-    const SLACK_CHANNEL_ID = canalData.data; // Usa o canal da tabela em vez de valor fixo
+    const SLACK_CHANNEL_ID = canalData.data;
     console.log("ID do canal do Slack obtido:", SLACK_CHANNEL_ID);
     
     // Obtém dados do corpo da requisição
