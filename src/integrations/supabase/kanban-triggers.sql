@@ -121,11 +121,8 @@ CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
 AS $function$
 DECLARE
   anon_key TEXT;
-  req_id BIGINT;  -- Alterado de UUID para BIGINT
-  req_headers JSONB;
-  req_body JSONB;
+  response_data jsonb;
   response_status integer;
-  response_body jsonb;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
@@ -141,42 +138,25 @@ BEGIN
 
   RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
-  -- Preparar os headers e body para a chamada HTTP
-  req_headers := jsonb_build_object(
-    'Content-Type', 'application/json',
-    'Authorization', 'Bearer ' || anon_key
-  );
-  
-  req_body := jsonb_build_object(
-    'record', row_to_json(NEW)
-  );
-  
-  -- Chamar a edge function via HTTP usando a função net.http_post com parâmetros POSICIONAIS (não nomeados)
-  req_id := net.http_post(
-    'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-    req_body,
-    '{}'::jsonb,
-    req_headers
-  );
-
-  -- Log do ID da requisição
-  RAISE NOTICE 'Requisição enviada com ID: %', req_id;
-  
-  -- Aguardar um curto período para garantir que a requisição foi processada
-  PERFORM pg_sleep(1); -- Espera 1 segundo
-  
-  -- Obter a resposta da requisição usando a função correta
+  -- Chamar a edge function via HTTP usando o pg_net
   SELECT 
-    status_code, 
-    content::jsonb 
+    status, response_body::jsonb
   INTO 
-    response_status, 
-    response_body
+    response_status, response_data
   FROM 
-    net.http_get_response(req_id);
-  
+    net.http_post(
+      url := 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || anon_key
+      ),
+      body := jsonb_build_object(
+        'record', row_to_json(NEW)
+      )::text
+    );
+
   -- Log do resultado da chamada
-  RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_body;
+  RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_data;
   
   RETURN NEW;
 EXCEPTION
