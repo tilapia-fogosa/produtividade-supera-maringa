@@ -115,7 +115,6 @@ END;
 $function$;
 
 -- Função corrigida para notificar sobre alertas de evasão via Slack
--- A função pg_net.http_post foi atualizada com os parâmetros na ordem correta
 CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -152,12 +151,12 @@ BEGIN
     'record', row_to_json(NEW)
   );
   
-  -- Chamar a edge function via HTTP usando o pg_net.http_post com a assinatura correta
-  req_id := pg_net.http_post(
-    url := 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-    body := req_body,
-    params := '{}'::jsonb,
-    headers := req_headers
+  -- Chamar a edge function via HTTP usando a função net.http_post com parâmetros na ordem correta
+  req_id := net.http_post(
+    url => 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+    body => req_body,
+    params => '{}'::jsonb,
+    headers => req_headers
   );
 
   -- Log do ID da requisição
@@ -166,15 +165,15 @@ BEGIN
   -- Aguardar um curto período para garantir que a requisição foi processada
   PERFORM pg_sleep(1); -- Espera 1 segundo
   
-  -- Obter a resposta da requisição
+  -- Obter a resposta da requisição usando a função correta
   SELECT 
-    status, 
+    status_code, 
     content::jsonb 
   INTO 
     response_status, 
     response_body
   FROM 
-    pg_net.http_get_response(req_id);
+    net.http_get_response(req_id);
   
   -- Log do resultado da chamada
   RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_body;
@@ -195,3 +194,4 @@ CREATE TRIGGER trigger_notify_evasion_alert
 AFTER INSERT ON alerta_evasao
 FOR EACH ROW
 EXECUTE FUNCTION notify_evasion_alert();
+

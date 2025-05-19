@@ -218,6 +218,8 @@ ${mencoesTxt} para acompanhamento.`;
     
     // Enviar para a API do Slack
     console.log("Chamando API do Slack com canal fixo:", SLACK_CHANNEL_ID);
+    console.log("Token usado:", SLACK_BOT_TOKEN.substring(0, 5) + "...");
+    
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: {
