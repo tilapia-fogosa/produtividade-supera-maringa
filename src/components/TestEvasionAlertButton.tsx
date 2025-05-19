@@ -46,7 +46,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       // que por sua vez chamará a edge function send-evasion-alert-slack
       
       // Aguardar um tempo para garantir que o trigger e a função sejam executados
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Aumentado para 5 segundos
+      await new Promise(resolve => setTimeout(resolve, 8000)); // Aumentado para 8 segundos
       
       toast({
         title: "Sucesso",

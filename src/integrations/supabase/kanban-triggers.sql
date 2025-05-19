@@ -121,7 +121,7 @@ CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
 AS $function$
 DECLARE
   anon_key TEXT;
-  req_id UUID;
+  req_id BIGINT;  -- Alterado de UUID para BIGINT
   req_headers JSONB;
   req_body JSONB;
   response_status integer;
@@ -151,12 +151,12 @@ BEGIN
     'record', row_to_json(NEW)
   );
   
-  -- Chamar a edge function via HTTP usando a função net.http_post com parâmetros na ordem correta
+  -- Chamar a edge function via HTTP usando a função net.http_post com parâmetros POSICIONAIS (não nomeados)
   req_id := net.http_post(
-    url => 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-    body => req_body,
-    params => '{}'::jsonb,
-    headers => req_headers
+    'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+    req_body,
+    '{}'::jsonb,
+    req_headers
   );
 
   -- Log do ID da requisição

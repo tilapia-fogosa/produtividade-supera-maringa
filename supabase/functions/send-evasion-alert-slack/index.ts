@@ -215,10 +215,26 @@ ${infoAluno}${aulaZeroInfo}${historicoAlertas}
 ${mencoesTxt} para acompanhamento.`;
     
     console.log("Mensagem preparada, enviando para o Slack");
+    console.log("Mensagem completa:", mensagem);
     
     // Enviar para a API do Slack
     console.log("Chamando API do Slack com canal fixo:", SLACK_CHANNEL_ID);
     console.log("Token usado:", SLACK_BOT_TOKEN.substring(0, 5) + "...");
+    
+    // Teste de conexão com o Slack para debug
+    console.log("Verificando se podemos alcançar a API do Slack...");
+    try {
+      const pingResponse = await fetch('https://slack.com/api/api.test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      const pingData = await pingResponse.json();
+      console.log("Resposta do teste da API do Slack:", JSON.stringify(pingData));
+    } catch (pingError) {
+      console.error("Erro ao testar API do Slack:", pingError);
+    }
     
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
