@@ -1,3 +1,4 @@
+
 -- Função para criar um kanban card a partir de um alerta de evasão
 CREATE OR REPLACE FUNCTION public.create_kanban_card_from_alert()
  RETURNS trigger
@@ -113,15 +114,19 @@ BEGIN
 END;
 $function$;
 
--- Função para notificar sobre alertas de evasão via Slack (NÃO depende mais do canal em dados_importantes)
+-- Função corrigida para notificar sobre alertas de evasão via Slack
+-- A função pg_net.http_post foi atualizada com os parâmetros na ordem correta
 CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
  RETURNS trigger
  LANGUAGE plpgsql
 AS $function$
 DECLARE
   anon_key TEXT;
-  response_data jsonb;
+  req_id UUID;
+  req_headers JSONB;
+  req_body JSONB;
   response_status integer;
+  response_body jsonb;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
@@ -137,25 +142,42 @@ BEGIN
 
   RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
-  -- Chamar a edge function via HTTP usando o pg_net
-  SELECT 
-    status, response_body::jsonb
-  INTO 
-    response_status, response_data
-  FROM 
-    net.http_post(
-      url := 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || anon_key
-      ),
-      body := jsonb_build_object(
-        'record', row_to_json(NEW)
-      )::text
-    );
+  -- Preparar os headers e body para a chamada HTTP
+  req_headers := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'Authorization', 'Bearer ' || anon_key
+  );
+  
+  req_body := jsonb_build_object(
+    'record', row_to_json(NEW)
+  );
+  
+  -- Chamar a edge function via HTTP usando o pg_net.http_post com a assinatura correta
+  req_id := pg_net.http_post(
+    url := 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+    body := req_body,
+    params := '{}'::jsonb,
+    headers := req_headers
+  );
 
+  -- Log do ID da requisição
+  RAISE NOTICE 'Requisição enviada com ID: %', req_id;
+  
+  -- Aguardar um curto período para garantir que a requisição foi processada
+  PERFORM pg_sleep(1); -- Espera 1 segundo
+  
+  -- Obter a resposta da requisição
+  SELECT 
+    status, 
+    content::jsonb 
+  INTO 
+    response_status, 
+    response_body
+  FROM 
+    pg_net.http_get_response(req_id);
+  
   -- Log do resultado da chamada
-  RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_data;
+  RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_body;
   
   RETURN NEW;
 EXCEPTION

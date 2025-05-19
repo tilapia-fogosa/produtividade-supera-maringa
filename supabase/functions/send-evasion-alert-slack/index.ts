@@ -26,14 +26,26 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Token agora é fixo, não precisamos mais buscar da tabela dados_importantes
-    console.log("Usando token do Slack hardcoded");
+    console.log("Usando token do Slack hardcoded:", SLACK_BOT_TOKEN.substring(0, 10) + "...");
     
     // IMPORTANTE: Canal agora é fixo
     console.log("Usando canal do Slack fixo:", SLACK_CHANNEL_ID);
     
     // Obtém dados do corpo da requisição
     console.log("Obtendo dados do corpo da requisição");
-    const { record } = await req.json();
+    let bodyData;
+    try {
+      bodyData = await req.json();
+      console.log("Dados recebidos:", JSON.stringify(bodyData));
+    } catch (parseError) {
+      console.error("Erro ao analisar o corpo da requisição:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao analisar o corpo da requisição' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    const { record } = bodyData;
     
     if (!record || !record.id) {
       console.error('Dados do alerta não fornecidos');
@@ -217,6 +229,15 @@ ${mencoesTxt} para acompanhamento.`;
         text: mensagem
       })
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro na resposta da API do Slack: Status ${response.status}`, errorText);
+      return new Response(
+        JSON.stringify({ success: false, error: `Erro na resposta do Slack: Status ${response.status} - ${errorText}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
     
     const responseData = await response.json();
     console.log("Resposta da API do Slack:", JSON.stringify(responseData));

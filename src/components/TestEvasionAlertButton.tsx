@@ -21,6 +21,8 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         description: "Criando alerta de teste e enviando para o Slack",
       });
       
+      console.log('Iniciando criação de alerta de evasão de teste');
+      
       // Criar um alerta de evasão de teste
       const { data: alertaData, error: alertaError } = await supabase
         .from('alerta_evasao')
@@ -34,14 +36,17 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         .single();
 
       if (alertaError) {
+        console.error('Erro ao criar alerta:', alertaError);
         throw new Error(`Erro ao criar alerta de evasão: ${alertaError.message}`);
       }
+
+      console.log('Alerta criado com sucesso:', alertaData);
 
       // O trigger criado deve chamar automaticamente a função notify_evasion_alert()
       // que por sua vez chamará a edge function send-evasion-alert-slack
       
       // Aguardar um tempo para garantir que o trigger e a função sejam executados
-      await new Promise(resolve => setTimeout(resolve, 2500)); // Aumentado para 2.5 segundos
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Aumentado para 3 segundos
       
       toast({
         title: "Sucesso",
