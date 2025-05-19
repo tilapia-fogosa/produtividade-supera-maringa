@@ -20,21 +20,6 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         title: "Enviando...",
         description: "Criando alerta de teste e enviando para o Slack",
       });
-
-      // Verificar se a chave SUPABASE_ANON_KEY está presente
-      const { data: configData, error: configError } = await supabase
-        .from('dados_importantes')
-        .select('key, data')
-        .eq('key', 'SUPABASE_ANON_KEY');
-      
-      if (configError) {
-        throw new Error(`Erro ao verificar configurações: ${configError.message}`);
-      }
-      
-      // Verificar se a configuração necessária está presente
-      if (!configData || configData.length === 0 || !configData[0].data) {
-        throw new Error(`Configuração ausente: SUPABASE_ANON_KEY. Por favor, configure-a em Administração > Configurações.`);
-      }
       
       // Criar um alerta de evasão de teste
       const { data: alertaData, error: alertaError } = await supabase
