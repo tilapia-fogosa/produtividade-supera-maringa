@@ -3,8 +3,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Canal fixo para uso no Slack - não depende mais da tabela dados_importantes
+// Canal fixo para uso no Slack
 const SLACK_CHANNEL_ID = "C06N9EWJXMG"; // Canal fixo para alertas de evasão
+
+// Token fixo para uso no Slack - não depende mais da tabela dados_importantes
+const SLACK_BOT_TOKEN = "xoxb-6800184675363-6778113409926-e24SGrSpPDqM42wEq2ngcsRh"; // Token hardcoded para Slack Bot
 
 serve(async (req) => {
   // Tratamento de CORS para requisições preflight
@@ -22,25 +25,10 @@ serve(async (req) => {
     console.log("Conectando ao Supabase URL:", supabaseUrl);
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Buscar o token do Slack da tabela dados_importantes
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'SLACK_BOT_TOKEN')
-      .single();
+    // Token agora é fixo, não precisamos mais buscar da tabela dados_importantes
+    console.log("Usando token do Slack hardcoded");
     
-    if (tokenError || !tokenData || !tokenData.data) {
-      console.error('Token do Slack não configurado:', tokenError?.message || 'Dados não encontrados');
-      return new Response(
-        JSON.stringify({ success: false, error: 'Token do Slack não configurado na tabela dados_importantes' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-    
-    const slackToken = tokenData.data;
-    console.log("Token do Slack obtido com sucesso");
-    
-    // IMPORTANTE: Canal agora é fixo, não buscamos mais da tabela
+    // IMPORTANTE: Canal agora é fixo
     console.log("Usando canal do Slack fixo:", SLACK_CHANNEL_ID);
     
     // Obtém dados do corpo da requisição
@@ -201,44 +189,6 @@ ${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_c
     }
     const mencoesTxt = mencoes.join(' e ');
 
-    // Formatar data para exibição
-    console.log("Formatando dados para a mensagem");
-    const dataAlerta = new Date(alertaDetalhes.data_alerta).toLocaleDateString('pt-BR');
-    const dataRetencao = alertaDetalhes.data_retencao 
-      ? new Date(alertaDetalhes.data_retencao).toLocaleDateString('pt-BR')
-      : '';
-
-    // Informações do aluno e da turma
-    const aluno = alertaDetalhes.alunos;
-    const telefoneLimpo = aluno?.telefone ? aluno.telefone.replace(/[^\d]/g, '') : '';
-    const linkWhatsapp = telefoneLimpo ? `https://wa.me/55${telefoneLimpo}` : '';
-    
-    // Informações da turma - apenas nome conforme solicitado
-    let turmaInfo = 'Turma não encontrada';
-    if (turmaDados) {
-      turmaInfo = turmaDados.nome;
-    }
-
-    // Seção de informações do aluno
-    let infoAluno = '';
-    if (aluno) {
-      infoAluno = `*Informações do Aluno:*
-Email: ${aluno.email || 'N/A'}
-Telefone: ${aluno.telefone || 'N/A'} ${linkWhatsapp ? `(<${linkWhatsapp}|Whatsapp>)` : ''}
-Turma: ${turmaInfo}
-Último Nível: ${aluno.ultimo_nivel || 'N/A'}
-Última Página: ${aluno.ultima_pagina || 'N/A'}
-Nível Desafio: ${aluno.niveldesafio || 'N/A'}`;
-    }
-
-    // Seção de informações da Aula Zero, se disponível
-    let aulaZeroInfo = '';
-    if (aluno && (aluno.motivo_procura || aluno.percepcao_coordenador)) {
-      aulaZeroInfo = `\n\n*Dados da Aula Zero:*
-${aluno.motivo_procura ? `Motivo da Procura: ${aluno.motivo_procura}` : ''}
-${aluno.percepcao_coordenador ? `Percepção do Coordenador: ${aluno.percepcao_coordenador}` : ''}`;
-    }
-
     // Montar texto da mensagem com o novo formato
     const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
 *Aluno:* ${alertaDetalhes.alunos?.nome}
@@ -260,10 +210,10 @@ ${mencoesTxt} para acompanhamento.`;
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
-        'Authorization': `Bearer ${slackToken}`
+        'Authorization': `Bearer ${SLACK_BOT_TOKEN}`
       },
       body: JSON.stringify({
-        channel: SLACK_CHANNEL_ID, // Usando canal fixo, não mais buscado do banco
+        channel: SLACK_CHANNEL_ID,
         text: mensagem
       })
     });
