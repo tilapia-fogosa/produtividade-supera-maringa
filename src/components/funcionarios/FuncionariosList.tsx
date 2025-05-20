@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useFuncionarios } from '@/hooks/use-funcionarios';
 import { Button } from "@/components/ui/button";
@@ -152,7 +151,7 @@ const FuncionariosList = () => {
           <DialogHeader>
             <DialogTitle>
               {currentFuncionario 
-                ? `Editar ${currentFuncionario.cargo?.toLowerCase() === 'estagiario' ? 'Estagiário' : 'Funcionário'}`
+                ? `Editar ${currentFuncionario.cargo?.toLowerCase() === 'estagiário' ? 'Estagiário' : 'Funcionário'}`
                 : `Adicionar ${filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}`}
             </DialogTitle>
           </DialogHeader>
@@ -161,7 +160,7 @@ const FuncionariosList = () => {
             onSubmit={handleSubmit}
             onCancel={handleCloseDialog}
             isSubmitting={isSubmitting}
-            tipoSelecionado={filtro === 'estagiarios' ? 'estagiario' : ''}
+            tipoSelecionado={filtro === 'estagiarios' ? 'Estagiário' : ''}
           />
         </DialogContent>
       </Dialog>

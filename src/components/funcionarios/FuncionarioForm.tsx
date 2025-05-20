@@ -14,6 +14,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Lista de cargos pré-definidos
+const CARGOS = [
+  'Estagiário',
+  'SDR',
+  'Consultor',
+  'Recepcionista',
+  'Familiar',
+  'Outro'
+];
+
 interface FuncionarioFormProps {
   funcionario?: Partial<Funcionario>;
   onSubmit: (data: Partial<Funcionario>) => void;
@@ -59,6 +69,10 @@ export const FuncionarioForm = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCargoChange = (value: string) => {
+    setFormData(prev => ({ ...prev, cargo: value }));
   };
 
   const handleTurmaChange = (value: string) => {
@@ -122,14 +136,21 @@ export const FuncionarioForm = ({
       
       <div>
         <Label htmlFor="cargo">Cargo</Label>
-        <Input
-          id="cargo"
-          name="cargo"
-          value={formData.cargo || ''}
-          onChange={handleChange}
-          placeholder="Digite o cargo do funcionário"
-          className="mt-1"
-        />
+        <Select 
+          value={formData.cargo || ''} 
+          onValueChange={handleCargoChange}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Selecione um cargo" />
+          </SelectTrigger>
+          <SelectContent>
+            {CARGOS.map((cargo) => (
+              <SelectItem key={cargo} value={cargo}>
+                {cargo}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
