@@ -45,12 +45,45 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       // O trigger criado deve chamar automaticamente a função notify_evasion_alert()
       // que por sua vez chamará a edge function send-evasion-alert-slack
       
-      // Aguardar um tempo para garantir que o trigger e a função sejam executados
-      await new Promise(resolve => setTimeout(resolve, 10000)); // Aumentado para 10 segundos
+      // Verificação adicional para garantir que o alerta foi processado
+      // Esperar 3 segundos para dar tempo ao trigger
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Verificar se o card foi criado no kanban (indicativo que o trigger rodou)
+      const { data: kanbanCard, error: kanbanError } = await supabase
+        .from('kanban_cards')
+        .select('*')
+        .eq('alerta_evasao_id', alertaData.id)
+        .single();
+        
+      if (kanbanError) {
+        console.warn('Não foi possível verificar se o card foi criado:', kanbanError);
+      } else {
+        console.log('Card do kanban criado:', kanbanCard);
+      }
+
+      // Tentando chamar a edge function diretamente como backup (caso o trigger falhe)
+      try {
+        console.log('Tentando chamar a edge function diretamente...');
+        const { data: functionResponse, error: functionError } = await supabase.functions.invoke(
+          'send-evasion-alert-slack', 
+          {
+            body: { record: alertaData }
+          }
+        );
+        
+        if (functionError) {
+          console.error('Erro ao chamar edge function diretamente:', functionError);
+        } else {
+          console.log('Resposta da edge function:', functionResponse);
+        }
+      } catch (funcError) {
+        console.error('Erro ao invocar edge function diretamente:', funcError);
+      }
       
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão enviado com sucesso para o Slack! Verifique o canal do Slack configurado.",
+        description: "Alerta de evasão criado com sucesso! Verifique os logs para confirmar o envio ao Slack.",
       });
     } catch (error) {
       console.error('Erro ao testar alerta de evasão:', error);

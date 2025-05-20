@@ -1,5 +1,4 @@
 
-
 -- Função para criar um kanban card a partir de um alerta de evasão
 CREATE OR REPLACE FUNCTION public.create_kanban_card_from_alert()
  RETURNS trigger
@@ -115,7 +114,7 @@ BEGIN
 END;
 $function$;
 
--- Função corrigida para notificar sobre alertas de evasão via Slack
+-- Função melhorada para notificar sobre alertas de evasão via Slack
 CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -124,6 +123,7 @@ DECLARE
   anon_key TEXT;
   req_id BIGINT;
   response RECORD;
+  payload TEXT;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
@@ -139,32 +139,48 @@ BEGIN
 
   RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
+  -- Construir payload e converter para texto
+  payload := jsonb_build_object('record', row_to_json(NEW))::text;
+  RAISE NOTICE 'Payload preparado: %', payload;
+  
   -- Preparar os dados para a requisição
   -- IMPORTANTE: Parâmetros posicionais na ordem correta: URL, body, params, headers
-  req_id := net.http_post(
-    'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-    jsonb_build_object('record', row_to_json(NEW))::text,
-    '{}'::jsonb,
-    jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || anon_key
-    )
-  );
-
-  -- Log do ID da requisição
-  RAISE NOTICE 'Requisição enviada com ID: %', req_id;
-  
-  -- Aguardar um curto período para garantir que a requisição foi processada
-  PERFORM pg_sleep(1); -- Espera 1 segundo
-  
-  -- Tentar obter a resposta (pode não estar disponível imediatamente)
   BEGIN
-    SELECT * INTO response FROM net.http_get_response(req_id);
-    RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', 
-                 response.status_code, response.content;
+    req_id := net.http_post(
+      'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+      payload,
+      '{}'::jsonb,
+      jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || anon_key
+      )
+    );
+
+    -- Log do ID da requisição
+    RAISE NOTICE 'Requisição enviada com ID: %', req_id;
+    
+    -- Aguardar um curto período para garantir que a requisição foi processada
+    PERFORM pg_sleep(2); -- Espera 2 segundos para dar tempo de processar
+    
+    -- Tentar obter a resposta (pode não estar disponível imediatamente)
+    BEGIN
+      SELECT * INTO response FROM net.http_get_response(req_id);
+      RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', 
+                  response.status_code, response.content;
+                  
+      -- Verificar se o status code indica erro
+      IF response.status_code >= 400 THEN
+        RAISE WARNING 'Erro na resposta da API: status code %', response.status_code;
+      END IF;
+    EXCEPTION
+      WHEN OTHERS THEN
+        RAISE NOTICE 'Erro ao obter resposta: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+        RAISE NOTICE 'Resposta ainda não disponível, mas a requisição foi enviada.';
+    END;
   EXCEPTION
     WHEN OTHERS THEN
-      RAISE NOTICE 'Resposta ainda não disponível, mas a requisição foi enviada.';
+      -- Em caso de erro na chamada HTTP, registrar o erro
+      RAISE WARNING 'Erro ao chamar a edge function: %, SQLSTATE: %', SQLERRM, SQLSTATE;
   END;
   
   RETURN NEW;
@@ -183,4 +199,3 @@ CREATE TRIGGER trigger_notify_evasion_alert
 AFTER INSERT ON alerta_evasao
 FOR EACH ROW
 EXECUTE FUNCTION notify_evasion_alert();
-
