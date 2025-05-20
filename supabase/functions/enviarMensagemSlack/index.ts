@@ -38,7 +38,8 @@ serve(async (req) => {
       username = "Sistema Kadin",
       turma = "Não informada",
       professor = "Não informado",
-      professorSlack = null
+      professorSlack = null,
+      cardId = ""
     } = await req.json();
     
     // Criar cliente Supabase para buscar informações adicionais
@@ -49,6 +50,9 @@ serve(async (req) => {
     
     // Buscar o ID do Slack da coordenadora Chris Kulza
     let coordenadoraSlack = "chriskulza"; // ID correto da Chris Kulza
+    
+    // Criar link para o card específico
+    const cardLink = cardId ? `https://kadinadmin.vercel.app/painel-pedagogico?card=${cardId}` : "https://kadinadmin.vercel.app/painel-pedagogico";
     
     // Formatar a mensagem conforme o template
     let mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
@@ -64,6 +68,9 @@ serve(async (req) => {
 
     // Mencionar a Chris Kulza para acompanhamento
     mensagem += `\n<@${coordenadoraSlack}> para acompanhamento.`;
+    
+    // Adicionar link para o card específico no kanban
+    mensagem += `\n\n<${cardLink}|👉 Ver card no Kanban>`;
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
