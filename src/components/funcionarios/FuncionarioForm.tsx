@@ -84,8 +84,9 @@ export const FuncionarioForm = ({
   };
 
   const handleTurmaChange = (value: string) => {
-    // Se o valor for "sem-turma", definimos como null para salvar no banco
-    const turmaId = value === "sem-turma" ? null : value;
+    // Se o valor for "sem-turma", definimos como string vazia para o formulário
+    // (será convertido para null na função de submit)
+    const turmaId = value === "sem-turma" ? "" : value;
     setFormData(prev => ({ ...prev, turma_id: turmaId }));
   };
 

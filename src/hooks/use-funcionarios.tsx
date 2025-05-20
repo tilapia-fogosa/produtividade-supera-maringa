@@ -60,20 +60,24 @@ export function useFuncionarios() {
       // ID exato da unidade de Maringá
       const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
       
-      // Debug para verificar o que está sendo enviado
-      console.log('Adicionando funcionário:', { 
+      // Preparar os dados tratando campos vazios para evitar erro de UUID
+      const dadosParaEnviar = {
         ...funcionario,
         active: true,
         unit_id: MARINGA_UNIT_ID
-      });
+      };
+      
+      // Verificar se turma_id está vazio e convertê-lo para null se estiver
+      if (dadosParaEnviar.turma_id === '') {
+        dadosParaEnviar.turma_id = null;
+      }
+      
+      // Debug para verificar o que está sendo enviado
+      console.log('Adicionando funcionário:', dadosParaEnviar);
       
       const { data, error } = await supabase
         .from('funcionarios')
-        .insert([{ 
-          ...funcionario,
-          active: true,
-          unit_id: MARINGA_UNIT_ID // Definindo Maringá como unidade padrão
-        }])
+        .insert([dadosParaEnviar])
         .select()
         .single();
 
