@@ -125,6 +125,10 @@ DECLARE
   supabase_url TEXT;
   anon_key TEXT;
   payload TEXT;
+  aluno_nome TEXT;
+  turma_nome TEXT := 'Não informada';
+  professor_nome TEXT := 'Não informado';
+  professor_slack TEXT := NULL;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
@@ -138,8 +142,39 @@ BEGIN
   RAISE NOTICE 'URL Supabase: %', supabase_url;
   RAISE NOTICE 'Usando anon_key: %...', LEFT(anon_key, 10);
   
-  -- Construir payload mais simples, apenas com o ID do alerta
-  payload := jsonb_build_object('record', jsonb_build_object('id', NEW.id))::text;
+  -- Buscar nome do aluno
+  SELECT nome INTO aluno_nome 
+  FROM alunos 
+  WHERE id = NEW.aluno_id;
+  
+  -- Buscar informações de turma e professor
+  SELECT 
+    t.nome, 
+    p.nome, 
+    p.slack_username
+  INTO 
+    turma_nome, 
+    professor_nome, 
+    professor_slack
+  FROM alunos a
+  LEFT JOIN turmas t ON a.turma_id = t.id
+  LEFT JOIN professores p ON t.professor_id = p.id
+  WHERE a.id = NEW.aluno_id;
+  
+  -- Construir payload no formato que a edge function enviarMensagemSlack espera
+  payload := jsonb_build_object(
+    'aluno', aluno_nome,
+    'dataAlerta', TO_CHAR(NEW.data_alerta, 'DD/MM/YYYY'),
+    'responsavel', NEW.responsavel,
+    'descritivo', NEW.descritivo,
+    'origem', NEW.origem_alerta,
+    'dataRetencao', CASE WHEN NEW.data_retencao IS NOT NULL THEN TO_CHAR(NEW.data_retencao, 'DD/MM/YYYY') ELSE '' END,
+    'turma', turma_nome,
+    'professor', professor_nome,
+    'professorSlack', professor_slack,
+    'username', 'Sistema Kadin'
+  )::text;
+  
   RAISE NOTICE 'Payload preparado: %', payload;
   
   BEGIN
@@ -147,7 +182,7 @@ BEGIN
     -- URL, body, params, headers
     BEGIN
       req_id := net.http_post(
-        supabase_url || '/functions/v1/send-evasion-alert-slack',
+        supabase_url || '/functions/v1/enviarMensagemSlack',
         payload,
         '{}'::jsonb,
         jsonb_build_object(
@@ -199,3 +234,4 @@ CREATE TRIGGER trigger_notify_evasion_alert
 AFTER INSERT ON alerta_evasao
 FOR EACH ROW
 EXECUTE FUNCTION notify_evasion_alert();
+
