@@ -186,6 +186,27 @@ export function useAlertasEvasao() {
       // Encontrar os dados do aluno selecionado
       const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
 
+      // Buscar dados da turma e professor para enviar ao Slack
+      let turmaNome = 'Não informada';
+      let professorNome = 'Não informado';
+      let professorSlack = null;
+      
+      if (aluno?.turma_id) {
+        const { data: turmaData, error: turmaError } = await supabase
+          .from('turmas')
+          .select('nome, professor_id, professor:professores(nome, slack_username)')
+          .eq('id', aluno.turma_id)
+          .single();
+          
+        if (!turmaError && turmaData) {
+          turmaNome = turmaData.nome || 'Não informada';
+          professorNome = turmaData.professor?.nome || 'Não informado';
+          professorSlack = turmaData.professor?.slack_username || null;
+        } else {
+          console.warn('Não foi possível obter dados da turma:', turmaError);
+        }
+      }
+
       // Se temos uma data de retenção, enviar para o webhook de agendamento
       if (dataRetencao && alertaData && alertaData.length > 0) {
         const alertaId = alertaData[0].id;
@@ -232,6 +253,36 @@ export function useAlertasEvasao() {
             console.error('Erro ao enviar para webhook de retenção:', webhookError);
           }
         }
+      }
+
+      // Enviar mensagem para o Slack
+      try {
+        console.log('Enviando alerta para o Slack...');
+        const { data: slackResponse, error: slackError } = await supabase.functions.invoke(
+          'enviarMensagemSlack', 
+          {
+            body: { 
+              aluno: aluno?.nome || 'Aluno de Teste',
+              dataAlerta: new Date(dataAlerta).toLocaleDateString('pt-BR'),
+              responsavel: responsavel,
+              descritivo: descritivo,
+              origem: origemAlerta,
+              dataRetencao: dataRetencao ? new Date(dataRetencao).toLocaleDateString('pt-BR') : '',
+              turma: turmaNome,
+              professor: professorNome,
+              professorSlack: professorSlack,
+              username: 'Sistema Kadin'
+            }
+          }
+        );
+        
+        if (slackError) {
+          console.error('Erro ao enviar para o Slack:', slackError);
+        } else {
+          console.log('Resposta do Slack:', slackResponse);
+        }
+      } catch (slackError) {
+        console.error('Erro ao invocar function de Slack:', slackError);
       }
 
       // Sempre envia para o webhook geral de alertas
