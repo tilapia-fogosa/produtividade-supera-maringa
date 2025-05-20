@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ interface FuncionarioFormProps {
   onSubmit: (data: Partial<Funcionario>) => void;
   onCancel: () => void;
   isSubmitting: boolean;
-  tipoSelecionado?: string; // Adicionando a propriedade tipoSelecionado como opcional
+  tipoSelecionado?: string;
 }
 
 export const FuncionarioForm = ({
@@ -44,7 +45,7 @@ export const FuncionarioForm = ({
     email: '',
     telefone: '',
     cargo: '',
-    turma_id: '',
+    turma_id: null as string | null, // Definindo explicitamente como string | null
   });
   const [validationErrors, setValidationErrors] = useState({
     nome: false
@@ -57,7 +58,7 @@ export const FuncionarioForm = ({
         email: funcionario.email || '',
         telefone: funcionario.telefone || '',
         cargo: funcionario.cargo || '',
-        turma_id: funcionario.turma_id || '',
+        turma_id: funcionario.turma_id || null, // Usando null explicitamente para ausência de valor
       });
     } else if (tipoSelecionado) {
       // Se não tiver funcionário, mas tiver tipo selecionado, inicializa o cargo
@@ -83,8 +84,8 @@ export const FuncionarioForm = ({
   };
 
   const handleTurmaChange = (value: string) => {
-    // Se o valor for "sem-turma", vamos tratar explicitamente como string vazia
-    const turmaId = value === "sem-turma" ? "" : value;
+    // Tratamento correto: se for "sem-turma", definimos como null explicitamente (não como string vazia)
+    const turmaId = value === "sem-turma" ? null : value;
     console.log("Valor selecionado para turma_id:", turmaId, "Tipo:", typeof turmaId);
     setFormData(prev => ({ ...prev, turma_id: turmaId }));
   };
@@ -101,12 +102,7 @@ export const FuncionarioForm = ({
     // Debug pré-submit
     console.log("Enviando dados do formulário:", formData);
     
-    // Criar uma cópia do formData para enviar
-    const dadosParaEnviar = {
-      ...formData
-    };
-    
-    onSubmit(dadosParaEnviar);
+    onSubmit(formData);
   };
 
   return (

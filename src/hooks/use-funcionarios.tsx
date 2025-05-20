@@ -67,9 +67,9 @@ export function useFuncionarios() {
         unit_id: MARINGA_UNIT_ID
       };
       
-      // Tratamento explícito para turma_id
-      // Se for string vazia ou undefined ou null, definir como null explicitamente
-      if (!dadosParaEnviar.turma_id || dadosParaEnviar.turma_id === '') {
+      // Garantir que turma_id seja null quando não selecionado (não string vazia)
+      // Isso é crucial para evitar o erro "invalid syntax for type uuid"
+      if (dadosParaEnviar.turma_id === '' || dadosParaEnviar.turma_id === undefined) {
         dadosParaEnviar.turma_id = null;
       }
       
@@ -117,6 +117,11 @@ export function useFuncionarios() {
 
   const atualizarFuncionario = async (id: string, dados: Partial<Funcionario>) => {
     try {
+      // Garantir que turma_id seja null quando não selecionado (não string vazia)
+      if (dados.turma_id === '') {
+        dados.turma_id = null;
+      }
+      
       const { error } = await supabase
         .from('funcionarios')
         .update(dados)

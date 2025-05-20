@@ -28,16 +28,21 @@ const FuncionariosList = () => {
   const handleSubmit = async (data: any) => {
     console.log("FuncionariosList recebeu dados para submit:", data);
     
+    // Validar turma_id para garantir que esteja correto antes de enviar
+    const dadosValidados = {
+      ...data,
+      // Garantir que turma_id seja null (não string vazia) quando sem turma
+      turma_id: data.turma_id === "" ? null : data.turma_id
+    };
+    
+    console.log("Dados validados para envio:", dadosValidados);
+    
     setIsSubmitting(true);
     try {
       if (currentFuncionario?.id) {
-        await atualizarFuncionario(currentFuncionario.id, data);
+        await atualizarFuncionario(currentFuncionario.id, dadosValidados);
       } else {
-        // Debug adicional para verificar os dados recebidos no componente pai
-        console.log("Tentando adicionar funcionário com dados:", JSON.stringify(data));
-        
-        // Certifique-se de que a turma_id é adequadamente tratada (null ou UUID válido)
-        const result = await adicionarFuncionario(data);
+        const result = await adicionarFuncionario(dadosValidados);
         console.log("Resultado da adição:", result);
       }
       handleCloseDialog();
