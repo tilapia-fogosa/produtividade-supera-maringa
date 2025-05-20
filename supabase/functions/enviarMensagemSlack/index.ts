@@ -55,11 +55,11 @@ serve(async (req) => {
 
     // Adicionar menções se tivermos os IDs do Slack
     if (professorSlack) {
-      mensagem += `\n@${professorSlack}`;
+      mensagem += `\n<@${professorSlack}>`;
     }
     
     // Sempre mencionar a Chris Kulza para acompanhamento
-    mensagem += "\n@Chris Kulza para acompanhamento.";
+    mensagem += "\n<@Chris Kulza> para acompanhamento.";
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
