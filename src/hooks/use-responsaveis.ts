@@ -10,6 +10,9 @@ export interface Responsavel {
   tipo: 'professor' | 'funcionario';
 }
 
+// Lista de cargos que não devem aparecer na lista de responsáveis
+const CARGOS_EXCLUIDOS = ['Filha', 'familiar'];
+
 export function useResponsaveis() {
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,8 +29,13 @@ export function useResponsaveis() {
           return;
         }
         
+        // Filtrar funcionários que não têm cargos excluídos
+        const funcionariosFiltrados = funcionarios.filter(func => 
+          !CARGOS_EXCLUIDOS.includes(func.cargo || '')
+        );
+        
         // Mapear funcionários para o formato de Responsavel
-        const responsaveisFuncionarios = funcionarios.map(func => ({
+        const responsaveisFuncionarios = funcionariosFiltrados.map(func => ({
           id: func.id,
           nome: func.nome,
           tipo: 'funcionario' as const
