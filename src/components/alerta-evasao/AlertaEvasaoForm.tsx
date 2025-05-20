@@ -13,6 +13,7 @@ import {
 import { origensAlerta } from '@/hooks/use-alertas-evasao';
 import { HistoricoAlertasView } from './HistoricoAlertasView';
 import { DadosAulaZeroView } from './DadosAulaZeroView';
+import { Responsavel } from '@/hooks/use-responsaveis';
 
 interface AlertaEvasaoFormProps {
   filtroAluno: string;
@@ -25,8 +26,9 @@ interface AlertaEvasaoFormProps {
   setOrigemAlerta: (origem: string) => void;
   descritivo: string;
   setDescritivo: (texto: string) => void;
-  responsavel: string;
-  setResponsavel: (nome: string) => void;
+  responsavelId: string | null;
+  setResponsavelId: (id: string) => void;
+  responsavelNome: string;
   dataRetencao: string;
   setDataRetencao: (data: string) => void;
   alunosFiltrados: any[];
@@ -35,6 +37,8 @@ interface AlertaEvasaoFormProps {
   carregandoHistorico: boolean;
   dadosAulaZero: any | null;
   isSubmitting: boolean;
+  responsaveis: Responsavel[];
+  carregandoResponsaveis: boolean;
   onSubmit: () => void;
   onCancel: () => void;
 }
@@ -50,8 +54,9 @@ export function AlertaEvasaoForm({
   setOrigemAlerta,
   descritivo,
   setDescritivo,
-  responsavel,
-  setResponsavel,
+  responsavelId,
+  setResponsavelId,
+  responsavelNome,
   dataRetencao,
   setDataRetencao,
   alunosFiltrados,
@@ -60,6 +65,8 @@ export function AlertaEvasaoForm({
   carregandoHistorico,
   dadosAulaZero,
   isSubmitting,
+  responsaveis,
+  carregandoResponsaveis,
   onSubmit,
   onCancel
 }: AlertaEvasaoFormProps) {
@@ -124,11 +131,30 @@ export function AlertaEvasaoForm({
         onChange={(e) => setDescritivo(e.target.value)}
       />
 
-      <Input
-        placeholder="Responsável"
-        value={responsavel}
-        onChange={(e) => setResponsavel(e.target.value)}
-      />
+      <div>
+        <label htmlFor="responsavel" className="block text-sm font-medium text-gray-700 mb-1">
+          Responsável
+        </label>
+        <Select 
+          value={responsavelId || ''} 
+          onValueChange={setResponsavelId}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            {carregandoResponsaveis ? (
+              <SelectItem value="carregando" disabled>Carregando...</SelectItem>
+            ) : (
+              responsaveis.map((resp) => (
+                <SelectItem key={resp.id} value={resp.id}>
+                  {resp.nome} {resp.tipo === 'funcionario' ? '(Funcionário)' : '(Professor)'}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div>
         <p className="text-sm text-muted-foreground mb-1">

@@ -27,8 +27,9 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     setOrigemAlerta,
     descritivo,
     setDescritivo,
-    responsavel,
-    setResponsavel,
+    responsavelId,
+    setResponsavelId,
+    responsavelNome,
     dataRetencao,
     setDataRetencao,
     alertasAnteriores,
@@ -37,6 +38,8 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     dadosAulaZero,
     alunosFiltrados,
     isSubmitting,
+    responsaveis,
+    carregandoResponsaveis,
     handleSubmit,
   } = useAlertasEvasao();
 
@@ -65,8 +68,9 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           setOrigemAlerta={setOrigemAlerta as (value: string) => void}
           descritivo={descritivo}
           setDescritivo={setDescritivo}
-          responsavel={responsavel}
-          setResponsavel={setResponsavel}
+          responsavelId={responsavelId}
+          setResponsavelId={setResponsavelId as (value: string) => void}
+          responsavelNome={responsavelNome}
           dataRetencao={dataRetencao}
           setDataRetencao={setDataRetencao}
           alunosFiltrados={alunosFiltrados}
@@ -75,6 +79,8 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           carregandoHistorico={carregandoHistorico}
           dadosAulaZero={dadosAulaZero}
           isSubmitting={isSubmitting}
+          responsaveis={responsaveis}
+          carregandoResponsaveis={carregandoResponsaveis}
           onSubmit={handleFormSubmit}
           onCancel={onClose}
         />
