@@ -62,12 +62,31 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       // Buscar informações do aluno para enviar ao Slack
       const { data: alunoData, error: alunoError } = await supabase
         .from('alunos')
-        .select('nome')
+        .select('nome, turma_id')
         .eq('id', alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e')
         .single();
 
       if (alunoError) {
         console.warn('Não foi possível obter dados do aluno:', alunoError);
+      }
+
+      // Buscar informações da turma e professor
+      let turmaNome = 'Não informada';
+      let professorNome = 'Não informado';
+      
+      if (alunoData?.turma_id) {
+        const { data: turmaData, error: turmaError } = await supabase
+          .from('turmas')
+          .select('nome, professor:professores(nome)')
+          .eq('id', alunoData.turma_id)
+          .single();
+          
+        if (!turmaError && turmaData) {
+          turmaNome = turmaData.nome || 'Não informada';
+          professorNome = turmaData.professor?.nome || 'Não informado';
+        } else {
+          console.warn('Não foi possível obter dados da turma:', turmaError);
+        }
       }
 
       // Chamar a edge function para enviar mensagem ao Slack
@@ -82,7 +101,10 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
               responsavel: 'Sistema de Teste',
               descritivo: 'Este é um alerta de teste enviado para o Slack',
               origem: 'outro',
-              dataRetencao: ''
+              dataRetencao: '',
+              turma: turmaNome,
+              professor: professorNome,
+              username: 'Sistema Kadin'
             }
           }
         );

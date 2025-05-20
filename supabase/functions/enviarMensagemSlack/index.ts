@@ -34,14 +34,18 @@ serve(async (req) => {
       descritivo = "Este é um alerta de teste", 
       origem = "outro",
       dataRetencao = "",
-      canal = "C05UB69SDU7", 
-      username = "Sistema Supera" 
+      canal = "C05UB69SDU7",
+      username = "Sistema Kadin",
+      turma = "Não informada",
+      professor = "Não informado"
     } = await req.json();
 
     // Formatar a mensagem conforme o template
-    const mensagem = `:batedor::batedor: *ALERTA: Farejei uma possível Evasão* :batedor::batedor:
+    const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
 
 *Aluno:* ${aluno}
+*Turma:* ${turma}
+*Professor:* ${professor}
 *Data do Aviso:* ${dataAlerta}
 *Responsável Alerta:* ${responsavel}
 *Informações:* ${descritivo}
