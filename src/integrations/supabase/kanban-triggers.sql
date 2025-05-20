@@ -121,8 +121,8 @@ CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
 AS $function$
 DECLARE
   anon_key TEXT;
-  response_data jsonb;
-  response_status integer;
+  req_id BIGINT;
+  response RECORD;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
@@ -138,25 +138,33 @@ BEGIN
 
   RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
-  -- Chamar a edge function via HTTP usando o pg_net
-  SELECT 
-    status, response_body::jsonb
-  INTO 
-    response_status, response_data
-  FROM 
-    net.http_post(
-      url := 'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || anon_key
-      ),
-      body := jsonb_build_object(
-        'record', row_to_json(NEW)
-      )::text
-    );
+  -- Preparar os dados para a requisição
+  -- IMPORTANTE: Usar parâmetros posicionais na ordem correta: URL, body, params, headers
+  req_id := net.http_post(
+    'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
+    jsonb_build_object('record', row_to_json(NEW))::text,
+    '{}'::jsonb,
+    jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || anon_key
+    )
+  );
 
-  -- Log do resultado da chamada
-  RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', response_status, response_data;
+  -- Log do ID da requisição
+  RAISE NOTICE 'Requisição enviada com ID: %', req_id;
+  
+  -- Aguardar um curto período para garantir que a requisição foi processada
+  PERFORM pg_sleep(1); -- Espera 1 segundo
+  
+  -- Tentar obter a resposta (pode não estar disponível imediatamente)
+  BEGIN
+    SELECT * INTO response FROM net.http_get_response(req_id);
+    RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', 
+                 response.status_code, response.content;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Resposta ainda não disponível, mas a requisição foi enviada.';
+  END;
   
   RETURN NEW;
 EXCEPTION
