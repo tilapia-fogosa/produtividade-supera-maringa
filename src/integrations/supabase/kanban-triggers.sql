@@ -1,4 +1,5 @@
 
+
 -- Função para criar um kanban card a partir de um alerta de evasão
 CREATE OR REPLACE FUNCTION public.create_kanban_card_from_alert()
  RETURNS trigger
@@ -139,7 +140,7 @@ BEGIN
   RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
   
   -- Preparar os dados para a requisição
-  -- IMPORTANTE: Usar parâmetros posicionais na ordem correta: URL, body, params, headers
+  -- IMPORTANTE: Parâmetros posicionais na ordem correta: URL, body, params, headers
   req_id := net.http_post(
     'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
     jsonb_build_object('record', row_to_json(NEW))::text,
