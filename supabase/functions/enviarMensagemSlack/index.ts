@@ -40,6 +40,24 @@ serve(async (req) => {
       professor = "Não informado",
       professorSlack = null
     } = await req.json();
+    
+    // Criar cliente Supabase para buscar informações adicionais
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.0.0");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Buscar o ID do Slack da coordenadora Chris Kulza
+    let coordenadoraSlack = null;
+    const { data: coordenadoraData, error: coordenadoraError } = await supabase
+      .from('professores')
+      .select('slack_username')
+      .ilike('nome', '%chris kulza%')
+      .single();
+      
+    if (!coordenadoraError && coordenadoraData) {
+      coordenadoraSlack = coordenadoraData.slack_username;
+    }
 
     // Formatar a mensagem conforme o template
     let mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
@@ -58,8 +76,12 @@ serve(async (req) => {
       mensagem += `\n<@${professorSlack}>`;
     }
     
-    // Sempre mencionar a Chris Kulza para acompanhamento
-    mensagem += "\n<@Chris Kulza> para acompanhamento.";
+    // Mencionar a Chris Kulza para acompanhamento (com ID do Slack, se disponível)
+    if (coordenadoraSlack) {
+      mensagem += `\n<@${coordenadoraSlack}> para acompanhamento.`;
+    } else {
+      mensagem += "\n<@Chris Kulza> para acompanhamento."; // Fallback caso não encontre
+    }
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
