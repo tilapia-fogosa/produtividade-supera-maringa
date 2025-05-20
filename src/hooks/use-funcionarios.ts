@@ -26,7 +26,7 @@ export interface Funcionario {
   data_onboarding?: string | null;
 }
 
-export function useFuncionarios() {
+export function useFuncionarios(filtrarPorCargo?: string) {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +35,18 @@ export function useFuncionarios() {
     try {
       setLoading(true);
       
-      const { data: funcionariosData, error } = await supabase
+      let query = supabase
         .from('funcionarios')
         .select('*, turma:turmas(id, nome)')
-        .eq('active', true) // Garantir que só recuperamos funcionários ativos
+        .eq('active', true)
         .order('nome');
+      
+      // Se um cargo específico foi solicitado, filtre por ele
+      if (filtrarPorCargo) {
+        query = query.eq('cargo', filtrarPorCargo);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Erro ao buscar funcionários:', error);
@@ -47,10 +54,10 @@ export function useFuncionarios() {
         return;
       }
 
-      console.log('Funcionários encontrados:', funcionariosData);
+      console.log('Funcionários encontrados:', data);
 
       // Transforma os dados para garantir que correspondam à interface Funcionario
-      const funcionariosFormatados = funcionariosData?.map(item => {
+      const funcionariosFormatados = data?.map(item => {
         const turmaData = item.turma;
         const turmaValida = turmaData && 
                           typeof turmaData === 'object' && 
@@ -77,15 +84,19 @@ export function useFuncionarios() {
 
   useEffect(() => {
     fetchFuncionarios();
-  }, []);
+  }, [filtrarPorCargo]);
 
   const adicionarFuncionario = async (funcionario: Omit<Funcionario, 'id' | 'created_at' | 'active'>) => {
     try {
+      // ID da unidade de Maringá como padrão
+      const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+      
       const { data, error } = await supabase
         .from('funcionarios')
         .insert([{ 
           ...funcionario,
-          active: true 
+          active: true,
+          unit_id: MARINGA_UNIT_ID // Definindo Maringá como unidade padrão
         }])
         .select()
         .single();
@@ -101,7 +112,7 @@ export function useFuncionarios() {
       
       toast({
         title: "Sucesso",
-        description: "Funcionário adicionado com sucesso!",
+        description: `${funcionario.cargo?.toLowerCase() === 'estagiario' ? 'Estagiário' : 'Funcionário'} adicionado com sucesso!`,
         variant: "default"
       });
       
@@ -137,7 +148,7 @@ export function useFuncionarios() {
         console.error('Erro de atualização:', error);
         toast({
           title: "Erro",
-          description: `Não foi possível atualizar o funcionário: ${error.message}`,
+          description: `Não foi possível atualizar o ${dados.cargo?.toLowerCase() === 'estagiario' ? 'estagiário' : 'funcionário'}: ${error.message}`,
           variant: "destructive"
         });
         return false;
@@ -145,7 +156,7 @@ export function useFuncionarios() {
       
       toast({
         title: "Sucesso",
-        description: "Funcionário atualizado com sucesso!",
+        description: `${dados.cargo?.toLowerCase() === 'estagiario' ? 'Estagiário' : 'Funcionário'} atualizado com sucesso!`,
         variant: "default"
       });
       
@@ -205,8 +216,20 @@ export function useFuncionarios() {
     }
   };
 
+  // Função para filtrar estagiários
+  const getEstagiarios = () => {
+    return funcionarios.filter(f => f.cargo?.toLowerCase() === 'estagiario');
+  };
+
+  // Função para filtrar apenas funcionários não-estagiários
+  const getFuncionariosNaoEstagiarios = () => {
+    return funcionarios.filter(f => f.cargo?.toLowerCase() !== 'estagiario');
+  };
+
   return {
     funcionarios,
+    estagiarios: getEstagiarios(),
+    funcionariosNaoEstagiarios: getFuncionariosNaoEstagiarios(),
     loading,
     error,
     adicionarFuncionario,

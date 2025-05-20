@@ -13,6 +13,7 @@ const FuncionariosList = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentFuncionario, setCurrentFuncionario] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filtro, setFiltro] = useState('todos');
 
   const handleOpenDialog = (funcionario?: any) => {
     setCurrentFuncionario(funcionario);
@@ -44,6 +45,12 @@ const FuncionariosList = () => {
     }
   };
 
+  const funcionariosFiltrados = funcionarios.filter(funcionario => {
+    if (filtro === 'todos') return true;
+    if (filtro === 'estagiarios') return funcionario.cargo?.toLowerCase() === 'estagiario';
+    return funcionario.cargo?.toLowerCase() !== 'estagiario';
+  });
+
   if (loading) {
     return (
       <div className="w-full flex justify-center py-8">
@@ -55,16 +62,46 @@ const FuncionariosList = () => {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Funcionários</CardTitle>
+        <div>
+          <CardTitle>Funcionários e Estagiários</CardTitle>
+          <div className="mt-2 flex space-x-2">
+            <Button 
+              variant={filtro === 'todos' ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFiltro('todos')}
+            >
+              Todos
+            </Button>
+            <Button 
+              variant={filtro === 'funcionarios' ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFiltro('funcionarios')}
+            >
+              Funcionários
+            </Button>
+            <Button 
+              variant={filtro === 'estagiarios' ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFiltro('estagiarios')}
+            >
+              Estagiários
+            </Button>
+          </div>
+        </div>
         <Button onClick={() => handleOpenDialog()}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Adicionar Funcionário
+          Adicionar {filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}
         </Button>
       </CardHeader>
       <CardContent>
-        {funcionarios.length === 0 ? (
+        {funcionariosFiltrados.length === 0 ? (
           <div className="text-center py-4 text-gray-500">
-            Nenhum funcionário cadastrado. Clique em "Adicionar Funcionário" para começar.
+            {filtro === 'estagiarios' 
+              ? 'Nenhum estagiário cadastrado.'
+              : filtro === 'funcionarios'
+                ? 'Nenhum funcionário cadastrado.'
+                : 'Nenhum funcionário ou estagiário cadastrado.'}
+            {' '}Clique em "Adicionar {filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}" para começar.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -79,7 +116,7 @@ const FuncionariosList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {funcionarios.map((funcionario) => (
+                {funcionariosFiltrados.map((funcionario) => (
                   <TableRow key={funcionario.id}>
                     <TableCell className="font-medium">{funcionario.nome}</TableCell>
                     <TableCell>{funcionario.email || '-'}</TableCell>
@@ -114,7 +151,9 @@ const FuncionariosList = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {currentFuncionario ? 'Editar Funcionário' : 'Adicionar Funcionário'}
+              {currentFuncionario 
+                ? `Editar ${currentFuncionario.cargo?.toLowerCase() === 'estagiario' ? 'Estagiário' : 'Funcionário'}`
+                : `Adicionar ${filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}`}
             </DialogTitle>
           </DialogHeader>
           <FuncionarioForm
@@ -122,6 +161,7 @@ const FuncionariosList = () => {
             onSubmit={handleSubmit}
             onCancel={handleCloseDialog}
             isSubmitting={isSubmitting}
+            tipoSelecionado={filtro === 'estagiarios' ? 'estagiario' : ''}
           />
         </DialogContent>
       </Dialog>
