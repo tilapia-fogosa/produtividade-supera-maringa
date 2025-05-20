@@ -18,7 +18,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       setIsSending(true);
       toast({
         title: "Enviando...",
-        description: "Criando alerta de teste",
+        description: "Criando alerta de teste e enviando para o Slack",
       });
       
       console.log('Iniciando criação de alerta de evasão de teste');
@@ -28,7 +28,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         .from('alerta_evasao')
         .insert({
           aluno_id: alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e', // ID de aluno válido da base de dados
-          descritivo: 'Este é um alerta de teste',
+          descritivo: 'Este é um alerta de teste enviado para o Slack',
           origem_alerta: 'outro', // Valor válido do enum
           responsavel: 'Sistema de Teste'
         })
@@ -59,15 +59,52 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         console.log('Card do kanban criado:', kanbanCard);
       }
 
+      // Buscar informações do aluno para enviar ao Slack
+      const { data: alunoData, error: alunoError } = await supabase
+        .from('alunos')
+        .select('nome')
+        .eq('id', alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e')
+        .single();
+
+      if (alunoError) {
+        console.warn('Não foi possível obter dados do aluno:', alunoError);
+      }
+
+      // Chamar a edge function para enviar mensagem ao Slack
+      try {
+        console.log('Enviando alerta para o Slack...');
+        const { data: slackResponse, error: slackError } = await supabase.functions.invoke(
+          'enviarMensagemSlack', 
+          {
+            body: { 
+              aluno: alunoData?.nome || 'Aluno de Teste',
+              dataAlerta: new Date().toLocaleDateString('pt-BR'),
+              responsavel: 'Sistema de Teste',
+              descritivo: 'Este é um alerta de teste enviado para o Slack',
+              origem: 'outro',
+              dataRetencao: ''
+            }
+          }
+        );
+        
+        if (slackError) {
+          console.error('Erro ao enviar para o Slack:', slackError);
+        } else {
+          console.log('Resposta do Slack:', slackResponse);
+        }
+      } catch (slackError) {
+        console.error('Erro ao invocar function de Slack:', slackError);
+      }
+
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão criado com sucesso!",
+        description: "Alerta de evasão criado com sucesso e enviado ao Slack!",
       });
     } catch (error) {
       console.error('Erro ao testar alerta de evasão:', error);
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao criar o alerta de evasão",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao enviar o alerta de evasão",
         variant: "destructive"
       });
     } finally {
@@ -88,7 +125,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       ) : (
         <SendIcon className="mr-2 h-4 w-4" />
       )}
-      {isSending ? 'Enviando...' : 'Testar Alerta de Evasão'}
+      {isSending ? 'Enviando...' : 'Testar Alerta de Evasão no Slack'}
     </Button>
   );
 };

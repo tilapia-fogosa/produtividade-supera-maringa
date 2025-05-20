@@ -13,6 +13,9 @@ verify_jwt = false
 [functions.test-slack-message]
 verify_jwt = false
 
+[functions.enviarMensagemSlack]
+verify_jwt = false
+
 [functions.check-hibernating-cards]
 verify_jwt = false
 
