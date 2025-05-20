@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,9 +83,9 @@ export const FuncionarioForm = ({
   };
 
   const handleTurmaChange = (value: string) => {
-    // Se o valor for "sem-turma", definimos como string vazia para o formulário
-    // (será convertido para null na função de submit)
+    // Se o valor for "sem-turma", vamos tratar explicitamente como string vazia
     const turmaId = value === "sem-turma" ? "" : value;
+    console.log("Valor selecionado para turma_id:", turmaId, "Tipo:", typeof turmaId);
     setFormData(prev => ({ ...prev, turma_id: turmaId }));
   };
 
@@ -99,8 +98,15 @@ export const FuncionarioForm = ({
       return;
     }
     
-    console.log("Enviando dados:", formData); // Debugging
-    onSubmit(formData);
+    // Debug pré-submit
+    console.log("Enviando dados do formulário:", formData);
+    
+    // Criar uma cópia do formData para enviar
+    const dadosParaEnviar = {
+      ...formData
+    };
+    
+    onSubmit(dadosParaEnviar);
   };
 
   return (

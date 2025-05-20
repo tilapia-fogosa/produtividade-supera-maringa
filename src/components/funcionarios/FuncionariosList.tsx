@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useFuncionarios } from '@/hooks/use-funcionarios';
 import { Button } from "@/components/ui/button";
@@ -25,14 +26,23 @@ const FuncionariosList = () => {
   };
 
   const handleSubmit = async (data: any) => {
+    console.log("FuncionariosList recebeu dados para submit:", data);
+    
     setIsSubmitting(true);
     try {
       if (currentFuncionario?.id) {
         await atualizarFuncionario(currentFuncionario.id, data);
       } else {
-        await adicionarFuncionario(data);
+        // Debug adicional para verificar os dados recebidos no componente pai
+        console.log("Tentando adicionar funcionário com dados:", JSON.stringify(data));
+        
+        // Certifique-se de que a turma_id é adequadamente tratada (null ou UUID válido)
+        const result = await adicionarFuncionario(data);
+        console.log("Resultado da adição:", result);
       }
       handleCloseDialog();
+    } catch (error) {
+      console.error("Erro ao processar funcionário:", error);
     } finally {
       setIsSubmitting(false);
     }

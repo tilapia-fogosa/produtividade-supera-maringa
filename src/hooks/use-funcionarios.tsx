@@ -60,20 +60,23 @@ export function useFuncionarios() {
       // ID exato da unidade de Maringá
       const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
       
-      // Preparar os dados tratando campos vazios para evitar erro de UUID
+      // Criar uma cópia dos dados para não modificar o objeto original
       const dadosParaEnviar = {
         ...funcionario,
         active: true,
         unit_id: MARINGA_UNIT_ID
       };
       
-      // Verificar se turma_id está vazio e convertê-lo para null se estiver
-      if (dadosParaEnviar.turma_id === '') {
+      // Tratamento explícito para turma_id
+      // Se for string vazia ou undefined ou null, definir como null explicitamente
+      if (!dadosParaEnviar.turma_id || dadosParaEnviar.turma_id === '') {
         dadosParaEnviar.turma_id = null;
       }
       
-      // Debug para verificar o que está sendo enviado
-      console.log('Adicionando funcionário:', dadosParaEnviar);
+      // Debug detalhado para verificar o formato exato dos dados
+      console.log('Tipo de turma_id:', typeof dadosParaEnviar.turma_id);
+      console.log('Valor de turma_id:', dadosParaEnviar.turma_id);
+      console.log('Adicionando funcionário (dados completos):', dadosParaEnviar);
       
       const { data, error } = await supabase
         .from('funcionarios')
