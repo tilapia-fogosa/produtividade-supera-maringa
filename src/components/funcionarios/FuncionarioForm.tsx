@@ -19,13 +19,15 @@ interface FuncionarioFormProps {
   onSubmit: (data: Partial<Funcionario>) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  tipoSelecionado?: string; // Adicionando a propriedade tipoSelecionado como opcional
 }
 
 export const FuncionarioForm = ({
   funcionario,
   onSubmit,
   onCancel,
-  isSubmitting
+  isSubmitting,
+  tipoSelecionado
 }: FuncionarioFormProps) => {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const [formData, setFormData] = useState({
@@ -45,8 +47,14 @@ export const FuncionarioForm = ({
         cargo: funcionario.cargo || '',
         turma_id: funcionario.turma_id || '',
       });
+    } else if (tipoSelecionado) {
+      // Se não tiver funcionário, mas tiver tipo selecionado, inicializa o cargo
+      setFormData(prev => ({
+        ...prev,
+        cargo: tipoSelecionado
+      }));
     }
-  }, [funcionario]);
+  }, [funcionario, tipoSelecionado]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
