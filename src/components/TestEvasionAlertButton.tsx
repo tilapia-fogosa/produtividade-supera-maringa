@@ -18,7 +18,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       setIsSending(true);
       toast({
         title: "Enviando...",
-        description: "Criando alerta de teste e enviando para o Slack",
+        description: "Criando alerta de teste",
       });
       
       console.log('Iniciando criação de alerta de evasão de teste');
@@ -28,7 +28,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         .from('alerta_evasao')
         .insert({
           aluno_id: alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e', // ID de aluno válido da base de dados
-          descritivo: 'Este é um alerta de teste enviado para o Slack',
+          descritivo: 'Este é um alerta de teste',
           origem_alerta: 'outro', // Valor válido do enum
           responsavel: 'Sistema de Teste'
         })
@@ -42,9 +42,6 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
 
       console.log('Alerta criado com sucesso:', alertaData);
 
-      // O trigger criado deve chamar automaticamente a função notify_evasion_alert()
-      // que por sua vez chamará a edge function send-evasion-alert-slack
-      
       // Verificação adicional para garantir que o alerta foi processado
       // Esperar 3 segundos para dar tempo ao trigger
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -62,34 +59,15 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         console.log('Card do kanban criado:', kanbanCard);
       }
 
-      // Tentando chamar a edge function diretamente como backup (caso o trigger falhe)
-      try {
-        console.log('Tentando chamar a edge function diretamente...');
-        const { data: functionResponse, error: functionError } = await supabase.functions.invoke(
-          'send-evasion-alert-slack', 
-          {
-            body: { record: alertaData }
-          }
-        );
-        
-        if (functionError) {
-          console.error('Erro ao chamar edge function diretamente:', functionError);
-        } else {
-          console.log('Resposta da edge function:', functionResponse);
-        }
-      } catch (funcError) {
-        console.error('Erro ao invocar edge function diretamente:', funcError);
-      }
-      
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão criado com sucesso! Verifique os logs para confirmar o envio ao Slack.",
+        description: "Alerta de evasão criado com sucesso!",
       });
     } catch (error) {
       console.error('Erro ao testar alerta de evasão:', error);
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao enviar o alerta de evasão",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao criar o alerta de evasão",
         variant: "destructive"
       });
     } finally {
@@ -110,7 +88,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       ) : (
         <SendIcon className="mr-2 h-4 w-4" />
       )}
-      {isSending ? 'Enviando...' : 'Testar Alerta de Evasão no Slack'}
+      {isSending ? 'Enviando...' : 'Testar Alerta de Evasão'}
     </Button>
   );
 };
