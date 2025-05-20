@@ -21,13 +21,80 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         description: "Criando alerta de teste e enviando para o Slack",
       });
       
-      console.log('Iniciando criação de alerta de evasão de teste');
+      // ID de aluno padrão (apenas use se nenhum for fornecido)
+      const aluno_id = alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e';
+      
+      console.log('Iniciando criação de alerta de evasão de teste para aluno ID:', aluno_id);
+      
+      // Primeiro, buscar todos os dados necessários do aluno e sua turma
+      const { data: alunoData, error: alunoError } = await supabase
+        .from('alunos')
+        .select(`
+          nome, 
+          turma_id,
+          turmas(
+            id,
+            nome,
+            dia_semana,
+            horario,
+            professor_id,
+            professores(
+              nome,
+              slack_username
+            )
+          )
+        `)
+        .eq('id', aluno_id)
+        .single();
+
+      if (alunoError) {
+        console.error('Erro ao buscar dados do aluno:', alunoError);
+        throw new Error(`Erro ao buscar dados do aluno: ${alunoError.message}`);
+      }
+
+      console.log('Dados do aluno obtidos:', alunoData);
+      
+      // Formatar informações da turma com dia e horário
+      let turmaNome = 'Não informada';
+      let professorNome = 'Não informado';
+      let professorSlack = null;
+      
+      if (alunoData.turmas) {
+        const turma = alunoData.turmas;
+        // Formatar o nome da turma com dia e horário
+        let diaSemanaFormatado = turma.dia_semana;
+        
+        // Converter para formato mais amigável
+        if (turma.dia_semana === 'segunda') diaSemanaFormatado = '2ª';
+        else if (turma.dia_semana === 'terca') diaSemanaFormatado = '3ª';
+        else if (turma.dia_semana === 'quarta') diaSemanaFormatado = '4ª';
+        else if (turma.dia_semana === 'quinta') diaSemanaFormatado = '5ª';
+        else if (turma.dia_semana === 'sexta') diaSemanaFormatado = '6ª';
+        else if (turma.dia_semana === 'sabado') diaSemanaFormatado = 'Sábado';
+        else if (turma.dia_semana === 'domingo') diaSemanaFormatado = 'Domingo';
+        
+        // Formatar horário
+        const horario = turma.horario ? turma.horario.substring(0, 5) : '00:00';
+        turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+        
+        // Dados do professor
+        if (turma.professores) {
+          professorNome = turma.professores.nome || 'Não informado';
+          professorSlack = turma.professores.slack_username;
+        }
+        
+        console.log('Dados formatados da turma:', { 
+          turmaNome, 
+          professorNome, 
+          professorSlack 
+        });
+      }
       
       // Criar um alerta de evasão de teste
       const { data: alertaData, error: alertaError } = await supabase
         .from('alerta_evasao')
         .insert({
-          aluno_id: alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e', // ID de aluno válido da base de dados
+          aluno_id: aluno_id,
           descritivo: 'Este é um alerta de teste enviado para o Slack',
           origem_alerta: 'outro', // Valor válido do enum
           responsavel: 'Sistema de Teste'
@@ -59,46 +126,14 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         console.log('Card do kanban criado:', kanbanCard);
       }
 
-      // Buscar informações do aluno para enviar ao Slack
-      const { data: alunoData, error: alunoError } = await supabase
-        .from('alunos')
-        .select('nome, turma_id')
-        .eq('id', alunoId || 'f8cf9249-e247-41b2-a004-2d937c721f5e')
-        .single();
-
-      if (alunoError) {
-        console.warn('Não foi possível obter dados do aluno:', alunoError);
-      }
-
-      // Buscar informações da turma e professor
-      let turmaNome = 'Não informada';
-      let professorNome = 'Não informado';
-      let professorSlack = null;
-      
-      if (alunoData?.turma_id) {
-        const { data: turmaData, error: turmaError } = await supabase
-          .from('turmas')
-          .select('nome, professor_id, professor:professores(nome, slack_username)')
-          .eq('id', alunoData.turma_id)
-          .single();
-          
-        if (!turmaError && turmaData) {
-          turmaNome = turmaData.nome || 'Não informada';
-          professorNome = turmaData.professor?.nome || 'Não informado';
-          professorSlack = turmaData.professor?.slack_username || null;
-        } else {
-          console.warn('Não foi possível obter dados da turma:', turmaError);
-        }
-      }
-
-      // Chamar a edge function para enviar mensagem ao Slack
+      // Chamar a edge function para enviar mensagem ao Slack com os dados corretos
       try {
         console.log('Enviando alerta para o Slack...');
         const { data: slackResponse, error: slackError } = await supabase.functions.invoke(
           'enviarMensagemSlack', 
           {
             body: { 
-              aluno: alunoData?.nome || 'Aluno de Teste',
+              aluno: alunoData.nome || 'Aluno de Teste',
               dataAlerta: new Date().toLocaleDateString('pt-BR'),
               responsavel: 'Sistema de Teste',
               descritivo: 'Este é um alerta de teste enviado para o Slack',
@@ -107,7 +142,8 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
               turma: turmaNome,
               professor: professorNome,
               professorSlack: professorSlack,
-              username: 'Sistema Kadin'
+              username: 'Sistema Kadin',
+              cardId: kanbanCard?.id || ''
             }
           }
         );
