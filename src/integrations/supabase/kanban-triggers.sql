@@ -120,75 +120,75 @@ CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  anon_key TEXT;
   req_id BIGINT;
   response RECORD;
+  supabase_url TEXT;
+  anon_key TEXT;
   payload TEXT;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
   
-  -- Buscar a chave anônima da tabela dados_importantes
-  SELECT data INTO anon_key
-  FROM dados_importantes
-  WHERE key = 'SUPABASE_ANON_KEY';
+  -- Usar valores hardcoded para as credenciais
+  -- O URL do projeto Supabase é definido automaticamente como variável de ambiente
+  supabase_url := 'https://hkvjdxxndapxpslovrlc.supabase.co';
   
-  IF anon_key IS NULL THEN
-    RAISE WARNING 'SUPABASE_ANON_KEY não encontrada na tabela dados_importantes';
-    RETURN NEW;
-  END IF;
+  -- Usar a chave anon diretamente - ela é pública e pode ser hardcoded
+  anon_key := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTA2MDcsImV4cCI6MjA1ODE2NjYwN30.wuocrBFksyYuPGQm4UKcGzQx94PwFXCxdrb_pG5-N08';
 
-  RAISE NOTICE 'Chave anon_key encontrada, chamando edge function.';
+  RAISE NOTICE 'URL Supabase: %', supabase_url;
+  RAISE NOTICE 'Usando anon_key: %...', LEFT(anon_key, 10);
   
-  -- Construir payload e converter para texto
-  payload := jsonb_build_object('record', row_to_json(NEW))::text;
+  -- Construir payload mais simples, apenas com o ID do alerta
+  payload := jsonb_build_object('record', jsonb_build_object('id', NEW.id))::text;
   RAISE NOTICE 'Payload preparado: %', payload;
   
-  -- Preparar os dados para a requisição
-  -- IMPORTANTE: Parâmetros posicionais na ordem correta: URL, body, params, headers
   BEGIN
-    req_id := net.http_post(
-      'https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/send-evasion-alert-slack',
-      payload,
-      '{}'::jsonb,
-      jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || anon_key
-      )
-    );
-
-    -- Log do ID da requisição
-    RAISE NOTICE 'Requisição enviada com ID: %', req_id;
-    
-    -- Aguardar um curto período para garantir que a requisição foi processada
-    PERFORM pg_sleep(2); -- Espera 2 segundos para dar tempo de processar
-    
-    -- Tentar obter a resposta (pode não estar disponível imediatamente)
+    -- Chamada HTTP para a edge function com os parâmetros na ordem correta
+    -- URL, body, params, headers
     BEGIN
-      SELECT * INTO response FROM net.http_get_response(req_id);
-      RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', 
-                  response.status_code, response.content;
-                  
-      -- Verificar se o status code indica erro
-      IF response.status_code >= 400 THEN
-        RAISE WARNING 'Erro na resposta da API: status code %', response.status_code;
-      END IF;
+      req_id := net.http_post(
+        supabase_url || '/functions/v1/send-evasion-alert-slack',
+        payload,
+        '{}'::jsonb,
+        jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || anon_key
+        )
+      );
+
+      RAISE NOTICE 'Requisição enviada com ID: %', req_id;
+      
+      -- Aguardar um período mais longo para garantir que a requisição foi processada
+      PERFORM pg_sleep(5); -- Aumentado para 5 segundos para dar mais tempo
+      
+      -- Tentar obter a resposta 
+      BEGIN
+        SELECT * INTO response FROM net.http_get_response(req_id);
+        
+        RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', 
+                   response.status_code, response.content;
+                   
+        -- Verificar se o status code indica erro
+        IF response.status_code >= 400 THEN
+          RAISE WARNING 'Erro na resposta da API: status code %', response.status_code;
+        END IF;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE NOTICE 'Erro ao obter resposta: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+          RAISE NOTICE 'Resposta ainda não disponível, mas a requisição foi enviada.';
+      END;
     EXCEPTION
       WHEN OTHERS THEN
-        RAISE NOTICE 'Erro ao obter resposta: %, SQLSTATE: %', SQLERRM, SQLSTATE;
-        RAISE NOTICE 'Resposta ainda não disponível, mas a requisição foi enviada.';
+        -- Em caso de erro na chamada HTTP, registrar o erro
+        RAISE WARNING 'Erro ao chamar a edge function: %, SQLSTATE: %', SQLERRM, SQLSTATE;
     END;
   EXCEPTION
     WHEN OTHERS THEN
-      -- Em caso de erro na chamada HTTP, registrar o erro
-      RAISE WARNING 'Erro ao chamar a edge function: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+      -- Em caso de erro, registrar o erro mas permitir que o fluxo continue
+      RAISE WARNING 'Erro ao enviar alerta para Slack: %, SQLSTATE: %', SQLERRM, SQLSTATE;
   END;
   
   RETURN NEW;
-EXCEPTION
-  WHEN OTHERS THEN
-    -- Em caso de erro, registrar o erro mas permitir que o fluxo continue
-    RAISE WARNING 'Erro ao enviar alerta para Slack: %, SQLSTATE: %', SQLERRM, SQLSTATE;
-    RETURN NEW;
 END;
 $function$;
 
