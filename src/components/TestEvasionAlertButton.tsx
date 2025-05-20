@@ -73,17 +73,19 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       // Buscar informações da turma e professor
       let turmaNome = 'Não informada';
       let professorNome = 'Não informado';
+      let professorSlack = null;
       
       if (alunoData?.turma_id) {
         const { data: turmaData, error: turmaError } = await supabase
           .from('turmas')
-          .select('nome, professor:professores(nome)')
+          .select('nome, professor_id, professor:professores(nome, slack_username)')
           .eq('id', alunoData.turma_id)
           .single();
           
         if (!turmaError && turmaData) {
           turmaNome = turmaData.nome || 'Não informada';
           professorNome = turmaData.professor?.nome || 'Não informado';
+          professorSlack = turmaData.professor?.slack_username || null;
         } else {
           console.warn('Não foi possível obter dados da turma:', turmaError);
         }
@@ -104,6 +106,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
               dataRetencao: '',
               turma: turmaNome,
               professor: professorNome,
+              professorSlack: professorSlack,
               username: 'Sistema Kadin'
             }
           }

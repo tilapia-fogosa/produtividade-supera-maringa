@@ -37,11 +37,12 @@ serve(async (req) => {
       canal = "C05UB69SDU7",
       username = "Sistema Kadin",
       turma = "Não informada",
-      professor = "Não informado"
+      professor = "Não informado",
+      professorSlack = null
     } = await req.json();
 
     // Formatar a mensagem conforme o template
-    const mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
+    let mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
 
 *Aluno:* ${aluno}
 *Turma:* ${turma}
@@ -50,8 +51,15 @@ serve(async (req) => {
 *Responsável Alerta:* ${responsavel}
 *Informações:* ${descritivo}
 *Origem do Alerta:* ${origem}
-*Retenção agendada? Data:* ${dataRetencao || "Não agendada"}
-@Chris Kulza para acompanhamento.`;
+*Retenção agendada? Data:* ${dataRetencao || "Não agendada"}`;
+
+    // Adicionar menções se tivermos os IDs do Slack
+    if (professorSlack) {
+      mensagem += `\n@${professorSlack}`;
+    }
+    
+    // Sempre mencionar a Chris Kulza para acompanhamento
+    mensagem += "\n@Chris Kulza para acompanhamento.";
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
