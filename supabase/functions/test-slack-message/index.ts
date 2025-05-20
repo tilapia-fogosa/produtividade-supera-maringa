@@ -18,7 +18,24 @@ serve(async (req) => {
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const slackToken = Deno.env.get('SLACK_BOT_TOKEN')!;
+    
+    const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+    
+    // Buscar o token do Slack da tabela dados_importantes
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('dados_importantes')
+      .select('data')
+      .eq('key', 'SLACK_BOT_TOKEN')
+      .single();
+    
+    if (tokenError || !tokenData || !tokenData.data) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token do Slack não configurado na tabela dados_importantes' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    const slackToken = tokenData.data;
 
     if (!slackToken) {
       return new Response(
@@ -26,14 +43,12 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
-
-    const supabase = createClient<Database>(supabaseUrl, supabaseKey);
     
     // Buscar ID do canal do Slack da tabela dados_importantes
     const { data: canalData, error: canalError } = await supabase
       .from('dados_importantes')
       .select('data')
-      .eq('key', 'slack_channel_id_alertas_falta')
+      .eq('key', 'canal_alertas_falta')
       .single();
     
     if (canalError || !canalData || !canalData.data) {

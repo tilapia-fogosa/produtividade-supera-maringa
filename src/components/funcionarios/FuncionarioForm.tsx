@@ -54,11 +54,21 @@ export const FuncionarioForm = ({
   };
 
   const handleTurmaChange = (value: string) => {
-    setFormData(prev => ({ ...prev, turma_id: value }));
+    // Se o valor for "sem-turma", definimos como null para salvar no banco
+    const turmaId = value === "sem-turma" ? null : value;
+    setFormData(prev => ({ ...prev, turma_id: turmaId }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Valida se nome está preenchido
+    if (!formData.nome.trim()) {
+      // Mostra um erro ou aviso para o usuário
+      alert("O nome do funcionário é obrigatório");
+      return;
+    }
+    
     onSubmit(formData);
   };
 
@@ -72,6 +82,8 @@ export const FuncionarioForm = ({
           value={formData.nome}
           onChange={handleChange}
           required
+          placeholder="Digite o nome do funcionário"
+          className="mt-1"
         />
       </div>
       
@@ -81,8 +93,10 @@ export const FuncionarioForm = ({
           id="email"
           name="email"
           type="email"
-          value={formData.email}
+          value={formData.email || ''}
           onChange={handleChange}
+          placeholder="Digite o email do funcionário"
+          className="mt-1"
         />
       </div>
       
@@ -91,8 +105,10 @@ export const FuncionarioForm = ({
         <Input
           id="telefone"
           name="telefone"
-          value={formData.telefone}
+          value={formData.telefone || ''}
           onChange={handleChange}
+          placeholder="Digite o telefone do funcionário"
+          className="mt-1"
         />
       </div>
       
@@ -101,19 +117,21 @@ export const FuncionarioForm = ({
         <Input
           id="cargo"
           name="cargo"
-          value={formData.cargo}
+          value={formData.cargo || ''}
           onChange={handleChange}
+          placeholder="Digite o cargo do funcionário"
+          className="mt-1"
         />
       </div>
 
       <div>
         <Label htmlFor="turma">Turma</Label>
         <Select
-          value={formData.turma_id}
+          value={formData.turma_id || 'sem-turma'}
           onValueChange={handleTurmaChange}
           disabled={loadingTurmas}
         >
-          <SelectTrigger>
+          <SelectTrigger className="mt-1">
             <SelectValue placeholder="Selecione uma turma" />
           </SelectTrigger>
           <SelectContent>
@@ -127,11 +145,20 @@ export const FuncionarioForm = ({
         </Select>
       </div>
       
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex justify-end gap-2 mt-6">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          className="px-4"
+        >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="px-4"
+        >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {funcionario ? 'Atualizar' : 'Adicionar'}
         </Button>

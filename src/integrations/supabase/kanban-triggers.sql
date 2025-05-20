@@ -113,3 +113,89 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+-- Função melhorada para notificar sobre alertas de evasão via Slack
+CREATE OR REPLACE FUNCTION public.notify_evasion_alert()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  req_id BIGINT;
+  response RECORD;
+  supabase_url TEXT;
+  anon_key TEXT;
+  payload TEXT;
+BEGIN
+  RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
+  
+  -- Usar valores hardcoded para as credenciais
+  -- O URL do projeto Supabase é definido automaticamente como variável de ambiente
+  supabase_url := 'https://hkvjdxxndapxpslovrlc.supabase.co';
+  
+  -- Usar a chave anon diretamente - ela é pública e pode ser hardcoded
+  anon_key := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTA2MDcsImV4cCI6MjA1ODE2NjYwN30.wuocrBFksyYuPGQm4UKcGzQx94PwFXCxdrb_pG5-N08';
+
+  RAISE NOTICE 'URL Supabase: %', supabase_url;
+  RAISE NOTICE 'Usando anon_key: %...', LEFT(anon_key, 10);
+  
+  -- Construir payload mais simples, apenas com o ID do alerta
+  payload := jsonb_build_object('record', jsonb_build_object('id', NEW.id))::text;
+  RAISE NOTICE 'Payload preparado: %', payload;
+  
+  BEGIN
+    -- Chamada HTTP para a edge function com os parâmetros na ordem correta
+    -- URL, body, params, headers
+    BEGIN
+      req_id := net.http_post(
+        supabase_url || '/functions/v1/send-evasion-alert-slack',
+        payload,
+        '{}'::jsonb,
+        jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || anon_key
+        )
+      );
+
+      RAISE NOTICE 'Requisição enviada com ID: %', req_id;
+      
+      -- Aguardar um período mais longo para garantir que a requisição foi processada
+      PERFORM pg_sleep(5); -- Aumentado para 5 segundos para dar mais tempo
+      
+      -- Tentar obter a resposta 
+      BEGIN
+        SELECT * INTO response FROM net.http_get_response(req_id);
+        
+        RAISE NOTICE 'Edge function chamada. Status: %, Resposta: %', 
+                   response.status_code, response.content;
+                   
+        -- Verificar se o status code indica erro
+        IF response.status_code >= 400 THEN
+          RAISE WARNING 'Erro na resposta da API: status code %', response.status_code;
+        END IF;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE NOTICE 'Erro ao obter resposta: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+          RAISE NOTICE 'Resposta ainda não disponível, mas a requisição foi enviada.';
+      END;
+    EXCEPTION
+      WHEN OTHERS THEN
+        -- Em caso de erro na chamada HTTP, registrar o erro
+        RAISE WARNING 'Erro ao chamar a edge function: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+    END;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- Em caso de erro, registrar o erro mas permitir que o fluxo continue
+      RAISE WARNING 'Erro ao enviar alerta para Slack: %, SQLSTATE: %', SQLERRM, SQLSTATE;
+  END;
+  
+  RETURN NEW;
+END;
+$function$;
+
+-- Recriar o trigger para garantir uso da função atualizada
+DROP TRIGGER IF EXISTS trigger_notify_evasion_alert ON alerta_evasao;
+
+CREATE TRIGGER trigger_notify_evasion_alert
+AFTER INSERT ON alerta_evasao
+FOR EACH ROW
+EXECUTE FUNCTION notify_evasion_alert();

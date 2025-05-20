@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,7 +96,7 @@ const CsvUploadComponent = () => {
       setErrorMessage(error instanceof Error ? error.message : "Erro ao processar o arquivo CSV");
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível processar o arquivo CSV",
+        description: error instanceof Error ? error.message : "N��o foi possível processar o arquivo CSV",
         variant: "destructive"
       });
     } finally {
