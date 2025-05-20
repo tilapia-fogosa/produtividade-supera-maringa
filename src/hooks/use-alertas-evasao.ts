@@ -262,7 +262,7 @@ export function useAlertasEvasao() {
                 aluno: aluno?.nome,
                 descricao: descritivo,
                 dataRetencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
-                responsavel: responsavel
+                responsavel: responsavelNome  // CORRIGIDO: mudado de responsavel para responsavelNome
               })
             });
           } catch (webhookError) {
@@ -322,7 +322,7 @@ export function useAlertasEvasao() {
               data: dataAlertaFormatada,
               origem: origemAlerta,
               descritivo,
-              responsavel,
+              responsavel: responsavelNome,  // CORRIGIDO: mudado de responsavel para responsavelNome
               data_retencao: dataRetencaoFormatada,
               historico: historicoCompleto
             }
