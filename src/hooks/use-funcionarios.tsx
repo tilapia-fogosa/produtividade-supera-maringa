@@ -57,8 +57,15 @@ export function useFuncionarios() {
 
   const adicionarFuncionario = async (funcionario: Omit<Funcionario, 'id' | 'created_at' | 'active'>) => {
     try {
-      // ID da unidade de Maringá como padrão
+      // ID exato da unidade de Maringá
       const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+      
+      // Debug para verificar o que está sendo enviado
+      console.log('Adicionando funcionário:', { 
+        ...funcionario,
+        active: true,
+        unit_id: MARINGA_UNIT_ID
+      });
       
       const { data, error } = await supabase
         .from('funcionarios')
@@ -71,6 +78,7 @@ export function useFuncionarios() {
         .single();
 
       if (error) {
+        console.error('Erro detalhado:', error);
         toast({
           title: "Erro",
           description: `Não foi possível adicionar o funcionário: ${error.message}`,

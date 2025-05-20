@@ -47,6 +47,9 @@ export const FuncionarioForm = ({
     cargo: '',
     turma_id: '',
   });
+  const [validationErrors, setValidationErrors] = useState({
+    nome: false
+  });
 
   useEffect(() => {
     if (funcionario) {
@@ -69,6 +72,11 @@ export const FuncionarioForm = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Limpar erro de validação ao digitar
+    if (name === 'nome' && value.trim() !== '') {
+      setValidationErrors(prev => ({ ...prev, nome: false }));
+    }
   };
 
   const handleCargoChange = (value: string) => {
@@ -86,11 +94,11 @@ export const FuncionarioForm = ({
     
     // Valida se nome está preenchido
     if (!formData.nome.trim()) {
-      // Mostra um erro ou aviso para o usuário
-      alert("O nome do funcionário é obrigatório");
+      setValidationErrors(prev => ({ ...prev, nome: true }));
       return;
     }
     
+    console.log("Enviando dados:", formData); // Debugging
     onSubmit(formData);
   };
 
@@ -105,8 +113,11 @@ export const FuncionarioForm = ({
           onChange={handleChange}
           required
           placeholder="Digite o nome do funcionário"
-          className="mt-1"
+          className={`mt-1 ${validationErrors.nome ? 'border-red-500' : ''}`}
         />
+        {validationErrors.nome && (
+          <p className="text-red-500 text-sm mt-1">Nome é obrigatório</p>
+        )}
       </div>
       
       <div>
