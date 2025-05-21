@@ -67,40 +67,18 @@ serve(async (req) => {
     const slackChannelId = canalData.data;
     console.log('ID do canal do Slack:', slackChannelId);
     
-    // Criar payload para envio
-    const blocks = [
-      {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: ":test_tube: Mensagem de Teste :test_tube:",
-          emoji: true
-        }
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "Esta é uma mensagem de teste do sistema de alertas de falta."
-        }
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "Se você está vendo esta mensagem, o sistema de notificações está funcionando corretamente!"
-        }
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: `:alarm_clock: Enviado em ${new Date().toLocaleString('pt-BR')}`
-          }
-        ]
-      }
-    ];
+    // Criar mensagem de teste no novo formato
+    const mensagemTexto = `Sistema Kadin
+⚠ Alerta de Teste - Mensagem de Teste ⚠
+Professor: Exemplo Professor
+@professor_exemplo
+
+Aluno: Aluno de Teste
+Tempo de Supera: 30
+Data: ${new Date().toLocaleDateString('pt-BR')}
+ATENÇÃO: Esta é uma mensagem de teste do sistema de alertas.
+Motivo da Falta: Teste do sistema
+@chriskulza para acompanhamento.`;
     
     // Enviar para a API do Slack
     const response = await fetch('https://slack.com/api/chat.postMessage', {
@@ -111,8 +89,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         channel: slackChannelId,
-        blocks: blocks,
-        text: "Mensagem de teste do sistema de alertas" // Fallback text
+        text: mensagemTexto,
+        username: "Sistema Kadin" // Define o nome do bot
       })
     });
     

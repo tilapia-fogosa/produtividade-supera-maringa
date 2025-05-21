@@ -402,28 +402,25 @@ async function buscarCoordenadorResponsavel(supabase: any, alunoId: string) {
 // Função para enviar alerta para o Slack
 async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, slackChannelId: string, alerta: any): Promise<boolean> {
   try {
-    // Formatar a mensagem para o Slack
-    let titulo = `:warning: Alerta de Falta`;
-    let corMensagem = "#FF9800"; // Cor laranja como padrão
+    // Formatar a mensagem para o Slack no novo formato solicitado
+    let titulo = `⚠ Alerta de Falta - `;
     
-    // Personalizar título e cor baseado no tipo de alerta
+    // Personalizar título baseado no tipo de alerta
     switch (alerta.tipo_criterio) {
       case 'consecutiva':
-        titulo = `:rotating_light: Alerta de Falta - Falta Recorrente :rotating_light:`;
-        corMensagem = "#FF0000"; // Vermelho para faltas consecutivas
+        titulo += `Falta Recorrente ⚠`;
         break;
       case 'frequencia_baixa':
-        titulo = `:warning: Alerta de Falta - Frequência Baixa :warning:`;
-        corMensagem = "#FFA500"; // Laranja para frequência baixa
+        titulo += `Frequência Baixa ⚠`;
         break;
       case 'primeira_apos_periodo':
-        titulo = `:bell: Alerta de Falta - Primeira Falta após Período :bell:`;
-        corMensagem = "#FFCC00"; // Amarelo para primeira falta após período
+        titulo += `Primeira Falta após Período ⚠`;
         break;
       case 'aluno_recente':
-        titulo = `:new: Alerta de Falta - Aluno Recente :new:`;
-        corMensagem = "#9932CC"; // Roxo para alunos recentes
+        titulo += `Aluno Recente ⚠`;
         break;
+      default:
+        titulo += `⚠`;
     }
     
     // Formatação do corpo da mensagem
@@ -448,74 +445,26 @@ async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, sl
     const dataFalta = new Date(alerta.data_falta);
     const dataFormatada = `${dataFalta.getDate().toString().padStart(2, '0')}/${(dataFalta.getMonth() + 1).toString().padStart(2, '0')}/${dataFalta.getFullYear()}`;
     
-    // Menção ao coordenador se disponível
-    const coordenador = await buscarCoordenadorResponsavel(supabase, alerta.aluno_id);
-    const mencaoCoordenador = coordenador ? `@${coordenador} para acompanhamento.` : '';
+    // Coordenadora hardcoded (Chris Kulza)
+    const coordenadoraSlack = "chriskulza"; // ID da Chris Kulza
     
-    // Construir o payload para o Slack
-    const blocks = [
-      {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: titulo,
-          emoji: true
-        }
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `Professor: ${alerta.professor_nome} ${alerta.professor_slack ? `\n@${alerta.professor_slack}` : ''}`
-        }
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `*Aluno:*\n${alerta.aluno_nome}`
-          },
-          {
-            type: "mrkdwn",
-            text: `*Tempo de Supera:*\n${alerta.dias_supera || "Não disponível"}`
-          },
-          {
-            type: "mrkdwn",
-            text: `*Data:*\n${dataFormatada}`
-          }
-        ]
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: detalheMensagem
-        }
-      }
-    ];
+    // Construir o texto da mensagem no formato solicitado
+    let mensagemTexto = `Sistema Kadin\n${titulo}\nProfessor: ${alerta.professor_nome}`;
+    
+    // Adicionar menção ao professor se disponível
+    if (alerta.professor_slack) {
+      mensagemTexto += `\n@${alerta.professor_slack}`;
+    }
+    
+    mensagemTexto += `\n\nAluno: ${alerta.aluno_nome}\nTempo de Supera: ${alerta.dias_supera || "Não disponível"}\nData: ${dataFormatada}\n${detalheMensagem}`;
     
     // Adicionar motivo da falta se disponível
     if (alerta.motivo_ultima_falta) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Motivo da Falta:*\n${alerta.motivo_ultima_falta}`
-        }
-      });
+      mensagemTexto += `\nMotivo da Falta: ${alerta.motivo_ultima_falta}`;
     }
     
-    // Adicionar menção ao coordenador se disponível
-    if (mencaoCoordenador) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: mencaoCoordenador
-        }
-      });
-    }
+    // Adicionar menção à Chris Kulza para acompanhamento
+    mensagemTexto += `\n@${coordenadoraSlack} para acompanhamento.`;
     
     // Enviar para a API do Slack usando token hardcoded
     const response = await fetch('https://slack.com/api/chat.postMessage', {
@@ -526,8 +475,8 @@ async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, sl
       },
       body: JSON.stringify({
         channel: SLACK_CHANNEL_ID, // Usa o canal hardcoded
-        blocks: blocks,
-        text: titulo // Fallback text
+        text: mensagemTexto,
+        username: "Sistema Kadin" // Define o nome do bot
       })
     });
     
