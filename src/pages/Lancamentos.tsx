@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, BookOpen, AlertTriangle, School } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
-import TestSlackButton from '@/components/TestSlackButton'; // Importamos o componente
 
 const Lancamentos = () => {
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ const Lancamentos = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-roxo-DEFAULT dark:text-foreground">Lançamentos</h1>
         <div className="flex gap-2">
-          <TestSlackButton /> {/* Adicionamos o botão de teste */}
           <GoogleSheetsSync />
         </div>
       </div>
