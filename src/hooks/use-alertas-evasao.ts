@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAlunos } from "@/hooks/use-alunos";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useResponsaveis, Responsavel } from '@/hooks/use-responsaveis';
 
 type OrigemAlerta = 'conversa_indireta' | 'aviso_recepcao' | 'aviso_professor_coordenador' | 'aviso_whatsapp' | 'inadimplencia' | 'outro';
 
@@ -17,12 +18,14 @@ export const origensAlerta = [
 
 export function useAlertasEvasao() {
   const { todosAlunos } = useAlunos();
+  const { responsaveis, isLoading: carregandoResponsaveis } = useResponsaveis();
   const [filtroAluno, setFiltroAluno] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
   const [dataAlerta, setDataAlerta] = useState('');
   const [origemAlerta, setOrigemAlerta] = useState<OrigemAlerta | null>(null);
   const [descritivo, setDescritivo] = useState('');
-  const [responsavel, setResponsavel] = useState('');
+  const [responsavelId, setResponsavelId] = useState<string | null>(null);
+  const [responsavelNome, setResponsavelNome] = useState('');
   const [dataRetencao, setDataRetencao] = useState('');
   const [historicoAlertas, setHistoricoAlertas] = useState<string | null>(null);
   const [alertasAnteriores, setAlertasAnteriores] = useState<any[]>([]);
@@ -33,6 +36,18 @@ export function useAlertasEvasao() {
   const alunosFiltrados = todosAlunos.filter(aluno => 
     aluno.nome.toLowerCase().includes(filtroAluno.toLowerCase())
   );
+
+  // Atualiza o nome do responsável quando o ID é selecionado
+  useEffect(() => {
+    if (responsavelId) {
+      const responsavelSelecionado = responsaveis.find(r => r.id === responsavelId);
+      if (responsavelSelecionado) {
+        setResponsavelNome(responsavelSelecionado.nome);
+      }
+    } else {
+      setResponsavelNome('');
+    }
+  }, [responsavelId, responsaveis]);
 
   // Buscar alertas anteriores e dados da aula zero quando o aluno é selecionado
   useEffect(() => {
@@ -131,7 +146,8 @@ export function useAlertasEvasao() {
     setDataAlerta('');
     setOrigemAlerta(null);
     setDescritivo('');
-    setResponsavel('');
+    setResponsavelId(null);
+    setResponsavelNome('');
     setDataRetencao('');
     setFiltroAluno('');
     setHistoricoAlertas(null);
@@ -172,7 +188,7 @@ export function useAlertasEvasao() {
           data_alerta: dataAlertaFormatada,
           origem_alerta: origemAlerta,
           descritivo,
-          responsavel,
+          responsavel: responsavelNome,
           data_retencao: dataRetencaoFormatada,
           kanban_status: initialColumn, // Define a coluna inicial
         })
@@ -185,6 +201,27 @@ export function useAlertasEvasao() {
 
       // Encontrar os dados do aluno selecionado
       const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
+
+      // Buscar dados da turma e professor para enviar ao Slack
+      let turmaNome = 'Não informada';
+      let professorNome = 'Não informado';
+      let professorSlack = null;
+      
+      if (aluno?.turma_id) {
+        const { data: turmaData, error: turmaError } = await supabase
+          .from('turmas')
+          .select('nome, professor_id, professor:professores(nome, slack_username)')
+          .eq('id', aluno.turma_id)
+          .single();
+          
+        if (!turmaError && turmaData) {
+          turmaNome = turmaData.nome || 'Não informada';
+          professorNome = turmaData.professor?.nome || 'Não informado';
+          professorSlack = turmaData.professor?.slack_username || null;
+        } else {
+          console.warn('Não foi possível obter dados da turma:', turmaError);
+        }
+      }
 
       // Se temos uma data de retenção, enviar para o webhook de agendamento
       if (dataRetencao && alertaData && alertaData.length > 0) {
@@ -225,13 +262,44 @@ export function useAlertasEvasao() {
                 aluno: aluno?.nome,
                 descricao: descritivo,
                 dataRetencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
-                responsavel: responsavel
+                responsavel: responsavelNome
               })
             });
           } catch (webhookError) {
             console.error('Erro ao enviar para webhook de retenção:', webhookError);
           }
         }
+      }
+
+      // Enviar mensagem para o Slack
+      try {
+        console.log('Enviando alerta para o Slack...');
+        const { data: slackResponse, error: slackError } = await supabase.functions.invoke(
+          'enviarMensagemSlack', 
+          {
+            body: { 
+              aluno: aluno?.nome || 'Aluno de Teste',
+              alunoId: alunoSelecionado, // Enviamos o ID do aluno
+              dataAlerta: new Date(dataAlerta).toLocaleDateString('pt-BR'),
+              responsavel: responsavelNome,
+              descritivo: descritivo,
+              origem: origemAlerta,
+              dataRetencao: dataRetencao ? new Date(dataRetencao).toLocaleDateString('pt-BR') : '',
+              turma: turmaNome,
+              professor: professorNome,
+              professorSlack: professorSlack,
+              username: 'Sistema Kadin'
+            }
+          }
+        );
+        
+        if (slackError) {
+          console.error('Erro ao enviar para o Slack:', slackError);
+        } else {
+          console.log('Resposta do Slack:', slackResponse);
+        }
+      } catch (slackError) {
+        console.error('Erro ao invocar function de Slack:', slackError);
       }
 
       // Sempre envia para o webhook geral de alertas
@@ -255,7 +323,7 @@ export function useAlertasEvasao() {
               data: dataAlertaFormatada,
               origem: origemAlerta,
               descritivo,
-              responsavel,
+              responsavel: responsavelNome,
               data_retencao: dataRetencaoFormatada,
               historico: historicoCompleto
             }
@@ -299,8 +367,9 @@ export function useAlertasEvasao() {
     setOrigemAlerta,
     descritivo,
     setDescritivo,
-    responsavel,
-    setResponsavel,
+    responsavelId,
+    setResponsavelId,
+    responsavelNome,
     dataRetencao,
     setDataRetencao,
     alertasAnteriores,
@@ -309,6 +378,8 @@ export function useAlertasEvasao() {
     dadosAulaZero,
     alunosFiltrados,
     isSubmitting,
+    responsaveis,
+    carregandoResponsaveis,
     handleSubmit,
     resetForm
   };

@@ -57,20 +57,35 @@ export function useFuncionarios() {
 
   const adicionarFuncionario = async (funcionario: Omit<Funcionario, 'id' | 'created_at' | 'active'>) => {
     try {
-      // ID da unidade de Maringá como padrão
+      // ID exato da unidade de Maringá
       const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+      
+      // Criar uma cópia dos dados para não modificar o objeto original
+      const dadosParaEnviar = {
+        ...funcionario,
+        active: true,
+        unit_id: MARINGA_UNIT_ID
+      };
+      
+      // Garantir que turma_id seja null quando não selecionado (não string vazia)
+      // Isso é crucial para evitar o erro "invalid syntax for type uuid"
+      if (dadosParaEnviar.turma_id === '' || dadosParaEnviar.turma_id === undefined) {
+        dadosParaEnviar.turma_id = null;
+      }
+      
+      // Debug detalhado para verificar o formato exato dos dados
+      console.log('Tipo de turma_id:', typeof dadosParaEnviar.turma_id);
+      console.log('Valor de turma_id:', dadosParaEnviar.turma_id);
+      console.log('Adicionando funcionário (dados completos):', dadosParaEnviar);
       
       const { data, error } = await supabase
         .from('funcionarios')
-        .insert([{ 
-          ...funcionario,
-          active: true,
-          unit_id: MARINGA_UNIT_ID // Definindo Maringá como unidade padrão
-        }])
+        .insert([dadosParaEnviar])
         .select()
         .single();
 
       if (error) {
+        console.error('Erro detalhado:', error);
         toast({
           title: "Erro",
           description: `Não foi possível adicionar o funcionário: ${error.message}`,
@@ -102,6 +117,11 @@ export function useFuncionarios() {
 
   const atualizarFuncionario = async (id: string, dados: Partial<Funcionario>) => {
     try {
+      // Garantir que turma_id seja null quando não selecionado (não string vazia)
+      if (dados.turma_id === '') {
+        dados.turma_id = null;
+      }
+      
       const { error } = await supabase
         .from('funcionarios')
         .update(dados)

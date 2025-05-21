@@ -2,10 +2,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, AlertTriangle, School, Send } from "lucide-react";
+import { TrendingUp, BookOpen, AlertTriangle, School } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
-import TestEvasionAlertButton from '@/components/TestEvasionAlertButton';
 
 const Lancamentos = () => {
   const navigate = useNavigate();
@@ -27,7 +26,9 @@ const Lancamentos = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-roxo-DEFAULT dark:text-foreground">Lançamentos</h1>
-        <GoogleSheetsSync />
+        <div className="flex gap-2">
+          <GoogleSheetsSync />
+        </div>
       </div>
       
       <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
@@ -67,11 +68,6 @@ const Lancamentos = () => {
           <AlertTriangle className="mr-2 h-6 w-6" />
           Lançar Alerta de Evasão
         </Button>
-
-        {/* Botão de teste de alerta de evasão */}
-        <div className="mt-4 flex justify-center">
-          <TestEvasionAlertButton />
-        </div>
       </div>
 
       <AlertaEvasaoModal 

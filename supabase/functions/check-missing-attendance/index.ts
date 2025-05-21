@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { Database } from "../_shared/database-types.ts";
@@ -7,6 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Valores hardcoded para o Slack
+const SLACK_BOT_TOKEN = "xoxb-your-hardcoded-slack-token-here";
+const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal para alertas de falta
+const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/your/webhook/url";
 
 // Função para verificar faltas consecutivas
 async function verificarFaltasConsecutivas(supabase: any, diasLimite = 2) {
@@ -398,28 +402,25 @@ async function buscarCoordenadorResponsavel(supabase: any, alunoId: string) {
 // Função para enviar alerta para o Slack
 async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, slackChannelId: string, alerta: any): Promise<boolean> {
   try {
-    // Formatar a mensagem para o Slack
-    let titulo = `:warning: Alerta de Falta`;
-    let corMensagem = "#FF9800"; // Cor laranja como padrão
+    // Formatar a mensagem para o Slack no novo formato solicitado
+    let titulo = `⚠ Alerta de Falta - `;
     
-    // Personalizar título e cor baseado no tipo de alerta
+    // Personalizar título baseado no tipo de alerta
     switch (alerta.tipo_criterio) {
       case 'consecutiva':
-        titulo = `:rotating_light: Alerta de Falta - Falta Recorrente :rotating_light:`;
-        corMensagem = "#FF0000"; // Vermelho para faltas consecutivas
+        titulo += `Falta Recorrente ⚠`;
         break;
       case 'frequencia_baixa':
-        titulo = `:warning: Alerta de Falta - Frequência Baixa :warning:`;
-        corMensagem = "#FFA500"; // Laranja para frequência baixa
+        titulo += `Frequência Baixa ⚠`;
         break;
       case 'primeira_apos_periodo':
-        titulo = `:bell: Alerta de Falta - Primeira Falta após Período :bell:`;
-        corMensagem = "#FFCC00"; // Amarelo para primeira falta após período
+        titulo += `Primeira Falta após Período ⚠`;
         break;
       case 'aluno_recente':
-        titulo = `:new: Alerta de Falta - Aluno Recente :new:`;
-        corMensagem = "#9932CC"; // Roxo para alunos recentes
+        titulo += `Aluno Recente ⚠`;
         break;
+      default:
+        titulo += `⚠`;
     }
     
     // Formatação do corpo da mensagem
@@ -444,86 +445,38 @@ async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, sl
     const dataFalta = new Date(alerta.data_falta);
     const dataFormatada = `${dataFalta.getDate().toString().padStart(2, '0')}/${(dataFalta.getMonth() + 1).toString().padStart(2, '0')}/${dataFalta.getFullYear()}`;
     
-    // Menção ao coordenador se disponível
-    const coordenador = await buscarCoordenadorResponsavel(supabase, alerta.aluno_id);
-    const mencaoCoordenador = coordenador ? `@${coordenador} para acompanhamento.` : '';
+    // Coordenadora hardcoded (Chris Kulza)
+    const coordenadoraSlack = "chriskulza"; // ID da Chris Kulza
     
-    // Construir o payload para o Slack
-    const blocks = [
-      {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: titulo,
-          emoji: true
-        }
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `Professor: ${alerta.professor_nome} ${alerta.professor_slack ? `\n@${alerta.professor_slack}` : ''}`
-        }
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `*Aluno:*\n${alerta.aluno_nome}`
-          },
-          {
-            type: "mrkdwn",
-            text: `*Tempo de Supera:*\n${alerta.dias_supera || "Não disponível"}`
-          },
-          {
-            type: "mrkdwn",
-            text: `*Data:*\n${dataFormatada}`
-          }
-        ]
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: detalheMensagem
-        }
-      }
-    ];
+    // Construir o texto da mensagem no formato solicitado
+    let mensagemTexto = `Sistema Kadin\n${titulo}\nProfessor: ${alerta.professor_nome}`;
+    
+    // Adicionar menção ao professor se disponível
+    if (alerta.professor_slack) {
+      mensagemTexto += `\n@${alerta.professor_slack}`;
+    }
+    
+    mensagemTexto += `\n\nAluno: ${alerta.aluno_nome}\nTempo de Supera: ${alerta.dias_supera || "Não disponível"}\nData: ${dataFormatada}\n${detalheMensagem}`;
     
     // Adicionar motivo da falta se disponível
     if (alerta.motivo_ultima_falta) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Motivo da Falta:*\n${alerta.motivo_ultima_falta}`
-        }
-      });
+      mensagemTexto += `\nMotivo da Falta: ${alerta.motivo_ultima_falta}`;
     }
     
-    // Adicionar menção ao coordenador se disponível
-    if (mencaoCoordenador) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: mencaoCoordenador
-        }
-      });
-    }
+    // Adicionar menção à Chris Kulza para acompanhamento
+    mensagemTexto += `\n@${coordenadoraSlack} para acompanhamento.`;
     
-    // Enviar para a API do Slack
+    // Enviar para a API do Slack usando token hardcoded
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
-        'Authorization': `Bearer ${slackToken}`
+        'Authorization': `Bearer ${SLACK_BOT_TOKEN}`
       },
       body: JSON.stringify({
-        channel: slackChannelId,
-        blocks: blocks,
-        text: titulo // Fallback text
+        channel: SLACK_CHANNEL_ID, // Usa o canal hardcoded
+        text: mensagemTexto,
+        username: "Sistema Kadin" // Define o nome do bot
       })
     });
     
@@ -551,64 +504,13 @@ serve(async (req) => {
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const slackToken = Deno.env.get('SLACK_BOT_TOKEN')!;
-
-    if (!slackToken) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Token do Slack não configurado.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
     
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
     
     console.log('Iniciando verificação de alertas de falta...');
     
-    // Buscar ID do canal do Slack da tabela dados_importantes
-    const { data: canalData, error: canalError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'slack_channel_id_alertas_falta')
-      .single();
-    
-    if (canalError || !canalData || !canalData.data) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'ID do canal do Slack não configurado na tabela dados_importantes' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      );
-    }
-    
-    const slackChannelId = canalData.data;
-    console.log('ID do canal do Slack encontrado:', slackChannelId);
-    
-    // Buscar URL do webhook do Slack da tabela dados_importantes
-    const { data: webhookData, error: webhookError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'webhook_alertas_falta')
-      .single();
-    
-    if (webhookError || !webhookData || !webhookData.data) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Webhook do Slack não configurado na tabela dados_importantes' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      );
-    }
-    
-    const webhookUrl = webhookData.data;
-    console.log('Webhook do Slack encontrado:', webhookUrl);
+    // Não é mais necessário buscar ID do canal ou webhook da tabela dados_importantes
+    // pois agora esses valores estão hardcoded como constantes
     
     // Executar todas as verificações
     const alertasConsecutivas = await verificarFaltasConsecutivas(supabase);
@@ -651,8 +553,8 @@ serve(async (req) => {
         continue;
       }
       
-      // Enviar para o Slack
-      const slackEnviado = await enviarAlertaParaSlack(webhookUrl, slackToken, slackChannelId, alerta);
+      // Enviar para o Slack usando valores hardcoded
+      const slackEnviado = await enviarAlertaParaSlack(SLACK_WEBHOOK_URL, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, alerta);
       
       if (slackEnviado) {
         console.log(`Alerta enviado com sucesso para o Slack: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);

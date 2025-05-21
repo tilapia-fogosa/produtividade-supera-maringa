@@ -14,18 +14,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Lista de cargos pré-definidos
+const CARGOS = [
+  'Estagiário',
+  'SDR',
+  'Consultor',
+  'Recepcionista',
+  'Familiar',
+  'Outro'
+];
+
 interface FuncionarioFormProps {
   funcionario?: Partial<Funcionario>;
   onSubmit: (data: Partial<Funcionario>) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  tipoSelecionado?: string;
 }
 
 export const FuncionarioForm = ({
   funcionario,
   onSubmit,
   onCancel,
-  isSubmitting
+  isSubmitting,
+  tipoSelecionado
 }: FuncionarioFormProps) => {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const [formData, setFormData] = useState({
@@ -33,7 +45,10 @@ export const FuncionarioForm = ({
     email: '',
     telefone: '',
     cargo: '',
-    turma_id: '',
+    turma_id: null as string | null, // Definindo explicitamente como string | null
+  });
+  const [validationErrors, setValidationErrors] = useState({
+    nome: false
   });
 
   useEffect(() => {
@@ -43,19 +58,35 @@ export const FuncionarioForm = ({
         email: funcionario.email || '',
         telefone: funcionario.telefone || '',
         cargo: funcionario.cargo || '',
-        turma_id: funcionario.turma_id || '',
+        turma_id: funcionario.turma_id || null, // Usando null explicitamente para ausência de valor
       });
+    } else if (tipoSelecionado) {
+      // Se não tiver funcionário, mas tiver tipo selecionado, inicializa o cargo
+      setFormData(prev => ({
+        ...prev,
+        cargo: tipoSelecionado
+      }));
     }
-  }, [funcionario]);
+  }, [funcionario, tipoSelecionado]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Limpar erro de validação ao digitar
+    if (name === 'nome' && value.trim() !== '') {
+      setValidationErrors(prev => ({ ...prev, nome: false }));
+    }
+  };
+
+  const handleCargoChange = (value: string) => {
+    setFormData(prev => ({ ...prev, cargo: value }));
   };
 
   const handleTurmaChange = (value: string) => {
-    // Se o valor for "sem-turma", definimos como null para salvar no banco
+    // Tratamento correto: se for "sem-turma", definimos como null explicitamente (não como string vazia)
     const turmaId = value === "sem-turma" ? null : value;
+    console.log("Valor selecionado para turma_id:", turmaId, "Tipo:", typeof turmaId);
     setFormData(prev => ({ ...prev, turma_id: turmaId }));
   };
 
@@ -64,10 +95,12 @@ export const FuncionarioForm = ({
     
     // Valida se nome está preenchido
     if (!formData.nome.trim()) {
-      // Mostra um erro ou aviso para o usuário
-      alert("O nome do funcionário é obrigatório");
+      setValidationErrors(prev => ({ ...prev, nome: true }));
       return;
     }
+    
+    // Debug pré-submit
+    console.log("Enviando dados do formulário:", formData);
     
     onSubmit(formData);
   };
@@ -83,8 +116,11 @@ export const FuncionarioForm = ({
           onChange={handleChange}
           required
           placeholder="Digite o nome do funcionário"
-          className="mt-1"
+          className={`mt-1 ${validationErrors.nome ? 'border-red-500' : ''}`}
         />
+        {validationErrors.nome && (
+          <p className="text-red-500 text-sm mt-1">Nome é obrigatório</p>
+        )}
       </div>
       
       <div>
@@ -114,14 +150,21 @@ export const FuncionarioForm = ({
       
       <div>
         <Label htmlFor="cargo">Cargo</Label>
-        <Input
-          id="cargo"
-          name="cargo"
-          value={formData.cargo || ''}
-          onChange={handleChange}
-          placeholder="Digite o cargo do funcionário"
-          className="mt-1"
-        />
+        <Select 
+          value={formData.cargo || ''} 
+          onValueChange={handleCargoChange}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Selecione um cargo" />
+          </SelectTrigger>
+          <SelectContent>
+            {CARGOS.map((cargo) => (
+              <SelectItem key={cargo} value={cargo}>
+                {cargo}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

@@ -13,6 +13,7 @@ const FuncionariosList = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentFuncionario, setCurrentFuncionario] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filtro, setFiltro] = useState('todos');
 
   const handleOpenDialog = (funcionario?: any) => {
     setCurrentFuncionario(funcionario);
@@ -25,14 +26,28 @@ const FuncionariosList = () => {
   };
 
   const handleSubmit = async (data: any) => {
+    console.log("FuncionariosList recebeu dados para submit:", data);
+    
+    // Validar turma_id para garantir que esteja correto antes de enviar
+    const dadosValidados = {
+      ...data,
+      // Garantir que turma_id seja null (não string vazia) quando sem turma
+      turma_id: data.turma_id === "" ? null : data.turma_id
+    };
+    
+    console.log("Dados validados para envio:", dadosValidados);
+    
     setIsSubmitting(true);
     try {
       if (currentFuncionario?.id) {
-        await atualizarFuncionario(currentFuncionario.id, data);
+        await atualizarFuncionario(currentFuncionario.id, dadosValidados);
       } else {
-        await adicionarFuncionario(data);
+        const result = await adicionarFuncionario(dadosValidados);
+        console.log("Resultado da adição:", result);
       }
       handleCloseDialog();
+    } catch (error) {
+      console.error("Erro ao processar funcionário:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -43,6 +58,12 @@ const FuncionariosList = () => {
       await removerFuncionario(id);
     }
   };
+
+  const funcionariosFiltrados = funcionarios.filter(funcionario => {
+    if (filtro === 'todos') return true;
+    if (filtro === 'estagiarios') return funcionario.cargo?.toLowerCase() === 'estagiario';
+    return funcionario.cargo?.toLowerCase() !== 'estagiario';
+  });
 
   if (loading) {
     return (
@@ -55,16 +76,46 @@ const FuncionariosList = () => {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Funcionários</CardTitle>
+        <div>
+          <CardTitle>Funcionários e Estagiários</CardTitle>
+          <div className="mt-2 flex space-x-2">
+            <Button 
+              variant={filtro === 'todos' ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFiltro('todos')}
+            >
+              Todos
+            </Button>
+            <Button 
+              variant={filtro === 'funcionarios' ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFiltro('funcionarios')}
+            >
+              Funcionários
+            </Button>
+            <Button 
+              variant={filtro === 'estagiarios' ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFiltro('estagiarios')}
+            >
+              Estagiários
+            </Button>
+          </div>
+        </div>
         <Button onClick={() => handleOpenDialog()}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Adicionar Funcionário
+          Adicionar {filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}
         </Button>
       </CardHeader>
       <CardContent>
-        {funcionarios.length === 0 ? (
+        {funcionariosFiltrados.length === 0 ? (
           <div className="text-center py-4 text-gray-500">
-            Nenhum funcionário cadastrado. Clique em "Adicionar Funcionário" para começar.
+            {filtro === 'estagiarios' 
+              ? 'Nenhum estagiário cadastrado.'
+              : filtro === 'funcionarios'
+                ? 'Nenhum funcionário cadastrado.'
+                : 'Nenhum funcionário ou estagiário cadastrado.'}
+            {' '}Clique em "Adicionar {filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}" para começar.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -79,7 +130,7 @@ const FuncionariosList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {funcionarios.map((funcionario) => (
+                {funcionariosFiltrados.map((funcionario) => (
                   <TableRow key={funcionario.id}>
                     <TableCell className="font-medium">{funcionario.nome}</TableCell>
                     <TableCell>{funcionario.email || '-'}</TableCell>
@@ -114,7 +165,9 @@ const FuncionariosList = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {currentFuncionario ? 'Editar Funcionário' : 'Adicionar Funcionário'}
+              {currentFuncionario 
+                ? `Editar ${currentFuncionario.cargo?.toLowerCase() === 'estagiário' ? 'Estagiário' : 'Funcionário'}`
+                : `Adicionar ${filtro === 'estagiarios' ? 'Estagiário' : 'Funcionário'}`}
             </DialogTitle>
           </DialogHeader>
           <FuncionarioForm
@@ -122,6 +175,7 @@ const FuncionariosList = () => {
             onSubmit={handleSubmit}
             onCancel={handleCloseDialog}
             isSubmitting={isSubmitting}
+            tipoSelecionado={filtro === 'estagiarios' ? 'Estagiário' : ''}
           />
         </DialogContent>
       </Dialog>
