@@ -2,10 +2,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, AlertTriangle, School, Send } from "lucide-react";
+import { TrendingUp, BookOpen, AlertTriangle, School } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
-import TestEvasionAlertButton from '@/components/TestEvasionAlertButton';
 
 const Lancamentos = () => {
   const navigate = useNavigate();
@@ -67,11 +66,6 @@ const Lancamentos = () => {
           <AlertTriangle className="mr-2 h-6 w-6" />
           Lançar Alerta de Evasão
         </Button>
-
-        {/* Botão de teste de alerta de evasão */}
-        <div className="mt-4 flex justify-center">
-          <TestEvasionAlertButton />
-        </div>
       </div>
 
       <AlertaEvasaoModal 
