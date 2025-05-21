@@ -67,16 +67,32 @@ serve(async (req) => {
     const slackChannelId = canalData.data;
     console.log('ID do canal do Slack:', slackChannelId);
     
+    // Buscar dados do professor para o teste (buscando o primeiro professor disponível)
+    const { data: professorData, error: professorError } = await supabase
+      .from('professores')
+      .select('nome, slack_username')
+      .limit(1)
+      .single();
+    
+    let professorNome = "Daniele Silva";
+    let professorSlackUsername = "Dani Silva";
+    
+    if (!professorError && professorData) {
+      professorNome = professorData.nome || professorNome;
+      professorSlackUsername = professorData.slack_username || professorSlackUsername;
+    }
+    
     // Criar mensagem de teste no novo formato
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
     const mensagemTexto = `Sistema Kadin
-⚠ Alerta de Teste - Mensagem de Teste ⚠
-Professor: Exemplo Professor
-@professor_exemplo
+⚠ Alerta de Falta - Falta Recorrente ⚠
+Professor: ${professorNome} 
+${professorSlackUsername ? `@${professorSlackUsername}` : ''}
 
-Aluno: Aluno de Teste
-Tempo de Supera: 30
-Data: ${new Date().toLocaleDateString('pt-BR')}
-ATENÇÃO: Esta é uma mensagem de teste do sistema de alertas.
+Aluno: Valcira dos Anjos Brito
+Tempo de Supera: 175
+Data: ${dataAtual}
+ATENÇÃO: Este aluno já faltou (2) faltas em sequência.
 Motivo da Falta: Teste do sistema
 @chriskulza para acompanhamento.`;
     
