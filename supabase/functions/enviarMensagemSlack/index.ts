@@ -59,61 +59,73 @@ serve(async (req) => {
     if (alunoId) {
       console.log(`Buscando dados completos do aluno ID: ${alunoId}`);
       
-      const { data: alunoData, error: alunoError } = await supabase
-        .from('alunos')
-        .select(`
-          nome, 
-          turma_id,
-          turmas(
-            id,
-            nome,
-            dia_semana,
-            horario,
-            professor_id,
-            professores(
-              nome,
-              slack_username
-            )
-          )
-        `)
-        .eq('id', alunoId)
-        .single();
-        
-      if (alunoError) {
-        console.error('Erro ao buscar dados do aluno:', alunoError);
-      } else if (alunoData) {
-        console.log('Dados do aluno obtidos:', JSON.stringify(alunoData));
-        
-        // Atualiza o nome do aluno
-        alunoNome = alunoData.nome || aluno;
-        
-        // Formata informações da turma
-        if (alunoData.turmas) {
-          const turmaObj = alunoData.turmas;
+      try {
+        // Primeira abordagem: buscar aluno e fazer JOIN com turma e professor
+        const { data: alunoData, error: alunoError } = await supabase
+          .from('alunos')
+          .select('nome, turma_id')
+          .eq('id', alunoId)
+          .single();
           
-          // Formatar dia da semana
-          let diaSemanaFormatado = '';
-          switch (turmaObj.dia_semana) {
-            case "segunda": diaSemanaFormatado = '2ª'; break;
-            case "terca": diaSemanaFormatado = '3ª'; break;
-            case "quarta": diaSemanaFormatado = '4ª'; break;
-            case "quinta": diaSemanaFormatado = '5ª'; break;
-            case "sexta": diaSemanaFormatado = '6ª'; break;
-            case "sabado": diaSemanaFormatado = 'Sábado'; break;
-            case "domingo": diaSemanaFormatado = 'Domingo'; break;
-            default: diaSemanaFormatado = turmaObj.dia_semana;
-          }
+        if (alunoError) {
+          console.error('Erro ao buscar dados do aluno:', alunoError);
+        } else if (alunoData) {
+          console.log('Dados do aluno obtidos:', JSON.stringify(alunoData));
           
-          // Formatar horário
-          const horario = turmaObj.horario ? turmaObj.horario.substring(0, 5) : '00:00';
-          turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+          // Atualiza o nome do aluno
+          alunoNome = alunoData.nome || aluno;
           
-          // Dados do professor
-          if (turmaObj.professores) {
-            professorNome = turmaObj.professores.nome || professor;
-            professorSlackUsername = turmaObj.professores.slack_username || professorSlack;
+          if (alunoData.turma_id) {
+            // Agora buscar os dados da turma
+            const { data: turmaData, error: turmaError } = await supabase
+              .from('turmas')
+              .select('nome, dia_semana, horario, professor_id')
+              .eq('id', alunoData.turma_id)
+              .single();
+              
+            if (turmaError) {
+              console.error('Erro ao buscar dados da turma:', turmaError);
+            } else if (turmaData) {
+              console.log('Dados da turma obtidos:', JSON.stringify(turmaData));
+              
+              // Formatar dia da semana
+              let diaSemanaFormatado = '';
+              switch (turmaData.dia_semana) {
+                case "segunda": diaSemanaFormatado = '2ª'; break;
+                case "terca": diaSemanaFormatado = '3ª'; break;
+                case "quarta": diaSemanaFormatado = '4ª'; break;
+                case "quinta": diaSemanaFormatado = '5ª'; break;
+                case "sexta": diaSemanaFormatado = '6ª'; break;
+                case "sabado": diaSemanaFormatado = 'Sábado'; break;
+                case "domingo": diaSemanaFormatado = 'Domingo'; break;
+                default: diaSemanaFormatado = turmaData.dia_semana;
+              }
+              
+              // Formatar horário
+              const horario = turmaData.horario ? turmaData.horario.substring(0, 5) : '00:00';
+              turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+              
+              // Se tivermos o professor_id, buscamos os dados do professor
+              if (turmaData.professor_id) {
+                const { data: professorData, error: professorError } = await supabase
+                  .from('professores')
+                  .select('nome, slack_username')
+                  .eq('id', turmaData.professor_id)
+                  .single();
+                  
+                if (professorError) {
+                  console.error('Erro ao buscar dados do professor:', professorError);
+                } else if (professorData) {
+                  console.log('Dados do professor obtidos:', JSON.stringify(professorData));
+                  professorNome = professorData.nome || professor;
+                  professorSlackUsername = professorData.slack_username || professorSlack;
+                }
+              }
+            }
           }
         }
+      } catch (dataError) {
+        console.error('Erro ao buscar dados relacionados:', dataError);
       }
     }
     
