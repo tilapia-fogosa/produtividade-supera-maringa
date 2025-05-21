@@ -60,7 +60,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       let professorSlack = null;
       
       if (alunoData.turmas) {
-        const turma = alunoData.turmas;
+        const turma = Array.isArray(alunoData.turmas) ? alunoData.turmas[0] : alunoData.turmas;
         // Formatar o nome da turma com dia e horário
         let diaSemanaFormatado = turma.dia_semana;
         
