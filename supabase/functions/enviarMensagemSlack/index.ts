@@ -140,7 +140,7 @@ serve(async (req) => {
 
 *Aluno:* ${alunoNome}
 *Turma:* ${turmaNome}
-*Professor:* ${professorSlackUsername ? `<@${professorSlackUsername}>` : professorNome}
+*Educador:* ${professorSlackUsername ? `<@${professorSlackUsername}>` : professorNome}
 *Data do Aviso:* ${dataAlerta}
 *Responsável Alerta:* ${responsavel}
 *Informações:* ${descritivo}
