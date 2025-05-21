@@ -62,16 +62,34 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
       if (alunoData.turmas) {
         const turma = Array.isArray(alunoData.turmas) ? alunoData.turmas[0] : alunoData.turmas;
         // Formatar o nome da turma com dia e horário
-        let diaSemanaFormatado = turma.dia_semana;
+        let diaSemanaFormatado = '';
         
-        // Converter para formato mais amigável
-        if (turma.dia_semana === 'segunda') diaSemanaFormatado = '2ª';
-        else if (turma.dia_semana === 'terca') diaSemanaFormatado = '3ª';
-        else if (turma.dia_semana === 'quarta') diaSemanaFormatado = '4ª';
-        else if (turma.dia_semana === 'quinta') diaSemanaFormatado = '5ª';
-        else if (turma.dia_semana === 'sexta') diaSemanaFormatado = '6ª';
-        else if (turma.dia_semana === 'sabado') diaSemanaFormatado = 'Sábado';
-        else if (turma.dia_semana === 'domingo') diaSemanaFormatado = 'Domingo';
+        // Converter para formato mais amigável sem modificar a variável original
+        switch (turma.dia_semana) {
+          case "segunda":
+            diaSemanaFormatado = '2ª';
+            break;
+          case "terca":
+            diaSemanaFormatado = '3ª';
+            break;
+          case "quarta":
+            diaSemanaFormatado = '4ª';
+            break;
+          case "quinta":
+            diaSemanaFormatado = '5ª';
+            break;
+          case "sexta":
+            diaSemanaFormatado = '6ª';
+            break;
+          case "sabado":
+            diaSemanaFormatado = 'Sábado';
+            break;
+          case "domingo":
+            diaSemanaFormatado = 'Domingo';
+            break;
+          default:
+            diaSemanaFormatado = turma.dia_semana;
+        }
         
         // Formatar horário
         const horario = turma.horario ? turma.horario.substring(0, 5) : '00:00';
