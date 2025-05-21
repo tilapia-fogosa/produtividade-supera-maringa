@@ -36,10 +36,11 @@ serve(async (req) => {
       dataRetencao = "",
       canal = "C05UB69SDU7",
       username = "Sistema Kadin",
-      turma = "Não informada",
-      professor = "Não informado",
+      turma = "",
+      professor = "",
       professorSlack = null,
-      cardId = ""
+      cardId = "",
+      alunoId = "" // Novo parâmetro para buscar dados dinâmicos
     } = await req.json();
     
     // Criar cliente Supabase para buscar informações adicionais
@@ -47,6 +48,74 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Variáveis para armazenar dados do aluno, turma e professor
+    let alunoNome = aluno;
+    let turmaNome = turma;
+    let professorNome = professor;
+    let professorSlackUsername = professorSlack;
+    
+    // Se temos um ID de aluno, buscamos todos os dados relacionados
+    if (alunoId) {
+      console.log(`Buscando dados completos do aluno ID: ${alunoId}`);
+      
+      const { data: alunoData, error: alunoError } = await supabase
+        .from('alunos')
+        .select(`
+          nome, 
+          turma_id,
+          turmas(
+            id,
+            nome,
+            dia_semana,
+            horario,
+            professor_id,
+            professores(
+              nome,
+              slack_username
+            )
+          )
+        `)
+        .eq('id', alunoId)
+        .single();
+        
+      if (alunoError) {
+        console.error('Erro ao buscar dados do aluno:', alunoError);
+      } else if (alunoData) {
+        console.log('Dados do aluno obtidos:', JSON.stringify(alunoData));
+        
+        // Atualiza o nome do aluno
+        alunoNome = alunoData.nome || aluno;
+        
+        // Formata informações da turma
+        if (alunoData.turmas) {
+          const turmaObj = alunoData.turmas;
+          
+          // Formatar dia da semana
+          let diaSemanaFormatado = '';
+          switch (turmaObj.dia_semana) {
+            case "segunda": diaSemanaFormatado = '2ª'; break;
+            case "terca": diaSemanaFormatado = '3ª'; break;
+            case "quarta": diaSemanaFormatado = '4ª'; break;
+            case "quinta": diaSemanaFormatado = '5ª'; break;
+            case "sexta": diaSemanaFormatado = '6ª'; break;
+            case "sabado": diaSemanaFormatado = 'Sábado'; break;
+            case "domingo": diaSemanaFormatado = 'Domingo'; break;
+            default: diaSemanaFormatado = turmaObj.dia_semana;
+          }
+          
+          // Formatar horário
+          const horario = turmaObj.horario ? turmaObj.horario.substring(0, 5) : '00:00';
+          turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+          
+          // Dados do professor
+          if (turmaObj.professores) {
+            professorNome = turmaObj.professores.nome || professor;
+            professorSlackUsername = turmaObj.professores.slack_username || professorSlack;
+          }
+        }
+      }
+    }
     
     // Buscar o ID do Slack da coordenadora Chris Kulza
     let coordenadoraSlack = "chriskulza"; // ID correto da Chris Kulza
@@ -57,9 +126,9 @@ serve(async (req) => {
     // Formatar a mensagem conforme o template
     let mensagem = `🚨🚨 *ALERTA: Farejei uma possível Evasão* 🚨🚨
 
-*Aluno:* ${aluno}
-*Turma:* ${turma}
-*Professor:* ${professorSlack ? `<@${professorSlack}>` : professor}
+*Aluno:* ${alunoNome}
+*Turma:* ${turmaNome}
+*Professor:* ${professorSlackUsername ? `<@${professorSlackUsername}>` : professorNome}
 *Data do Aviso:* ${dataAlerta}
 *Responsável Alerta:* ${responsavel}
 *Informações:* ${descritivo}

@@ -152,6 +152,7 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
           {
             body: { 
               aluno: alunoData.nome || 'Aluno de Teste',
+              alunoId: aluno_id, // Enviamos o ID do aluno para buscar dados dinâmicos
               dataAlerta: new Date().toLocaleDateString('pt-BR'),
               responsavel: 'Sistema de Teste',
               descritivo: 'Este é um alerta de teste enviado para o Slack',

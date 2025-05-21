@@ -262,7 +262,7 @@ export function useAlertasEvasao() {
                 aluno: aluno?.nome,
                 descricao: descritivo,
                 dataRetencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
-                responsavel: responsavelNome  // CORRIGIDO: mudado de responsavel para responsavelNome
+                responsavel: responsavelNome
               })
             });
           } catch (webhookError) {
@@ -279,6 +279,7 @@ export function useAlertasEvasao() {
           {
             body: { 
               aluno: aluno?.nome || 'Aluno de Teste',
+              alunoId: alunoSelecionado, // Enviamos o ID do aluno
               dataAlerta: new Date(dataAlerta).toLocaleDateString('pt-BR'),
               responsavel: responsavelNome,
               descritivo: descritivo,
@@ -322,7 +323,7 @@ export function useAlertasEvasao() {
               data: dataAlertaFormatada,
               origem: origemAlerta,
               descritivo,
-              responsavel: responsavelNome,  // CORRIGIDO: mudado de responsavel para responsavelNome
+              responsavel: responsavelNome,
               data_retencao: dataRetencaoFormatada,
               historico: historicoCompleto
             }

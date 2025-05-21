@@ -81,6 +81,7 @@ BEGIN
   -- Construir payload no formato que a edge function enviarMensagemSlack espera
   payload := jsonb_build_object(
     'aluno', aluno_nome,
+    'alunoId', NEW.aluno_id,  -- Enviamos o ID do aluno para busca dinâmica
     'dataAlerta', TO_CHAR(NEW.data_alerta, 'DD/MM/YYYY'),
     'responsavel', NEW.responsavel,
     'descritivo', NEW.descritivo,
