@@ -84,17 +84,16 @@ serve(async (req) => {
     
     // Criar mensagem de teste no novo formato
     const dataAtual = new Date().toLocaleDateString('pt-BR');
-    const mensagemTexto = `Sistema Kadin
-⚠ Alerta de Falta - Falta Recorrente ⚠
+    const mensagemTexto = `⚠ Alerta de Falta - Falta Recorrente ⚠
 Professor: ${professorNome} 
-${professorSlackUsername ? `@${professorSlackUsername}` : ''}
+${professorSlackUsername ? `<@${professorSlackUsername}>` : ''}
 
 Aluno: Valcira dos Anjos Brito
 Tempo de Supera: 175
 Data: ${dataAtual}
 ATENÇÃO: Este aluno já faltou (2) faltas em sequência.
 Motivo da Falta: Teste do sistema
-@chriskulza para acompanhamento.`;
+<@chriskulza> para acompanhamento.`;
     
     // Enviar para a API do Slack
     const response = await fetch('https://slack.com/api/chat.postMessage', {
