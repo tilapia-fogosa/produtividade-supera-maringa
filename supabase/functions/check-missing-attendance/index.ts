@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { Database } from "../_shared/database-types.ts";
@@ -7,6 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Valores hardcoded para o Slack
+const SLACK_BOT_TOKEN = "xoxb-your-hardcoded-slack-token-here";
+const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal para alertas de falta
+const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/your/webhook/url";
 
 // Função para verificar faltas consecutivas
 async function verificarFaltasConsecutivas(supabase: any, diasLimite = 2) {
@@ -513,15 +517,15 @@ async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, sl
       });
     }
     
-    // Enviar para a API do Slack
+    // Enviar para a API do Slack usando token hardcoded
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
-        'Authorization': `Bearer ${slackToken}`
+        'Authorization': `Bearer ${SLACK_BOT_TOKEN}`
       },
       body: JSON.stringify({
-        channel: slackChannelId,
+        channel: SLACK_CHANNEL_ID, // Usa o canal hardcoded
         blocks: blocks,
         text: titulo // Fallback text
       })
@@ -551,64 +555,13 @@ serve(async (req) => {
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const slackToken = Deno.env.get('SLACK_BOT_TOKEN')!;
-
-    if (!slackToken) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Token do Slack não configurado.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
     
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
     
     console.log('Iniciando verificação de alertas de falta...');
     
-    // Buscar ID do canal do Slack da tabela dados_importantes
-    const { data: canalData, error: canalError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'slack_channel_id_alertas_falta')
-      .single();
-    
-    if (canalError || !canalData || !canalData.data) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'ID do canal do Slack não configurado na tabela dados_importantes' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      );
-    }
-    
-    const slackChannelId = canalData.data;
-    console.log('ID do canal do Slack encontrado:', slackChannelId);
-    
-    // Buscar URL do webhook do Slack da tabela dados_importantes
-    const { data: webhookData, error: webhookError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'webhook_alertas_falta')
-      .single();
-    
-    if (webhookError || !webhookData || !webhookData.data) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Webhook do Slack não configurado na tabela dados_importantes' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      );
-    }
-    
-    const webhookUrl = webhookData.data;
-    console.log('Webhook do Slack encontrado:', webhookUrl);
+    // Não é mais necessário buscar ID do canal ou webhook da tabela dados_importantes
+    // pois agora esses valores estão hardcoded como constantes
     
     // Executar todas as verificações
     const alertasConsecutivas = await verificarFaltasConsecutivas(supabase);
@@ -651,8 +604,8 @@ serve(async (req) => {
         continue;
       }
       
-      // Enviar para o Slack
-      const slackEnviado = await enviarAlertaParaSlack(webhookUrl, slackToken, slackChannelId, alerta);
+      // Enviar para o Slack usando valores hardcoded
+      const slackEnviado = await enviarAlertaParaSlack(SLACK_WEBHOOK_URL, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, alerta);
       
       if (slackEnviado) {
         console.log(`Alerta enviado com sucesso para o Slack: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);

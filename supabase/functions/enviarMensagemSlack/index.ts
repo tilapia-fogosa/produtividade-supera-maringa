@@ -2,6 +2,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+// Valores hardcoded para Slack
+const SLACK_BOT_TOKEN = "xoxb-your-hardcoded-slack-token-here";
+const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal padrão para mensagens
+
 serve(async (req) => {
   // Lidar com requisições CORS preflight
   if (req.method === 'OPTIONS') {
@@ -9,23 +13,6 @@ serve(async (req) => {
   }
   
   try {
-    // Obter o token do Slack a partir das variáveis de ambiente
-    const slackToken = Deno.env.get('SLACK_BOT_TOKEN');
-
-    if (!slackToken) {
-      console.error('Token do Slack não encontrado nas variáveis de ambiente');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Token do Slack não configurado nas variáveis de ambiente' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-          status: 500 
-        }
-      );
-    }
-
     // Obter dados da requisição
     const { 
       aluno = "Aluno de Teste", 
@@ -34,13 +21,13 @@ serve(async (req) => {
       descritivo = "Este é um alerta de teste", 
       origem = "outro",
       dataRetencao = "",
-      canal = "C05UB69SDU7",
+      canal = SLACK_CHANNEL_ID, // Usa o canal hardcoded como padrão, mas permite sobrescrever
       username = "Sistema Kadin",
       turma = "",
       professor = "",
       professorSlack = null,
       cardId = "",
-      alunoId = "" // Novo parâmetro para buscar dados dinâmicos
+      alunoId = "" // Parâmetro para buscar dados dinâmicos
     } = await req.json();
     
     // Criar cliente Supabase para buscar informações adicionais
@@ -129,8 +116,8 @@ serve(async (req) => {
       }
     }
     
-    // Buscar o ID do Slack da coordenadora Chris Kulza
-    let coordenadoraSlack = "chriskulza"; // ID correto da Chris Kulza
+    // ID do Slack da coordenadora hardcoded
+    const coordenadoraSlack = "chriskulza"; // ID da Chris Kulza
     
     // Link para o painel pedagógico
     const painelPedagogicoLink = "https://pedagogico.agenciakadin.com.br/painel-pedagogico";
@@ -155,12 +142,12 @@ serve(async (req) => {
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
-    // Enviando para a API do Slack
+    // Enviando para a API do Slack usando o token hardcoded
     const response = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${slackToken}`,
+        "Authorization": `Bearer ${SLACK_BOT_TOKEN}`,
       },
       body: JSON.stringify({
         channel: canal,
