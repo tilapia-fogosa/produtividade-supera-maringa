@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle, CalendarClock, User, Clock, History, CheckCircle2, XCircle, School, UserCheck, AlertOctagon, Calendar, FileWarning, MessageCircle } from "lucide-react";
@@ -191,16 +192,6 @@ export function KanbanCard({
                 <span>Data do alerta: {formattedDataAlerta}</span>
               </div>
               
-              <div className="flex flex-wrap gap-2 text-xs">
-                <Badge variant={fez_pausa_emergencial ? "default" : "outline"} className="text-xs">
-                  {fez_pausa_emergencial ? "Fez pausa emergencial" : "Sem pausa emergencial"}
-                </Badge>
-                
-                <Badge variant={faltas_recorrentes ? "destructive" : "outline"} className="text-xs">
-                  {faltas_recorrentes ? "Faltas recorrentes" : "Sem faltas recorrentes"}
-                </Badge>
-              </div>
-              
               {link_ficha_rescisao && <div className="flex items-center gap-1 text-xs text-blue-600">
                   <FileWarning className="h-3 w-3" />
                   <a href={link_ficha_rescisao} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
@@ -284,11 +275,6 @@ export function KanbanCard({
           {(isEvadidoCard || isRetidoCard) && observacoes_adicionais && <div className="text-xs text-gray-600 line-clamp-2">
               <span className="font-medium">Observações: </span>
               {observacoes_adicionais}
-            </div>}
-          
-          {/* Outras informações que já existiam */}
-          {origem && <div className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700">
-              {origem}
             </div>}
           
           {description && !isEvadidoCard && !isRetidoCard && <p className="text-xs text-gray-600 line-clamp-2">{description}</p>}

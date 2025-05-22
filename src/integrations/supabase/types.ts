@@ -2833,6 +2833,10 @@ export type Database = {
         Args: { p_update_id: string }
         Returns: boolean
       }
+      update_existing_kanban_cards_history: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       user_has_access_to_unit: {
         Args: { unit_id: string }
         Returns: boolean
