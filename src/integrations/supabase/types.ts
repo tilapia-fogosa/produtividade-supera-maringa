@@ -2642,6 +2642,15 @@ export type Database = {
         }
         Returns: Json
       }
+      get_aluno_detalhes: {
+        Args: { p_aluno_nome: string }
+        Returns: {
+          aluno_id: string
+          turma: string
+          educador: string
+          faltas_recorrentes: boolean
+        }[]
+      }
       get_commercial_unit_stats: {
         Args: {
           p_start_date: string

@@ -4,7 +4,6 @@ import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
 import { Loader2, Bell, MessageSquare, Calendar, Check, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface PedagogicalKanbanProps {

@@ -96,7 +96,44 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       }
 
       console.log('Cards carregados:', data);
-      return data as KanbanCard[];
+      
+      // Após carregar os cards, buscar detalhes adicionais para cada um
+      const cardsWithDetails = await Promise.all(data.map(async (card) => {
+        // Só buscar detalhes para cards que não foram finalizados
+        if (card.resultado) {
+          return card;
+        }
+        
+        if (card.aluno_nome) {
+          try {
+            const { data: detalhes, error: detalheError } = await supabase
+              .rpc('get_aluno_detalhes', {
+                p_aluno_nome: card.aluno_nome
+              });
+            
+            if (detalheError) {
+              console.error(`Erro ao buscar detalhes para ${card.aluno_nome}:`, detalheError);
+              return card;
+            }
+            
+            if (detalhes && detalhes.length > 0) {
+              // Atualizar o card com os detalhes obtidos
+              return {
+                ...card,
+                turma: detalhes[0].turma || card.turma,
+                educador: detalhes[0].educador || card.educador,
+                faltas_recorrentes: detalhes[0].faltas_recorrentes
+              };
+            }
+          } catch (err) {
+            console.error(`Erro ao processar detalhes para ${card.aluno_nome}:`, err);
+          }
+        }
+        
+        return card;
+      }));
+      
+      return cardsWithDetails as KanbanCard[];
     }
   });
 
