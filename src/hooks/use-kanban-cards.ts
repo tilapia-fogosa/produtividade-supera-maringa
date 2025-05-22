@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { startOfMonth, startOfYear, subMonths, subYears, format } from 'date-fns';
 
 interface KanbanCard {
   id: string;
@@ -23,6 +24,28 @@ interface KanbanCard {
   last_activity?: string;
   retention_date?: string | null;
   resultado?: 'evadiu' | 'retido' | null;
+}
+
+interface ResultadoPeriodo {
+  periodo: string;
+  total: number;
+  evadidos: number;
+  retidos: number;
+  percentualRetencao: number;
+  comparacaoAnterior?: {
+    total: number;
+    evadidos: number;
+    retidos: number;
+    percentualRetencao: number;
+    diferencaPercentual: number;
+  };
+  comparacaoAnoAnterior?: {
+    total: number;
+    evadidos: number;
+    retidos: number;
+    percentualRetencao: number;
+    diferencaPercentual: number;
+  };
 }
 
 export const useKanbanCards = (showHibernating: boolean = false) => {
@@ -192,6 +215,7 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       
       toast.success(mensagem);
       queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['resultados-evasao'] });
     },
     onError: (error) => {
       console.error('Erro ao finalizar alerta:', error);
@@ -199,11 +223,178 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     }
   });
 
+  // Nova função para obter estatísticas de resultados por períodos
+  const useResultadosEvasao = () => {
+    return useQuery({
+      queryKey: ['resultados-evasao'],
+      queryFn: async () => {
+        const agora = new Date();
+        
+        // Definir períodos
+        const inicioMesAtual = startOfMonth(agora);
+        const inicioMesAnterior = startOfMonth(subMonths(agora, 1));
+        const inicioMesAnoAnterior = startOfMonth(subYears(agora, 1));
+        
+        const inicioTrimestreAtual = startOfMonth(subMonths(agora, 2));
+        const inicioTrimestreAnterior = startOfMonth(subMonths(agora, 5));
+        const inicioTrimestreAnoAnterior = startOfMonth(subYears(subMonths(agora, 2), 1));
+        
+        const inicioSemestreAtual = startOfMonth(subMonths(agora, 5));
+        const inicioSemestreAnterior = startOfMonth(subMonths(agora, 11));
+        const inicioSemestreAnoAnterior = startOfMonth(subYears(subMonths(agora, 5), 1));
+        
+        const inicioAnoAtual = startOfYear(agora);
+        const inicioAnoAnterior = startOfYear(subYears(agora, 1));
+        const inicioAnoRetrasado = startOfYear(subYears(agora, 2));
+        
+        // Buscar cards finalizados
+        const { data: todosCards, error } = await supabase
+          .from('kanban_cards')
+          .select('*')
+          .not('resultado', 'is', null);
+          
+        if (error) {
+          console.error('Erro ao buscar cards para estatísticas:', error);
+          throw error;
+        }
+        
+        const cardsComData = todosCards.map(card => ({
+          ...card,
+          dataObj: new Date(card.updated_at)
+        }));
+        
+        // Função para calcular estatísticas para um período
+        const calcularEstatisticas = (cards: any[], dataInicio: Date, dataFim: Date = agora) => {
+          const cardsDoPeriodo = cards.filter(card => 
+            card.dataObj >= dataInicio && card.dataObj <= dataFim);
+            
+          const total = cardsDoPeriodo.length;
+          const evadidos = cardsDoPeriodo.filter(card => card.resultado === 'evadiu').length;
+          const retidos = cardsDoPeriodo.filter(card => card.resultado === 'retido').length;
+          const percentualRetencao = total > 0 ? (retidos / total) * 100 : 0;
+          
+          return {
+            total,
+            evadidos,
+            retidos,
+            percentualRetencao: Math.round(percentualRetencao * 10) / 10 // arredondar para 1 casa decimal
+          };
+        };
+        
+        // Calcular estatísticas para cada período
+        const estatisticasMesAtual = calcularEstatisticas(cardsComData, inicioMesAtual);
+        const estatisticasMesAnterior = calcularEstatisticas(cardsComData, inicioMesAnterior, inicioMesAtual);
+        const estatisticasMesAnoAnterior = calcularEstatisticas(
+          cardsComData, 
+          inicioMesAnoAnterior,
+          new Date(inicioMesAnoAnterior.getFullYear(), inicioMesAnoAnterior.getMonth() + 1, 0)
+        );
+        
+        const estatisticasTrimestreAtual = calcularEstatisticas(cardsComData, inicioTrimestreAtual);
+        const estatisticasTrimestreAnterior = calcularEstatisticas(cardsComData, inicioTrimestreAnterior, inicioTrimestreAtual);
+        const estatisticasTrimestreAnoAnterior = calcularEstatisticas(
+          cardsComData, 
+          inicioTrimestreAnoAnterior,
+          new Date(inicioTrimestreAnoAnterior.getFullYear(), inicioTrimestreAnoAnterior.getMonth() + 3, 0)
+        );
+        
+        const estatisticasSemestreAtual = calcularEstatisticas(cardsComData, inicioSemestreAtual);
+        const estatisticasSemestreAnterior = calcularEstatisticas(cardsComData, inicioSemestreAnterior, inicioSemestreAtual);
+        const estatisticasSemestreAnoAnterior = calcularEstatisticas(
+          cardsComData, 
+          inicioSemestreAnoAnterior,
+          new Date(inicioSemestreAnoAnterior.getFullYear(), inicioSemestreAnoAnterior.getMonth() + 6, 0)
+        );
+        
+        const estatisticasAnoAtual = calcularEstatisticas(cardsComData, inicioAnoAtual);
+        const estatisticasAnoAnterior = calcularEstatisticas(cardsComData, inicioAnoAnterior, inicioAnoAtual);
+        
+        // Calcular diferenças percentuais
+        const calcularDiferencaPercentual = (atual: number, anterior: number) => {
+          if (anterior === 0) return atual > 0 ? 100 : 0;
+          return Math.round(((atual - anterior) / anterior) * 100);
+        };
+        
+        // Montar objeto de retorno
+        const resultados: ResultadoPeriodo[] = [
+          {
+            periodo: `Mês (${format(inicioMesAtual, 'MMM/yyyy')})`,
+            ...estatisticasMesAtual,
+            comparacaoAnterior: {
+              ...estatisticasMesAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasMesAtual.percentualRetencao, 
+                estatisticasMesAnterior.percentualRetencao
+              )
+            },
+            comparacaoAnoAnterior: {
+              ...estatisticasMesAnoAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasMesAtual.percentualRetencao, 
+                estatisticasMesAnoAnterior.percentualRetencao
+              )
+            }
+          },
+          {
+            periodo: `Trimestre (${format(inicioTrimestreAtual, 'MMM')}-${format(agora, 'MMM/yyyy')})`,
+            ...estatisticasTrimestreAtual,
+            comparacaoAnterior: {
+              ...estatisticasTrimestreAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasTrimestreAtual.percentualRetencao, 
+                estatisticasTrimestreAnterior.percentualRetencao
+              )
+            },
+            comparacaoAnoAnterior: {
+              ...estatisticasTrimestreAnoAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasTrimestreAtual.percentualRetencao, 
+                estatisticasTrimestreAnoAnterior.percentualRetencao
+              )
+            }
+          },
+          {
+            periodo: `Semestre (${format(inicioSemestreAtual, 'MMM')}-${format(agora, 'MMM/yyyy')})`,
+            ...estatisticasSemestreAtual,
+            comparacaoAnterior: {
+              ...estatisticasSemestreAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasSemestreAtual.percentualRetencao, 
+                estatisticasSemestreAnterior.percentualRetencao
+              )
+            },
+            comparacaoAnoAnterior: {
+              ...estatisticasSemestreAnoAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasSemestreAtual.percentualRetencao, 
+                estatisticasSemestreAnoAnterior.percentualRetencao
+              )
+            }
+          },
+          {
+            periodo: `Ano (${format(inicioAnoAtual, 'yyyy')})`,
+            ...estatisticasAnoAtual,
+            comparacaoAnterior: {
+              ...estatisticasAnoAnterior,
+              diferencaPercentual: calcularDiferencaPercentual(
+                estatisticasAnoAtual.percentualRetencao, 
+                estatisticasAnoAnterior.percentualRetencao
+              )
+            }
+          }
+        ];
+        
+        return resultados;
+      }
+    });
+  };
+
   return {
     cards,
     isLoading,
     updateCardColumn,
     updateCard,
-    finalizarAlerta
+    finalizarAlerta,
+    useResultadosEvasao
   };
 };
