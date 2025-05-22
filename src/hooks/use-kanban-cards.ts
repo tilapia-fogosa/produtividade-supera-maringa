@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -118,12 +117,22 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
             
             if (detalhes && detalhes.length > 0) {
               // Atualizar o card com os detalhes obtidos
-              return {
+              const updatedCard = {
                 ...card,
                 turma: detalhes[0].turma || card.turma,
                 educador: detalhes[0].educador || card.educador,
                 faltas_recorrentes: detalhes[0].faltas_recorrentes
               };
+              
+              // Persistir os detalhes no banco
+              await updateCardDetails.mutateAsync({
+                cardId: card.id,
+                turma: detalhes[0].turma,
+                educador: detalhes[0].educador,
+                faltas_recorrentes: detalhes[0].faltas_recorrentes
+              });
+              
+              return updatedCard;
             }
           } catch (err) {
             console.error(`Erro ao processar detalhes para ${card.aluno_nome}:`, err);
@@ -135,6 +144,39 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       
       return cardsWithDetails as KanbanCard[];
     }
+  });
+
+  const updateCardDetails = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      turma, 
+      educador, 
+      faltas_recorrentes 
+    }: { 
+      cardId: string; 
+      turma?: string | null;
+      educador?: string | null;
+      faltas_recorrentes?: boolean;
+    }) => {
+      // Não exibir toast para esta operação silenciosa
+      const { error, data } = await supabase
+        .from('kanban_cards')
+        .update({ 
+          turma, 
+          educador, 
+          faltas_recorrentes 
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Erro ao atualizar detalhes do card:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    // Não invalidar a query para evitar refetch durante o processo de busca
   });
 
   const updateCardColumn = useMutation({
