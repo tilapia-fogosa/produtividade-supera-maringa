@@ -10,6 +10,7 @@ interface PedagogicalKanbanProps {
   type: 'evasions' | 'absences';
   showHibernating?: boolean;
   searchQuery?: string;
+  filtroResultado?: 'todos' | 'evadiu' | 'retido' | 'pendente';
 }
 
 const columns = {
@@ -35,9 +36,8 @@ const columns = {
   }
 };
 
-export function PedagogicalKanban({ type, showHibernating = false, searchQuery = "" }: PedagogicalKanbanProps) {
+export function PedagogicalKanban({ type, showHibernating = false, searchQuery = "", filtroResultado = 'todos' }: PedagogicalKanbanProps) {
   const { cards, isLoading, updateCardColumn, updateCard, finalizarAlerta } = useKanbanCards(showHibernating);
-  const [filtroResultado, setFiltroResultado] = useState<'todos' | 'evadiu' | 'retido' | 'pendente'>('todos');
 
   const filteredCards = cards.filter(card => {
     // Filtra por termo de busca
@@ -164,41 +164,6 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
   
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <Button 
-          size="sm"
-          variant={filtroResultado === 'todos' ? 'default' : 'outline'}
-          onClick={() => setFiltroResultado('todos')}
-          className="bg-orange-500 text-white hover:bg-orange-600"
-        >
-          Todos
-        </Button>
-        <Button 
-          size="sm"
-          variant={filtroResultado === 'pendente' ? 'default' : 'outline'}
-          onClick={() => setFiltroResultado('pendente')}
-          className={filtroResultado === 'pendente' ? 'bg-gray-500 text-white hover:bg-gray-600' : ''}
-        >
-          Pendentes
-        </Button>
-        <Button 
-          size="sm"
-          variant={filtroResultado === 'evadiu' ? 'default' : 'outline'}
-          onClick={() => setFiltroResultado('evadiu')}
-          className={filtroResultado === 'evadiu' ? 'bg-red-500 text-white hover:bg-red-600' : ''}
-        >
-          Evadidos
-        </Button>
-        <Button 
-          size="sm"
-          variant={filtroResultado === 'retido' ? 'default' : 'outline'}
-          onClick={() => setFiltroResultado('retido')}
-          className={filtroResultado === 'retido' ? 'bg-green-500 text-white hover:bg-green-600' : ''}
-        >
-          Retidos
-        </Button>
-      </div>
-    
       <div className="flex gap-4 overflow-x-auto pb-4">
         <DragDropContext onDragEnd={handleDragEnd}>
           {Object.entries(columnsToShow).map(([id, { title, icon: Icon }]) => {
