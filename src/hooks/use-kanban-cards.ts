@@ -23,6 +23,31 @@ interface KanbanCard {
   last_activity?: string;
   retention_date?: string | null;
   resultado?: 'evadiu' | 'retido' | null;
+  
+  // Campos comuns
+  turma?: string | null;
+  educador?: string | null;
+  fez_pausa_emergencial?: boolean;
+  faltas_recorrentes?: boolean;
+  
+  // Campos específicos para alertas ativos
+  link_ficha_rescisao?: string | null;
+  
+  // Campos específicos para Evadidos
+  data_evasao?: string | null;
+  data_rescisao?: string | null;
+  data_exclusao_sgs?: string | null;
+  motivo_evasao?: string | null;
+  exclusao_sgs_confirmada?: boolean;
+  exclusao_whatsapp_confirmada?: boolean;
+  
+  // Campos específicos para Retidos
+  data_retencao_confirmada?: string | null;
+  acao_retencao?: string | null;
+  acordo_retencao?: string | null;
+  
+  // Observações para retidos e evadidos
+  observacoes_adicionais?: string | null;
 }
 
 interface ResultadoPeriodo {
@@ -113,6 +138,21 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       tags?: string[];
       column_id?: string;
       historico?: string | null;
+      turma?: string;
+      educador?: string;
+      fez_pausa_emergencial?: boolean;
+      faltas_recorrentes?: boolean;
+      link_ficha_rescisao?: string;
+      data_evasao?: string;
+      data_rescisao?: string;
+      data_exclusao_sgs?: string;
+      motivo_evasao?: string;
+      exclusao_sgs_confirmada?: boolean;
+      exclusao_whatsapp_confirmada?: boolean;
+      data_retencao_confirmada?: string;
+      acao_retencao?: string;
+      acordo_retencao?: string;
+      observacoes_adicionais?: string;
     }) => {
       console.log('Atualizando card:', updateData);
       
@@ -138,6 +178,44 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     },
     onError: (error) => {
       console.error('Erro na mutação de atualização de card:', error);
+    }
+  });
+
+  // Nova mutação para atualizar campos de status
+  const updateCardStatus = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      field, 
+      value 
+    }: { 
+      cardId: string; 
+      field: string;
+      value: boolean | string | null;
+    }) => {
+      console.log(`Atualizando status do card ${cardId}, campo ${field}:`, value);
+      
+      const { error, data } = await supabase
+        .from('kanban_cards')
+        .update({ [field]: value })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Erro ao atualizar status do card:', error);
+        throw error;
+      }
+      
+      console.log('Status atualizado:', data);
+      return data;
+    },
+    onSuccess: () => {
+      console.log('Invalidando cache após atualização de status');
+      queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+      toast.success("Status atualizado com sucesso");
+    },
+    onError: (error) => {
+      console.error('Erro na mutação de atualização de status:', error);
+      toast.error("Erro ao atualizar status");
     }
   });
 
@@ -175,13 +253,23 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
         ? `${cardAtual.historico}\n\n${mensagemHistorico}` 
         : mensagemHistorico;
       
+      // Prepara dados adicionais baseados no tipo de resultado
+      const dadosAdicionais = resultado === 'evadiu' 
+        ? { 
+            data_evasao: new Date().toISOString(),
+          } 
+        : { 
+            data_retencao_confirmada: new Date().toISOString(), 
+          };
+      
       // Atualiza o card com o resultado e o histórico
       const { error: errorCard } = await supabase
         .from('kanban_cards')
         .update({ 
           resultado,
           historico: historicoAtualizado,
-          column_id: 'done' // Move para coluna "Concluído"
+          column_id: 'done', // Move para coluna "Concluído"
+          ...dadosAdicionais
         })
         .eq('id', cardId);
 
@@ -393,6 +481,7 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     isLoading,
     updateCardColumn,
     updateCard,
+    updateCardStatus,
     finalizarAlerta,
     useResultadosEvasao
   };

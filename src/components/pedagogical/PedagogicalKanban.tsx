@@ -1,3 +1,4 @@
+
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
@@ -37,7 +38,14 @@ const columns = {
 };
 
 export function PedagogicalKanban({ type, showHibernating = false, searchQuery = "", filtroResultado = 'todos' }: PedagogicalKanbanProps) {
-  const { cards, isLoading, updateCardColumn, updateCard, finalizarAlerta } = useKanbanCards(showHibernating);
+  const { 
+    cards, 
+    isLoading, 
+    updateCardColumn, 
+    updateCard, 
+    updateCardStatus, 
+    finalizarAlerta 
+  } = useKanbanCards(showHibernating);
 
   const filteredCards = cards.filter(card => {
     // Filtra por termo de busca
@@ -125,6 +133,22 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
     due_date?: string | null;
     tags?: string[];
     column_id?: string;
+    retention_date?: string | null;
+    turma?: string;
+    educador?: string;
+    fez_pausa_emergencial?: boolean;
+    faltas_recorrentes?: boolean;
+    link_ficha_rescisao?: string;
+    data_evasao?: string;
+    data_rescisao?: string;
+    data_exclusao_sgs?: string;
+    motivo_evasao?: string;
+    exclusao_sgs_confirmada?: boolean;
+    exclusao_whatsapp_confirmada?: boolean;
+    data_retencao_confirmada?: string;
+    acao_retencao?: string;
+    acordo_retencao?: string;
+    observacoes_adicionais?: string;
   }) => {
     console.log(`Editando card ${cardId} com valores:`, values);
     
@@ -146,6 +170,10 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
     alunoNome?: string | null;
   }) => {
     finalizarAlerta.mutate(params);
+  };
+
+  const handleUpdateStatus = (cardId: string, field: string, value: boolean | string | null) => {
+    updateCardStatus.mutate({ cardId, field, value });
   };
 
   if (isLoading) {
@@ -213,8 +241,24 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
                                   alerta_evasao_id={card.alerta_evasao_id}
                                   retention_date={card.retention_date}
                                   resultado={card.resultado}
+                                  turma={card.turma}
+                                  educador={card.educador}
+                                  fez_pausa_emergencial={card.fez_pausa_emergencial}
+                                  faltas_recorrentes={card.faltas_recorrentes}
+                                  link_ficha_rescisao={card.link_ficha_rescisao}
+                                  data_evasao={card.data_evasao}
+                                  data_rescisao={card.data_rescisao}
+                                  data_exclusao_sgs={card.data_exclusao_sgs}
+                                  motivo_evasao={card.motivo_evasao}
+                                  exclusao_sgs_confirmada={card.exclusao_sgs_confirmada}
+                                  exclusao_whatsapp_confirmada={card.exclusao_whatsapp_confirmada}
+                                  data_retencao_confirmada={card.data_retencao_confirmada}
+                                  acao_retencao={card.acao_retencao}
+                                  acordo_retencao={card.acordo_retencao}
+                                  observacoes_adicionais={card.observacoes_adicionais}
                                   onEdit={handleCardEdit(card.id)}
                                   onFinalizar={handleFinalizar}
+                                  onUpdateStatus={handleUpdateStatus}
                                 />
                               </div>
                             )}

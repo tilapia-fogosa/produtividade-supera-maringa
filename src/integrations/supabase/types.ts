@@ -1142,14 +1142,28 @@ export type Database = {
       }
       kanban_cards: {
         Row: {
+          acao_retencao: string | null
+          acordo_retencao: string | null
           alerta_evasao_id: string
           aluno_nome: string | null
           column_id: string
           created_at: string
+          data_evasao: string | null
+          data_exclusao_sgs: string | null
+          data_rescisao: string | null
+          data_retencao_confirmada: string | null
           description: string | null
           due_date: string | null
+          educador: string | null
+          exclusao_sgs_confirmada: boolean | null
+          exclusao_whatsapp_confirmada: boolean | null
+          faltas_recorrentes: boolean | null
+          fez_pausa_emergencial: boolean | null
           historico: string | null
           id: string
+          link_ficha_rescisao: string | null
+          motivo_evasao: string | null
+          observacoes_adicionais: string | null
           origem: string | null
           priority: string | null
           responsavel: string | null
@@ -1157,17 +1171,32 @@ export type Database = {
           retention_date: string | null
           tags: string[] | null
           title: string
+          turma: string | null
           updated_at: string
         }
         Insert: {
+          acao_retencao?: string | null
+          acordo_retencao?: string | null
           alerta_evasao_id: string
           aluno_nome?: string | null
           column_id?: string
           created_at?: string
+          data_evasao?: string | null
+          data_exclusao_sgs?: string | null
+          data_rescisao?: string | null
+          data_retencao_confirmada?: string | null
           description?: string | null
           due_date?: string | null
+          educador?: string | null
+          exclusao_sgs_confirmada?: boolean | null
+          exclusao_whatsapp_confirmada?: boolean | null
+          faltas_recorrentes?: boolean | null
+          fez_pausa_emergencial?: boolean | null
           historico?: string | null
           id?: string
+          link_ficha_rescisao?: string | null
+          motivo_evasao?: string | null
+          observacoes_adicionais?: string | null
           origem?: string | null
           priority?: string | null
           responsavel?: string | null
@@ -1175,17 +1204,32 @@ export type Database = {
           retention_date?: string | null
           tags?: string[] | null
           title: string
+          turma?: string | null
           updated_at?: string
         }
         Update: {
+          acao_retencao?: string | null
+          acordo_retencao?: string | null
           alerta_evasao_id?: string
           aluno_nome?: string | null
           column_id?: string
           created_at?: string
+          data_evasao?: string | null
+          data_exclusao_sgs?: string | null
+          data_rescisao?: string | null
+          data_retencao_confirmada?: string | null
           description?: string | null
           due_date?: string | null
+          educador?: string | null
+          exclusao_sgs_confirmada?: boolean | null
+          exclusao_whatsapp_confirmada?: boolean | null
+          faltas_recorrentes?: boolean | null
+          fez_pausa_emergencial?: boolean | null
           historico?: string | null
           id?: string
+          link_ficha_rescisao?: string | null
+          motivo_evasao?: string | null
+          observacoes_adicionais?: string | null
           origem?: string | null
           priority?: string | null
           responsavel?: string | null
@@ -1193,6 +1237,7 @@ export type Database = {
           retention_date?: string | null
           tags?: string[] | null
           title?: string
+          turma?: string | null
           updated_at?: string
         }
         Relationships: [
