@@ -18,7 +18,6 @@ interface CardData {
   title: string;
   description: string | null;
   responsavel: string | null;
-  priority?: string;
   due_date?: string | null;
   retention_date?: string | null;
   tags?: string[];
@@ -60,7 +59,6 @@ interface EditKanbanCardModalProps {
     title: string;
     description: string;
     responsavel: string;
-    priority?: string;
     due_date?: string | null;
     retention_date?: string | null;
     tags?: string[];
@@ -119,7 +117,6 @@ export function EditKanbanCardModal({ isOpen, card, onClose, onSave }: EditKanba
   const [title, setTitle] = useState<string>(card.title || "");
   const [description, setDescription] = useState<string>(card.description || "");
   const [responsavel, setResponsavel] = useState<string>(card.responsavel || "");
-  const [priority, setPriority] = useState<string>(card.priority || "medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(card.due_date ? new Date(card.due_date) : undefined);
   const [retentionDate, setRetentionDate] = useState<Date | undefined>(card.retention_date ? new Date(card.retention_date) : undefined);
   
@@ -158,7 +155,6 @@ export function EditKanbanCardModal({ isOpen, card, onClose, onSave }: EditKanba
       title,
       description,
       responsavel,
-      priority,
       due_date: dueDate ? dueDate.toISOString() : null,
       retention_date: retentionDate ? retentionDate.toISOString() : null,
       
@@ -229,20 +225,6 @@ export function EditKanbanCardModal({ isOpen, card, onClose, onSave }: EditKanba
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="priority">Prioridade</Label>
-                  <Select value={priority} onValueChange={setPriority}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a prioridade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Baixa</SelectItem>
-                      <SelectItem value="medium">Média</SelectItem>
-                      <SelectItem value="high">Alta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
                   <Label htmlFor="dueDate">Data limite</Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -267,9 +249,7 @@ export function EditKanbanCardModal({ isOpen, card, onClose, onSave }: EditKanba
                     </PopoverContent>
                   </Popover>
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+                
                 <div className="space-y-2">
                   <Label htmlFor="retentionDate">Data de retenção</Label>
                   <Popover>
@@ -295,16 +275,16 @@ export function EditKanbanCardModal({ isOpen, card, onClose, onSave }: EditKanba
                     </PopoverContent>
                   </Popover>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="link-ficha">Link para ficha de rescisão</Label>
-                  <Input 
-                    id="link-ficha" 
-                    value={linkFichaRescisao} 
-                    onChange={(e) => setLinkFichaRescisao(e.target.value)} 
-                    placeholder="URL da ficha de rescisão"
-                  />
-                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="link-ficha">Link para ficha de rescisão</Label>
+                <Input 
+                  id="link-ficha" 
+                  value={linkFichaRescisao} 
+                  onChange={(e) => setLinkFichaRescisao(e.target.value)} 
+                  placeholder="URL da ficha de rescisão"
+                />
               </div>
               
               <div className="space-y-2">

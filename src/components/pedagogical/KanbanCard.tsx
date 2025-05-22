@@ -31,7 +31,6 @@ interface KanbanCardProps {
   origem?: string | null;
   responsavel?: string | null;
   createdAt: string;
-  priority?: string;
   due_date?: string | null;
   tags?: string[];
   historico?: string | null;
@@ -69,7 +68,6 @@ interface KanbanCardProps {
     title: string; 
     description: string; 
     responsavel: string;
-    priority?: string;
     due_date?: string | null;
     retention_date?: string | null;
     tags?: string[];
@@ -99,12 +97,6 @@ interface KanbanCardProps {
   onUpdateStatus?: (cardId: string, field: string, value: boolean | string | null) => void;
 }
 
-const priorityColors = {
-  low: "bg-green-500",
-  medium: "bg-yellow-500",
-  high: "bg-red-500"
-};
-
 export function KanbanCard({ 
   id,
   title, 
@@ -113,7 +105,6 @@ export function KanbanCard({
   origem, 
   responsavel, 
   createdAt,
-  priority = 'medium',
   due_date,
   tags = [],
   historico,
@@ -153,8 +144,6 @@ export function KanbanCard({
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
-
-  const priorityColor = priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium;
   
   const handleCardClick = () => {
     setIsEditModalOpen(true);
@@ -207,8 +196,7 @@ export function KanbanCard({
         
         <div className="space-y-2">
           <div className="flex items-start justify-between">
-            <h4 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1 mr-2">{alunoNome || title}</h4>
-            <div className={`w-2 h-2 rounded-full ${priorityColor} flex-shrink-0`} />
+            <h4 className="text-sm font-medium text-gray-900 line-clamp-2">{alunoNome || title}</h4>
           </div>
           
           {/* Informações Comuns para Todos os Cards */}
@@ -446,7 +434,6 @@ export function KanbanCard({
           title, 
           description, 
           responsavel, 
-          priority,
           due_date,
           retention_date,
           tags,

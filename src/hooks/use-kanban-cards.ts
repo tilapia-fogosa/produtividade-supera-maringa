@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,7 +16,6 @@ interface KanbanCard {
   created_at: string;
   updated_at: string;
   historico?: string | null;
-  priority?: string;
   due_date?: string | null;
   attached_files?: any[];
   comments?: any[];
@@ -133,7 +133,6 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       title: string;
       description: string;
       responsavel: string;
-      priority?: string;
       due_date?: string | null;
       tags?: string[];
       column_id?: string;
