@@ -2,10 +2,9 @@
 import { Card } from "@/components/ui/card";
 import { PedagogicalKanban } from "@/components/pedagogical/PedagogicalKanban";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder, Clock, Search, Bell } from "lucide-react";
+import { Folder, Clock, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { AlertasLancamento } from "@/components/pedagogical/AlertasLancamento";
 
 const PainelPedagogico = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,10 +25,6 @@ const PainelPedagogico = () => {
                 <Clock className="h-4 w-4" />
                 <span>Inativos</span>
               </TabsTrigger>
-              <TabsTrigger value="alertas" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                <span>Alertas de Lançamento</span>
-              </TabsTrigger>
             </TabsList>
             
             <div className="mb-4 flex items-center gap-2 mt-4">
@@ -49,10 +44,6 @@ const PainelPedagogico = () => {
 
             <TabsContent value="inativos">
               <PedagogicalKanban type="evasions" showHibernating={true} searchQuery={searchQuery} />
-            </TabsContent>
-
-            <TabsContent value="alertas">
-              <AlertasLancamento />
             </TabsContent>
           </Tabs>
         </Card>
