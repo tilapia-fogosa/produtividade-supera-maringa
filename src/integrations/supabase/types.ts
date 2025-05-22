@@ -1153,6 +1153,7 @@ export type Database = {
           origem: string | null
           priority: string | null
           responsavel: string | null
+          resultado: string | null
           retention_date: string | null
           tags: string[] | null
           title: string
@@ -1170,6 +1171,7 @@ export type Database = {
           origem?: string | null
           priority?: string | null
           responsavel?: string | null
+          resultado?: string | null
           retention_date?: string | null
           tags?: string[] | null
           title: string
@@ -1187,6 +1189,7 @@ export type Database = {
           origem?: string | null
           priority?: string | null
           responsavel?: string | null
+          resultado?: string | null
           retention_date?: string | null
           tags?: string[] | null
           title?: string
