@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { AlertTriangle, CalendarClock, User, Clock, History } from "lucide-react";
+import { AlertTriangle, CalendarClock, User, Clock, History, CheckCircle2, XCircle } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EditKanbanCardModal } from "./EditKanbanCardModal";
@@ -23,6 +24,8 @@ interface KanbanCardProps {
   historico?: string | null;
   column_id: string;
   retention_date?: string | null;
+  alerta_evasao_id: string;
+  resultado?: 'evadiu' | 'retido' | null;
   onEdit: (values: { 
     title: string; 
     description: string; 
@@ -32,6 +35,12 @@ interface KanbanCardProps {
     retention_date?: string | null;
     tags?: string[];
     column_id?: string;
+  }) => void;
+  onFinalizar?: (params: {
+    cardId: string;
+    alertaId: string;
+    resultado: 'evadiu' | 'retido';
+    alunoNome?: string | null;
   }) => void;
 }
 
@@ -55,19 +64,49 @@ export function KanbanCard({
   historico,
   column_id,
   retention_date,
-  onEdit
+  alerta_evasao_id,
+  resultado,
+  onEdit,
+  onFinalizar
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
 
   const priorityColor = priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium;
+  
+  const handleCardClick = () => {
+    if (!resultado) {  // Só permite editar se não estiver finalizado
+      setIsEditModalOpen(true);
+    }
+  };
+  
+  const handleFinalizar = (tipo: 'evadiu' | 'retido', e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onFinalizar) {
+      onFinalizar({
+        cardId: id,
+        alertaId: alerta_evasao_id,
+        resultado: tipo,
+        alunoNome
+      });
+    }
+  };
 
   return (
     <>
       <Card 
-        className="p-3 mb-2 bg-white shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing relative"
-        onClick={() => setIsEditModalOpen(true)}
+        className={`p-3 mb-2 bg-white shadow-sm hover:shadow-md transition-shadow ${resultado ? 'border-l-4 ' + (resultado === 'evadiu' ? 'border-l-red-500' : 'border-l-green-500') : 'cursor-grab active:cursor-grabbing'} relative`}
+        onClick={handleCardClick}
       >
+        {resultado && (
+          <Badge 
+            variant={resultado === 'evadiu' ? 'destructive' : 'success'} 
+            className="absolute top-2 right-2"
+          >
+            {resultado === 'evadiu' ? 'Evadido' : 'Retido'}
+          </Badge>
+        )}
+        
         <div className="space-y-2">
           <div className="flex items-start justify-between">
             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1 mr-2">{title}</h4>
@@ -140,6 +179,27 @@ export function KanbanCard({
           <div className="text-xs text-orange-600">
             {responsavel}
           </div>
+          
+          {!resultado && column_id !== 'hibernating' && onFinalizar && (
+            <div className="flex justify-between gap-2 pt-2">
+              <Button
+                size="sm"
+                variant="destructive"
+                className="w-1/2 bg-red-500 text-white hover:bg-red-600"
+                onClick={(e) => handleFinalizar('evadiu', e)}
+              >
+                <XCircle className="h-4 w-4 mr-1" /> Evadiu
+              </Button>
+              
+              <Button
+                size="sm" 
+                className="w-1/2 bg-green-500 text-white hover:bg-green-600"
+                onClick={(e) => handleFinalizar('retido', e)}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Retido
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 

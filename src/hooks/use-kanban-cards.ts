@@ -1,6 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface KanbanCard {
   id: string;
@@ -21,6 +22,7 @@ interface KanbanCard {
   tags?: string[];
   last_activity?: string;
   retention_date?: string | null;
+  resultado?: 'evadiu' | 'retido' | null;
 }
 
 export const useKanbanCards = (showHibernating: boolean = false) => {
@@ -117,10 +119,91 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     }
   });
 
+  const finalizarAlerta = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      alertaId, 
+      resultado, 
+      alunoNome 
+    }: { 
+      cardId: string; 
+      alertaId: string; 
+      resultado: 'evadiu' | 'retido';
+      alunoNome?: string | null;
+    }) => {
+      console.log(`Finalizando alerta ${alertaId} com resultado: ${resultado}`);
+      
+      const dataHora = new Date().toLocaleString('pt-BR');
+      const mensagemHistorico = `${dataHora} - Alerta finalizado como: ${resultado === 'evadiu' ? 'EVADIDO' : 'RETIDO'}`;
+      
+      // Primeiro, busca o card atual para obter o histórico existente
+      const { data: cardAtual, error: erroCard } = await supabase
+        .from('kanban_cards')
+        .select('historico')
+        .eq('id', cardId)
+        .single();
+        
+      if (erroCard) {
+        console.error('Erro ao buscar card para finalização:', erroCard);
+        throw erroCard;
+      }
+      
+      // Atualiza o histórico concatenando a nova mensagem
+      const historicoAtualizado = cardAtual.historico 
+        ? `${cardAtual.historico}\n\n${mensagemHistorico}` 
+        : mensagemHistorico;
+      
+      // Atualiza o card com o resultado e o histórico
+      const { error: errorCard } = await supabase
+        .from('kanban_cards')
+        .update({ 
+          resultado,
+          historico: historicoAtualizado,
+          column_id: 'done' // Move para coluna "Concluído"
+        })
+        .eq('id', cardId);
+
+      if (errorCard) {
+        console.error('Erro ao finalizar card:', errorCard);
+        throw errorCard;
+      }
+      
+      // Atualiza o alerta na tabela alerta_evasao
+      const { error: errorAlerta } = await supabase
+        .from('alerta_evasao')
+        .update({ 
+          status: 'resolvido',
+          kanban_status: 'done'
+        })
+        .eq('id', alertaId);
+
+      if (errorAlerta) {
+        console.error('Erro ao atualizar alerta de evasão:', errorAlerta);
+        throw errorAlerta;
+      }
+      
+      return { resultado, alunoNome };
+    },
+    onSuccess: (data) => {
+      console.log('Alerta finalizado com sucesso:', data);
+      const mensagem = data.resultado === 'evadiu' 
+        ? `${data.alunoNome || 'Aluno'} marcado como evadido`
+        : `${data.alunoNome || 'Aluno'} marcado como retido`;
+      
+      toast.success(mensagem);
+      queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao finalizar alerta:', error);
+      toast.error('Erro ao finalizar o alerta');
+    }
+  });
+
   return {
     cards,
     isLoading,
     updateCardColumn,
-    updateCard
+    updateCard,
+    finalizarAlerta
   };
 };

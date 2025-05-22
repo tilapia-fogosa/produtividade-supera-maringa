@@ -1,8 +1,11 @@
+
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
 import { Loader2, Bell, MessageSquare, Calendar, Check, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface PedagogicalKanbanProps {
   type: 'evasions' | 'absences';
@@ -34,18 +37,28 @@ const columns = {
 };
 
 export function PedagogicalKanban({ type, showHibernating = false, searchQuery = "" }: PedagogicalKanbanProps) {
-  const { cards, isLoading, updateCardColumn, updateCard } = useKanbanCards(showHibernating);
+  const { cards, isLoading, updateCardColumn, updateCard, finalizarAlerta } = useKanbanCards(showHibernating);
+  const [filtroResultado, setFiltroResultado] = useState<'todos' | 'evadiu' | 'retido' | 'pendente'>('todos');
 
   const filteredCards = cards.filter(card => {
+    // Filtra por termo de busca
     const matchesSearch = searchQuery 
       ? card.aluno_nome?.toLowerCase().includes(searchQuery.toLowerCase()) 
       : true;
     
-    if (showHibernating) {
-      return card.column_id === 'hibernating' && matchesSearch;
-    }
+    // Filtra por hibernating
+    const matchesHibernating = showHibernating
+      ? card.column_id === 'hibernating'
+      : card.column_id !== 'hibernating';
     
-    return card.column_id !== 'hibernating' && matchesSearch;
+    // Filtra por resultado
+    const matchesResultado = filtroResultado === 'todos'
+      ? true
+      : filtroResultado === 'pendente'
+        ? !card.resultado
+        : card.resultado === filtroResultado;
+    
+    return matchesSearch && matchesHibernating && matchesResultado;
   });
 
   const handleDragEnd = (result: DropResult) => {
@@ -55,6 +68,12 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
     
     const { draggableId, destination } = result;
     const card = cards.find(c => c.id === draggableId);
+    
+    // Não permite mover cards que já foram finalizados
+    if (card?.resultado) {
+      toast.error("Este alerta já foi finalizado e não pode ser movido");
+      return;
+    }
     
     if (destination.droppableId === 'scheduled' && (!card?.retention_date)) {
       toast.error("É necessário preencher a data de retenção antes de mover para Retenção agendada");
@@ -120,6 +139,15 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
       }
     });
   };
+  
+  const handleFinalizar = (params: {
+    cardId: string;
+    alertaId: string;
+    resultado: 'evadiu' | 'retido';
+    alunoNome?: string | null;
+  }) => {
+    finalizarAlerta.mutate(params);
+  };
 
   if (isLoading) {
     return (
@@ -134,68 +162,110 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
     : Object.fromEntries(
         Object.entries(columns).filter(([key]) => key !== 'hibernating')
       );
-
+  
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
-      <DragDropContext onDragEnd={handleDragEnd}>
-        {Object.entries(columnsToShow).map(([id, { title, icon: Icon }]) => {
-          const columnCards = filteredCards.filter(card => card.column_id === id);
-          
-          return (
-            <div key={id} className="flex-shrink-0 w-72">
-              <div className="bg-orange-50 rounded-lg p-3">
-                <div className="font-medium text-sm mb-3 text-azul-500 flex items-center gap-2">
-                  <Icon className="h-4 w-4" />
-                  {title} ({columnCards.length})
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          size="sm"
+          variant={filtroResultado === 'todos' ? 'default' : 'outline'}
+          onClick={() => setFiltroResultado('todos')}
+          className="bg-orange-500 text-white hover:bg-orange-600"
+        >
+          Todos
+        </Button>
+        <Button 
+          size="sm"
+          variant={filtroResultado === 'pendente' ? 'default' : 'outline'}
+          onClick={() => setFiltroResultado('pendente')}
+          className={filtroResultado === 'pendente' ? 'bg-gray-500 text-white hover:bg-gray-600' : ''}
+        >
+          Pendentes
+        </Button>
+        <Button 
+          size="sm"
+          variant={filtroResultado === 'evadiu' ? 'default' : 'outline'}
+          onClick={() => setFiltroResultado('evadiu')}
+          className={filtroResultado === 'evadiu' ? 'bg-red-500 text-white hover:bg-red-600' : ''}
+        >
+          Evadidos
+        </Button>
+        <Button 
+          size="sm"
+          variant={filtroResultado === 'retido' ? 'default' : 'outline'}
+          onClick={() => setFiltroResultado('retido')}
+          className={filtroResultado === 'retido' ? 'bg-green-500 text-white hover:bg-green-600' : ''}
+        >
+          Retidos
+        </Button>
+      </div>
+    
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          {Object.entries(columnsToShow).map(([id, { title, icon: Icon }]) => {
+            const columnCards = filteredCards.filter(card => card.column_id === id);
+            
+            return (
+              <div key={id} className="flex-shrink-0 w-72">
+                <div className="bg-orange-50 rounded-lg p-3">
+                  <div className="font-medium text-sm mb-3 text-azul-500 flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    {title} ({columnCards.length})
+                  </div>
+                  
+                  <Droppable droppableId={id}>
+                    {(provided) => (
+                      <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="space-y-2 min-h-[100px]"
+                      >
+                        {columnCards.map((card, index) => (
+                          <Draggable 
+                            key={card.id} 
+                            draggableId={card.id} 
+                            index={index}
+                            isDragDisabled={!!card.resultado} // Desabilita drag se finalizado
+                          >
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <KanbanCard
+                                  id={card.id}
+                                  title={card.title}
+                                  description={card.description}
+                                  alunoNome={card.aluno_nome}
+                                  origem={card.origem}
+                                  responsavel={card.responsavel}
+                                  createdAt={card.created_at}
+                                  priority={card.priority}
+                                  due_date={card.due_date}
+                                  tags={card.tags}
+                                  historico={card.historico}
+                                  column_id={card.column_id}
+                                  alerta_evasao_id={card.alerta_evasao_id}
+                                  retention_date={card.retention_date}
+                                  resultado={card.resultado}
+                                  onEdit={handleCardEdit(card.id)}
+                                  onFinalizar={handleFinalizar}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
                 </div>
-                
-                <Droppable droppableId={id}>
-                  {(provided) => (
-                    <div 
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="space-y-2 min-h-[100px]"
-                    >
-                      {columnCards.map((card, index) => (
-                        <Draggable 
-                          key={card.id} 
-                          draggableId={card.id} 
-                          index={index}
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                            >
-                              <KanbanCard
-                                id={card.id}
-                                title={card.title}
-                                description={card.description}
-                                alunoNome={card.aluno_nome}
-                                origem={card.origem}
-                                responsavel={card.responsavel}
-                                createdAt={card.created_at}
-                                priority={card.priority}
-                                due_date={card.due_date}
-                                tags={card.tags}
-                                historico={card.historico}
-                                column_id={card.column_id}
-                                onEdit={handleCardEdit(card.id)}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
               </div>
-            </div>
-          );
-        })}
-      </DragDropContext>
+            );
+          })}
+        </DragDropContext>
+      </div>
     </div>
   );
 }
