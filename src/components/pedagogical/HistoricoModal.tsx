@@ -18,11 +18,7 @@ export function HistoricoModal({ historico, onAddComment, isOpen, onClose }: His
 
   const handleAddComment = () => {
     if (!newComment.trim()) {
-      toast({
-        title: "Erro",
-        description: "O comentário não pode estar vazio",
-        variant: "destructive",
-      });
+      toast.error("O comentário não pode estar vazio");
       return;
     }
 

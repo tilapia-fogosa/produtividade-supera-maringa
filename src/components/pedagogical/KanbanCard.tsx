@@ -142,7 +142,8 @@ export function KanbanCard({
   
   onEdit,
   onFinalizar,
-  onUpdateStatus
+  onUpdateStatus,
+  onAddComment
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
@@ -171,8 +172,6 @@ export function KanbanCard({
   };
   
   const handleAddComment = (comment: string) => {
-    // A implementação real será feita pelo componente pai que passa o handler
-    // através da prop onAddComment
     if (onAddComment) {
       onAddComment(id, comment);
       setIsHistoricoModalOpen(false);
