@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
 
 interface HistoricoModalProps {
@@ -15,7 +15,6 @@ interface HistoricoModalProps {
 
 export function HistoricoModal({ historico, onAddComment, isOpen, onClose }: HistoricoModalProps) {
   const [newComment, setNewComment] = useState("");
-  const { toast } = useToast();
 
   const handleAddComment = () => {
     if (!newComment.trim()) {

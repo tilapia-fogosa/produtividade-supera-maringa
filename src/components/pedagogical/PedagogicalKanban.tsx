@@ -1,4 +1,3 @@
-
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
 import { KanbanCard } from "./KanbanCard";
@@ -43,7 +42,8 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
     updateCardColumn, 
     updateCard, 
     updateCardStatus, 
-    finalizarAlerta 
+    finalizarAlerta,
+    addCommentToHistory
   } = useKanbanCards(showHibernating);
 
   const filteredCards = cards.filter(card => {
@@ -173,6 +173,10 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
   const handleUpdateStatus = (cardId: string, field: string, value: boolean | string | null) => {
     updateCardStatus.mutate({ cardId, field, value });
   };
+  
+  const handleAddComment = (cardId: string, comment: string) => {
+    addCommentToHistory.mutate({ cardId, comment });
+  };
 
   if (isLoading) {
     return (
@@ -256,6 +260,7 @@ export function PedagogicalKanban({ type, showHibernating = false, searchQuery =
                                   onEdit={handleCardEdit(card.id)}
                                   onFinalizar={handleFinalizar}
                                   onUpdateStatus={handleUpdateStatus}
+                                  onAddComment={handleAddComment}
                                 />
                               </div>
                             )}

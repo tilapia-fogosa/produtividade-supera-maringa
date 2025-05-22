@@ -297,6 +297,66 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     }
   });
 
+  // Nova mutação para adicionar comentários ao histórico
+  const addCommentToHistory = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      comment 
+    }: { 
+      cardId: string; 
+      comment: string;
+    }) => {
+      // Primeiro, buscar o card atual para obter o histórico existente
+      const { data: card, error: fetchError } = await supabase
+        .from('kanban_cards')
+        .select('historico')
+        .eq('id', cardId)
+        .single();
+        
+      if (fetchError) {
+        console.error('Erro ao buscar card para adicionar comentário:', fetchError);
+        throw fetchError;
+      }
+      
+      // Formatar a data atual
+      const dataHora = new Date().toLocaleString('pt-BR');
+      
+      // Criar a mensagem do comentário
+      const mensagemComentario = `${dataHora} - COMENTÁRIO: ${comment}`;
+      
+      // Atualizar o histórico concatenando o novo comentário
+      const historicoAtualizado = card.historico 
+        ? `${card.historico}\n\n${mensagemComentario}` 
+        : mensagemComentario;
+      
+      // Atualizar o card com o histórico atualizado
+      const { error, data } = await supabase
+        .from('kanban_cards')
+        .update({ 
+          historico: historicoAtualizado
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Erro ao adicionar comentário ao histórico:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      console.log('Comentário adicionado com sucesso');
+      toast.success("Comentário adicionado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao adicionar comentário:', error);
+      toast.error("Erro ao adicionar comentário");
+    }
+  });
+
+  // Nova mutação para finalizar alertas
   const finalizarAlerta = useMutation({
     mutationFn: async ({ 
       cardId, 
@@ -561,6 +621,7 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     updateCard,
     updateCardStatus,
     finalizarAlerta,
-    useResultadosEvasao
+    useResultadosEvasao,
+    addCommentToHistory // Exportar a nova função
   };
 };

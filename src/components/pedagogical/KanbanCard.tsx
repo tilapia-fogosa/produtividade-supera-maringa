@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { 
@@ -13,7 +12,8 @@ import {
   UserCheck,
   AlertOctagon,
   Calendar,
-  FileWarning
+  FileWarning,
+  MessageCircle
 } from "lucide-react";
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HistoricoView } from "./HistoricoView";
 import { Checkbox } from "@/components/ui/checkbox";
+import { HistoricoModal } from "./HistoricoModal";
 
 interface KanbanCardProps {
   id: string;
@@ -95,6 +96,7 @@ interface KanbanCardProps {
     alunoNome?: string | null;
   }) => void;
   onUpdateStatus?: (cardId: string, field: string, value: boolean | string | null) => void;
+  onAddComment?: (cardId: string, comment: string) => void;
 }
 
 export function KanbanCard({ 
@@ -144,6 +146,7 @@ export function KanbanCard({
 }: KanbanCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   
   const handleCardClick = () => {
     setIsEditModalOpen(true);
@@ -164,6 +167,15 @@ export function KanbanCard({
   const handleStatusChange = (field: string, value: boolean | string | null) => {
     if (onUpdateStatus) {
       onUpdateStatus(id, field, value);
+    }
+  };
+  
+  const handleAddComment = (comment: string) => {
+    // A implementação real será feita pelo componente pai que passa o handler
+    // através da prop onAddComment
+    if (onAddComment) {
+      onAddComment(id, comment);
+      setIsHistoricoModalOpen(false);
     }
   };
 
@@ -383,20 +395,34 @@ export function KanbanCard({
                 </div>
               )}
             </div>
-            {historico && (
+            <div className="flex gap-1">
+              {historico && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowHistorico(true);
+                  }}
+                >
+                  <History className="h-3 w-3 mr-1" />
+                  Ver
+                </Button>
+              )}
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-6 px-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowHistorico(true);
+                  setIsHistoricoModalOpen(true);
                 }}
               >
-                <History className="h-3 w-3 mr-1" />
-                Histórico
+                <MessageCircle className="h-3 w-3 mr-1" />
+                Comentar
               </Button>
-            )}
+            </div>
           </div>
           
           <div className="text-xs text-orange-600">
@@ -465,6 +491,13 @@ export function KanbanCard({
           onVoltar={() => setShowHistorico(false)} 
         />
       )}
+      
+      <HistoricoModal
+        isOpen={isHistoricoModalOpen}
+        onClose={() => setIsHistoricoModalOpen(false)}
+        historico={historico}
+        onAddComment={handleAddComment}
+      />
     </>
   );
 }
