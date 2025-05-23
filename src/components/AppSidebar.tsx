@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { GraduationCap, Package, MessageCircle, CalendarDays, ClipboardList, User, FileText } from "lucide-react";
 import {
@@ -86,6 +85,10 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      {/* Texto na parte inferior da sidebar */}
+      <div className="mt-auto mb-4 flex justify-center">
+        <span className="text-white text-sm font-semibold">Área de testes</span>
+      </div>
     </Sidebar>
   );
 }
