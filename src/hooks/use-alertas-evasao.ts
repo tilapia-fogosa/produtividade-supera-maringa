@@ -168,6 +168,8 @@ export function useAlertasEvasao() {
     try {
       setIsSubmitting(true);
       
+      // TEMPORARIAMENTE DESABILITADO - Criação no banco de dados
+      /*
       // Determinar a coluna inicial com base na presença de data de retenção
       const initialColumn = dataRetencao ? 'scheduled' : 'todo';
       
@@ -198,6 +200,7 @@ export function useAlertasEvasao() {
         console.error("Erro ao salvar alerta:", error);
         throw error;
       }
+      */
 
       // Encontrar os dados do aluno selecionado
       const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
@@ -223,6 +226,8 @@ export function useAlertasEvasao() {
         }
       }
 
+      // TEMPORARIAMENTE DESABILITADO - Webhook de retenção agendada
+      /*
       // Se temos uma data de retenção, enviar para o webhook de agendamento
       if (dataRetencao && alertaData && alertaData.length > 0) {
         const alertaId = alertaData[0].id;
@@ -270,6 +275,7 @@ export function useAlertasEvasao() {
           }
         }
       }
+      */
 
       // Enviar mensagem para o Slack
       try {
@@ -301,6 +307,15 @@ export function useAlertasEvasao() {
       } catch (slackError) {
         console.error('Erro ao invocar function de Slack:', slackError);
       }
+
+      // Construir o histórico completo com dados da aula zero se disponíveis
+      const historicoCompleto = construirHistoricoCompleto();
+      
+      // Formatar a data do alerta para ser apenas a data, sem hora
+      const dataAlertaFormatada = dataAlerta ? new Date(dataAlerta).toISOString().split('T')[0] : null;
+      
+      // Formatar a data de retenção, se existir
+      const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
 
       // Sempre envia para o webhook geral de alertas
       const webhookUrl = 'https://hook.us1.make.com/v8b7u98lehutsqqk9tox27b2bn7x1mmx';
@@ -339,16 +354,16 @@ export function useAlertasEvasao() {
 
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão registrado com sucesso!",
+        description: "Alerta de evasão enviado para Slack e webhook com sucesso! (Banco temporariamente desabilitado)",
       });
       
       resetForm();
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar alerta:', error);
+      console.error('Erro ao processar alerta:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar o alerta de evasão.",
+        description: "Não foi possível processar o alerta de evasão.",
         variant: "destructive",
       });
     } finally {

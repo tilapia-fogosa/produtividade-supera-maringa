@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,7 +15,6 @@ interface KanbanCard {
   created_at: string;
   updated_at: string;
   historico?: string | null;
-  priority?: string;
   due_date?: string | null;
   attached_files?: any[];
   comments?: any[];
@@ -24,6 +22,31 @@ interface KanbanCard {
   last_activity?: string;
   retention_date?: string | null;
   resultado?: 'evadiu' | 'retido' | null;
+  
+  // Campos comuns
+  turma?: string | null;
+  educador?: string | null;
+  fez_pausa_emergencial?: boolean;
+  faltas_recorrentes?: boolean;
+  
+  // Campos específicos para alertas ativos
+  link_ficha_rescisao?: string | null;
+  
+  // Campos específicos para Evadidos
+  data_evasao?: string | null;
+  data_rescisao?: string | null;
+  data_exclusao_sgs?: string | null;
+  motivo_evasao?: string | null;
+  exclusao_sgs_confirmada?: boolean;
+  exclusao_whatsapp_confirmada?: boolean;
+  
+  // Campos específicos para Retidos
+  data_retencao_confirmada?: string | null;
+  acao_retencao?: string | null;
+  acordo_retencao?: string | null;
+  
+  // Observações para retidos e evadidos
+  observacoes_adicionais?: string | null;
 }
 
 interface ResultadoPeriodo {
@@ -72,8 +95,88 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       }
 
       console.log('Cards carregados:', data);
-      return data as KanbanCard[];
+      
+      // Após carregar os cards, buscar detalhes adicionais para cada um
+      const cardsWithDetails = await Promise.all(data.map(async (card) => {
+        // Só buscar detalhes para cards que não foram finalizados
+        if (card.resultado) {
+          return card;
+        }
+        
+        if (card.aluno_nome) {
+          try {
+            const { data: detalhes, error: detalheError } = await supabase
+              .rpc('get_aluno_detalhes', {
+                p_aluno_nome: card.aluno_nome
+              });
+            
+            if (detalheError) {
+              console.error(`Erro ao buscar detalhes para ${card.aluno_nome}:`, detalheError);
+              return card;
+            }
+            
+            if (detalhes && detalhes.length > 0) {
+              // Atualizar o card com os detalhes obtidos
+              const updatedCard = {
+                ...card,
+                turma: detalhes[0].turma || card.turma,
+                educador: detalhes[0].educador || card.educador,
+                faltas_recorrentes: detalhes[0].faltas_recorrentes
+              };
+              
+              // Persistir os detalhes no banco
+              await updateCardDetails.mutateAsync({
+                cardId: card.id,
+                turma: detalhes[0].turma,
+                educador: detalhes[0].educador,
+                faltas_recorrentes: detalhes[0].faltas_recorrentes
+              });
+              
+              return updatedCard;
+            }
+          } catch (err) {
+            console.error(`Erro ao processar detalhes para ${card.aluno_nome}:`, err);
+          }
+        }
+        
+        return card;
+      }));
+      
+      return cardsWithDetails as KanbanCard[];
     }
+  });
+
+  const updateCardDetails = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      turma, 
+      educador, 
+      faltas_recorrentes 
+    }: { 
+      cardId: string; 
+      turma?: string | null;
+      educador?: string | null;
+      faltas_recorrentes?: boolean;
+    }) => {
+      // Não exibir toast para esta operação silenciosa
+      const { error, data } = await supabase
+        .from('kanban_cards')
+        .update({ 
+          turma, 
+          educador, 
+          faltas_recorrentes 
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Erro ao atualizar detalhes do card:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    // Não invalidar a query para evitar refetch durante o processo de busca
   });
 
   const updateCardColumn = useMutation({
@@ -109,11 +212,25 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
       title: string;
       description: string;
       responsavel: string;
-      priority?: string;
       due_date?: string | null;
       tags?: string[];
       column_id?: string;
       historico?: string | null;
+      turma?: string;
+      educador?: string;
+      fez_pausa_emergencial?: boolean;
+      faltas_recorrentes?: boolean;
+      link_ficha_rescisao?: string;
+      data_evasao?: string;
+      data_rescisao?: string;
+      data_exclusao_sgs?: string;
+      motivo_evasao?: string;
+      exclusao_sgs_confirmada?: boolean;
+      exclusao_whatsapp_confirmada?: boolean;
+      data_retencao_confirmada?: string;
+      acao_retencao?: string;
+      acordo_retencao?: string;
+      observacoes_adicionais?: string;
     }) => {
       console.log('Atualizando card:', updateData);
       
@@ -142,6 +259,104 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     }
   });
 
+  // Nova mutação para atualizar campos de status
+  const updateCardStatus = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      field, 
+      value 
+    }: { 
+      cardId: string; 
+      field: string;
+      value: boolean | string | null;
+    }) => {
+      console.log(`Atualizando status do card ${cardId}, campo ${field}:`, value);
+      
+      const { error, data } = await supabase
+        .from('kanban_cards')
+        .update({ [field]: value })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Erro ao atualizar status do card:', error);
+        throw error;
+      }
+      
+      console.log('Status atualizado:', data);
+      return data;
+    },
+    onSuccess: () => {
+      console.log('Invalidando cache após atualização de status');
+      queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+      toast.success("Status atualizado com sucesso");
+    },
+    onError: (error) => {
+      console.error('Erro na mutação de atualização de status:', error);
+      toast.error("Erro ao atualizar status");
+    }
+  });
+
+  // Nova mutação para adicionar comentários ao histórico
+  const addCommentToHistory = useMutation({
+    mutationFn: async ({ 
+      cardId, 
+      comment 
+    }: { 
+      cardId: string; 
+      comment: string;
+    }) => {
+      // Primeiro, buscar o card atual para obter o histórico existente
+      const { data: card, error: fetchError } = await supabase
+        .from('kanban_cards')
+        .select('historico')
+        .eq('id', cardId)
+        .single();
+        
+      if (fetchError) {
+        console.error('Erro ao buscar card para adicionar comentário:', fetchError);
+        throw fetchError;
+      }
+      
+      // Formatar a data atual
+      const dataHora = new Date().toLocaleString('pt-BR');
+      
+      // Criar a mensagem do comentário
+      const mensagemComentario = `${dataHora} - COMENTÁRIO: ${comment}`;
+      
+      // Atualizar o histórico concatenando o novo comentário
+      const historicoAtualizado = card.historico 
+        ? `${card.historico}\n\n${mensagemComentario}` 
+        : mensagemComentario;
+      
+      // Atualizar o card com o histórico atualizado
+      const { error, data } = await supabase
+        .from('kanban_cards')
+        .update({ 
+          historico: historicoAtualizado
+        })
+        .eq('id', cardId)
+        .select();
+
+      if (error) {
+        console.error('Erro ao adicionar comentário ao histórico:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      console.log('Comentário adicionado com sucesso');
+      toast.success("Comentário adicionado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ['kanban-cards'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao adicionar comentário:', error);
+      toast.error("Erro ao adicionar comentário");
+    }
+  });
+
+  // Nova mutação para finalizar alertas
   const finalizarAlerta = useMutation({
     mutationFn: async ({ 
       cardId, 
@@ -176,13 +391,23 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
         ? `${cardAtual.historico}\n\n${mensagemHistorico}` 
         : mensagemHistorico;
       
+      // Prepara dados adicionais baseados no tipo de resultado
+      const dadosAdicionais = resultado === 'evadiu' 
+        ? { 
+            data_evasao: new Date().toISOString(),
+          } 
+        : { 
+            data_retencao_confirmada: new Date().toISOString(), 
+          };
+      
       // Atualiza o card com o resultado e o histórico
       const { error: errorCard } = await supabase
         .from('kanban_cards')
         .update({ 
           resultado,
           historico: historicoAtualizado,
-          column_id: 'done' // Move para coluna "Concluído"
+          column_id: 'done', // Move para coluna "Concluído"
+          ...dadosAdicionais
         })
         .eq('id', cardId);
 
@@ -394,7 +619,9 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
     isLoading,
     updateCardColumn,
     updateCard,
+    updateCardStatus,
     finalizarAlerta,
-    useResultadosEvasao
+    useResultadosEvasao,
+    addCommentToHistory // Exportar a nova função
   };
 };

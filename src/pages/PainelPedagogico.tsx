@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { PedagogicalKanban } from "@/components/pedagogical/PedagogicalKanban";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder, Clock, Search, BarChart3 } from "lucide-react";
+import { Folder, Clock, Search, BarChart3, AlertCircle, UserX, UserCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useKanbanCards } from "@/hooks/use-kanban-cards";
@@ -21,10 +21,18 @@ const PainelPedagogico = () => {
       <div className="grid grid-cols-1 gap-4">
         <Card className="p-4">
           <Tabs defaultValue="ativos">
-            <TabsList>
+            <TabsList className="mb-4">
               <TabsTrigger value="ativos" className="flex items-center gap-2">
-                <Folder className="h-4 w-4" />
-                <span>Ativos</span>
+                <AlertCircle className="h-4 w-4" />
+                <span>Alertas Ativos</span>
+              </TabsTrigger>
+              <TabsTrigger value="evadidos" className="flex items-center gap-2">
+                <UserX className="h-4 w-4" />
+                <span>Evadidos</span>
+              </TabsTrigger>
+              <TabsTrigger value="retidos" className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                <span>Retidos</span>
               </TabsTrigger>
               <TabsTrigger value="inativos" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -36,8 +44,8 @@ const PainelPedagogico = () => {
               </TabsTrigger>
             </TabsList>
             
-            <div className="mb-4 flex items-center gap-2 mt-4">
-              {(["ativos", "inativos"].includes(window.location.hash.replace("#", "")) || !window.location.hash) && (
+            <div className="mb-4 flex items-center gap-2">
+              {(["ativos", "evadidos", "retidos", "inativos"].includes(window.location.hash.replace("#", "")) || !window.location.hash) && (
                 <>
                   <Search className="h-4 w-4 text-gray-500" />
                   <Input
@@ -52,11 +60,38 @@ const PainelPedagogico = () => {
             </div>
 
             <TabsContent value="ativos">
-              <PedagogicalKanban type="evasions" showHibernating={false} searchQuery={searchQuery} />
+              <PedagogicalKanban 
+                type="evasions" 
+                showHibernating={false} 
+                searchQuery={searchQuery} 
+                filtroResultado="pendente"
+              />
+            </TabsContent>
+
+            <TabsContent value="evadidos">
+              <PedagogicalKanban 
+                type="evasions" 
+                showHibernating={false} 
+                searchQuery={searchQuery} 
+                filtroResultado="evadiu"
+              />
+            </TabsContent>
+
+            <TabsContent value="retidos">
+              <PedagogicalKanban 
+                type="evasions" 
+                showHibernating={false} 
+                searchQuery={searchQuery} 
+                filtroResultado="retido"
+              />
             </TabsContent>
 
             <TabsContent value="inativos">
-              <PedagogicalKanban type="evasions" showHibernating={true} searchQuery={searchQuery} />
+              <PedagogicalKanban 
+                type="evasions" 
+                showHibernating={true} 
+                searchQuery={searchQuery} 
+              />
             </TabsContent>
 
             <TabsContent value="resultados">
