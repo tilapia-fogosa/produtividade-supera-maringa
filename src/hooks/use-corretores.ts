@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Corretor } from '@/types/corretores';
@@ -25,19 +26,6 @@ export const useCorretores = (unitId?: string) => {
         
         console.log('Professores encontrados:', professores);
         
-        // Buscar estagiários
-        const { data: estagiarios, error: estError } = await supabase
-          .from('estagiarios')
-          .select('*')
-          .eq('active', true);
-          
-        if (estError) {
-          console.error('Erro ao buscar estagiários:', estError);
-          throw estError;
-        }
-        
-        console.log('Estagiários encontrados:', estagiarios);
-        
         // Buscar funcionários com cargo "Estagiário" (corrigido)
         const { data: funcionariosEstagiarios, error: funcError } = await supabase
           .from('funcionarios')
@@ -59,13 +47,6 @@ export const useCorretores = (unitId?: string) => {
           tipo: 'corretor' as const
         })) || [];
         
-        // Mapear estagiários para o formato de Corretor
-        const estagiariosFormatados = estagiarios?.map(est => ({
-          id: est.id,
-          nome: est.nome,
-          tipo: 'corretor' as const
-        })) || [];
-        
         // Mapear funcionários estagiários para o formato de Corretor
         const funcionariosEstagiariosFormatados = funcionariosEstagiarios?.map(func => ({
           id: func.id,
@@ -74,12 +55,11 @@ export const useCorretores = (unitId?: string) => {
         })) || [];
         
         // Combinar as listas e ordenar por nome
-        const todosCorretores = [...professoresFormatados, ...estagiariosFormatados, ...funcionariosEstagiariosFormatados]
+        const todosCorretores = [...professoresFormatados, ...funcionariosEstagiariosFormatados]
           .sort((a, b) => a.nome.localeCompare(b.nome));
           
         console.log('Corretores carregados:', {
           professores: professoresFormatados.length,
-          estagiarios: estagiariosFormatados.length,
           funcionariosEstagiarios: funcionariosEstagiariosFormatados.length,
           total: todosCorretores.length,
           listaCompleta: todosCorretores
