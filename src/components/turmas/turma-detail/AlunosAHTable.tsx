@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, CheckCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Aluno } from '@/hooks/use-professor-turmas';
+import { PessoaTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 import { formatDateBr } from "@/lib/utils";
 
 interface AlunosAHTableProps {
-  alunos: Aluno[];
-  onSelecionarAluno?: (aluno: Aluno) => void;
+  alunos: PessoaTurmaDetalhes[];
+  onSelecionarAluno?: (pessoa: PessoaTurmaDetalhes) => void;
   ahRegistrado?: Record<string, boolean>;
 }
 
@@ -21,13 +21,13 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // Filtrar apenas os alunos ativos
-  const alunosAtivos = alunos.filter(aluno => aluno.active);
+  // Filtrar apenas as pessoas ativas
+  const pessoasAtivas = alunos.filter(pessoa => pessoa.active);
 
-  if (alunosAtivos.length === 0) {
+  if (pessoasAtivas.length === 0) {
     return (
       <div className="text-center py-3">
-        <p className={isMobile ? "text-sm" : ""}>Não há alunos cadastrados nesta turma.</p>
+        <p className={isMobile ? "text-sm" : ""}>Não há pessoas cadastradas nesta turma.</p>
       </div>
     );
   }
@@ -44,18 +44,28 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Nome</TableHead>
+            <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Tipo</TableHead>
             <TableHead className={`${isMobile ? "px-2 py-2 text-xs" : ""}`}>Última Correção</TableHead>
             <TableHead className={`w-20 text-right ${isMobile ? "px-2 py-2 text-xs" : ""}`}>Ação</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunosAtivos.map((aluno, index) => (
-            <TableRow key={aluno.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
+          {pessoasAtivas.map((pessoa, index) => (
+            <TableRow key={pessoa.id} className={index % 2 === 1 ? "bg-muted/50" : ""}>
               <TableCell className={`font-medium ${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                <div className="truncate max-w-[150px]">{aluno.nome}</div>
+                <div className="truncate max-w-[150px]">{pessoa.nome}</div>
               </TableCell>
               <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
-                {formatarUltimaCorrecao(aluno.ultima_correcao_ah)}
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  pessoa.origem === 'aluno' 
+                    ? 'bg-blue-100 text-blue-800' 
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {pessoa.origem === 'aluno' ? 'Aluno' : 'Funcionário'}
+                </span>
+              </TableCell>
+              <TableCell className={`${isMobile ? "px-2 py-1.5 text-xs" : ""}`}>
+                {formatarUltimaCorrecao(pessoa.ultima_correcao_ah)}
               </TableCell>
               <TableCell className={`text-right ${isMobile ? "px-2 py-1.5" : ""}`}>
                 <TooltipProvider>
@@ -64,10 +74,10 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
                       <Button 
                         variant="outline" 
                         size="icon"
-                        onClick={() => onSelecionarAluno(aluno)} 
+                        onClick={() => onSelecionarAluno(pessoa)} 
                         className="h-8 w-8 p-0"
                       >
-                        {ahRegistrado[aluno.id] ? (
+                        {ahRegistrado[pessoa.id] ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
                           <BookOpen className="h-4 w-4" />
@@ -75,7 +85,7 @@ const AlunosAHTable: React.FC<AlunosAHTableProps> = ({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {ahRegistrado[aluno.id] ? "Correção AH já registrada hoje" : "Registrar correção AH"}
+                      {ahRegistrado[pessoa.id] ? "Correção AH já registrada hoje" : "Registrar correção AH"}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

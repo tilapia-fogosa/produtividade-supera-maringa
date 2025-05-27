@@ -12,21 +12,33 @@ export const useCorretores = (unitId?: string) => {
     const fetchCorretores = async () => {
       try {
         setIsLoading(true);
+        console.log('Buscando corretores...');
         
         // Buscar professores
         const { data: professores, error: profError } = await supabase
           .from('professores')
           .select('*');
           
-        if (profError) throw profError;
+        if (profError) {
+          console.error('Erro ao buscar professores:', profError);
+          throw profError;
+        }
         
-        // Buscar estagiários
-        const { data: estagiarios, error: estError } = await supabase
-          .from('estagiarios')
+        console.log('Professores encontrados:', professores);
+        
+        // Buscar funcionários com cargo "Estagiário" (corrigido)
+        const { data: funcionariosEstagiarios, error: funcError } = await supabase
+          .from('funcionarios')
           .select('*')
-          .eq('active', true);
+          .eq('active', true)
+          .eq('cargo', 'Estagiário');
           
-        if (estError) throw estError;
+        if (funcError) {
+          console.error('Erro ao buscar funcionários estagiários:', funcError);
+          throw funcError;
+        }
+        
+        console.log('Funcionários estagiários encontrados:', funcionariosEstagiarios);
         
         // Mapear professores para o formato de Corretor
         const professoresFormatados = professores?.map(prof => ({
@@ -35,16 +47,23 @@ export const useCorretores = (unitId?: string) => {
           tipo: 'corretor' as const
         })) || [];
         
-        // Mapear estagiários para o formato de Corretor
-        const estagiariosFormatados = estagiarios?.map(est => ({
-          id: est.id,
-          nome: est.nome,
+        // Mapear funcionários estagiários para o formato de Corretor
+        const funcionariosEstagiariosFormatados = funcionariosEstagiarios?.map(func => ({
+          id: func.id,
+          nome: func.nome,
           tipo: 'corretor' as const
         })) || [];
         
         // Combinar as listas e ordenar por nome
-        const todosCorretores = [...professoresFormatados, ...estagiariosFormatados]
+        const todosCorretores = [...professoresFormatados, ...funcionariosEstagiariosFormatados]
           .sort((a, b) => a.nome.localeCompare(b.nome));
+          
+        console.log('Corretores carregados:', {
+          professores: professoresFormatados.length,
+          funcionariosEstagiarios: funcionariosEstagiariosFormatados.length,
+          total: todosCorretores.length,
+          listaCompleta: todosCorretores
+        });
           
         setCorretores(todosCorretores);
       } catch (err: any) {
