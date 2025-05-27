@@ -12,13 +12,19 @@ export const useCorretores = (unitId?: string) => {
     const fetchCorretores = async () => {
       try {
         setIsLoading(true);
+        console.log('Buscando corretores...');
         
         // Buscar professores
         const { data: professores, error: profError } = await supabase
           .from('professores')
           .select('*');
           
-        if (profError) throw profError;
+        if (profError) {
+          console.error('Erro ao buscar professores:', profError);
+          throw profError;
+        }
+        
+        console.log('Professores encontrados:', professores);
         
         // Buscar estagiários
         const { data: estagiarios, error: estError } = await supabase
@@ -26,7 +32,12 @@ export const useCorretores = (unitId?: string) => {
           .select('*')
           .eq('active', true);
           
-        if (estError) throw estError;
+        if (estError) {
+          console.error('Erro ao buscar estagiários:', estError);
+          throw estError;
+        }
+        
+        console.log('Estagiários encontrados:', estagiarios);
         
         // Buscar funcionários com cargo "estagiario"
         const { data: funcionariosEstagiarios, error: funcError } = await supabase
@@ -35,7 +46,12 @@ export const useCorretores = (unitId?: string) => {
           .eq('active', true)
           .eq('cargo', 'estagiario');
           
-        if (funcError) throw funcError;
+        if (funcError) {
+          console.error('Erro ao buscar funcionários estagiários:', funcError);
+          throw funcError;
+        }
+        
+        console.log('Funcionários estagiários encontrados:', funcionariosEstagiarios);
         
         // Mapear professores para o formato de Corretor
         const professoresFormatados = professores?.map(prof => ({
@@ -66,7 +82,8 @@ export const useCorretores = (unitId?: string) => {
           professores: professoresFormatados.length,
           estagiarios: estagiariosFormatados.length,
           funcionariosEstagiarios: funcionariosEstagiariosFormatados.length,
-          total: todosCorretores.length
+          total: todosCorretores.length,
+          listaCompleta: todosCorretores
         });
           
         setCorretores(todosCorretores);
