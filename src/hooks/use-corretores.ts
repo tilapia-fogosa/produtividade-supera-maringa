@@ -28,6 +28,15 @@ export const useCorretores = (unitId?: string) => {
           
         if (estError) throw estError;
         
+        // Buscar funcionários com cargo "estagiario"
+        const { data: funcionariosEstagiarios, error: funcError } = await supabase
+          .from('funcionarios')
+          .select('*')
+          .eq('active', true)
+          .eq('cargo', 'estagiario');
+          
+        if (funcError) throw funcError;
+        
         // Mapear professores para o formato de Corretor
         const professoresFormatados = professores?.map(prof => ({
           id: prof.id,
@@ -42,9 +51,23 @@ export const useCorretores = (unitId?: string) => {
           tipo: 'corretor' as const
         })) || [];
         
+        // Mapear funcionários estagiários para o formato de Corretor
+        const funcionariosEstagiariosFormatados = funcionariosEstagiarios?.map(func => ({
+          id: func.id,
+          nome: func.nome,
+          tipo: 'corretor' as const
+        })) || [];
+        
         // Combinar as listas e ordenar por nome
-        const todosCorretores = [...professoresFormatados, ...estagiariosFormatados]
+        const todosCorretores = [...professoresFormatados, ...estagiariosFormatados, ...funcionariosEstagiariosFormatados]
           .sort((a, b) => a.nome.localeCompare(b.nome));
+          
+        console.log('Corretores carregados:', {
+          professores: professoresFormatados.length,
+          estagiarios: estagiariosFormatados.length,
+          funcionariosEstagiarios: funcionariosEstagiariosFormatados.length,
+          total: todosCorretores.length
+        });
           
         setCorretores(todosCorretores);
       } catch (err: any) {
