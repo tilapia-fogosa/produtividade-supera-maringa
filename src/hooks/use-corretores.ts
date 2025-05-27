@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Corretor } from '@/types/corretores';
@@ -39,12 +38,12 @@ export const useCorretores = (unitId?: string) => {
         
         console.log('Estagiários encontrados:', estagiarios);
         
-        // Buscar funcionários com cargo "estagiario"
+        // Buscar funcionários com cargo "Estagiário" (corrigido)
         const { data: funcionariosEstagiarios, error: funcError } = await supabase
           .from('funcionarios')
           .select('*')
           .eq('active', true)
-          .eq('cargo', 'estagiario');
+          .eq('cargo', 'Estagiário');
           
         if (funcError) {
           console.error('Erro ao buscar funcionários estagiários:', funcError);
