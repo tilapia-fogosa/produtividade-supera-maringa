@@ -53,12 +53,10 @@ serve(async (req) => {
       .maybeSingle();
 
     let pessoaData = null;
-    let isPessoa = false;
     let tipoTabela = '';
 
     if (alunoData && !alunoError) {
       pessoaData = alunoData;
-      isPessoa = false;
       tipoTabela = 'alunos';
       console.log('Identificado como aluno:', alunoData);
     } else {
@@ -71,52 +69,32 @@ serve(async (req) => {
 
       if (funcionarioData && !funcionarioError) {
         pessoaData = funcionarioData;
-        isPessoa = true;
         tipoTabela = 'funcionarios';
-        console.log('Identificado como funcionário:', funcionarioData);
+        console.log('Identificado como funcionário que assiste aulas:', funcionarioData);
       } else {
         console.error('Pessoa não encontrada nem como aluno nem como funcionário');
         throw new Error('Pessoa não encontrada');
       }
     }
 
-    // Registrar na tabela apropriada
-    if (isPessoa) {
-      // Registrar na tabela produtividade_ah_funcionarios
-      console.log('Registrando dados na tabela produtividade_ah_funcionarios...');
-      const { error: produtividadeError } = await supabase
-        .from('produtividade_ah_funcionarios')
-        .insert({
-          funcionario_id: data.aluno_id,
-          apostila: data.apostila,
-          exercicios: data.exercicios,
-          erros: data.erros,
-          professor_correcao: data.professor_correcao,
-          comentario: data.comentario
-        });
+    // IMPORTANTE: Agora, independente de ser aluno ou funcionário, 
+    // SEMPRE registramos na tabela produtividade_ah (dos alunos)
+    // porque funcionários que assistem aulas são tratados como alunos para AH
+    console.log('Registrando dados na tabela produtividade_ah...');
+    const { error: produtividadeError } = await supabase
+      .from('produtividade_ah')
+      .insert({
+        aluno_id: data.aluno_id,
+        apostila: data.apostila,
+        exercicios: data.exercicios,
+        erros: data.erros,
+        professor_correcao: data.professor_correcao,
+        comentario: data.comentario
+      });
 
-      if (produtividadeError) {
-        console.error('Erro ao registrar na tabela produtividade_ah_funcionarios:', produtividadeError);
-        throw new Error('Erro ao salvar dados de produtividade: ' + produtividadeError.message);
-      }
-    } else {
-      // Registrar na tabela produtividade_ah (alunos)
-      console.log('Registrando dados na tabela produtividade_ah...');
-      const { error: produtividadeError } = await supabase
-        .from('produtividade_ah')
-        .insert({
-          aluno_id: data.aluno_id,
-          apostila: data.apostila,
-          exercicios: data.exercicios,
-          erros: data.erros,
-          professor_correcao: data.professor_correcao,
-          comentario: data.comentario
-        });
-
-      if (produtividadeError) {
-        console.error('Erro ao registrar na tabela produtividade_ah:', produtividadeError);
-        throw new Error('Erro ao salvar dados de produtividade: ' + produtividadeError.message);
-      }
+    if (produtividadeError) {
+      console.error('Erro ao registrar na tabela produtividade_ah:', produtividadeError);
+      throw new Error('Erro ao salvar dados de produtividade: ' + produtividadeError.message);
     }
 
     // Buscar nome do professor/corretor
@@ -153,7 +131,7 @@ serve(async (req) => {
       pessoa_codigo: pessoaData?.codigo,
       pessoa_matricula: pessoaData?.matricula,
       turma_id: pessoaData?.turma_id,
-      tipo_pessoa: isPessoa ? 'funcionario' : 'aluno',
+      tipo_pessoa: tipoTabela === 'funcionarios' ? 'funcionario' : 'aluno',
       apostila: data.apostila,
       exercicios: data.exercicios,
       erros: data.erros,
@@ -194,10 +172,9 @@ serve(async (req) => {
         throw new Error(`Erro no webhook: Status ${response.status} - ${responseText}`);
       }
 
-      // Atualizar última correção AH da pessoa
-      const campoUpdate = isPessoa ? 'funcionarios' : 'alunos';
+      // Atualizar última correção AH da pessoa na tabela apropriada
       const { error: updateError } = await supabase
-        .from(campoUpdate)
+        .from(tipoTabela)
         .update({ 
           ultima_correcao_ah: new Date().toISOString() 
         })
@@ -211,7 +188,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
-          tipo_pessoa: isPessoa ? 'funcionario' : 'aluno',
+          tipo_pessoa: tipoTabela === 'funcionarios' ? 'funcionario' : 'aluno',
           webhookUrl: WEBHOOK_URL,
           payload: webhookPayload,
           response: {
