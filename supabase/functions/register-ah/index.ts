@@ -28,7 +28,7 @@ serve(async (req) => {
     if (!data || !data.aluno_id) {
       console.error('Dados incompletos recebidos');
       return new Response(
-        JSON.stringify({ error: 'Dados incompletos. ID do aluno/funcionário é obrigatório.' }),
+        JSON.stringify({ error: 'Dados incompletos. ID da pessoa é obrigatório.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -54,10 +54,12 @@ serve(async (req) => {
 
     let pessoaData = null;
     let tipoTabela = '';
+    let tipoPessoa = '';
 
     if (alunoData && !alunoError) {
       pessoaData = alunoData;
       tipoTabela = 'alunos';
+      tipoPessoa = 'aluno';
       console.log('Identificado como aluno:', alunoData);
     } else {
       // Se não é aluno, tentar buscar como funcionário
@@ -70,6 +72,7 @@ serve(async (req) => {
       if (funcionarioData && !funcionarioError) {
         pessoaData = funcionarioData;
         tipoTabela = 'funcionarios';
+        tipoPessoa = 'funcionario';
         console.log('Identificado como funcionário que assiste aulas:', funcionarioData);
       } else {
         console.error('Pessoa não encontrada nem como aluno nem como funcionário');
@@ -77,14 +80,13 @@ serve(async (req) => {
       }
     }
 
-    // IMPORTANTE: Agora, independente de ser aluno ou funcionário, 
-    // SEMPRE registramos na tabela produtividade_ah (dos alunos)
-    // porque funcionários que assistem aulas são tratados como alunos para AH
+    // Registrar na tabela produtividade_ah usando a nova estrutura
     console.log('Registrando dados na tabela produtividade_ah...');
     const { error: produtividadeError } = await supabase
       .from('produtividade_ah')
       .insert({
-        aluno_id: data.aluno_id,
+        pessoa_id: data.aluno_id,
+        tipo_pessoa: tipoPessoa,
         apostila: data.apostila,
         exercicios: data.exercicios,
         erros: data.erros,
@@ -131,7 +133,7 @@ serve(async (req) => {
       pessoa_codigo: pessoaData?.codigo,
       pessoa_matricula: pessoaData?.matricula,
       turma_id: pessoaData?.turma_id,
-      tipo_pessoa: tipoTabela === 'funcionarios' ? 'funcionario' : 'aluno',
+      tipo_pessoa: tipoPessoa,
       apostila: data.apostila,
       exercicios: data.exercicios,
       erros: data.erros,
@@ -188,7 +190,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
-          tipo_pessoa: tipoTabela === 'funcionarios' ? 'funcionario' : 'aluno',
+          tipo_pessoa: tipoPessoa,
           webhookUrl: WEBHOOK_URL,
           payload: webhookPayload,
           response: {

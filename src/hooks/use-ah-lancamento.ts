@@ -69,32 +69,20 @@ export const useAhLancamento = (pessoaId?: string) => {
     try {
       setIsLoading(true);
       
-      // Primeiro tentar buscar como aluno
-      const { data: lancamentosAluno, error: errorAluno } = await supabase
+      // Buscar lançamentos na tabela produtividade_ah usando a nova estrutura
+      const { data: lancamentos, error } = await supabase
         .from('produtividade_ah')
         .select('*')
-        .eq('aluno_id', pessoaId)
+        .eq('pessoa_id', pessoaId)
         .order('created_at', { ascending: false })
         .limit(limit);
       
-      if (!errorAluno && lancamentosAluno && lancamentosAluno.length > 0) {
-        return lancamentosAluno;
-      }
-      
-      // Se não encontrou como aluno, tentar como funcionário
-      const { data: lancamentosFuncionario, error: errorFuncionario } = await supabase
-        .from('produtividade_ah_funcionarios')
-        .select('*')
-        .eq('funcionario_id', pessoaId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      
-      if (errorFuncionario) {
-        console.error('Erro ao buscar lançamentos AH:', errorFuncionario);
+      if (error) {
+        console.error('Erro ao buscar lançamentos AH:', error);
         return [];
       }
       
-      return lancamentosFuncionario || [];
+      return lancamentos || [];
     } catch (error) {
       console.error('Erro ao buscar lançamentos AH:', error);
       return [];
