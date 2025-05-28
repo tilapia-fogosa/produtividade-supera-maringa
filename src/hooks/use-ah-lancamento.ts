@@ -12,7 +12,7 @@ interface ProdutividadeAH {
   comentario?: string;
 }
 
-export const useAhLancamento = (alunoId?: string) => {
+export const useAhLancamento = (pessoaId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const registrarLancamentoAH = async (dados: ProdutividadeAH) => {
@@ -22,7 +22,7 @@ export const useAhLancamento = (alunoId?: string) => {
       // Garantir que aluno_id existe se foi passado na inicialização do hook
       const dadosCompletos = {
         ...dados,
-        aluno_id: alunoId || dados.aluno_id
+        aluno_id: pessoaId || dados.aluno_id
       };
       
       console.log('Enviando dados para edge function:', dadosCompletos);
@@ -44,9 +44,10 @@ export const useAhLancamento = (alunoId?: string) => {
           variant: "default"
         });
       } else {
+        const tipoPessoa = data?.tipo_pessoa === 'funcionario' ? 'funcionário' : 'aluno';
         toast({
           title: "Sucesso",
-          description: "Lançamento de Abrindo Horizontes registrado com sucesso!",
+          description: `Lançamento de Abrindo Horizontes registrado com sucesso para ${tipoPessoa}!`,
         });
       }
       
@@ -64,20 +65,36 @@ export const useAhLancamento = (alunoId?: string) => {
     }
   };
 
-  const getUltimosLancamentosAH = async (alunoId: string, limit = 5) => {
+  const getUltimosLancamentosAH = async (pessoaId: string, limit = 5) => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      // Primeiro tentar buscar como aluno
+      const { data: lancamentosAluno, error: errorAluno } = await supabase
         .from('produtividade_ah')
         .select('*')
-        .eq('aluno_id', alunoId)
+        .eq('aluno_id', pessoaId)
         .order('created_at', { ascending: false })
         .limit(limit);
       
-      if (error) throw error;
+      if (!errorAluno && lancamentosAluno && lancamentosAluno.length > 0) {
+        return lancamentosAluno;
+      }
       
-      return data || [];
+      // Se não encontrou como aluno, tentar como funcionário
+      const { data: lancamentosFuncionario, error: errorFuncionario } = await supabase
+        .from('produtividade_ah_funcionarios')
+        .select('*')
+        .eq('funcionario_id', pessoaId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (errorFuncionario) {
+        console.error('Erro ao buscar lançamentos AH:', errorFuncionario);
+        return [];
+      }
+      
+      return lancamentosFuncionario || [];
     } catch (error) {
       console.error('Erro ao buscar lançamentos AH:', error);
       return [];

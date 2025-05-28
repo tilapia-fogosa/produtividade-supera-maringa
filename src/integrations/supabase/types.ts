@@ -1659,6 +1659,50 @@ export type Database = {
           },
         ]
       }
+      produtividade_ah_funcionarios: {
+        Row: {
+          apostila: string | null
+          comentario: string | null
+          created_at: string
+          erros: number | null
+          exercicios: number | null
+          funcionario_id: string
+          id: string
+          professor_correcao: string | null
+          updated_at: string
+        }
+        Insert: {
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          erros?: number | null
+          exercicios?: number | null
+          funcionario_id: string
+          id?: string
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          erros?: number | null
+          exercicios?: number | null
+          funcionario_id?: string
+          id?: string
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_ah_funcionarios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professores: {
         Row: {
           created_at: string
