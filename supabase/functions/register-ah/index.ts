@@ -28,7 +28,7 @@ serve(async (req) => {
     if (!data || !data.aluno_id) {
       console.error('Dados incompletos recebidos');
       return new Response(
-        JSON.stringify({ error: 'Dados incompletos. ID do aluno é obrigatório.' }),
+        JSON.stringify({ error: 'Dados incompletos. ID da pessoa é obrigatório.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -42,12 +42,51 @@ serve(async (req) => {
       }
     });
 
-    // Registrar na tabela produtividade_ah
+    // Primeiro, identificar se é aluno ou funcionário
+    console.log('Verificando se é aluno ou funcionário...');
+    
+    // Tentar buscar como aluno primeiro
+    const { data: alunoData, error: alunoError } = await supabase
+      .from('alunos')
+      .select('nome, turma_id, codigo, matricula')
+      .eq('id', data.aluno_id)
+      .maybeSingle();
+
+    let pessoaData = null;
+    let tipoTabela = '';
+    let tipoPessoa = '';
+
+    if (alunoData && !alunoError) {
+      pessoaData = alunoData;
+      tipoTabela = 'alunos';
+      tipoPessoa = 'aluno';
+      console.log('Identificado como aluno:', alunoData);
+    } else {
+      // Se não é aluno, tentar buscar como funcionário
+      const { data: funcionarioData, error: funcionarioError } = await supabase
+        .from('funcionarios')
+        .select('nome, turma_id, codigo, matricula')
+        .eq('id', data.aluno_id)
+        .maybeSingle();
+
+      if (funcionarioData && !funcionarioError) {
+        pessoaData = funcionarioData;
+        tipoTabela = 'funcionarios';
+        tipoPessoa = 'funcionario';
+        console.log('Identificado como funcionário que assiste aulas:', funcionarioData);
+      } else {
+        console.error('Pessoa não encontrada nem como aluno nem como funcionário');
+        throw new Error('Pessoa não encontrada');
+      }
+    }
+
+    // Registrar na tabela produtividade_ah usando a nova estrutura
     console.log('Registrando dados na tabela produtividade_ah...');
     const { error: produtividadeError } = await supabase
       .from('produtividade_ah')
       .insert({
-        aluno_id: data.aluno_id,
+        pessoa_id: data.aluno_id,
+        tipo_pessoa: tipoPessoa,
         apostila: data.apostila,
         exercicios: data.exercicios,
         erros: data.erros,
@@ -58,19 +97,6 @@ serve(async (req) => {
     if (produtividadeError) {
       console.error('Erro ao registrar na tabela produtividade_ah:', produtividadeError);
       throw new Error('Erro ao salvar dados de produtividade: ' + produtividadeError.message);
-    }
-
-    // Buscar dados adicionais do aluno para enriquecer o payload
-    console.log('Buscando dados do aluno...');
-    const { data: alunoData, error: alunoError } = await supabase
-      .from('alunos')
-      .select('nome, turma_id, codigo, matricula')
-      .eq('id', data.aluno_id)
-      .single();
-
-    if (alunoError) {
-      console.error('Erro ao buscar dados do aluno:', alunoError);
-      // Continuar mesmo com erro na busca de dados adicionais
     }
 
     // Buscar nome do professor/corretor
@@ -87,25 +113,27 @@ serve(async (req) => {
     if (professorData?.nome) {
       nomeCorretor = professorData.nome;
     } else {
-      // Se não encontrou nos professores, tentar nos estagiários
-      const { data: estagiarioData } = await supabase
-        .from('estagiarios')
+      // Se não encontrou nos professores, tentar nos funcionários estagiários
+      const { data: funcionarioCorretorData } = await supabase
+        .from('funcionarios')
         .select('nome')
         .eq('id', data.professor_correcao)
+        .eq('cargo', 'Estagiário')
         .maybeSingle();
       
-      if (estagiarioData?.nome) {
-        nomeCorretor = estagiarioData.nome;
+      if (funcionarioCorretorData?.nome) {
+        nomeCorretor = funcionarioCorretorData.nome;
       }
     }
 
     // Preparar payload para o webhook
     const webhookPayload = {
-      aluno_id: data.aluno_id,
-      aluno_nome: alunoData?.nome,
-      aluno_codigo: alunoData?.codigo,
-      aluno_matricula: alunoData?.matricula,
-      turma_id: alunoData?.turma_id,
+      pessoa_id: data.aluno_id,
+      pessoa_nome: pessoaData?.nome,
+      pessoa_codigo: pessoaData?.codigo,
+      pessoa_matricula: pessoaData?.matricula,
+      turma_id: pessoaData?.turma_id,
+      tipo_pessoa: tipoPessoa,
       apostila: data.apostila,
       exercicios: data.exercicios,
       erros: data.erros,
@@ -146,9 +174,9 @@ serve(async (req) => {
         throw new Error(`Erro no webhook: Status ${response.status} - ${responseText}`);
       }
 
-      // Atualizar última correção AH do aluno
+      // Atualizar última correção AH da pessoa na tabela apropriada
       const { error: updateError } = await supabase
-        .from('alunos')
+        .from(tipoTabela)
         .update({ 
           ultima_correcao_ah: new Date().toISOString() 
         })
@@ -162,6 +190,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
+          tipo_pessoa: tipoPessoa,
           webhookUrl: WEBHOOK_URL,
           payload: webhookPayload,
           response: {
@@ -197,4 +226,3 @@ serve(async (req) => {
     );
   }
 });
-

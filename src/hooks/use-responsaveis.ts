@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCorretores } from './use-corretores';
 import { useFuncionarios } from './use-funcionarios';
 
 export interface Responsavel {
@@ -16,8 +15,31 @@ const CARGOS_EXCLUIDOS = ['Filha', 'familiar'];
 export function useResponsaveis() {
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [professores, setProfessores] = useState<any[]>([]);
+  const [loadingProfessores, setLoadingProfessores] = useState(true);
   const { funcionarios, loading: funcionariosLoading } = useFuncionarios();
-  const { corretores, isLoading: corretoresLoading } = useCorretores();
+
+  // Buscar professores separadamente
+  useEffect(() => {
+    const buscarProfessores = async () => {
+      try {
+        const { data: professoresData, error } = await supabase
+          .from('professores')
+          .select('*');
+          
+        if (error) throw error;
+        
+        setProfessores(professoresData || []);
+      } catch (error) {
+        console.error('Erro ao buscar professores:', error);
+        setProfessores([]);
+      } finally {
+        setLoadingProfessores(false);
+      }
+    };
+
+    buscarProfessores();
+  }, []);
 
   useEffect(() => {
     const carregarResponsaveis = async () => {
@@ -25,7 +47,7 @@ export function useResponsaveis() {
         setIsLoading(true);
         
         // Aguardar o carregamento de ambas as fontes de dados
-        if (funcionariosLoading || corretoresLoading) {
+        if (funcionariosLoading || loadingProfessores) {
           return;
         }
         
@@ -41,8 +63,8 @@ export function useResponsaveis() {
           tipo: 'funcionario' as const
         }));
         
-        // Mapear corretores (professores) para o formato de Responsavel
-        const responsaveisProfessores = corretores.map(prof => ({
+        // Mapear professores para o formato de Responsavel
+        const responsaveisProfessores = professores.map(prof => ({
           id: prof.id,
           nome: prof.nome,
           tipo: 'professor' as const
@@ -61,7 +83,7 @@ export function useResponsaveis() {
     };
 
     carregarResponsaveis();
-  }, [funcionarios, corretores, funcionariosLoading, corretoresLoading]);
+  }, [funcionarios, professores, funcionariosLoading, loadingProfessores]);
 
   return {
     responsaveis,

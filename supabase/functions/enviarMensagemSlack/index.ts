@@ -1,9 +1,8 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Valores hardcoded para Slack
-const SLACK_BOT_TOKEN = "xoxb-your-hardcoded-slack-token-here";
+// Token real do Slack Bot
+const SLACK_BOT_TOKEN = "xoxb-5990179335553-7417193096371-xICG9oDp0nFrscu3lyaxQxSF";
 const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal padrão para mensagens
 
 serve(async (req) => {
@@ -142,7 +141,7 @@ serve(async (req) => {
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
-    // Enviando para a API do Slack usando o token hardcoded
+    // Enviando para a API do Slack usando o token real
     const response = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: {
