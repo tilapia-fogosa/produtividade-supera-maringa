@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface DesempenhoMensalItem {
@@ -33,14 +33,21 @@ export interface AlunoDevolutiva {
   ah_percentual_total: number;
 }
 
-export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'mes') => {
-  const [loading, setLoading] = useState(true);
+interface UseAlunoDevolutivaReturn {
+  data: AlunoDevolutiva | null;
+  loading: boolean;
+  error: string | null;
+  mesesDisponiveis: string[];
+}
+
+export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'mes'): UseAlunoDevolutivaReturn => {
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AlunoDevolutiva | null>(null);
   const [mesesDisponiveis, setMesesDisponiveis] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
       if (!alunoId) return;
       
       try {
@@ -57,9 +64,6 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           console.error('Erro ao calcular data inicial:', dataInicialError);
           throw new Error('Erro ao calcular período de datas');
         }
-
-        // Em vez de usar a função RPC complexa, vamos buscar os dados manualmente
-        // para ter mais controle sobre o processo
 
         // 1. Buscar informações básicas do aluno
         const { data: dadosAluno, error: alunoError } = await supabase
@@ -79,7 +83,7 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           .select('texto_geral')
           .single();
 
-        const textoGeral = configError ? null : configDevolutiva?.texto_geral;
+        const textoGeral: string | null = configError ? null : configDevolutiva?.texto_geral || null;
 
         // 3. Buscar dados de ábaco
         const { data: dadosAbaco, error: abacoError } = await supabase
@@ -97,7 +101,7 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         const { data: dadosAH, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('created_at, apostila, exercicios, erros')
-          .eq('aluno_id', alunoId)
+          .eq('pessoa_id', alunoId)
           .gte('created_at', dataInicial)
           .order('created_at', { ascending: false });
 
@@ -200,11 +204,11 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         });
 
         // Calcular percentuais totais
-        const abacoPercentualTotal = totalExerciciosAbaco > 0
+        const abacoPercentualTotal: number = totalExerciciosAbaco > 0
           ? ((totalExerciciosAbaco - totalErrosAbaco) / totalExerciciosAbaco) * 100
           : 0;
           
-        const ahPercentualTotal = totalExerciciosAH > 0
+        const ahPercentualTotal: number = totalExerciciosAH > 0
           ? ((totalExerciciosAH - totalErrosAH) / totalExerciciosAH) * 100
           : 0;
 
