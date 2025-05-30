@@ -14,9 +14,9 @@ type SortDirection = 'asc' | 'desc';
 export default function AlunosAtivos() {
   const { alunos, loading, error } = useAlunosAtivos();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTurma, setFilterTurma] = useState('');
-  const [filterProfessor, setFilterProfessor] = useState('');
-  const [filterApostila, setFilterApostila] = useState('');
+  const [filterTurma, setFilterTurma] = useState('todas');
+  const [filterProfessor, setFilterProfessor] = useState('todos');
+  const [filterApostila, setFilterApostila] = useState('todas');
   const [sortField, setSortField] = useState<SortField>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -37,9 +37,9 @@ export default function AlunosAtivos() {
   const alunosFiltrados = useMemo(() => {
     let resultado = alunos.filter(aluno => {
       const matchSearch = aluno.nome.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchTurma = !filterTurma || aluno.turma_nome === filterTurma;
-      const matchProfessor = !filterProfessor || aluno.professor_nome === filterProfessor;
-      const matchApostila = !filterApostila || aluno.ultima_apostila === filterApostila;
+      const matchTurma = filterTurma === 'todas' || aluno.turma_nome === filterTurma;
+      const matchProfessor = filterProfessor === 'todos' || aluno.professor_nome === filterProfessor;
+      const matchApostila = filterApostila === 'todas' || aluno.ultima_apostila === filterApostila;
       
       return matchSearch && matchTurma && matchProfessor && matchApostila;
     });
@@ -102,9 +102,9 @@ export default function AlunosAtivos() {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setFilterTurma('');
-    setFilterProfessor('');
-    setFilterApostila('');
+    setFilterTurma('todas');
+    setFilterProfessor('todos');
+    setFilterApostila('todas');
   };
 
   if (loading) {
@@ -156,7 +156,7 @@ export default function AlunosAtivos() {
                 <SelectValue placeholder="Filtrar por turma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as turmas</SelectItem>
+                <SelectItem value="todas">Todas as turmas</SelectItem>
                 {turmasUnicas.map(turma => (
                   <SelectItem key={turma} value={turma}>{turma}</SelectItem>
                 ))}
@@ -168,7 +168,7 @@ export default function AlunosAtivos() {
                 <SelectValue placeholder="Filtrar por professor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os professores</SelectItem>
+                <SelectItem value="todos">Todos os professores</SelectItem>
                 {professoresUnicos.map(professor => (
                   <SelectItem key={professor} value={professor}>{professor}</SelectItem>
                 ))}
@@ -180,7 +180,7 @@ export default function AlunosAtivos() {
                 <SelectValue placeholder="Filtrar por apostila" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as apostilas</SelectItem>
+                <SelectItem value="todas">Todas as apostilas</SelectItem>
                 {apostilasUnicas.map(apostila => (
                   <SelectItem key={apostila} value={apostila}>{apostila}</SelectItem>
                 ))}
