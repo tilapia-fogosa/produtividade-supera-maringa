@@ -8,7 +8,17 @@ export interface AlunoDevolutiva {
   id: string;
   nome: string;
   texto_devolutiva: string | null;
+  tipo: 'aluno';
 }
+
+export interface FuncionarioDevolutiva {
+  id: string;
+  nome: string;
+  texto_devolutiva: string | null;
+  tipo: 'funcionario';
+}
+
+export type PessoaDevolutiva = AlunoDevolutiva | FuncionarioDevolutiva;
 
 export function useDevolutivas(diaParam?: string | null) {
   const [turmas, setTurmas] = useState<Turma[]>([]);
