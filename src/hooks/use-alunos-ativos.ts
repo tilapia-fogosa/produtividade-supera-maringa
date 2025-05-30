@@ -14,6 +14,20 @@ export interface AlunoAtivo {
   active: boolean;
 }
 
+interface AlunoQueryResult {
+  id: string;
+  nome: string;
+  turma_id: string | null;
+  dias_supera: number | null;
+  active: boolean;
+  turmas: {
+    nome: string;
+    professores: {
+      nome: string;
+    } | null;
+  } | null;
+}
+
 export function useAlunosAtivos() {
   const [alunos, setAlunos] = useState<AlunoAtivo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +42,9 @@ export function useAlunosAtivos() {
       setLoading(true);
       setError(null);
 
-      // Buscar alunos ativos com LEFT JOIN nas turmas e professores
+      console.log('Iniciando busca de alunos ativos...');
+
+      // Buscar alunos ativos com informações das turmas e professores
       const { data: alunosData, error: alunosError } = await supabase
         .from('alunos')
         .select(`
@@ -45,13 +61,26 @@ export function useAlunosAtivos() {
           )
         `)
         .eq('active', true)
-        .order('nome');
+        .order('nome') as { data: AlunoQueryResult[] | null, error: any };
 
-      if (alunosError) throw alunosError;
+      if (alunosError) {
+        console.error('Erro na consulta de alunos:', alunosError);
+        throw alunosError;
+      }
+
+      console.log('Dados recebidos do Supabase:', alunosData);
+
+      if (!alunosData) {
+        console.log('Nenhum dado retornado');
+        setAlunos([]);
+        return;
+      }
 
       // Mapear dados dos alunos com informações das turmas e professores
       const alunosComDados = await Promise.all(
-        (alunosData || []).map(async (aluno: any) => {
+        alunosData.map(async (aluno: AlunoQueryResult) => {
+          console.log('Processando aluno:', aluno.nome);
+          
           // Buscar a última apostila registrada no ábaco
           const { data: ultimaApostila, error: apostilaError } = await supabase
             .from('produtividade_abaco')
@@ -62,10 +91,10 @@ export function useAlunosAtivos() {
             .limit(1);
 
           if (apostilaError) {
-            console.error('Erro ao buscar última apostila:', apostilaError);
+            console.error('Erro ao buscar última apostila para aluno', aluno.nome, ':', apostilaError);
           }
 
-          return {
+          const alunoProcessado: AlunoAtivo = {
             id: aluno.id,
             nome: aluno.nome,
             turma_id: aluno.turma_id,
@@ -74,19 +103,23 @@ export function useAlunosAtivos() {
             ultima_apostila: ultimaApostila && ultimaApostila.length > 0 ? ultimaApostila[0].apostila : null,
             dias_supera: aluno.dias_supera,
             active: aluno.active,
-          } as AlunoAtivo;
+          };
+
+          console.log('Aluno processado:', alunoProcessado);
+          return alunoProcessado;
         })
       );
 
       setAlunos(alunosComDados);
-      console.log(`Carregados ${alunosComDados.length} alunos ativos`);
+      console.log(`Carregados ${alunosComDados.length} alunos ativos com sucesso`);
 
     } catch (err) {
       console.error('Erro ao buscar alunos ativos:', err);
-      setError('Erro ao carregar alunos ativos. Tente novamente.');
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(`Erro ao carregar alunos ativos: ${errorMessage}`);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar a lista de alunos ativos.",
+        description: "Não foi possível carregar a lista de alunos ativos. Verifique o console para mais detalhes.",
         variant: "destructive"
       });
     } finally {
