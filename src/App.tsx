@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -25,6 +26,7 @@ import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
 import AdminConfiguracao from "./pages/AdminConfiguracao";
+import AlunosAtivos from "./pages/AlunosAtivos";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,7 @@ function App() {
                       <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
                       <Route path="/funcionarios" element={<Funcionarios />} />
                       <Route path="/alunos" element={<Alunos />} />
+                      <Route path="/alunos-ativos" element={<AlunosAtivos />} />
                       <Route path="/aula-zero" element={<AulaZero />} />
                       <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
                       <Route path="*" element={<NotFound />} />
