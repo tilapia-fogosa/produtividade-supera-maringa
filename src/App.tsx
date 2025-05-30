@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -28,6 +27,7 @@ import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
 import AdminConfiguracao from "./pages/AdminConfiguracao";
 import AlunosAtivos from "./pages/AlunosAtivos";
+import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +55,7 @@ function App() {
                       <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
                       <Route path="/estoque" element={<Estoque />} />
                       <Route path="/devolutivas" element={<Devolutivas />} />
+                      <Route path="/devolutivas/alunos" element={<AlunosDevolutivas />} />
                       <Route path="/devolutivas/turmas" element={<Turmas />} />
                       <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                       <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
