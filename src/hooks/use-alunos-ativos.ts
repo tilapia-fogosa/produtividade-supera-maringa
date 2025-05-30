@@ -28,7 +28,7 @@ export function useAlunosAtivos() {
       setLoading(true);
       setError(null);
 
-      // Buscar alunos ativos com informações das turmas e professores
+      // Buscar alunos ativos com LEFT JOIN nas turmas e professores
       const { data: alunosData, error: alunosError } = await supabase
         .from('alunos')
         .select(`
@@ -37,9 +37,9 @@ export function useAlunosAtivos() {
           turma_id,
           dias_supera,
           active,
-          turmas (
+          turmas!left (
             nome,
-            professores (
+            professores!left (
               nome
             )
           )
@@ -49,9 +49,9 @@ export function useAlunosAtivos() {
 
       if (alunosError) throw alunosError;
 
-      // Buscar a última apostila registrada para cada aluno
-      const alunosComApostila = await Promise.all(
-        (alunosData || []).map(async (aluno) => {
+      // Mapear dados dos alunos com informações das turmas e professores
+      const alunosComDados = await Promise.all(
+        (alunosData || []).map(async (aluno: any) => {
           // Buscar a última apostila registrada no ábaco
           const { data: ultimaApostila, error: apostilaError } = await supabase
             .from('produtividade_abaco')
@@ -78,8 +78,8 @@ export function useAlunosAtivos() {
         })
       );
 
-      setAlunos(alunosComApostila);
-      console.log(`Carregados ${alunosComApostila.length} alunos ativos`);
+      setAlunos(alunosComDados);
+      console.log(`Carregados ${alunosComDados.length} alunos ativos`);
 
     } catch (err) {
       console.error('Erro ao buscar alunos ativos:', err);
