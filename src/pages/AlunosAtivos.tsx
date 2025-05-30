@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
+
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera';
 type SortDirection = 'asc' | 'desc';
+
 export default function AlunosAtivos() {
   const {
     alunos,
     loading,
     error
   } = useAlunosAtivos();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState('todas');
   const [filterProfessor, setFilterProfessor] = useState('todos');
@@ -215,7 +218,16 @@ export default function AlunosAtivos() {
                       {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400">{aluno.ultima_apostila}</Badge> : <span className="text-gray-400">Não registrado</span>}
                     </td>
                     <td className="p-4">
-                      <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}>
+                      <Badge 
+                        variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} 
+                        className={
+                          aluno.dias_supera && aluno.dias_supera < 90 
+                            ? "bg-orange-200 text-orange-800 border-orange-300" 
+                            : aluno.dias_supera && aluno.dias_supera > 30 
+                              ? "bg-green-100 text-green-800" 
+                              : ""
+                        }
+                      >
                         {aluno.dias_supera || 0} dias
                       </Badge>
                     </td>
