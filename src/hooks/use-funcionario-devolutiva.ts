@@ -61,92 +61,41 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
             break;
         }
 
-        // Buscar dados do funcionário
-        const { data: funcionarioData, error: funcionarioError } = await supabase
-          .from('funcionarios')
-          .select('id, nome, texto_devolutiva')
-          .eq('id', funcionarioId)
-          .single();
+        console.log('Buscando devolutiva do funcionário:', funcionarioId);
+        console.log('Período:', periodo, 'Data inicial:', dataInicial.toISOString());
 
-        if (funcionarioError) {
-          console.error('Erro ao buscar funcionário:', funcionarioError);
+        // Usar a função RPC para buscar os dados
+        const { data: funcionarioData, error: rpcError } = await supabase
+          .rpc('get_funcionario_devolutiva', {
+            p_funcionario_id: funcionarioId,
+            p_data_inicial: dataInicial.toISOString()
+          });
+
+        if (rpcError) {
+          console.error('Erro na RPC get_funcionario_devolutiva:', rpcError);
+          setError('Erro ao buscar dados do funcionário');
+          return;
+        }
+
+        if (!funcionarioData) {
           setError('Funcionário não encontrado');
           return;
         }
 
-        // Buscar dados de produtividade AH do funcionário
-        const { data: ahData, error: ahError } = await supabase
-          .from('produtividade_ah_funcionarios')
-          .select('apostila, exercicios, erros, created_at')
-          .eq('funcionario_id', funcionarioId)
-          .gte('created_at', dataInicial.toISOString())
-          .lte('created_at', dataFinal.toISOString())
-          .order('created_at', { ascending: false });
+        console.log('Dados retornados pela RPC:', funcionarioData);
 
-        if (ahError) {
-          console.error('Erro ao buscar produtividade AH:', ahError);
-        }
-
-        // Buscar texto geral da configuração
-        const { data: configData } = await supabase
-          .from('devolutivas_config')
-          .select('texto_geral')
-          .limit(1);
-
-        // Processar dados de AH por mês
-        const ahPorMes = new Map<string, {
-          livros: Set<string>;
-          exercicios: number;
-          erros: number;
-        }>();
-
-        (ahData || []).forEach(item => {
-          const mes = new Date(item.created_at).toLocaleDateString('pt-BR', { 
-            month: 'long', 
-            year: 'numeric' 
-          });
-          
-          if (!ahPorMes.has(mes)) {
-            ahPorMes.set(mes, {
-              livros: new Set(),
-              exercicios: 0,
-              erros: 0
-            });
-          }
-          
-          const mesData = ahPorMes.get(mes)!;
-          if (item.apostila) mesData.livros.add(item.apostila);
-          mesData.exercicios += item.exercicios || 0;
-          mesData.erros += item.erros || 0;
-        });
-
-        // Converter para array e calcular percentuais
-        const desempenhoAH: DesempenhoAH[] = Array.from(ahPorMes.entries()).map(([mes, dados]) => ({
-          mes,
-          livro: Array.from(dados.livros).join(', ') || 'Não registrado',
-          exercicios: dados.exercicios,
-          erros: dados.erros,
-          percentual_acerto: dados.exercicios > 0 
-            ? ((dados.exercicios - dados.erros) / dados.exercicios) * 100 
-            : 0
-        }));
-
-        // Calcular totais
-        const ahTotalExercicios = desempenhoAH.reduce((sum, item) => sum + item.exercicios, 0);
-        const ahTotalErros = desempenhoAH.reduce((sum, item) => sum + item.erros, 0);
-        const ahPercentualTotal = ahTotalExercicios > 0 
-          ? ((ahTotalExercicios - ahTotalErros) / ahTotalExercicios) * 100 
-          : 0;
-
+        // Transformar os dados para o formato esperado
+        const desempenhoAH: DesempenhoAH[] = funcionarioData.desempenho_ah || [];
+        
         setData({
           id: funcionarioData.id,
           nome: funcionarioData.nome,
           texto_devolutiva: funcionarioData.texto_devolutiva,
-          texto_geral: configData?.[0]?.texto_geral || null,
+          texto_geral: funcionarioData.texto_geral,
           desempenho_ah: desempenhoAH,
-          ah_total_exercicios: ahTotalExercicios,
-          ah_total_erros: ahTotalErros,
-          ah_percentual_total: ahPercentualTotal
+          ah_total_exercicios: funcionarioData.ah_total_exercicios || 0,
+          ah_total_erros: funcionarioData.ah_total_erros || 0,
+          ah_percentual_total: funcionarioData.ah_percentual_total || 0
         });
 
       } catch (err) {

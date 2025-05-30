@@ -2846,6 +2846,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_funcionario_devolutiva: {
+        Args: { p_funcionario_id: string; p_data_inicial: string }
+        Returns: Json
+      }
       get_leads_stats: {
         Args: { p_unit_ids: string[] }
         Returns: Json
