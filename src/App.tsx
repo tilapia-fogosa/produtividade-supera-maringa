@@ -19,6 +19,7 @@ import Lancamentos from "./pages/Lancamentos";
 import DiasLancamento from "./pages/DiasLancamento";
 import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
+import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import Diario from "./pages/Diario";
 import Funcionarios from "./pages/Funcionarios";
@@ -57,6 +58,7 @@ function App() {
                       <Route path="/devolutivas/turmas" element={<Turmas />} />
                       <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                       <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
+                      <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
                       <Route path="/fichas" element={<Fichas />} />
                       <Route path="/lancamentos" element={<Lancamentos />} />
                       <Route path="/diario" element={<Diario />} />
