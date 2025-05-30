@@ -95,8 +95,8 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
 
         console.log('Dados retornados pela RPC:', funcionarioData);
 
-        // Cast do tipo para o formato esperado
-        const typedData = funcionarioData as FuncionarioDevolutivaRPCResponse;
+        // Cast do tipo para o formato esperado - primeiro para unknown, depois para nosso tipo
+        const typedData = funcionarioData as unknown as FuncionarioDevolutivaRPCResponse;
         
         // Transformar os dados para o formato esperado
         const desempenhoAH: DesempenhoAH[] = typedData.desempenho_ah || [];
