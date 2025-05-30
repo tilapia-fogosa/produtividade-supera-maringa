@@ -23,6 +23,17 @@ export interface FuncionarioDevolutivaData {
   ah_percentual_total: number;
 }
 
+interface FuncionarioDevolutivaRPCResponse {
+  id: string;
+  nome: string;
+  texto_devolutiva: string | null;
+  texto_geral: string | null;
+  desempenho_ah: DesempenhoAH[];
+  ah_total_exercicios: number;
+  ah_total_erros: number;
+  ah_percentual_total: number;
+}
+
 export function useFuncionarioDevolutiva(funcionarioId: string, periodo: PeriodoFiltro) {
   const [data, setData] = useState<FuncionarioDevolutivaData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,18 +95,21 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
 
         console.log('Dados retornados pela RPC:', funcionarioData);
 
+        // Cast do tipo para o formato esperado
+        const typedData = funcionarioData as FuncionarioDevolutivaRPCResponse;
+        
         // Transformar os dados para o formato esperado
-        const desempenhoAH: DesempenhoAH[] = funcionarioData.desempenho_ah || [];
+        const desempenhoAH: DesempenhoAH[] = typedData.desempenho_ah || [];
         
         setData({
-          id: funcionarioData.id,
-          nome: funcionarioData.nome,
-          texto_devolutiva: funcionarioData.texto_devolutiva,
-          texto_geral: funcionarioData.texto_geral,
+          id: typedData.id,
+          nome: typedData.nome,
+          texto_devolutiva: typedData.texto_devolutiva,
+          texto_geral: typedData.texto_geral,
           desempenho_ah: desempenhoAH,
-          ah_total_exercicios: funcionarioData.ah_total_exercicios || 0,
-          ah_total_erros: funcionarioData.ah_total_erros || 0,
-          ah_percentual_total: funcionarioData.ah_percentual_total || 0
+          ah_total_exercicios: typedData.ah_total_exercicios || 0,
+          ah_total_erros: typedData.ah_total_erros || 0,
+          ah_percentual_total: typedData.ah_percentual_total || 0
         });
 
       } catch (err) {
