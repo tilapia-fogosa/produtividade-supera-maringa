@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { GraduationCap, Package, MessageCircle, CalendarDays, ClipboardList, User, FileText } from "lucide-react";
+import { GraduationCap, Package, MessageCircle, CalendarDays, ClipboardList, User, FileText, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -47,6 +47,11 @@ const menuItems = [
     title: "Funcionários",
     path: "/funcionarios",
     icon: User,
+  },
+  {
+    title: "Alunos Ativos",
+    path: "/alunos-ativos",
+    icon: Users,
   },
 ];
 

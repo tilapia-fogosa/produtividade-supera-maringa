@@ -18,6 +18,7 @@ import Lancamentos from "./pages/Lancamentos";
 import DiasLancamento from "./pages/DiasLancamento";
 import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
+import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import Diario from "./pages/Diario";
 import Funcionarios from "./pages/Funcionarios";
@@ -25,6 +26,8 @@ import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
 import AdminConfiguracao from "./pages/AdminConfiguracao";
+import AlunosAtivos from "./pages/AlunosAtivos";
+import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 
 const queryClient = new QueryClient();
 
@@ -52,15 +55,18 @@ function App() {
                       <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
                       <Route path="/estoque" element={<Estoque />} />
                       <Route path="/devolutivas" element={<Devolutivas />} />
+                      <Route path="/devolutivas/alunos" element={<AlunosDevolutivas />} />
                       <Route path="/devolutivas/turmas" element={<Turmas />} />
                       <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                       <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
+                      <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
                       <Route path="/fichas" element={<Fichas />} />
                       <Route path="/lancamentos" element={<Lancamentos />} />
                       <Route path="/diario" element={<Diario />} />
                       <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
                       <Route path="/funcionarios" element={<Funcionarios />} />
                       <Route path="/alunos" element={<Alunos />} />
+                      <Route path="/alunos-ativos" element={<AlunosAtivos />} />
                       <Route path="/aula-zero" element={<AulaZero />} />
                       <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
                       <Route path="*" element={<NotFound />} />
