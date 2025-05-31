@@ -2765,6 +2765,16 @@ export type Database = {
           faltas_recorrentes: boolean
         }[]
       }
+      get_attendance_rate_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_prev_start_date: string
+          p_prev_end_date: string
+          p_unit_ids: string[]
+        }
+        Returns: Json
+      }
       get_commercial_unit_stats: {
         Args: {
           p_start_date: string
