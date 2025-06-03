@@ -142,9 +142,10 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
     console.log('Registrando presença para o', tipoPessoa + ':', data.aluno_id);
     
-    // Preparar dados para inserção
+    // Preparar dados para inserção usando os novos campos
     const produtividadeData = {
-      aluno_id: data.aluno_id,
+      pessoa_id: data.aluno_id, // Usar pessoa_id em vez de aluno_id
+      tipo_pessoa: tipoPessoa, // Definir o tipo de pessoa
       data_aula: data.data_aula,
       presente: data.presente,
       is_reposicao: data.is_reposicao || false,
