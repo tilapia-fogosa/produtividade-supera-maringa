@@ -102,22 +102,22 @@ export function usePessoasTurma() {
       // Buscar os últimos registros de produtividade de cada pessoa
       const pessoasIds = todasPessoas.map(pessoa => pessoa.id);
       
-      // Buscar último registro de produtividade para cada pessoa
+      // Buscar último registro de produtividade para cada pessoa (usando pessoa_id)
       const { data: ultimosRegistros, error: ultimosRegistrosError } = await supabase
         .from('produtividade_abaco')
-        .select('id, aluno_id, created_at, data_aula')
-        .in('aluno_id', pessoasIds)
+        .select('id, pessoa_id, created_at, data_aula')
+        .in('pessoa_id', pessoasIds)
         .order('created_at', { ascending: false });
         
       if (ultimosRegistrosError) throw ultimosRegistrosError;
       
       // Associar os últimos registros às pessoas
       if (ultimosRegistros && ultimosRegistros.length > 0) {
-        // Criar um objeto com o último registro de cada aluno
-        const ultimosPorAluno: Record<string, { id: string, created_at: string, data_aula: string }> = {};
+        // Criar um objeto com o último registro de cada pessoa
+        const ultimosPorPessoa: Record<string, { id: string, created_at: string, data_aula: string }> = {};
         ultimosRegistros.forEach(registro => {
-          if (!ultimosPorAluno[registro.aluno_id]) {
-            ultimosPorAluno[registro.aluno_id] = {
+          if (!ultimosPorPessoa[registro.pessoa_id]) {
+            ultimosPorPessoa[registro.pessoa_id] = {
               id: registro.id,
               created_at: registro.created_at,
               data_aula: registro.data_aula
@@ -127,7 +127,7 @@ export function usePessoasTurma() {
         
         // Adicionar informações do último registro a cada pessoa
         todasPessoas.forEach(pessoa => {
-          const ultimoRegistro = ultimosPorAluno[pessoa.id];
+          const ultimoRegistro = ultimosPorPessoa[pessoa.id];
           if (ultimoRegistro) {
             pessoa.data_ultimo_registro = ultimoRegistro.data_aula;
             pessoa.ultimo_registro_id = ultimoRegistro.id;
@@ -137,11 +137,11 @@ export function usePessoasTurma() {
       
       setPessoasTurma(todasPessoas);
       
-      // Verificar registros de produtividade para o dia atual
+      // Verificar registros de produtividade para o dia atual (usando pessoa_id)
       const hoje = new Date().toISOString().split('T')[0];
       const { data: registrosData, error: registrosError } = await supabase
         .from('produtividade_abaco')
-        .select('aluno_id')
+        .select('pessoa_id')
         .eq('data_aula', hoje);
         
       if (registrosError) throw registrosError;
@@ -150,7 +150,7 @@ export function usePessoasTurma() {
       const novoEstado: Record<string, boolean> = {};
       if (registrosData && registrosData.length > 0) {
         registrosData.forEach(registro => {
-          novoEstado[registro.aluno_id] = true;
+          novoEstado[registro.pessoa_id] = true;
         });
       }
       
