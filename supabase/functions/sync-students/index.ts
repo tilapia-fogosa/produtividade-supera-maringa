@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
@@ -253,7 +252,7 @@ async function syncProfessors(rawData) {
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
         unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
-      })))
+      }))
       .select();
     
     if (insertError) {
@@ -304,10 +303,10 @@ async function syncTurmas(rawData, professors) {
     return [];
   }
   
-  // Get existing turmas from database
+  // Get existing turmas from database - removido 'horario' do select
   const { data: existingTurmas, error: fetchError } = await supabase
     .from('turmas')
-    .select('id, nome, professor_id, dia_semana, horario');
+    .select('id, nome, professor_id, dia_semana');
   
   if (fetchError) {
     throw new Error(`Erro ao buscar turmas existentes: ${fetchError.message}`);
@@ -332,12 +331,11 @@ async function syncTurmas(rawData, professors) {
       professorMap.get(turma.professor_nome.toLowerCase().trim()) : null;
     
     if (!existingTurma) {
-      // New turma to add
+      // New turma to add - removido 'horario' do insert
       turmasToAdd.push({
         nome: turma.nome,
         professor_id: professorId,
         dia_semana: turma.dia_semana, // Using the detected weekday
-        horario: '14:00:00',    // Default value, can be updated later
         unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
       });
     } else if (
