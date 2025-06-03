@@ -36,7 +36,6 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
             id,
             nome,
             dia_semana,
-            horario,
             professor_id,
             professores(
               nome,
@@ -54,46 +53,16 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
 
       console.log('Dados do aluno obtidos:', alunoData);
       
-      // Formatar informações da turma com dia e horário
+      // Usar o nome da turma como está no banco (já inclui horário e outras informações)
       let turmaNome = 'Não informada';
       let professorNome = 'Não informado';
       let professorSlack = null;
       
       if (alunoData.turmas) {
         const turma = Array.isArray(alunoData.turmas) ? alunoData.turmas[0] : alunoData.turmas;
-        // Formatar o nome da turma com dia e horário
-        let diaSemanaFormatado = '';
         
-        // Converter para formato mais amigável sem modificar a variável original
-        switch (turma.dia_semana) {
-          case "segunda":
-            diaSemanaFormatado = '2ª';
-            break;
-          case "terca":
-            diaSemanaFormatado = '3ª';
-            break;
-          case "quarta":
-            diaSemanaFormatado = '4ª';
-            break;
-          case "quinta":
-            diaSemanaFormatado = '5ª';
-            break;
-          case "sexta":
-            diaSemanaFormatado = '6ª';
-            break;
-          case "sabado":
-            diaSemanaFormatado = 'Sábado';
-            break;
-          case "domingo":
-            diaSemanaFormatado = 'Domingo';
-            break;
-          default:
-            diaSemanaFormatado = turma.dia_semana;
-        }
-        
-        // Formatar horário
-        const horario = turma.horario ? turma.horario.substring(0, 5) : '00:00';
-        turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+        // Usar o nome da turma diretamente (já contém as informações necessárias)
+        turmaNome = turma.nome;
         
         // Dados do professor
         if (turma.professores) {
