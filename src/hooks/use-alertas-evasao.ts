@@ -200,7 +200,7 @@ export function useAlertasEvasao() {
             body: { 
               aluno: aluno?.nome || 'Aluno de Teste',
               alunoId: alunoSelecionado, // Enviamos o ID do aluno
-              dataAlerta: new Date(dataAlerta).toLocaleDateString('pt-BR'),
+              dataAlerta: dataAlerta, // Envia a data bruta (YYYY-MM-DD)
               responsavel: responsavelNome,
               descritivo: descritivo,
               origem: origemAlerta,

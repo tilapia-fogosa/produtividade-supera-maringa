@@ -16,7 +16,7 @@ serve(async (req) => {
     // Obter dados da requisição
     const { 
       aluno = "Aluno de Teste", 
-      dataAlerta = new Date().toLocaleDateString('pt-BR'), 
+      dataAlerta = new Date().toISOString().split('T')[0], // Recebe no formato YYYY-MM-DD
       responsavel = "Sistema de Teste", 
       descritivo = "Este é um alerta de teste", 
       origem = "outro",
@@ -102,6 +102,20 @@ serve(async (req) => {
       }
     }
     
+    // Formatar a data do alerta para o padrão brasileiro
+    const formatarDataBrasileira = (dataString: string) => {
+      try {
+        // Se a data está no formato YYYY-MM-DD
+        const [ano, mes, dia] = dataString.split('-');
+        return `${dia}/${mes}/${ano}`;
+      } catch (error) {
+        console.error('Erro ao formatar data:', error);
+        return dataString; // Retorna a data original se não conseguir formatar
+      }
+    };
+    
+    const dataAlertaFormatada = formatarDataBrasileira(dataAlerta);
+    
     // ID do Slack da coordenadora hardcoded
     const coordenadoraSlack = "chriskulza"; // ID da Chris Kulza
     
@@ -114,7 +128,7 @@ serve(async (req) => {
 *Aluno:* ${alunoNome}
 *Turma:* ${turmaNome}
 *Educador:* ${professorSlackUsername ? `<@${professorSlackUsername}>` : professorNome}
-*Data do Aviso:* ${dataAlerta}
+*Data do Aviso:* ${dataAlertaFormatada}
 *Responsável Alerta:* ${responsavel}
 *Informações:* ${descritivo}
 *Origem do Alerta:* ${origem}
