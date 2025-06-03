@@ -15,7 +15,6 @@ DECLARE
   professor_nome TEXT := 'Não informado';
   professor_slack TEXT := NULL;
   dia_semana_texto TEXT;
-  horario_texto TEXT;
   card_id TEXT;
 BEGIN
   RAISE NOTICE 'Iniciando função notify_evasion_alert para o alerta ID: %', NEW.id;
@@ -35,14 +34,12 @@ BEGIN
     a.nome, 
     t.nome, 
     t.dia_semana,
-    TO_CHAR(t.horario, 'HH24:MI') as horario_formatado,
     p.nome, 
     p.slack_username
   INTO 
     aluno_nome,
     turma_nome, 
     dia_semana_texto,
-    horario_texto,
     professor_nome, 
     professor_slack
   FROM alunos a
@@ -50,24 +47,11 @@ BEGIN
   LEFT JOIN professores p ON t.professor_id = p.id
   WHERE a.id = NEW.aluno_id;
   
-  -- Formatar nome da turma com dia e horário
-  IF dia_semana_texto IS NOT NULL AND horario_texto IS NOT NULL THEN
-    -- Converter dia_semana para texto em português
-    dia_semana_texto := CASE dia_semana_texto
-      WHEN 'segunda' THEN '2ª'
-      WHEN 'terca' THEN '3ª'
-      WHEN 'quarta' THEN '4ª'
-      WHEN 'quinta' THEN '5ª'
-      WHEN 'sexta' THEN '6ª'
-      WHEN 'sabado' THEN 'Sábado'
-      WHEN 'domingo' THEN 'Domingo'
-      ELSE dia_semana_texto
-    END;
-    
-    -- Formatar o nome completo da turma
-    turma_nome := dia_semana_texto || ' (' || horario_texto || ' - 60+)';
-    
-    RAISE NOTICE 'Turma formatada: %', turma_nome;
+  -- Usar o nome da turma como está no banco (já inclui horário e outras informações)
+  IF turma_nome IS NOT NULL THEN
+    RAISE NOTICE 'Turma: %', turma_nome;
+  ELSE
+    turma_nome := 'Turma não encontrada';
   END IF;
 
   -- Obter o ID do cartão Kanban criado para este alerta

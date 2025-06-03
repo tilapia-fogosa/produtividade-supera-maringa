@@ -2295,7 +2295,6 @@ export type Database = {
         Row: {
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          horario: string
           id: string
           nome: string
           professor_id: string
@@ -2305,7 +2304,6 @@ export type Database = {
         Insert: {
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          horario: string
           id?: string
           nome: string
           professor_id: string
@@ -2315,7 +2313,6 @@ export type Database = {
         Update: {
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
-          horario?: string
           id?: string
           nome?: string
           professor_id?: string

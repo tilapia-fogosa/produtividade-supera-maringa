@@ -16,7 +16,7 @@ export function useTodasTurmas() {
         const { data: turmasData, error } = await supabase
           .from('turmas')
           .select('*')
-          .order('nome, horario');
+          .order('nome');
 
         if (error) {
           console.error('Erro ao buscar turmas:', error);
