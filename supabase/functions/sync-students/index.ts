@@ -1,3 +1,4 @@
+
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
@@ -246,13 +247,13 @@ async function syncProfessors(rawData) {
     // Obter o ID da unidade de Maringá
     const maringaUnitId = await getMaringaUnitId();
     
-    // Atualizar para usar o nome correto da coluna (unit_id)
+    // Corrigir a sintaxe do insert
     const { data: insertedProfessors, error: insertError } = await supabase
       .from('professores')
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
-        unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
-      }))
+        unit_id: maringaUnitId
+      })))
       .select();
     
     if (insertError) {
