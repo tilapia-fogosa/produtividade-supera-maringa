@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -46,7 +47,7 @@ serve(async (req) => {
       console.log(`Buscando dados completos do aluno ID: ${alunoId}`);
       
       try {
-        // Primeira abordagem: buscar aluno e fazer JOIN com turma e professor
+        // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('nome, turma_id')
@@ -62,10 +63,10 @@ serve(async (req) => {
           alunoNome = alunoData.nome || aluno;
           
           if (alunoData.turma_id) {
-            // Agora buscar os dados da turma
+            // Buscar os dados da turma
             const { data: turmaData, error: turmaError } = await supabase
               .from('turmas')
-              .select('nome, dia_semana, horario, professor_id')
+              .select('nome, professor_id')
               .eq('id', alunoData.turma_id)
               .single();
               
@@ -74,22 +75,8 @@ serve(async (req) => {
             } else if (turmaData) {
               console.log('Dados da turma obtidos:', JSON.stringify(turmaData));
               
-              // Formatar dia da semana
-              let diaSemanaFormatado = '';
-              switch (turmaData.dia_semana) {
-                case "segunda": diaSemanaFormatado = '2ª'; break;
-                case "terca": diaSemanaFormatado = '3ª'; break;
-                case "quarta": diaSemanaFormatado = '4ª'; break;
-                case "quinta": diaSemanaFormatado = '5ª'; break;
-                case "sexta": diaSemanaFormatado = '6ª'; break;
-                case "sabado": diaSemanaFormatado = 'Sábado'; break;
-                case "domingo": diaSemanaFormatado = 'Domingo'; break;
-                default: diaSemanaFormatado = turmaData.dia_semana;
-              }
-              
-              // Formatar horário
-              const horario = turmaData.horario ? turmaData.horario.substring(0, 5) : '00:00';
-              turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+              // Usar diretamente o nome da turma do banco
+              turmaNome = turmaData.nome || turma;
               
               // Se tivermos o professor_id, buscamos os dados do professor
               if (turmaData.professor_id) {
