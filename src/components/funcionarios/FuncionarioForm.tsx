@@ -181,7 +181,7 @@ export const FuncionarioForm = ({
             <SelectItem value="sem-turma">Sem turma</SelectItem>
             {turmas.map((turma) => (
               <SelectItem key={turma.id} value={turma.id}>
-                {turma.nome} - {turma.horario}
+                {turma.nome}
               </SelectItem>
             ))}
           </SelectContent>

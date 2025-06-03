@@ -55,12 +55,12 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
       const pessoasIds = alunos.map(pessoa => pessoa.id);
       
       const registrosFiltrados = produtividadeData?.filter(registro => 
-        pessoasIds.includes(registro.aluno_id)
+        pessoasIds.includes(registro.pessoa_id)
       ) || [];
       
       // Adicionar informações da pessoa (aluno ou funcionário) aos registros
       const registrosComPessoa = registrosFiltrados.map(registro => {
-        const pessoa = alunos.find(p => p.id === registro.aluno_id);
+        const pessoa = alunos.find(p => p.id === registro.pessoa_id);
         return {
           ...registro,
           pessoa: pessoa || null,

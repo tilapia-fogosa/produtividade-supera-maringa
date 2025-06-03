@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +15,6 @@ export interface Turma {
   id: string;
   nome: string;
   professor_id: string;
-  horario: string;
   sala: string | null;
   dia_semana: "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
   unit_id: string;

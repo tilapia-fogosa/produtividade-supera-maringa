@@ -157,14 +157,14 @@ export function AlertaEvasaoForm({
       </div>
 
       <div>
-        <p className="text-sm text-muted-foreground mb-1">
+        <label htmlFor="data-retencao" className="block text-sm font-medium text-gray-700 mb-1">
           Agendado Retenção (caso tenha)
-        </p>
+        </label>
         <Input
-          type="date"
+          id="data-retencao"
+          type="datetime-local"
           value={dataRetencao}
           onChange={(e) => setDataRetencao(e.target.value)}
-          placeholder="Data da Retenção"
           className="w-full"
         />
       </div>

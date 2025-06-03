@@ -1561,7 +1561,6 @@ export type Database = {
       }
       produtividade_abaco: {
         Row: {
-          aluno_id: string
           apostila: string | null
           comentario: string | null
           created_at: string
@@ -1572,11 +1571,12 @@ export type Database = {
           id: string
           is_reposicao: boolean
           pagina: string | null
+          pessoa_id: string
           presente: boolean
+          tipo_pessoa: string | null
           updated_at: string
         }
         Insert: {
-          aluno_id: string
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1587,11 +1587,12 @@ export type Database = {
           id?: string
           is_reposicao?: boolean
           pagina?: string | null
+          pessoa_id: string
           presente?: boolean
+          tipo_pessoa?: string | null
           updated_at?: string
         }
         Update: {
-          aluno_id?: string
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1602,18 +1603,12 @@ export type Database = {
           id?: string
           is_reposicao?: boolean
           pagina?: string | null
+          pessoa_id?: string
           presente?: boolean
+          tipo_pessoa?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "produtividade_abaco_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       produtividade_ah: {
         Row: {
@@ -2295,7 +2290,6 @@ export type Database = {
         Row: {
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          horario: string
           id: string
           nome: string
           professor_id: string
@@ -2305,7 +2299,6 @@ export type Database = {
         Insert: {
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          horario: string
           id?: string
           nome: string
           professor_id: string
@@ -2315,7 +2308,6 @@ export type Database = {
         Update: {
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
-          horario?: string
           id?: string
           nome?: string
           professor_id?: string

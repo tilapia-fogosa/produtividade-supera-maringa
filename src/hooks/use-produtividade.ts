@@ -5,7 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface Produtividade {
   id: string;
-  aluno_id: string;
+  pessoa_id: string; // Mudança de aluno_id para pessoa_id
+  tipo_pessoa: string; // Novo campo
   data_aula: string;
   presente: boolean;
   apostila: string | null;
@@ -19,11 +20,11 @@ export interface Produtividade {
   updated_at: string;
 }
 
-export function useProdutividade(alunoId: string) {
+export function useProdutividade(pessoaId: string) {
   const [registrando, setRegistrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [alunoProdutividade, setAlunoProdutividade] = useState<Produtividade[]>([]);
+  const [pessoaProdutividade, setPessoaProdutividade] = useState<Produtividade[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -32,7 +33,7 @@ export function useProdutividade(alunoId: string) {
       const { data, error } = await supabase
         .from('produtividade_abaco')
         .select('*')
-        .eq('aluno_id', alunoId)
+        .eq('pessoa_id', pessoaId) // Mudança para pessoa_id
         .order('data_aula', { ascending: false });
 
       if (error) {
@@ -41,7 +42,7 @@ export function useProdutividade(alunoId: string) {
         return;
       }
 
-      setAlunoProdutividade(data || []);
+      setPessoaProdutividade(data || []);
     } catch (error: any) {
       console.error("Erro inesperado ao buscar produtividade:", error);
       setError(error.message || "Erro ao buscar produtividade");
@@ -50,15 +51,24 @@ export function useProdutividade(alunoId: string) {
 
   const registrarPresenca = async (presente: boolean, dataAula: string) => {
     try {
-      // Se o aluno está ausente (falta), atualizamos o campo ultima_falta
+      // Verificar se é aluno ou funcionário para atualizar a data da última falta
       if (!presente) {
-        const { error: updateError } = await supabase
+        // Primeiro tentar atualizar na tabela alunos
+        const { error: alunoUpdateError } = await supabase
           .from('alunos')
           .update({ ultima_falta: dataAula })
-          .eq('id', alunoId);
+          .eq('id', pessoaId);
           
-        if (updateError) {
-          console.error('Erro ao atualizar data da última falta:', updateError);
+        // Se falhar, tentar na tabela funcionários
+        if (alunoUpdateError) {
+          const { error: funcionarioUpdateError } = await supabase
+            .from('funcionarios')
+            .update({ ultima_falta: dataAula })
+            .eq('id', pessoaId);
+            
+          if (funcionarioUpdateError) {
+            console.error('Erro ao atualizar data da última falta:', funcionarioUpdateError);
+          }
         }
       }
       
@@ -66,10 +76,24 @@ export function useProdutividade(alunoId: string) {
       setError(null);
       setSuccess(null);
 
+      // Determinar tipo de pessoa
+      const { data: alunoExiste } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('id', pessoaId)
+        .maybeSingle();
+
+      const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
+
       const { data, error } = await supabase
         .from('produtividade_abaco')
         .insert([
-          { aluno_id: alunoId, data_aula: dataAula, presente: presente }
+          { 
+            pessoa_id: pessoaId, 
+            tipo_pessoa: tipoPessoa,
+            data_aula: dataAula, 
+            presente: presente 
+          }
         ]);
 
       if (error) {
@@ -89,7 +113,7 @@ export function useProdutividade(alunoId: string) {
         description: "Presença registrada com sucesso!",
       });
 
-      // Após registrar a presença, buscar novamente a produtividade do aluno
+      // Após registrar a presença, buscar novamente a produtividade
       await buscarProdutividade();
     } catch (error: any) {
       console.error("Erro inesperado ao registrar presença:", error);
@@ -104,7 +128,6 @@ export function useProdutividade(alunoId: string) {
     }
   };
 
-  // Nova função para registrar produtividade
   const registrarProdutividade = async (produtividadeData: any) => {
     try {
       setIsLoading(true);
@@ -150,7 +173,6 @@ export function useProdutividade(alunoId: string) {
     }
   };
 
-  // Nova função para excluir o último registro de produtividade
   const excluirProdutividade = async (registroId: string) => {
     try {
       setIsLoading(true);
@@ -203,7 +225,7 @@ export function useProdutividade(alunoId: string) {
     registrarPresenca,
     registrarProdutividade,
     excluirProdutividade,
-    alunoProdutividade,
+    pessoaProdutividade,
     buscarProdutividade
   };
 }
