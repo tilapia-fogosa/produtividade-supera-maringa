@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Aluno, Turma } from '@/hooks/use-professor-turmas';
+import { Turma } from '@/hooks/use-professor-turmas';
+import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 import { Input } from "@/components/ui/input";
 import { 
   Form,
@@ -38,13 +39,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ReposicaoAulaModalProps {
   isOpen: boolean;
   turma: Turma;
-  todosAlunos: Aluno[];
+  todosAlunos: PessoaTurma[];
   onClose: () => void;
   onError?: (errorMessage: string) => void;
 }
 
 interface FormValues {
-  alunoId: string;
+  pessoaId: string;
   presente: "sim" | "não";
   motivoFalta: string;
   apostilaAbaco: string;
@@ -66,14 +67,14 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   const isMobile = useIsMobile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filtro, setFiltro] = useState("");
-  const [alunosFiltrados, setAlunosFiltrados] = useState<Aluno[]>(todosAlunos);
-  const [alunoSelecionado, setAlunoSelecionado] = useState<Aluno | null>(null);
+  const [alunosFiltrados, setAlunosFiltrados] = useState<PessoaTurma[]>(todosAlunos);
+  const [pessoaSelecionada, setPessoaSelecionada] = useState<PessoaTurma | null>(null);
   
   const { apostilas: apostilasDisponiveis } = useApostilas();
   
   const form = useForm<FormValues>({
     defaultValues: {
-      alunoId: "",
+      pessoaId: "",
       presente: "sim",
       motivoFalta: "",
       apostilaAbaco: "",
@@ -90,14 +91,14 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
     if (!isOpen) {
       form.reset();
       setFiltro("");
-      setAlunoSelecionado(null);
+      setPessoaSelecionada(null);
     }
   }, [isOpen, form]);
   
   useEffect(() => {
     if (filtro) {
-      const filtered = todosAlunos.filter(aluno => 
-        aluno.nome.toLowerCase().includes(filtro.toLowerCase())
+      const filtered = todosAlunos.filter(pessoa => 
+        pessoa.nome.toLowerCase().includes(filtro.toLowerCase())
       );
       setAlunosFiltrados(filtered);
     } else {
@@ -106,53 +107,51 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   }, [filtro, todosAlunos]);
 
   useEffect(() => {
-    const alunoId = form.watch("alunoId");
-    if (alunoId) {
-      const aluno = todosAlunos.find(a => a.id === alunoId);
-      if (aluno) {
-        setAlunoSelecionado(aluno);
+    const pessoaId = form.watch("pessoaId");
+    if (pessoaId) {
+      const pessoa = todosAlunos.find(p => p.id === pessoaId);
+      if (pessoa) {
+        setPessoaSelecionada(pessoa);
         
-        if (aluno.ultimo_nivel) {
-          form.setValue("apostilaAbaco", aluno.ultimo_nivel);
+        if (pessoa.ultimo_nivel) {
+          form.setValue("apostilaAbaco", pessoa.ultimo_nivel);
         }
         
-        if (aluno.niveldesafio) {
-          form.setValue("nivelDesafio", aluno.niveldesafio.toString());
+        if (pessoa.niveldesafio) {
+          form.setValue("nivelDesafio", pessoa.niveldesafio.toString());
         } else {
-          form.setValue("nivelDesafio", "1"); // Valor padrão caso não tenha
+          form.setValue("nivelDesafio", "1");
         }
       } else {
-        setAlunoSelecionado(null);
+        setPessoaSelecionada(null);
       }
     } else {
-      setAlunoSelecionado(null);
+      setPessoaSelecionada(null);
     }
-  }, [form.watch("alunoId"), todosAlunos, form]);
+  }, [form.watch("pessoaId"), todosAlunos, form]);
   
   const handleSubmit = async (values: FormValues) => {
-    if (!values.alunoId) {
+    if (!values.pessoaId) {
       toast({
         title: "Erro",
-        description: "Selecione um aluno para registrar a reposição",
+        description: "Selecione uma pessoa para registrar a reposição",
         variant: "destructive"
       });
       return;
     }
     
-    // Buscar o aluno atual
-    const alunoSelecionado = todosAlunos.find(a => a.id === values.alunoId);
+    const pessoaSelecionada = todosAlunos.find(p => p.id === values.pessoaId);
     
-    if (!alunoSelecionado) {
+    if (!pessoaSelecionada) {
       toast({
         title: "Erro",
-        description: "Aluno não encontrado",
+        description: "Pessoa não encontrada",
         variant: "destructive"
       });
       return;
     }
     
-    // Só validar apostila se o aluno não tiver um último nível definido
-    if (values.presente === "sim" && !values.apostilaAbaco && !alunoSelecionado.ultimo_nivel) {
+    if (values.presente === "sim" && !values.apostilaAbaco && !pessoaSelecionada.ultimo_nivel) {
       toast({
         title: "Erro",
         description: "Selecione a apostila do ábaco",
@@ -165,8 +164,8 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
       setIsSubmitting(true);
       
       const produtividadeData = {
-        aluno_id: values.alunoId,
-        aluno_nome: alunoSelecionado.nome,
+        aluno_id: values.pessoaId, // Backend ainda espera aluno_id, será convertido para pessoa_id
+        aluno_nome: pessoaSelecionada.nome,
         turma_id: turma.id,
         turma_nome: turma.nome,
         presente: values.presente === "sim",
@@ -179,9 +178,10 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
         nivel_desafio: values.presente === "sim" && values.fezDesafio === "sim" ? values.nivelDesafio : undefined,
         comentario: values.presente === "sim" ? values.comentario : undefined,
         data_registro: new Date().toISOString(),
-        apostila_atual: alunoSelecionado.ultimo_nivel,
-        ultima_pagina: alunoSelecionado.ultima_pagina?.toString(),
-        is_reposicao: true
+        apostila_atual: pessoaSelecionada.ultimo_nivel,
+        ultima_pagina: pessoaSelecionada.ultima_pagina?.toString(),
+        is_reposicao: true,
+        tipo_pessoa: pessoaSelecionada.origem // Adicionar tipo de pessoa
       };
 
       const { data, error } = await supabase.functions.invoke('register-productivity', {
@@ -235,7 +235,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
   };
 
   const presente = form.watch("presente");
-  const alunoId = form.watch("alunoId");
+  const pessoaId = form.watch("pessoaId");
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -250,11 +250,11 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-2">
               <div className="space-y-2">
-                <FormLabel>Selecione o Aluno</FormLabel>
+                <FormLabel>Selecione a Pessoa</FormLabel>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Pesquisar aluno..."
+                    placeholder="Pesquisar pessoa..."
                     value={filtro}
                     onChange={(e) => setFiltro(e.target.value)}
                     className="pl-8"
@@ -263,7 +263,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                 
                 <FormField
                   control={form.control}
-                  name="alunoId"
+                  name="pessoaId"
                   render={({ field }) => (
                     <FormItem>
                       <Select 
@@ -272,18 +272,18 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione um aluno" />
+                            <SelectValue placeholder="Selecione uma pessoa" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-60">
                           {alunosFiltrados.length === 0 ? (
                             <div className="py-2 px-2 text-sm text-gray-500 text-center">
-                              Nenhum aluno encontrado
+                              Nenhuma pessoa encontrada
                             </div>
                           ) : (
-                            alunosFiltrados.map((aluno) => (
-                              <SelectItem key={aluno.id} value={aluno.id}>
-                                {aluno.nome} {aluno.codigo ? `(${aluno.codigo})` : ''}
+                            alunosFiltrados.map((pessoa) => (
+                              <SelectItem key={pessoa.id} value={pessoa.id}>
+                                {pessoa.nome} {pessoa.codigo ? `(${pessoa.codigo})` : ''} - {pessoa.origem === 'funcionario' ? 'Funcionário' : 'Aluno'}
                               </SelectItem>
                             ))
                           )}
@@ -294,9 +294,9 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                 />
               </div>
               
-              {alunoId && (
+              {pessoaId && (
                 <div className="pt-2">
-                  <AlunoProgressoCard alunoId={alunoId} />
+                  <AlunoProgressoCard alunoId={pessoaId} />
                 </div>
               )}
               
@@ -310,7 +310,7 @@ const ReposicaoAulaModal: React.FC<ReposicaoAulaModalProps> = ({
                       setPresente={(value) => field.onChange(value)}
                       motivoFalta={form.watch("motivoFalta")}
                       setMotivoFalta={(value) => form.setValue("motivoFalta", value)}
-                      alunoId={alunoId}
+                      alunoId={pessoaId}
                     />
                   </FormItem>
                 )}
