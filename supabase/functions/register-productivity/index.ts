@@ -102,24 +102,36 @@ serve(async (req) => {
     }
 
     // Se foi registrada uma falta, chamar a função de verificação de alertas
-    if (!data.presente && data.aluno_id) {
-      console.log('Falta registrada, verificando critérios de alerta para:', data.aluno_id);
+    // CORREÇÃO: Mudando de aluno_id para pessoa_id
+    console.log('Verificando se é uma falta para chamar check-missing-attendance...');
+    console.log('data.presente:', data.presente);
+    console.log('data.aluno_id (antigo):', data.aluno_id); 
+    console.log('data.pessoa_id (novo):', data.pessoa_id);
+    
+    if (!data.presente && data.pessoa_id) {
+      console.log('✅ Falta registrada, verificando critérios de alerta para pessoa_id:', data.pessoa_id);
       
       try {
+        console.log('🔄 Chamando função check-missing-attendance...');
         const { data: alertaData, error: alertaError } = await supabase.functions.invoke('check-missing-attendance', {
-          body: { pessoa_id: data.aluno_id }
+          body: { pessoa_id: data.pessoa_id }
         });
         
         if (alertaError) {
-          console.error('Erro ao verificar alertas de falta:', alertaError);
+          console.error('❌ Erro ao verificar alertas de falta:', alertaError);
           // Não falhar o registro por causa disso, apenas logar
         } else {
-          console.log('Verificação de alertas concluída:', alertaData);
+          console.log('✅ Verificação de alertas concluída com sucesso:', alertaData);
         }
       } catch (error) {
-        console.error('Erro inesperado ao verificar alertas:', error);
+        console.error('❌ Erro inesperado ao verificar alertas:', error);
         // Não falhar o registro por causa disso, apenas logar
       }
+    } else {
+      console.log('❌ Não é uma falta ou pessoa_id não fornecido - não chamando check-missing-attendance');
+      console.log('Motivos:');
+      console.log('- É presença?', data.presente);
+      console.log('- Tem pessoa_id?', !!data.pessoa_id);
     }
 
     // Tentar envio para webhook (apenas se configurado)
