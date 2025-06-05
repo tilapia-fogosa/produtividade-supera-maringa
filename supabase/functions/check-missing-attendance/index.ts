@@ -169,20 +169,39 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se o unit_id existe na tabela unidades (para evitar erro de foreign key)
+    // Verificar se o unit_id existe na tabela units ou usar Maringá como padrão
     let validUnitId = null;
+    
     if (unitId) {
-      const { data: unidade } = await supabase
-        .from('unidades')
+      const { data: unit } = await supabase
+        .from('units')
         .select('id')
         .eq('id', unitId)
         .maybeSingle();
         
-      if (unidade) {
+      if (unit) {
         validUnitId = unitId;
         console.log('Unit ID válido encontrado:', validUnitId);
       } else {
-        console.log('Unit ID não encontrado na tabela unidades, usando NULL');
+        console.log('Unit ID não encontrado na tabela units');
+      }
+    }
+    
+    // Se não temos um unit_id válido, usar Maringá como padrão
+    if (!validUnitId) {
+      const { data: maringaUnit } = await supabase
+        .from('units')
+        .select('id')
+        .ilike('name', '%maringá%')
+        .limit(1)
+        .maybeSingle();
+        
+      if (maringaUnit) {
+        validUnitId = maringaUnit.id;
+        console.log('Usando Maringá como unit_id padrão:', validUnitId);
+      } else {
+        console.log('Unidade de Maringá não encontrada, usando NULL');
+        validUnitId = null;
       }
     }
     
@@ -301,7 +320,7 @@ serve(async (req) => {
           aluno_id: pessoaId,
           turma_id: turmaInfo?.id || null,
           professor_id: professorInfo?.id || null,
-          unit_id: validUnitId, // Usar o unit_id validado ou null
+          unit_id: validUnitId,
           data_falta: dataFalta,
           tipo_criterio: criterio.tipo_criterio,
           detalhes: criterio.detalhes,
