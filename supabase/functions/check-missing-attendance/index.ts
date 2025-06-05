@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { Database } from "../_shared/database-types.ts";
@@ -225,6 +226,11 @@ serve(async (req) => {
     
     console.log(`Encontrados ${produtividade?.length || 0} registros de produtividade`);
     
+    // Calcular estatísticas aqui para usar depois no retorno
+    const totalAulas = produtividade?.length || 0;
+    const totalFaltas = produtividade?.filter(p => !p.presente).length || 0;
+    const percentualFaltas = totalAulas > 0 ? (totalFaltas / totalAulas) * 100 : 0;
+    
     // 3. Aplicar critérios de alerta por ORDEM DE PRIORIDADE
     let alertaCriterioEncontrado: AlertaCriteria | null = null;
     
@@ -295,10 +301,6 @@ serve(async (req) => {
     if (!alertaCriterioEncontrado) {
       console.log('🔍 PRIORIDADE 3: Verificando critério de frequência baixa...');
       console.log('Verificando critério 3: Percentual de faltas');
-      const totalAulas = produtividade?.length || 0;
-      const totalFaltas = produtividade?.filter(p => !p.presente).length || 0;
-      const percentualFaltas = totalAulas > 0 ? (totalFaltas / totalAulas) * 100 : 0;
-      
       console.log(`Total aulas: ${totalAulas}, Total faltas: ${totalFaltas}, Percentual: ${percentualFaltas.toFixed(1)}%`);
       
       if (percentualFaltas > 30) {

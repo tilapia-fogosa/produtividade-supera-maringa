@@ -209,6 +209,8 @@ export function useProdutividade(pessoaId?: string) {
         return false;
       }
       
+      console.log('Excluindo registro de produtividade:', registroId);
+      
       const { error } = await supabase
         .from('produtividade_abaco')
         .delete()
@@ -225,13 +227,12 @@ export function useProdutividade(pessoaId?: string) {
         return false;
       }
       
+      console.log('Registro excluído com sucesso');
+      
       toast({
         title: "Sucesso",
         description: "Registro excluído com sucesso!",
       });
-      
-      // Não chamar buscarProdutividade aqui pois pode causar o erro de UUID vazio
-      // A atualização será feita no componente que chama esta função
       
       return true;
     } catch (error: any) {
