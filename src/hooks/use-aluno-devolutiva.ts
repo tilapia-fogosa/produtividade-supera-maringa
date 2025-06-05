@@ -89,7 +89,7 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         const { data: dadosAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
           .select('data_aula, apostila, exercicios, erros, fez_desafio')
-          .eq('aluno_id', alunoId)
+          .eq('pessoa_id', alunoId)
           .gte('data_aula', dataInicial)
           .order('data_aula', { ascending: false });
 
@@ -115,42 +115,44 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         let totalExerciciosAbaco = 0;
         let totalErrosAbaco = 0;
 
-        (dadosAbaco || []).forEach(item => {
-          if (!item.data_aula) return;
-          
-          const mesKey = format(new Date(item.data_aula), 'yyyy-MM');
-          const mesFormatado = format(new Date(item.data_aula), 'MMMM yyyy', { locale: ptBR });
-          
-          if (!abacoMensal[mesKey]) {
-            abacoMensal[mesKey] = {
-              mes: mesFormatado,
-              livro: item.apostila || '',
-              exercicios: 0,
-              erros: 0,
-              percentual_acerto: 0
-            };
-          }
-          
-          // Adicionar apostila se ainda não estiver na string
-          if (item.apostila && !abacoMensal[mesKey].livro.includes(item.apostila)) {
-            abacoMensal[mesKey].livro = abacoMensal[mesKey].livro 
-              ? `${abacoMensal[mesKey].livro}, ${item.apostila}` 
-              : item.apostila;
-          }
-          
-          // Somar exercícios e erros
-          abacoMensal[mesKey].exercicios += item.exercicios || 0;
-          abacoMensal[mesKey].erros += item.erros || 0;
-          
-          // Contabilizar totais gerais
-          totalExerciciosAbaco += item.exercicios || 0;
-          totalErrosAbaco += item.erros || 0;
-          
-          // Contar desafios
-          if (item.fez_desafio) {
-            totalDesafios++;
-          }
-        });
+        if (dadosAbaco && Array.isArray(dadosAbaco)) {
+          dadosAbaco.forEach(item => {
+            if (!item.data_aula) return;
+            
+            const mesKey = format(new Date(item.data_aula), 'yyyy-MM');
+            const mesFormatado = format(new Date(item.data_aula), 'MMMM yyyy', { locale: ptBR });
+            
+            if (!abacoMensal[mesKey]) {
+              abacoMensal[mesKey] = {
+                mes: mesFormatado,
+                livro: item.apostila || '',
+                exercicios: 0,
+                erros: 0,
+                percentual_acerto: 0
+              };
+            }
+            
+            // Adicionar apostila se ainda não estiver na string
+            if (item.apostila && !abacoMensal[mesKey].livro.includes(item.apostila)) {
+              abacoMensal[mesKey].livro = abacoMensal[mesKey].livro 
+                ? `${abacoMensal[mesKey].livro}, ${item.apostila}` 
+                : item.apostila;
+            }
+            
+            // Somar exercícios e erros
+            abacoMensal[mesKey].exercicios += item.exercicios || 0;
+            abacoMensal[mesKey].erros += item.erros || 0;
+            
+            // Contabilizar totais gerais
+            totalExerciciosAbaco += item.exercicios || 0;
+            totalErrosAbaco += item.erros || 0;
+            
+            // Contar desafios
+            if (item.fez_desafio) {
+              totalDesafios++;
+            }
+          });
+        }
 
         // Calcular percentuais de acerto para ábaco
         Object.values(abacoMensal).forEach(mes => {
@@ -164,37 +166,39 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         let totalExerciciosAH = 0;
         let totalErrosAH = 0;
 
-        (dadosAH || []).forEach(item => {
-          if (!item.created_at) return;
-          
-          const mesKey = format(new Date(item.created_at), 'yyyy-MM');
-          const mesFormatado = format(new Date(item.created_at), 'MMMM yyyy', { locale: ptBR });
-          
-          if (!ahMensal[mesKey]) {
-            ahMensal[mesKey] = {
-              mes: mesFormatado,
-              livro: item.apostila || '',
-              exercicios: 0,
-              erros: 0,
-              percentual_acerto: 0
-            };
-          }
-          
-          // Adicionar apostila se ainda não estiver na string
-          if (item.apostila && !ahMensal[mesKey].livro.includes(item.apostila)) {
-            ahMensal[mesKey].livro = ahMensal[mesKey].livro 
-              ? `${ahMensal[mesKey].livro}, ${item.apostila}` 
-              : item.apostila;
-          }
-          
-          // Somar exercícios e erros
-          ahMensal[mesKey].exercicios += item.exercicios || 0;
-          ahMensal[mesKey].erros += item.erros || 0;
-          
-          // Contabilizar totais gerais
-          totalExerciciosAH += item.exercicios || 0;
-          totalErrosAH += item.erros || 0;
-        });
+        if (dadosAH && Array.isArray(dadosAH)) {
+          dadosAH.forEach(item => {
+            if (!item.created_at) return;
+            
+            const mesKey = format(new Date(item.created_at), 'yyyy-MM');
+            const mesFormatado = format(new Date(item.created_at), 'MMMM yyyy', { locale: ptBR });
+            
+            if (!ahMensal[mesKey]) {
+              ahMensal[mesKey] = {
+                mes: mesFormatado,
+                livro: item.apostila || '',
+                exercicios: 0,
+                erros: 0,
+                percentual_acerto: 0
+              };
+            }
+            
+            // Adicionar apostila se ainda não estiver na string
+            if (item.apostila && !ahMensal[mesKey].livro.includes(item.apostila)) {
+              ahMensal[mesKey].livro = ahMensal[mesKey].livro 
+                ? `${ahMensal[mesKey].livro}, ${item.apostila}` 
+                : item.apostila;
+            }
+            
+            // Somar exercícios e erros
+            ahMensal[mesKey].exercicios += item.exercicios || 0;
+            ahMensal[mesKey].erros += item.erros || 0;
+            
+            // Contabilizar totais gerais
+            totalExerciciosAH += item.exercicios || 0;
+            totalErrosAH += item.erros || 0;
+          });
+        }
 
         // Calcular percentuais de acerto para AH
         Object.values(ahMensal).forEach(mes => {
