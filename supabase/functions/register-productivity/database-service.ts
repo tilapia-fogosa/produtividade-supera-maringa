@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { ProdutividadeData } from './types.ts';
 
@@ -172,10 +173,9 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     console.log('Dados de produtividade a salvar:', produtividadeData);
     
     // Inserir na tabela produtividade_abaco
-    const { data: insertedData, error: produtividadeError } = await supabaseClient
+    const { error: produtividadeError } = await supabaseClient
       .from('produtividade_abaco')
-      .insert([produtividadeData])
-      .select();
+      .insert([produtividadeData]);
     
     if (produtividadeError) {
       console.error('Erro ao registrar produtividade ábaco:', produtividadeError);
@@ -183,10 +183,6 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     }
     
     console.log('Produtividade registrada com sucesso!');
-    
-    // Removido: chamada para check-missing-attendance
-    // A verificação de alertas será feita em outro momento/processo
-    
     return true;
     
   } catch (error) {
