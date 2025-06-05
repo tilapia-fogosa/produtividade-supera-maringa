@@ -1,11 +1,11 @@
 
 export interface ProdutividadeData {
-  pessoa_id: string; // Mudança de aluno_id para pessoa_id
+  aluno_id: string;
   aluno_nome: string;
   turma_id: string;
   turma_nome: string;
   presente: boolean;
-  motivo_falta?: string;
+  motivo_falta?: string; // Novo campo para motivo da falta
   apostila_abaco?: string;
   pagina_abaco?: string;
   exercicios_abaco?: string;
