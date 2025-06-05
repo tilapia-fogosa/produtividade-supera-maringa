@@ -131,14 +131,14 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         turma_id: turma.id,
         turma_nome: turma.nome,
         presente: presente === "sim",
-        motivo_falta: presente === "não" ? motivoFalta : undefined,
+        motivo_falta: motivoFalta || "", // Sempre enviar, mesmo que vazio
         apostila_abaco: presente === "sim" ? apostilaAbaco : undefined,
         pagina_abaco: presente === "sim" ? paginaAbaco : undefined,
         exercicios_abaco: presente === "sim" ? exerciciosAbaco : undefined,
         erros_abaco: presente === "sim" ? errosAbaco : undefined,
         fez_desafio: presente === "sim" ? fezDesafio === "sim" : undefined,
         nivel_desafio: presente === "sim" && fezDesafio === "sim" ? nivelDesafio : undefined,
-        comentario: presente === "sim" ? comentario : undefined,
+        comentario: comentario || "", // Sempre enviar, mesmo que vazio
         data_registro: new Date().toISOString().split('T')[0], // Data em que o registro está sendo feito (hoje)
         data_aula: dataAulaFormatada, // Data da aula que pode ser diferente da data do registro
         data_ultima_correcao_ah: new Date().toISOString(),
