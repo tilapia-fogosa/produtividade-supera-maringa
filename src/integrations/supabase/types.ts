@@ -1570,6 +1570,7 @@ export type Database = {
           fez_desafio: boolean | null
           id: string
           is_reposicao: boolean
+          motivo_falta: string | null
           pagina: string | null
           pessoa_id: string
           presente: boolean
@@ -1586,6 +1587,7 @@ export type Database = {
           fez_desafio?: boolean | null
           id?: string
           is_reposicao?: boolean
+          motivo_falta?: string | null
           pagina?: string | null
           pessoa_id: string
           presente?: boolean
@@ -1602,6 +1604,7 @@ export type Database = {
           fez_desafio?: boolean | null
           id?: string
           is_reposicao?: boolean
+          motivo_falta?: string | null
           pagina?: string | null
           pessoa_id?: string
           presente?: boolean
