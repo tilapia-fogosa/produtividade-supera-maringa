@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { ProdutividadeData } from './types.ts';
 
@@ -185,25 +184,8 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     
     console.log('Produtividade registrada com sucesso!');
     
-    // Se for uma falta, disparar manualmente a verificação de alertas
-    if (!data.presente) {
-      console.log('Falta detectada, verificando alertas...');
-      try {
-        const { error: alertError } = await supabaseClient.functions.invoke('check-missing-attendance', {
-          body: { aluno_id: data.aluno_id }
-        });
-        
-        if (alertError) {
-          console.error('Erro ao processar alertas de falta:', alertError);
-          // Não falhar o registro por causa do alerta
-        } else {
-          console.log('Alertas de falta processados com sucesso');
-        }
-      } catch (alertError) {
-        console.error('Erro ao chamar função de alertas:', alertError);
-        // Não falhar o registro por causa do alerta
-      }
-    }
+    // Removido: chamada para check-missing-attendance
+    // A verificação de alertas será feita em outro momento/processo
     
     return true;
     
