@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
@@ -130,27 +131,49 @@ const ProdutividadeTurma = () => {
   };
 
   const handleClickExcluirRegistro = (aluno: PessoaTurma) => {
+    console.log('🔍 handleClickExcluirRegistro: Dados do aluno recebidos:', {
+      id: aluno.id,
+      nome: aluno.nome,
+      ultimo_registro_id: aluno.ultimo_registro_id,
+      data_ultimo_registro: aluno.data_ultimo_registro
+    });
+    
+    if (!aluno.ultimo_registro_id) {
+      console.error('❌ handleClickExcluirRegistro: ultimo_registro_id não disponível');
+      toast({
+        title: "Erro",
+        description: "ID do registro não encontrado. Não é possível excluir.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setAlunoParaExcluir(aluno);
     setConfirmDialogOpen(true);
   };
 
   const handleConfirmExclusao = async () => {
     if (!alunoParaExcluir || !alunoParaExcluir.ultimo_registro_id) {
-      console.log('Dados insuficientes para exclusão:', { 
+      console.error('❌ handleConfirmExclusao: Dados insuficientes para exclusão:', { 
         alunoParaExcluir: alunoParaExcluir?.nome, 
         registroId: alunoParaExcluir?.ultimo_registro_id 
+      });
+      toast({
+        title: "Erro",
+        description: "Dados insuficientes para exclusão",
+        variant: "destructive"
       });
       setConfirmDialogOpen(false);
       return;
     }
     
     try {
-      console.log('Tentando excluir registro:', alunoParaExcluir.ultimo_registro_id, 'do aluno:', alunoParaExcluir.nome);
+      console.log('🔄 handleConfirmExclusao: Tentando excluir registro:', alunoParaExcluir.ultimo_registro_id, 'do aluno:', alunoParaExcluir.nome);
       
       const sucesso = await excluirProdutividade(alunoParaExcluir.ultimo_registro_id);
       
       if (sucesso) {
-        console.log('Exclusão bem-sucedida, atualizando estado local');
+        console.log('✅ handleConfirmExclusao: Exclusão bem-sucedida, atualizando estado local');
         
         // Atualizar o estado local primeiro
         if (produtividadeRegistrada[alunoParaExcluir.id]) {
@@ -166,7 +189,7 @@ const ProdutividadeTurma = () => {
         });
       }
     } catch (error) {
-      console.error('Erro ao excluir registro:', error);
+      console.error('❌ handleConfirmExclusao: Erro ao excluir registro:', error);
       toast({
         title: "Erro",
         description: "Não foi possível excluir o registro",
