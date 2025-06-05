@@ -25,7 +25,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     const { data: alunoExiste, error: alunoError } = await supabaseClient
       .from('alunos')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', data.pessoa_id) // Mudança para pessoa_id
       .maybeSingle();
     
     if (alunoError) {
@@ -56,7 +56,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
         const { error: updateError } = await supabaseClient
           .from('alunos')
           .update(updateData)
-          .eq('id', data.aluno_id);
+          .eq('id', data.pessoa_id); // Mudança para pessoa_id
         
         if (updateError) {
           console.error('Erro ao atualizar dados do aluno:', updateError);
@@ -73,7 +73,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     const { data: funcionarioExiste, error: funcionarioError } = await supabaseClient
       .from('funcionarios')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', data.pessoa_id) // Mudança para pessoa_id
       .maybeSingle();
     
     if (funcionarioError) {
@@ -95,7 +95,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
         const { error: updateError } = await supabaseClient
           .from('funcionarios')
           .update(updateData)
-          .eq('id', data.aluno_id);
+          .eq('id', data.pessoa_id); // Mudança para pessoa_id
         
         if (updateError) {
           console.error('Erro ao atualizar dados do funcionário:', updateError);
@@ -108,7 +108,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       return true;
     }
     
-    console.error('ID não encontrado nem em alunos nem em funcionários:', data.aluno_id);
+    console.error('ID não encontrado nem em alunos nem em funcionários:', data.pessoa_id); // Mudança para pessoa_id
     return false;
     
   } catch (error) {
@@ -119,19 +119,19 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
 
 export async function registrarProdutividade(supabaseClient: any, data: ProdutividadeData): Promise<boolean> {
   try {
-    console.log('Registrando produtividade para pessoa:', data.aluno_id);
+    console.log('Registrando produtividade para pessoa:', data.pessoa_id); // Mudança para pessoa_id
     
     // Verificar se é aluno ou funcionário antes de inserir
     const { data: alunoExiste } = await supabaseClient
       .from('alunos')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', data.pessoa_id) // Mudança para pessoa_id
       .maybeSingle();
     
     const { data: funcionarioExiste } = await supabaseClient
       .from('funcionarios')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', data.pessoa_id) // Mudança para pessoa_id
       .maybeSingle();
     
     if (!alunoExiste && !funcionarioExiste) {
@@ -140,11 +140,11 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     }
     
     const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
-    console.log('Registrando presença para o', tipoPessoa + ':', data.aluno_id);
+    console.log('Registrando presença para o', tipoPessoa + ':', data.pessoa_id); // Mudança para pessoa_id
     
     // Preparar dados para inserção usando os novos campos
     const produtividadeData = {
-      pessoa_id: data.aluno_id, // Usar pessoa_id em vez de aluno_id
+      pessoa_id: data.pessoa_id, // Usar pessoa_id em vez de aluno_id
       tipo_pessoa: tipoPessoa, // Definir o tipo de pessoa
       data_aula: data.data_aula,
       presente: data.presente,
@@ -155,7 +155,7 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
       erros: data.erros_abaco ? parseInt(data.erros_abaco) : null,
       fez_desafio: data.fez_desafio || false,
       comentario: data.comentario || '',
-      motivo_falta: data.motivo_falta || null // Novo campo para o motivo da falta
+      motivo_falta: data.motivo_falta || null // Campo para o motivo da falta
     };
     
     console.log('Dados de produtividade a salvar:', produtividadeData);

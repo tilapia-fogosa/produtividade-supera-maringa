@@ -126,7 +126,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
 
       // Preparar os dados para enviar para a Edge Function - garantindo que os valores sejam strings ou undefined
       const produtividadeData = {
-        aluno_id: aluno.id,
+        pessoa_id: aluno.id, // Mudança de aluno_id para pessoa_id
         aluno_nome: aluno.nome,
         turma_id: turma.id,
         turma_nome: turma.nome,
