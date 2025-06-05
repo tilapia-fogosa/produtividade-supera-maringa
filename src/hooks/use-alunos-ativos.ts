@@ -108,16 +108,24 @@ export function useAlunosAtivos() {
           const professor = turma ? professoresData.find(p => p.id === turma.professor_id) : null;
           
           // Buscar a última apostila registrada no ábaco
-          const { data: ultimaApostila, error: apostilaError } = await supabase
-            .from('produtividade_abaco')
-            .select('apostila')
-            .eq('aluno_id', aluno.id)
-            .not('apostila', 'is', null)
-            .order('data_aula', { ascending: false })
-            .limit(1);
+          // Simplificando a consulta para evitar erro de instanciação de tipo
+          let ultimaApostila: string | null = null;
+          try {
+            const { data: apostilaData, error: apostilaError } = await supabase
+              .from('produtividade_abaco')
+              .select('apostila')
+              .eq('pessoa_id', aluno.id)
+              .not('apostila', 'is', null)
+              .order('data_aula', { ascending: false })
+              .limit(1);
 
-          if (apostilaError) {
-            console.error('Erro ao buscar última apostila para aluno', aluno.nome, ':', apostilaError);
+            if (apostilaError) {
+              console.error('Erro ao buscar última apostila para aluno', aluno.nome, ':', apostilaError);
+            } else if (apostilaData && apostilaData.length > 0) {
+              ultimaApostila = apostilaData[0].apostila;
+            }
+          } catch (error) {
+            console.error('Erro inesperado ao buscar apostila:', error);
           }
 
           const alunoProcessado: AlunoAtivo = {
@@ -126,7 +134,7 @@ export function useAlunosAtivos() {
             turma_id: aluno.turma_id,
             turma_nome: turma?.nome || null,
             professor_nome: professor?.nome || null,
-            ultima_apostila: ultimaApostila && ultimaApostila.length > 0 ? ultimaApostila[0].apostila : null,
+            ultima_apostila: ultimaApostila,
             dias_supera: aluno.dias_supera,
             active: aluno.active,
           };
