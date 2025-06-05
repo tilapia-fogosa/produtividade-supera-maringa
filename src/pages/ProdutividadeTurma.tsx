@@ -39,7 +39,8 @@ const ProdutividadeTurma = () => {
     recarregarDadosAposExclusao
   } = usePessoasTurma();
 
-  const { excluirProdutividade, isLoading: excluindoProdutividade } = useProdutividade('');
+  // Usar hook sem pessoaId específico para exclusão
+  const { excluirProdutividade, isLoading: excluindoProdutividade } = useProdutividade();
 
   useEffect(() => {
     const fetchTurma = async () => {
@@ -135,19 +136,34 @@ const ProdutividadeTurma = () => {
 
   const handleConfirmExclusao = async () => {
     if (!alunoParaExcluir || !alunoParaExcluir.ultimo_registro_id) {
+      console.log('Dados insuficientes para exclusão:', { 
+        alunoParaExcluir: alunoParaExcluir?.nome, 
+        registroId: alunoParaExcluir?.ultimo_registro_id 
+      });
       setConfirmDialogOpen(false);
       return;
     }
     
     try {
+      console.log('Tentando excluir registro:', alunoParaExcluir.ultimo_registro_id, 'do aluno:', alunoParaExcluir.nome);
+      
       const sucesso = await excluirProdutividade(alunoParaExcluir.ultimo_registro_id);
       
       if (sucesso) {
+        console.log('Exclusão bem-sucedida, atualizando estado local');
+        
+        // Atualizar o estado local primeiro
         if (produtividadeRegistrada[alunoParaExcluir.id]) {
           atualizarProdutividadeRegistrada(alunoParaExcluir.id, false);
         }
         
+        // Recarregar os dados da turma
         recarregarDadosAposExclusao(alunoParaExcluir.id);
+        
+        toast({
+          title: "Sucesso",
+          description: `Registro de ${alunoParaExcluir.nome} excluído com sucesso!`,
+        });
       }
     } catch (error) {
       console.error('Erro ao excluir registro:', error);
@@ -241,8 +257,12 @@ const ProdutividadeTurma = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmExclusao} className="bg-red-600 hover:bg-red-700">
-                Excluir
+              <AlertDialogAction 
+                onClick={handleConfirmExclusao} 
+                className="bg-red-600 hover:bg-red-700"
+                disabled={excluindoProdutividade}
+              >
+                {excluindoProdutividade ? 'Excluindo...' : 'Excluir'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

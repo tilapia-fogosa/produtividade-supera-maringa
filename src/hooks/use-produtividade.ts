@@ -21,7 +21,7 @@ export interface Produtividade {
   updated_at: string;
 }
 
-export function useProdutividade(pessoaId: string) {
+export function useProdutividade(pessoaId?: string) {
   const [registrando, setRegistrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -29,12 +29,21 @@ export function useProdutividade(pessoaId: string) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const buscarProdutividade = async () => {
+  const buscarProdutividade = async (targetPessoaId?: string) => {
     try {
+      const idToUse = targetPessoaId || pessoaId;
+      
+      // Verificar se o ID é válido antes de fazer a consulta
+      if (!idToUse || idToUse.trim() === '') {
+        console.log('ID da pessoa não fornecido ou vazio, pulando busca de produtividade');
+        setPessoaProdutividade([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('produtividade_abaco')
         .select('*')
-        .eq('pessoa_id', pessoaId) // Mudança para pessoa_id
+        .eq('pessoa_id', idToUse)
         .order('data_aula', { ascending: false });
 
       if (error) {
@@ -50,22 +59,30 @@ export function useProdutividade(pessoaId: string) {
     }
   };
 
-  const registrarPresenca = async (presente: boolean, dataAula: string, motivoFalta?: string) => {
+  const registrarPresenca = async (presente: boolean, dataAula: string, motivoFalta?: string, targetPessoaId?: string) => {
     try {
+      const idToUse = targetPessoaId || pessoaId;
+      
+      if (!idToUse) {
+        console.error('ID da pessoa não fornecido');
+        setError('ID da pessoa é obrigatório');
+        return;
+      }
+
       // Verificar se é aluno ou funcionário para atualizar a data da última falta
       if (!presente) {
         // Primeiro tentar atualizar na tabela alunos
         const { error: alunoUpdateError } = await supabase
           .from('alunos')
           .update({ ultima_falta: dataAula })
-          .eq('id', pessoaId);
+          .eq('id', idToUse);
           
         // Se falhar, tentar na tabela funcionários
         if (alunoUpdateError) {
           const { error: funcionarioUpdateError } = await supabase
             .from('funcionarios')
             .update({ ultima_falta: dataAula })
-            .eq('id', pessoaId);
+            .eq('id', idToUse);
             
           if (funcionarioUpdateError) {
             console.error('Erro ao atualizar data da última falta:', funcionarioUpdateError);
@@ -81,7 +98,7 @@ export function useProdutividade(pessoaId: string) {
       const { data: alunoExiste } = await supabase
         .from('alunos')
         .select('id')
-        .eq('id', pessoaId)
+        .eq('id', idToUse)
         .maybeSingle();
 
       const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
@@ -90,7 +107,7 @@ export function useProdutividade(pessoaId: string) {
         .from('produtividade_abaco')
         .insert([
           { 
-            pessoa_id: pessoaId, 
+            pessoa_id: idToUse, 
             tipo_pessoa: tipoPessoa,
             data_aula: dataAula, 
             presente: presente,
@@ -116,7 +133,7 @@ export function useProdutividade(pessoaId: string) {
       });
 
       // Após registrar a presença, buscar novamente a produtividade
-      await buscarProdutividade();
+      await buscarProdutividade(idToUse);
     } catch (error: any) {
       console.error("Erro inesperado ao registrar presença:", error);
       setError(error.message || "Erro ao registrar presença");
@@ -180,6 +197,18 @@ export function useProdutividade(pessoaId: string) {
       setIsLoading(true);
       setError(null);
       
+      // Verificar se o ID do registro é válido
+      if (!registroId || registroId.trim() === '') {
+        console.error('ID do registro não fornecido ou vazio');
+        setError('ID do registro é obrigatório');
+        toast({
+          title: "Erro",
+          description: "ID do registro não fornecido.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
       const { error } = await supabase
         .from('produtividade_abaco')
         .delete()
@@ -196,10 +225,13 @@ export function useProdutividade(pessoaId: string) {
         return false;
       }
       
-      // Removido o toast de sucesso daqui - será mostrado apenas no componente que chama
+      toast({
+        title: "Sucesso",
+        description: "Registro excluído com sucesso!",
+      });
       
-      // Atualizar a lista de produtividade
-      await buscarProdutividade();
+      // Não chamar buscarProdutividade aqui pois pode causar o erro de UUID vazio
+      // A atualização será feita no componente que chama esta função
       
       return true;
     } catch (error: any) {
