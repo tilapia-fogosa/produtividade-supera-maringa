@@ -62,11 +62,13 @@ serve(async (req) => {
     console.log('Buscando dados da pessoa...');
     let pessoa = null;
     let tipoPessoa = '';
+    let turmaInfo = null;
+    let professorInfo = null;
     
     // Tentar buscar como aluno
     const { data: aluno, error: alunoError } = await supabase
       .from('alunos')
-      .select('*, turma:turma_id(*, professor:professor_id(*, slack_username))')
+      .select('*')
       .eq('id', pessoaId)
       .maybeSingle();
     
@@ -79,11 +81,37 @@ serve(async (req) => {
       pessoa = aluno;
       tipoPessoa = 'aluno';
       console.log(`Pessoa encontrada como aluno: ${aluno.nome}`);
+      
+      // Buscar dados da turma
+      if (aluno.turma_id) {
+        const { data: turma, error: turmaError } = await supabase
+          .from('turmas')
+          .select('*')
+          .eq('id', aluno.turma_id)
+          .maybeSingle();
+          
+        if (turma) {
+          turmaInfo = turma;
+          
+          // Buscar dados do professor
+          if (turma.professor_id) {
+            const { data: professor, error: professorError } = await supabase
+              .from('professores')
+              .select('*')
+              .eq('id', turma.professor_id)
+              .maybeSingle();
+              
+            if (professor) {
+              professorInfo = professor;
+            }
+          }
+        }
+      }
     } else {
       // Se não é aluno, buscar como funcionário
       const { data: funcionario, error: funcionarioError } = await supabase
         .from('funcionarios')
-        .select('*, turma:turma_id(*, professor:professor_id(*, slack_username))')
+        .select('*')
         .eq('id', pessoaId)
         .maybeSingle();
       
@@ -96,6 +124,32 @@ serve(async (req) => {
         pessoa = funcionario;
         tipoPessoa = 'funcionario';
         console.log(`Pessoa encontrada como funcionário: ${funcionario.nome}`);
+        
+        // Buscar dados da turma se funcionário tiver uma
+        if (funcionario.turma_id) {
+          const { data: turma, error: turmaError } = await supabase
+            .from('turmas')
+            .select('*')
+            .eq('id', funcionario.turma_id)
+            .maybeSingle();
+            
+          if (turma) {
+            turmaInfo = turma;
+            
+            // Buscar dados do professor
+            if (turma.professor_id) {
+              const { data: professor, error: professorError } = await supabase
+                .from('professores')
+                .select('*')
+                .eq('id', turma.professor_id)
+                .maybeSingle();
+                
+              if (professor) {
+                professorInfo = professor;
+              }
+            }
+          }
+        }
       }
     }
     
@@ -135,7 +189,7 @@ serve(async (req) => {
     const alertas: AlertaCriteria[] = [];
     
     // CRITÉRIO 1: Pessoa com menos de 90 dias de Supera que faltou 1 única vez
-    if (pessoa.dias_supera < 90) {
+    if (pessoa.dias_supera && pessoa.dias_supera < 90) {
       const faltas = produtividade?.filter(p => !p.presente) || [];
       if (faltas.length === 1) {
         console.log('Critério 1 atendido: Pessoa nova com 1 falta');
@@ -152,7 +206,7 @@ serve(async (req) => {
     }
     
     // CRITÉRIO 2: Pessoa com mais de 90 dias que faltou 2 vezes nos últimos 30 dias
-    if (pessoa.dias_supera >= 90) {
+    if (pessoa.dias_supera && pessoa.dias_supera >= 90) {
       const dataLimite30Dias = new Date();
       dataLimite30Dias.setDate(dataLimite30Dias.getDate() - 30);
       
@@ -204,7 +258,7 @@ serve(async (req) => {
       const { data: alertaExistente } = await supabase
         .from('alertas_falta')
         .select('id')
-        .eq('aluno_id', pessoaId) // Nota: ainda usando aluno_id na tabela
+        .eq('aluno_id', pessoaId)
         .eq('tipo_criterio', criterio.tipo_criterio)
         .eq('status', 'enviado')
         .gte('data_alerta', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
@@ -225,8 +279,8 @@ serve(async (req) => {
         .from('alertas_falta')
         .insert({
           aluno_id: pessoaId,
-          turma_id: pessoa.turma_id,
-          professor_id: pessoa.turma?.professor_id,
+          turma_id: turmaInfo?.id || null,
+          professor_id: professorInfo?.id || null,
           unit_id: pessoa.unit_id,
           data_falta: dataFalta,
           tipo_criterio: criterio.tipo_criterio,
