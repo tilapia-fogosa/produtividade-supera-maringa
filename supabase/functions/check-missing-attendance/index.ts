@@ -64,6 +64,7 @@ serve(async (req) => {
     let tipoPessoa = '';
     let turmaInfo = null;
     let professorInfo = null;
+    let unitId = null;
     
     // Tentar buscar como aluno
     const { data: aluno, error: alunoError } = await supabase
@@ -80,6 +81,7 @@ serve(async (req) => {
     if (aluno) {
       pessoa = aluno;
       tipoPessoa = 'aluno';
+      unitId = aluno.unit_id;
       console.log(`Pessoa encontrada como aluno: ${aluno.nome}`);
       
       // Buscar dados da turma
@@ -123,6 +125,7 @@ serve(async (req) => {
       if (funcionario) {
         pessoa = funcionario;
         tipoPessoa = 'funcionario';
+        unitId = funcionario.unit_id;
         console.log(`Pessoa encontrada como funcionário: ${funcionario.nome}`);
         
         // Buscar dados da turma se funcionário tiver uma
@@ -164,6 +167,23 @@ serve(async (req) => {
           status: 404
         }
       );
+    }
+
+    // Verificar se o unit_id existe na tabela unidades (para evitar erro de foreign key)
+    let validUnitId = null;
+    if (unitId) {
+      const { data: unidade } = await supabase
+        .from('unidades')
+        .select('id')
+        .eq('id', unitId)
+        .maybeSingle();
+        
+      if (unidade) {
+        validUnitId = unitId;
+        console.log('Unit ID válido encontrado:', validUnitId);
+      } else {
+        console.log('Unit ID não encontrado na tabela unidades, usando NULL');
+      }
     }
     
     // 2. Buscar histórico de faltas da pessoa nos últimos 4 meses
@@ -281,7 +301,7 @@ serve(async (req) => {
           aluno_id: pessoaId,
           turma_id: turmaInfo?.id || null,
           professor_id: professorInfo?.id || null,
-          unit_id: pessoa.unit_id,
+          unit_id: validUnitId, // Usar o unit_id validado ou null
           data_falta: dataFalta,
           tipo_criterio: criterio.tipo_criterio,
           detalhes: criterio.detalhes,
