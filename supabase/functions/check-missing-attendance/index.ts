@@ -235,16 +235,17 @@ serve(async (req) => {
     let alertaCriterioEncontrado: AlertaCriteria | null = null;
     
     console.log('=== VERIFICANDO CRITÉRIOS DE ALERTA (POR PRIORIDADE) ===');
+    console.log(`Dados da pessoa: dias_supera=${pessoa.dias_supera}, tipo=${tipoPessoa}`);
     
-    // CRITÉRIO 1 (PRIORIDADE MAIS ALTA): Pessoa com menos de 90 dias de Supera que faltou 1 única vez
-    console.log('🔍 PRIORIDADE 1: Verificando critério para aluno recente...');
-    console.log(`Verificando critério 1: Dias na Supera: ${pessoa.dias_supera}`);
-    if (pessoa.dias_supera && pessoa.dias_supera < 90) {
+    // CRITÉRIO 1 (PRIORIDADE MAIS ALTA): Pessoa com menos de 90 dias de Supera que faltou
+    console.log('🔍 PRIORIDADE 1: Verificando critério para pessoa recente...');
+    if (pessoa.dias_supera !== null && pessoa.dias_supera !== undefined && pessoa.dias_supera < 90) {
       const faltas = produtividade?.filter(p => !p.presente) || [];
-      console.log(`Faltas encontradas para pessoa nova: ${faltas.length}`);
+      console.log(`Pessoa nova (${pessoa.dias_supera} dias) - Total faltas: ${faltas.length}`);
       
-      if (faltas.length === 1) {
-        console.log('✅ CRITÉRIO 1 ATENDIDO: Pessoa nova com 1 falta (PRIORIDADE MÁXIMA)');
+      // Para aluno recente, qualquer falta é suficiente (não apenas 1)
+      if (faltas.length >= 1) {
+        console.log('✅ CRITÉRIO 1 ATENDIDO: Pessoa nova com falta (PRIORIDADE MÁXIMA)');
         alertaCriterioEncontrado = {
           tipo_criterio: 'aluno_recente_primeira_falta',
           detalhes: {
@@ -255,7 +256,7 @@ serve(async (req) => {
           deve_criar_alerta: true
         };
       } else {
-        console.log(`❌ Critério 1 não atendido: ${faltas.length} faltas (esperado 1)`);
+        console.log(`❌ Critério 1 não atendido: ${faltas.length} faltas (precisa >= 1)`);
       }
     } else {
       console.log(`❌ Critério 1 não aplicável: ${pessoa.dias_supera} dias (precisa < 90)`);
@@ -265,8 +266,7 @@ serve(async (req) => {
     // Só verifica se não encontrou critério de prioridade maior
     if (!alertaCriterioEncontrado) {
       console.log('🔍 PRIORIDADE 2: Verificando critério para pessoa experiente...');
-      console.log('Verificando critério 2: Faltas nos últimos 30 dias');
-      if (pessoa.dias_supera && pessoa.dias_supera >= 90) {
+      if (pessoa.dias_supera !== null && pessoa.dias_supera !== undefined && pessoa.dias_supera >= 90) {
         const dataLimite30Dias = new Date();
         dataLimite30Dias.setDate(dataLimite30Dias.getDate() - 30);
         
@@ -275,7 +275,7 @@ serve(async (req) => {
           new Date(p.data_aula) >= dataLimite30Dias
         ) || [];
         
-        console.log(`Faltas nos últimos 30 dias: ${faltasUltimos30Dias.length}`);
+        console.log(`Pessoa experiente (${pessoa.dias_supera} dias) - Faltas nos últimos 30 dias: ${faltasUltimos30Dias.length}`);
         
         if (faltasUltimos30Dias.length >= 2) {
           console.log('✅ CRITÉRIO 2 ATENDIDO: Pessoa experiente com 2+ faltas em 30 dias');
@@ -300,10 +300,9 @@ serve(async (req) => {
     // Só verifica se não encontrou critérios de prioridade maior
     if (!alertaCriterioEncontrado) {
       console.log('🔍 PRIORIDADE 3: Verificando critério de frequência baixa...');
-      console.log('Verificando critério 3: Percentual de faltas');
       console.log(`Total aulas: ${totalAulas}, Total faltas: ${totalFaltas}, Percentual: ${percentualFaltas.toFixed(1)}%`);
       
-      if (percentualFaltas > 30) {
+      if (totalAulas >= 4 && percentualFaltas > 30) { // Precisa ter pelo menos 4 aulas para ser válido
         console.log(`✅ CRITÉRIO 3 ATENDIDO: ${percentualFaltas.toFixed(1)}% de faltas em 4 meses`);
         alertaCriterioEncontrado = {
           tipo_criterio: 'frequencia_baixa',
@@ -316,7 +315,7 @@ serve(async (req) => {
           deve_criar_alerta: true
         };
       } else {
-        console.log(`❌ Critério 3 não atendido: ${percentualFaltas.toFixed(1)}% (precisa > 30%)`);
+        console.log(`❌ Critério 3 não atendido: ${percentualFaltas.toFixed(1)}% (precisa > 30% com >= 4 aulas)`);
       }
     }
     
