@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { Database } from "../_shared/database-types.ts";
@@ -226,20 +225,21 @@ serve(async (req) => {
     
     console.log(`Encontrados ${produtividade?.length || 0} registros de produtividade`);
     
-    // 3. Aplicar critérios de alerta com logs detalhados
-    const alertas: AlertaCriteria[] = [];
+    // 3. Aplicar critérios de alerta por ORDEM DE PRIORIDADE
+    let alertaCriterioEncontrado: AlertaCriteria | null = null;
     
-    console.log('=== VERIFICANDO CRITÉRIOS DE ALERTA ===');
+    console.log('=== VERIFICANDO CRITÉRIOS DE ALERTA (POR PRIORIDADE) ===');
     
-    // CRITÉRIO 1: Pessoa com menos de 90 dias de Supera que faltou 1 única vez
+    // CRITÉRIO 1 (PRIORIDADE MAIS ALTA): Pessoa com menos de 90 dias de Supera que faltou 1 única vez
+    console.log('🔍 PRIORIDADE 1: Verificando critério para aluno recente...');
     console.log(`Verificando critério 1: Dias na Supera: ${pessoa.dias_supera}`);
     if (pessoa.dias_supera && pessoa.dias_supera < 90) {
       const faltas = produtividade?.filter(p => !p.presente) || [];
       console.log(`Faltas encontradas para pessoa nova: ${faltas.length}`);
       
       if (faltas.length === 1) {
-        console.log('✅ Critério 1 atendido: Pessoa nova com 1 falta');
-        alertas.push({
+        console.log('✅ CRITÉRIO 1 ATENDIDO: Pessoa nova com 1 falta (PRIORIDADE MÁXIMA)');
+        alertaCriterioEncontrado = {
           tipo_criterio: 'aluno_recente_primeira_falta',
           detalhes: {
             dias_supera: pessoa.dias_supera,
@@ -247,7 +247,7 @@ serve(async (req) => {
             data_falta: faltas[0].data_aula
           },
           deve_criar_alerta: true
-        });
+        };
       } else {
         console.log(`❌ Critério 1 não atendido: ${faltas.length} faltas (esperado 1)`);
       }
@@ -255,82 +255,87 @@ serve(async (req) => {
       console.log(`❌ Critério 1 não aplicável: ${pessoa.dias_supera} dias (precisa < 90)`);
     }
     
-    // CRITÉRIO 2: Pessoa com mais de 90 dias que faltou 2 vezes nos últimos 30 dias
-    console.log('Verificando critério 2: Faltas nos últimos 30 dias');
-    if (pessoa.dias_supera && pessoa.dias_supera >= 90) {
-      const dataLimite30Dias = new Date();
-      dataLimite30Dias.setDate(dataLimite30Dias.getDate() - 30);
+    // CRITÉRIO 2 (PRIORIDADE MÉDIA): Pessoa com mais de 90 dias que faltou 2 vezes nos últimos 30 dias
+    // Só verifica se não encontrou critério de prioridade maior
+    if (!alertaCriterioEncontrado) {
+      console.log('🔍 PRIORIDADE 2: Verificando critério para pessoa experiente...');
+      console.log('Verificando critério 2: Faltas nos últimos 30 dias');
+      if (pessoa.dias_supera && pessoa.dias_supera >= 90) {
+        const dataLimite30Dias = new Date();
+        dataLimite30Dias.setDate(dataLimite30Dias.getDate() - 30);
+        
+        const faltasUltimos30Dias = produtividade?.filter(p => 
+          !p.presente && 
+          new Date(p.data_aula) >= dataLimite30Dias
+        ) || [];
+        
+        console.log(`Faltas nos últimos 30 dias: ${faltasUltimos30Dias.length}`);
+        
+        if (faltasUltimos30Dias.length >= 2) {
+          console.log('✅ CRITÉRIO 2 ATENDIDO: Pessoa experiente com 2+ faltas em 30 dias');
+          alertaCriterioEncontrado = {
+            tipo_criterio: 'faltas_consecutivas_experiente',
+            detalhes: {
+              dias_supera: pessoa.dias_supera,
+              total_faltas_30_dias: faltasUltimos30Dias.length,
+              datas_faltas: faltasUltimos30Dias.map(f => f.data_aula).slice(0, 2)
+            },
+            deve_criar_alerta: true
+          };
+        } else {
+          console.log(`❌ Critério 2 não atendido: ${faltasUltimos30Dias.length} faltas em 30 dias (precisa >= 2)`);
+        }
+      } else {
+        console.log(`❌ Critério 2 não aplicável: ${pessoa.dias_supera} dias (precisa >= 90)`);
+      }
+    }
+    
+    // CRITÉRIO 3 (PRIORIDADE BAIXA): Mais de 30% de faltas nos últimos 4 meses
+    // Só verifica se não encontrou critérios de prioridade maior
+    if (!alertaCriterioEncontrado) {
+      console.log('🔍 PRIORIDADE 3: Verificando critério de frequência baixa...');
+      console.log('Verificando critério 3: Percentual de faltas');
+      const totalAulas = produtividade?.length || 0;
+      const totalFaltas = produtividade?.filter(p => !p.presente).length || 0;
+      const percentualFaltas = totalAulas > 0 ? (totalFaltas / totalAulas) * 100 : 0;
       
-      const faltasUltimos30Dias = produtividade?.filter(p => 
-        !p.presente && 
-        new Date(p.data_aula) >= dataLimite30Dias
-      ) || [];
+      console.log(`Total aulas: ${totalAulas}, Total faltas: ${totalFaltas}, Percentual: ${percentualFaltas.toFixed(1)}%`);
       
-      console.log(`Faltas nos últimos 30 dias: ${faltasUltimos30Dias.length}`);
-      
-      if (faltasUltimos30Dias.length >= 2) {
-        console.log('✅ Critério 2 atendido: Pessoa experiente com 2+ faltas em 30 dias');
-        alertas.push({
-          tipo_criterio: 'faltas_consecutivas_experiente',
+      if (percentualFaltas > 30) {
+        console.log(`✅ CRITÉRIO 3 ATENDIDO: ${percentualFaltas.toFixed(1)}% de faltas em 4 meses`);
+        alertaCriterioEncontrado = {
+          tipo_criterio: 'frequencia_baixa',
           detalhes: {
-            dias_supera: pessoa.dias_supera,
-            total_faltas_30_dias: faltasUltimos30Dias.length,
-            datas_faltas: faltasUltimos30Dias.map(f => f.data_aula).slice(0, 2)
+            percentual_faltas: Math.round(percentualFaltas * 10) / 10,
+            total_aulas: totalAulas,
+            total_faltas: totalFaltas,
+            periodo: 'últimos 4 meses'
           },
           deve_criar_alerta: true
-        });
+        };
       } else {
-        console.log(`❌ Critério 2 não atendido: ${faltasUltimos30Dias.length} faltas em 30 dias (precisa >= 2)`);
+        console.log(`❌ Critério 3 não atendido: ${percentualFaltas.toFixed(1)}% (precisa > 30%)`);
       }
-    } else {
-      console.log(`❌ Critério 2 não aplicável: ${pessoa.dias_supera} dias (precisa >= 90)`);
     }
     
-    // CRITÉRIO 3: Mais de 30% de faltas nos últimos 4 meses
-    console.log('Verificando critério 3: Percentual de faltas');
-    const totalAulas = produtividade?.length || 0;
-    const totalFaltas = produtividade?.filter(p => !p.presente).length || 0;
-    const percentualFaltas = totalAulas > 0 ? (totalFaltas / totalAulas) * 100 : 0;
-    
-    console.log(`Total aulas: ${totalAulas}, Total faltas: ${totalFaltas}, Percentual: ${percentualFaltas.toFixed(1)}%`);
-    
-    if (percentualFaltas > 30) {
-      console.log(`✅ Critério 3 atendido: ${percentualFaltas.toFixed(1)}% de faltas em 4 meses`);
-      alertas.push({
-        tipo_criterio: 'frequencia_baixa',
-        detalhes: {
-          percentual_faltas: Math.round(percentualFaltas * 10) / 10,
-          total_aulas: totalAulas,
-          total_faltas: totalFaltas,
-          periodo: 'últimos 4 meses'
-        },
-        deve_criar_alerta: true
-      });
-    } else {
-      console.log(`❌ Critério 3 não atendido: ${percentualFaltas.toFixed(1)}% (precisa > 30%)`);
+    console.log(`=== RESULTADO: ${alertaCriterioEncontrado ? 'CRITÉRIO ENCONTRADO' : 'NENHUM CRITÉRIO ATENDIDO'} ===`);
+    if (alertaCriterioEncontrado) {
+      console.log(`Critério selecionado: ${alertaCriterioEncontrado.tipo_criterio}`);
     }
     
-    console.log(`=== TOTAL DE CRITÉRIOS ATENDIDOS: ${alertas.length} ===`);
+    // 4. Criar alerta no banco de dados (apenas um)
+    let alertaCriado = null;
     
-    // 4. Criar alertas no banco de dados
-    const alertasCriados = [];
-    
-    for (let i = 0; i < alertas.length; i++) {
-      const criterio = alertas[i];
-      console.log(`Processando critério ${i + 1}: ${criterio.tipo_criterio}`);
-      
-      if (!criterio.deve_criar_alerta) {
-        console.log(`Pulando critério ${criterio.tipo_criterio} - não deve criar alerta`);
-        continue;
-      }
+    if (alertaCriterioEncontrado && alertaCriterioEncontrado.deve_criar_alerta) {
+      console.log(`Processando critério: ${alertaCriterioEncontrado.tipo_criterio}`);
       
       // Verificação de duplicatas mais flexível - apenas últimas 24 horas
-      console.log(`Verificando duplicatas para ${criterio.tipo_criterio}...`);
+      console.log(`Verificando duplicatas para ${alertaCriterioEncontrado.tipo_criterio}...`);
       const { data: alertaExistente, error: alertaExistenteError } = await supabase
         .from('alertas_falta')
         .select('id, data_alerta')
         .eq('aluno_id', pessoaId)
-        .eq('tipo_criterio', criterio.tipo_criterio)
+        .eq('tipo_criterio', alertaCriterioEncontrado.tipo_criterio)
         .gte('data_alerta', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Últimas 24h
         .limit(1)
         .maybeSingle();
@@ -340,55 +345,53 @@ serve(async (req) => {
       }
       
       if (alertaExistente) {
-        console.log(`❌ Alerta já existe para critério ${criterio.tipo_criterio} (criado em: ${alertaExistente.data_alerta})`);
-        continue;
+        console.log(`❌ Alerta já existe para critério ${alertaCriterioEncontrado.tipo_criterio} (criado em: ${alertaExistente.data_alerta})`);
+      } else {
+        console.log(`✅ Nenhum alerta duplicado encontrado para ${alertaCriterioEncontrado.tipo_criterio}`);
+        
+        // Obter a data da última falta para usar no alerta
+        const ultimaFalta = produtividade?.find(p => !p.presente);
+        const dataFalta = ultimaFalta?.data_aula || new Date().toISOString().split('T')[0];
+        
+        console.log(`Criando alerta para ${alertaCriterioEncontrado.tipo_criterio} com data de falta: ${dataFalta}`);
+        console.log(`Unit ID que será usado: ${validUnitId}`);
+        
+        // Criar novo alerta
+        const alertaData = {
+          aluno_id: pessoaId,
+          turma_id: turmaInfo?.id || null,
+          professor_id: professorInfo?.id || null,
+          unit_id: validUnitId,
+          data_falta: dataFalta,
+          tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
+          detalhes: alertaCriterioEncontrado.detalhes,
+          status: 'enviado'
+        };
+        
+        console.log('Dados do alerta a ser criado:', JSON.stringify(alertaData, null, 2));
+        
+        const { data: novoAlerta, error: alertaError } = await supabase
+          .from('alertas_falta')
+          .insert(alertaData)
+          .select()
+          .single();
+        
+        if (alertaError) {
+          console.error('❌ Erro ao criar alerta:', alertaError);
+          console.error('Detalhes do erro:', JSON.stringify(alertaError, null, 2));
+        } else {
+          console.log(`✅ Alerta criado com sucesso: ${alertaCriterioEncontrado.tipo_criterio} - ID: ${novoAlerta.id}`);
+          alertaCriado = {
+            id: novoAlerta.id,
+            tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
+            detalhes: alertaCriterioEncontrado.detalhes
+          };
+        }
       }
-      
-      console.log(`✅ Nenhum alerta duplicado encontrado para ${criterio.tipo_criterio}`);
-      
-      // Obter a data da última falta para usar no alerta
-      const ultimaFalta = produtividade?.find(p => !p.presente);
-      const dataFalta = ultimaFalta?.data_aula || new Date().toISOString().split('T')[0];
-      
-      console.log(`Criando alerta para ${criterio.tipo_criterio} com data de falta: ${dataFalta}`);
-      console.log(`Unit ID que será usado: ${validUnitId}`);
-      
-      // Criar novo alerta
-      const alertaData = {
-        aluno_id: pessoaId,
-        turma_id: turmaInfo?.id || null,
-        professor_id: professorInfo?.id || null,
-        unit_id: validUnitId,
-        data_falta: dataFalta,
-        tipo_criterio: criterio.tipo_criterio,
-        detalhes: criterio.detalhes,
-        status: 'enviado'
-      };
-      
-      console.log('Dados do alerta a ser criado:', JSON.stringify(alertaData, null, 2));
-      
-      const { data: novoAlerta, error: alertaError } = await supabase
-        .from('alertas_falta')
-        .insert(alertaData)
-        .select()
-        .single();
-      
-      if (alertaError) {
-        console.error('❌ Erro ao criar alerta:', alertaError);
-        console.error('Detalhes do erro:', JSON.stringify(alertaError, null, 2));
-        continue;
-      }
-      
-      console.log(`✅ Alerta criado com sucesso: ${criterio.tipo_criterio} - ID: ${novoAlerta.id}`);
-      alertasCriados.push({
-        id: novoAlerta.id,
-        tipo_criterio: criterio.tipo_criterio,
-        detalhes: criterio.detalhes
-      });
     }
     
     console.log('=== CHECK-MISSING-ATTENDANCE CONCLUÍDO ===');
-    console.log(`Alertas criados: ${alertasCriados.length}`);
+    console.log(`Alerta criado: ${alertaCriado ? 'SIM' : 'NÃO'}`);
     
     return new Response(
       JSON.stringify({ 
@@ -404,8 +407,8 @@ serve(async (req) => {
           total_faltas_4_meses: totalFaltas,
           percentual_faltas: Math.round(percentualFaltas * 10) / 10
         },
-        alertas_criados: alertasCriados,
-        message: `Verificação concluída. ${alertasCriados.length} alertas criados.`
+        alertas_criados: alertaCriado ? [alertaCriado] : [],
+        message: `Verificação concluída. ${alertaCriado ? '1 alerta criado.' : 'Nenhum alerta criado.'}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
