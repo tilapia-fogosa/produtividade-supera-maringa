@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ProdutividadeScreen from '@/components/turmas/turma-detail/ProdutividadeScreen';
@@ -144,12 +143,6 @@ const ProdutividadeTurma = () => {
       const sucesso = await excluirProdutividade(alunoParaExcluir.ultimo_registro_id);
       
       if (sucesso) {
-        toast({
-          title: "Sucesso",
-          description: "Último registro excluído com sucesso",
-          variant: "default"
-        });
-        
         if (produtividadeRegistrada[alunoParaExcluir.id]) {
           atualizarProdutividadeRegistrada(alunoParaExcluir.id, false);
         }

@@ -196,10 +196,7 @@ export function useProdutividade(pessoaId: string) {
         return false;
       }
       
-      toast({
-        title: "Sucesso",
-        description: "Registro de produtividade excluído com sucesso!",
-      });
+      // Removido o toast de sucesso daqui - será mostrado apenas no componente que chama
       
       // Atualizar a lista de produtividade
       await buscarProdutividade();
