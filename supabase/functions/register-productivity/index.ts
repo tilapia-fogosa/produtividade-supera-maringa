@@ -101,6 +101,27 @@ serve(async (req) => {
       );
     }
 
+    // Se foi registrada uma falta, chamar a função de verificação de alertas
+    if (!data.presente && data.aluno_id) {
+      console.log('Falta registrada, verificando critérios de alerta para:', data.aluno_id);
+      
+      try {
+        const { data: alertaData, error: alertaError } = await supabase.functions.invoke('check-missing-attendance', {
+          body: { pessoa_id: data.aluno_id }
+        });
+        
+        if (alertaError) {
+          console.error('Erro ao verificar alertas de falta:', alertaError);
+          // Não falhar o registro por causa disso, apenas logar
+        } else {
+          console.log('Verificação de alertas concluída:', alertaData);
+        }
+      } catch (error) {
+        console.error('Erro inesperado ao verificar alertas:', error);
+        // Não falhar o registro por causa disso, apenas logar
+      }
+    }
+
     // Tentar envio para webhook (apenas se configurado)
     let webhookResult = null;
     try {
