@@ -137,7 +137,7 @@ export type Database = {
             foreignKeyName: "alertas_falta_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "unidades"
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]

@@ -169,10 +169,11 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se o unit_id existe na tabela units ou usar Maringá como padrão
+    // Verificar se o unit_id existe na tabela units
     let validUnitId = null;
     
     if (unitId) {
+      console.log('Verificando unit_id na tabela units:', unitId);
       const { data: unit } = await supabase
         .from('units')
         .select('id')
@@ -181,14 +182,15 @@ serve(async (req) => {
         
       if (unit) {
         validUnitId = unitId;
-        console.log('Unit ID válido encontrado:', validUnitId);
+        console.log('✅ Unit ID válido encontrado:', validUnitId);
       } else {
-        console.log('Unit ID não encontrado na tabela units');
+        console.log('❌ Unit ID não encontrado na tabela units');
       }
     }
     
     // Se não temos um unit_id válido, usar Maringá como padrão
     if (!validUnitId) {
+      console.log('Buscando unidade padrão (Maringá)...');
       const { data: maringaUnit } = await supabase
         .from('units')
         .select('id')
@@ -198,9 +200,9 @@ serve(async (req) => {
         
       if (maringaUnit) {
         validUnitId = maringaUnit.id;
-        console.log('Usando Maringá como unit_id padrão:', validUnitId);
+        console.log('✅ Usando Maringá como unit_id padrão:', validUnitId);
       } else {
-        console.log('Unidade de Maringá não encontrada, usando NULL');
+        console.log('❌ Unidade de Maringá não encontrada, usando NULL');
         validUnitId = null;
       }
     }
@@ -349,6 +351,7 @@ serve(async (req) => {
       const dataFalta = ultimaFalta?.data_aula || new Date().toISOString().split('T')[0];
       
       console.log(`Criando alerta para ${criterio.tipo_criterio} com data de falta: ${dataFalta}`);
+      console.log(`Unit ID que será usado: ${validUnitId}`);
       
       // Criar novo alerta
       const alertaData = {
