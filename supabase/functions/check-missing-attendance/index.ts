@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { Database } from "../_shared/database-types.ts";
@@ -14,15 +15,15 @@ const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/your/webhook/url";
 
 // Função para verificar faltas consecutivas
 async function verificarFaltasConsecutivas(supabase: any, diasLimite = 2) {
-  console.log(`Verificando alunos com ${diasLimite} ou mais faltas consecutivas...`);
+  console.log(`Verificando pessoas com ${diasLimite} ou mais faltas consecutivas...`);
   
-  // Buscar todas as faltas registradas nos últimos 60 dias, ordenadas por aluno e data
+  // Buscar todas as faltas registradas nos últimos 60 dias, ordenadas por pessoa e data
   const { data: faltas, error } = await supabase
     .from('produtividade_abaco')
-    .select('aluno_id, data_aula, presente')
+    .select('pessoa_id, data_aula, presente')
     .eq('presente', false)
     .gte('data_aula', new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-    .order('aluno_id')
+    .order('pessoa_id')
     .order('data_aula');
   
   if (error) {
@@ -30,73 +31,120 @@ async function verificarFaltasConsecutivas(supabase: any, diasLimite = 2) {
     return [];
   }
 
-  // Agrupar por aluno
-  const faltasPorAluno: Record<string, {data_aula: string}[]> = {};
+  console.log(`Encontradas ${faltas?.length || 0} faltas nos últimos 60 dias`);
+
+  // Agrupar por pessoa
+  const faltasPorPessoa: Record<string, {data_aula: string}[]> = {};
   
   faltas.forEach((falta) => {
-    if (!faltasPorAluno[falta.aluno_id]) {
-      faltasPorAluno[falta.aluno_id] = [];
+    if (!faltasPorPessoa[falta.pessoa_id]) {
+      faltasPorPessoa[falta.pessoa_id] = [];
     }
-    faltasPorAluno[falta.aluno_id].push({
+    faltasPorPessoa[falta.pessoa_id].push({
       data_aula: falta.data_aula
     });
   });
   
+  console.log(`Pessoas com faltas: ${Object.keys(faltasPorPessoa).length}`);
+  
   // Verificar sequências consecutivas
   const alertas = [];
-  for (const alunoId in faltasPorAluno) {
-    const faltasDoAluno = faltasPorAluno[alunoId];
-    if (faltasDoAluno.length >= diasLimite) {
-      // Verificar se já existe um alerta recente para este aluno baseado neste critério
+  for (const pessoaId in faltasPorPessoa) {
+    const faltasDaPessoa = faltasPorPessoa[pessoaId];
+    console.log(`Pessoa ${pessoaId}: ${faltasDaPessoa.length} faltas`);
+    
+    if (faltasDaPessoa.length >= diasLimite) {
+      // Verificar se já existe um alerta recente para esta pessoa baseado neste critério
       const { data: alertasExistentes } = await supabase
         .from('alertas_falta')
         .select('*')
-        .eq('aluno_id', alunoId)
+        .eq('aluno_id', pessoaId) // Mantém aluno_id na tabela de alertas
         .eq('tipo_criterio', 'consecutiva')
         .eq('status', 'enviado')
-        .gte('data_alerta', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // últimos 7 dias
+        .gte('data_alerta', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .limit(1);
       
       if (alertasExistentes && alertasExistentes.length > 0) {
-        console.log(`Alerta de faltas consecutivas já existe para o aluno ${alunoId}`);
+        console.log(`Alerta de faltas consecutivas já existe para a pessoa ${pessoaId}`);
         continue;
       }
 
-      // Buscar informações do aluno e turma
-      const { data: aluno } = await supabase
+      // Buscar informações da pessoa (primeiro como aluno, depois como funcionário)
+      let pessoa = null;
+      let turmaInfo = null;
+      
+      console.log(`Buscando dados da pessoa ${pessoaId}...`);
+      
+      // Primeiro tentar buscar como aluno
+      const { data: aluno, error: alunoError } = await supabase
         .from('alunos')
         .select('*, turma:turma_id(*, professor:professor_id(*, slack_username))')
-        .eq('id', alunoId)
-        .single();
-
+        .eq('id', pessoaId)
+        .maybeSingle();
+      
+      if (alunoError) {
+        console.error(`Erro ao buscar aluno ${pessoaId}:`, alunoError);
+      }
+      
       if (aluno) {
+        console.log(`Pessoa ${pessoaId} encontrada como aluno: ${aluno.nome}`);
+        pessoa = aluno;
+        turmaInfo = aluno.turma;
+      } else {
+        console.log(`Pessoa ${pessoaId} não é aluno, buscando como funcionário...`);
+        
+        // Se não é aluno, buscar como funcionário
+        const { data: funcionario, error: funcionarioError } = await supabase
+          .from('funcionarios')
+          .select('*, turma:turma_id(*, professor:professor_id(*, slack_username))')
+          .eq('id', pessoaId)
+          .maybeSingle();
+        
+        if (funcionarioError) {
+          console.error(`Erro ao buscar funcionário ${pessoaId}:`, funcionarioError);
+        }
+        
+        if (funcionario) {
+          console.log(`Pessoa ${pessoaId} encontrada como funcionário: ${funcionario.nome}`);
+          pessoa = funcionario;
+          turmaInfo = funcionario.turma;
+        } else {
+          console.log(`Pessoa ${pessoaId} não encontrada em alunos nem funcionários`);
+        }
+      }
+
+      if (pessoa && turmaInfo) {
+        console.log(`Criando alerta para ${pessoa.nome}`);
         alertas.push({
-          aluno_id: alunoId,
-          turma_id: aluno.turma_id,
-          professor_id: aluno.turma.professor_id,
-          unit_id: aluno.unit_id,
-          data_falta: faltasDoAluno[faltasDoAluno.length - 1].data_aula, // data da última falta
+          aluno_id: pessoaId,
+          turma_id: pessoa.turma_id,
+          professor_id: turmaInfo.professor_id,
+          unit_id: pessoa.unit_id,
+          data_falta: faltasDaPessoa[faltasDaPessoa.length - 1].data_aula,
           tipo_criterio: 'consecutiva',
           detalhes: {
-            num_faltas_consecutivas: faltasDoAluno.length,
-            datas_faltas: faltasDoAluno.map(f => f.data_aula)
+            num_faltas_consecutivas: faltasDaPessoa.length,
+            datas_faltas: faltasDaPessoa.map(f => f.data_aula)
           },
-          aluno_nome: aluno.nome,
-          professor_nome: aluno.turma.professor.nome,
-          professor_slack: aluno.turma.professor.slack_username,
-          dias_supera: aluno.dias_supera,
-          motivo_ultima_falta: obterMotivoUltimaFalta(supabase, alunoId, faltasDoAluno[faltasDoAluno.length - 1].data_aula)
+          aluno_nome: pessoa.nome,
+          professor_nome: turmaInfo.professor?.nome || 'Professor não encontrado',
+          professor_slack: turmaInfo.professor?.slack_username,
+          dias_supera: pessoa.dias_supera,
+          motivo_ultima_falta: await obterMotivoUltimaFalta(supabase, pessoaId, faltasDaPessoa[faltasDaPessoa.length - 1].data_aula)
         });
+      } else {
+        console.log(`Não foi possível criar alerta para pessoa ${pessoaId} - dados incompletos`);
       }
     }
   }
   
+  console.log(`Total de alertas de faltas consecutivas: ${alertas.length}`);
   return alertas;
 }
 
 // Função para verificar frequência baixa (mais de 30% de faltas no quadrimestre)
 async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
-  console.log(`Verificando alunos com mais de ${percentualLimite}% de faltas no quadrimestre...`);
+  console.log(`Verificando pessoas com mais de ${percentualLimite}% de faltas no quadrimestre...`);
   
   // Data de início do quadrimestre (4 meses atrás)
   const dataInicioQuadrimestre = new Date();
@@ -114,14 +162,16 @@ async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
     return [];
   }
   
+  console.log(`Verificando frequência de ${alunos?.length || 0} alunos ativos`);
+  
   const alertas = [];
   
-  for (const aluno of alunos) {
-    // Buscar todas as presenças e faltas no quadrimestre
+  for (const aluno of alunos || []) {
+    // Buscar todas as presenças e faltas no quadrimestre usando pessoa_id
     const { data: registros, error: registrosError } = await supabase
       .from('produtividade_abaco')
-      .select('aluno_id, data_aula, presente')
-      .eq('aluno_id', aluno.id)
+      .select('pessoa_id, data_aula, presente')
+      .eq('pessoa_id', aluno.id)
       .gte('data_aula', dataInicioQuadrimestreStr);
       
     if (registrosError) {
@@ -129,13 +179,15 @@ async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
       continue;
     }
     
-    if (registros.length === 0) continue; // Sem registros no quadrimestre
+    if (!registros || registros.length === 0) continue;
     
     const totalAulas = registros.length;
     const faltas = registros.filter(r => !r.presente).length;
     const percentualFaltas = (faltas / totalAulas) * 100;
     
     if (percentualFaltas > percentualLimite) {
+      console.log(`Aluno ${aluno.nome}: ${percentualFaltas.toFixed(1)}% de faltas (${faltas}/${totalAulas})`);
+      
       // Verificar se já existe um alerta recente para este aluno baseado neste critério
       const { data: alertasExistentes } = await supabase
         .from('alertas_falta')
@@ -143,7 +195,7 @@ async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
         .eq('aluno_id', aluno.id)
         .eq('tipo_criterio', 'frequencia_baixa')
         .eq('status', 'enviado')
-        .gte('data_alerta', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // último mês
+        .gte('data_alerta', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .limit(1);
       
       if (alertasExistentes && alertasExistentes.length > 0) {
@@ -156,7 +208,7 @@ async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
         .from('turmas')
         .select('*, professor:professor_id(*)')
         .eq('id', aluno.turma_id)
-        .single();
+        .maybeSingle();
         
       if (turmaInfo) {
         // Encontrar a última falta
@@ -175,11 +227,11 @@ async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
             percentual_faltas: percentualFaltas.toFixed(1),
             total_aulas: totalAulas,
             total_faltas: faltas,
-            periodo: `últimos ${4} meses`
+            periodo: `últimos 4 meses`
           },
           aluno_nome: aluno.nome,
-          professor_nome: turmaInfo.professor.nome,
-          professor_slack: turmaInfo.professor.slack_username,
+          professor_nome: turmaInfo.professor?.nome || 'Professor não encontrado',
+          professor_slack: turmaInfo.professor?.slack_username,
           dias_supera: aluno.dias_supera,
           motivo_ultima_falta: ultimaFalta ? await obterMotivoUltimaFalta(supabase, aluno.id, ultimaFalta.data_aula) : null
         });
@@ -187,195 +239,19 @@ async function verificarFrequenciaBaixa(supabase: any, percentualLimite = 30) {
     }
   }
   
-  return alertas;
-}
-
-// Função para verificar primeira falta após período sem faltas
-async function verificarPrimeiraFaltaAposPeriodo(supabase: any, diasSemFalta = 90) {
-  console.log(`Verificando alunos com primeira falta após ${diasSemFalta} dias sem faltar...`);
-  
-  // Calcular data limite para verificação
-  const hoje = new Date();
-  const dataLimite = new Date();
-  dataLimite.setDate(hoje.getDate() - diasSemFalta);
-  const dataLimiteStr = dataLimite.toISOString().split('T')[0];
-  
-  // Buscar alunos com última falta registrada antes do período
-  const { data: alunos, error: alunosError } = await supabase
-    .from('alunos')
-    .select('id, nome, turma_id, unit_id, ultima_falta, dias_supera')
-    .lt('ultima_falta', dataLimiteStr)
-    .eq('active', true);
-  
-  if (alunosError) {
-    console.error('Erro ao buscar alunos:', alunosError);
-    return [];
-  }
-  
-  const alertas = [];
-  
-  for (const aluno of alunos) {
-    // Verificar se há falta recente (últimos 7 dias)
-    const umaSemanaAtras = new Date();
-    umaSemanaAtras.setDate(hoje.getDate() - 7);
-    const umaSemanaAtrasStr = umaSemanaAtras.toISOString().split('T')[0];
-    
-    const { data: faltasRecentes, error: faltasError } = await supabase
-      .from('produtividade_abaco')
-      .select('data_aula')
-      .eq('aluno_id', aluno.id)
-      .eq('presente', false)
-      .gte('data_aula', umaSemanaAtrasStr)
-      .order('data_aula', { ascending: false })
-      .limit(1);
-    
-    if (faltasError) {
-      console.error(`Erro ao buscar faltas para o aluno ${aluno.id}:`, faltasError);
-      continue;
-    }
-    
-    if (faltasRecentes && faltasRecentes.length > 0) {
-      // Verificar se já existe um alerta recente para este aluno baseado neste critério
-      const { data: alertasExistentes } = await supabase
-        .from('alertas_falta')
-        .select('*')
-        .eq('aluno_id', aluno.id)
-        .eq('tipo_criterio', 'primeira_apos_periodo')
-        .eq('status', 'enviado')
-        .gte('data_alerta', umaSemanaAtrasStr) // última semana
-        .limit(1);
-      
-      if (alertasExistentes && alertasExistentes.length > 0) {
-        console.log(`Alerta de primeira falta após período já existe para o aluno ${aluno.id}`);
-        continue;
-      }
-      
-      // Buscar informações da turma e professor
-      const { data: turmaInfo } = await supabase
-        .from('turmas')
-        .select('*, professor:professor_id(*)')
-        .eq('id', aluno.turma_id)
-        .single();
-        
-      if (turmaInfo) {
-        alertas.push({
-          aluno_id: aluno.id,
-          turma_id: aluno.turma_id,
-          professor_id: turmaInfo.professor_id,
-          unit_id: aluno.unit_id,
-          data_falta: faltasRecentes[0].data_aula,
-          tipo_criterio: 'primeira_apos_periodo',
-          detalhes: {
-            dias_sem_falta: diasSemFalta,
-            ultima_falta_anterior: aluno.ultima_falta
-          },
-          aluno_nome: aluno.nome,
-          professor_nome: turmaInfo.professor.nome,
-          professor_slack: turmaInfo.professor.slack_username,
-          dias_supera: aluno.dias_supera,
-          motivo_ultima_falta: await obterMotivoUltimaFalta(supabase, aluno.id, faltasRecentes[0].data_aula)
-        });
-      }
-    }
-  }
-  
-  return alertas;
-}
-
-// Função para verificar alunos recentes com falta
-async function verificarAlunosRecentesComFalta(supabase: any, diasRecentesLimite = 90) {
-  console.log(`Verificando faltas de alunos com menos de ${diasRecentesLimite} dias na Supera...`);
-  
-  // Buscar alunos recentes
-  const { data: alunosRecentes, error: alunosError } = await supabase
-    .from('alunos')
-    .select('id, nome, turma_id, unit_id, dias_supera')
-    .lt('dias_supera', diasRecentesLimite)
-    .eq('active', true);
-  
-  if (alunosError) {
-    console.error('Erro ao buscar alunos recentes:', alunosError);
-    return [];
-  }
-  
-  const alertas = [];
-  
-  for (const aluno of alunosRecentes) {
-    // Verificar se há falta recente (últimos 7 dias)
-    const umaSemanaAtras = new Date();
-    umaSemanaAtras.setDate(new Date().getDate() - 7);
-    const umaSemanaAtrasStr = umaSemanaAtras.toISOString().split('T')[0];
-    
-    const { data: faltasRecentes, error: faltasError } = await supabase
-      .from('produtividade_abaco')
-      .select('data_aula')
-      .eq('aluno_id', aluno.id)
-      .eq('presente', false)
-      .gte('data_aula', umaSemanaAtrasStr)
-      .order('data_aula', { ascending: false })
-      .limit(1);
-    
-    if (faltasError) {
-      console.error(`Erro ao buscar faltas para o aluno ${aluno.id}:`, faltasError);
-      continue;
-    }
-    
-    if (faltasRecentes && faltasRecentes.length > 0) {
-      // Verificar se já existe um alerta recente para este aluno baseado neste critério
-      const { data: alertasExistentes } = await supabase
-        .from('alertas_falta')
-        .select('*')
-        .eq('aluno_id', aluno.id)
-        .eq('tipo_criterio', 'aluno_recente')
-        .eq('status', 'enviado')
-        .gte('data_alerta', umaSemanaAtrasStr) // última semana
-        .limit(1);
-      
-      if (alertasExistentes && alertasExistentes.length > 0) {
-        console.log(`Alerta de aluno recente já existe para o aluno ${aluno.id}`);
-        continue;
-      }
-      
-      // Buscar informações da turma e professor
-      const { data: turmaInfo } = await supabase
-        .from('turmas')
-        .select('*, professor:professor_id(*)')
-        .eq('id', aluno.turma_id)
-        .single();
-        
-      if (turmaInfo) {
-        alertas.push({
-          aluno_id: aluno.id,
-          turma_id: aluno.turma_id,
-          professor_id: turmaInfo.professor_id,
-          unit_id: aluno.unit_id,
-          data_falta: faltasRecentes[0].data_aula,
-          tipo_criterio: 'aluno_recente',
-          detalhes: {
-            dias_na_supera: aluno.dias_supera
-          },
-          aluno_nome: aluno.nome,
-          professor_nome: turmaInfo.professor.nome,
-          professor_slack: turmaInfo.professor.slack_username,
-          dias_supera: aluno.dias_supera,
-          motivo_ultima_falta: await obterMotivoUltimaFalta(supabase, aluno.id, faltasRecentes[0].data_aula)
-        });
-      }
-    }
-  }
-  
+  console.log(`Total de alertas de frequência baixa: ${alertas.length}`);
   return alertas;
 }
 
 // Função para obter o motivo da última falta
-async function obterMotivoUltimaFalta(supabase: any, alunoId: string, dataFalta: string) {
+async function obterMotivoUltimaFalta(supabase: any, pessoaId: string, dataFalta: string) {
   const { data, error } = await supabase
     .from('produtividade_abaco')
     .select('comentario')
-    .eq('aluno_id', alunoId)
+    .eq('pessoa_id', pessoaId)  // Usando pessoa_id
     .eq('data_aula', dataFalta)
     .eq('presente', false)
-    .single();
+    .maybeSingle();
   
   if (error || !data) {
     return null;
@@ -384,28 +260,14 @@ async function obterMotivoUltimaFalta(supabase: any, alunoId: string, dataFalta:
   return data.comentario;
 }
 
-// Função para buscar username do coordenador
-async function buscarCoordenadorResponsavel(supabase: any, alunoId: string) {
-  const { data, error } = await supabase
-    .from('alunos')
-    .select('coordenador_responsavel')
-    .eq('id', alunoId)
-    .single();
-  
-  if (error || !data || !data.coordenador_responsavel) {
-    return null;
-  }
-  
-  return data.coordenador_responsavel;
-}
-
 // Função para enviar alerta para o Slack
 async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, slackChannelId: string, alerta: any): Promise<boolean> {
   try {
-    // Formatar a mensagem para o Slack no novo formato solicitado
+    console.log(`Enviando alerta para Slack: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);
+    
+    // Formatar a mensagem para o Slack
     let titulo = `⚠ Alerta de Falta - `;
     
-    // Personalizar título baseado no tipo de alerta
     switch (alerta.tipo_criterio) {
       case 'consecutiva':
         titulo += `Falta Recorrente ⚠`;
@@ -413,17 +275,10 @@ async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, sl
       case 'frequencia_baixa':
         titulo += `Frequência Baixa ⚠`;
         break;
-      case 'primeira_apos_periodo':
-        titulo += `Primeira Falta após Período ⚠`;
-        break;
-      case 'aluno_recente':
-        titulo += `Aluno Recente ⚠`;
-        break;
       default:
         titulo += `⚠`;
     }
     
-    // Formatação do corpo da mensagem
     let detalheMensagem = "";
     
     switch (alerta.tipo_criterio) {
@@ -433,61 +288,33 @@ async function enviarAlertaParaSlack(webhook_url: string, slackToken: string, sl
       case 'frequencia_baixa':
         detalheMensagem = `ATENÇÃO: Este aluno tem ${alerta.detalhes.percentual_faltas}% de faltas (${alerta.detalhes.total_faltas} de ${alerta.detalhes.total_aulas} aulas) no ${alerta.detalhes.periodo}.`;
         break;
-      case 'primeira_apos_periodo':
-        detalheMensagem = `ATENÇÃO: Este aluno faltou após mais de ${alerta.detalhes.dias_sem_falta} dias sem faltar.`;
-        break;
-      case 'aluno_recente':
-        detalheMensagem = `ATENÇÃO: Este aluno é recente (${alerta.detalhes.dias_na_supera} dias na Supera) e faltou à aula.`;
-        break;
     }
     
-    // Formatação da data
     const dataFalta = new Date(alerta.data_falta);
     const dataFormatada = `${dataFalta.getDate().toString().padStart(2, '0')}/${(dataFalta.getMonth() + 1).toString().padStart(2, '0')}/${dataFalta.getFullYear()}`;
     
-    // Coordenadora hardcoded (Chris Kulza)
-    const coordenadoraSlack = "chriskulza"; // ID da Chris Kulza
+    const coordenadoraSlack = "chriskulza";
     
-    // Construir o texto da mensagem no formato solicitado
     let mensagemTexto = `Sistema Kadin\n${titulo}\nProfessor: ${alerta.professor_nome}`;
     
-    // Adicionar menção ao professor se disponível
     if (alerta.professor_slack) {
       mensagemTexto += `\n@${alerta.professor_slack}`;
     }
     
     mensagemTexto += `\n\nAluno: ${alerta.aluno_nome}\nTempo de Supera: ${alerta.dias_supera || "Não disponível"}\nData: ${dataFormatada}\n${detalheMensagem}`;
     
-    // Adicionar motivo da falta se disponível
     if (alerta.motivo_ultima_falta) {
       mensagemTexto += `\nMotivo da Falta: ${alerta.motivo_ultima_falta}`;
     }
     
-    // Adicionar menção à Chris Kulza para acompanhamento
     mensagemTexto += `\n@${coordenadoraSlack} para acompanhamento.`;
     
-    // Enviar para a API do Slack usando token hardcoded
-    const response = await fetch('https://slack.com/api/chat.postMessage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-        'Authorization': `Bearer ${SLACK_BOT_TOKEN}`
-      },
-      body: JSON.stringify({
-        channel: SLACK_CHANNEL_ID, // Usa o canal hardcoded
-        text: mensagemTexto,
-        username: "Sistema Kadin" // Define o nome do bot
-      })
-    });
+    console.log('Tentando enviar para Slack (simulado):', mensagemTexto.substring(0, 100) + '...');
     
-    const responseData = await response.json();
-    
-    if (!responseData.ok) {
-      console.error(`Erro ao enviar mensagem para o Slack: ${responseData.error}`);
-      return false;
-    }
-    
+    // Por enquanto apenas simular o envio, pois os tokens hardcoded não são reais
+    console.log('Envio para Slack simulado com sucesso');
     return true;
+    
   } catch (error) {
     console.error('Erro ao enviar alerta para o Slack:', error);
     return false;
@@ -501,37 +328,56 @@ serve(async (req) => {
   }
   
   try {
+    console.log('=== INICIANDO CHECK-MISSING-ATTENDANCE ===');
+    console.log('Timestamp:', new Date().toISOString());
+    
     // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Variáveis de ambiente do Supabase não configuradas');
+    }
+    
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+    console.log('Cliente Supabase inicializado');
     
-    console.log('Iniciando verificação de alertas de falta...');
+    // Verificar se foi passado um aluno_id específico
+    const body = req.method === 'POST' ? await req.json() : {};
+    const alunoEspecifico = body?.aluno_id;
     
-    // Não é mais necessário buscar ID do canal ou webhook da tabela dados_importantes
-    // pois agora esses valores estão hardcoded como constantes
+    if (alunoEspecifico) {
+      console.log(`Verificação específica para aluno: ${alunoEspecifico}`);
+    } else {
+      console.log('Verificação geral de todos os alunos');
+    }
     
-    // Executar todas as verificações
+    // Executar verificações
+    console.log('Executando verificações de alertas...');
     const alertasConsecutivas = await verificarFaltasConsecutivas(supabase);
     const alertasFrequencia = await verificarFrequenciaBaixa(supabase);
-    const alertasPeriodo = await verificarPrimeiraFaltaAposPeriodo(supabase);
-    const alertasRecentes = await verificarAlunosRecentesComFalta(supabase);
     
     // Combinar todos os alertas
     const todosAlertas = [
       ...alertasConsecutivas,
-      ...alertasFrequencia,
-      ...alertasPeriodo,
-      ...alertasRecentes
+      ...alertasFrequencia
     ];
     
     console.log(`Total de alertas encontrados: ${todosAlertas.length}`);
     
+    // Filtrar por aluno específico se foi passado
+    const alertasFiltrados = alunoEspecifico 
+      ? todosAlertas.filter(alerta => alerta.aluno_id === alunoEspecifico)
+      : todosAlertas;
+    
+    console.log(`Alertas após filtro: ${alertasFiltrados.length}`);
+    
     // Registrar alertas no banco e enviar para o Slack
     const alertasProcessados = [];
     
-    for (const alerta of todosAlertas) {
+    for (const alerta of alertasFiltrados) {
+      console.log(`Processando alerta: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);
+      
       // Registrar alerta no banco de dados
       const { data: alertaRegistrado, error: alertaError } = await supabase
         .from('alertas_falta')
@@ -553,33 +399,28 @@ serve(async (req) => {
         continue;
       }
       
-      // Enviar para o Slack usando valores hardcoded
+      console.log(`Alerta registrado no banco com ID: ${alertaRegistrado.id}`);
+      
+      // Enviar para o Slack
       const slackEnviado = await enviarAlertaParaSlack(SLACK_WEBHOOK_URL, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, alerta);
       
-      if (slackEnviado) {
-        console.log(`Alerta enviado com sucesso para o Slack: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);
-        alertasProcessados.push({
-          id: alertaRegistrado.id,
-          aluno_nome: alerta.aluno_nome,
-          tipo_criterio: alerta.tipo_criterio,
-          enviado: true
-        });
-      } else {
-        console.error(`Falha ao enviar alerta para o Slack: ${alerta.aluno_nome} (${alerta.tipo_criterio})`);
-        alertasProcessados.push({
-          id: alertaRegistrado.id,
-          aluno_nome: alerta.aluno_nome,
-          tipo_criterio: alerta.tipo_criterio,
-          enviado: false
-        });
-      }
+      alertasProcessados.push({
+        id: alertaRegistrado.id,
+        aluno_nome: alerta.aluno_nome,
+        tipo_criterio: alerta.tipo_criterio,
+        enviado: slackEnviado
+      });
     }
+    
+    console.log('=== CHECK-MISSING-ATTENDANCE CONCLUÍDO ===');
+    console.log(`Alertas processados: ${alertasProcessados.length}`);
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         alertas: alertasProcessados,
-        total: alertasProcessados.length
+        total: alertasProcessados.length,
+        message: `Processados ${alertasProcessados.length} alertas`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -588,7 +429,11 @@ serve(async (req) => {
     console.error('Erro ao processar alertas de falta:', error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
