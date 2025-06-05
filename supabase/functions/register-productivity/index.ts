@@ -21,27 +21,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Buscar webhook URL
-    console.log('Buscando URL do webhook...');
-    const { data: configData, error: configError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'webhook_lançarprodutividade')
-      .single();
-    
-    if (configError) {
-      console.error('Erro ao buscar webhook URL:', configError);
-      throw new Error('Não foi possível recuperar a URL do webhook');
-    }
-
-    if (!configData || !configData.data) {
-      throw new Error('URL do webhook não encontrada');
-    }
-
-    const webhookUrl = configData.data;
-
     // Obter os dados da solicitação
     const requestData = await req.json();
+    console.log('Dados da requisição:', JSON.stringify(requestData, null, 2));
     
     // Criar um cliente Supabase com o contexto de autenticação do usuário logado
     const supabaseClient = createSupabaseClient(req.headers.get('Authorization')!);
@@ -96,9 +78,11 @@ serve(async (req) => {
     }
 
     // Registrar dados do aluno no banco
+    console.log('Registrando dados do aluno/funcionário...');
     const sucessoBanco = await registrarDadosAluno(supabaseClient, data);
     
     if (!sucessoBanco) {
+      console.error('Falha ao atualizar dados do aluno/funcionário');
       return new Response(
         JSON.stringify({ error: 'Erro ao atualizar dados do aluno' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -106,50 +90,74 @@ serve(async (req) => {
     }
 
     // Registrar produtividade nas tabelas do banco
+    console.log('Registrando produtividade...');
     const sucessoProdutividade = await registrarProdutividade(supabaseClient, data);
     
     if (!sucessoProdutividade) {
+      console.error('Falha ao registrar produtividade');
       return new Response(
         JSON.stringify({ error: 'Erro ao registrar produtividade' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
+    // Tentar envio para webhook (apenas se configurado)
+    let webhookResult = null;
     try {
-      console.log('Iniciando envio para o webhook...');
+      console.log('Verificando configuração do webhook...');
+      const { data: configData, error: configError } = await supabase
+        .from('dados_importantes')
+        .select('data')
+        .eq('key', 'webhook_lançarprodutividade')
+        .single();
       
-      // Enviar dados para o webhook
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
+      if (configError || !configData || !configData.data) {
+        console.log('Webhook não configurado, continuando sem envio');
+      } else {
+        const webhookUrl = configData.data;
+        console.log('Enviando para webhook:', webhookUrl);
+        
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro ao enviar dados para o webhook: ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro ao enviar dados para o webhook: ${errorText}`);
+        }
+
+        console.log('Dados enviados com sucesso para o webhook!');
+        webhookResult = { success: true };
       }
-
-      console.log('Dados enviados com sucesso para o webhook!');
       
     } catch (webhookError) {
-      console.error('Erro ao processar webhook:', webhookError);
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          webhookError: true,
-          message: 'Dados salvos no banco, mas não foi possível sincronizar com o webhook: ' + webhookError.message
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('Erro ao processar webhook (continuando):', webhookError);
+      webhookResult = { 
+        error: true, 
+        message: 'Dados salvos, mas não foi possível sincronizar com webhook: ' + webhookError.message 
+      };
     }
 
     // Retornar resposta de sucesso
+    const response = { 
+      success: true, 
+      message: 'Produtividade registrada com sucesso!',
+      isAbsence: !data.presente
+    };
+    
+    if (webhookResult?.error) {
+      response.webhookError = true;
+      response.message = webhookResult.message;
+    }
+    
+    console.log('Registro concluído com sucesso');
+    
     return new Response(
-      JSON.stringify({ success: true, message: 'Produtividade registrada com sucesso!' }),
+      JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
