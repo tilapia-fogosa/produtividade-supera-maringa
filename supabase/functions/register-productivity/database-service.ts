@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { ProdutividadeData } from './types.ts';
 
@@ -165,7 +166,7 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
     console.log('Registrando presença para o', tipoPessoa + ':', data.pessoa_id);
     
-    // Preparar dados para inserção usando os novos campos
+    // Preparar dados para inserção - simplificado para evitar problemas
     const produtividadeData = {
       pessoa_id: data.pessoa_id,
       tipo_pessoa: tipoPessoa,
@@ -182,33 +183,26 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     };
     
     console.log('Dados de produtividade preparados para inserção:', produtividadeData);
-    
-    // Verificar se a tabela produtividade_abaco existe e quais são seus campos
     console.log('Tentando inserir na tabela produtividade_abaco...');
     
-    try {
-      // Inserir na tabela produtividade_abaco
-      const { data: insertedData, error: produtividadeError } = await supabaseClient
-        .from('produtividade_abaco')
-        .insert([produtividadeData])
-        .select();
-      
-      if (produtividadeError) {
-        console.error('Erro detalhado ao registrar produtividade ábaco:', produtividadeError);
-        console.error('Código do erro:', produtividadeError.code);
-        console.error('Mensagem:', produtividadeError.message);
-        console.error('Detalhes:', produtividadeError.details);
-        console.error('Hint:', produtividadeError.hint);
-        return false;
-      }
-      
-      console.log('Produtividade registrada com sucesso! Dados inseridos:', insertedData);
-      return true;
-      
-    } catch (insertError) {
-      console.error('Erro na inserção (catch):', insertError);
+    // Inserir na tabela produtividade_abaco com tratamento de erro melhorado
+    const { data: insertedData, error: produtividadeError } = await supabaseClient
+      .from('produtividade_abaco')
+      .insert(produtividadeData)
+      .select();
+    
+    if (produtividadeError) {
+      console.error('Erro detalhado ao registrar produtividade ábaco:', {
+        code: produtividadeError.code,
+        message: produtividadeError.message,
+        details: produtividadeError.details,
+        hint: produtividadeError.hint
+      });
       return false;
     }
+    
+    console.log('Produtividade registrada com sucesso! Dados inseridos:', insertedData);
+    return true;
     
   } catch (error) {
     console.error('Erro geral ao registrar produtividade:', error);

@@ -124,26 +124,26 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
       // Formatar data para o formato ISO (YYYY-MM-DD)
       const dataAulaFormatada = dataAula.toISOString().split('T')[0];
 
-      // Preparar os dados para enviar para a Edge Function - garantindo que os valores sejam strings ou undefined
+      // Preparar os dados para enviar para a Edge Function - corrigindo os valores undefined
       const produtividadeData = {
-        pessoa_id: aluno.id, // Mudança de aluno_id para pessoa_id
+        pessoa_id: aluno.id,
         aluno_nome: aluno.nome,
         turma_id: turma.id,
         turma_nome: turma.nome,
         presente: presente === "sim",
-        motivo_falta: presente === "não" ? (motivoFalta || "") : undefined,
-        apostila_abaco: presente === "sim" ? (apostilaAbaco || undefined) : undefined,
-        pagina_abaco: presente === "sim" ? (paginaAbaco || undefined) : undefined,
-        exercicios_abaco: presente === "sim" ? (exerciciosAbaco || undefined) : undefined,
-        erros_abaco: presente === "sim" ? (errosAbaco || undefined) : undefined,
-        fez_desafio: presente === "sim" ? (fezDesafio === "sim") : undefined,
-        nivel_desafio: presente === "sim" && fezDesafio === "sim" ? (nivelDesafio || undefined) : undefined,
+        motivo_falta: presente === "não" ? (motivoFalta || "") : "",
+        apostila_abaco: presente === "sim" ? (apostilaAbaco || "") : "",
+        pagina_abaco: presente === "sim" ? (paginaAbaco || "") : "",
+        exercicios_abaco: presente === "sim" ? (exerciciosAbaco || "") : "",
+        erros_abaco: presente === "sim" ? (errosAbaco || "") : "",
+        fez_desafio: presente === "sim" ? (fezDesafio === "sim") : false,
+        nivel_desafio: presente === "sim" && fezDesafio === "sim" ? (nivelDesafio || "") : "",
         comentario: comentario || "",
         data_registro: new Date().toISOString().split('T')[0],
         data_aula: dataAulaFormatada,
         data_ultima_correcao_ah: new Date().toISOString(),
-        apostila_atual: presente === "sim" ? (apostilaAbaco || aluno.ultimo_nivel) : aluno.ultimo_nivel,
-        ultima_pagina: presente === "sim" ? (paginaAbaco || aluno.ultima_pagina?.toString()) : aluno.ultima_pagina?.toString(),
+        apostila_atual: presente === "sim" ? (apostilaAbaco || aluno.ultimo_nivel || "") : (aluno.ultimo_nivel || ""),
+        ultima_pagina: presente === "sim" ? (paginaAbaco || aluno.ultima_pagina?.toString() || "") : (aluno.ultima_pagina?.toString() || ""),
         is_reposicao: false
       };
 
