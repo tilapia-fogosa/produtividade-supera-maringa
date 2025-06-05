@@ -154,7 +154,8 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
       exercicios: data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
       erros: data.erros_abaco ? parseInt(data.erros_abaco) : null,
       fez_desafio: data.fez_desafio || false,
-      comentario: data.comentario || ''
+      comentario: data.comentario || '',
+      motivo_falta: data.motivo_falta || null // Novo campo para o motivo da falta
     };
     
     console.log('Dados de produtividade a salvar:', produtividadeData);
@@ -216,6 +217,7 @@ export async function atualizarProdutividade(supabaseClient: any, data: any): Pr
         erros: data.erros,
         fez_desafio: data.fez_desafio,
         comentario: data.comentario,
+        motivo_falta: data.motivo_falta,
         updated_at: new Date().toISOString()
       })
       .eq('id', data.id);

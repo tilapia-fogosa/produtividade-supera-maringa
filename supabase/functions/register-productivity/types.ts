@@ -1,11 +1,11 @@
 
 export interface ProdutividadeData {
   aluno_id: string;
-  aluno_nome?: string;
-  turma_id?: string;
-  turma_nome?: string;
+  aluno_nome: string;
+  turma_id: string;
+  turma_nome: string;
   presente: boolean;
-  motivo_falta?: string;
+  motivo_falta?: string; // Novo campo para motivo da falta
   apostila_abaco?: string;
   pagina_abaco?: string;
   exercicios_abaco?: string;
@@ -13,24 +13,10 @@ export interface ProdutividadeData {
   fez_desafio?: boolean;
   nivel_desafio?: string;
   comentario?: string;
-  data_registro?: string;
-  data_aula?: string;
+  data_registro: string;
+  data_aula: string;
+  data_ultima_correcao_ah?: string;
   apostila_atual?: string;
   ultima_pagina?: string;
   is_reposicao?: boolean;
-  data_ultima_correcao_ah?: string;
-}
-
-export interface AlertaCriterio {
-  tipo_criterio: string;
-  detalhes: Record<string, any>;
-  data_falta: string;
-  aluno_nome: string;
-  turma_id: string;
-  professor_id: string;
-  unit_id: string;
-  dias_supera: number;
-  motivo_falta: string;
-  professor_nome: string;
-  professor_slack: string;
 }

@@ -19,7 +19,6 @@ const ProdutividadeTurma = () => {
   const dia = location.state?.dia;
   const alunosCarregadosRef = useRef(false);
   
-  // Referência para controlar a data última verificada
   const ultimaDataVerificadaRef = useRef<string>('');
   
   const [loading, setLoading] = useState(true);
@@ -30,7 +29,6 @@ const ProdutividadeTurma = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [alunoParaExcluir, setAlunoParaExcluir] = useState<PessoaTurma | null>(null);
 
-  // Use o hook usePessoasTurma em vez do useAlunos para obter dados de alunos e funcionários
   const { 
     pessoasTurma: alunos, 
     todasPessoas: todosAlunos, 
@@ -42,7 +40,6 @@ const ProdutividadeTurma = () => {
     recarregarDadosAposExclusao
   } = usePessoasTurma();
 
-  // Hook para lidar com produtividade
   const { excluirProdutividade, isLoading: excluindoProdutividade } = useProdutividade('');
 
   useEffect(() => {
@@ -66,7 +63,6 @@ const ProdutividadeTurma = () => {
           
           setTurma(turmaData);
           
-          // Carregamos os alunos apenas uma vez quando a turma é carregada
           if (!alunosCarregadosRef.current) {
             console.log("Carregando pessoas pela primeira vez para a turma:", data.id);
             await buscarPessoasPorTurma(data.id);
@@ -87,19 +83,14 @@ const ProdutividadeTurma = () => {
 
     fetchTurma();
     
-    // Limpa o estado ao desmontar
     return () => {
       alunosCarregadosRef.current = false;
     };
   }, [params.turmaId, buscarPessoasPorTurma]);
 
-  // Efeito separado para verificar mudanças na data
   useEffect(() => {
-    // Verificar se a data mudou e se precisamos atualizar
     const hoje = new Date().toISOString().split('T')[0];
     
-    // Só recarrega se: a data de hoje for diferente da última data de verificação,
-    // a turma estiver carregada e os alunos já foram carregados pelo menos uma vez
     if (hoje !== ultimaDataVerificadaRef.current && turma && alunosCarregadosRef.current) {
       console.log("Verificando produtividade para nova data:", hoje);
       buscarPessoasPorTurma(turma.id);
@@ -159,12 +150,10 @@ const ProdutividadeTurma = () => {
           variant: "default"
         });
         
-        // Remover o registro da lista de produtividade registrada se for do mesmo dia
         if (produtividadeRegistrada[alunoParaExcluir.id]) {
           atualizarProdutividadeRegistrada(alunoParaExcluir.id, false);
         }
         
-        // Recarregar dados após exclusão
         recarregarDadosAposExclusao(alunoParaExcluir.id);
       }
     } catch (error) {

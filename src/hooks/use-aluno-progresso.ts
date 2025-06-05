@@ -15,7 +15,7 @@ interface AlunoProgresso {
   previsao_conclusao: string | null;
   media_paginas_por_aula: number | null;
   media_exercicios_por_aula: number | null;
-  ultimo_desafio: string | null; // Alterado para string
+  ultimo_desafio: string | null;
   texto_devolutiva: string | null;
 }
 
@@ -35,36 +35,53 @@ export const useAlunoProgresso = (alunoId: string) => {
 
         console.log('useAlunoProgresso: Buscando dados para o aluno ID:', alunoId);
 
-        // Buscar dados do aluno incluindo niveldesafio e texto_devolutiva
+        // Primeiro, verificar se é aluno ou funcionário
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta, niveldesafio, texto_devolutiva')
           .eq('id', alunoId)
           .maybeSingle();
 
-        if (alunoError) {
+        let pessoaData = alunoData;
+        let isPessoa = !!alunoData;
+
+        // Se não encontrou nos alunos, buscar nos funcionários
+        if (!alunoData && !alunoError) {
+          const { data: funcionarioData, error: funcionarioError } = await supabase
+            .from('funcionarios')
+            .select('ultimo_nivel, ultima_pagina, ultima_correcao_ah, ultima_falta, niveldesafio, texto_devolutiva')
+            .eq('id', alunoId)
+            .maybeSingle();
+
+          if (funcionarioError) {
+            console.error('useAlunoProgresso: Erro ao buscar dados do funcionário:', funcionarioError);
+            throw funcionarioError;
+          }
+
+          pessoaData = funcionarioData;
+          isPessoa = !!funcionarioData;
+        } else if (alunoError) {
           console.error('useAlunoProgresso: Erro ao buscar dados do aluno:', alunoError);
           throw alunoError;
         }
 
-        if (!alunoData) {
-          console.log('useAlunoProgresso: Nenhum dado encontrado para o aluno ID:', alunoId);
+        if (!pessoaData) {
+          console.log('useAlunoProgresso: Nenhum dado encontrado para a pessoa ID:', alunoId);
           setProgresso(null);
           return;
         }
 
-        console.log('useAlunoProgresso: Dados do aluno recuperados:', alunoData);
+        console.log('useAlunoProgresso: Dados da pessoa recuperados:', pessoaData);
 
         let totalPaginas = null;
         let paginasRestantes = null;
         let progressoPercentual = 0;
         
-        if (alunoData.ultimo_nivel) {
-          // Obter total de páginas através do hook useApostilas
-          totalPaginas = getTotalPaginas(alunoData.ultimo_nivel);
-          console.log(`useAlunoProgresso: Total de páginas para ${alunoData.ultimo_nivel}:`, totalPaginas);
+        if (pessoaData.ultimo_nivel) {
+          totalPaginas = getTotalPaginas(pessoaData.ultimo_nivel);
+          console.log(`useAlunoProgresso: Total de páginas para ${pessoaData.ultimo_nivel}:`, totalPaginas);
           
-          const ultimaPagina = alunoData.ultima_pagina !== null ? Number(alunoData.ultima_pagina) : null;
+          const ultimaPagina = pessoaData.ultima_pagina !== null ? Number(pessoaData.ultima_pagina) : null;
           
           if (ultimaPagina !== null && totalPaginas !== null) {
             paginasRestantes = Math.max(0, totalPaginas - ultimaPagina);
@@ -83,21 +100,24 @@ export const useAlunoProgresso = (alunoId: string) => {
         const inicioMesAtual = startOfMonth(dataAtual);
         let faltouMesAtual = null;
         
-        if (alunoData.ultima_falta) {
-          const dataUltimaFalta = new Date(alunoData.ultima_falta);
+        if (pessoaData.ultima_falta) {
+          const dataUltimaFalta = new Date(pessoaData.ultima_falta);
           faltouMesAtual = isAfter(dataUltimaFalta, inicioMesAtual);
         }
 
-        // Resto do código para buscar produtividade permanece o mesmo
+        // Buscar produtividade usando pessoa_id
         const { data: produtividadeData, error: produtividadeError } = await supabase
           .from('produtividade_abaco')
           .select('pagina, exercicios, data_aula')
-          .eq('aluno_id', alunoId)
+          .eq('pessoa_id', alunoId)
           .eq('presente', true)
           .order('data_aula', { ascending: false })
           .limit(4);
 
-        if (produtividadeError) throw produtividadeError;
+        if (produtividadeError) {
+          console.error('useAlunoProgresso: Erro ao buscar produtividade:', produtividadeError);
+          throw produtividadeError;
+        }
 
         let mediaPaginasPorAula = null;
         let mediaExerciciosPorAula = null;
@@ -139,9 +159,9 @@ export const useAlunoProgresso = (alunoId: string) => {
         }
 
         setProgresso({
-          ultimo_nivel: alunoData.ultimo_nivel,
-          ultima_pagina: alunoData.ultima_pagina,
-          ultima_correcao_ah: alunoData.ultima_correcao_ah,
+          ultimo_nivel: pessoaData.ultimo_nivel,
+          ultima_pagina: pessoaData.ultima_pagina,
+          ultima_correcao_ah: pessoaData.ultima_correcao_ah,
           total_paginas: totalPaginas,
           paginas_restantes: paginasRestantes,
           progresso_percentual: progressoPercentual,
@@ -149,8 +169,8 @@ export const useAlunoProgresso = (alunoId: string) => {
           previsao_conclusao: previsaoConclusao,
           media_paginas_por_aula: mediaPaginasPorAula,
           media_exercicios_por_aula: mediaExerciciosPorAula,
-          ultimo_desafio: alunoData.niveldesafio,
-          texto_devolutiva: alunoData.texto_devolutiva
+          ultimo_desafio: pessoaData.niveldesafio,
+          texto_devolutiva: pessoaData.texto_devolutiva
         });
 
       } catch (error) {

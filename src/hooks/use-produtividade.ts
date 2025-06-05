@@ -15,6 +15,7 @@ export interface Produtividade {
   erros: number | null;
   fez_desafio: boolean | null;
   comentario: string | null;
+  motivo_falta: string | null; // Novo campo
   is_reposicao: boolean;
   created_at: string;
   updated_at: string;
@@ -49,7 +50,7 @@ export function useProdutividade(pessoaId: string) {
     }
   };
 
-  const registrarPresenca = async (presente: boolean, dataAula: string) => {
+  const registrarPresenca = async (presente: boolean, dataAula: string, motivoFalta?: string) => {
     try {
       // Verificar se é aluno ou funcionário para atualizar a data da última falta
       if (!presente) {
@@ -92,7 +93,8 @@ export function useProdutividade(pessoaId: string) {
             pessoa_id: pessoaId, 
             tipo_pessoa: tipoPessoa,
             data_aula: dataAula, 
-            presente: presente 
+            presente: presente,
+            motivo_falta: motivoFalta || null
           }
         ]);
 

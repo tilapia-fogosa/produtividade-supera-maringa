@@ -11,6 +11,7 @@ export interface ProdutividadeAbaco {
   erros: number | null;
   fez_desafio: boolean;
   comentario: string | null;
+  motivo_falta: string | null; // Novo campo
   created_at: string;
   updated_at: string;
 }

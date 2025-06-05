@@ -40,7 +40,6 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
   const [reposicaoModalAberto, setReposicaoModalAberto] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   
-  // Convertendo o valor de string para o enum TelaModo
   const telaInicial = initialServiceType === 'abrindo_horizontes' ? 'AH' : 'LISTA_ALUNOS';
   const [telaModo, setTelaModo] = useState<'LISTA_ALUNOS' | 'AH'>(telaInicial);
   
@@ -87,7 +86,7 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         {telaModo === 'LISTA_ALUNOS' && (
           <ProdutividadeScreen 
             turma={turma}
-            onBack={() => {}} // Não usado, mas necessário para tipagem
+            onBack={() => {}}
             alunos={alunos}
             onRegistrarPresenca={handleClickRegistrarPresenca}
             onReposicaoAula={handleClickReposicaoAula}
@@ -98,14 +97,13 @@ const TurmaDetail: React.FC<TurmaDetailProps> = ({
         {telaModo === 'AH' && (
           <AbindoHorizontesScreen 
             turma={turma}
-            onBack={() => {}} // Não usado, mas necessário para tipagem
+            onBack={() => {}}
             alunos={alunos}
             onBackToMenu={handleBackNavigation}
           />
         )}
       </div>
 
-      {/* Modals */}
       {alunoSelecionado && (
         <ProdutividadeModal 
           isOpen={modalAberto} 
