@@ -46,9 +46,15 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       }
       
       const updateData: any = {};
-      if (data.apostila_atual) updateData.ultimo_nivel = data.apostila_atual;
-      if (data.ultima_pagina) updateData.ultima_pagina = parseInt(data.ultima_pagina);
-      if (data.data_ultima_correcao_ah) updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      if (data.apostila_atual && data.presente) updateData.ultimo_nivel = data.apostila_atual;
+      if (data.ultima_pagina && data.presente) updateData.ultima_pagina = parseInt(data.ultima_pagina);
+      if (data.data_ultima_correcao_ah && data.presente) updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      
+      // Se é uma falta, atualizar a data da última falta
+      if (!data.presente) {
+        updateData.ultima_falta = data.data_aula;
+        console.log('Atualizando última falta para:', data.data_aula);
+      }
       
       if (Object.keys(updateData).length > 0) {
         console.log('Atualizando dados do aluno:', updateData);
@@ -85,9 +91,15 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       console.log('Encontrado como funcionário, atualizando dados...');
       
       const updateData: any = {};
-      if (data.apostila_atual) updateData.ultimo_nivel = data.apostila_atual;
-      if (data.ultima_pagina) updateData.ultima_pagina = parseInt(data.ultima_pagina);
-      if (data.data_ultima_correcao_ah) updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      if (data.apostila_atual && data.presente) updateData.ultimo_nivel = data.apostila_atual;
+      if (data.ultima_pagina && data.presente) updateData.ultima_pagina = parseInt(data.ultima_pagina);
+      if (data.data_ultima_correcao_ah && data.presente) updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      
+      // Se é uma falta, atualizar a data da última falta
+      if (!data.presente) {
+        updateData.ultima_falta = data.data_aula;
+        console.log('Atualizando última falta do funcionário para:', data.data_aula);
+      }
       
       if (Object.keys(updateData).length > 0) {
         console.log('Atualizando dados do funcionário:', updateData);
@@ -140,22 +152,22 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     }
     
     const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
-    console.log('Registrando presença para o', tipoPessoa + ':', data.aluno_id);
+    console.log('Registrando para o', tipoPessoa + ':', data.aluno_id);
     
     // Preparar dados para inserção usando os novos campos
     const produtividadeData = {
-      pessoa_id: data.aluno_id, // Usar pessoa_id em vez de aluno_id
-      tipo_pessoa: tipoPessoa, // Definir o tipo de pessoa
+      pessoa_id: data.aluno_id,
+      tipo_pessoa: tipoPessoa,
       data_aula: data.data_aula,
       presente: data.presente,
       is_reposicao: data.is_reposicao || false,
-      apostila: data.apostila_abaco || null,
-      pagina: data.pagina_abaco || null,
-      exercicios: data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
-      erros: data.erros_abaco ? parseInt(data.erros_abaco) : null,
-      fez_desafio: data.fez_desafio || false,
+      apostila: data.presente ? (data.apostila_abaco || null) : null,
+      pagina: data.presente ? (data.pagina_abaco || null) : null,
+      exercicios: data.presente && data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
+      erros: data.presente && data.erros_abaco ? parseInt(data.erros_abaco) : null,
+      fez_desafio: data.presente ? (data.fez_desafio || false) : false,
       comentario: data.comentario || '',
-      motivo_falta: data.motivo_falta || null // Novo campo para o motivo da falta
+      motivo_falta: !data.presente ? (data.motivo_falta || null) : null
     };
     
     console.log('Dados de produtividade a salvar:', produtividadeData);
@@ -172,6 +184,27 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     }
     
     console.log('Produtividade registrada com sucesso!');
+    
+    // Se for uma falta, disparar manualmente a verificação de alertas
+    if (!data.presente) {
+      console.log('Falta detectada, verificando alertas...');
+      try {
+        const { error: alertError } = await supabaseClient.functions.invoke('check-missing-attendance', {
+          body: { aluno_id: data.aluno_id }
+        });
+        
+        if (alertError) {
+          console.error('Erro ao processar alertas de falta:', alertError);
+          // Não falhar o registro por causa do alerta
+        } else {
+          console.log('Alertas de falta processados com sucesso');
+        }
+      } catch (alertError) {
+        console.error('Erro ao chamar função de alertas:', alertError);
+        // Não falhar o registro por causa do alerta
+      }
+    }
+    
     return true;
     
   } catch (error) {
