@@ -197,9 +197,11 @@ export function useProdutividade(pessoaId?: string) {
       setIsLoading(true);
       setError(null);
       
-      // Verificar se o ID do registro é válido
-      if (!registroId || registroId.trim() === '') {
-        console.error('ID do registro não fornecido ou vazio');
+      console.log('🔄 excluirProdutividade: Iniciando exclusão do registro:', registroId);
+      
+      // Validar ID do registro
+      if (!registroId || typeof registroId !== 'string' || registroId.trim() === '') {
+        console.error('❌ excluirProdutividade: ID do registro inválido:', registroId);
         setError('ID do registro é obrigatório');
         toast({
           title: "Erro",
@@ -209,7 +211,7 @@ export function useProdutividade(pessoaId?: string) {
         return false;
       }
       
-      console.log('Excluindo registro de produtividade:', registroId);
+      console.log('✅ excluirProdutividade: ID válido, executando exclusão...');
       
       const { error } = await supabase
         .from('produtividade_abaco')
@@ -217,7 +219,7 @@ export function useProdutividade(pessoaId?: string) {
         .eq('id', registroId);
       
       if (error) {
-        console.error("Erro ao excluir registro de produtividade:", error);
+        console.error("❌ excluirProdutividade: Erro no Supabase:", error);
         setError(error.message);
         toast({
           title: "Erro",
@@ -227,7 +229,7 @@ export function useProdutividade(pessoaId?: string) {
         return false;
       }
       
-      console.log('Registro excluído com sucesso');
+      console.log('✅ excluirProdutividade: Registro excluído com sucesso');
       
       toast({
         title: "Sucesso",
@@ -236,7 +238,7 @@ export function useProdutividade(pessoaId?: string) {
       
       return true;
     } catch (error: any) {
-      console.error("Erro inesperado ao excluir produtividade:", error);
+      console.error("❌ excluirProdutividade: Erro inesperado:", error);
       setError(error.message || "Erro ao excluir produtividade");
       toast({
         title: "Erro",
