@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTurmasPorDia } from '@/hooks/use-turmas-por-dia';
+import { useProjetoSaoRafael } from '@/hooks/use-projeto-sao-rafael';
 import DayTurmasList from '@/components/turmas/DayTurmasList';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar } from 'lucide-react';
@@ -31,11 +32,23 @@ const Turmas = () => {
   console.log("Turmas - Service Type:", serviceType);
   console.log("Turmas - Data selecionada:", data);
   
-  const { turmas, loading } = useTurmasPorDia(diaSelecionado);
+  // Para Projeto São Rafael, usar hook específico
+  const { turmas: turmasProjetoSaoRafael, loading: loadingProjetoSaoRafael } = useProjetoSaoRafael();
+  
+  // Para outros casos, usar hook normal
+  const { turmas: turmasNormais, loading: loadingNormais } = useTurmasPorDia(diaSelecionado);
+  
+  // Definir quais dados usar baseado no serviceType
+  const turmas = serviceType === 'projeto_sao_rafael' ? turmasProjetoSaoRafael : turmasNormais;
+  const loading = serviceType === 'projeto_sao_rafael' ? loadingProjetoSaoRafael : loadingNormais;
 
   const handleVoltar = () => {
+    // Se for Projeto São Rafael, voltar para devolutivas
+    if (serviceType === 'projeto_sao_rafael') {
+      navigate('/devolutivas');
+    }
     // Se for devolutiva, voltar para a página de devolutivas
-    if (serviceType === 'devolutiva' || serviceType === 'ficha_impressao') {
+    else if (serviceType === 'devolutiva' || serviceType === 'ficha_impressao') {
       navigate('/devolutivas');
     } 
     // Se for diário de turma, voltar para a página de diário
@@ -67,20 +80,26 @@ const Turmas = () => {
   // Formatar o texto do título com base nas informações disponíveis
   const getTituloTexto = () => {
     let serviceName = '';
-    if (serviceType === 'abrindo_horizontes') serviceName = 'Turmas para Abrindo Horizontes';
+    if (serviceType === 'projeto_sao_rafael') serviceName = 'Projeto São Rafael';
+    else if (serviceType === 'abrindo_horizontes') serviceName = 'Turmas para Abrindo Horizontes';
     else if (serviceType === 'devolutiva') serviceName = 'Turmas para Devolutivas';
     else if (serviceType === 'ficha_impressao') serviceName = 'Turmas para Fichas de Acompanhamento';
     else if (serviceType === 'diario_turma') serviceName = 'Turmas para Diário';
     else serviceName = 'Turmas de';
 
     let dayText = '';
-    if (diaSelecionado) {
+    if (diaSelecionado && serviceType !== 'projeto_sao_rafael') {
       dayText = diaSelecionado === 'segunda' ? 'Segunda-feira' : 
                diaSelecionado === 'terca' ? 'Terça-feira' : 
                diaSelecionado === 'quarta' ? 'Quarta-feira' : 
                diaSelecionado === 'quinta' ? 'Quinta-feira' : 
                diaSelecionado === 'sexta' ? 'Sexta-feira' : 
                diaSelecionado === 'sabado' ? 'Sábado' : 'Domingo';
+    }
+    
+    // Se for Projeto São Rafael, mostrar só o nome do projeto
+    if (serviceType === 'projeto_sao_rafael') {
+      return serviceName;
     }
     
     // Se tiver uma data específica, usar essa informação
@@ -99,6 +118,10 @@ const Turmas = () => {
     // Caso contrário, usar o dia da semana ou texto padrão
     return dayText ? `${serviceName} - ${dayText}` : serviceName;
   };
+
+  // Para Projeto São Rafael, não mostrar seletor de dias
+  const mostrarSeletorDias = serviceType !== 'projeto_sao_rafael' && !diaSelecionado;
+  const mostrarTurmas = serviceType === 'projeto_sao_rafael' || diaSelecionado;
   
   return (
     <div className="w-full min-h-screen bg-background dark:bg-background text-azul-500 dark:text-orange-100">
@@ -115,8 +138,8 @@ const Turmas = () => {
           {getTituloTexto()}
         </h1>
 
-        {/* Seletor de dias da semana */}
-        {!diaSelecionado && (
+        {/* Seletor de dias da semana - só mostra se não for Projeto São Rafael */}
+        {mostrarSeletorDias && (
           <Card className="border-orange-200 bg-white mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-azul-500">Selecione o dia da semana</CardTitle>
@@ -136,8 +159,8 @@ const Turmas = () => {
           </Card>
         )}
         
-        {/* Mostrar lista de turmas somente se um dia for selecionado */}
-        {diaSelecionado && (
+        {/* Mostrar lista de turmas */}
+        {mostrarTurmas && (
           <>
             <DayTurmasList 
               turmas={turmas} 
@@ -145,8 +168,8 @@ const Turmas = () => {
               serviceType={serviceType}
             />
             
-            {/* Botão para voltar à seleção de dia */}
-            {turmas.length > 0 && (
+            {/* Botão para voltar à seleção de dia - só mostra se não for Projeto São Rafael */}
+            {turmas.length > 0 && serviceType !== 'projeto_sao_rafael' && (
               <Button 
                 onClick={() => setDiaSelecionado(null)}
                 variant="outline" 
