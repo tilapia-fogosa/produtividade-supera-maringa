@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -5,12 +6,14 @@ import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 import { Badge } from "@/components/ui/badge";
 import { Check, Trash2 } from "lucide-react";
 import { format } from 'date-fns';
+
 interface AlunosListaTableProps {
   alunos: PessoaTurma[];
   onRegistrarPresenca: (aluno: PessoaTurma) => void;
   onExcluirRegistro?: (aluno: PessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }
+
 const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
   alunos,
   onRegistrarPresenca,
@@ -18,10 +21,13 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
   produtividadeRegistrada = {}
 }) => {
   if (alunos.length === 0) {
-    return <div className="text-center py-8 bg-slate-50 rounded-md">
+    return (
+      <div className="text-center py-8 bg-slate-50 rounded-md">
         <p className="text-gray-500">Nenhuma pessoa encontrada nesta turma</p>
-      </div>;
+      </div>
+    );
   }
+
   const formatarData = (dataString?: string) => {
     if (!dataString) return '-';
     try {
@@ -38,7 +44,30 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
       return dataString; // Retorna a string original em caso de erro
     }
   };
-  return <div className="border rounded-md overflow-hidden">
+
+  const handleExcluirClick = (aluno: PessoaTurma) => {
+    console.log('🔍 AlunosListaTable: Clique no botão excluir para aluno:', {
+      id: aluno.id,
+      nome: aluno.nome,
+      ultimo_registro_id: aluno.ultimo_registro_id,
+      produtividade_registrada: produtividadeRegistrada[aluno.id]
+    });
+    
+    if (!onExcluirRegistro) {
+      console.warn('⚠️ AlunosListaTable: onExcluirRegistro não fornecido');
+      return;
+    }
+    
+    if (!aluno.ultimo_registro_id) {
+      console.error('❌ AlunosListaTable: ultimo_registro_id não disponível para aluno:', aluno.nome);
+      return;
+    }
+    
+    onExcluirRegistro(aluno);
+  };
+
+  return (
+    <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -50,39 +79,73 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {alunos.map(aluno => <TableRow key={aluno.id}>
+          {alunos.map((aluno) => (
+            <TableRow key={aluno.id}>
               <TableCell className="font-medium">
                 {aluno.nome}
               </TableCell>
               <TableCell>
-                <Badge variant={aluno.origem === 'funcionario' ? "secondary" : "default"} className="bg-purple-400">
+                <Badge 
+                  variant={aluno.origem === 'funcionario' ? "secondary" : "default"} 
+                  className="bg-purple-400"
+                >
                   {aluno.origem === 'funcionario' ? 'Funcionário' : 'Aluno'}
                 </Badge>
               </TableCell>
               <TableCell>
-                {aluno.ultima_pagina ? <span>
+                {aluno.ultima_pagina ? (
+                  <span>
                     {aluno.ultima_pagina} 
                     {aluno.ultimo_nivel ? ` (${aluno.ultimo_nivel})` : ''}
-                  </span> : <span className="text-gray-400">Sem registro</span>}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">Sem registro</span>
+                )}
               </TableCell>
               <TableCell>
-                {aluno.data_ultimo_registro ? <span>{formatarData(aluno.data_ultimo_registro)}</span> : <span className="text-gray-400">Nunca</span>}
+                {aluno.data_ultimo_registro ? (
+                  <span>{formatarData(aluno.data_ultimo_registro)}</span>
+                ) : (
+                  <span className="text-gray-400">Nunca</span>
+                )}
               </TableCell>
               <TableCell className="text-right flex justify-end items-center gap-2">
-                {produtividadeRegistrada[aluno.id] ? <Button variant="ghost" className="text-green-600 hover:text-green-700 cursor-default" disabled>
+                {produtividadeRegistrada[aluno.id] ? (
+                  <Button 
+                    variant="ghost" 
+                    className="text-green-600 hover:text-green-700 cursor-default" 
+                    disabled
+                  >
                     <Check className="h-4 w-4 mr-1" />
                     Registrado
-                  </Button> : <Button onClick={() => onRegistrarPresenca(aluno)} variant="outline" className="hover:bg-orange-100">
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => onRegistrarPresenca(aluno)} 
+                    variant="outline" 
+                    className="hover:bg-orange-100"
+                  >
                     Registrar
-                  </Button>}
+                  </Button>
+                )}
                 
-                {aluno.ultimo_registro_id && onExcluirRegistro && <Button onClick={() => onExcluirRegistro(aluno)} variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                {aluno.ultimo_registro_id && onExcluirRegistro && (
+                  <Button 
+                    onClick={() => handleExcluirClick(aluno)} 
+                    variant="ghost" 
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    title={`Excluir registro do dia ${formatarData(aluno.data_ultimo_registro)}`}
+                  >
                     <Trash2 className="h-4 w-4" />
-                  </Button>}
+                  </Button>
+                )}
               </TableCell>
-            </TableRow>)}
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
-    </div>;
+    </div>
+  );
 };
+
 export default AlunosListaTable;

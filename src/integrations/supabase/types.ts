@@ -137,7 +137,7 @@ export type Database = {
             foreignKeyName: "alertas_falta_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "unidades"
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1779,6 +1779,30 @@ export type Database = {
         }
         Relationships: []
       }
+      projeto_sao_rafael_textos: {
+        Row: {
+          created_at: string
+          id: string
+          mes_ano: string
+          texto_geral: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mes_ano: string
+          texto_geral?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mes_ano?: string
+          texto_geral?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       regions: {
         Row: {
           active: boolean
@@ -2694,6 +2718,27 @@ export type Database = {
       }
     }
     Functions: {
+      buscar_dados_abaco_projeto_sao_rafael: {
+        Args: { p_mes_ano: string; p_professor_id: string }
+        Returns: {
+          ano_mes: string
+          nome_aluno: string
+          total_exercicios: number
+          total_erros: number
+          percentual_acerto: number
+          total_presencas: number
+        }[]
+      }
+      buscar_dados_ah_projeto_sao_rafael: {
+        Args: { p_mes_ano: string; p_professor_id: string }
+        Returns: {
+          ano_mes: string
+          nome_aluno: string
+          total_exercicios: number
+          total_erros: number
+          percentual_acerto: number
+        }[]
+      }
       change_initial_password: {
         Args: { user_id: string; new_password: string }
         Returns: boolean
