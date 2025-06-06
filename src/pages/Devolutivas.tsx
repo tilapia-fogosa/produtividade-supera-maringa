@@ -23,12 +23,7 @@ const Devolutivas = () => {
   };
 
   const irParaProjetoSaoRafael = () => {
-    navigate('/turmas', {
-      state: {
-        serviceType: 'projeto_sao_rafael',
-        dia: 'quinta'
-      }
-    });
+    navigate('/projeto-sao-rafael');
   };
 
   return (
@@ -78,7 +73,7 @@ const Devolutivas = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500 mb-4">
-              Acesse as turmas do projeto São Rafael (Prof. Gustavo - Quintas-feiras).
+              Acesse o relatório mensal do Projeto São Rafael com dados de Ábaco e Abrindo Horizontes.
             </p>
             <Button 
               onClick={irParaProjetoSaoRafael}

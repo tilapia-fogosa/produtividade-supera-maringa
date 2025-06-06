@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -28,6 +29,7 @@ import Fichas from "./pages/Fichas";
 import AdminConfiguracao from "./pages/AdminConfiguracao";
 import AlunosAtivos from "./pages/AlunosAtivos";
 import AlunosDevolutivas from "./pages/AlunosDevolutivas";
+import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +62,7 @@ function App() {
                       <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                       <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
                       <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
+                      <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafael />} />
                       <Route path="/fichas" element={<Fichas />} />
                       <Route path="/lancamentos" element={<Lancamentos />} />
                       <Route path="/diario" element={<Diario />} />
