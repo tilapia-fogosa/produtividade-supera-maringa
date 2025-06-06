@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -77,15 +76,15 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
           setDadosAH(ahProcessado);
         }
 
-        // Buscar texto geral (se existir)
-        const { data: textoData } = await supabase
-          .from('projeto_sao_rafael_textos')
-          .select('texto_geral')
-          .eq('mes_ano', mesAno)
-          .single();
+        // Buscar texto geral usando rpc (raw SQL)
+        const { data: textoData, error: textoError } = await supabase.rpc('exec_sql', {
+          query: `SELECT texto_geral FROM projeto_sao_rafael_textos WHERE mes_ano = '${mesAno}' LIMIT 1`
+        });
         
-        if (textoData) {
-          setTextoGeral(textoData.texto_geral || '');
+        if (!textoError && textoData && textoData.length > 0) {
+          setTextoGeral(textoData[0].texto_geral || '');
+        } else {
+          setTextoGeral('');
         }
 
       } catch (error) {
@@ -102,12 +101,17 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
 
   const salvarTextoGeral = async (texto: string) => {
     try {
-      const { error } = await supabase
-        .from('projeto_sao_rafael_textos')
-        .upsert({
-          mes_ano: mesAno,
-          texto_geral: texto
-        });
+      // Usar rpc para inserir/atualizar texto geral
+      const { error } = await supabase.rpc('exec_sql', {
+        query: `
+          INSERT INTO projeto_sao_rafael_textos (mes_ano, texto_geral)
+          VALUES ('${mesAno}', '${texto.replace(/'/g, "''")}')
+          ON CONFLICT (mes_ano) 
+          DO UPDATE SET 
+            texto_geral = EXCLUDED.texto_geral,
+            updated_at = now()
+        `
+      });
 
       if (error) {
         console.error('Erro ao salvar texto geral:', error);

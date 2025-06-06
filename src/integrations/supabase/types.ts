@@ -1779,6 +1779,30 @@ export type Database = {
         }
         Relationships: []
       }
+      projeto_sao_rafael_textos: {
+        Row: {
+          created_at: string
+          id: string
+          mes_ano: string
+          texto_geral: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mes_ano: string
+          texto_geral?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mes_ano?: string
+          texto_geral?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       regions: {
         Row: {
           active: boolean
