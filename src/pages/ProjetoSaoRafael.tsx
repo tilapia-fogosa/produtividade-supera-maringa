@@ -4,28 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useProjetoSaoRafaelDados } from '@/hooks/use-projeto-sao-rafael-dados';
-import { useToast } from "@/hooks/use-toast";
+import ObservacoesModal from '@/components/projeto-sao-rafael/ObservacoesModal';
 
 const ProjetoSaoRafael = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   // Definir mês atual como padrão
   const mesAtual = new Date().toISOString().substring(0, 7);
   const [mesAnoSelecionado, setMesAnoSelecionado] = useState(mesAtual);
-  const [textoTemp, setTextoTemp] = useState('');
-  const [salvando, setSalvando] = useState(false);
   
   const { dadosAbaco, dadosAH, textoGeral, loading, salvarTextoGeral } = useProjetoSaoRafaelDados(mesAnoSelecionado);
-
-  // Sincronizar texto temporário com o texto carregado
-  React.useEffect(() => {
-    setTextoTemp(textoGeral);
-  }, [textoGeral]);
 
   // Gerar opções de meses (últimos 12 meses)
   const gerarOpcoesMeses = () => {
@@ -43,27 +34,6 @@ const ProjetoSaoRafael = () => {
     }
     
     return opcoes;
-  };
-
-  const handleSalvarTexto = async () => {
-    setSalvando(true);
-    try {
-      const sucesso = await salvarTextoGeral(textoTemp);
-      if (sucesso) {
-        toast({
-          title: "Sucesso",
-          description: "Texto geral salvo com sucesso!",
-        });
-      } else {
-        toast({
-          title: "Erro",
-          description: "Erro ao salvar o texto. Tente novamente.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setSalvando(false);
-    }
   };
 
   const formatarMesAno = (mesAno: string) => {
@@ -88,19 +58,27 @@ const ProjetoSaoRafael = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-azul-500">Projeto São Rafael</h1>
         
-        <div className="w-full sm:w-auto">
-          <Select value={mesAnoSelecionado} onValueChange={setMesAnoSelecionado}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Selecione o mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {gerarOpcoesMeses().map(opcao => (
-                <SelectItem key={opcao.valor} value={opcao.valor}>
-                  {opcao.texto}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="w-full sm:w-auto">
+            <Select value={mesAnoSelecionado} onValueChange={setMesAnoSelecionado}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Selecione o mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {gerarOpcoesMeses().map(opcao => (
+                  <SelectItem key={opcao.valor} value={opcao.valor}>
+                    {opcao.texto}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <ObservacoesModal
+            textoGeral={textoGeral}
+            mesAno={mesAnoSelecionado}
+            onSalvar={salvarTextoGeral}
+          />
         </div>
       </div>
 
@@ -191,39 +169,21 @@ const ProjetoSaoRafael = () => {
             </CardContent>
           </Card>
 
-          {/* Campo de Texto Geral */}
-          <Card className="border-orange-200 bg-white">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-azul-500">
-                Observações Gerais
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={textoTemp}
-                onChange={(e) => setTextoTemp(e.target.value)}
-                placeholder="Digite aqui suas observações gerais sobre o Projeto São Rafael para este mês..."
-                className="min-h-[120px]"
-              />
-              <Button 
-                onClick={handleSalvarTexto}
-                disabled={salvando}
-                className="w-full sm:w-auto bg-azul-500 hover:bg-azul-600 text-white"
-              >
-                {salvando ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Texto Geral
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Observações Gerais - Apenas visualização */}
+          {textoGeral && (
+            <Card className="border-orange-200 bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-azul-500">
+                  Observações Gerais
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 p-4 rounded-md border">
+                  <p className="text-gray-700 whitespace-pre-wrap">{textoGeral}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </div>
