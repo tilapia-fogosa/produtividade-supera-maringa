@@ -34,30 +34,36 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
         
         console.log('Buscando dados para o mês:', mesAno);
         
-        // Buscar dados do Ábaco usando RPC
-        const { data: abacoData, error: abacoError } = await supabase.rpc('buscar_dados_abaco_projeto_sao_rafael', {
-          p_mes_ano: mesAno,
-          p_professor_id: PROFESSOR_GUSTAVO_ID
-        });
+        // Buscar dados do Ábaco usando RPC - usando chamada genérica para evitar erro de tipagem
+        const { data: abacoData, error: abacoError } = await supabase.rpc(
+          'buscar_dados_abaco_projeto_sao_rafael' as any,
+          {
+            p_mes_ano: mesAno,
+            p_professor_id: PROFESSOR_GUSTAVO_ID
+          }
+        );
 
         if (abacoError) {
           console.error('Erro ao buscar dados do Ábaco:', abacoError);
         } else {
           console.log('Dados do Ábaco:', abacoData);
-          setDadosAbaco(abacoData || []);
+          setDadosAbaco((abacoData as DadosAbaco[]) || []);
         }
 
-        // Buscar dados do Abrindo Horizontes usando RPC
-        const { data: ahData, error: ahError } = await supabase.rpc('buscar_dados_ah_projeto_sao_rafael', {
-          p_mes_ano: mesAno,
-          p_professor_id: PROFESSOR_GUSTAVO_ID
-        });
+        // Buscar dados do Abrindo Horizontes usando RPC - usando chamada genérica para evitar erro de tipagem
+        const { data: ahData, error: ahError } = await supabase.rpc(
+          'buscar_dados_ah_projeto_sao_rafael' as any,
+          {
+            p_mes_ano: mesAno,
+            p_professor_id: PROFESSOR_GUSTAVO_ID
+          }
+        );
 
         if (ahError) {
           console.error('Erro ao buscar dados do AH:', ahError);
         } else {
           console.log('Dados do AH:', ahData);
-          setDadosAH(ahData || []);
+          setDadosAH((ahData as DadosAH[]) || []);
         }
 
         // Buscar texto geral

@@ -2718,6 +2718,27 @@ export type Database = {
       }
     }
     Functions: {
+      buscar_dados_abaco_projeto_sao_rafael: {
+        Args: { p_mes_ano: string; p_professor_id: string }
+        Returns: {
+          ano_mes: string
+          nome_aluno: string
+          total_exercicios: number
+          total_erros: number
+          percentual_acerto: number
+          total_presencas: number
+        }[]
+      }
+      buscar_dados_ah_projeto_sao_rafael: {
+        Args: { p_mes_ano: string; p_professor_id: string }
+        Returns: {
+          ano_mes: string
+          nome_aluno: string
+          total_exercicios: number
+          total_erros: number
+          percentual_acerto: number
+        }[]
+      }
       change_initial_password: {
         Args: { user_id: string; new_password: string }
         Returns: boolean
