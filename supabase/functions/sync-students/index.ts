@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
@@ -398,7 +397,7 @@ async function syncTurmas(rawData, professors) {
   return allTurmas;
 }
 
-// STEP 3: Sync students and link them to turmas
+// STEP 3: Sync students and link them to turmas - FIXED to prevent duplicates
 async function syncStudents(rawData, turmas) {
   console.log("Sincronizando alunos...");
   
@@ -423,7 +422,7 @@ async function syncStudents(rawData, turmas) {
     return {
       nome: row.nome,
       turma_id: turmaId,
-      unit_id: maringaUnitId,  // Usando o ID da unidade de Maringá para todos os alunos
+      unit_id: maringaUnitId,
       codigo: row.codigo || null,
       telefone: row.telefone || null,
       email: row.email || null,
@@ -459,23 +458,55 @@ async function syncStudents(rawData, turmas) {
     
     console.log("Todos os alunos marcados como inativos temporariamente");
     
+    let alunosNovos = 0;
+    let alunosAtualizados = 0;
+    let alunosTrocasTurma = 0;
+    
     // Agora, para cada aluno na planilha
     for (const studentData of studentsData) {
-      // Verificar se o aluno já existe (por nome e turma)
-      const { data: existingStudent, error: fetchError } = await supabase
-        .from('alunos')
-        .select('id')
-        .eq('nome', studentData.nome)
-        .eq('turma_id', studentData.turma_id)
-        .maybeSingle();
-        
-      if (fetchError) {
-        console.error(`Erro ao buscar aluno ${studentData.nome}:`, fetchError);
-        continue;
+      let existingStudent = null;
+      
+      // CORREÇÃO: Buscar aluno existente primeiro por código (se disponível), depois por nome
+      // Removida a condição de turma_id para evitar duplicação quando aluno troca de turma
+      if (studentData.codigo && studentData.codigo.trim() !== '') {
+        const { data: studentByCode, error: fetchByCodeError } = await supabase
+          .from('alunos')
+          .select('id, nome, turma_id, codigo')
+          .eq('codigo', studentData.codigo.trim())
+          .maybeSingle();
+          
+        if (fetchByCodeError) {
+          console.error(`Erro ao buscar aluno por código ${studentData.codigo}:`, fetchByCodeError);
+        } else {
+          existingStudent = studentByCode;
+        }
+      }
+      
+      // Se não encontrou por código, buscar por nome
+      if (!existingStudent) {
+        const { data: studentByName, error: fetchByNameError } = await supabase
+          .from('alunos')
+          .select('id, nome, turma_id, codigo')
+          .eq('nome', studentData.nome)
+          .maybeSingle();
+          
+        if (fetchByNameError) {
+          console.error(`Erro ao buscar aluno por nome ${studentData.nome}:`, fetchByNameError);
+        } else {
+          existingStudent = studentByName;
+        }
       }
       
       if (existingStudent) {
-        // Atualizar aluno existente
+        // Verificar se houve mudança de turma
+        const trocouTurma = existingStudent.turma_id !== studentData.turma_id;
+        
+        if (trocouTurma) {
+          console.log(`Aluno ${studentData.nome} trocou de turma (ID antigo: ${existingStudent.turma_id}, ID novo: ${studentData.turma_id})`);
+          alunosTrocasTurma++;
+        }
+        
+        // Atualizar aluno existente (incluindo nova turma se houve troca)
         const { error: updateError } = await supabase
           .from('alunos')
           .update({ ...studentData })
@@ -483,6 +514,11 @@ async function syncStudents(rawData, turmas) {
           
         if (updateError) {
           console.error(`Erro ao atualizar aluno ${studentData.nome}:`, updateError);
+        } else {
+          alunosAtualizados++;
+          if (trocouTurma) {
+            console.log(`✓ Aluno ${studentData.nome} atualizado com nova turma`);
+          }
         }
       } else {
         // Inserir novo aluno
@@ -492,9 +528,17 @@ async function syncStudents(rawData, turmas) {
           
         if (insertError) {
           console.error(`Erro ao inserir aluno ${studentData.nome}:`, insertError);
+        } else {
+          alunosNovos++;
+          console.log(`✓ Novo aluno ${studentData.nome} inserido`);
         }
       }
     }
+    
+    console.log(`Estatísticas da sincronização:`);
+    console.log(`- Alunos novos: ${alunosNovos}`);
+    console.log(`- Alunos atualizados: ${alunosAtualizados}`);
+    console.log(`- Alunos que trocaram de turma: ${alunosTrocasTurma}`);
     
     // Retornar os alunos ativos após a sincronização
     const { data: activeStudents, error: fetchActiveError } = await supabase
