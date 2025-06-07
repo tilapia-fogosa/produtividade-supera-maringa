@@ -93,19 +93,50 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
 
   const salvarTextoGeral = async (texto: string) => {
     try {
-      // Usar upsert para inserir ou atualizar texto geral
-      const { error } = await supabase
-        .from('projeto_sao_rafael_textos')
-        .upsert({
-          mes_ano: mesAno,
-          texto_geral: texto
-        });
+      console.log('Salvando texto geral para o mês:', mesAno);
+      console.log('Texto:', texto);
 
-      if (error) {
-        console.error('Erro ao salvar texto geral:', error);
+      // Verificar se já existe um registro para este mês
+      const { data: existingRecord, error: checkError } = await supabase
+        .from('projeto_sao_rafael_textos')
+        .select('id')
+        .eq('mes_ano', mesAno)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Erro ao verificar registro existente:', checkError);
         return false;
       }
 
+      if (existingRecord) {
+        // Registro existe, fazer UPDATE
+        console.log('Registro existente encontrado, fazendo UPDATE');
+        const { error: updateError } = await supabase
+          .from('projeto_sao_rafael_textos')
+          .update({ texto_geral: texto })
+          .eq('mes_ano', mesAno);
+
+        if (updateError) {
+          console.error('Erro ao atualizar texto geral:', updateError);
+          return false;
+        }
+      } else {
+        // Registro não existe, fazer INSERT
+        console.log('Nenhum registro existente, fazendo INSERT');
+        const { error: insertError } = await supabase
+          .from('projeto_sao_rafael_textos')
+          .insert({
+            mes_ano: mesAno,
+            texto_geral: texto
+          });
+
+        if (insertError) {
+          console.error('Erro ao inserir texto geral:', insertError);
+          return false;
+        }
+      }
+
+      console.log('Texto geral salvo com sucesso');
       setTextoGeral(texto);
       return true;
     } catch (error) {
