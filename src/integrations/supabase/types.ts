@@ -300,6 +300,105 @@ export type Database = {
           },
         ]
       }
+      alunos_backup: {
+        Row: {
+          active: boolean | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          codigo: string | null
+          coordenador_responsavel: string | null
+          created_at: string | null
+          curso: string | null
+          data_onboarding: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
+          id: string | null
+          idade: number | null
+          indice: string | null
+          is_funcionario: boolean | null
+          matricula: string | null
+          motivo_procura: string | null
+          niveldesafio: string | null
+          nome: string | null
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          telefone: string | null
+          texto_devolutiva: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          unit_id: string | null
+          vencimento_contrato: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string | null
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          unit_id?: string | null
+          vencimento_contrato?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string | null
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          unit_id?: string | null
+          vencimento_contrato?: string | null
+        }
+        Relationships: []
+      }
       apostilas: {
         Row: {
           created_at: string
@@ -1561,6 +1660,7 @@ export type Database = {
       }
       produtividade_abaco: {
         Row: {
+          aluno_nome: string | null
           apostila: string | null
           comentario: string | null
           created_at: string
@@ -1578,6 +1678,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1595,6 +1696,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1610,6 +1712,63 @@ export type Database = {
           presente?: boolean
           tipo_pessoa?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      produtividade_abaco_backup: {
+        Row: {
+          aluno_nome: string | null
+          apostila: string | null
+          comentario: string | null
+          created_at: string | null
+          data_aula: string | null
+          erros: number | null
+          exercicios: number | null
+          fez_desafio: boolean | null
+          id: string | null
+          is_reposicao: boolean | null
+          motivo_falta: string | null
+          pagina: string | null
+          pessoa_id: string | null
+          presente: boolean | null
+          tipo_pessoa: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aluno_nome?: string | null
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          data_aula?: string | null
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string | null
+          is_reposicao?: boolean | null
+          motivo_falta?: string | null
+          pagina?: string | null
+          pessoa_id?: string | null
+          presente?: boolean | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aluno_nome?: string | null
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          data_aula?: string | null
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string | null
+          is_reposicao?: boolean | null
+          motivo_falta?: string | null
+          pagina?: string | null
+          pessoa_id?: string | null
+          presente?: boolean | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

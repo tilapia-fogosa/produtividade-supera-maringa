@@ -77,6 +77,11 @@ serve(async (req) => {
       );
     }
 
+    // Garantir compatibilidade com ambos os campos (pessoa_id e aluno_id)
+    if (!data.pessoa_id && data.aluno_id) {
+      data.pessoa_id = data.aluno_id;
+    }
+
     // Registrar dados do aluno no banco
     console.log('Registrando dados do aluno/funcionário...');
     const sucessoBanco = await registrarDadosAluno(supabaseClient, data);
@@ -102,11 +107,9 @@ serve(async (req) => {
     }
 
     // Se foi registrada uma falta, chamar a função de verificação de alertas
-    // CORREÇÃO: Mudando de aluno_id para pessoa_id
     console.log('Verificando se é uma falta para chamar check-missing-attendance...');
     console.log('data.presente:', data.presente);
-    console.log('data.aluno_id (antigo):', data.aluno_id); 
-    console.log('data.pessoa_id (novo):', data.pessoa_id);
+    console.log('data.pessoa_id:', data.pessoa_id);
     
     if (!data.presente && data.pessoa_id) {
       console.log('✅ Falta registrada, verificando critérios de alerta para pessoa_id:', data.pessoa_id);
