@@ -85,7 +85,7 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
 
         const textoGeral: string | null = configError ? null : configDevolutiva?.texto_geral || null;
 
-        // 3. Buscar dados de ábaco
+        // 3. Buscar dados de ábaco para o aluno específico
         const { data: dadosAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
           .select('data_aula, apostila, exercicios, erros, fez_desafio')
@@ -97,7 +97,7 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           console.error('Erro ao buscar dados de ábaco:', abacoError);
         }
 
-        // 4. Buscar dados de AH
+        // 4. Buscar dados de AH para o aluno específico
         const { data: dadosAH, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('created_at, apostila, exercicios, erros')
@@ -109,14 +109,80 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
           console.error('Erro ao buscar dados de AH:', ahError);
         }
 
+        // 5. FALLBACK: Se não encontramos dados, buscar em registros duplicados
+        let dadosAbacoFinal = dadosAbaco;
+        let dadosAHFinal = dadosAH;
+        let alunoUtilizado = dadosAluno;
+
+        if ((!dadosAbaco || dadosAbaco.length === 0) && (!dadosAH || dadosAH.length === 0)) {
+          console.log('Dados principais vazios, buscando em registros duplicados...');
+          
+          // Buscar todos os alunos com o mesmo nome
+          const { data: alunosDuplicados, error: duplicadosError } = await supabase
+            .from('alunos')
+            .select('id, nome, texto_devolutiva')
+            .eq('nome', dadosAluno.nome);
+
+          if (!duplicadosError && alunosDuplicados && alunosDuplicados.length > 1) {
+            console.log(`Encontrados ${alunosDuplicados.length} registros para ${dadosAluno.nome}`);
+            
+            // Buscar dados de produtividade para todos os IDs duplicados
+            const todosIds = alunosDuplicados.map(a => a.id);
+            
+            // Buscar ábaco para todos os IDs
+            const { data: abacoCompleto, error: abacoCompletoError } = await supabase
+              .from('produtividade_abaco')
+              .select('data_aula, apostila, exercicios, erros, fez_desafio, pessoa_id')
+              .in('pessoa_id', todosIds)
+              .gte('data_aula', dataInicial)
+              .order('data_aula', { ascending: false });
+
+            // Buscar AH para todos os IDs
+            const { data: ahCompleto, error: ahCompletoError } = await supabase
+              .from('produtividade_ah')
+              .select('created_at, apostila, exercicios, erros, pessoa_id')
+              .in('pessoa_id', todosIds)
+              .gte('created_at', dataInicial)
+              .order('created_at', { ascending: false });
+
+            if (!abacoCompletoError && abacoCompleto && abacoCompleto.length > 0) {
+              dadosAbacoFinal = abacoCompleto;
+              console.log(`Encontrados ${abacoCompleto.length} registros de ábaco em duplicados`);
+              
+              // Encontrar qual registro tem dados e usar seu texto_devolutiva se disponível
+              const idComDados = abacoCompleto[0].pessoa_id;
+              const alunoComDados = alunosDuplicados.find(a => a.id === idComDados);
+              if (alunoComDados && alunoComDados.texto_devolutiva) {
+                alunoUtilizado = alunoComDados;
+                console.log(`Usando texto_devolutiva do registro ${idComDados}`);
+              }
+            }
+
+            if (!ahCompletoError && ahCompleto && ahCompleto.length > 0) {
+              dadosAHFinal = ahCompleto;
+              console.log(`Encontrados ${ahCompleto.length} registros de AH em duplicados`);
+              
+              // Se ainda não encontramos texto_devolutiva, tentar do AH
+              if (!alunoUtilizado.texto_devolutiva) {
+                const idComDados = ahCompleto[0].pessoa_id;
+                const alunoComDados = alunosDuplicados.find(a => a.id === idComDados);
+                if (alunoComDados && alunoComDados.texto_devolutiva) {
+                  alunoUtilizado = alunoComDados;
+                  console.log(`Usando texto_devolutiva do registro AH ${idComDados}`);
+                }
+              }
+            }
+          }
+        }
+
         // Processar os dados de ábaco agrupando por mês
         const abacoMensal: Record<string, DesempenhoMensalAbaco> = {};
         let totalDesafios = 0;
         let totalExerciciosAbaco = 0;
         let totalErrosAbaco = 0;
 
-        if (dadosAbaco && Array.isArray(dadosAbaco)) {
-          dadosAbaco.forEach(item => {
+        if (dadosAbacoFinal && Array.isArray(dadosAbacoFinal)) {
+          dadosAbacoFinal.forEach(item => {
             if (!item.data_aula) return;
             
             const mesKey = format(new Date(item.data_aula), 'yyyy-MM');
@@ -166,8 +232,8 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
         let totalExerciciosAH = 0;
         let totalErrosAH = 0;
 
-        if (dadosAH && Array.isArray(dadosAH)) {
-          dadosAH.forEach(item => {
+        if (dadosAHFinal && Array.isArray(dadosAHFinal)) {
+          dadosAHFinal.forEach(item => {
             if (!item.created_at) return;
             
             const mesKey = format(new Date(item.created_at), 'yyyy-MM');
@@ -226,9 +292,9 @@ export const useAlunoDevolutiva = (alunoId: string, periodo: PeriodoFiltro = 'me
 
         // Montar o objeto final da devolutiva
         const alunoDevolutiva: AlunoDevolutiva = {
-          id: dadosAluno.id,
-          nome: dadosAluno.nome,
-          texto_devolutiva: dadosAluno.texto_devolutiva,
+          id: alunoUtilizado.id,
+          nome: alunoUtilizado.nome,
+          texto_devolutiva: alunoUtilizado.texto_devolutiva,
           texto_geral: textoGeral,
           desafios_feitos: totalDesafios,
           desempenho_abaco: Object.values(abacoMensal),
