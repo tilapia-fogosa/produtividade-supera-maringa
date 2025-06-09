@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,7 +44,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (BUSCA POR ID CORRIGIDO) ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (DIAGNOSTICO DETALHADO) ===');
         console.log('Aluno ID:', alunoId);
         console.log('Período:', periodo);
 
@@ -74,21 +75,19 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
 
         console.log('✓ Configuração de devolutiva:', configData);
 
-        // Calcular período usando ciclos fechados de mês
+        // Calcular período
         const hoje = new Date();
         let dataInicial: Date;
         let dataFinal: Date;
         
         switch (periodo) {
           case 'mes_atual':
-            // Primeiro dia do mês atual até hoje
             dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
             dataFinal = hoje;
             break;
           case 'mes_passado':
-            // Primeiro ao último dia do mês passado
             dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0); // último dia do mês anterior
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'trimestre':
             dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 3, 1);
@@ -116,8 +115,56 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         
         console.log('✓ Período de busca:', dataInicialFormatada, 'até', dataFinalFormatada);
 
-        // Buscar produtividade ábaco usando ID do aluno (agora corrigido)
-        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO POR ID ===');
+        // DIAGNÓSTICO: Verificar se existem registros para este aluno
+        console.log('=== DIAGNÓSTICO: VERIFICANDO REGISTROS EXISTENTES ===');
+        
+        const { data: abacoAll, error: abacoAllError } = await supabase
+          .from('produtividade_abaco')
+          .select('*')
+          .eq('pessoa_id', alunoId)
+          .eq('tipo_pessoa', 'aluno')
+          .order('data_aula', { ascending: false })
+          .limit(5);
+
+        console.log('Registros ábaco encontrados (últimos 5):', abacoAll);
+        if (abacoAllError) console.error('Erro ao buscar registros ábaco:', abacoAllError);
+
+        const { data: ahAll, error: ahAllError } = await supabase
+          .from('produtividade_ah')
+          .select('*')
+          .eq('pessoa_id', alunoId)
+          .eq('tipo_pessoa', 'aluno')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        console.log('Registros AH encontrados (últimos 5):', ahAll);
+        if (ahAllError) console.error('Erro ao buscar registros AH:', ahAllError);
+
+        // DIAGNÓSTICO: Verificar registros antigos por nome também
+        console.log('=== DIAGNÓSTICO: VERIFICANDO REGISTROS POR NOME ===');
+        
+        const { data: abacoPorNome } = await supabase
+          .from('produtividade_abaco')
+          .select('*')
+          .eq('aluno_nome', alunoData.nome)
+          .eq('tipo_pessoa', 'aluno')
+          .order('data_aula', { ascending: false })
+          .limit(3);
+
+        console.log('Registros ábaco por nome:', abacoPorNome);
+
+        const { data: ahPorNome } = await supabase
+          .from('produtividade_ah')
+          .select('*')
+          .eq('aluno_nome', alunoData.nome)
+          .eq('tipo_pessoa', 'aluno')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        console.log('Registros AH por nome:', ahPorNome);
+
+        // Agora buscar dados do período específico
+        console.log('=== BUSCANDO DADOS DO PERÍODO ESPECÍFICO ===');
         
         const { data: produtividadeAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
@@ -129,19 +176,11 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           .eq('presente', true)
           .order('data_aula', { ascending: false });
 
-        if (abacoError) {
-          console.error('Erro ao buscar produtividade ábaco:', abacoError);
-        } else {
-          console.log('✓ Produtividade ábaco encontrada:', produtividadeAbaco?.length || 0, 'registros');
-          if (produtividadeAbaco && produtividadeAbaco.length > 0) {
-            console.log('Primeiros registros do período:', produtividadeAbaco.slice(0, 3));
-            console.log('Últimos registros do período:', produtividadeAbaco.slice(-3));
-          }
+        console.log('Dados ábaco no período:', produtividadeAbaco?.length || 0, 'registros');
+        if (produtividadeAbaco && produtividadeAbaco.length > 0) {
+          console.log('Primeiros registros ábaco:', produtividadeAbaco.slice(0, 2));
         }
 
-        // Buscar produtividade AH usando ID do aluno (agora corrigido)
-        console.log('=== BUSCANDO PRODUTIVIDADE AH POR ID ===');
-        
         const { data: produtividadeAHRaw, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
@@ -151,38 +190,23 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
 
         let produtividadeAH: any[] = [];
         if (produtividadeAHRaw && !ahError) {
-          // Filtrar por data já que o Supabase não tem campo data_aula na tabela AH
           produtividadeAH = produtividadeAHRaw.filter(item => {
             const dataItem = new Date(item.created_at).toISOString().split('T')[0];
             return dataItem >= dataInicialFormatada && dataItem <= dataFinalFormatada;
           });
         }
 
-        if (ahError) {
-          console.error('Erro ao buscar produtividade AH:', ahError);
-        } else {
-          console.log('✓ Produtividade AH total encontrada:', produtividadeAHRaw?.length || 0, 'registros');
-          console.log('✓ Produtividade AH filtrada por período:', produtividadeAH.length, 'registros');
-          if (produtividadeAH && produtividadeAH.length > 0) {
-            console.log('Primeiros registros AH do período:', produtividadeAH.slice(0, 3));
-          }
+        console.log('Dados AH no período:', produtividadeAH.length, 'registros');
+        if (produtividadeAH && produtividadeAH.length > 0) {
+          console.log('Primeiros registros AH:', produtividadeAH.slice(0, 2));
         }
 
-        // Processar dados ábaco por mês usando data_aula
+        // Processar dados
         const abacoProcessado = processarDadosAbacoePorMes(produtividadeAbaco || []);
         const ahProcessado = processarDadosAHPorMes(produtividadeAH || []);
 
-        console.log('✓ Dados ábaco processados:', abacoProcessado.length, 'meses');
-        console.log('✓ Dados AH processados:', ahProcessado.length, 'meses');
-
-        // Log detalhado dos totais por mês
-        abacoProcessado.forEach(item => {
-          console.log(`Ábaco ${item.mes}: ${item.exercicios} exercícios, ${item.erros} erros`);
-        });
-
-        ahProcessado.forEach(item => {
-          console.log(`AH ${item.mes}: ${item.exercicios} exercícios, ${item.erros} erros`);
-        });
+        console.log('✓ Dados ábaco processados:', abacoProcessado);
+        console.log('✓ Dados AH processados:', ahProcessado);
 
         // Calcular totais
         const abacoTotais = calcularTotais(abacoProcessado);
