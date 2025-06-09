@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,7 +44,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (POR NOME) ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (BUSCA DIRETA) ===');
         console.log('Aluno ID:', alunoId);
         console.log('Período:', periodo);
 
@@ -104,54 +105,70 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         console.log('✓ Nome do aluno para busca:', nomeAluno);
 
         // Buscar produtividade ábaco usando nome do aluno
-        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO POR NOME ===');
+        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO ===');
         
         const { data: produtividadeAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
-          .select(`
-            *,
-            alunos!inner (id, nome)
-          `)
-          .eq('alunos.nome', nomeAluno)
+          .select('*')
+          .eq('aluno_nome', nomeAluno)
           .gte('data_aula', dataInicialFormatada)
           .lte('data_aula', dataFinalFormatada)
           .eq('presente', true)
           .order('data_aula', { ascending: false });
 
         if (abacoError) {
-          console.error('Erro ao buscar produtividade ábaco por nome:', abacoError);
+          console.error('Erro ao buscar produtividade ábaco:', abacoError);
         } else {
-          console.log('✓ Produtividade ábaco encontrada por nome:', produtividadeAbaco?.length || 0, 'registros');
+          console.log('✓ Produtividade ábaco encontrada:', produtividadeAbaco?.length || 0, 'registros');
           if (produtividadeAbaco && produtividadeAbaco.length > 0) {
             console.log('Primeiros registros do período:', produtividadeAbaco.slice(0, 2));
           }
         }
 
-        // Buscar produtividade AH usando nome do aluno
-        console.log('=== BUSCANDO PRODUTIVIDADE AH POR NOME ===');
+        // Se não encontrou por aluno_nome, tentar buscar pela pessoa_id
+        let produtividadeAbacoFallback = produtividadeAbaco;
+        if (!produtividadeAbaco || produtividadeAbaco.length === 0) {
+          console.log('=== TENTATIVA FALLBACK: BUSCANDO POR PESSOA_ID ===');
+          
+          const { data: abacoFallback, error: abacoFallbackError } = await supabase
+            .from('produtividade_abaco')
+            .select('*')
+            .eq('pessoa_id', alunoId)
+            .gte('data_aula', dataInicialFormatada)
+            .lte('data_aula', dataFinalFormatada)
+            .eq('presente', true)
+            .order('data_aula', { ascending: false });
+
+          if (abacoFallbackError) {
+            console.error('Erro no fallback ábaco:', abacoFallbackError);
+          } else {
+            console.log('✓ Fallback ábaco encontrou:', abacoFallback?.length || 0, 'registros');
+            produtividadeAbacoFallback = abacoFallback;
+          }
+        }
+
+        // Buscar produtividade AH 
+        console.log('=== BUSCANDO PRODUTIVIDADE AH ===');
         
         const { data: produtividadeAH, error: ahError } = await supabase
           .from('produtividade_ah')
-          .select(`
-            *,
-            alunos!inner (id, nome)
-          `)
-          .eq('alunos.nome', nomeAluno)
+          .select('*')
+          .eq('pessoa_id', alunoId)
           .gte('created_at', dataInicial.toISOString())
           .lte('created_at', dataFinal.toISOString())
           .order('created_at', { ascending: false });
 
         if (ahError) {
-          console.error('Erro ao buscar produtividade AH por nome:', ahError);
+          console.error('Erro ao buscar produtividade AH:', ahError);
         } else {
-          console.log('✓ Produtividade AH encontrada por nome:', produtividadeAH?.length || 0, 'registros');
+          console.log('✓ Produtividade AH encontrada:', produtividadeAH?.length || 0, 'registros');
           if (produtividadeAH && produtividadeAH.length > 0) {
             console.log('Primeiros registros do período:', produtividadeAH.slice(0, 2));
           }
         }
 
         // Processar dados ábaco por mês
-        const abacoProcessado = processarDadosPorMes(produtividadeAbaco || [], 'data_aula');
+        const abacoProcessado = processarDadosPorMes(produtividadeAbacoFallback || [], 'data_aula');
         const ahProcessado = processarDadosPorMes(produtividadeAH || [], 'created_at');
 
         console.log('✓ Dados ábaco processados:', abacoProcessado.length, 'meses');
@@ -162,7 +179,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         const ahTotais = calcularTotais(ahProcessado);
 
         // Contar desafios feitos
-        const desafiosFeitos = (produtividadeAbaco || []).filter(p => p.fez_desafio).length;
+        const desafiosFeitos = (produtividadeAbacoFallback || []).filter(p => p.fez_desafio).length;
 
         const resultado: AlunoDevolutivaData = {
           id: alunoData.id,
