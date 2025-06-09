@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +43,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (BUSCA POR NOME) ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (BUSCA POR ID CORRIGIDO) ===');
         console.log('Aluno ID:', alunoId);
         console.log('Período:', periodo);
 
@@ -65,7 +64,6 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         }
 
         console.log('✓ Dados do aluno encontrados:', alunoData);
-        const nomeAluno = alunoData.nome;
 
         // Buscar texto geral das devolutivas
         const { data: configData } = await supabase
@@ -117,15 +115,15 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         const dataFinalFormatada = dataFinal.toISOString().split('T')[0];
         
         console.log('✓ Período de busca:', dataInicialFormatada, 'até', dataFinalFormatada);
-        console.log('✓ Nome do aluno para busca:', nomeAluno);
 
-        // Buscar produtividade ábaco usando nome do aluno e data_aula
-        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO POR NOME E DATA_AULA ===');
+        // Buscar produtividade ábaco usando ID do aluno (agora corrigido)
+        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO POR ID ===');
         
         const { data: produtividadeAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
           .select('*')
-          .eq('aluno_nome', nomeAluno)
+          .eq('pessoa_id', alunoId)
+          .eq('tipo_pessoa', 'aluno')
           .gte('data_aula', dataInicialFormatada)
           .lte('data_aula', dataFinalFormatada)
           .eq('presente', true)
@@ -141,14 +139,14 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           }
         }
 
-        // Buscar produtividade AH usando nome do aluno
-        console.log('=== BUSCANDO PRODUTIVIDADE AH POR NOME ===');
+        // Buscar produtividade AH usando ID do aluno (agora corrigido)
+        console.log('=== BUSCANDO PRODUTIVIDADE AH POR ID ===');
         
-        // Para AH, vamos buscar todos os registros e filtrar pela data de criação convertida para data de aula
         const { data: produtividadeAHRaw, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
-          .eq('aluno_nome', nomeAluno)
+          .eq('pessoa_id', alunoId)
+          .eq('tipo_pessoa', 'aluno')
           .order('created_at', { ascending: false });
 
         let produtividadeAH: any[] = [];

@@ -38,7 +38,7 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
           return;
         }
 
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA FUNCIONÁRIO (POR NOME) ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA FUNCIONÁRIO (POR ID CORRIGIDO) ===');
         console.log('Funcionário ID:', funcionarioId);
         console.log('Período:', periodo);
 
@@ -61,7 +61,6 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
         }
 
         console.log('✓ Dados do funcionário encontrados:', funcionarioData);
-        const nomeFuncionario = funcionarioData.nome;
 
         // Buscar texto geral das devolutivas
         const { data: configData } = await supabase
@@ -111,15 +110,15 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
 
         console.log('Buscando devolutiva do funcionário:', funcionarioId);
         console.log('Período:', periodo, 'Data inicial:', dataInicial.toISOString(), 'Data final:', dataFinal.toISOString());
-        console.log('Nome do funcionário para busca:', nomeFuncionario);
 
-        // Buscar produtividade AH usando nome do funcionário
-        console.log('=== BUSCANDO PRODUTIVIDADE AH POR NOME ===');
+        // Buscar produtividade AH usando ID do funcionário (agora corrigido)
+        console.log('=== BUSCANDO PRODUTIVIDADE AH POR ID ===');
         
         const { data: produtividadeAH, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
-          .eq('aluno_nome', nomeFuncionario)
+          .eq('pessoa_id', funcionarioId)
+          .eq('tipo_pessoa', 'funcionario')
           .gte('created_at', dataInicial.toISOString())
           .lte('created_at', dataFinal.toISOString())
           .order('created_at', { ascending: false });
