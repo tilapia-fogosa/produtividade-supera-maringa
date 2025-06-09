@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-export type PeriodoFiltro = 'mes' | 'trimestre' | 'quadrimestre' | 'semestre' | 'ano';
+export type PeriodoFiltro = 'mes_atual' | 'mes_passado' | 'trimestre' | 'quadrimestre' | 'semestre' | 'ano';
 
 interface DesempenhoItem {
   mes: string;
@@ -80,8 +80,11 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         const dataInicial = new Date();
         
         switch (periodo) {
-          case 'mes':
+          case 'mes_atual':
             dataInicial.setMonth(dataInicial.getMonth() - 1);
+            break;
+          case 'mes_passado':
+            dataInicial.setMonth(dataInicial.getMonth() - 2);
             break;
           case 'trimestre':
             dataInicial.setMonth(dataInicial.getMonth() - 3);
