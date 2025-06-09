@@ -41,8 +41,15 @@ const DevolutivaAluno = () => {
   const navigate = useNavigate();
   const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes');
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
-  const [textoDevolutiva, setTextoDevolutiva] = useState(aluno?.texto_devolutiva || '');
+  const [textoDevolutiva, setTextoDevolutiva] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+
+  // Atualizar texto da devolutiva quando os dados carregarem
+  React.useEffect(() => {
+    if (aluno?.texto_devolutiva) {
+      setTextoDevolutiva(aluno.texto_devolutiva);
+    }
+  }, [aluno?.texto_devolutiva]);
 
   const getPrimeiroNome = (nomeCompleto: string) => {
     const nomeSplit = nomeCompleto.trim().split(' ');
@@ -99,6 +106,11 @@ const DevolutivaAluno = () => {
         <p className="text-center text-red-500">
           {error || 'Erro ao carregar dados do aluno'}
         </p>
+        <div className="mt-4 text-center">
+          <Button onClick={handleVoltar} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+          </Button>
+        </div>
       </div>
     );
   }
@@ -144,7 +156,11 @@ const DevolutivaAluno = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Tabela Ábaco */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2">
+            <h3 className="font-semibold text-azul-500">Desempenho no Ábaco</h3>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -156,26 +172,40 @@ const DevolutivaAluno = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {aluno.desempenho_abaco.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.mes}</TableCell>
-                  <TableCell>{item.livro}</TableCell>
-                  <TableCell>{item.exercicios}</TableCell>
-                  <TableCell>{item.erros}</TableCell>
-                  <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+              {aluno.desempenho_abaco.length > 0 ? (
+                <>
+                  {aluno.desempenho_abaco.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.mes}</TableCell>
+                      <TableCell>{item.livro}</TableCell>
+                      <TableCell>{item.exercicios}</TableCell>
+                      <TableCell>{item.erros}</TableCell>
+                      <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold bg-gray-50">
+                    <TableCell colSpan={2}>Total</TableCell>
+                    <TableCell>{aluno.abaco_total_exercicios}</TableCell>
+                    <TableCell>{aluno.abaco_total_erros}</TableCell>
+                    <TableCell>{aluno.abaco_percentual_total.toFixed(1)}%</TableCell>
+                  </TableRow>
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    Nenhum registro encontrado no período selecionado
+                  </TableCell>
                 </TableRow>
-              ))}
-              <TableRow className="font-bold bg-gray-50">
-                <TableCell colSpan={2}>Total</TableCell>
-                <TableCell>{aluno.abaco_total_exercicios}</TableCell>
-                <TableCell>{aluno.abaco_total_erros}</TableCell>
-                <TableCell>{aluno.abaco_percentual_total.toFixed(1)}%</TableCell>
-              </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
 
+        {/* Tabela AH */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2">
+            <h3 className="font-semibold text-azul-500">Desempenho no Abrindo Horizontes</h3>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -187,21 +217,31 @@ const DevolutivaAluno = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {aluno.desempenho_ah.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.mes}</TableCell>
-                  <TableCell>{item.livro}</TableCell>
-                  <TableCell>{item.exercicios}</TableCell>
-                  <TableCell>{item.erros}</TableCell>
-                  <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+              {aluno.desempenho_ah.length > 0 ? (
+                <>
+                  {aluno.desempenho_ah.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.mes}</TableCell>
+                      <TableCell>{item.livro}</TableCell>
+                      <TableCell>{item.exercicios}</TableCell>
+                      <TableCell>{item.erros}</TableCell>
+                      <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold bg-gray-50">
+                    <TableCell colSpan={2}>Total</TableCell>
+                    <TableCell>{aluno.ah_total_exercicios}</TableCell>
+                    <TableCell>{aluno.ah_total_erros}</TableCell>
+                    <TableCell>{aluno.ah_percentual_total.toFixed(1)}%</TableCell>
+                  </TableRow>
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    Nenhum registro encontrado no período selecionado
+                  </TableCell>
                 </TableRow>
-              ))}
-              <TableRow className="font-bold bg-gray-50">
-                <TableCell colSpan={2}>Total</TableCell>
-                <TableCell>{aluno.ah_total_exercicios}</TableCell>
-                <TableCell>{aluno.ah_total_erros}</TableCell>
-                <TableCell>{aluno.ah_percentual_total.toFixed(1)}%</TableCell>
-              </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
