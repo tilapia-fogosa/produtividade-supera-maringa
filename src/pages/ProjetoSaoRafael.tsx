@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ const ProjetoSaoRafael = () => {
   const { dadosAbaco, dadosAH, textoGeral, loading, salvarTextoGeral } = useProjetoSaoRafaelDados(mesAnoSelecionado);
 
   // Gerar opções de meses (últimos 12 meses)
-  const gerarOpcoesMeses = () => {
+  function gerarOpcoesMeses() {
     const opcoes = [];
     const hoje = new Date();
     
@@ -34,16 +33,16 @@ const ProjetoSaoRafael = () => {
     }
     
     return opcoes;
-  };
+  }
 
-  const formatarMesAno = (mesAno: string) => {
+  function formatarMesAno(mesAno: string) {
     const [ano, mes] = mesAno.split('-');
     const data = new Date(parseInt(ano), parseInt(mes) - 1);
     return data.toLocaleDateString('pt-BR', { 
       year: 'numeric', 
       month: 'long' 
     });
-  };
+  }
 
   return (
     <div className="container mx-auto py-4 px-2">
@@ -184,6 +183,15 @@ const ProjetoSaoRafael = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Rodapé com Logo do Supera */}
+          <div className="flex justify-center items-center py-6 mt-8 border-t border-orange-200">
+            <img 
+              src="/lovable-uploads/8d83acfe-5f42-4bcc-869e-62dd972ebf81.png" 
+              alt="Supera Maringá" 
+              className="h-12 sm:h-16 w-auto opacity-80 hover:opacity-100 transition-opacity"
+            />
+          </div>
         </div>
       )}
     </div>
