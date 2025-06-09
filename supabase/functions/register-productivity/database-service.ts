@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { ProdutividadeData } from './types.ts';
 
@@ -24,7 +25,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     const { data: alunoExiste, error: alunoError } = await supabaseClient
       .from('alunos')
       .select('id')
-      .eq('id', data.pessoa_id || data.aluno_id) // Suportar ambos os campos durante a transição
+      .eq('id', data.pessoa_id || data.aluno_id)
       .maybeSingle();
     
     if (alunoError) {
@@ -150,7 +151,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
 
 export async function registrarProdutividade(supabaseClient: any, data: ProdutividadeData): Promise<boolean> {
   try {
-    const pessoaId = data.pessoa_id || data.aluno_id; // Suportar ambos os campos
+    const pessoaId = data.pessoa_id || data.aluno_id;
     console.log('Registrando produtividade para pessoa:', pessoaId);
     
     // Verificar se é aluno ou funcionário antes de inserir
@@ -174,7 +175,7 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
     console.log('Registrando para o', tipoPessoa + ':', pessoaId);
     
-    // Preparar dados para inserção usando os novos campos
+    // Preparar dados para inserção usando pessoa_id
     const produtividadeData = {
       pessoa_id: pessoaId,
       tipo_pessoa: tipoPessoa,

@@ -6,9 +6,20 @@ import { format } from 'date-fns';
 export interface PessoaTurma {
   id: string;
   nome: string;
+  email?: string;
+  telefone?: string;
+  turma_id: string;
+  active: boolean;
   origem: 'aluno' | 'funcionario';
+  unit_id?: string;
+  codigo?: string;
+  ultimo_nivel?: string;
   ultima_pagina?: string | null;
-  ultimo_nivel?: string | null;
+  niveldesafio?: string;
+  ultima_correcao_ah?: string;
+  data_onboarding?: string | null;
+  cargo?: string | null;
+  // Campos para último registro
   data_ultimo_registro?: string | null;
   ultimo_registro_id?: string | null;
 }
@@ -41,7 +52,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
       // Buscar alunos da turma
       const { data: alunos, error: alunosError } = await supabase
         .from('alunos')
-        .select('id, nome, ultimo_nivel, ultima_pagina')
+        .select('*')
         .eq('turma_id', turmaId)
         .eq('active', true);
 
@@ -53,7 +64,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
       // Buscar funcionários da turma
       const { data: funcionarios, error: funcionariosError } = await supabase
         .from('funcionarios')
-        .select('id, nome, ultimo_nivel, ultima_pagina')
+        .select('*')
         .eq('turma_id', turmaId)
         .eq('active', true);
 
@@ -67,16 +78,36 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
         ...(alunos || []).map(aluno => ({
           id: aluno.id,
           nome: aluno.nome,
+          email: aluno.email,
+          telefone: aluno.telefone,
+          turma_id: aluno.turma_id,
+          active: aluno.active,
           origem: 'aluno' as const,
+          unit_id: aluno.unit_id,
+          codigo: aluno.codigo,
+          ultimo_nivel: aluno.ultimo_nivel,
           ultima_pagina: aluno.ultima_pagina?.toString() || null,
-          ultimo_nivel: aluno.ultimo_nivel
+          niveldesafio: aluno.niveldesafio,
+          ultima_correcao_ah: aluno.ultima_correcao_ah,
+          data_onboarding: aluno.data_onboarding,
+          cargo: null
         })),
         ...(funcionarios || []).map(funcionario => ({
           id: funcionario.id,
           nome: funcionario.nome,
+          email: funcionario.email,
+          telefone: funcionario.telefone,
+          turma_id: funcionario.turma_id,
+          active: funcionario.active,
           origem: 'funcionario' as const,
+          unit_id: funcionario.unit_id,
+          codigo: funcionario.codigo,
+          ultimo_nivel: funcionario.ultimo_nivel,
           ultima_pagina: funcionario.ultima_pagina?.toString() || null,
-          ultimo_nivel: funcionario.ultimo_nivel
+          niveldesafio: funcionario.niveldesafio,
+          ultima_correcao_ah: funcionario.ultima_correcao_ah,
+          data_onboarding: funcionario.data_onboarding,
+          cargo: funcionario.cargo
         }))
       ];
 
@@ -86,23 +117,36 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
       const pessoasComRegistros = await Promise.all(
         todasAsPessoas.map(async (pessoa) => {
           try {
-            // Buscar último registro de produtividade
-            const { data: ultimoRegistro } = await supabase
+            console.log(`Buscando produtividade para pessoa ${pessoa.nome} (${pessoa.id})`);
+            
+            // Buscar último registro de produtividade usando pessoa_id
+            const { data: ultimoRegistro, error: registroError } = await supabase
               .from('produtividade_abaco')
-              .select('id, data_aula, apostila, pagina')
+              .select('id, data_aula, apostila, pagina, created_at')
               .eq('pessoa_id', pessoa.id)
               .order('data_aula', { ascending: false })
               .limit(1)
               .maybeSingle();
 
+            if (registroError) {
+              console.error(`Erro ao buscar último registro para ${pessoa.nome}:`, registroError);
+            }
+
             // Verificar se tem produtividade registrada hoje
             const hoje = format(new Date(), 'yyyy-MM-dd');
-            const { data: registroHoje } = await supabase
+            const { data: registroHoje, error: hojeError } = await supabase
               .from('produtividade_abaco')
               .select('id')
               .eq('pessoa_id', pessoa.id)
               .eq('data_aula', hoje)
               .maybeSingle();
+
+            if (hojeError) {
+              console.error(`Erro ao verificar registro de hoje para ${pessoa.nome}:`, hojeError);
+            }
+
+            console.log(`Último registro para ${pessoa.nome}:`, ultimoRegistro);
+            console.log(`Registro hoje para ${pessoa.nome}:`, !!registroHoje);
 
             return {
               ...pessoa,
@@ -162,7 +206,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
     // Recarregar dados da pessoa específica
     const atualizarPessoa = async () => {
       try {
-        // Buscar último registro atualizado
+        // Buscar último registro atualizado usando pessoa_id
         const { data: ultimoRegistro } = await supabase
           .from('produtividade_abaco')
           .select('id, data_aula, apostila, pagina')
