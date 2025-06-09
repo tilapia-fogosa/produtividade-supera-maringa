@@ -14,7 +14,7 @@ export interface PessoaTurmaDetalhes {
   unit_id?: string;
   codigo?: string;
   ultimo_nivel?: string;
-  ultima_pagina?: number;
+  ultima_pagina?: number | null; // Padronizado como number | null
   niveldesafio?: string;
   ultima_correcao_ah?: string;
   data_onboarding?: string | null;
@@ -104,14 +104,16 @@ export function useTurmaDetalhes(turmaId?: string | null) {
         const alunosConvertidos: PessoaTurmaDetalhes[] = (alunosData || []).map(aluno => ({
           ...aluno,
           origem: 'aluno' as const,
-          turma_id: aluno.turma_id || turmaId
+          turma_id: aluno.turma_id || turmaId,
+          ultima_pagina: aluno.ultima_pagina // Já é number | null
         }));
 
         // Converter funcionários para o formato comum
         const funcionariosConvertidos: PessoaTurmaDetalhes[] = (funcionariosData || []).map(funcionario => ({
           ...funcionario,
           origem: 'funcionario' as const,
-          turma_id: funcionario.turma_id || turmaId
+          turma_id: funcionario.turma_id || turmaId,
+          ultima_pagina: funcionario.ultima_pagina // Já é number | null
         }));
 
         // Combinar e ordenar por nome

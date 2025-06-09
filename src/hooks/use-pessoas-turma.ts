@@ -14,7 +14,7 @@ export interface PessoaTurma {
   unit_id?: string;
   codigo?: string;
   ultimo_nivel?: string;
-  ultima_pagina?: string | null;
+  ultima_pagina?: number | null; // Padronizado como number | null
   niveldesafio?: string;
   ultima_correcao_ah?: string;
   data_onboarding?: string | null;
@@ -86,7 +86,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
           unit_id: aluno.unit_id,
           codigo: aluno.codigo,
           ultimo_nivel: aluno.ultimo_nivel,
-          ultima_pagina: aluno.ultima_pagina?.toString() || null,
+          ultima_pagina: aluno.ultima_pagina, // Já é number | null no banco
           niveldesafio: aluno.niveldesafio,
           ultima_correcao_ah: aluno.ultima_correcao_ah,
           data_onboarding: aluno.data_onboarding,
@@ -103,7 +103,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
           unit_id: funcionario.unit_id,
           codigo: funcionario.codigo,
           ultimo_nivel: funcionario.ultimo_nivel,
-          ultima_pagina: funcionario.ultima_pagina?.toString() || null,
+          ultima_pagina: funcionario.ultima_pagina, // Já é number | null no banco
           niveldesafio: funcionario.niveldesafio,
           ultima_correcao_ah: funcionario.ultima_correcao_ah,
           data_onboarding: funcionario.data_onboarding,
@@ -153,7 +153,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
               data_ultimo_registro: ultimoRegistro?.data_aula || null,
               ultimo_registro_id: ultimoRegistro?.id || null,
               // Atualizar com dados do último registro se disponível
-              ultima_pagina: ultimoRegistro?.pagina || pessoa.ultima_pagina,
+              ultima_pagina: ultimoRegistro?.pagina ? parseInt(ultimoRegistro.pagina) : pessoa.ultima_pagina,
               ultimo_nivel: ultimoRegistro?.apostila || pessoa.ultimo_nivel,
               temRegistroHoje: !!registroHoje
             };
@@ -222,7 +222,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
               ...pessoa,
               data_ultimo_registro: ultimoRegistro?.data_aula || null,
               ultimo_registro_id: ultimoRegistro?.id || null,
-              ultima_pagina: ultimoRegistro?.pagina || pessoa.ultima_pagina,
+              ultima_pagina: ultimoRegistro?.pagina ? parseInt(ultimoRegistro.pagina) : pessoa.ultima_pagina,
               ultimo_nivel: ultimoRegistro?.apostila || pessoa.ultimo_nivel
             };
           }
@@ -235,7 +235,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
               ...pessoa,
               data_ultimo_registro: ultimoRegistro?.data_aula || null,
               ultimo_registro_id: ultimoRegistro?.id || null,
-              ultima_pagina: ultimoRegistro?.pagina || pessoa.ultima_pagina,
+              ultima_pagina: ultimoRegistro?.pagina ? parseInt(ultimoRegistro.pagina) : pessoa.ultima_pagina,
               ultimo_nivel: ultimoRegistro?.apostila || pessoa.ultimo_nivel
             };
           }
