@@ -397,9 +397,9 @@ async function syncTurmas(rawData, professors) {
   return allTurmas;
 }
 
-// STEP 3: Sync students and link them to turmas - FIXED to prevent duplicates
+// STEP 3: Sync students with NOME as primary criterion - UPDATED LOGIC
 async function syncStudents(rawData, turmas) {
-  console.log("Sincronizando alunos...");
+  console.log("Sincronizando alunos com prioridade para NOME...");
   
   // Create a map of turma names to IDs for quick lookup
   const turmaMap = new Map(
@@ -462,13 +462,30 @@ async function syncStudents(rawData, turmas) {
     let alunosAtualizados = 0;
     let alunosTrocasTurma = 0;
     
-    // Agora, para cada aluno na planilha
+    // Agora, para cada aluno na planilha - PRIORIDADE PARA NOME
     for (const studentData of studentsData) {
       let existingStudent = null;
       
-      // CORREÇÃO: Buscar aluno existente primeiro por código (se disponível), depois por nome
-      // Removida a condição de turma_id para evitar duplicação quando aluno troca de turma
-      if (studentData.codigo && studentData.codigo.trim() !== '') {
+      console.log(`\n=== Processando aluno: ${studentData.nome} ===`);
+      
+      // NOVO: Buscar aluno existente PRIMEIRO por NOME (critério principal)
+      console.log(`Buscando por nome: "${studentData.nome}"`);
+      const { data: studentByName, error: fetchByNameError } = await supabase
+        .from('alunos')
+        .select('id, nome, turma_id, codigo')
+        .eq('nome', studentData.nome)
+        .maybeSingle();
+        
+      if (fetchByNameError) {
+        console.error(`Erro ao buscar aluno por nome ${studentData.nome}:`, fetchByNameError);
+      } else if (studentByName) {
+        console.log(`✓ Aluno encontrado por NOME - ID: ${studentByName.id}`);
+        existingStudent = studentByName;
+      }
+      
+      // FALLBACK: Se não encontrou por nome E temos código, buscar por código
+      if (!existingStudent && studentData.codigo && studentData.codigo.trim() !== '') {
+        console.log(`Não encontrado por nome. Tentando buscar por código: "${studentData.codigo}"`);
         const { data: studentByCode, error: fetchByCodeError } = await supabase
           .from('alunos')
           .select('id, nome, turma_id, codigo')
@@ -477,23 +494,17 @@ async function syncStudents(rawData, turmas) {
           
         if (fetchByCodeError) {
           console.error(`Erro ao buscar aluno por código ${studentData.codigo}:`, fetchByCodeError);
-        } else {
+        } else if (studentByCode) {
+          console.log(`✓ Aluno encontrado por CÓDIGO - ID: ${studentByCode.id}`);
           existingStudent = studentByCode;
-        }
-      }
-      
-      // Se não encontrou por código, buscar por nome
-      if (!existingStudent) {
-        const { data: studentByName, error: fetchByNameError } = await supabase
-          .from('alunos')
-          .select('id, nome, turma_id, codigo')
-          .eq('nome', studentData.nome)
-          .maybeSingle();
           
-        if (fetchByNameError) {
-          console.error(`Erro ao buscar aluno por nome ${studentData.nome}:`, fetchByNameError);
-        } else {
-          existingStudent = studentByName;
+          // IMPORTANTE: Se encontrou por código mas o nome é diferente, avisar!
+          if (studentByCode.nome !== studentData.nome) {
+            console.warn(`⚠️ ATENÇÃO: Aluno encontrado por código tem nome diferente!`);
+            console.warn(`   Nome no banco: "${studentByCode.nome}"`);
+            console.warn(`   Nome na planilha: "${studentData.nome}"`);
+            console.warn(`   Mantendo nome da planilha como principal`);
+          }
         }
       }
       
@@ -502,7 +513,9 @@ async function syncStudents(rawData, turmas) {
         const trocouTurma = existingStudent.turma_id !== studentData.turma_id;
         
         if (trocouTurma) {
-          console.log(`Aluno ${studentData.nome} trocou de turma (ID antigo: ${existingStudent.turma_id}, ID novo: ${studentData.turma_id})`);
+          console.log(`🔄 MUDANÇA DE TURMA detectada para ${studentData.nome}:`);
+          console.log(`   Turma anterior ID: ${existingStudent.turma_id}`);
+          console.log(`   Nova turma ID: ${studentData.turma_id}`);
           alunosTrocasTurma++;
         }
         
@@ -513,32 +526,35 @@ async function syncStudents(rawData, turmas) {
           .eq('id', existingStudent.id);
           
         if (updateError) {
-          console.error(`Erro ao atualizar aluno ${studentData.nome}:`, updateError);
+          console.error(`❌ Erro ao atualizar aluno ${studentData.nome}:`, updateError);
         } else {
           alunosAtualizados++;
+          console.log(`✅ Aluno ${studentData.nome} atualizado com sucesso`);
           if (trocouTurma) {
-            console.log(`✓ Aluno ${studentData.nome} atualizado com nova turma`);
+            console.log(`   ✓ Nova turma aplicada`);
           }
         }
       } else {
         // Inserir novo aluno
+        console.log(`➕ Novo aluno detectado: ${studentData.nome}`);
         const { error: insertError } = await supabase
           .from('alunos')
           .insert([studentData]);
           
         if (insertError) {
-          console.error(`Erro ao inserir aluno ${studentData.nome}:`, insertError);
+          console.error(`❌ Erro ao inserir aluno ${studentData.nome}:`, insertError);
         } else {
           alunosNovos++;
-          console.log(`✓ Novo aluno ${studentData.nome} inserido`);
+          console.log(`✅ Novo aluno ${studentData.nome} inserido com sucesso`);
         }
       }
     }
     
-    console.log(`Estatísticas da sincronização:`);
-    console.log(`- Alunos novos: ${alunosNovos}`);
-    console.log(`- Alunos atualizados: ${alunosAtualizados}`);
-    console.log(`- Alunos que trocaram de turma: ${alunosTrocasTurma}`);
+    console.log(`\n=== ESTATÍSTICAS DA SINCRONIZAÇÃO ===`);
+    console.log(`✅ Alunos novos: ${alunosNovos}`);
+    console.log(`🔄 Alunos atualizados: ${alunosAtualizados}`);
+    console.log(`🏫 Alunos que trocaram de turma: ${alunosTrocasTurma}`);
+    console.log(`📊 Total processado: ${studentsData.length}`);
     
     // Retornar os alunos ativos após a sincronização
     const { data: activeStudents, error: fetchActiveError } = await supabase
@@ -550,9 +566,11 @@ async function syncStudents(rawData, turmas) {
       throw fetchActiveError;
     }
     
+    console.log(`✅ Sincronização concluída. ${activeStudents?.length || 0} alunos ativos no sistema.`);
+    
     return activeStudents || [];
   } catch (error) {
-    console.error('Erro durante a sincronização de alunos:', error);
+    console.error('❌ Erro durante a sincronização de alunos:', error);
     throw error;
   }
 }
