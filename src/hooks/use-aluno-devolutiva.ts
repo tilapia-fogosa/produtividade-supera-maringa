@@ -44,9 +44,11 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('Carregando devolutiva para aluno:', alunoId, 'período:', periodo);
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA ===');
+        console.log('Aluno ID:', alunoId);
+        console.log('Período:', periodo);
 
-        // Buscar dados básicos do aluno
+        // Primeiro, verificar se o aluno existe
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('id, nome, texto_devolutiva')
@@ -62,7 +64,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           throw new Error('Aluno não encontrado');
         }
 
-        console.log('Dados do aluno encontrados:', alunoData);
+        console.log('✓ Dados do aluno encontrados:', alunoData);
 
         // Buscar texto geral das devolutivas
         const { data: configData } = await supabase
@@ -71,7 +73,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           .limit(1)
           .single();
 
-        console.log('Configuração de devolutiva:', configData);
+        console.log('✓ Configuração de devolutiva:', configData);
 
         // Calcular data inicial baseada no período
         const dataFinal = new Date();
@@ -95,42 +97,90 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
             break;
         }
 
-        console.log('Período de busca:', dataInicial.toISOString(), 'até', dataFinal.toISOString());
+        const dataInicialFormatada = dataInicial.toISOString().split('T')[0];
+        const dataFinalFormatada = dataFinal.toISOString().split('T')[0];
+        
+        console.log('✓ Período de busca:', dataInicialFormatada, 'até', dataFinalFormatada);
 
-        // Buscar produtividade ábaco usando pessoa_id
+        // Verificar se existem registros para este aluno na tabela produtividade_abaco
+        console.log('=== VERIFICANDO REGISTROS PRODUTIVIDADE_ABACO ===');
+        
+        const { data: verificacaoAbaco, error: verificacaoAbacoError } = await supabase
+          .from('produtividade_abaco')
+          .select('*')
+          .eq('pessoa_id', alunoId)
+          .limit(5);
+
+        if (verificacaoAbacoError) {
+          console.error('Erro na verificação ábaco:', verificacaoAbacoError);
+        } else {
+          console.log('Total de registros encontrados para este aluno (ábaco):', verificacaoAbaco?.length || 0);
+          if (verificacaoAbaco && verificacaoAbaco.length > 0) {
+            console.log('Primeiros registros:', verificacaoAbaco);
+          }
+        }
+
+        // Buscar produtividade ábaco
         const { data: produtividadeAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
           .select('*')
           .eq('pessoa_id', alunoId)
-          .eq('tipo_pessoa', 'aluno')
-          .gte('data_aula', dataInicial.toISOString().split('T')[0])
-          .lte('data_aula', dataFinal.toISOString().split('T')[0])
-          .eq('presente', true);
+          .gte('data_aula', dataInicialFormatada)
+          .lte('data_aula', dataFinalFormatada)
+          .eq('presente', true)
+          .order('data_aula', { ascending: false });
 
         if (abacoError) {
           console.error('Erro ao buscar produtividade ábaco:', abacoError);
+        } else {
+          console.log('✓ Produtividade ábaco encontrada:', produtividadeAbaco?.length || 0, 'registros');
+          if (produtividadeAbaco && produtividadeAbaco.length > 0) {
+            console.log('Primeiros registros do período:', produtividadeAbaco.slice(0, 2));
+          }
         }
 
-        console.log('Produtividade ábaco encontrada:', produtividadeAbaco?.length || 0, 'registros');
+        // Verificar registros AH
+        console.log('=== VERIFICANDO REGISTROS PRODUTIVIDADE_AH ===');
+        
+        const { data: verificacaoAH, error: verificacaoAHError } = await supabase
+          .from('produtividade_ah')
+          .select('*')
+          .eq('pessoa_id', alunoId)
+          .limit(5);
 
-        // Buscar produtividade AH usando pessoa_id
+        if (verificacaoAHError) {
+          console.error('Erro na verificação AH:', verificacaoAHError);
+        } else {
+          console.log('Total de registros encontrados para este aluno (AH):', verificacaoAH?.length || 0);
+          if (verificacaoAH && verificacaoAH.length > 0) {
+            console.log('Primeiros registros:', verificacaoAH);
+          }
+        }
+
+        // Buscar produtividade AH
         const { data: produtividadeAH, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
           .eq('pessoa_id', alunoId)
-          .eq('tipo_pessoa', 'aluno')
           .gte('created_at', dataInicial.toISOString())
-          .lte('created_at', dataFinal.toISOString());
+          .lte('created_at', dataFinal.toISOString())
+          .order('created_at', { ascending: false });
 
         if (ahError) {
           console.error('Erro ao buscar produtividade AH:', ahError);
+        } else {
+          console.log('✓ Produtividade AH encontrada:', produtividadeAH?.length || 0, 'registros');
+          if (produtividadeAH && produtividadeAH.length > 0) {
+            console.log('Primeiros registros do período:', produtividadeAH.slice(0, 2));
+          }
         }
-
-        console.log('Produtividade AH encontrada:', produtividadeAH?.length || 0, 'registros');
 
         // Processar dados ábaco por mês
         const abacoProcessado = processarDadosPorMes(produtividadeAbaco || [], 'data_aula');
         const ahProcessado = processarDadosPorMes(produtividadeAH || [], 'created_at');
+
+        console.log('✓ Dados ábaco processados:', abacoProcessado.length, 'meses');
+        console.log('✓ Dados AH processados:', ahProcessado.length, 'meses');
 
         // Calcular totais
         const abacoTotais = calcularTotais(abacoProcessado);
@@ -155,11 +205,19 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           ah_percentual_total: ahTotais.percentual,
         };
 
-        console.log('Resultado final da devolutiva:', resultado);
+        console.log('=== RESULTADO FINAL ===');
+        console.log('Nome:', resultado.nome);
+        console.log('Desafios feitos:', resultado.desafios_feitos);
+        console.log('Meses com dados ábaco:', resultado.desempenho_abaco.length);
+        console.log('Meses com dados AH:', resultado.desempenho_ah.length);
+        console.log('Total exercícios ábaco:', resultado.abaco_total_exercicios);
+        console.log('Total exercícios AH:', resultado.ah_total_exercicios);
+
         setData(resultado);
 
       } catch (err) {
-        console.error('Erro ao carregar devolutiva:', err);
+        console.error('=== ERRO NA BUSCA ===');
+        console.error('Erro:', err);
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados da devolutiva');
       } finally {
         setLoading(false);
@@ -173,13 +231,17 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
 }
 
 function processarDadosPorMes(dados: any[], campoData: string): DesempenhoItem[] {
+  console.log('Processando dados por mês:', dados.length, 'registros');
+  
   const dadosPorMes = new Map<string, {
     livros: Set<string>;
     exercicios: number;
     erros: number;
   }>();
 
-  dados.forEach(item => {
+  dados.forEach((item, index) => {
+    console.log(`Processando item ${index + 1}:`, item);
+    
     const data = new Date(item[campoData]);
     const mesAno = `${data.getMonth() + 1}/${data.getFullYear()}`;
     
@@ -201,7 +263,7 @@ function processarDadosPorMes(dados: any[], campoData: string): DesempenhoItem[]
     mesData.erros += item.erros || 0;
   });
 
-  return Array.from(dadosPorMes.entries()).map(([mes, dados]) => ({
+  const resultado = Array.from(dadosPorMes.entries()).map(([mes, dados]) => ({
     mes,
     livro: Array.from(dados.livros).join(', ') || 'Não informado',
     exercicios: dados.exercicios,
@@ -216,6 +278,9 @@ function processarDadosPorMes(dados: any[], campoData: string): DesempenhoItem[]
     if (anoA !== anoB) return anoB - anoA;
     return mesB - mesA;
   });
+
+  console.log('Resultado processado:', resultado);
+  return resultado;
 }
 
 function calcularTotais(dados: DesempenhoItem[]) {
