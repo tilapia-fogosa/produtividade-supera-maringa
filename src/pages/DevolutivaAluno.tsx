@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,8 @@ import {
 } from "@/components/ui/collapsible";
 
 const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
-  { value: 'mes', label: 'Último mês' },
+  { value: 'mes_atual', label: 'Mês atual' },
+  { value: 'mes_passado', label: 'Mês passado' },
   { value: 'trimestre', label: 'Último trimestre' },
   { value: 'quadrimestre', label: 'Último quadrimestre' },
   { value: 'semestre', label: 'Último semestre' },
@@ -39,7 +39,7 @@ const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
 const DevolutivaAluno = () => {
   const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
-  const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes');
+  const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes_atual');
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
   const [textoDevolutiva, setTextoDevolutiva] = useState('');
   const [isOpen, setIsOpen] = useState(false);

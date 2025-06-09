@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-export type PeriodoFiltro = 'mes' | 'trimestre' | 'quadrimestre' | 'semestre' | 'ano';
+export type PeriodoFiltro = 'mes_atual' | 'mes_passado' | 'trimestre' | 'quadrimestre' | 'semestre' | 'ano';
 
 export interface DesempenhoAH {
   mes: string;
@@ -73,30 +72,45 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
 
         console.log('✓ Configuração de devolutiva:', configData);
 
-        // Calcular data inicial baseada no período
-        const dataFinal = new Date();
-        const dataInicial = new Date();
+        // Calcular data inicial e final baseada no período (ciclos fechados de mês)
+        const hoje = new Date();
+        let dataInicial: Date;
+        let dataFinal: Date;
         
         switch (periodo) {
-          case 'mes':
-            dataInicial.setMonth(dataFinal.getMonth() - 1);
+          case 'mes_atual':
+            // Primeiro dia do mês atual até hoje
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            dataFinal = hoje;
+            break;
+          case 'mes_passado':
+            // Primeiro ao último dia do mês passado
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0); // último dia do mês anterior
             break;
           case 'trimestre':
-            dataInicial.setMonth(dataFinal.getMonth() - 3);
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 3, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'quadrimestre':
-            dataInicial.setMonth(dataFinal.getMonth() - 4);
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 4, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'semestre':
-            dataInicial.setMonth(dataFinal.getMonth() - 6);
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 6, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'ano':
-            dataInicial.setFullYear(dataFinal.getFullYear() - 1);
+            dataInicial = new Date(hoje.getFullYear() - 1, hoje.getMonth(), 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
+          default:
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            dataFinal = hoje;
         }
 
         console.log('Buscando devolutiva do funcionário:', funcionarioId);
-        console.log('Período:', periodo, 'Data inicial:', dataInicial.toISOString());
+        console.log('Período:', periodo, 'Data inicial:', dataInicial.toISOString(), 'Data final:', dataFinal.toISOString());
         console.log('Nome do funcionário para busca:', nomeFuncionario);
 
         // Buscar produtividade AH usando nome do funcionário
