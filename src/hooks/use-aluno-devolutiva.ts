@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +43,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (BUSCA DIRETA) ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (BUSCA POR NOME) ===');
         console.log('Aluno ID:', alunoId);
         console.log('Período:', periodo);
 
@@ -125,35 +124,13 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           }
         }
 
-        // Se não encontrou por aluno_nome, tentar buscar pela pessoa_id
-        let produtividadeAbacoFallback = produtividadeAbaco;
-        if (!produtividadeAbaco || produtividadeAbaco.length === 0) {
-          console.log('=== TENTATIVA FALLBACK: BUSCANDO POR PESSOA_ID ===');
-          
-          const { data: abacoFallback, error: abacoFallbackError } = await supabase
-            .from('produtividade_abaco')
-            .select('*')
-            .eq('pessoa_id', alunoId)
-            .gte('data_aula', dataInicialFormatada)
-            .lte('data_aula', dataFinalFormatada)
-            .eq('presente', true)
-            .order('data_aula', { ascending: false });
-
-          if (abacoFallbackError) {
-            console.error('Erro no fallback ábaco:', abacoFallbackError);
-          } else {
-            console.log('✓ Fallback ábaco encontrou:', abacoFallback?.length || 0, 'registros');
-            produtividadeAbacoFallback = abacoFallback;
-          }
-        }
-
-        // Buscar produtividade AH 
-        console.log('=== BUSCANDO PRODUTIVIDADE AH ===');
+        // Buscar produtividade AH usando nome do aluno
+        console.log('=== BUSCANDO PRODUTIVIDADE AH POR NOME ===');
         
         const { data: produtividadeAH, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
-          .eq('pessoa_id', alunoId)
+          .eq('aluno_nome', nomeAluno)
           .gte('created_at', dataInicial.toISOString())
           .lte('created_at', dataFinal.toISOString())
           .order('created_at', { ascending: false });
@@ -168,7 +145,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         }
 
         // Processar dados ábaco por mês
-        const abacoProcessado = processarDadosPorMes(produtividadeAbacoFallback || [], 'data_aula');
+        const abacoProcessado = processarDadosPorMes(produtividadeAbaco || [], 'data_aula');
         const ahProcessado = processarDadosPorMes(produtividadeAH || [], 'created_at');
 
         console.log('✓ Dados ábaco processados:', abacoProcessado.length, 'meses');
@@ -179,7 +156,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         const ahTotais = calcularTotais(ahProcessado);
 
         // Contar desafios feitos
-        const desafiosFeitos = (produtividadeAbacoFallback || []).filter(p => p.fez_desafio).length;
+        const desafiosFeitos = (produtividadeAbaco || []).filter(p => p.fez_desafio).length;
 
         const resultado: AlunoDevolutivaData = {
           id: alunoData.id,
