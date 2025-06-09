@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -57,33 +56,24 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
 
         const turmasIds = turmasData.map(t => t.id);
 
-        // Buscar TODOS os alunos das turmas (ativos)
-        const { data: alunosData, error: alunosError } = await supabase
-          .from('alunos')
-          .select('id, nome')
-          .in('turma_id', turmasIds)
-          .eq('active', true);
+        // Buscar alunos que tiveram lançamentos no período (ábaco ou AH)
+        const alunosComLancamentos = await buscarAlunosComLancamentos(turmasIds, mesAno);
 
-        if (alunosError) {
-          console.error('Erro ao buscar alunos:', alunosError);
-          return;
-        }
+        console.log('Alunos com lançamentos encontrados:', alunosComLancamentos);
 
-        console.log('Todos os alunos encontrados:', alunosData);
-
-        if (!alunosData || alunosData.length === 0) {
-          console.log('Nenhum aluno encontrado nas turmas');
+        if (alunosComLancamentos.length === 0) {
+          console.log('Nenhum aluno com lançamentos encontrado');
           setDadosAbaco([]);
           setDadosAH([]);
           return;
         }
 
-        // Processar dados do Ábaco para TODOS os alunos
-        const dadosProcessadosAbaco = await processarDadosAbacoTodosAlunos(alunosData, mesAno);
+        // Processar dados do Ábaco para alunos com lançamentos
+        const dadosProcessadosAbaco = await processarDadosAbacoAlunosComLancamentos(alunosComLancamentos, mesAno);
         setDadosAbaco(dadosProcessadosAbaco);
 
-        // Processar dados do AH para TODOS os alunos  
-        const dadosProcessadosAH = await processarDadosAHTodosAlunos(alunosData, mesAno);
+        // Processar dados do AH para alunos com lançamentos  
+        const dadosProcessadosAH = await processarDadosAHAlunosComLancamentos(alunosComLancamentos, mesAno);
         setDadosAH(dadosProcessadosAH);
 
         // Buscar texto geral
@@ -174,8 +164,71 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
   };
 }
 
-async function processarDadosAbacoTodosAlunos(alunos: any[], mesAno: string): Promise<DadosAbaco[]> {
-  console.log('Processando dados do ábaco para todos os alunos:', alunos.length);
+async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
+  console.log('Buscando alunos com lançamentos no período:', mesAno);
+  
+  // Buscar alunos que tiveram lançamentos de produtividade ábaco no período
+  const { data: alunosAbaco, error: errorAbaco } = await supabase
+    .from('alunos')
+    .select('id, nome')
+    .in('turma_id', turmasIds)
+    .eq('active', true);
+
+  if (errorAbaco) {
+    console.error('Erro ao buscar alunos:', errorAbaco);
+    return [];
+  }
+
+  if (!alunosAbaco || alunosAbaco.length === 0) {
+    return [];
+  }
+
+  // Buscar quais alunos tiveram lançamentos de ábaco no período
+  const { data: lancamentosAbaco } = await supabase
+    .from('produtividade_abaco')
+    .select('aluno_nome')
+    .in('aluno_nome', alunosAbaco.map(a => a.nome))
+    .gte('data_aula', `${mesAno}-01`)
+    .lte('data_aula', `${mesAno}-31`);
+
+  // Buscar quais alunos tiveram lançamentos de AH no período
+  const { data: lancamentosAH } = await supabase
+    .from('produtividade_ah')
+    .select('aluno_nome')
+    .in('aluno_nome', alunosAbaco.map(a => a.nome))
+    .gte('created_at', `${mesAno}-01T00:00:00.000Z`)
+    .lte('created_at', `${mesAno}-31T23:59:59.999Z`);
+
+  // Combinar alunos que tiveram lançamentos em qualquer uma das tabelas
+  const nomesComLancamentos = new Set<string>();
+  
+  if (lancamentosAbaco) {
+    lancamentosAbaco.forEach(item => {
+      if (item.aluno_nome) {
+        nomesComLancamentos.add(item.aluno_nome);
+      }
+    });
+  }
+  
+  if (lancamentosAH) {
+    lancamentosAH.forEach(item => {
+      if (item.aluno_nome) {
+        nomesComLancamentos.add(item.aluno_nome);
+      }
+    });
+  }
+
+  // Filtrar apenas alunos que tiveram lançamentos
+  const alunosComLancamentos = alunosAbaco.filter(aluno => 
+    nomesComLancamentos.has(aluno.nome)
+  );
+
+  console.log('Total de alunos com lançamentos:', alunosComLancamentos.length);
+  return alunosComLancamentos;
+}
+
+async function processarDadosAbacoAlunosComLancamentos(alunos: any[], mesAno: string): Promise<DadosAbaco[]> {
+  console.log('Processando dados do ábaco para alunos com lançamentos:', alunos.length);
   
   // Buscar dados de produtividade para o período
   const { data: produtividadeData, error } = await supabase
@@ -198,7 +251,7 @@ async function processarDadosAbacoTodosAlunos(alunos: any[], mesAno: string): Pr
     presencas: number;
   }>();
 
-  // Inicializar todos os alunos com zeros
+  // Inicializar alunos com lançamentos com zeros
   alunos.forEach(aluno => {
     dadosPorAluno.set(aluno.nome, {
       exercicios: 0,
@@ -236,12 +289,12 @@ async function processarDadosAbacoTodosAlunos(alunos: any[], mesAno: string): Pr
     total_presencas: dados.presencas
   })).sort((a, b) => a.nome_aluno.localeCompare(b.nome_aluno));
 
-  console.log('Resultado processado ábaco (todos os alunos):', resultado);
+  console.log('Resultado processado ábaco (alunos com lançamentos):', resultado);
   return resultado;
 }
 
-async function processarDadosAHTodosAlunos(alunos: any[], mesAno: string): Promise<DadosAH[]> {
-  console.log('Processando dados do AH para todos os alunos:', alunos.length);
+async function processarDadosAHAlunosComLancamentos(alunos: any[], mesAno: string): Promise<DadosAH[]> {
+  console.log('Processando dados do AH para alunos com lançamentos:', alunos.length);
   
   // Buscar dados de produtividade AH para o período
   const { data: produtividadeAHData, error } = await supabase
@@ -263,7 +316,7 @@ async function processarDadosAHTodosAlunos(alunos: any[], mesAno: string): Promi
     erros: number;
   }>();
 
-  // Inicializar todos os alunos com zeros
+  // Inicializar alunos com lançamentos com zeros
   alunos.forEach(aluno => {
     dadosPorAluno.set(aluno.nome, {
       exercicios: 0,
@@ -296,6 +349,6 @@ async function processarDadosAHTodosAlunos(alunos: any[], mesAno: string): Promi
       : 0
   })).sort((a, b) => a.nome_aluno.localeCompare(b.nome_aluno));
 
-  console.log('Resultado processado AH (todos os alunos):', resultado);
+  console.log('Resultado processado AH (alunos com lançamentos):', resultado);
   return resultado;
 }
