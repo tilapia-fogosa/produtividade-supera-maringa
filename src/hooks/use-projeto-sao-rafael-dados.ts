@@ -164,8 +164,20 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
   };
 }
 
+function obterUltimoDiaDoMes(mesAno: string) {
+  const [ano, mes] = mesAno.split('-').map(Number);
+  const ultimoDia = new Date(ano, mes, 0).getDate(); // mes sem -1 porque queremos o último dia do mês anterior ao próximo
+  return ultimoDia;
+}
+
 async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
   console.log('Buscando alunos com lançamentos no período:', mesAno);
+  
+  const ultimoDia = obterUltimoDiaDoMes(mesAno);
+  const dataInicial = `${mesAno}-01`;
+  const dataFinal = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}`;
+  
+  console.log('Período de busca:', dataInicial, 'até', dataFinal);
   
   // Buscar alunos que tiveram lançamentos de produtividade ábaco no período
   const { data: alunosAbaco, error: errorAbaco } = await supabase
@@ -188,16 +200,19 @@ async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
     .from('produtividade_abaco')
     .select('aluno_nome')
     .in('aluno_nome', alunosAbaco.map(a => a.nome))
-    .gte('data_aula', `${mesAno}-01`)
-    .lte('data_aula', `${mesAno}-31`);
+    .gte('data_aula', dataInicial)
+    .lte('data_aula', dataFinal);
 
   // Buscar quais alunos tiveram lançamentos de AH no período
+  const dataInicialAH = `${dataInicial}T00:00:00.000Z`;
+  const dataFinalAH = `${dataFinal}T23:59:59.999Z`;
+  
   const { data: lancamentosAH } = await supabase
     .from('produtividade_ah')
     .select('aluno_nome')
     .in('aluno_nome', alunosAbaco.map(a => a.nome))
-    .gte('created_at', `${mesAno}-01T00:00:00.000Z`)
-    .lte('created_at', `${mesAno}-31T23:59:59.999Z`);
+    .gte('created_at', dataInicialAH)
+    .lte('created_at', dataFinalAH);
 
   // Combinar alunos que tiveram lançamentos em qualquer uma das tabelas
   const nomesComLancamentos = new Set<string>();
@@ -230,13 +245,17 @@ async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
 async function processarDadosAbacoAlunosComLancamentos(alunos: any[], mesAno: string): Promise<DadosAbaco[]> {
   console.log('Processando dados do ábaco para alunos com lançamentos:', alunos.length);
   
+  const ultimoDia = obterUltimoDiaDoMes(mesAno);
+  const dataInicial = `${mesAno}-01`;
+  const dataFinal = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}`;
+  
   // Buscar dados de produtividade para o período
   const { data: produtividadeData, error } = await supabase
     .from('produtividade_abaco')
     .select('*')
     .in('aluno_nome', alunos.map(a => a.nome))
-    .gte('data_aula', `${mesAno}-01`)
-    .lte('data_aula', `${mesAno}-31`);
+    .gte('data_aula', dataInicial)
+    .lte('data_aula', dataFinal);
 
   if (error) {
     console.error('Erro ao buscar dados de produtividade ábaco:', error);
@@ -296,13 +315,17 @@ async function processarDadosAbacoAlunosComLancamentos(alunos: any[], mesAno: st
 async function processarDadosAHAlunosComLancamentos(alunos: any[], mesAno: string): Promise<DadosAH[]> {
   console.log('Processando dados do AH para alunos com lançamentos:', alunos.length);
   
+  const ultimoDia = obterUltimoDiaDoMes(mesAno);
+  const dataInicialAH = `${mesAno}-01T00:00:00.000Z`;
+  const dataFinalAH = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}T23:59:59.999Z`;
+  
   // Buscar dados de produtividade AH para o período
   const { data: produtividadeAHData, error } = await supabase
     .from('produtividade_ah')
     .select('*')
     .in('aluno_nome', alunos.map(a => a.nome))
-    .gte('created_at', `${mesAno}-01T00:00:00.000Z`)
-    .lte('created_at', `${mesAno}-31T23:59:59.999Z`);
+    .gte('created_at', dataInicialAH)
+    .lte('created_at', dataFinalAH);
 
   if (error) {
     console.error('Erro ao buscar dados de produtividade AH:', error);
