@@ -57,7 +57,7 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
 
         const turmasIds = turmasData.map(t => t.id);
 
-        // Buscar alunos das turmas
+        // Buscar TODOS os alunos das turmas (ativos)
         const { data: alunosData, error: alunosError } = await supabase
           .from('alunos')
           .select('id, nome')
@@ -69,7 +69,7 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
           return;
         }
 
-        console.log('Alunos encontrados:', alunosData);
+        console.log('Todos os alunos encontrados:', alunosData);
 
         if (!alunosData || alunosData.length === 0) {
           console.log('Nenhum aluno encontrado nas turmas');
@@ -78,46 +78,13 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
           return;
         }
 
-        const nomesAlunos = alunosData.map(a => a.nome);
+        // Processar dados do Ábaco para TODOS os alunos
+        const dadosProcessadosAbaco = await processarDadosAbacoTodosAlunos(alunosData, mesAno);
+        setDadosAbaco(dadosProcessadosAbaco);
 
-        // Buscar dados do Ábaco pelo nome do aluno
-        const { data: abacoData, error: abacoError } = await supabase
-          .from('produtividade_abaco')
-          .select('*')
-          .in('aluno_nome', nomesAlunos)
-          .gte('data_aula', `${mesAno}-01`)
-          .lte('data_aula', `${mesAno}-31`)
-          .eq('presente', true);
-
-        if (abacoError) {
-          console.error('Erro ao buscar dados do Ábaco:', abacoError);
-        } else {
-          console.log('Dados do Ábaco encontrados:', abacoData?.length || 0);
-          
-          // Processar dados do ábaco agrupando por aluno
-          const dadosProcessadosAbaco = processarDadosAbaco(abacoData || [], mesAno);
-          setDadosAbaco(dadosProcessadosAbaco);
-        }
-
-        // Buscar dados do Abrindo Horizontes pelo pessoa_id
-        const pessoasIds = alunosData.map(a => a.id);
-        
-        const { data: ahData, error: ahError } = await supabase
-          .from('produtividade_ah')
-          .select('*')
-          .in('pessoa_id', pessoasIds)
-          .gte('created_at', `${mesAno}-01T00:00:00.000Z`)
-          .lte('created_at', `${mesAno}-31T23:59:59.999Z`);
-
-        if (ahError) {
-          console.error('Erro ao buscar dados do AH:', ahError);
-        } else {
-          console.log('Dados do AH encontrados:', ahData?.length || 0);
-          
-          // Processar dados do AH agrupando por aluno
-          const dadosProcessadosAH = processarDadosAH(ahData || [], alunosData, mesAno);
-          setDadosAH(dadosProcessadosAH);
-        }
+        // Processar dados do AH para TODOS os alunos  
+        const dadosProcessadosAH = await processarDadosAHTodosAlunos(alunosData, mesAno);
+        setDadosAH(dadosProcessadosAH);
 
         // Buscar texto geral
         const { data: textoData, error: textoError } = await supabase
@@ -207,37 +174,56 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
   };
 }
 
-function processarDadosAbaco(dados: any[], mesAno: string): DadosAbaco[] {
-  console.log('Processando dados do ábaco:', dados.length, 'registros');
+async function processarDadosAbacoTodosAlunos(alunos: any[], mesAno: string): Promise<DadosAbaco[]> {
+  console.log('Processando dados do ábaco para todos os alunos:', alunos.length);
   
+  // Buscar dados de produtividade para o período
+  const { data: produtividadeData, error } = await supabase
+    .from('produtividade_abaco')
+    .select('*')
+    .in('aluno_nome', alunos.map(a => a.nome))
+    .gte('data_aula', `${mesAno}-01`)
+    .lte('data_aula', `${mesAno}-31`);
+
+  if (error) {
+    console.error('Erro ao buscar dados de produtividade ábaco:', error);
+  }
+
+  console.log('Dados de produtividade ábaco encontrados:', produtividadeData?.length || 0);
+
+  // Agrupar dados por aluno
   const dadosPorAluno = new Map<string, {
     exercicios: number;
     erros: number;
     presencas: number;
   }>();
 
-  dados.forEach((item, index) => {
-    console.log(`Processando item ábaco ${index + 1}:`, item);
-    
-    const nomeAluno = item.aluno_nome;
-    if (!nomeAluno) return;
-    
-    if (!dadosPorAluno.has(nomeAluno)) {
-      dadosPorAluno.set(nomeAluno, {
-        exercicios: 0,
-        erros: 0,
-        presencas: 0
-      });
-    }
-
-    const alunoData = dadosPorAluno.get(nomeAluno)!;
-    
-    alunoData.exercicios += item.exercicios || 0;
-    alunoData.erros += item.erros || 0;
-    if (item.presente) {
-      alunoData.presencas += 1;
-    }
+  // Inicializar todos os alunos com zeros
+  alunos.forEach(aluno => {
+    dadosPorAluno.set(aluno.nome, {
+      exercicios: 0,
+      erros: 0,
+      presencas: 0
+    });
   });
+
+  // Processar dados de produtividade se existirem
+  if (produtividadeData) {
+    produtividadeData.forEach((item, index) => {
+      console.log(`Processando item ábaco ${index + 1}:`, item);
+      
+      const nomeAluno = item.aluno_nome;
+      if (!nomeAluno || !dadosPorAluno.has(nomeAluno)) return;
+      
+      const alunoData = dadosPorAluno.get(nomeAluno)!;
+      
+      alunoData.exercicios += item.exercicios || 0;
+      alunoData.erros += item.erros || 0;
+      if (item.presente) {
+        alunoData.presencas += 1;
+      }
+    });
+  }
 
   const resultado = Array.from(dadosPorAluno.entries()).map(([nome, dados]) => ({
     ano_mes: mesAno,
@@ -250,39 +236,55 @@ function processarDadosAbaco(dados: any[], mesAno: string): DadosAbaco[] {
     total_presencas: dados.presencas
   })).sort((a, b) => a.nome_aluno.localeCompare(b.nome_aluno));
 
-  console.log('Resultado processado ábaco:', resultado);
+  console.log('Resultado processado ábaco (todos os alunos):', resultado);
   return resultado;
 }
 
-function processarDadosAH(dados: any[], alunos: any[], mesAno: string): DadosAH[] {
-  console.log('Processando dados do AH:', dados.length, 'registros');
+async function processarDadosAHTodosAlunos(alunos: any[], mesAno: string): Promise<DadosAH[]> {
+  console.log('Processando dados do AH para todos os alunos:', alunos.length);
   
+  // Buscar dados de produtividade AH para o período
+  const { data: produtividadeAHData, error } = await supabase
+    .from('produtividade_ah')
+    .select('*')
+    .in('aluno_nome', alunos.map(a => a.nome))
+    .gte('created_at', `${mesAno}-01T00:00:00.000Z`)
+    .lte('created_at', `${mesAno}-31T23:59:59.999Z`);
+
+  if (error) {
+    console.error('Erro ao buscar dados de produtividade AH:', error);
+  }
+
+  console.log('Dados de produtividade AH encontrados:', produtividadeAHData?.length || 0);
+
+  // Agrupar dados por aluno
   const dadosPorAluno = new Map<string, {
     exercicios: number;
     erros: number;
   }>();
 
-  dados.forEach((item, index) => {
-    console.log(`Processando item AH ${index + 1}:`, item);
-    
-    // Encontrar o nome do aluno pelo pessoa_id
-    const aluno = alunos.find(a => a.id === item.pessoa_id);
-    if (!aluno) return;
-    
-    const nomeAluno = aluno.nome;
-    
-    if (!dadosPorAluno.has(nomeAluno)) {
-      dadosPorAluno.set(nomeAluno, {
-        exercicios: 0,
-        erros: 0
-      });
-    }
-
-    const alunoData = dadosPorAluno.get(nomeAluno)!;
-    
-    alunoData.exercicios += item.exercicios || 0;
-    alunoData.erros += item.erros || 0;
+  // Inicializar todos os alunos com zeros
+  alunos.forEach(aluno => {
+    dadosPorAluno.set(aluno.nome, {
+      exercicios: 0,
+      erros: 0
+    });
   });
+
+  // Processar dados de produtividade se existirem
+  if (produtividadeAHData) {
+    produtividadeAHData.forEach((item, index) => {
+      console.log(`Processando item AH ${index + 1}:`, item);
+      
+      const nomeAluno = item.aluno_nome;
+      if (!nomeAluno || !dadosPorAluno.has(nomeAluno)) return;
+      
+      const alunoData = dadosPorAluno.get(nomeAluno)!;
+      
+      alunoData.exercicios += item.exercicios || 0;
+      alunoData.erros += item.erros || 0;
+    });
+  }
 
   const resultado = Array.from(dadosPorAluno.entries()).map(([nome, dados]) => ({
     ano_mes: mesAno,
@@ -294,6 +296,6 @@ function processarDadosAH(dados: any[], alunos: any[], mesAno: string): DadosAH[
       : 0
   })).sort((a, b) => a.nome_aluno.localeCompare(b.nome_aluno));
 
-  console.log('Resultado processado AH:', resultado);
+  console.log('Resultado processado AH (todos os alunos):', resultado);
   return resultado;
 }
