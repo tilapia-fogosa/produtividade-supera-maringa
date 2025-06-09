@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,11 +43,11 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (POR NOME) ===');
         console.log('Aluno ID:', alunoId);
         console.log('Período:', periodo);
 
-        // Primeiro, verificar se o aluno existe
+        // Primeiro, buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('id, nome, texto_devolutiva')
@@ -65,6 +64,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         }
 
         console.log('✓ Dados do aluno encontrados:', alunoData);
+        const nomeAluno = alunoData.nome;
 
         // Buscar texto geral das devolutivas
         const { data: configData } = await supabase
@@ -101,75 +101,50 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         const dataFinalFormatada = dataFinal.toISOString().split('T')[0];
         
         console.log('✓ Período de busca:', dataInicialFormatada, 'até', dataFinalFormatada);
+        console.log('✓ Nome do aluno para busca:', nomeAluno);
 
-        // Verificar se existem registros para este aluno na tabela produtividade_abaco
-        console.log('=== VERIFICANDO REGISTROS PRODUTIVIDADE_ABACO ===');
+        // Buscar produtividade ábaco usando nome do aluno
+        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO POR NOME ===');
         
-        const { data: verificacaoAbaco, error: verificacaoAbacoError } = await supabase
-          .from('produtividade_abaco')
-          .select('*')
-          .eq('pessoa_id', alunoId)
-          .limit(5);
-
-        if (verificacaoAbacoError) {
-          console.error('Erro na verificação ábaco:', verificacaoAbacoError);
-        } else {
-          console.log('Total de registros encontrados para este aluno (ábaco):', verificacaoAbaco?.length || 0);
-          if (verificacaoAbaco && verificacaoAbaco.length > 0) {
-            console.log('Primeiros registros:', verificacaoAbaco);
-          }
-        }
-
-        // Buscar produtividade ábaco
         const { data: produtividadeAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
-          .select('*')
-          .eq('pessoa_id', alunoId)
+          .select(`
+            *,
+            alunos!inner (id, nome)
+          `)
+          .eq('alunos.nome', nomeAluno)
           .gte('data_aula', dataInicialFormatada)
           .lte('data_aula', dataFinalFormatada)
           .eq('presente', true)
           .order('data_aula', { ascending: false });
 
         if (abacoError) {
-          console.error('Erro ao buscar produtividade ábaco:', abacoError);
+          console.error('Erro ao buscar produtividade ábaco por nome:', abacoError);
         } else {
-          console.log('✓ Produtividade ábaco encontrada:', produtividadeAbaco?.length || 0, 'registros');
+          console.log('✓ Produtividade ábaco encontrada por nome:', produtividadeAbaco?.length || 0, 'registros');
           if (produtividadeAbaco && produtividadeAbaco.length > 0) {
             console.log('Primeiros registros do período:', produtividadeAbaco.slice(0, 2));
           }
         }
 
-        // Verificar registros AH
-        console.log('=== VERIFICANDO REGISTROS PRODUTIVIDADE_AH ===');
+        // Buscar produtividade AH usando nome do aluno
+        console.log('=== BUSCANDO PRODUTIVIDADE AH POR NOME ===');
         
-        const { data: verificacaoAH, error: verificacaoAHError } = await supabase
-          .from('produtividade_ah')
-          .select('*')
-          .eq('pessoa_id', alunoId)
-          .limit(5);
-
-        if (verificacaoAHError) {
-          console.error('Erro na verificação AH:', verificacaoAHError);
-        } else {
-          console.log('Total de registros encontrados para este aluno (AH):', verificacaoAH?.length || 0);
-          if (verificacaoAH && verificacaoAH.length > 0) {
-            console.log('Primeiros registros:', verificacaoAH);
-          }
-        }
-
-        // Buscar produtividade AH
         const { data: produtividadeAH, error: ahError } = await supabase
           .from('produtividade_ah')
-          .select('*')
-          .eq('pessoa_id', alunoId)
+          .select(`
+            *,
+            alunos!inner (id, nome)
+          `)
+          .eq('alunos.nome', nomeAluno)
           .gte('created_at', dataInicial.toISOString())
           .lte('created_at', dataFinal.toISOString())
           .order('created_at', { ascending: false });
 
         if (ahError) {
-          console.error('Erro ao buscar produtividade AH:', ahError);
+          console.error('Erro ao buscar produtividade AH por nome:', ahError);
         } else {
-          console.log('✓ Produtividade AH encontrada:', produtividadeAH?.length || 0, 'registros');
+          console.log('✓ Produtividade AH encontrada por nome:', produtividadeAH?.length || 0, 'registros');
           if (produtividadeAH && produtividadeAH.length > 0) {
             console.log('Primeiros registros do período:', produtividadeAH.slice(0, 2));
           }
