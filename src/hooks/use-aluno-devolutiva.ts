@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -75,29 +76,41 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
 
         console.log('✓ Configuração de devolutiva:', configData);
 
-        // Calcular data inicial baseada no período
-        const dataFinal = new Date();
-        const dataInicial = new Date();
+        // Calcular período usando ciclos fechados de mês
+        const hoje = new Date();
+        let dataInicial: Date;
+        let dataFinal: Date;
         
         switch (periodo) {
           case 'mes_atual':
-            dataInicial.setMonth(dataInicial.getMonth() - 1);
+            // Primeiro dia do mês atual até hoje
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            dataFinal = hoje;
             break;
           case 'mes_passado':
-            dataInicial.setMonth(dataInicial.getMonth() - 2);
+            // Primeiro ao último dia do mês passado
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0); // último dia do mês anterior
             break;
           case 'trimestre':
-            dataInicial.setMonth(dataInicial.getMonth() - 3);
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 3, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'quadrimestre':
-            dataInicial.setMonth(dataInicial.getMonth() - 4);
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 4, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'semestre':
-            dataInicial.setMonth(dataInicial.getMonth() - 6);
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 6, 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
           case 'ano':
-            dataInicial.setFullYear(dataInicial.getFullYear() - 1);
+            dataInicial = new Date(hoje.getFullYear() - 1, hoje.getMonth(), 1);
+            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
             break;
+          default:
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            dataFinal = hoje;
         }
 
         const dataInicialFormatada = dataInicial.toISOString().split('T')[0];
@@ -106,8 +119,8 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         console.log('✓ Período de busca:', dataInicialFormatada, 'até', dataFinalFormatada);
         console.log('✓ Nome do aluno para busca:', nomeAluno);
 
-        // Buscar produtividade ábaco usando nome do aluno
-        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO ===');
+        // Buscar produtividade ábaco usando nome do aluno e data_aula
+        console.log('=== BUSCANDO PRODUTIVIDADE ÁBACO POR NOME E DATA_AULA ===');
         
         const { data: produtividadeAbaco, error: abacoError } = await supabase
           .from('produtividade_abaco')
@@ -123,36 +136,55 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         } else {
           console.log('✓ Produtividade ábaco encontrada:', produtividadeAbaco?.length || 0, 'registros');
           if (produtividadeAbaco && produtividadeAbaco.length > 0) {
-            console.log('Primeiros registros do período:', produtividadeAbaco.slice(0, 2));
+            console.log('Primeiros registros do período:', produtividadeAbaco.slice(0, 3));
+            console.log('Últimos registros do período:', produtividadeAbaco.slice(-3));
           }
         }
 
         // Buscar produtividade AH usando nome do aluno
         console.log('=== BUSCANDO PRODUTIVIDADE AH POR NOME ===');
         
-        const { data: produtividadeAH, error: ahError } = await supabase
+        // Para AH, vamos buscar todos os registros e filtrar pela data de criação convertida para data de aula
+        const { data: produtividadeAHRaw, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
           .eq('aluno_nome', nomeAluno)
-          .gte('created_at', dataInicial.toISOString())
-          .lte('created_at', dataFinal.toISOString())
           .order('created_at', { ascending: false });
+
+        let produtividadeAH: any[] = [];
+        if (produtividadeAHRaw && !ahError) {
+          // Filtrar por data já que o Supabase não tem campo data_aula na tabela AH
+          produtividadeAH = produtividadeAHRaw.filter(item => {
+            const dataItem = new Date(item.created_at).toISOString().split('T')[0];
+            return dataItem >= dataInicialFormatada && dataItem <= dataFinalFormatada;
+          });
+        }
 
         if (ahError) {
           console.error('Erro ao buscar produtividade AH:', ahError);
         } else {
-          console.log('✓ Produtividade AH encontrada:', produtividadeAH?.length || 0, 'registros');
+          console.log('✓ Produtividade AH total encontrada:', produtividadeAHRaw?.length || 0, 'registros');
+          console.log('✓ Produtividade AH filtrada por período:', produtividadeAH.length, 'registros');
           if (produtividadeAH && produtividadeAH.length > 0) {
-            console.log('Primeiros registros do período:', produtividadeAH.slice(0, 2));
+            console.log('Primeiros registros AH do período:', produtividadeAH.slice(0, 3));
           }
         }
 
-        // Processar dados ábaco por mês
-        const abacoProcessado = processarDadosPorMes(produtividadeAbaco || [], 'data_aula');
-        const ahProcessado = processarDadosPorMes(produtividadeAH || [], 'created_at');
+        // Processar dados ábaco por mês usando data_aula
+        const abacoProcessado = processarDadosAbacoePorMes(produtividadeAbaco || []);
+        const ahProcessado = processarDadosAHPorMes(produtividadeAH || []);
 
         console.log('✓ Dados ábaco processados:', abacoProcessado.length, 'meses');
         console.log('✓ Dados AH processados:', ahProcessado.length, 'meses');
+
+        // Log detalhado dos totais por mês
+        abacoProcessado.forEach(item => {
+          console.log(`Ábaco ${item.mes}: ${item.exercicios} exercícios, ${item.erros} erros`);
+        });
+
+        ahProcessado.forEach(item => {
+          console.log(`AH ${item.mes}: ${item.exercicios} exercícios, ${item.erros} erros`);
+        });
 
         // Calcular totais
         const abacoTotais = calcularTotais(abacoProcessado);
@@ -202,8 +234,8 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
   return { data, loading, error };
 }
 
-function processarDadosPorMes(dados: any[], campoData: string): DesempenhoItem[] {
-  console.log('Processando dados por mês:', dados.length, 'registros');
+function processarDadosAbacoePorMes(dados: any[]): DesempenhoItem[] {
+  console.log('Processando dados ábaco por mês:', dados.length, 'registros');
   
   const dadosPorMes = new Map<string, {
     livros: Set<string>;
@@ -212,10 +244,17 @@ function processarDadosPorMes(dados: any[], campoData: string): DesempenhoItem[]
   }>();
 
   dados.forEach((item, index) => {
-    console.log(`Processando item ${index + 1}:`, item);
-    
-    const data = new Date(item[campoData]);
+    // Usar data_aula para ábaco
+    const data = new Date(item.data_aula);
     const mesAno = `${data.getMonth() + 1}/${data.getFullYear()}`;
+    
+    console.log(`Processando item ábaco ${index + 1}:`, {
+      data_aula: item.data_aula,
+      mesAno,
+      exercicios: item.exercicios,
+      erros: item.erros,
+      apostila: item.apostila
+    });
     
     if (!dadosPorMes.has(mesAno)) {
       dadosPorMes.set(mesAno, {
@@ -251,7 +290,67 @@ function processarDadosPorMes(dados: any[], campoData: string): DesempenhoItem[]
     return mesB - mesA;
   });
 
-  console.log('Resultado processado:', resultado);
+  console.log('Resultado ábaco processado:', resultado);
+  return resultado;
+}
+
+function processarDadosAHPorMes(dados: any[]): DesempenhoItem[] {
+  console.log('Processando dados AH por mês:', dados.length, 'registros');
+  
+  const dadosPorMes = new Map<string, {
+    livros: Set<string>;
+    exercicios: number;
+    erros: number;
+  }>();
+
+  dados.forEach((item, index) => {
+    // Usar created_at convertido para data para AH (já que não tem data_aula)
+    const data = new Date(item.created_at);
+    const mesAno = `${data.getMonth() + 1}/${data.getFullYear()}`;
+    
+    console.log(`Processando item AH ${index + 1}:`, {
+      created_at: item.created_at,
+      mesAno,
+      exercicios: item.exercicios,
+      erros: item.erros,
+      apostila: item.apostila
+    });
+    
+    if (!dadosPorMes.has(mesAno)) {
+      dadosPorMes.set(mesAno, {
+        livros: new Set(),
+        exercicios: 0,
+        erros: 0
+      });
+    }
+
+    const mesData = dadosPorMes.get(mesAno)!;
+    
+    if (item.apostila) {
+      mesData.livros.add(item.apostila);
+    }
+    
+    mesData.exercicios += item.exercicios || 0;
+    mesData.erros += item.erros || 0;
+  });
+
+  const resultado = Array.from(dadosPorMes.entries()).map(([mes, dados]) => ({
+    mes,
+    livro: Array.from(dados.livros).join(', ') || 'Não informado',
+    exercicios: dados.exercicios,
+    erros: dados.erros,
+    percentual_acerto: dados.exercicios > 0 
+      ? ((dados.exercicios - dados.erros) / dados.exercicios) * 100 
+      : 0
+  })).sort((a, b) => {
+    const [mesA, anoA] = a.mes.split('/').map(Number);
+    const [mesB, anoB] = b.mes.split('/').map(Number);
+    
+    if (anoA !== anoB) return anoB - anoA;
+    return mesB - mesA;
+  });
+
+  console.log('Resultado AH processado:', resultado);
   return resultado;
 }
 
