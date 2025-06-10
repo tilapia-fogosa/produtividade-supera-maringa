@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -74,39 +75,39 @@ export function useFuncionarioDevolutiva(funcionarioId: string, periodo: Periodo
         // Calcular data inicial e final baseada no período (ciclos fechados de mês)
         const hoje = new Date();
         let dataInicial: Date;
-        let dataFinal: Date;
         
+        // CORREÇÃO: Sempre incluir o mês atual nos períodos
         switch (periodo) {
           case 'mes_atual':
             // Primeiro dia do mês atual até hoje
             dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            dataFinal = hoje;
             break;
           case 'mes_passado':
             // Primeiro ao último dia do mês passado
             dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0); // último dia do mês anterior
             break;
           case 'trimestre':
-            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 3, 1);
-            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+            // Últimos 3 meses incluindo o atual
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 2, 1);
             break;
           case 'quadrimestre':
-            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 4, 1);
-            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+            // Últimos 4 meses incluindo o atual
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 3, 1);
             break;
           case 'semestre':
-            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 6, 1);
-            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+            // Últimos 6 meses incluindo o atual
+            dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1);
             break;
           case 'ano':
-            dataInicial = new Date(hoje.getFullYear() - 1, hoje.getMonth(), 1);
-            dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+            // Últimos 12 meses incluindo o atual
+            dataInicial = new Date(hoje.getFullYear() - 1, hoje.getMonth() + 1, 1);
             break;
           default:
             dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            dataFinal = hoje;
         }
+
+        // Data final é sempre o dia atual
+        const dataFinal = hoje;
 
         console.log('Buscando devolutiva do funcionário:', funcionarioId);
         console.log('Período:', periodo, 'Data inicial:', dataInicial.toISOString(), 'Data final:', dataFinal.toISOString());
