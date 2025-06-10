@@ -224,6 +224,7 @@ export type Database = {
           ultima_pagina: number | null
           ultimo_nivel: string | null
           unit_id: string
+          valor_mensalidade: number | null
           vencimento_contrato: string | null
         }
         Insert: {
@@ -256,6 +257,7 @@ export type Database = {
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
           unit_id: string
+          valor_mensalidade?: number | null
           vencimento_contrato?: string | null
         }
         Update: {
@@ -288,6 +290,7 @@ export type Database = {
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
           unit_id?: string
+          valor_mensalidade?: number | null
           vencimento_contrato?: string | null
         }
         Relationships: [
@@ -299,6 +302,105 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      alunos_backup: {
+        Row: {
+          active: boolean | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          codigo: string | null
+          coordenador_responsavel: string | null
+          created_at: string | null
+          curso: string | null
+          data_onboarding: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
+          id: string | null
+          idade: number | null
+          indice: string | null
+          is_funcionario: boolean | null
+          matricula: string | null
+          motivo_procura: string | null
+          niveldesafio: string | null
+          nome: string | null
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          telefone: string | null
+          texto_devolutiva: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          unit_id: string | null
+          vencimento_contrato: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string | null
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          unit_id?: string | null
+          vencimento_contrato?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string | null
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          unit_id?: string | null
+          vencimento_contrato?: string | null
+        }
+        Relationships: []
       }
       apostilas: {
         Row: {
@@ -1561,6 +1663,7 @@ export type Database = {
       }
       produtividade_abaco: {
         Row: {
+          aluno_nome: string | null
           apostila: string | null
           comentario: string | null
           created_at: string
@@ -1578,6 +1681,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1595,6 +1699,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1613,8 +1718,66 @@ export type Database = {
         }
         Relationships: []
       }
+      produtividade_abaco_backup: {
+        Row: {
+          aluno_nome: string | null
+          apostila: string | null
+          comentario: string | null
+          created_at: string | null
+          data_aula: string | null
+          erros: number | null
+          exercicios: number | null
+          fez_desafio: boolean | null
+          id: string | null
+          is_reposicao: boolean | null
+          motivo_falta: string | null
+          pagina: string | null
+          pessoa_id: string | null
+          presente: boolean | null
+          tipo_pessoa: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aluno_nome?: string | null
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          data_aula?: string | null
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string | null
+          is_reposicao?: boolean | null
+          motivo_falta?: string | null
+          pagina?: string | null
+          pessoa_id?: string | null
+          presente?: boolean | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aluno_nome?: string | null
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          data_aula?: string | null
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string | null
+          is_reposicao?: boolean | null
+          motivo_falta?: string | null
+          pagina?: string | null
+          pessoa_id?: string | null
+          presente?: boolean | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       produtividade_ah: {
         Row: {
+          aluno_nome: string | null
           apostila: string | null
           comentario: string | null
           created_at: string
@@ -1627,6 +1790,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1639,6 +1803,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1652,49 +1817,44 @@ export type Database = {
         }
         Relationships: []
       }
-      produtividade_ah_funcionarios: {
+      produtividade_ah_backup: {
         Row: {
           apostila: string | null
           comentario: string | null
-          created_at: string
+          created_at: string | null
           erros: number | null
           exercicios: number | null
-          funcionario_id: string
-          id: string
+          id: string | null
+          pessoa_id: string | null
           professor_correcao: string | null
-          updated_at: string
+          tipo_pessoa: string | null
+          updated_at: string | null
         }
         Insert: {
           apostila?: string | null
           comentario?: string | null
-          created_at?: string
+          created_at?: string | null
           erros?: number | null
           exercicios?: number | null
-          funcionario_id: string
-          id?: string
+          id?: string | null
+          pessoa_id?: string | null
           professor_correcao?: string | null
-          updated_at?: string
+          tipo_pessoa?: string | null
+          updated_at?: string | null
         }
         Update: {
           apostila?: string | null
           comentario?: string | null
-          created_at?: string
+          created_at?: string | null
           erros?: number | null
           exercicios?: number | null
-          funcionario_id?: string
-          id?: string
+          id?: string | null
+          pessoa_id?: string | null
           professor_correcao?: string | null
-          updated_at?: string
+          tipo_pessoa?: string | null
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "produtividade_ah_funcionarios_funcionario_id_fkey"
-            columns: ["funcionario_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       professores: {
         Row: {
@@ -2907,6 +3067,31 @@ export type Database = {
       get_periodo_data: {
         Args: { p_periodo: string }
         Returns: string
+      }
+      get_produtividade_abaco_limpa: {
+        Args: {
+          p_pessoa_id: string
+          p_data_inicial: string
+          p_data_final: string
+        }
+        Returns: {
+          id: string
+          pessoa_id: string
+          tipo_pessoa: string
+          data_aula: string
+          presente: boolean
+          apostila: string
+          pagina: string
+          exercicios: number
+          erros: number
+          fez_desafio: boolean
+          comentario: string
+          motivo_falta: string
+          is_reposicao: boolean
+          aluno_nome: string
+          created_at: string
+          updated_at: string
+        }[]
       }
       get_registration_stats: {
         Args: {

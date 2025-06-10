@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +39,7 @@ interface AulaZeroData {
   avaliacao_abaco: string;
   avaliacao_ah: string;
   pontos_atencao: string;
+  valor_mensalidade: string;
 }
 
 const WEBHOOK_URL = "https://hook.us1.make.com/rhla45qk19cwlcq3jnekoirj1zatazfn";
@@ -56,7 +58,8 @@ const AulaZero = () => {
       motivo_procura: '',
       avaliacao_abaco: '',
       avaliacao_ah: '',
-      pontos_atencao: ''
+      pontos_atencao: '',
+      valor_mensalidade: ''
     }
   });
 
@@ -110,6 +113,7 @@ const AulaZero = () => {
         avaliacao_abaco: data.avaliacao_abaco,
         avaliacao_ah: data.avaliacao_ah,
         pontos_atencao: data.pontos_atencao,
+        valor_mensalidade: data.valor_mensalidade,
         data_registro: dataAtual
       };
       
@@ -172,6 +176,9 @@ const AulaZero = () => {
         }
       }
 
+      // Converter valor da mensalidade para número
+      const valorMensalidade = data.valor_mensalidade ? parseFloat(data.valor_mensalidade.replace(',', '.')) : null;
+
       // Salvar os dados no Supabase
       const { error } = await supabase
         .from('alunos')
@@ -181,6 +188,7 @@ const AulaZero = () => {
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
           pontos_atencao: data.pontos_atencao,
+          valor_mensalidade: valorMensalidade,
         })
         .eq('id', data.alunoId);
 
@@ -268,6 +276,25 @@ const AulaZero = () => {
                       </Select>
                     </FormControl>
                   </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Valor da Mensalidade */}
+            <FormField
+              control={form.control}
+              name="valor_mensalidade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor da Mensalidade (R$)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Ex: 150,00"
+                      {...field}
+                      type="text"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

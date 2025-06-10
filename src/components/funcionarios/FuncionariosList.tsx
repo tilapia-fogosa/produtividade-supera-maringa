@@ -123,9 +123,8 @@ const FuncionariosList = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
                   <TableHead>Cargo</TableHead>
+                  <TableHead>Turma</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -133,9 +132,8 @@ const FuncionariosList = () => {
                 {funcionariosFiltrados.map((funcionario) => (
                   <TableRow key={funcionario.id}>
                     <TableCell className="font-medium">{funcionario.nome}</TableCell>
-                    <TableCell>{funcionario.email || '-'}</TableCell>
-                    <TableCell>{funcionario.telefone || '-'}</TableCell>
                     <TableCell>{funcionario.cargo || '-'}</TableCell>
+                    <TableCell>{funcionario.turma?.nome || '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"

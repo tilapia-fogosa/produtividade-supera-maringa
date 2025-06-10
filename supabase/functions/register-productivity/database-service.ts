@@ -25,7 +25,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     const { data: alunoExiste, error: alunoError } = await supabaseClient
       .from('alunos')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', data.pessoa_id || data.aluno_id)
       .maybeSingle();
     
     if (alunoError) {
@@ -36,19 +36,26 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     if (alunoExiste) {
       console.log('Encontrado como aluno, atualizando dados...');
       
-      // Se existe como aluno, atualizar os dados
-      if (data.apostila_atual) {
-        console.log('Atualizando último nível do aluno para:', data.apostila_atual);
-      }
-      
-      if (data.ultima_pagina) {
-        console.log('Atualizando última página do aluno para:', data.ultima_pagina);
-      }
-      
       const updateData: any = {};
-      if (data.apostila_atual && data.presente) updateData.ultimo_nivel = data.apostila_atual;
-      if (data.ultima_pagina && data.presente) updateData.ultima_pagina = parseInt(data.ultima_pagina);
-      if (data.data_ultima_correcao_ah && data.presente) updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      
+      // Só atualizar se presente e com dados válidos
+      if (data.presente) {
+        if (data.apostila_atual || data.apostila_abaco) {
+          updateData.ultimo_nivel = data.apostila_atual || data.apostila_abaco;
+          console.log('Atualizando último nível do aluno para:', updateData.ultimo_nivel);
+        }
+        
+        if (data.ultima_pagina || data.pagina_abaco) {
+          const pagina = data.ultima_pagina || data.pagina_abaco;
+          updateData.ultima_pagina = parseInt(pagina);
+          console.log('Atualizando última página do aluno para:', updateData.ultima_pagina);
+        }
+        
+        if (data.data_ultima_correcao_ah) {
+          updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+          console.log('Atualizando última correção AH para:', updateData.ultima_correcao_ah);
+        }
+      }
       
       // Se é uma falta, atualizar a data da última falta
       if (!data.presente) {
@@ -62,7 +69,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
         const { error: updateError } = await supabaseClient
           .from('alunos')
           .update(updateData)
-          .eq('id', data.aluno_id);
+          .eq('id', data.pessoa_id || data.aluno_id);
         
         if (updateError) {
           console.error('Erro ao atualizar dados do aluno:', updateError);
@@ -79,7 +86,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     const { data: funcionarioExiste, error: funcionarioError } = await supabaseClient
       .from('funcionarios')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', data.pessoa_id || data.aluno_id)
       .maybeSingle();
     
     if (funcionarioError) {
@@ -91,9 +98,22 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       console.log('Encontrado como funcionário, atualizando dados...');
       
       const updateData: any = {};
-      if (data.apostila_atual && data.presente) updateData.ultimo_nivel = data.apostila_atual;
-      if (data.ultima_pagina && data.presente) updateData.ultima_pagina = parseInt(data.ultima_pagina);
-      if (data.data_ultima_correcao_ah && data.presente) updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+      
+      // Só atualizar se presente e com dados válidos
+      if (data.presente) {
+        if (data.apostila_atual || data.apostila_abaco) {
+          updateData.ultimo_nivel = data.apostila_atual || data.apostila_abaco;
+        }
+        
+        if (data.ultima_pagina || data.pagina_abaco) {
+          const pagina = data.ultima_pagina || data.pagina_abaco;
+          updateData.ultima_pagina = parseInt(pagina);
+        }
+        
+        if (data.data_ultima_correcao_ah) {
+          updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
+        }
+      }
       
       // Se é uma falta, atualizar a data da última falta
       if (!data.presente) {
@@ -107,7 +127,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
         const { error: updateError } = await supabaseClient
           .from('funcionarios')
           .update(updateData)
-          .eq('id', data.aluno_id);
+          .eq('id', data.pessoa_id || data.aluno_id);
         
         if (updateError) {
           console.error('Erro ao atualizar dados do funcionário:', updateError);
@@ -120,7 +140,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       return true;
     }
     
-    console.error('ID não encontrado nem em alunos nem em funcionários:', data.aluno_id);
+    console.error('ID não encontrado nem em alunos nem em funcionários:', data.pessoa_id || data.aluno_id);
     return false;
     
   } catch (error) {
@@ -131,19 +151,20 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
 
 export async function registrarProdutividade(supabaseClient: any, data: ProdutividadeData): Promise<boolean> {
   try {
-    console.log('Registrando produtividade para pessoa:', data.aluno_id);
+    const pessoaId = data.pessoa_id || data.aluno_id;
+    console.log('Registrando produtividade para pessoa:', pessoaId);
     
     // Verificar se é aluno ou funcionário antes de inserir
     const { data: alunoExiste } = await supabaseClient
       .from('alunos')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', pessoaId)
       .maybeSingle();
     
     const { data: funcionarioExiste } = await supabaseClient
       .from('funcionarios')
       .select('id')
-      .eq('id', data.aluno_id)
+      .eq('id', pessoaId)
       .maybeSingle();
     
     if (!alunoExiste && !funcionarioExiste) {
@@ -152,19 +173,19 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     }
     
     const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
-    console.log('Registrando para o', tipoPessoa + ':', data.aluno_id);
+    console.log('Registrando para o', tipoPessoa + ':', pessoaId);
     
-    // Preparar dados para inserção usando os novos campos
+    // Preparar dados para inserção usando pessoa_id
     const produtividadeData = {
-      pessoa_id: data.aluno_id,
+      pessoa_id: pessoaId,
       tipo_pessoa: tipoPessoa,
       data_aula: data.data_aula,
       presente: data.presente,
       is_reposicao: data.is_reposicao || false,
-      apostila: data.presente ? (data.apostila_abaco || null) : null,
-      pagina: data.presente ? (data.pagina_abaco || null) : null,
-      exercicios: data.presente && data.exercicios_abaco ? parseInt(data.exercicios_abaco) : null,
-      erros: data.presente && data.erros_abaco ? parseInt(data.erros_abaco) : null,
+      apostila: data.presente ? (data.apostila_abaco || data.apostila_atual || null) : null,
+      pagina: data.presente ? (data.pagina_abaco || data.ultima_pagina || null) : null,
+      exercicios: data.presente && (data.exercicios_abaco || data.exercicios) ? parseInt(data.exercicios_abaco || data.exercicios) : null,
+      erros: data.presente && (data.erros_abaco || data.erros) ? parseInt(data.erros_abaco || data.erros) : null,
       fez_desafio: data.presente ? (data.fez_desafio || false) : false,
       comentario: data.comentario || '',
       motivo_falta: !data.presente ? (data.motivo_falta || null) : null

@@ -1,11 +1,13 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye } from "lucide-react";
+import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
+import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
 
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera';
 type SortDirection = 'asc' | 'desc';
@@ -23,6 +25,7 @@ export default function AlunosAtivos() {
   const [filterApostila, setFilterApostila] = useState('todas');
   const [sortField, setSortField] = useState<SortField>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoAtivo | null>(null);
 
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
@@ -79,6 +82,7 @@ export default function AlunosAtivos() {
     });
     return resultado;
   }, [alunos, searchTerm, filterTurma, filterProfessor, filterApostila, sortField, sortDirection]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -87,16 +91,27 @@ export default function AlunosAtivos() {
       setSortDirection('asc');
     }
   };
+
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="w-4 h-4" />;
     return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
   };
+
   const clearFilters = () => {
     setSearchTerm('');
     setFilterTurma('todas');
     setFilterProfessor('todos');
     setFilterApostila('todas');
   };
+
+  const handleVerDetalhes = (aluno: AlunoAtivo) => {
+    setAlunoSelecionado(aluno);
+  };
+
+  const handleFecharModal = () => {
+    setAlunoSelecionado(null);
+  };
+
   if (loading) {
     return <div className="p-4 text-center">
         <p>Carregando alunos ativos...</p>
@@ -107,7 +122,9 @@ export default function AlunosAtivos() {
         <p>Erro ao carregar alunos: {error}</p>
       </div>;
   }
-  return <div className="p-4 space-y-6">
+  
+  return (
+    <div className="p-4 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Alunos Ativos</h1>
         <Badge variant="secondary" className="text-sm bg-purple-400">
@@ -203,10 +220,14 @@ export default function AlunosAtivos() {
                       {getSortIcon('dias_supera')}
                     </Button>
                   </th>
+                  <th className="text-left p-4 w-[120px]">
+                    <span className="font-semibold">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {alunosFiltrados.map(aluno => <tr key={aluno.id} className="border-b hover:bg-gray-50">
+                {alunosFiltrados.map(aluno => (
+                  <tr key={aluno.id} className="border-b hover:bg-gray-50">
                     <td className="p-4 font-medium">{aluno.nome}</td>
                     <td className="p-4">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -215,7 +236,11 @@ export default function AlunosAtivos() {
                     </td>
                     <td className="p-4">{aluno.professor_nome || 'Não atribuído'}</td>
                     <td className="p-4">
-                      {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400">{aluno.ultima_apostila}</Badge> : <span className="text-gray-400">Não registrado</span>}
+                      {aluno.ultima_apostila ? (
+                        <Badge variant="secondary" className="bg-violet-400">{aluno.ultima_apostila}</Badge>
+                      ) : (
+                        <span className="text-gray-400">Não registrado</span>
+                      )}
                     </td>
                     <td className="p-4">
                       <Badge 
@@ -231,15 +256,38 @@ export default function AlunosAtivos() {
                         {aluno.dias_supera || 0} dias
                       </Badge>
                     </td>
-                  </tr>)}
+                    <td className="p-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleVerDetalhes(aluno)}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Ver Detalhes
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
 
-            {alunosFiltrados.length === 0 && <div className="text-center py-8 text-gray-500">
+            {alunosFiltrados.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
                 <p>Nenhum aluno encontrado com os filtros aplicados.</p>
-              </div>}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
-    </div>;
+
+      {/* Modal de detalhes do aluno */}
+      {alunoSelecionado && (
+        <DetalhesAlunoAtivoModal
+          aluno={alunoSelecionado}
+          onClose={handleFecharModal}
+        />
+      )}
+    </div>
+  );
 }

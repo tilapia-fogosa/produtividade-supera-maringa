@@ -12,6 +12,30 @@ export interface AlunoAtivo {
   ultima_apostila: string | null;
   dias_supera: number | null;
   active: boolean;
+  idade: number | null;
+  email: string | null;
+  telefone: string | null;
+  matricula: string | null;
+  codigo: string | null;
+  indice: string | null;
+  curso: string | null;
+  ultima_pagina: number | null;
+  ultimo_nivel: string | null;
+  niveldesafio: string | null;
+  dias_apostila: number | null;
+  data_onboarding: string | null;
+  motivo_procura: string | null;
+  coordenador_responsavel: string | null;
+  percepcao_coordenador: string | null;
+  pontos_atencao: string | null;
+  avaliacao_abaco: string | null;
+  avaliacao_ah: string | null;
+  texto_devolutiva: string | null;
+  vencimento_contrato: string | null;
+  ultima_falta: string | null;
+  ultima_correcao_ah: string | null;
+  is_funcionario: boolean | null;
+  valor_mensalidade: number | null;
 }
 
 export function useAlunosAtivos() {
@@ -30,10 +54,17 @@ export function useAlunosAtivos() {
 
       console.log('Iniciando busca de alunos ativos...');
 
-      // Primeira consulta: buscar alunos ativos
+      // Primeira consulta: buscar alunos ativos com todos os campos
       const { data: alunosData, error: alunosError } = await supabase
         .from('alunos')
-        .select('id, nome, turma_id, dias_supera, active')
+        .select(`
+          id, nome, turma_id, dias_supera, active, idade, email, telefone,
+          matricula, codigo, indice, curso, ultima_pagina, ultimo_nivel,
+          niveldesafio, dias_apostila, data_onboarding, motivo_procura,
+          coordenador_responsavel, percepcao_coordenador, pontos_atencao,
+          avaliacao_abaco, avaliacao_ah, texto_devolutiva, vencimento_contrato,
+          ultima_falta, ultima_correcao_ah, is_funcionario, valor_mensalidade
+        `)
         .eq('active', true)
         .order('nome');
 
@@ -108,7 +139,6 @@ export function useAlunosAtivos() {
           const professor = turma ? professoresData.find(p => p.id === turma.professor_id) : null;
           
           // Buscar a última apostila registrada no ábaco
-          // Simplificando a consulta para evitar erro de instanciação de tipo
           let ultimaApostila: string | null = null;
           try {
             const { data: apostilaData, error: apostilaError } = await supabase
@@ -129,14 +159,10 @@ export function useAlunosAtivos() {
           }
 
           const alunoProcessado: AlunoAtivo = {
-            id: aluno.id,
-            nome: aluno.nome,
-            turma_id: aluno.turma_id,
+            ...aluno,
             turma_nome: turma?.nome || null,
             professor_nome: professor?.nome || null,
             ultima_apostila: ultimaApostila,
-            dias_supera: aluno.dias_supera,
-            active: aluno.active,
           };
 
           console.log('Aluno processado:', alunoProcessado);
