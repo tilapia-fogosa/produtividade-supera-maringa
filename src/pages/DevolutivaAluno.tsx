@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -146,6 +147,45 @@ const DevolutivaAluno = () => {
         </h1>
       </div>
 
+      {/* Informativo Personalizado movido para o topo */}
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full space-y-2"
+      >
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="outline"
+            className="flex items-center justify-between w-full"
+          >
+            <span>Informativo Personalizado</span>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${
+                isOpen ? "transform rotate-180" : ""
+              }`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4">
+          <Textarea
+            placeholder="Digite aqui sua mensagem para o aluno ou responsável..."
+            value={textoDevolutiva}
+            onChange={(e) => setTextoDevolutiva(e.target.value)}
+            className="min-h-[200px]"
+          />
+          <Button onClick={handleSalvarDevolutiva} className="w-full">
+            Salvar Informativo
+          </Button>
+
+          {textoDevolutiva && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h3 className="font-semibold mb-2">Informativo Atual:</h3>
+              <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+
       <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
         <div className="flex items-center justify-center gap-2">
           <Brain className="h-6 w-6 text-orange-500" />
@@ -264,43 +304,16 @@ const DevolutivaAluno = () => {
         </div>
       </div>
 
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="w-full space-y-2"
-      >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="outline"
-            className="flex items-center justify-between w-full"
-          >
-            <span>Informativo Personalizado</span>
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${
-                isOpen ? "transform rotate-180" : ""
-              }`}
-            />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4">
-          <Textarea
-            placeholder="Digite aqui sua mensagem para o aluno ou responsável..."
-            value={textoDevolutiva}
-            onChange={(e) => setTextoDevolutiva(e.target.value)}
-            className="min-h-[200px]"
+      {/* Rodapé com logo da São Rafael */}
+      <footer className="mt-8 pt-6 border-t border-orange-200">
+        <div className="flex justify-center items-center">
+          <img 
+            src="/lovable-uploads/5407bd2f-e771-477d-ad1c-dd4ec2e14a8d.png" 
+            alt="Projeto São Rafael"
+            className="h-16 w-auto opacity-80"
           />
-          <Button onClick={handleSalvarDevolutiva} className="w-full">
-            Salvar Informativo
-          </Button>
-
-          {textoDevolutiva && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h3 className="font-semibold mb-2">Informativo Atual:</h3>
-              <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
-            </div>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      </footer>
     </div>
   );
 };
