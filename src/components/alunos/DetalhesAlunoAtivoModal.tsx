@@ -34,13 +34,6 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
               <InfoItem label="Telefone" value={aluno.telefone || 'Não informado'} />
             </Section>
 
-            <Section title="Dados Acadêmicos">
-              <InfoItem label="Matrícula" value={aluno.matricula || 'Não informado'} />
-              <InfoItem label="Código" value={aluno.codigo || 'Não informado'} />
-              <InfoItem label="Índice" value={aluno.indice || 'Não informado'} />
-              <InfoItem label="Curso" value={aluno.curso || 'Não informado'} />
-            </Section>
-
             <Section title="Turma e Professor">
               <InfoItem label="Nome da Turma" value={aluno.turma_nome || 'Não atribuído'} />
               <InfoItem label="Professor" value={aluno.professor_nome || 'Não atribuído'} />
@@ -49,9 +42,7 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
             <Section title="Progresso Acadêmico">
               <InfoItem label="Última Apostila" value={aluno.ultima_apostila || 'Não registrado'} />
               <InfoItem label="Última Página" value={aluno.ultima_pagina?.toString() || 'Não registrado'} />
-              <InfoItem label="Último Nível" value={aluno.ultimo_nivel || 'Não registrado'} />
-              <InfoItem label="Nível Desafio" value={aluno.niveldesafio || 'Não registrado'} />
-              <InfoItem label="Dias na Apostila" value={aluno.dias_apostila?.toString() || 'Não registrado'} />
+              <InfoItem label="Última Correção AH" value={aluno.ultima_correcao_ah ? new Date(aluno.ultima_correcao_ah).toLocaleDateString('pt-BR') : 'Não registrado'} />
             </Section>
 
             <Section title="Dados do Onboarding">
@@ -62,16 +53,10 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
               <InfoItem label="Pontos de Atenção" value={aluno.pontos_atencao || 'Não registrado'} />
             </Section>
 
-            <Section title="Avaliações">
-              <InfoItem label="Avaliação Ábaco" value={aluno.avaliacao_abaco || 'Não registrado'} />
-              <InfoItem label="Avaliação AH" value={aluno.avaliacao_ah || 'Não registrado'} />
-              <InfoItem label="Texto Devolutiva" value={aluno.texto_devolutiva || 'Não registrado'} />
-            </Section>
-
             <Section title="Informações Contratuais">
+              <InfoItem label="Início do Contrato" value={aluno.data_onboarding ? new Date(aluno.data_onboarding).toLocaleDateString('pt-BR') : 'Não informado'} />
               <InfoItem label="Vencimento do Contrato" value={aluno.vencimento_contrato || 'Não informado'} />
               <InfoItem label="Última Falta" value={aluno.ultima_falta ? new Date(aluno.ultima_falta).toLocaleDateString('pt-BR') : 'Não registrado'} />
-              <InfoItem label="Última Correção AH" value={aluno.ultima_correcao_ah ? new Date(aluno.ultima_correcao_ah).toLocaleDateString('pt-BR') : 'Não registrado'} />
             </Section>
 
             <Section title="Status">
