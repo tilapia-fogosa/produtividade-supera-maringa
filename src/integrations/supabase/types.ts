@@ -224,6 +224,7 @@ export type Database = {
           ultima_pagina: number | null
           ultimo_nivel: string | null
           unit_id: string
+          valor_mensalidade: number | null
           vencimento_contrato: string | null
         }
         Insert: {
@@ -256,6 +257,7 @@ export type Database = {
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
           unit_id: string
+          valor_mensalidade?: number | null
           vencimento_contrato?: string | null
         }
         Update: {
@@ -288,6 +290,7 @@ export type Database = {
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
           unit_id?: string
+          valor_mensalidade?: number | null
           vencimento_contrato?: string | null
         }
         Relationships: [

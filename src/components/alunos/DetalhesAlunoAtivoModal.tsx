@@ -16,6 +16,14 @@ interface DetalhesAlunoAtivoModalProps {
 }
 
 export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoModalProps) {
+  const formatarValorMensalidade = (valor: number | null) => {
+    if (valor === null || valor === undefined) return 'Não informado';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor);
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] max-h-[90vh]">
@@ -56,6 +64,7 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
             <Section title="Informações Contratuais">
               <InfoItem label="Início do Contrato" value={aluno.data_onboarding ? new Date(aluno.data_onboarding).toLocaleDateString('pt-BR') : 'Não informado'} />
               <InfoItem label="Vencimento do Contrato" value={aluno.vencimento_contrato || 'Não informado'} />
+              <InfoItem label="Valor da Mensalidade" value={formatarValorMensalidade(aluno.valor_mensalidade)} />
               <InfoItem label="Última Falta" value={aluno.ultima_falta ? new Date(aluno.ultima_falta).toLocaleDateString('pt-BR') : 'Não registrado'} />
             </Section>
 

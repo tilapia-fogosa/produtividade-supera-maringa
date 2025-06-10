@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -34,6 +35,7 @@ export interface AlunoAtivo {
   ultima_falta: string | null;
   ultima_correcao_ah: string | null;
   is_funcionario: boolean | null;
+  valor_mensalidade: number | null;
 }
 
 export function useAlunosAtivos() {
@@ -61,7 +63,7 @@ export function useAlunosAtivos() {
           niveldesafio, dias_apostila, data_onboarding, motivo_procura,
           coordenador_responsavel, percepcao_coordenador, pontos_atencao,
           avaliacao_abaco, avaliacao_ah, texto_devolutiva, vencimento_contrato,
-          ultima_falta, ultima_correcao_ah, is_funcionario
+          ultima_falta, ultima_correcao_ah, is_funcionario, valor_mensalidade
         `)
         .eq('active', true)
         .order('nome');
