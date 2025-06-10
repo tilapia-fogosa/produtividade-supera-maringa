@@ -13,9 +13,14 @@ export function useTodasTurmas() {
       try {
         setLoading(true);
         
+        // Buscar turmas que têm pelo menos um aluno ativo
         const { data: turmasData, error } = await supabase
           .from('turmas')
-          .select('*')
+          .select(`
+            *,
+            alunos!inner(id, active)
+          `)
+          .eq('alunos.active', true)
           .order('nome');
 
         if (error) {
@@ -24,15 +29,21 @@ export function useTodasTurmas() {
           return;
         }
 
-        console.log('Turmas encontradas:', turmasData);
+        console.log('Turmas com alunos encontradas:', turmasData);
         
-        // Garantir que cada turma tenha o campo sala
-        const turmasCompletas = turmasData?.map(turma => ({
-          ...turma,
-          sala: turma.sala || null
-        })) || [];
+        // Remover duplicatas e garantir que cada turma tenha o campo sala
+        const turmasUnicas = turmasData?.reduce((acc, turma) => {
+          const turmaExistente = acc.find(t => t.id === turma.id);
+          if (!turmaExistente) {
+            acc.push({
+              ...turma,
+              sala: turma.sala || null
+            });
+          }
+          return acc;
+        }, [] as Turma[]) || [];
         
-        setTurmas(turmasCompletas);
+        setTurmas(turmasUnicas);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
         setError(error instanceof Error ? error.message : 'Erro desconhecido');
