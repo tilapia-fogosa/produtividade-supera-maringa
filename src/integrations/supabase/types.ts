@@ -3065,6 +3065,31 @@ export type Database = {
         Args: { p_periodo: string }
         Returns: string
       }
+      get_produtividade_abaco_limpa: {
+        Args: {
+          p_pessoa_id: string
+          p_data_inicial: string
+          p_data_final: string
+        }
+        Returns: {
+          id: string
+          pessoa_id: string
+          tipo_pessoa: string
+          data_aula: string
+          presente: boolean
+          apostila: string
+          pagina: string
+          exercicios: number
+          erros: number
+          fez_desafio: boolean
+          comentario: string
+          motivo_falta: string
+          is_reposicao: boolean
+          aluno_nome: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_registration_stats: {
         Args: {
           p_start_date: string

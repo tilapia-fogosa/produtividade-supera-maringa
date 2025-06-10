@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +43,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
       try {
         setLoading(true);
         setError(null);
-        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA (DIAGNOSTICO DETALHADO) ===');
+        console.log('=== INICIANDO BUSCA DE DEVOLUTIVA COM RPC ===');
         console.log('Aluno ID:', alunoId);
         console.log('Período:', periodo);
 
@@ -115,72 +114,28 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         
         console.log('✓ Período de busca:', dataInicialFormatada, 'até', dataFinalFormatada);
 
-        // DIAGNÓSTICO: Verificar se existem registros para este aluno
-        console.log('=== DIAGNÓSTICO: VERIFICANDO REGISTROS EXISTENTES ===');
-        
-        const { data: abacoAll, error: abacoAllError } = await supabase
-          .from('produtividade_abaco')
-          .select('*')
-          .eq('pessoa_id', alunoId)
-          .eq('tipo_pessoa', 'aluno')
-          .order('data_aula', { ascending: false })
-          .limit(5);
-
-        console.log('Registros ábaco encontrados (últimos 5):', abacoAll);
-        if (abacoAllError) console.error('Erro ao buscar registros ábaco:', abacoAllError);
-
-        const { data: ahAll, error: ahAllError } = await supabase
-          .from('produtividade_ah')
-          .select('*')
-          .eq('pessoa_id', alunoId)
-          .eq('tipo_pessoa', 'aluno')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        console.log('Registros AH encontrados (últimos 5):', ahAll);
-        if (ahAllError) console.error('Erro ao buscar registros AH:', ahAllError);
-
-        // DIAGNÓSTICO: Verificar registros antigos por nome também
-        console.log('=== DIAGNÓSTICO: VERIFICANDO REGISTROS POR NOME ===');
-        
-        const { data: abacoPorNome } = await supabase
-          .from('produtividade_abaco')
-          .select('*')
-          .eq('aluno_nome', alunoData.nome)
-          .eq('tipo_pessoa', 'aluno')
-          .order('data_aula', { ascending: false })
-          .limit(3);
-
-        console.log('Registros ábaco por nome:', abacoPorNome);
-
-        const { data: ahPorNome } = await supabase
-          .from('produtividade_ah')
-          .select('*')
-          .eq('aluno_nome', alunoData.nome)
-          .eq('tipo_pessoa', 'aluno')
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        console.log('Registros AH por nome:', ahPorNome);
-
-        // Agora buscar dados do período específico
-        console.log('=== BUSCANDO DADOS DO PERÍODO ESPECÍFICO ===');
+        // Usar a nova função RPC para buscar dados do ábaco sem duplicatas
+        console.log('=== BUSCANDO DADOS DO ÁBACO VIA RPC (SEM DUPLICATAS) ===');
         
         const { data: produtividadeAbaco, error: abacoError } = await supabase
-          .from('produtividade_abaco')
-          .select('*')
-          .eq('pessoa_id', alunoId)
-          .eq('tipo_pessoa', 'aluno')
-          .gte('data_aula', dataInicialFormatada)
-          .lte('data_aula', dataFinalFormatada)
-          .eq('presente', true)
-          .order('data_aula', { ascending: false });
+          .rpc('get_produtividade_abaco_limpa', {
+            p_pessoa_id: alunoId,
+            p_data_inicial: dataInicialFormatada,
+            p_data_final: dataFinalFormatada
+          });
 
-        console.log('Dados ábaco no período:', produtividadeAbaco?.length || 0, 'registros');
-        if (produtividadeAbaco && produtividadeAbaco.length > 0) {
-          console.log('Primeiros registros ábaco:', produtividadeAbaco.slice(0, 2));
+        if (abacoError) {
+          console.error('Erro ao buscar dados do ábaco via RPC:', abacoError);
+          throw new Error('Erro ao buscar dados de produtividade do ábaco');
         }
 
+        console.log('Dados ábaco via RPC (sem duplicatas):', produtividadeAbaco?.length || 0, 'registros');
+        if (produtividadeAbaco && produtividadeAbaco.length > 0) {
+          console.log('Primeiros registros ábaco:', produtividadeAbaco.slice(0, 2));
+          console.log('Total exercícios bruto:', produtividadeAbaco.reduce((sum: number, item: any) => sum + (item.exercicios || 0), 0));
+        }
+
+        // Buscar dados do AH (ainda sem RPC, mas usando filtro manual por enquanto)
         const { data: produtividadeAHRaw, error: ahError } = await supabase
           .from('produtividade_ah')
           .select('*')
@@ -197,23 +152,20 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         }
 
         console.log('Dados AH no período:', produtividadeAH.length, 'registros');
-        if (produtividadeAH && produtividadeAH.length > 0) {
-          console.log('Primeiros registros AH:', produtividadeAH.slice(0, 2));
-        }
 
-        // Processar dados
+        // Processar dados - agora os dados do ábaco já vêm limpos da RPC
         const abacoProcessado = processarDadosAbacoePorMes(produtividadeAbaco || []);
         const ahProcessado = processarDadosAHPorMes(produtividadeAH || []);
 
-        console.log('✓ Dados ábaco processados:', abacoProcessado);
+        console.log('✓ Dados ábaco processados (pós-RPC):', abacoProcessado);
         console.log('✓ Dados AH processados:', ahProcessado);
 
         // Calcular totais
         const abacoTotais = calcularTotais(abacoProcessado);
         const ahTotais = calcularTotais(ahProcessado);
 
-        // Contar desafios feitos
-        const desafiosFeitos = (produtividadeAbaco || []).filter(p => p.fez_desafio).length;
+        // Contar desafios feitos - agora usando dados limpos da RPC
+        const desafiosFeitos = (produtividadeAbaco || []).filter((p: any) => p.fez_desafio).length;
 
         const resultado: AlunoDevolutivaData = {
           id: alunoData.id,
@@ -231,12 +183,12 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           ah_percentual_total: ahTotais.percentual,
         };
 
-        console.log('=== RESULTADO FINAL ===');
+        console.log('=== RESULTADO FINAL (COM RPC) ===');
         console.log('Nome:', resultado.nome);
         console.log('Desafios feitos:', resultado.desafios_feitos);
         console.log('Meses com dados ábaco:', resultado.desempenho_abaco.length);
         console.log('Meses com dados AH:', resultado.desempenho_ah.length);
-        console.log('Total exercícios ábaco:', resultado.abaco_total_exercicios);
+        console.log('Total exercícios ábaco (sem duplicatas):', resultado.abaco_total_exercicios);
         console.log('Total exercícios AH:', resultado.ah_total_exercicios);
 
         setData(resultado);
@@ -257,7 +209,7 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
 }
 
 function processarDadosAbacoePorMes(dados: any[]): DesempenhoItem[] {
-  console.log('Processando dados ábaco por mês:', dados.length, 'registros');
+  console.log('Processando dados ábaco por mês (dados já filtrados pela RPC):', dados.length, 'registros');
   
   const dadosPorMes = new Map<string, {
     livros: Set<string>;
@@ -312,7 +264,7 @@ function processarDadosAbacoePorMes(dados: any[]): DesempenhoItem[] {
     return mesB - mesA;
   });
 
-  console.log('Resultado ábaco processado:', resultado);
+  console.log('Resultado ábaco processado (pós-RPC):', resultado);
   return resultado;
 }
 
