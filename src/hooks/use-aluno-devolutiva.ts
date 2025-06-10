@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -136,6 +135,36 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           console.log('Total exercícios bruto:', produtividadeAbaco.reduce((sum: number, item: any) => sum + (item.exercicios || 0), 0));
         }
 
+        // NOVA CONSULTA SEPARADA PARA DESAFIOS - incluindo todos os registros, mesmo com exercicios = 0
+        console.log('=== BUSCANDO DESAFIOS SEPARADAMENTE ===');
+        
+        const { data: desafiosData, error: desafiosError } = await supabase
+          .from('produtividade_abaco')
+          .select('data_aula, fez_desafio')
+          .eq('pessoa_id', alunoId)
+          .eq('tipo_pessoa', 'aluno')
+          .eq('fez_desafio', true)
+          .gte('data_aula', dataInicialFormatada)
+          .lte('data_aula', dataFinalFormatada)
+          .order('data_aula', { ascending: false });
+
+        if (desafiosError) {
+          console.error('Erro ao buscar desafios:', desafiosError);
+        }
+
+        // Remover duplicatas de desafios por data
+        const desafiosUnicos = new Map();
+        (desafiosData || []).forEach(item => {
+          const data = item.data_aula;
+          if (!desafiosUnicos.has(data)) {
+            desafiosUnicos.set(data, item);
+          }
+        });
+
+        const totalDesafios = desafiosUnicos.size;
+        console.log('✓ Total de desafios únicos encontrados:', totalDesafios);
+        console.log('✓ Datas dos desafios:', Array.from(desafiosUnicos.keys()));
+
         // Buscar dados do AH (ainda sem RPC, mas usando filtro manual por enquanto)
         const { data: produtividadeAHRaw, error: ahError } = await supabase
           .from('produtividade_ah')
@@ -165,15 +194,12 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
         const abacoTotais = calcularTotais(abacoProcessado);
         const ahTotais = calcularTotais(ahProcessado);
 
-        // Contar desafios feitos - agora usando dados limpos da RPC
-        const desafiosFeitos = (produtividadeAbaco || []).filter((p: any) => p.fez_desafio).length;
-
         const resultado: AlunoDevolutivaData = {
           id: alunoData.id,
           nome: alunoData.nome,
           texto_devolutiva: alunoData.texto_devolutiva,
           texto_geral: configData?.texto_geral || null,
-          desafios_feitos: desafiosFeitos,
+          desafios_feitos: totalDesafios, // Usando a contagem separada de desafios
           desempenho_abaco: abacoProcessado,
           desempenho_ah: ahProcessado,
           abaco_total_exercicios: abacoTotais.exercicios,
@@ -184,9 +210,9 @@ export function useAlunoDevolutiva(alunoId: string, periodo: PeriodoFiltro) {
           ah_percentual_total: ahTotais.percentual,
         };
 
-        console.log('=== RESULTADO FINAL (COM RPC) ===');
+        console.log('=== RESULTADO FINAL (COM CONTAGEM SEPARADA DE DESAFIOS) ===');
         console.log('Nome:', resultado.nome);
-        console.log('Desafios feitos:', resultado.desafios_feitos);
+        console.log('Desafios feitos (contagem separada):', resultado.desafios_feitos);
         console.log('Meses com dados ábaco:', resultado.desempenho_abaco.length);
         console.log('Meses com dados AH:', resultado.desempenho_ah.length);
         console.log('Total exercícios ábaco (sem duplicatas):', resultado.abaco_total_exercicios);
