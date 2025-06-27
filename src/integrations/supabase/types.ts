@@ -2588,6 +2588,8 @@ export type Database = {
           created_at: string
           email: string | null
           enrollment_fee: number | null
+          evolution_instance_name: string | null
+          evolutionapi_token: string | null
           id: string
           legal_representative: string | null
           material_fee: number | null
@@ -2613,6 +2615,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
+          evolution_instance_name?: string | null
+          evolutionapi_token?: string | null
           id?: string
           legal_representative?: string | null
           material_fee?: number | null
@@ -2638,6 +2642,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
+          evolution_instance_name?: string | null
+          evolutionapi_token?: string | null
           id?: string
           legal_representative?: string | null
           material_fee?: number | null

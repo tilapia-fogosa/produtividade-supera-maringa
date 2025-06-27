@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Printer } from "lucide-react";
 import FichaTurmaImprimivel from '@/components/fichas/FichaTurmaImprimivel';
 import { toast } from '@/hooks/use-toast';
@@ -17,6 +18,7 @@ const Fichas = () => {
   const dataAtual = new Date();
   const [mesSelecionado, setMesSelecionado] = useState(dataAtual.getMonth());
   const [anoSelecionado, setAnoSelecionado] = useState(dataAtual.getFullYear());
+  const [iniciarSemanaAnterior, setIniciarSemanaAnterior] = useState(false);
 
   const handleVoltar = () => {
     navigate('/devolutivas');
@@ -89,7 +91,7 @@ const Fichas = () => {
             )}
           </div>
 
-          {/* Seletores de Mês e Ano */}
+          {/* Seletores de Mês e Ano com Toggle */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-azul-500">Período:</span>
@@ -125,6 +127,21 @@ const Fichas = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Toggle para começar ciclo na semana anterior */}
+            <div className="flex items-center gap-2">
+              <Switch
+                id="iniciar-semana-anterior"
+                checked={iniciarSemanaAnterior}
+                onCheckedChange={setIniciarSemanaAnterior}
+              />
+              <label 
+                htmlFor="iniciar-semana-anterior" 
+                className="text-sm font-medium text-azul-500 cursor-pointer"
+              >
+                Começar ciclo semana anterior
+              </label>
+            </div>
           </div>
         </div>
         
@@ -137,6 +154,7 @@ const Fichas = () => {
             <div>
               <h2 className="text-xl font-bold mb-4 text-azul-500 print:hidden">
                 Fichas de Acompanhamento - {mesNome} {anoSelecionado} - {turmasOrdenadas.length} Turmas
+                {iniciarSemanaAnterior && <span className="text-sm font-normal ml-2">(iniciando semana anterior)</span>}
               </h2>
               
               {turmasOrdenadas.map((item, index) => (
@@ -146,6 +164,7 @@ const Fichas = () => {
                     alunos={item.alunos}
                     mesSelecionado={mesSelecionado}
                     anoSelecionado={anoSelecionado}
+                    iniciarSemanaAnterior={iniciarSemanaAnterior}
                   />
                   {index < turmasOrdenadas.length - 1 && (
                     <div className="print:page-break-after print:mb-0 mb-12"></div>

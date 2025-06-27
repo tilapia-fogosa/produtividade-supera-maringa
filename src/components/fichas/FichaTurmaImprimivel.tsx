@@ -16,6 +16,7 @@ interface FichaTurmaImprimivelProps {
   }[];
   mesSelecionado: number;
   anoSelecionado: number;
+  iniciarSemanaAnterior: boolean;
 }
 
 // Definir cores constantes para garantir consistência
@@ -30,7 +31,8 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   turma,
   alunos,
   mesSelecionado,
-  anoSelecionado
+  anoSelecionado,
+  iniciarSemanaAnterior
 }) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const alunosPorPagina = 14;
@@ -70,15 +72,47 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   const gerarDatasAulas = () => {
     const diaSemana = obterDiaSemana(turma.dia_semana);
     
-    // Encontrar todas as datas do mês selecionado para o dia da semana da turma
-    const datasDoMes: Date[] = [];
-    const primeiroDiaDoMes = new Date(anoSelecionado, mesSelecionado, 1);
-    const ultimoDiaDoMes = new Date(anoSelecionado, mesSelecionado + 1, 0);
+    let dataInicio: Date;
+    let dataFim: Date;
     
-    for (let dia = 1; dia <= ultimoDiaDoMes.getDate(); dia++) {
-      const data = new Date(anoSelecionado, mesSelecionado, dia);
-      if (data.getDay() === diaSemana) {
-        datasDoMes.push(data);
+    if (iniciarSemanaAnterior) {
+      // Encontrar a primeira ocorrência do dia da semana começando uma semana antes do mês
+      const primeiroDiaDoMes = new Date(anoSelecionado, mesSelecionado, 1);
+      const ultimoDiaDoMesAnterior = new Date(anoSelecionado, mesSelecionado, 0);
+      
+      // Procurar a primeira ocorrência do dia da semana na semana anterior ao mês
+      dataInicio = new Date(ultimoDiaDoMesAnterior);
+      dataInicio.setDate(dataInicio.getDate() - 6); // Uma semana antes
+      
+      // Encontrar a primeira ocorrência do dia da semana a partir desta data
+      while (dataInicio.getDay() !== diaSemana) {
+        dataInicio.setDate(dataInicio.getDate() + 1);
+      }
+      
+      // Data fim será o último dia do mês selecionado + alguns dias para cobrir 5 semanas
+      dataFim = new Date(anoSelecionado, mesSelecionado + 1, 0);
+      dataFim.setDate(dataFim.getDate() + 7); // Uma semana a mais para garantir 5 semanas
+    } else {
+      // Lógica original - começar do primeiro dia do mês
+      dataInicio = new Date(anoSelecionado, mesSelecionado, 1);
+      dataFim = new Date(anoSelecionado, mesSelecionado + 1, 0);
+      
+      // Encontrar a primeira ocorrência do dia da semana no mês
+      while (dataInicio.getDay() !== diaSemana && dataInicio.getMonth() === mesSelecionado) {
+        dataInicio.setDate(dataInicio.getDate() + 1);
+      }
+    }
+    
+    // Coletar todas as datas do dia da semana dentro do período
+    const datasDoMes: Date[] = [];
+    const dataAtual = new Date(dataInicio);
+    
+    while (datasDoMes.length < 5 && dataAtual <= dataFim) {
+      if (dataAtual.getDay() === diaSemana) {
+        datasDoMes.push(new Date(dataAtual));
+        dataAtual.setDate(dataAtual.getDate() + 7); // Próxima semana
+      } else {
+        dataAtual.setDate(dataAtual.getDate() + 1);
       }
     }
     
@@ -354,7 +388,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
 
       {/* Mês e ano selecionados */}
       <div className="ficha-mes-ano">
-        <h2>{format(new Date(anoSelecionado, mesSelecionado), 'MMMM yyyy', { locale: ptBR })}</h2>
+        <h2>
+          {format(new Date(anoSelecionado, mesSelecionado), 'MMMM yyyy', { locale: ptBR })}
+          {iniciarSemanaAnterior && <span className="text-sm"> (iniciando semana anterior)</span>}
+        </h2>
       </div>
 
       {/* Tabela principal da ficha (14 alunos) */}
