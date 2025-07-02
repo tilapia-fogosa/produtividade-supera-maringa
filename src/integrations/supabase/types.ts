@@ -1661,6 +1661,50 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          published_at: string | null
+          scheduled_for: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          scheduled_for: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          scheduled_for?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtividade_abaco: {
         Row: {
           aluno_nome: string | null
@@ -2752,6 +2796,36 @@ export type Database = {
           },
         ]
       }
+      users: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       webhook_credentials: {
         Row: {
           active: boolean | null
@@ -3025,6 +3099,17 @@ export type Database = {
           ag_conversion_rate: number
           at_conversion_rate: number
           ma_conversion_rate: number
+        }[]
+      }
+      get_correcoes_ah_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          professor_correcao: string
+          mes_atual: number
+          mes_anterior: number
+          ultimos_3_meses: number
+          ultimos_6_meses: number
+          ultimos_12_meses: number
         }[]
       }
       get_daily_activities_by_type: {

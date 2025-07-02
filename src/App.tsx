@@ -30,6 +30,7 @@ import AdminConfiguracao from "./pages/AdminConfiguracao";
 import AlunosAtivos from "./pages/AlunosAtivos";
 import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
+import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ function App() {
                       <Route path="/alunos-ativos" element={<AlunosAtivos />} />
                       <Route path="/aula-zero" element={<AulaZero />} />
                       <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
+                      <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
