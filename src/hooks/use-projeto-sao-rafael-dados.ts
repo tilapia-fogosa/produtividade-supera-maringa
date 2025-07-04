@@ -179,7 +179,7 @@ async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
   
   console.log('Período de busca:', dataInicial, 'até', dataFinal);
   
-  // Buscar alunos que tiveram lançamentos de produtividade ábaco no período
+  // Buscar todos os alunos das turmas do Professor Gustavo
   const { data: alunosAbaco, error: errorAbaco } = await supabase
     .from('alunos')
     .select('id, nome')
@@ -195,47 +195,49 @@ async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
     return [];
   }
 
-  // Buscar quais alunos tiveram lançamentos de ábaco no período
+  const alunosIds = alunosAbaco.map(a => a.id);
+
+  // Buscar quais alunos tiveram lançamentos de ábaco no período usando pessoa_id
   const { data: lancamentosAbaco } = await supabase
     .from('produtividade_abaco')
-    .select('aluno_nome')
-    .in('aluno_nome', alunosAbaco.map(a => a.nome))
+    .select('pessoa_id')
+    .in('pessoa_id', alunosIds)
     .gte('data_aula', dataInicial)
     .lte('data_aula', dataFinal);
 
-  // Buscar quais alunos tiveram lançamentos de AH no período
+  // Buscar quais alunos tiveram lançamentos de AH no período usando pessoa_id
   const dataInicialAH = `${dataInicial}T00:00:00.000Z`;
   const dataFinalAH = `${dataFinal}T23:59:59.999Z`;
   
   const { data: lancamentosAH } = await supabase
     .from('produtividade_ah')
-    .select('aluno_nome')
-    .in('aluno_nome', alunosAbaco.map(a => a.nome))
+    .select('pessoa_id')
+    .in('pessoa_id', alunosIds)
     .gte('created_at', dataInicialAH)
     .lte('created_at', dataFinalAH);
 
   // Combinar alunos que tiveram lançamentos em qualquer uma das tabelas
-  const nomesComLancamentos = new Set<string>();
+  const idsComLancamentos = new Set<string>();
   
   if (lancamentosAbaco) {
     lancamentosAbaco.forEach(item => {
-      if (item.aluno_nome) {
-        nomesComLancamentos.add(item.aluno_nome);
+      if (item.pessoa_id) {
+        idsComLancamentos.add(item.pessoa_id);
       }
     });
   }
   
   if (lancamentosAH) {
     lancamentosAH.forEach(item => {
-      if (item.aluno_nome) {
-        nomesComLancamentos.add(item.aluno_nome);
+      if (item.pessoa_id) {
+        idsComLancamentos.add(item.pessoa_id);
       }
     });
   }
 
   // Filtrar apenas alunos que tiveram lançamentos
   const alunosComLancamentos = alunosAbaco.filter(aluno => 
-    nomesComLancamentos.has(aluno.nome)
+    idsComLancamentos.has(aluno.id)
   );
 
   console.log('Total de alunos com lançamentos:', alunosComLancamentos.length);
@@ -249,11 +251,11 @@ async function processarDadosAbacoAlunosComLancamentos(alunos: any[], mesAno: st
   const dataInicial = `${mesAno}-01`;
   const dataFinal = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}`;
   
-  // Buscar dados de produtividade para o período
+  // Buscar dados de produtividade para o período usando pessoa_id
   const { data: produtividadeData, error } = await supabase
     .from('produtividade_abaco')
     .select('*')
-    .in('aluno_nome', alunos.map(a => a.nome))
+    .in('pessoa_id', alunos.map(a => a.id))
     .gte('data_aula', dataInicial)
     .lte('data_aula', dataFinal);
 
@@ -262,6 +264,12 @@ async function processarDadosAbacoAlunosComLancamentos(alunos: any[], mesAno: st
   }
 
   console.log('Dados de produtividade ábaco encontrados:', produtividadeData?.length || 0);
+
+  // Criar mapa de ID para Nome do aluno
+  const mapIdParaNome = new Map<string, string>();
+  alunos.forEach(aluno => {
+    mapIdParaNome.set(aluno.id, aluno.nome);
+  });
 
   // Agrupar dados por aluno
   const dadosPorAluno = new Map<string, {
@@ -284,7 +292,7 @@ async function processarDadosAbacoAlunosComLancamentos(alunos: any[], mesAno: st
     produtividadeData.forEach((item, index) => {
       console.log(`Processando item ábaco ${index + 1}:`, item);
       
-      const nomeAluno = item.aluno_nome;
+      const nomeAluno = mapIdParaNome.get(item.pessoa_id);
       if (!nomeAluno || !dadosPorAluno.has(nomeAluno)) return;
       
       const alunoData = dadosPorAluno.get(nomeAluno)!;
@@ -319,11 +327,11 @@ async function processarDadosAHAlunosComLancamentos(alunos: any[], mesAno: strin
   const dataInicialAH = `${mesAno}-01T00:00:00.000Z`;
   const dataFinalAH = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}T23:59:59.999Z`;
   
-  // Buscar dados de produtividade AH para o período
+  // Buscar dados de produtividade AH para o período usando pessoa_id
   const { data: produtividadeAHData, error } = await supabase
     .from('produtividade_ah')
     .select('*')
-    .in('aluno_nome', alunos.map(a => a.nome))
+    .in('pessoa_id', alunos.map(a => a.id))
     .gte('created_at', dataInicialAH)
     .lte('created_at', dataFinalAH);
 
@@ -332,6 +340,12 @@ async function processarDadosAHAlunosComLancamentos(alunos: any[], mesAno: strin
   }
 
   console.log('Dados de produtividade AH encontrados:', produtividadeAHData?.length || 0);
+
+  // Criar mapa de ID para Nome do aluno
+  const mapIdParaNome = new Map<string, string>();
+  alunos.forEach(aluno => {
+    mapIdParaNome.set(aluno.id, aluno.nome);
+  });
 
   // Agrupar dados por aluno
   const dadosPorAluno = new Map<string, {
@@ -352,7 +366,7 @@ async function processarDadosAHAlunosComLancamentos(alunos: any[], mesAno: strin
     produtividadeAHData.forEach((item, index) => {
       console.log(`Processando item AH ${index + 1}:`, item);
       
-      const nomeAluno = item.aluno_nome;
+      const nomeAluno = mapIdParaNome.get(item.pessoa_id);
       if (!nomeAluno || !dadosPorAluno.has(nomeAluno)) return;
       
       const alunoData = dadosPorAluno.get(nomeAluno)!;
