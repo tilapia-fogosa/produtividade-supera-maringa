@@ -948,6 +948,106 @@ export type Database = {
           },
         ]
       }
+      clients_backup: {
+        Row: {
+          active: boolean
+          age_range: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          lead_quality_score: number | null
+          lead_source: string
+          meta_id: string | null
+          name: string
+          next_contact_date: string | null
+          observations: string | null
+          original_ad: string | null
+          original_adset: string | null
+          phone_number: string
+          registration_cpf: string | null
+          registration_name: string | null
+          scheduled_date: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+          valorization_confirmed: boolean | null
+        }
+        Insert: {
+          active?: boolean
+          age_range?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source: string
+          meta_id?: string | null
+          name: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number: string
+          registration_cpf?: string | null
+          registration_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          valorization_confirmed?: boolean | null
+        }
+        Update: {
+          active?: boolean
+          age_range?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source?: string
+          meta_id?: string | null
+          name?: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number?: string
+          registration_cpf?: string | null
+          registration_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          valorization_confirmed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_backup_lead_source_fkey"
+            columns: ["lead_source"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_backup_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_backup_unit_id_fkey1"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dados_importantes: {
         Row: {
           data: string | null
@@ -1657,6 +1757,50 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          published_at: string | null
+          scheduled_for: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          scheduled_for: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          scheduled_for?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -2588,6 +2732,8 @@ export type Database = {
           created_at: string
           email: string | null
           enrollment_fee: number | null
+          evolution_instance_name: string | null
+          evolutionapi_token: string | null
           id: string
           legal_representative: string | null
           material_fee: number | null
@@ -2613,6 +2759,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
+          evolution_instance_name?: string | null
+          evolutionapi_token?: string | null
           id?: string
           legal_representative?: string | null
           material_fee?: number | null
@@ -2638,6 +2786,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
+          evolution_instance_name?: string | null
+          evolutionapi_token?: string | null
           id?: string
           legal_representative?: string | null
           material_fee?: number | null
@@ -2745,6 +2895,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      users: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       webhook_credentials: {
         Row: {
@@ -3019,6 +3199,17 @@ export type Database = {
           ag_conversion_rate: number
           at_conversion_rate: number
           ma_conversion_rate: number
+        }[]
+      }
+      get_correcoes_ah_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          professor_correcao: string
+          mes_atual: number
+          mes_anterior: number
+          ultimos_3_meses: number
+          ultimos_6_meses: number
+          ultimos_12_meses: number
         }[]
       }
       get_daily_activities_by_type: {
