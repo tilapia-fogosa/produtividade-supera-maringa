@@ -71,7 +71,7 @@ Professor: ${professor_nome}`;
 
     // Adicionar menção ao professor se tiver slack_username
     if (professor_slack) {
-      mensagem += `\n@${professor_slack}`;
+      mensagem += `\n<@${professor_slack}>`;
     }
 
     mensagem += `
@@ -96,7 +96,7 @@ Motivo da Falta: ${motivo_falta || 'Não informado'}`;
 
     // Adicionar menção hardcoded da chriskulza
     mensagem += `
-@chriskulza para acompanhamento.`;
+<@chriskulza> para acompanhamento.`;
 
     console.log('Mensagem formatada:', mensagem);
 
