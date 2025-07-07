@@ -252,6 +252,20 @@ export async function excluirProdutividade(supabaseClient: any, registroId: stri
   try {
     console.log('Excluindo registro de produtividade:', registroId);
     
+    // Primeiro, buscar os dados do registro para verificar se é uma falta
+    const { data: registro, error: registroError } = await supabaseClient
+      .from('produtividade_abaco')
+      .select('pessoa_id, presente, tipo_pessoa')
+      .eq('id', registroId)
+      .single();
+    
+    if (registroError) {
+      console.error('Erro ao buscar registro antes da exclusão:', registroError);
+      return false;
+    }
+    
+    console.log('Dados do registro a ser excluído:', registro);
+    
     const { error } = await supabaseClient
       .from('produtividade_abaco')
       .delete()
@@ -260,6 +274,38 @@ export async function excluirProdutividade(supabaseClient: any, registroId: stri
     if (error) {
       console.error('Erro ao excluir produtividade:', error);
       return false;
+    }
+    
+    // Se o registro removido era uma falta, decrementar faltas_consecutivas
+    if (!registro.presente) {
+      console.log('Registro era uma falta, decrementando faltas_consecutivas...');
+      
+      const tabela = registro.tipo_pessoa === 'aluno' ? 'alunos' : 'funcionarios';
+      
+      // Buscar valor atual de faltas_consecutivas
+      const { data: pessoaAtual, error: pessoaError } = await supabaseClient
+        .from(tabela)
+        .select('faltas_consecutivas')
+        .eq('id', registro.pessoa_id)
+        .single();
+      
+      if (pessoaError) {
+        console.error('Erro ao buscar faltas_consecutivas:', pessoaError);
+      } else {
+        const novaContagem = Math.max(0, (pessoaAtual.faltas_consecutivas || 0) - 1);
+        console.log(`Decrementando faltas_consecutivas de ${pessoaAtual.faltas_consecutivas} para ${novaContagem}`);
+        
+        const { error: updateError } = await supabaseClient
+          .from(tabela)
+          .update({ faltas_consecutivas: novaContagem })
+          .eq('id', registro.pessoa_id);
+        
+        if (updateError) {
+          console.error('Erro ao atualizar faltas_consecutivas:', updateError);
+        } else {
+          console.log('faltas_consecutivas atualizada com sucesso');
+        }
+      }
     }
     
     console.log('Registro excluído com sucesso!');
