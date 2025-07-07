@@ -231,91 +231,58 @@ serve(async (req) => {
     const totalFaltas = produtividade?.filter(p => !p.presente).length || 0;
     const percentualFaltas = totalAulas > 0 ? (totalFaltas / totalAulas) * 100 : 0;
     
-    // 3. Aplicar critérios de alerta por ORDEM DE PRIORIDADE
+    // 3. Aplicar critérios de alerta simplificados
     let alertaCriterioEncontrado: AlertaCriteria | null = null;
     
-    console.log('=== VERIFICANDO CRITÉRIOS DE ALERTA (POR PRIORIDADE) ===');
-    console.log(`Dados da pessoa: dias_supera=${pessoa.dias_supera}, tipo=${tipoPessoa}`);
+    console.log('=== VERIFICANDO CRITÉRIOS DE ALERTA (SISTEMA NOVO) ===');
+    console.log(`Dados da pessoa: dias_supera=${pessoa.dias_supera}, faltas_consecutivas=${pessoa.faltas_consecutivas}, tipo=${tipoPessoa}`);
     
-    // CRITÉRIO 1 (PRIORIDADE MAIS ALTA): Pessoa com menos de 90 dias de Supera que faltou
-    console.log('🔍 PRIORIDADE 1: Verificando critério para pessoa recente...');
+    // CRITÉRIO 1: Aluno recente (< 90 dias) que faltou
+    console.log('🔍 CRITÉRIO 1: Verificando aluno recente...');
     if (pessoa.dias_supera !== null && pessoa.dias_supera !== undefined && pessoa.dias_supera < 90) {
-      const faltas = produtividade?.filter(p => !p.presente) || [];
-      console.log(`Pessoa nova (${pessoa.dias_supera} dias) - Total faltas: ${faltas.length}`);
+      const faltasRecentes = produtividade?.filter(p => !p.presente) || [];
+      console.log(`Aluno recente (${pessoa.dias_supera} dias) - Total faltas: ${faltasRecentes.length}`);
       
-      // Para aluno recente, qualquer falta é suficiente (não apenas 1)
-      if (faltas.length >= 1) {
-        console.log('✅ CRITÉRIO 1 ATENDIDO: Pessoa nova com falta (PRIORIDADE MÁXIMA)');
+      if (faltasRecentes.length >= 1) {
+        console.log('✅ CRITÉRIO 1 ATENDIDO: Aluno recente com falta');
         alertaCriterioEncontrado = {
-          tipo_criterio: 'aluno_recente_primeira_falta',
+          tipo_criterio: 'aluno_recente',
           detalhes: {
             dias_supera: pessoa.dias_supera,
-            total_faltas: faltas.length,
-            data_falta: faltas[0].data_aula
+            total_faltas: faltasRecentes.length,
+            data_falta: faltasRecentes[0].data_aula
           },
           deve_criar_alerta: true
         };
       } else {
-        console.log(`❌ Critério 1 não atendido: ${faltas.length} faltas (precisa >= 1)`);
+        console.log(`❌ Critério 1 não atendido: ${faltasRecentes.length} faltas (precisa >= 1)`);
       }
     } else {
       console.log(`❌ Critério 1 não aplicável: ${pessoa.dias_supera} dias (precisa < 90)`);
     }
     
-    // CRITÉRIO 2 (PRIORIDADE MÉDIA): Pessoa com mais de 90 dias que faltou 2 vezes nos últimos 30 dias
-    // Só verifica se não encontrou critério de prioridade maior
+    // CRITÉRIO 2: Aluno experiente (≥ 90 dias) com 2+ faltas consecutivas
     if (!alertaCriterioEncontrado) {
-      console.log('🔍 PRIORIDADE 2: Verificando critério para pessoa experiente...');
+      console.log('🔍 CRITÉRIO 2: Verificando aluno experiente...');
       if (pessoa.dias_supera !== null && pessoa.dias_supera !== undefined && pessoa.dias_supera >= 90) {
-        const dataLimite30Dias = new Date();
-        dataLimite30Dias.setDate(dataLimite30Dias.getDate() - 30);
+        const faltasConsecutivas = pessoa.faltas_consecutivas || 0;
+        console.log(`Aluno experiente (${pessoa.dias_supera} dias) - Faltas consecutivas: ${faltasConsecutivas}`);
         
-        const faltasUltimos30Dias = produtividade?.filter(p => 
-          !p.presente && 
-          new Date(p.data_aula) >= dataLimite30Dias
-        ) || [];
-        
-        console.log(`Pessoa experiente (${pessoa.dias_supera} dias) - Faltas nos últimos 30 dias: ${faltasUltimos30Dias.length}`);
-        
-        if (faltasUltimos30Dias.length >= 2) {
-          console.log('✅ CRITÉRIO 2 ATENDIDO: Pessoa experiente com 2+ faltas em 30 dias');
+        if (faltasConsecutivas >= 2) {
+          console.log('✅ CRITÉRIO 2 ATENDIDO: Aluno experiente com 2+ faltas consecutivas');
           alertaCriterioEncontrado = {
-            tipo_criterio: 'faltas_consecutivas_experiente',
+            tipo_criterio: 'faltas_consecutivas',
             detalhes: {
               dias_supera: pessoa.dias_supera,
-              total_faltas_30_dias: faltasUltimos30Dias.length,
-              datas_faltas: faltasUltimos30Dias.map(f => f.data_aula).slice(0, 2)
+              faltas_consecutivas: faltasConsecutivas
             },
             deve_criar_alerta: true
           };
         } else {
-          console.log(`❌ Critério 2 não atendido: ${faltasUltimos30Dias.length} faltas em 30 dias (precisa >= 2)`);
+          console.log(`❌ Critério 2 não atendido: ${faltasConsecutivas} faltas consecutivas (precisa >= 2)`);
         }
       } else {
         console.log(`❌ Critério 2 não aplicável: ${pessoa.dias_supera} dias (precisa >= 90)`);
-      }
-    }
-    
-    // CRITÉRIO 3 (PRIORIDADE BAIXA): Mais de 30% de faltas nos últimos 4 meses
-    // Só verifica se não encontrou critérios de prioridade maior
-    if (!alertaCriterioEncontrado) {
-      console.log('🔍 PRIORIDADE 3: Verificando critério de frequência baixa...');
-      console.log(`Total aulas: ${totalAulas}, Total faltas: ${totalFaltas}, Percentual: ${percentualFaltas.toFixed(1)}%`);
-      
-      if (totalAulas >= 4 && percentualFaltas > 30) { // Precisa ter pelo menos 4 aulas para ser válido
-        console.log(`✅ CRITÉRIO 3 ATENDIDO: ${percentualFaltas.toFixed(1)}% de faltas em 4 meses`);
-        alertaCriterioEncontrado = {
-          tipo_criterio: 'frequencia_baixa',
-          detalhes: {
-            percentual_faltas: Math.round(percentualFaltas * 10) / 10,
-            total_aulas: totalAulas,
-            total_faltas: totalFaltas,
-            periodo: 'últimos 4 meses'
-          },
-          deve_criar_alerta: true
-        };
-      } else {
-        console.log(`❌ Critério 3 não atendido: ${percentualFaltas.toFixed(1)}% (precisa > 30% com >= 4 aulas)`);
       }
     }
     
@@ -324,7 +291,7 @@ serve(async (req) => {
       console.log(`Critério selecionado: ${alertaCriterioEncontrado.tipo_criterio}`);
     }
     
-    // 4. Criar alerta no banco de dados (apenas um)
+    // 4. Enviar alerta para o Slack se critério foi atendido
     let alertaCriado = null;
     
     if (alertaCriterioEncontrado && alertaCriterioEncontrado.deve_criar_alerta) {
@@ -353,6 +320,7 @@ serve(async (req) => {
         // Obter a data da última falta para usar no alerta
         const ultimaFalta = produtividade?.find(p => !p.presente);
         const dataFalta = ultimaFalta?.data_aula || new Date().toISOString().split('T')[0];
+        const motivoFalta = ultimaFalta?.motivo_falta || '';
         
         console.log(`Criando alerta para ${alertaCriterioEncontrado.tipo_criterio} com data de falta: ${dataFalta}`);
         console.log(`Unit ID que será usado: ${validUnitId}`);
@@ -387,6 +355,36 @@ serve(async (req) => {
             tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
             detalhes: alertaCriterioEncontrado.detalhes
           };
+          
+          // Chamar função para enviar mensagem no Slack
+          console.log('🔔 Enviando alerta para o Slack...');
+          try {
+            const slackPayload = {
+              aluno_nome: pessoa.nome,
+              professor_nome: professorInfo?.nome || 'Professor não encontrado',
+              professor_slack: professorInfo?.slack_username || null,
+              turma_nome: turmaInfo?.nome || 'Turma não encontrada',
+              dias_supera: pessoa.dias_supera,
+              data_falta: dataFalta,
+              faltas_consecutivas: pessoa.faltas_consecutivas || 0,
+              motivo_falta: motivoFalta,
+              tipo_criterio: alertaCriterioEncontrado.tipo_criterio
+            };
+            
+            console.log('Payload para Slack:', JSON.stringify(slackPayload, null, 2));
+            
+            const { data: slackResponse, error: slackError } = await supabase.functions.invoke('enviar-alerta-falta-slack', {
+              body: slackPayload
+            });
+            
+            if (slackError) {
+              console.error('❌ Erro ao enviar para Slack:', slackError);
+            } else {
+              console.log('✅ Mensagem enviada para Slack com sucesso:', slackResponse);
+            }
+          } catch (slackError) {
+            console.error('❌ Erro inesperado ao enviar para Slack:', slackError);
+          }
         }
       }
     }
