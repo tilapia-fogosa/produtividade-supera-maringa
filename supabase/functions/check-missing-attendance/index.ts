@@ -298,75 +298,74 @@ serve(async (req) => {
       console.log(`Processando critério: ${alertaCriterioEncontrado.tipo_criterio}`);
       
       console.log(`✅ Criando alerta para ${alertaCriterioEncontrado.tipo_criterio} (verificação de duplicatas removida)`);
-        
-        // Obter a data da última falta para usar no alerta
-        const ultimaFalta = produtividade?.find(p => !p.presente);
-        const dataFalta = ultimaFalta?.data_aula || new Date().toISOString().split('T')[0];
-        const motivoFalta = ultimaFalta?.motivo_falta || '';
-        
-        console.log(`Criando alerta para ${alertaCriterioEncontrado.tipo_criterio} com data de falta: ${dataFalta}`);
-        console.log(`Unit ID que será usado: ${validUnitId}`);
-        
-        // Criar novo alerta
-        const alertaData = {
-          aluno_id: pessoaId,
-          turma_id: turmaInfo?.id || null,
-          professor_id: professorInfo?.id || null,
-          unit_id: validUnitId,
-          data_falta: dataFalta,
+      
+      // Obter a data da última falta para usar no alerta
+      const ultimaFalta = produtividade?.find(p => !p.presente);
+      const dataFalta = ultimaFalta?.data_aula || new Date().toISOString().split('T')[0];
+      const motivoFalta = ultimaFalta?.motivo_falta || '';
+      
+      console.log(`Criando alerta para ${alertaCriterioEncontrado.tipo_criterio} com data de falta: ${dataFalta}`);
+      console.log(`Unit ID que será usado: ${validUnitId}`);
+      
+      // Criar novo alerta
+      const alertaData = {
+        aluno_id: pessoaId,
+        turma_id: turmaInfo?.id || null,
+        professor_id: professorInfo?.id || null,
+        unit_id: validUnitId,
+        data_falta: dataFalta,
+        tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
+        detalhes: alertaCriterioEncontrado.detalhes,
+        status: 'enviado'
+      };
+      
+      console.log('Dados do alerta a ser criado:', JSON.stringify(alertaData, null, 2));
+      
+      const { data: novoAlerta, error: alertaError } = await supabase
+        .from('alertas_falta')
+        .insert(alertaData)
+        .select()
+        .single();
+      
+      if (alertaError) {
+        console.error('❌ Erro ao criar alerta:', alertaError);
+        console.error('Detalhes do erro:', JSON.stringify(alertaError, null, 2));
+      } else {
+        console.log(`✅ Alerta criado com sucesso: ${alertaCriterioEncontrado.tipo_criterio} - ID: ${novoAlerta.id}`);
+        alertaCriado = {
+          id: novoAlerta.id,
           tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
-          detalhes: alertaCriterioEncontrado.detalhes,
-          status: 'enviado'
+          detalhes: alertaCriterioEncontrado.detalhes
         };
         
-        console.log('Dados do alerta a ser criado:', JSON.stringify(alertaData, null, 2));
-        
-        const { data: novoAlerta, error: alertaError } = await supabase
-          .from('alertas_falta')
-          .insert(alertaData)
-          .select()
-          .single();
-        
-        if (alertaError) {
-          console.error('❌ Erro ao criar alerta:', alertaError);
-          console.error('Detalhes do erro:', JSON.stringify(alertaError, null, 2));
-        } else {
-          console.log(`✅ Alerta criado com sucesso: ${alertaCriterioEncontrado.tipo_criterio} - ID: ${novoAlerta.id}`);
-          alertaCriado = {
-            id: novoAlerta.id,
-            tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
-            detalhes: alertaCriterioEncontrado.detalhes
+        // Chamar função para enviar mensagem no Slack
+        console.log('🔔 Enviando alerta para o Slack...');
+        try {
+          const slackPayload = {
+            aluno_nome: pessoa.nome,
+            professor_nome: professorInfo?.nome || 'Professor não encontrado',
+            professor_slack: professorInfo?.slack_username || null,
+            turma_nome: turmaInfo?.nome || 'Turma não encontrada',
+            dias_supera: pessoa.dias_supera,
+            data_falta: dataFalta,
+            faltas_consecutivas: pessoa.faltas_consecutivas || 0,
+            motivo_falta: motivoFalta,
+            tipo_criterio: alertaCriterioEncontrado.tipo_criterio
           };
           
-          // Chamar função para enviar mensagem no Slack
-          console.log('🔔 Enviando alerta para o Slack...');
-          try {
-            const slackPayload = {
-              aluno_nome: pessoa.nome,
-              professor_nome: professorInfo?.nome || 'Professor não encontrado',
-              professor_slack: professorInfo?.slack_username || null,
-              turma_nome: turmaInfo?.nome || 'Turma não encontrada',
-              dias_supera: pessoa.dias_supera,
-              data_falta: dataFalta,
-              faltas_consecutivas: pessoa.faltas_consecutivas || 0,
-              motivo_falta: motivoFalta,
-              tipo_criterio: alertaCriterioEncontrado.tipo_criterio
-            };
-            
-            console.log('Payload para Slack:', JSON.stringify(slackPayload, null, 2));
-            
-            const { data: slackResponse, error: slackError } = await supabase.functions.invoke('enviar-alerta-falta-slack', {
-              body: slackPayload
-            });
-            
-            if (slackError) {
-              console.error('❌ Erro ao enviar para Slack:', slackError);
-            } else {
-              console.log('✅ Mensagem enviada para Slack com sucesso:', slackResponse);
-            }
-          } catch (slackError) {
-            console.error('❌ Erro inesperado ao enviar para Slack:', slackError);
+          console.log('Payload para Slack:', JSON.stringify(slackPayload, null, 2));
+          
+          const { data: slackResponse, error: slackError } = await supabase.functions.invoke('enviar-alerta-falta-slack', {
+            body: slackPayload
+          });
+          
+          if (slackError) {
+            console.error('❌ Erro ao enviar para Slack:', slackError);
+          } else {
+            console.log('✅ Mensagem enviada para Slack com sucesso:', slackResponse);
           }
+        } catch (slackError) {
+          console.error('❌ Erro inesperado ao enviar para Slack:', slackError);
         }
       }
     }
