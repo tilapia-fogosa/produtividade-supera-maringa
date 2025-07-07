@@ -297,25 +297,7 @@ serve(async (req) => {
     if (alertaCriterioEncontrado && alertaCriterioEncontrado.deve_criar_alerta) {
       console.log(`Processando critério: ${alertaCriterioEncontrado.tipo_criterio}`);
       
-      // Verificação de duplicatas mais flexível - apenas últimas 24 horas
-      console.log(`Verificando duplicatas para ${alertaCriterioEncontrado.tipo_criterio}...`);
-      const { data: alertaExistente, error: alertaExistenteError } = await supabase
-        .from('alertas_falta')
-        .select('id, data_alerta')
-        .eq('aluno_id', pessoaId)
-        .eq('tipo_criterio', alertaCriterioEncontrado.tipo_criterio)
-        .gte('data_alerta', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Últimas 24h
-        .limit(1)
-        .maybeSingle();
-      
-      if (alertaExistenteError && alertaExistenteError.code !== 'PGRST116') {
-        console.error(`Erro ao verificar alertas existentes: ${alertaExistenteError.message}`);
-      }
-      
-      if (alertaExistente) {
-        console.log(`❌ Alerta já existe para critério ${alertaCriterioEncontrado.tipo_criterio} (criado em: ${alertaExistente.data_alerta})`);
-      } else {
-        console.log(`✅ Nenhum alerta duplicado encontrado para ${alertaCriterioEncontrado.tipo_criterio}`);
+      console.log(`✅ Criando alerta para ${alertaCriterioEncontrado.tipo_criterio} (verificação de duplicatas removida)`);
         
         // Obter a data da última falta para usar no alerta
         const ultimaFalta = produtividade?.find(p => !p.presente);
