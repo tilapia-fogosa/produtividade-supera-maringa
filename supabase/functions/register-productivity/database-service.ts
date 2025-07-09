@@ -38,8 +38,13 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       
       const updateData: any = {};
       
-      // Só atualizar se presente e com dados válidos
+      // Atualizar contador de faltas consecutivas
       if (data.presente) {
+        // Se presente, zerar contador de faltas consecutivas
+        updateData.faltas_consecutivas = 0;
+        console.log('Zerando faltas consecutivas (presente)');
+        
+        // Só atualizar outros dados se presente e com dados válidos
         if (data.apostila_atual || data.apostila_abaco) {
           updateData.ultimo_nivel = data.apostila_atual || data.apostila_abaco;
           console.log('Atualizando último nível do aluno para:', updateData.ultimo_nivel);
@@ -55,11 +60,24 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
           updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
           console.log('Atualizando última correção AH para:', updateData.ultima_correcao_ah);
         }
-      }
-      
-      // Se é uma falta, atualizar a data da última falta
-      if (!data.presente) {
+      } else {
+        // Se falta, incrementar contador de faltas consecutivas
+        // Primeiro buscar o valor atual
+        const { data: alunoAtual, error: alunoError } = await supabaseClient
+          .from('alunos')
+          .select('faltas_consecutivas')
+          .eq('id', data.pessoa_id || data.aluno_id)
+          .single();
+        
+        if (alunoError) {
+          console.error('Erro ao buscar faltas consecutivas atuais:', alunoError);
+          updateData.faltas_consecutivas = 1; // Começa com 1 se erro
+        } else {
+          updateData.faltas_consecutivas = (alunoAtual.faltas_consecutivas || 0) + 1;
+        }
+        
         updateData.ultima_falta = data.data_aula;
+        console.log('Incrementando faltas consecutivas para:', updateData.faltas_consecutivas);
         console.log('Atualizando última falta para:', data.data_aula);
       }
       
@@ -99,8 +117,13 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       
       const updateData: any = {};
       
-      // Só atualizar se presente e com dados válidos
+      // Atualizar contador de faltas consecutivas para funcionários também
       if (data.presente) {
+        // Se presente, zerar contador de faltas consecutivas
+        updateData.faltas_consecutivas = 0;
+        console.log('Zerando faltas consecutivas do funcionário (presente)');
+        
+        // Só atualizar outros dados se presente e com dados válidos
         if (data.apostila_atual || data.apostila_abaco) {
           updateData.ultimo_nivel = data.apostila_atual || data.apostila_abaco;
         }
@@ -113,11 +136,24 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
         if (data.data_ultima_correcao_ah) {
           updateData.ultima_correcao_ah = data.data_ultima_correcao_ah;
         }
-      }
-      
-      // Se é uma falta, atualizar a data da última falta
-      if (!data.presente) {
+      } else {
+        // Se falta, incrementar contador de faltas consecutivas
+        // Primeiro buscar o valor atual
+        const { data: funcionarioAtual, error: funcionarioError } = await supabaseClient
+          .from('funcionarios')
+          .select('faltas_consecutivas')
+          .eq('id', data.pessoa_id || data.aluno_id)
+          .single();
+        
+        if (funcionarioError) {
+          console.error('Erro ao buscar faltas consecutivas atuais do funcionário:', funcionarioError);
+          updateData.faltas_consecutivas = 1; // Começa com 1 se erro
+        } else {
+          updateData.faltas_consecutivas = (funcionarioAtual.faltas_consecutivas || 0) + 1;
+        }
+        
         updateData.ultima_falta = data.data_aula;
+        console.log('Incrementando faltas consecutivas do funcionário para:', updateData.faltas_consecutivas);
         console.log('Atualizando última falta do funcionário para:', data.data_aula);
       }
       
@@ -216,6 +252,20 @@ export async function excluirProdutividade(supabaseClient: any, registroId: stri
   try {
     console.log('Excluindo registro de produtividade:', registroId);
     
+    // Primeiro, buscar os dados do registro para verificar se é uma falta
+    const { data: registro, error: registroError } = await supabaseClient
+      .from('produtividade_abaco')
+      .select('pessoa_id, presente, tipo_pessoa')
+      .eq('id', registroId)
+      .single();
+    
+    if (registroError) {
+      console.error('Erro ao buscar registro antes da exclusão:', registroError);
+      return false;
+    }
+    
+    console.log('Dados do registro a ser excluído:', registro);
+    
     const { error } = await supabaseClient
       .from('produtividade_abaco')
       .delete()
@@ -224,6 +274,38 @@ export async function excluirProdutividade(supabaseClient: any, registroId: stri
     if (error) {
       console.error('Erro ao excluir produtividade:', error);
       return false;
+    }
+    
+    // Se o registro removido era uma falta, decrementar faltas_consecutivas
+    if (!registro.presente) {
+      console.log('Registro era uma falta, decrementando faltas_consecutivas...');
+      
+      const tabela = registro.tipo_pessoa === 'aluno' ? 'alunos' : 'funcionarios';
+      
+      // Buscar valor atual de faltas_consecutivas
+      const { data: pessoaAtual, error: pessoaError } = await supabaseClient
+        .from(tabela)
+        .select('faltas_consecutivas')
+        .eq('id', registro.pessoa_id)
+        .single();
+      
+      if (pessoaError) {
+        console.error('Erro ao buscar faltas_consecutivas:', pessoaError);
+      } else {
+        const novaContagem = Math.max(0, (pessoaAtual.faltas_consecutivas || 0) - 1);
+        console.log(`Decrementando faltas_consecutivas de ${pessoaAtual.faltas_consecutivas} para ${novaContagem}`);
+        
+        const { error: updateError } = await supabaseClient
+          .from(tabela)
+          .update({ faltas_consecutivas: novaContagem })
+          .eq('id', registro.pessoa_id);
+        
+        if (updateError) {
+          console.error('Erro ao atualizar faltas_consecutivas:', updateError);
+        } else {
+          console.log('faltas_consecutivas atualizada com sucesso');
+        }
+      }
     }
     
     console.log('Registro excluído com sucesso!');

@@ -211,6 +211,27 @@ export function useProdutividade(pessoaId?: string) {
         return false;
       }
       
+      // Primeiro, buscar os dados do registro para verificar se é uma falta
+      console.log('🔍 excluirProdutividade: Buscando dados do registro antes da exclusão...');
+      const { data: registro, error: registroError } = await supabase
+        .from('produtividade_abaco')
+        .select('pessoa_id, presente, tipo_pessoa')
+        .eq('id', registroId)
+        .single();
+      
+      if (registroError) {
+        console.error('❌ excluirProdutividade: Erro ao buscar registro:', registroError);
+        setError(registroError.message);
+        toast({
+          title: "Erro",
+          description: "Não foi possível encontrar o registro.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      console.log('✅ excluirProdutividade: Dados do registro encontrados:', registro);
+      
       console.log('✅ excluirProdutividade: ID válido, executando exclusão...');
       
       const { error } = await supabase
@@ -230,6 +251,38 @@ export function useProdutividade(pessoaId?: string) {
       }
       
       console.log('✅ excluirProdutividade: Registro excluído com sucesso');
+      
+      // Se o registro removido era uma falta, decrementar faltas_consecutivas
+      if (!registro.presente) {
+        console.log('🔄 excluirProdutividade: Registro era uma falta, decrementando faltas_consecutivas...');
+        
+        const tabela = registro.tipo_pessoa === 'aluno' ? 'alunos' : 'funcionarios';
+        
+        // Buscar valor atual de faltas_consecutivas
+        const { data: pessoaAtual, error: pessoaError } = await supabase
+          .from(tabela)
+          .select('faltas_consecutivas')
+          .eq('id', registro.pessoa_id)
+          .single();
+        
+        if (pessoaError) {
+          console.error('❌ excluirProdutividade: Erro ao buscar faltas_consecutivas:', pessoaError);
+        } else {
+          const novaContagem = Math.max(0, (pessoaAtual.faltas_consecutivas || 0) - 1);
+          console.log(`🔄 excluirProdutividade: Decrementando faltas_consecutivas de ${pessoaAtual.faltas_consecutivas} para ${novaContagem}`);
+          
+          const { error: updateError } = await supabase
+            .from(tabela)
+            .update({ faltas_consecutivas: novaContagem })
+            .eq('id', registro.pessoa_id);
+          
+          if (updateError) {
+            console.error('❌ excluirProdutividade: Erro ao atualizar faltas_consecutivas:', updateError);
+          } else {
+            console.log('✅ excluirProdutividade: faltas_consecutivas atualizada com sucesso');
+          }
+        }
+      }
       
       toast({
         title: "Sucesso",
