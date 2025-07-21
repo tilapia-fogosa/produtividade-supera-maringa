@@ -60,12 +60,14 @@ const formatarNomeProfessor = (nomeCompleto: string) => {
   return `${primeiroNome} ${primeiraLetra}.`;
 };
 
-// Função para converter horário em linha do grid
-const horarioParaLinha = (horario: string) => {
-  const [hora] = horario.split(":");
-  const horaNum = parseInt(hora);
-  // Grid começa às 6h, então 6h = linha 0, 7h = linha 1, etc.
-  return horaNum - 6;
+// Função para converter horário em slot de 30 minutos
+const horarioParaSlot = (horario: string) => {
+  const [hora, minuto] = horario.split(":").map(num => parseInt(num));
+  // Grid começa às 6h, cada slot é de 30 min
+  // 6:00 = slot 0, 6:30 = slot 1, 7:00 = slot 2, etc.
+  const horaRelativa = hora - 6;
+  const slotsPorHora = 2; // 30 min cada
+  return (horaRelativa * slotsPorHora) + (minuto >= 30 ? 1 : 0);
 };
 
 // Função para determinar o dia da semana baseado no enum
@@ -83,34 +85,30 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
 };
 
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma }: { turma: CalendarioTurma }) => {
+const BlocoTurma = ({ turma, index, total }: { turma: CalendarioTurma, index: number, total: number }) => {
+  const largura = total === 1 ? "w-full" : total === 2 ? "w-1/2" : total === 3 ? "w-1/3" : "w-1/4";
+  
   return (
-    <div className="bg-blue-100 border border-blue-200 rounded-md p-2 mb-1 cursor-pointer hover:bg-blue-200 transition-colors text-xs">
-      <div className="font-medium text-blue-900 mb-1">
-        {turma.categoria}
+    <div 
+      className={`${largura} pr-1 last:pr-0`}
+      style={{
+        gridRow: `span 4`, // Ocupa 4 slots (2 horas)
+      }}
+    >
+      <div className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between">
+        <div>
+          <div className="font-medium text-blue-900 mb-1 text-sm">
+            {turma.categoria}
+          </div>
+          <div className="text-blue-700 mb-1">
+            {formatarNomeProfessor(turma.professor_nome)}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-blue-600 mt-auto">
+          <Users className="w-3 h-3" />
+          <span>{turma.total_alunos_ativos}/12</span>
+        </div>
       </div>
-      <div className="text-blue-700">
-        {formatarNomeProfessor(turma.professor_nome)}
-      </div>
-      <div className="flex items-center gap-1 text-blue-600">
-        <Users className="w-3 h-3" />
-        <span>{turma.total_alunos_ativos}/12</span>
-      </div>
-    </div>
-  );
-};
-
-// Componente para célula do grid
-const CelulaGrid = ({ turmas, horario, data }: { 
-  turmas: CalendarioTurma[], 
-  horario: string,
-  data: Date 
-}) => {
-  return (
-    <div className="border-r border-b border-gray-200 h-16 p-1 overflow-hidden">
-      {turmas.map((turma) => (
-        <BlocoTurma key={turma.turma_id} turma={turma} />
-      ))}
     </div>
   );
 };
@@ -169,7 +167,7 @@ export default function CalendarioAulas() {
     return resultado;
   }, [turmasPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Organizar turmas por grid (horário × dia)
+  // Organizar turmas por grid de slots de 30 minutos
   const gridTurmas = useMemo(() => {
     const grid: Record<string, CalendarioTurma[]> = {};
     
@@ -177,8 +175,8 @@ export default function CalendarioAulas() {
       const diaIndex = obterDiaSemanaIndex(diaSemana);
       
       turmas.forEach(turma => {
-        const linha = horarioParaLinha(turma.horario_inicio);
-        const chave = `${linha}-${diaIndex}`;
+        const slot = horarioParaSlot(turma.horario_inicio);
+        const chave = `${slot}-${diaIndex}`;
         
         if (!grid[chave]) {
           grid[chave] = [];
@@ -226,8 +224,16 @@ export default function CalendarioAulas() {
     setSemanaAtual(new Date());
   };
 
-  // Horários do grid (6h às 20h)
-  const horarios = Array.from({ length: 15 }, (_, i) => {
+  // Horários do grid - slots de 30 minutos (6h às 21h)
+  const slots = Array.from({ length: 30 }, (_, i) => {
+    const horaInicial = 6;
+    const hora = Math.floor(i / 2) + horaInicial;
+    const minuto = (i % 2) * 30;
+    return `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
+  });
+
+  // Horários para display (apenas horas cheias)
+  const horariosDisplay = Array.from({ length: 15 }, (_, i) => {
     const hora = i + 6;
     return `${hora.toString().padStart(2, '0')}:00`;
   });
@@ -391,27 +397,51 @@ export default function CalendarioAulas() {
           })}
         </div>
 
-        {/* Grid de horários */}
-        <div className="grid grid-cols-8">
-          {horarios.map((horario, linhaIndex) => (
+        {/* Grid de horários - usando CSS Grid otimizado */}
+        <div 
+          className="grid grid-cols-8"
+          style={{
+            gridTemplateRows: `repeat(${horariosDisplay.length}, minmax(80px, 1fr))`
+          }}
+        >
+          {horariosDisplay.map((horario, horaIndex) => (
             <div key={horario} className="contents">
               {/* Coluna de horário */}
-              <div className="p-3 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50">
+              <div className="p-3 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50 flex items-start">
                 {horario}
               </div>
               
               {/* Células dos dias */}
-              {datasSemanais.map((data, colunaIndex) => {
-                const chaveGrid = `${linhaIndex}-${colunaIndex}`;
-                const turmasNaCelula = gridTurmas[chaveGrid] || [];
+              {datasSemanais.map((data, diaIndex) => {
+                // Pegar turmas para ambos os slots desta hora (XX:00 e XX:30)
+                const slotHoraCheia = horaIndex * 2;
+                const slotMeiaHora = slotHoraCheia + 1;
+                
+                const turmasHoraCheia = gridTurmas[`${slotHoraCheia}-${diaIndex}`] || [];
+                const turmasMeiaHora = gridTurmas[`${slotMeiaHora}-${diaIndex}`] || [];
+                
+                // Verificar se alguma turma já foi renderizada (evitar duplicação)
+                const turmasParaRenderizar = [...turmasHoraCheia, ...turmasMeiaHora];
                 
                 return (
-                  <CelulaGrid
-                    key={`${linhaIndex}-${colunaIndex}`}
-                    turmas={turmasNaCelula}
-                    horario={horario}
-                    data={data}
-                  />
+                  <div
+                    key={`${horaIndex}-${diaIndex}`}
+                    className="border-r border-b border-gray-200 last:border-r-0 relative overflow-hidden"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: `repeat(${Math.max(1, turmasParaRenderizar.length)}, 1fr)`,
+                      minHeight: '80px'
+                    }}
+                  >
+                    {turmasParaRenderizar.map((turma, turmaIndex) => (
+                      <BlocoTurma
+                        key={`${turma.turma_id}-${turmaIndex}`}
+                        turma={turma}
+                        index={turmaIndex}
+                        total={turmasParaRenderizar.length}
+                      />
+                    ))}
+                  </div>
                 );
               })}
             </div>
