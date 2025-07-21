@@ -1,3 +1,4 @@
+
 import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo } from "react";
 
 const diasSemana = {
-  domingo: "DOM",
   segunda: "SEG", 
   terca: "TER",
   quarta: "QUA",
@@ -19,7 +19,6 @@ const diasSemana = {
 };
 
 const diasSemanaNomes = {
-  domingo: "Domingo",
   segunda: "Segunda",
   terca: "Terça",
   quarta: "Quarta",
@@ -28,18 +27,19 @@ const diasSemanaNomes = {
   sabado: "Sábado"
 };
 
-// Função para calcular as datas da semana atual
+// Função para calcular as datas da semana atual (segunda a sábado)
 const calcularDatasSemanais = (dataReferencia: Date) => {
   const inicio = new Date(dataReferencia);
   const diaSemana = inicio.getDay(); // 0 = domingo, 1 = segunda, etc.
   
-  // Calcular o domingo da semana (início da semana)
-  inicio.setDate(inicio.getDate() - diaSemana);
+  // Calcular a segunda-feira da semana
+  const segunda = new Date(inicio);
+  segunda.setDate(inicio.getDate() - diaSemana + 1);
   
   const datasSemanais = [];
-  for (let i = 0; i < 7; i++) {
-    const data = new Date(inicio);
-    data.setDate(inicio.getDate() + i);
+  for (let i = 0; i < 6; i++) { // Segunda a sábado (6 dias)
+    const data = new Date(segunda);
+    data.setDate(segunda.getDate() + i);
     datasSemanais.push(data);
   }
   
@@ -69,18 +69,17 @@ const horarioParaSlot = (horario: string) => {
   return (horaRelativa * slotsPorHora) + (minuto >= 30 ? 1 : 0);
 };
 
-// Função para determinar o dia da semana baseado no enum
+// Função para determinar o dia da semana baseado no enum (excluindo domingo)
 const obterDiaSemanaIndex = (diaSemana: string) => {
   const mapping: Record<string, number> = {
-    'domingo': 0,
-    'segunda': 1,
-    'terca': 2,
-    'quarta': 3,
-    'quinta': 4,
-    'sexta': 5,
-    'sabado': 6
+    'segunda': 0,
+    'terca': 1,
+    'quarta': 2,
+    'quinta': 3,
+    'sexta': 4,
+    'sabado': 5
   };
-  return mapping[diaSemana] || 0;
+  return mapping[diaSemana] !== undefined ? mapping[diaSemana] : -1;
 };
 
 // Componente para o bloco de turma
@@ -108,37 +107,43 @@ export default function CalendarioAulas() {
   const [semanaAtual, setSemanaAtual] = useState(new Date());
 
   // Estados dos filtros
-  const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([
-    '60+', '60+S', 'Adolescente', 'Adolescentes', 'Adultos', 'Júnior', 'Mirim', 'BPA', 'C'
-  ]);
+  const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>([
-    'domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'
+    'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'
   ]);
   const [somenteComVagas, setSomenteComVagas] = useState(false);
 
-  // Calcular datas da semana
+  // Calcular datas da semana (segunda a sábado)
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
 
-  // Extrair perfis únicos dos dados
+  // Extrair perfis únicos dos dados (excluindo domingo)
   const perfisDisponiveis = useMemo(() => {
     if (!turmasPorDia) return [];
     const perfis = new Set<string>();
-    Object.values(turmasPorDia).flat().forEach(turma => {
-      // Só considerar turmas com alunos ativos
-      if (turma.categoria && turma.total_alunos_ativos > 0) {
-        perfis.add(turma.categoria);
-      }
+    Object.entries(turmasPorDia).forEach(([dia, turmas]) => {
+      // Excluir domingo
+      if (dia === 'domingo') return;
+      
+      turmas.forEach(turma => {
+        // Só considerar turmas com alunos ativos
+        if (turma.categoria && turma.total_alunos_ativos > 0) {
+          perfis.add(turma.categoria);
+        }
+      });
     });
     return Array.from(perfis).sort();
   }, [turmasPorDia]);
 
-  // Aplicar filtros
+  // Aplicar filtros (excluindo domingo)
   const turmasFiltradasPorDia = useMemo(() => {
     if (!turmasPorDia) return {};
     
     const resultado: Record<string, CalendarioTurma[]> = {};
     
     Object.entries(turmasPorDia).forEach(([dia, turmas]) => {
+      // Excluir domingo
+      if (dia === 'domingo') return;
+      
       if (!diasSelecionados.includes(dia)) {
         resultado[dia] = [];
         return;
@@ -163,12 +168,15 @@ export default function CalendarioAulas() {
     return resultado;
   }, [turmasPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Estrutura do grid reorganizada - criar mapa de turmas por posição
+  // Estrutura do grid reorganizada - criar mapa de turmas por posição (excluindo domingo)
   const turmasGrid = useMemo(() => {
     const grid: Record<string, CalendarioTurma[]> = {};
     
     Object.entries(turmasFiltradasPorDia).forEach(([diaSemana, turmas]) => {
       const diaIndex = obterDiaSemanaIndex(diaSemana);
+      
+      // Pular se for um dia inválido (domingo retorna -1)
+      if (diaIndex === -1) return;
       
       turmas.forEach(turma => {
         const slotInicio = horarioParaSlot(turma.horario_inicio);
@@ -201,9 +209,13 @@ export default function CalendarioAulas() {
   };
 
   const limparFiltros = () => {
-    setPerfisSelecionados(['60+', '60+S', 'Adolescente', 'Adolescentes', 'Adultos', 'Júnior', 'Mirim', 'BPA', 'C']);
-    setDiasSelecionados(['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']);
+    setPerfisSelecionados([]);
+    setDiasSelecionados(['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']);
     setSomenteComVagas(false);
+  };
+
+  const selecionarTodosPerfis = () => {
+    setPerfisSelecionados([...perfisDisponiveis]);
   };
 
   const navegarSemana = (direcao: 'anterior' | 'proxima') => {
@@ -354,21 +366,32 @@ export default function CalendarioAulas() {
               Somente Vagas Disponíveis (menos de 12 alunos)
             </label>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={limparFiltros}
-            className="text-xs"
-          >
-            🔄 Limpar Filtros
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={selecionarTodosPerfis}
+              className="text-xs"
+              disabled={perfisSelecionados.length === perfisDisponiveis.length}
+            >
+              ✓ Selecionar Todos Perfis
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={limparFiltros}
+              className="text-xs"
+            >
+              🔄 Limpar Filtros
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Grid do Calendário Reestruturado */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
-        {/* Header dos dias */}
-        <div className="grid grid-cols-8 bg-gray-50 sticky top-0 z-10">
+        {/* Header dos dias (segunda a sábado) */}
+        <div className="grid grid-cols-7 bg-gray-50 sticky top-0 z-10">
           <div className="p-3 text-center border-r border-gray-200 text-sm font-medium">
             GMT-03
           </div>
@@ -393,14 +416,14 @@ export default function CalendarioAulas() {
           style={{
             display: 'grid',
             gridTemplateRows: `repeat(${slots.length}, 40px)`,
-            gridTemplateColumns: '80px repeat(7, 1fr)',
+            gridTemplateColumns: '45px repeat(6, 1fr)',
           }}
         >
           {/* Renderizar linhas de horário */}
           {slots.map((slot, slotIndex) => (
             <div
               key={`time-${slotIndex}`}
-              className="border-r border-b border-gray-200 bg-gray-50 text-sm text-muted-foreground flex items-center justify-center"
+              className="border-r border-b border-gray-200 bg-gray-50 text-xs text-muted-foreground flex items-center justify-center"
               style={{
                 gridRow: slotIndex + 1,
                 gridColumn: 1,
