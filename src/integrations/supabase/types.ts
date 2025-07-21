@@ -135,6 +135,13 @@ export type Database = {
             foreignKeyName: "alertas_falta_turma_id_fkey"
             columns: ["turma_id"]
             isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
@@ -188,6 +195,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "professores"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_lancamento_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
           },
           {
             foreignKeyName: "alertas_lancamento_turma_id_fkey"
@@ -1366,6 +1380,13 @@ export type Database = {
             foreignKeyName: "funcionarios_turma_id_fkey"
             columns: ["turma_id"]
             isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "funcionarios_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
@@ -2053,11 +2074,19 @@ export type Database = {
         Row: {
           access_blocked: boolean | null
           avatar_url: string | null
+          calendar_id: string | null
           created_at: string
           email: string | null
           email_confirmed: boolean | null
           first_access_at: string | null
           full_name: string | null
+          g_access_token: string | null
+          g_refresh_token: string | null
+          g_token_expiration: string | null
+          gcalendar_id: string | null
+          google_calendars: Json | null
+          google_email: string | null
+          google_id: string | null
           id: string
           is_admin: boolean | null
           must_change_password: boolean | null
@@ -2067,11 +2096,19 @@ export type Database = {
         Insert: {
           access_blocked?: boolean | null
           avatar_url?: string | null
+          calendar_id?: string | null
           created_at?: string
           email?: string | null
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          g_access_token?: string | null
+          g_refresh_token?: string | null
+          g_token_expiration?: string | null
+          gcalendar_id?: string | null
+          google_calendars?: Json | null
+          google_email?: string | null
+          google_id?: string | null
           id: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
@@ -2081,11 +2118,19 @@ export type Database = {
         Update: {
           access_blocked?: boolean | null
           avatar_url?: string | null
+          calendar_id?: string | null
           created_at?: string
           email?: string | null
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          g_access_token?: string | null
+          g_refresh_token?: string | null
+          g_token_expiration?: string | null
+          gcalendar_id?: string | null
+          google_calendars?: Json | null
+          google_email?: string | null
+          google_id?: string | null
           id?: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
@@ -3023,6 +3068,38 @@ export type Database = {
       }
     }
     Views: {
+      calendario_turmas_view: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          dia_semana: Database["public"]["Enums"]["dia_semana"] | null
+          horario_inicio: string | null
+          nome_completo: string | null
+          professor_id: string | null
+          professor_nome: string | null
+          professor_slack: string | null
+          sala: string | null
+          total_alunos_ativos: number | null
+          turma_id: string | null
+          unit_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turmas_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turmas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanban_client_summary: {
         Row: {
           created_at: string | null
@@ -3261,6 +3338,14 @@ export type Database = {
       get_funcionario_devolutiva: {
         Args: { p_funcionario_id: string; p_data_inicial: string }
         Returns: Json
+      }
+      get_leads_by_month_and_source: {
+        Args: { p_unit_ids: string[]; p_months_back?: number }
+        Returns: {
+          month_year: string
+          lead_source: string
+          lead_count: number
+        }[]
       }
       get_leads_stats: {
         Args: { p_unit_ids: string[] }
