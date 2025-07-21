@@ -1,4 +1,3 @@
-
 import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +10,8 @@ import { useState, useMemo } from "react";
 
 const diasSemana = {
   domingo: "DOM",
-  segunda: "SEG",
-  terca: "TER", 
+  segunda: "SEG", 
+  terca: "TER",
   quarta: "QUA",
   quinta: "QUI",
   sexta: "SEX",
@@ -22,7 +21,7 @@ const diasSemana = {
 const diasSemanaNomes = {
   domingo: "Domingo",
   segunda: "Segunda",
-  terca: "Terça", 
+  terca: "Terça",
   quarta: "Quarta",
   quinta: "Quinta",
   sexta: "Sexta",
@@ -87,7 +86,7 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
 // Componente para o bloco de turma
 const BlocoTurma = ({ turma }: { turma: CalendarioTurma }) => {
   return (
-    <div className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[120px]">
+    <div className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between">
       <div>
         <div className="font-medium text-blue-900 mb-1 text-sm">
           {turma.categoria}
@@ -146,7 +145,7 @@ export default function CalendarioAulas() {
       }
       
       const turmasFiltradas = turmas.filter(turma => {
-        // Filtrar turmas com 0 alunos
+        // Filtrar turmas com 0 alunos (já aplicado no hook)
         if (turma.total_alunos_ativos === 0) return false;
         
         // Filtro por perfil
@@ -389,50 +388,66 @@ export default function CalendarioAulas() {
         </div>
 
         {/* Grid de horários - usando CSS Grid com slots de 30 minutos */}
-        <div 
-          className="grid grid-cols-8"
-          style={{
-            gridTemplateRows: `repeat(${slots.length}, minmax(40px, 1fr))`
-          }}
-        >
-          {slots.map((slot, slotIndex) => (
-            <div key={slot} className="contents">
-              {/* Coluna de horário - mostrar apenas horas cheias */}
-              <div className="p-2 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50 flex items-center justify-center">
-                {slot.endsWith(':00') ? slot : ''}
-              </div>
-              
-              {/* Células dos dias */}
-              {datasSemanais.map((data, diaIndex) => {
-                const turmasNesteCelula = gridTurmas[`${slotIndex}-${diaIndex}`] || [];
+        <div className="grid grid-cols-8">
+          {slots.map((slot, slotIndex) => {
+            // Calcular quais células têm turmas para determinar o row span
+            const celulasComTurmas = new Set<number>();
+            
+            for (let diaIndex = 0; diaIndex < 7; diaIndex++) {
+              const turmasNesteCelula = gridTurmas[`${slotIndex}-${diaIndex}`] || [];
+              if (turmasNesteCelula.length > 0) {
+                // Turmas ocupam 4 slots (2 horas)
+                for (let i = 0; i < 4; i++) {
+                  celulasComTurmas.add(slotIndex + i);
+                }
+              }
+            }
+            
+            return (
+              <div key={slot} className="contents">
+                {/* Coluna de horário - mostrar apenas horas cheias */}
+                <div className="p-2 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50 flex items-center justify-center min-h-[40px]">
+                  {slot.endsWith(':00') ? slot : ''}
+                </div>
                 
-                return (
-                  <div
-                    key={`${slotIndex}-${diaIndex}`}
-                    className="border-r border-b border-gray-200 last:border-r-0 min-h-[40px] relative"
-                    style={{
-                      display: turmasNesteCelula.length > 0 ? 'grid' : 'block',
-                      gridTemplateColumns: turmasNesteCelula.length > 0 ? `repeat(${turmasNesteCelula.length}, 1fr)` : '1fr',
-                      gap: turmasNesteCelula.length > 1 ? '2px' : '0',
-                      padding: turmasNesteCelula.length > 0 ? '2px' : '0'
-                    }}
-                  >
-                    {turmasNesteCelula.map((turma, turmaIndex) => (
+                {/* Células dos dias */}
+                {datasSemanais.map((data, diaIndex) => {
+                  const turmasNesteCelula = gridTurmas[`${slotIndex}-${diaIndex}`] || [];
+                  const temTurmas = turmasNesteCelula.length > 0;
+                  
+                  // Se há turmas, renderizar com altura de 4 slots (160px)
+                  // Se não há turmas, renderizar célula normal (40px)
+                  if (temTurmas) {
+                    return (
                       <div
-                        key={`${turma.turma_id}-${turmaIndex}`}
+                        key={`${slotIndex}-${diaIndex}`}
+                        className="border-r border-b border-gray-200 last:border-r-0 p-1"
                         style={{
-                          gridRow: `span 4`, // Ocupa 4 slots (2 horas)
-                          height: '160px' // Altura fixa para 2 horas
+                          gridRow: `span 4`, // Ocupar 4 slots (2 horas)
+                          height: '160px',
+                          display: 'grid',
+                          gridTemplateColumns: `repeat(${turmasNesteCelula.length}, 1fr)`,
+                          gap: '2px'
                         }}
                       >
-                        <BlocoTurma turma={turma} />
+                        {turmasNesteCelula.map((turma, turmaIndex) => (
+                          <BlocoTurma key={`${turma.turma_id}-${turmaIndex}`} turma={turma} />
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                    );
+                  } else {
+                    // Células vazias normais
+                    return (
+                      <div
+                        key={`${slotIndex}-${diaIndex}`}
+                        className="border-r border-b border-gray-200 last:border-r-0 min-h-[40px]"
+                      />
+                    );
+                  }
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
