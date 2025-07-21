@@ -1,5 +1,5 @@
 
-import { Calendar, Clock, Users, User } from "lucide-react";
+import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo } from "react";
 
 const diasSemana = {
+  domingo: "DOM",
+  segunda: "SEG",
+  terca: "TER", 
+  quarta: "QUA",
+  quinta: "QUI",
+  sexta: "SEX",
+  sabado: "SAB"
+};
+
+const diasSemanaNomes = {
+  domingo: "Domingo",
   segunda: "Segunda",
   terca: "Terça", 
   quarta: "Quarta",
@@ -18,57 +29,107 @@ const diasSemana = {
   sabado: "Sábado"
 };
 
-const TurmaCard = ({ turma }: { turma: CalendarioTurma }) => (
-  <Card className="mb-1 hover:shadow-md transition-shadow w-full">
-    <CardContent className="p-2 space-y-1">
-      <div className="flex items-center gap-1 text-xs font-medium">
-        <Clock className="w-3 h-3 text-primary flex-shrink-0" />
-        <span className="truncate">{turma.horario_inicio}</span>
-      </div>
-      <div className="flex justify-center">
-        <Badge variant="outline" className="text-xs px-1 py-0">
-          {turma.categoria}
-        </Badge>
-      </div>
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <User className="w-3 h-3 flex-shrink-0" />
-        <span className="truncate text-xs">{turma.professor_nome}</span>
-      </div>
-      <div className="flex items-center gap-1 text-xs">
-        <Users className="w-3 h-3 text-primary flex-shrink-0" />
-        <span className="font-medium">{turma.total_alunos_ativos}</span>
-      </div>
-    </CardContent>
-  </Card>
-);
+// Função para calcular as datas da semana atual
+const calcularDatasSemanais = (dataReferencia: Date) => {
+  const inicio = new Date(dataReferencia);
+  const diaSemana = inicio.getDay(); // 0 = domingo, 1 = segunda, etc.
+  
+  // Calcular o domingo da semana (início da semana)
+  inicio.setDate(inicio.getDate() - diaSemana);
+  
+  const datasSemanais = [];
+  for (let i = 0; i < 7; i++) {
+    const data = new Date(inicio);
+    data.setDate(inicio.getDate() + i);
+    datasSemanais.push(data);
+  }
+  
+  return datasSemanais;
+};
 
-const DiaContainer = ({ dia, turmas }: { dia: string; turmas: CalendarioTurma[] }) => (
-  <div className="flex flex-col h-full">
-    <div className="flex flex-col items-center gap-1 pb-2 border-b mb-2 sticky top-0 bg-background">
-      <h3 className="text-sm font-semibold text-center">{diasSemana[dia as keyof typeof diasSemana]}</h3>
-      <Badge variant="secondary" className="text-xs">
-        {turmas.length}
-      </Badge>
+// Função para formatar nome do professor
+const formatarNomeProfessor = (nomeCompleto: string) => {
+  if (!nomeCompleto) return "";
+  const partes = nomeCompleto.trim().split(" ");
+  if (partes.length === 1) return partes[0];
+  
+  const primeiroNome = partes[0];
+  const ultimoSobrenome = partes[partes.length - 1];
+  const primeiraLetra = ultimoSobrenome.charAt(0).toUpperCase();
+  
+  return `${primeiroNome} ${primeiraLetra}.`;
+};
+
+// Função para converter horário em linha do grid
+const horarioParaLinha = (horario: string) => {
+  const [hora] = horario.split(":");
+  const horaNum = parseInt(hora);
+  // Grid começa às 6h, então 6h = linha 0, 7h = linha 1, etc.
+  return horaNum - 6;
+};
+
+// Função para determinar o dia da semana baseado no enum
+const obterDiaSemanaIndex = (diaSemana: string) => {
+  const mapping: Record<string, number> = {
+    'domingo': 0,
+    'segunda': 1,
+    'terca': 2,
+    'quarta': 3,
+    'quinta': 4,
+    'sexta': 5,
+    'sabado': 6
+  };
+  return mapping[diaSemana] || 0;
+};
+
+// Componente para o bloco de turma
+const BlocoTurma = ({ turma }: { turma: CalendarioTurma }) => {
+  return (
+    <div className="bg-blue-100 border border-blue-200 rounded-md p-2 mb-1 cursor-pointer hover:bg-blue-200 transition-colors text-xs">
+      <div className="font-medium text-blue-900 mb-1">
+        {turma.categoria}
+      </div>
+      <div className="text-blue-700">
+        {formatarNomeProfessor(turma.professor_nome)}
+      </div>
+      <div className="flex items-center gap-1 text-blue-600">
+        <Users className="w-3 h-3" />
+        <span>{turma.total_alunos_ativos}/12</span>
+      </div>
     </div>
-    <div className="space-y-1 flex-1 overflow-y-auto">
+  );
+};
+
+// Componente para célula do grid
+const CelulaGrid = ({ turmas, horario, data }: { 
+  turmas: CalendarioTurma[], 
+  horario: string,
+  data: Date 
+}) => {
+  return (
+    <div className="border-r border-b border-gray-200 h-16 p-1 overflow-hidden">
       {turmas.map((turma) => (
-        <TurmaCard key={turma.turma_id} turma={turma} />
+        <BlocoTurma key={turma.turma_id} turma={turma} />
       ))}
     </div>
-  </div>
-);
+  );
+};
 
 export default function CalendarioAulas() {
   const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas();
+  const [semanaAtual, setSemanaAtual] = useState(new Date());
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([
     '60+', '60+S', 'Adolescente', 'Adolescentes', 'Adultos', 'Júnior', 'Mirim', 'BPA', 'C'
   ]);
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>([
-    'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'
+    'domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'
   ]);
   const [somenteComVagas, setSomenteComVagas] = useState(false);
+
+  // Calcular datas da semana
+  const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
 
   // Extrair perfis únicos dos dados
   const perfisDisponiveis = useMemo(() => {
@@ -108,6 +169,27 @@ export default function CalendarioAulas() {
     return resultado;
   }, [turmasPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
+  // Organizar turmas por grid (horário × dia)
+  const gridTurmas = useMemo(() => {
+    const grid: Record<string, CalendarioTurma[]> = {};
+    
+    Object.entries(turmasFiltradasPorDia).forEach(([diaSemana, turmas]) => {
+      const diaIndex = obterDiaSemanaIndex(diaSemana);
+      
+      turmas.forEach(turma => {
+        const linha = horarioParaLinha(turma.horario_inicio);
+        const chave = `${linha}-${diaIndex}`;
+        
+        if (!grid[chave]) {
+          grid[chave] = [];
+        }
+        grid[chave].push(turma);
+      });
+    });
+    
+    return grid;
+  }, [turmasFiltradasPorDia]);
+
   const togglePerfil = (perfil: string) => {
     setPerfisSelecionados(prev => 
       prev.includes(perfil) 
@@ -126,9 +208,29 @@ export default function CalendarioAulas() {
 
   const limparFiltros = () => {
     setPerfisSelecionados(['60+', '60+S', 'Adolescente', 'Adolescentes', 'Adultos', 'Júnior', 'Mirim', 'BPA', 'C']);
-    setDiasSelecionados(['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']);
+    setDiasSelecionados(['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']);
     setSomenteComVagas(false);
   };
+
+  const navegarSemana = (direcao: 'anterior' | 'proxima') => {
+    const novaSemana = new Date(semanaAtual);
+    if (direcao === 'anterior') {
+      novaSemana.setDate(novaSemana.getDate() - 7);
+    } else {
+      novaSemana.setDate(novaSemana.getDate() + 7);
+    }
+    setSemanaAtual(novaSemana);
+  };
+
+  const voltarParaHoje = () => {
+    setSemanaAtual(new Date());
+  };
+
+  // Horários do grid (6h às 20h)
+  const horarios = Array.from({ length: 15 }, (_, i) => {
+    const hora = i + 6;
+    return `${hora.toString().padStart(2, '0')}:00`;
+  });
 
   if (isLoading) {
     return (
@@ -137,34 +239,7 @@ export default function CalendarioAulas() {
           <Calendar className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold">Calendário de Aulas</h1>
         </div>
-        {/* Skeleton dos filtros */}
-        <div className="space-y-4 mb-6">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-12" />
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-16" />
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-20" />
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-6 gap-2 h-96">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          ))}
-        </div>
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -183,18 +258,59 @@ export default function CalendarioAulas() {
     );
   }
 
-  const diasOrdenados = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+  const hoje = new Date();
+  const mesAno = semanaAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Calendar className="w-6 h-6 text-primary" />
-        <h1 className="text-2xl font-bold">Calendário de Aulas</h1>
+      {/* Header com navegação */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold">Calendário de Aulas</h1>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navegarSemana('anterior')}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          <div className="text-lg font-medium capitalize">
+            {mesAno}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navegarSemana('proxima')}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={voltarParaHoje}
+          >
+            Hoje
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       {/* Seção de Filtros */}
       <div className="space-y-4 mb-6 p-4 bg-muted/20 rounded-lg">
-        {/* Filtro por Perfil */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Perfil:</label>
           <div className="flex flex-wrap gap-2">
@@ -213,26 +329,24 @@ export default function CalendarioAulas() {
           </div>
         </div>
 
-        {/* Filtro por Dia da Semana */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Dia da Semana:</label>
           <div className="flex flex-wrap gap-2">
-            {diasOrdenados.map((dia) => (
+            {Object.entries(diasSemanaNomes).map(([chave, nome]) => (
               <Toggle
-                key={dia}
-                pressed={diasSelecionados.includes(dia)}
-                onPressedChange={() => toggleDia(dia)}
+                key={chave}
+                pressed={diasSelecionados.includes(chave)}
+                onPressedChange={() => toggleDia(chave)}
                 variant="outline"
                 size="sm"
                 className="text-xs"
               >
-                {diasSemana[dia as keyof typeof diasSemana]}
+                {nome}
               </Toggle>
             ))}
           </div>
         </div>
 
-        {/* Filtro Somente Vagas e Limpar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Switch
@@ -255,23 +369,55 @@ export default function CalendarioAulas() {
         </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-2 h-[calc(100vh-350px)] overflow-hidden">
-        {diasOrdenados.map((dia) => (
-          <div key={dia} className="border-r last:border-r-0 pr-2 last:pr-0">
-            <DiaContainer
-              dia={dia}
-              turmas={turmasFiltradasPorDia?.[dia] || []}
-            />
+      {/* Grid do Calendário */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {/* Header dos dias */}
+        <div className="grid grid-cols-8 bg-gray-50">
+          <div className="p-3 text-center border-r border-gray-200 text-sm font-medium">
+            GMT-03
           </div>
-        ))}
-      </div>
-
-      {diasOrdenados.every(dia => !turmasFiltradasPorDia?.[dia]?.length) && (
-        <div className="text-center py-8">
-          <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Nenhuma turma encontrada com os filtros aplicados.</p>
+          {datasSemanais.map((data, index) => {
+            const diaSemanaChave = Object.keys(diasSemana)[index];
+            const isHoje = data.toDateString() === hoje.toDateString();
+            
+            return (
+              <div key={index} className="p-3 text-center border-r border-gray-200 last:border-r-0">
+                <div className="text-sm font-medium">{diasSemana[diaSemanaChave as keyof typeof diasSemana]}</div>
+                <div className={`text-lg ${isHoje ? 'bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mt-1' : ''}`}>
+                  {data.getDate()}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Grid de horários */}
+        <div className="grid grid-cols-8">
+          {horarios.map((horario, linhaIndex) => (
+            <div key={horario} className="contents">
+              {/* Coluna de horário */}
+              <div className="p-3 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50">
+                {horario}
+              </div>
+              
+              {/* Células dos dias */}
+              {datasSemanais.map((data, colunaIndex) => {
+                const chaveGrid = `${linhaIndex}-${colunaIndex}`;
+                const turmasNaCelula = gridTurmas[chaveGrid] || [];
+                
+                return (
+                  <CelulaGrid
+                    key={`${linhaIndex}-${colunaIndex}`}
+                    turmas={turmasNaCelula}
+                    horario={horario}
+                    data={data}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
