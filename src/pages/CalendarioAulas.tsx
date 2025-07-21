@@ -85,29 +85,20 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
 };
 
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma, index, total }: { turma: CalendarioTurma, index: number, total: number }) => {
-  const largura = total === 1 ? "w-full" : total === 2 ? "w-1/2" : total === 3 ? "w-1/3" : "w-1/4";
-  
+const BlocoTurma = ({ turma }: { turma: CalendarioTurma }) => {
   return (
-    <div 
-      className={`${largura} pr-1 last:pr-0`}
-      style={{
-        gridRow: `span 4`, // Ocupa 4 slots (2 horas)
-      }}
-    >
-      <div className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between">
-        <div>
-          <div className="font-medium text-blue-900 mb-1 text-sm">
-            {turma.categoria}
-          </div>
-          <div className="text-blue-700 mb-1">
-            {formatarNomeProfessor(turma.professor_nome)}
-          </div>
+    <div className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[120px]">
+      <div>
+        <div className="font-medium text-blue-900 mb-1 text-sm">
+          {turma.categoria}
         </div>
-        <div className="flex items-center gap-1 text-blue-600 mt-auto">
-          <Users className="w-3 h-3" />
-          <span>{turma.total_alunos_ativos}/12</span>
+        <div className="text-blue-700 mb-1">
+          {formatarNomeProfessor(turma.professor_nome)}
         </div>
+      </div>
+      <div className="flex items-center gap-1 text-blue-600 mt-auto">
+        <Users className="w-3 h-3" />
+        <span>{turma.total_alunos_ativos}/12</span>
       </div>
     </div>
   );
@@ -134,7 +125,10 @@ export default function CalendarioAulas() {
     if (!turmasPorDia) return [];
     const perfis = new Set<string>();
     Object.values(turmasPorDia).flat().forEach(turma => {
-      if (turma.categoria) perfis.add(turma.categoria);
+      // Só considerar turmas com alunos ativos
+      if (turma.categoria && turma.total_alunos_ativos > 0) {
+        perfis.add(turma.categoria);
+      }
     });
     return Array.from(perfis).sort();
   }, [turmasPorDia]);
@@ -152,6 +146,9 @@ export default function CalendarioAulas() {
       }
       
       const turmasFiltradas = turmas.filter(turma => {
+        // Filtrar turmas com 0 alunos
+        if (turma.total_alunos_ativos === 0) return false;
+        
         // Filtro por perfil
         if (!perfisSelecionados.includes(turma.categoria)) return false;
         
@@ -224,18 +221,12 @@ export default function CalendarioAulas() {
     setSemanaAtual(new Date());
   };
 
-  // Horários do grid - slots de 30 minutos (6h às 21h)
+  // Slots de 30 minutos (6h às 21h = 30 slots)
   const slots = Array.from({ length: 30 }, (_, i) => {
     const horaInicial = 6;
     const hora = Math.floor(i / 2) + horaInicial;
     const minuto = (i % 2) * 30;
     return `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
-  });
-
-  // Horários para display (apenas horas cheias)
-  const horariosDisplay = Array.from({ length: 15 }, (_, i) => {
-    const hora = i + 6;
-    return `${hora.toString().padStart(2, '0')}:00`;
   });
 
   if (isLoading) {
@@ -397,49 +388,45 @@ export default function CalendarioAulas() {
           })}
         </div>
 
-        {/* Grid de horários - usando CSS Grid otimizado */}
+        {/* Grid de horários - usando CSS Grid com slots de 30 minutos */}
         <div 
           className="grid grid-cols-8"
           style={{
-            gridTemplateRows: `repeat(${horariosDisplay.length}, minmax(80px, 1fr))`
+            gridTemplateRows: `repeat(${slots.length}, minmax(40px, 1fr))`
           }}
         >
-          {horariosDisplay.map((horario, horaIndex) => (
-            <div key={horario} className="contents">
-              {/* Coluna de horário */}
-              <div className="p-3 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50 flex items-start">
-                {horario}
+          {slots.map((slot, slotIndex) => (
+            <div key={slot} className="contents">
+              {/* Coluna de horário - mostrar apenas horas cheias */}
+              <div className="p-2 text-center border-r border-b border-gray-200 text-sm text-muted-foreground bg-gray-50 flex items-center justify-center">
+                {slot.endsWith(':00') ? slot : ''}
               </div>
               
               {/* Células dos dias */}
               {datasSemanais.map((data, diaIndex) => {
-                // Pegar turmas para ambos os slots desta hora (XX:00 e XX:30)
-                const slotHoraCheia = horaIndex * 2;
-                const slotMeiaHora = slotHoraCheia + 1;
-                
-                const turmasHoraCheia = gridTurmas[`${slotHoraCheia}-${diaIndex}`] || [];
-                const turmasMeiaHora = gridTurmas[`${slotMeiaHora}-${diaIndex}`] || [];
-                
-                // Verificar se alguma turma já foi renderizada (evitar duplicação)
-                const turmasParaRenderizar = [...turmasHoraCheia, ...turmasMeiaHora];
+                const turmasNesteCelula = gridTurmas[`${slotIndex}-${diaIndex}`] || [];
                 
                 return (
                   <div
-                    key={`${horaIndex}-${diaIndex}`}
-                    className="border-r border-b border-gray-200 last:border-r-0 relative overflow-hidden"
+                    key={`${slotIndex}-${diaIndex}`}
+                    className="border-r border-b border-gray-200 last:border-r-0 min-h-[40px] relative"
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${Math.max(1, turmasParaRenderizar.length)}, 1fr)`,
-                      minHeight: '80px'
+                      display: turmasNesteCelula.length > 0 ? 'grid' : 'block',
+                      gridTemplateColumns: turmasNesteCelula.length > 0 ? `repeat(${turmasNesteCelula.length}, 1fr)` : '1fr',
+                      gap: turmasNesteCelula.length > 1 ? '2px' : '0',
+                      padding: turmasNesteCelula.length > 0 ? '2px' : '0'
                     }}
                   >
-                    {turmasParaRenderizar.map((turma, turmaIndex) => (
-                      <BlocoTurma
+                    {turmasNesteCelula.map((turma, turmaIndex) => (
+                      <div
                         key={`${turma.turma_id}-${turmaIndex}`}
-                        turma={turma}
-                        index={turmaIndex}
-                        total={turmasParaRenderizar.length}
-                      />
+                        style={{
+                          gridRow: `span 4`, // Ocupa 4 slots (2 horas)
+                          height: '160px' // Altura fixa para 2 horas
+                        }}
+                      >
+                        <BlocoTurma turma={turma} />
+                      </div>
                     ))}
                   </div>
                 );
