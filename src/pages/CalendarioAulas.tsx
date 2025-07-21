@@ -1,5 +1,6 @@
-import { Calendar, Clock, Users, MapPin, User } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Calendar, Clock, Users, User } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,25 +15,16 @@ const diasSemana = {
 };
 
 const TurmaCard = ({ turma }: { turma: CalendarioTurma }) => (
-  <Card className="mb-3 hover:shadow-md transition-shadow">
-    <CardHeader className="pb-3">
-      <div className="flex items-center justify-between">
-        <CardTitle className="text-sm font-medium truncate">
-          {turma.nome_completo}
-        </CardTitle>
+  <Card className="mb-2 hover:shadow-md transition-shadow">
+    <CardContent className="p-3 space-y-1">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <Clock className="w-4 h-4 text-primary" />
+        <span>{turma.horario_inicio}</span>
+      </div>
+      <div className="flex items-center gap-2">
         <Badge variant="outline" className="text-xs">
           {turma.categoria}
         </Badge>
-      </div>
-    </CardHeader>
-    <CardContent className="pt-0 space-y-2">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Clock className="w-4 h-4" />
-        <span>{turma.horario_inicio}</span>
-      </div>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <MapPin className="w-4 h-4" />
-        <span>{turma.sala}</span>
       </div>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <User className="w-4 h-4" />
@@ -47,7 +39,7 @@ const TurmaCard = ({ turma }: { turma: CalendarioTurma }) => (
 );
 
 const DiaContainer = ({ dia, turmas }: { dia: string; turmas: CalendarioTurma[] }) => (
-  <div className="space-y-3">
+  <div className="space-y-2">
     <div className="flex items-center gap-2 pb-2 border-b">
       <Calendar className="w-5 h-5 text-primary" />
       <h3 className="text-lg font-semibold">{diasSemana[dia as keyof typeof diasSemana]}</h3>
@@ -55,7 +47,7 @@ const DiaContainer = ({ dia, turmas }: { dia: string; turmas: CalendarioTurma[] 
         {turmas.length} turmas
       </Badge>
     </div>
-    <div className="space-y-3">
+    <div className="space-y-2">
       {turmas.map((turma) => (
         <TurmaCard key={turma.turma_id} turma={turma} />
       ))}
@@ -77,8 +69,8 @@ export default function CalendarioAulas() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="space-y-3">
               <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
             </div>
           ))}
         </div>
