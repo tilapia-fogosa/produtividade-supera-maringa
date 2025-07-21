@@ -391,9 +391,14 @@ export default function CalendarioAulas() {
       {/* Grid do Calendário Reestruturado */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         {/* Header dos dias (segunda a sábado) */}
-        <div className="grid grid-cols-7 bg-gray-50 sticky top-0 z-10">
+        <div 
+          className="bg-gray-50 sticky top-0 z-10"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '45px repeat(6, 1fr)',
+          }}
+        >
           <div className="p-3 text-center border-r border-gray-200 text-sm font-medium">
-            GMT-03
           </div>
           {datasSemanais.map((data, index) => {
             const diaSemanaChave = Object.keys(diasSemana)[index];
