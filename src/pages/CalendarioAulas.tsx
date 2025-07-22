@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo } from "react";
+import { TurmaModal } from "@/components/turmas/TurmaModal";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -83,9 +84,12 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
 };
 
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma }: { turma: CalendarioTurma }) => {
+const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () => void }) => {
   return (
-    <div className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between">
+    <div 
+      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between"
+      onClick={onClick}
+    >
       <div>
         <div className="font-medium text-blue-900 mb-1 text-sm">
           {turma.categoria}
@@ -112,6 +116,10 @@ export default function CalendarioAulas() {
     'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'
   ]);
   const [somenteComVagas, setSomenteComVagas] = useState(false);
+  
+  // Estados para o modal da turma
+  const [modalTurmaId, setModalTurmaId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Calcular datas da semana (segunda a sábado)
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
@@ -230,6 +238,17 @@ export default function CalendarioAulas() {
 
   const voltarParaHoje = () => {
     setSemanaAtual(new Date());
+  };
+
+  // Funções para o modal da turma
+  const handleTurmaClick = (turmaId: string) => {
+    setModalTurmaId(turmaId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalTurmaId(null);
   };
 
   // Slots de 30 minutos (6h às 21h = 30 slots)
@@ -473,13 +492,24 @@ export default function CalendarioAulas() {
                 }}
               >
                 {turmas.map((turma, turmaIndex) => (
-                  <BlocoTurma key={`${turma.turma_id}-${turmaIndex}`} turma={turma} />
+                  <BlocoTurma 
+                    key={`${turma.turma_id}-${turmaIndex}`} 
+                    turma={turma} 
+                    onClick={() => handleTurmaClick(turma.turma_id)}
+                  />
                 ))}
               </div>
             );
           })}
         </div>
       </div>
+      
+      {/* Modal da Turma */}
+      <TurmaModal 
+        turmaId={modalTurmaId}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

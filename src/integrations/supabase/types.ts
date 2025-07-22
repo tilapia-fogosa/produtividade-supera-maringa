@@ -892,6 +892,7 @@ export type Database = {
           registration_name: string | null
           scheduled_date: string | null
           status: string
+          tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id: string | null
           updated_at: string
           valorization_confirmed: boolean | null
@@ -917,6 +918,7 @@ export type Database = {
           registration_name?: string | null
           scheduled_date?: string | null
           status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -942,6 +944,7 @@ export type Database = {
           registration_name?: string | null
           scheduled_date?: string | null
           status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -1664,6 +1667,42 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "loss_reason_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      n8n_bot_mensagens: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: number
+          nome: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: number
+          nome?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: number
+          nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "n8n_bot_mensagens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "n8n_bot_mensagens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
         ]
@@ -3403,6 +3442,10 @@ export type Database = {
           ma_conversion_rate: number
         }[]
       }
+      get_turma_modal_data: {
+        Args: { p_turma_id: string }
+        Returns: Json
+      }
       get_user_access_info: {
         Args: { user_id: string }
         Returns: {
@@ -3539,6 +3582,7 @@ export type Database = {
       sale_type: "matricula" | "outros"
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
+      tipo_atendimento: "bot" | "humano"
       user_role:
         | "consultor"
         | "franqueado"
@@ -3704,6 +3748,7 @@ export const Constants = {
       sale_type: ["matricula", "outros"],
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
+      tipo_atendimento: ["bot", "humano"],
       user_role: [
         "consultor",
         "franqueado",
