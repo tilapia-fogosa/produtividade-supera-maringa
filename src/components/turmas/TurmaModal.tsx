@@ -6,8 +6,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Calendar, Clock } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Users, Calendar, Clock, GraduationCap, School, User } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -70,6 +70,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
             <div className="flex gap-4">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-36" />
             </div>
           ) : (
             <div className="flex gap-6 text-sm text-muted-foreground">
@@ -78,26 +79,62 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 <span>{data?.turma?.dia_semana}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
+                <School className="h-4 w-4" />
                 <span>Sala {data?.turma?.sala}</span>
+              </div>
+              {data?.turma?.horario_inicio && data?.turma?.horario_fim && (
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>{data.turma.horario_inicio} - {data.turma.horario_fim}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Estatísticas */}
+          {!isLoading && data?.estatisticas && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+              <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Estatísticas da Turma
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-blue-600">{data.estatisticas.total_alunos_ativos}</p>
+                  <p className="text-sm text-muted-foreground">Alunos Ativos</p>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-green-600">
+                    {data.estatisticas.media_idade ? `${data.estatisticas.media_idade}` : '-'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Idade Média</p>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-purple-600">
+                    {data.estatisticas.media_dias_supera ? `${data.estatisticas.media_dias_supera}` : '-'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Dias Médio na Supera</p>
+                </div>
               </div>
             </div>
           )}
 
           {/* Lista de Alunos */}
           <div>
-            <h3 className="text-lg font-medium mb-4">
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <Users className="h-5 w-5" />
               Alunos Ativos ({isLoading ? '...' : data?.alunos?.length || 0})
             </h3>
             
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <div key={index} className="flex items-center space-x-3 p-4 border rounded-lg">
                     <Skeleton className="h-12 w-12 rounded-full" />
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-1">
                       <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-28" />
                     </div>
                   </div>
                 ))}
@@ -107,18 +144,29 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 {data?.alunos?.map((aluno) => (
                   <div
                     key={aluno.id}
-                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md"
                   >
                     <Avatar className="h-12 w-12">
+                      <AvatarImage src={aluno.foto_url || undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        <User className="h-6 w-6" />
+                        {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{aluno.nome}</p>
-                      <div className="flex gap-3 text-xs text-muted-foreground">
-                        <span>{aluno.idade} anos</span>
-                        <span>{aluno.dias_supera} dias no Supera</span>
+                      <div className="space-y-1">
+                        {(aluno.idade || aluno.dias_supera) && (
+                          <div className="flex gap-3 text-xs text-muted-foreground">
+                            {aluno.idade && <span>{aluno.idade} anos</span>}
+                            {aluno.dias_supera && <span>{aluno.dias_supera} dias na Supera</span>}
+                          </div>
+                        )}
+                        {(aluno.telefone || aluno.email) && (
+                          <div className="text-xs text-muted-foreground">
+                            {aluno.telefone && <div>{aluno.telefone}</div>}
+                            {aluno.email && <div className="truncate">{aluno.email}</div>}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -127,9 +175,10 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
             )}
 
             {!isLoading && (!data?.alunos || data.alunos.length === 0) && (
-              <div className="text-center py-8 text-muted-foreground">
-                <User className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Nenhum aluno ativo encontrado nesta turma</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium mb-2">Nenhum aluno ativo encontrado</p>
+                <p className="text-sm">Esta turma não possui alunos ativos no momento.</p>
               </div>
             )}
           </div>

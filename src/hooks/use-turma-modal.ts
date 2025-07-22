@@ -7,6 +7,8 @@ export type TurmaModalData = {
     nome: string;
     sala: string;
     dia_semana: string;
+    horario_inicio?: string;
+    horario_fim?: string;
   };
   professor: {
     id: string;
@@ -19,7 +21,14 @@ export type TurmaModalData = {
     idade: number;
     dias_supera: number;
     foto_url: string | null;
+    telefone?: string;
+    email?: string;
   }>;
+  estatisticas: {
+    total_alunos_ativos: number;
+    media_idade: number;
+    media_dias_supera: number;
+  };
 };
 
 export const useTurmaModal = (turmaId: string | null) => {
