@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
-import { useAlunosTurma } from "@/hooks/use-alunos-turma";
+import { useAlunosReposicao } from "@/hooks/use-alunos-reposicao";
 
 interface ReposicaoLancamentoModalProps {
   isOpen: boolean;
@@ -32,7 +32,7 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
   const { criarReposicao } = useReposicoes();
-  const { data: alunos = [], isLoading: loadingAlunos } = useAlunosTurma(turmaSelecionada);
+  const { data: alunos = [], isLoading: loadingAlunos } = useAlunosReposicao(turmaSelecionada);
 
   // Encontrar turma selecionada
   const turma = turmas.find(t => t.id === turmaSelecionada);
