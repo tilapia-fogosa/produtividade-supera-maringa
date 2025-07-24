@@ -155,12 +155,6 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                             {aluno.dias_supera && <span>{aluno.dias_supera} dias na Supera</span>}
                           </div>
                         )}
-                        {(aluno.telefone || aluno.email) && (
-                          <div className="text-xs text-muted-foreground">
-                            {aluno.telefone && <div>{aluno.telefone}</div>}
-                            {aluno.email && <div className="truncate">{aluno.email}</div>}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
