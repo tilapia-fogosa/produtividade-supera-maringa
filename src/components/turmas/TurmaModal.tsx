@@ -78,16 +78,10 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 <Calendar className="h-4 w-4" />
                 <span>{data?.turma?.dia_semana}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <School className="h-4 w-4" />
-                <span>Sala {data?.turma?.sala}</span>
-              </div>
-              {data?.turma?.horario_inicio && data?.turma?.horario_fim && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{data.turma.horario_inicio} - {data.turma.horario_fim}</span>
-                </div>
-              )}
+               <div className="flex items-center gap-2">
+                 <School className="h-4 w-4" />
+                 <span>Sala {data?.turma?.sala}</span>
+               </div>
             </div>
           )}
 

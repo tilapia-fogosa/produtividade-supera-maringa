@@ -1673,39 +1673,30 @@ export type Database = {
       }
       n8n_bot_mensagens: {
         Row: {
-          client_id: string | null
+          concatena: boolean | null
+          concatena_tempo: string | null
           created_at: string
           id: number
+          msg_concatenada: string[] | null
           nome: string | null
         }
         Insert: {
-          client_id?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
           created_at?: string
           id?: number
+          msg_concatenada?: string[] | null
           nome?: string | null
         }
         Update: {
-          client_id?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
           created_at?: string
           id?: number
+          msg_concatenada?: string[] | null
           nome?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "n8n_bot_mensagens_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "n8n_bot_mensagens_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "kanban_client_summary"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       pedagogical_enrollments: {
         Row: {
