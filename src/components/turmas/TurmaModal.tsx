@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,9 +7,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Calendar, Clock, GraduationCap, School, User } from "lucide-react";
+import { Users, Calendar, RefreshCw, School } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReposicaoModal from "./ReposicaoModal";
 
 interface TurmaModalProps {
   turmaId: string | null;
@@ -23,6 +24,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
   onClose,
 }) => {
   const { data, isLoading, error } = useTurmaModal(turmaId);
+  const [reposicaoModalOpen, setReposicaoModalOpen] = useState(false);
 
   if (error) {
     return (
@@ -54,7 +56,14 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
               )}
             </DialogTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setReposicaoModalOpen(true)}
+                disabled={isLoading || !data?.turma}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
                 Lançar Reposição na Turma
               </Button>
               <Button variant="outline" size="sm" disabled>
@@ -172,6 +181,20 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
           </div>
         </div>
       </DialogContent>
+
+      {/* Modal de Reposição */}
+      {data?.turma && (
+        <ReposicaoModal
+          isOpen={reposicaoModalOpen}
+          onClose={() => setReposicaoModalOpen(false)}
+          turma={{
+            id: data.turma.id,
+            nome: data.turma.nome,
+            dia_semana: data.turma.dia_semana,
+            unit_id: data.turma.unit_id || '00000000-0000-0000-0000-000000000000'
+          }}
+        />
+      )}
     </Dialog>
   );
 };

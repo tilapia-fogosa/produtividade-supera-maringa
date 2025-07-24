@@ -7,6 +7,7 @@ export type TurmaModalData = {
     nome: string;
     sala: string;
     dia_semana: string;
+    unit_id?: string;
   };
   professor: {
     id: string;
