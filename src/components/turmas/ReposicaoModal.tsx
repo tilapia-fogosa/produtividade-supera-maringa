@@ -49,12 +49,17 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
 
   const [alunoSelecionado, setAlunoSelecionado] = useState<string>("");
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<string>("");
-  const [tipoResponsavel, setTipoResponsavel] = useState<'professor' | 'funcionario'>('professor');
   const [dataSelecionada, setDataSelecionada] = useState<Date | undefined>();
   const [observacoes, setObservacoes] = useState<string>("");
 
   // Calcular datas válidas baseadas no dia da semana da turma
   const datasValidas = calcularDatasValidas(turma.dia_semana);
+  
+  // Função para determinar o tipo do responsável
+  const determinarTipoResponsavel = (responsavelId: string): 'professor' | 'funcionario' => {
+    const responsavel = responsaveis.find(r => r.id === responsavelId);
+    return responsavel?.tipo || 'professor';
+  };
   
   const handleSubmit = async () => {
     if (!alunoSelecionado || !responsavelSelecionado || !dataSelecionada) {
@@ -67,7 +72,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
         turma_id: turma.id,
         data_reposicao: format(dataSelecionada, 'yyyy-MM-dd'),
         responsavel_id: responsavelSelecionado,
-        responsavel_tipo: tipoResponsavel,
+        responsavel_tipo: determinarTipoResponsavel(responsavelSelecionado),
         observacoes: observacoes || undefined,
         unit_id: turma.unit_id,
         created_by: 'sistema', // Por enquanto fixo, pois não há login
@@ -76,7 +81,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
       // Resetar form
       setAlunoSelecionado("");
       setResponsavelSelecionado("");
-      setTipoResponsavel('professor');
       setDataSelecionada(undefined);
       setObservacoes("");
       onClose();
@@ -84,8 +88,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
       console.error('Erro ao salvar reposição:', error);
     }
   };
-
-  const responsaveisFiltrados = responsaveis.filter(r => r.tipo === tipoResponsavel);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -114,36 +116,18 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
             </Select>
           </div>
 
-          {/* Tipo de Responsável */}
-          <div className="space-y-2">
-            <Label htmlFor="tipo-responsavel">Tipo de Responsável *</Label>
-            <Select value={tipoResponsavel} onValueChange={(value: 'professor' | 'funcionario') => {
-              setTipoResponsavel(value);
-              setResponsavelSelecionado(""); // Reset responsável quando mudar tipo
-            }}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="professor">Professor</SelectItem>
-                <SelectItem value="funcionario">Funcionário</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Seleção do Responsável */}
           <div className="space-y-2">
             <Label htmlFor="responsavel">Responsável *</Label>
             <Select 
               value={responsavelSelecionado} 
               onValueChange={setResponsavelSelecionado}
-              disabled={!tipoResponsavel}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o responsável" />
               </SelectTrigger>
               <SelectContent>
-                {responsaveisFiltrados.map((responsavel) => (
+                {responsaveis.map((responsavel) => (
                   <SelectItem key={responsavel.id} value={responsavel.id}>
                     {responsavel.nome}
                   </SelectItem>
@@ -166,12 +150,19 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                 format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
               )}
               modifiers={{
-                available: datasValidas
+                available: datasValidas,
+                selected: dataSelecionada ? [dataSelecionada] : undefined
               }}
               modifiersStyles={{
                 available: { 
                   backgroundColor: 'hsl(var(--primary))',
                   color: 'hsl(var(--primary-foreground))'
+                },
+                selected: {
+                  backgroundColor: 'hsl(var(--secondary))',
+                  color: 'hsl(var(--secondary-foreground))',
+                  border: '2px solid hsl(var(--secondary))',
+                  fontWeight: '600'
                 }
               }}
               locale={ptBR}
