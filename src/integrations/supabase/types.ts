@@ -3478,6 +3478,21 @@ export type Database = {
         Args: { p_unit_ids: string[] }
         Returns: Json
       }
+      get_lista_completa_reposicoes: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          reposicao_id: string
+          data_reposicao: string
+          aluno_nome: string
+          turma_original_nome: string
+          turma_reposicao_nome: string
+          observacoes: string
+          unit_id: string
+          aluno_id: string
+          turma_original_id: string
+          turma_reposicao_id: string
+        }[]
+      }
       get_periodo_data: {
         Args: { p_periodo: string }
         Returns: string
