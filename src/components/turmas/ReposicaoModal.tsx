@@ -16,8 +16,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
 import { useAlunos } from "@/hooks/use-alunos";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
@@ -140,39 +146,54 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
           <div className="space-y-2">
             <Label>Data da Reposição *</Label>
             <div className="text-sm text-muted-foreground mb-2">
-              Datas disponíveis para {turma.dia_semana}:
+              Datas disponíveis para {turma.dia_semana}
             </div>
-            <Calendar
-              mode="single"
-              selected={dataSelecionada}
-              onSelect={setDataSelecionada}
-              disabled={(date) => !datasValidas.some(d => 
-                format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-              )}
-              modifiers={{
-                available: datasValidas,
-                selected: dataSelecionada ? [dataSelecionada] : undefined
-              }}
-              modifiersStyles={{
-                available: { 
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))'
-                },
-                selected: {
-                  backgroundColor: 'hsl(var(--secondary))',
-                  color: 'hsl(var(--secondary-foreground))',
-                  border: '2px solid hsl(var(--secondary))',
-                  fontWeight: '600'
-                }
-              }}
-              locale={ptBR}
-              className={cn("rounded-md border pointer-events-auto", isMobile && "text-sm")}
-            />
-            {dataSelecionada && (
-              <div className="text-sm text-primary font-medium">
-                Data selecionada: {format(dataSelecionada, 'dd/MM/yyyy', { locale: ptBR })}
-              </div>
-            )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dataSelecionada && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataSelecionada ? 
+                    format(dataSelecionada, "dd/MM/yyyy", { locale: ptBR }) : 
+                    "Selecione a data da reposição"
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dataSelecionada}
+                  onSelect={setDataSelecionada}
+                  disabled={(date) => !datasValidas.some(d => 
+                    format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+                  )}
+                  modifiers={{
+                    available: datasValidas,
+                    selected: dataSelecionada ? [dataSelecionada] : undefined
+                  }}
+                  modifiersStyles={{
+                    available: { 
+                      backgroundColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))'
+                    },
+                    selected: {
+                      backgroundColor: 'hsl(var(--secondary))',
+                      color: 'hsl(var(--secondary-foreground))',
+                      border: '2px solid hsl(var(--secondary))',
+                      fontWeight: '600'
+                    }
+                  }}
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto", isMobile && "text-sm")}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Observações */}
