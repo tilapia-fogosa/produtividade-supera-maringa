@@ -32,7 +32,7 @@ export type TurmaModalData = {
     telefone?: string;
     email?: string;
     data_reposicao: string;
-    motivo?: string;
+    observacoes?: string;
   }>;
   estatisticas: {
     total_alunos_ativos: number;
