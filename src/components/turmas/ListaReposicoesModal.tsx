@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaReposicoes } from "@/hooks/use-lista-reposicoes";
 
@@ -45,7 +45,7 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+      return format(parseISO(dateString), "dd/MM/yyyy", { locale: ptBR });
     } catch {
       return dateString;
     }
