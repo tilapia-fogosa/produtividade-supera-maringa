@@ -127,6 +127,7 @@ export default function CalendarioAulas() {
   
   // Estados para o modal da turma
   const [modalTurmaId, setModalTurmaId] = useState<string | null>(null);
+  const [modalDataConsulta, setModalDataConsulta] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 
@@ -247,14 +248,16 @@ export default function CalendarioAulas() {
   };
 
   // Funções para o modal da turma
-  const handleTurmaClick = (turmaId: string) => {
+  const handleTurmaClick = (turmaId: string, diaIndex: number) => {
     setModalTurmaId(turmaId);
+    setModalDataConsulta(datasSemanais[diaIndex]);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setModalTurmaId(null);
+    setModalDataConsulta(null);
   };
 
   // Slots de 30 minutos (6h às 21h = 30 slots)
@@ -501,7 +504,7 @@ export default function CalendarioAulas() {
                   <BlocoTurma 
                     key={`${turma.turma_id}-${turmaIndex}`} 
                     turma={turma} 
-                    onClick={() => handleTurmaClick(turma.turma_id)}
+                    onClick={() => handleTurmaClick(turma.turma_id, dia)}
                   />
                 ))}
               </div>
@@ -515,6 +518,7 @@ export default function CalendarioAulas() {
         turmaId={modalTurmaId}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        dataConsulta={modalDataConsulta || undefined}
       />
     </div>
   );

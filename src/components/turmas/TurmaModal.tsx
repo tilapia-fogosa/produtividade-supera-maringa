@@ -16,14 +16,16 @@ interface TurmaModalProps {
   turmaId: string | null;
   isOpen: boolean;
   onClose: () => void;
+  dataConsulta?: Date;
 }
 
 export const TurmaModal: React.FC<TurmaModalProps> = ({
   turmaId,
   isOpen,
   onClose,
+  dataConsulta,
 }) => {
-  const { data, isLoading, error } = useTurmaModal(turmaId);
+  const { data, isLoading, error } = useTurmaModal(turmaId, dataConsulta);
   const [reposicaoModalOpen, setReposicaoModalOpen] = useState(false);
 
   if (error) {
@@ -179,6 +181,81 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* Seção Reposições e Experimentais */}
+          {dataConsulta && (
+            <div>
+              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                <RefreshCw className="h-5 w-5" />
+                Reposições e Experimentais ({isLoading ? '...' : (data?.reposicoes?.length || 0)})
+              </h3>
+              
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-4 border rounded-lg">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {data?.reposicoes && data.reposicoes.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {data.reposicoes.map((aluno) => (
+                        <div
+                          key={aluno.id}
+                          className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-orange-200 bg-orange-50"
+                        >
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={aluno.foto_url || undefined} />
+                            <AvatarFallback className="bg-orange-100 text-orange-600">
+                              {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{aluno.nome}</p>
+                            <div className="space-y-1">
+                              {(aluno.idade || aluno.dias_supera) && (
+                                <div className="flex gap-3 text-xs text-muted-foreground">
+                                  {aluno.idade && <span>{aluno.idade} anos</span>}
+                                  {aluno.dias_supera && <span>{aluno.dias_supera} dias na Supera</span>}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 text-xs text-orange-600">
+                                <RefreshCw className="h-3 w-3" />
+                                <span>Reposição</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+                      <RefreshCw className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm font-medium mb-1">Nenhuma reposição para este dia</p>
+                      <p className="text-xs">Não há alunos com reposição marcada para {dataConsulta.toLocaleDateString('pt-BR')}.</p>
+                    </div>
+                  )}
+                  
+                  {/* Placeholder para Aulas Experimentais */}
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-dashed">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <School className="h-4 w-4" />
+                      <span className="text-sm font-medium">Aulas Experimentais (0)</span>
+                      <span className="text-xs text-gray-400">- Não implementado</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
 
