@@ -97,15 +97,15 @@ const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () =
         <div className="text-blue-700 mb-1">
           {formatarNomeProfessor(turma.professor_nome)}
         </div>
-      </div>
-      <div className="flex items-center gap-1 text-blue-600 mt-auto">
-        <Users className="w-3 h-3" />
-        <span>
-          {turma.total_alunos_ativos}/{turma.categoria === 'infantil' ? '6' : '12'}
-          {turma.total_reposicoes > 0 && (
-            <span className="text-red-500 font-medium"> Rep: {turma.total_reposicoes}</span>
-          )}
-        </span>
+        <div className="flex items-center gap-1 text-blue-600">
+          <Users className="w-3 h-3" />
+          <span>
+            {turma.total_alunos_ativos}/{turma.categoria === 'infantil' ? '6' : '12'}
+            {turma.total_reposicoes > 0 && (
+              <span className="text-red-500 font-medium"> Rep: {turma.total_reposicoes}</span>
+            )}
+          </span>
+        </div>
       </div>
     </div>
   );
