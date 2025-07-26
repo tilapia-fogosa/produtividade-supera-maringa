@@ -105,6 +105,9 @@ const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () =
             {turma.total_reposicoes > 0 && (
               <span className="text-red-500 font-medium"> Rep: {turma.total_reposicoes}</span>
             )}
+            {turma.total_aulas_experimentais > 0 && (
+              <span className="text-green-500 font-medium"> Exp: {turma.total_aulas_experimentais}</span>
+            )}
           </span>
         </div>
       </div>
