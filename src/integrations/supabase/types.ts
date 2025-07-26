@@ -448,6 +448,45 @@ export type Database = {
         }
         Relationships: []
       }
+      aulas_experimentais: {
+        Row: {
+          cliente_nome: string
+          created_at: string
+          created_by: string | null
+          data_aula_experimental: string
+          descricao_cliente: string | null
+          id: string
+          responsavel_id: string
+          responsavel_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Insert: {
+          cliente_nome: string
+          created_at?: string
+          created_by?: string | null
+          data_aula_experimental: string
+          descricao_cliente?: string | null
+          id?: string
+          responsavel_id: string
+          responsavel_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Update: {
+          cliente_nome?: string
+          created_at?: string
+          created_by?: string | null
+          data_aula_experimental?: string
+          descricao_cliente?: string | null
+          id?: string
+          responsavel_id?: string
+          responsavel_tipo?: string
+          turma_id?: string
+          unit_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           active: boolean

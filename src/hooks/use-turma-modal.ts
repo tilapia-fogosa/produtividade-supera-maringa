@@ -34,9 +34,19 @@ export type TurmaModalData = {
     data_reposicao: string;
     observacoes?: string;
   }>;
+  aulas_experimentais: Array<{
+    id: string;
+    cliente_nome: string;
+    data_aula_experimental: string;
+    responsavel_id: string;
+    responsavel_tipo: 'professor' | 'funcionario';
+    descricao_cliente?: string;
+    responsavel_nome?: string;
+  }>;
   estatisticas: {
     total_alunos_ativos: number;
     total_reposicoes_dia: number;
+    total_aulas_experimentais_dia: number;
     media_idade: number;
     media_dias_supera: number;
   };

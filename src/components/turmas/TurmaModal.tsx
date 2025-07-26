@@ -11,6 +11,7 @@ import { Users, Calendar, RefreshCw, School } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReposicaoModal from "./ReposicaoModal";
+import AulaExperimentalModal from "./AulaExperimentalModal";
 
 interface TurmaModalProps {
   turmaId: string | null;
@@ -27,6 +28,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
 }) => {
   const { data, isLoading, error } = useTurmaModal(turmaId, dataConsulta);
   const [reposicaoModalOpen, setReposicaoModalOpen] = useState(false);
+  const [aulaExperimentalModalOpen, setAulaExperimentalModalOpen] = useState(false);
 
   if (error) {
     return (
@@ -68,7 +70,14 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 <RefreshCw className="h-4 w-4" />
                 Lançar Reposição na Turma
               </Button>
-              <Button variant="outline" size="sm" disabled>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setAulaExperimentalModalOpen(true)}
+                disabled={isLoading || !data?.turma}
+                className="flex items-center gap-2"
+              >
+                <School className="h-4 w-4" />
                 Lançar Aula Experimental na Turma
               </Button>
             </div>
@@ -187,7 +196,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
             <div>
               <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
                 <RefreshCw className="h-5 w-5" />
-                Reposições e Experimentais ({isLoading ? '...' : (data?.reposicoes?.length || 0)})
+                Reposições e Experimentais ({isLoading ? '...' : ((data?.reposicoes?.length || 0) + (data?.aulas_experimentais?.length || 0))})
               </h3>
               
               {isLoading ? (
@@ -236,22 +245,54 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
-                      <RefreshCw className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm font-medium mb-1">Nenhuma reposição para este dia</p>
-                      <p className="text-xs">Não há alunos com reposição marcada para {dataConsulta.toLocaleDateString('pt-BR')}.</p>
+                  ) : null}
+                  
+                  {/* Aulas Experimentais */}
+                  {data?.aulas_experimentais && data.aulas_experimentais.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="text-md font-medium mb-3 flex items-center gap-2">
+                        <School className="h-4 w-4" />
+                        Aulas Experimentais ({data.aulas_experimentais.length})
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {data.aulas_experimentais.map((aulaExp) => (
+                          <div
+                            key={aulaExp.id}
+                            className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-blue-200 bg-blue-50"
+                          >
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-blue-100 text-blue-600">
+                                {aulaExp.cliente_nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{aulaExp.cliente_nome}</p>
+                              <div className="space-y-1">
+                                {aulaExp.responsavel_nome && (
+                                  <div className="text-xs text-muted-foreground">
+                                    <span>Responsável: {aulaExp.responsavel_nome}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1 text-xs text-blue-600">
+                                  <School className="h-3 w-3" />
+                                  <span>Aula Experimental</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   
-                  {/* Placeholder para Aulas Experimentais */}
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-dashed">
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <School className="h-4 w-4" />
-                      <span className="text-sm font-medium">Aulas Experimentais (0)</span>
-                      <span className="text-xs text-gray-400">- Não implementado</span>
+                  {(!data?.reposicoes || data.reposicoes.length === 0) && 
+                   (!data?.aulas_experimentais || data.aulas_experimentais.length === 0) && (
+                    <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+                      <RefreshCw className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm font-medium mb-1">Nenhuma reposição ou aula experimental para este dia</p>
+                      <p className="text-xs">Não há atividades especiais marcadas para {dataConsulta.toLocaleDateString('pt-BR')}.</p>
                     </div>
-                  </div>
+                  )}
                 </>
               )}
             </div>
@@ -270,6 +311,18 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
             dia_semana: data.turma.dia_semana,
             unit_id: data.turma.unit_id || '00000000-0000-0000-0000-000000000000'
           }}
+        />
+      )}
+
+      {/* Modal de Aula Experimental */}
+      {data?.turma && (
+        <AulaExperimentalModal
+          isOpen={aulaExperimentalModalOpen}
+          onClose={() => setAulaExperimentalModalOpen(false)}
+          turmaId={data.turma.id}
+          turmaNome={data.turma.nome}
+          diaSemana={data.turma.dia_semana}
+          unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
         />
       )}
     </Dialog>
