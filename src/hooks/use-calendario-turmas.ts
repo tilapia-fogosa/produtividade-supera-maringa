@@ -13,16 +13,17 @@ export type CalendarioTurma = {
   horario_inicio: string;
   categoria: string;
   total_alunos_ativos: number;
+  total_reposicoes: number;
   created_at: string;
 };
 
-export const useCalendarioTurmas = () => {
+export const useCalendarioTurmas = (dataConsulta: Date) => {
   return useQuery({
-    queryKey: ["calendario-turmas"],
+    queryKey: ["calendario-turmas", dataConsulta.toISOString().split('T')[0]],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("calendario_turmas_view")
-        .select("*");
+      const { data, error } = await supabase.rpc("get_calendario_turmas_com_reposicoes", {
+        p_data_consulta: dataConsulta.toISOString().split('T')[0]
+      });
       
       if (error) throw error;
       

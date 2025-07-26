@@ -100,15 +100,23 @@ const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () =
       </div>
       <div className="flex items-center gap-1 text-blue-600 mt-auto">
         <Users className="w-3 h-3" />
-        <span>{turma.total_alunos_ativos}/12</span>
+        <span>
+          {turma.total_alunos_ativos}/{turma.categoria === 'infantil' ? '6' : '12'}
+          {turma.total_reposicoes > 0 && (
+            <span className="text-red-500 font-medium"> Rep: {turma.total_reposicoes}</span>
+          )}
+        </span>
       </div>
     </div>
   );
 };
 
 export default function CalendarioAulas() {
-  const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas();
   const [semanaAtual, setSemanaAtual] = useState(new Date());
+  const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
+  
+  // Buscar dados das turmas para a primeira data da semana
+  const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(datasSemanais[0]);
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
@@ -121,8 +129,6 @@ export default function CalendarioAulas() {
   const [modalTurmaId, setModalTurmaId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Calcular datas da semana (segunda a sábado)
-  const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
 
   // Extrair perfis únicos dos dados (excluindo domingo)
   const perfisDisponiveis = useMemo(() => {
