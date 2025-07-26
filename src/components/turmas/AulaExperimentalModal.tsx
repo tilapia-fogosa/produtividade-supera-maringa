@@ -45,7 +45,7 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!clienteNome || !responsavelId || !responsavelTipo || !dataAulaExperimental) {
+    if (!clienteNome || !responsavelId || !responsavelTipo || !dataAulaExperimental || !descricaoCliente) {
       return;
     }
 
@@ -149,13 +149,14 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="descricao-cliente">Descrição Detalhada do Cliente</Label>
+            <Label htmlFor="descricao-cliente">Descrição Detalhada do Cliente *</Label>
             <Textarea
               id="descricao-cliente"
               value={descricaoCliente}
               onChange={(e) => setDescricaoCliente(e.target.value)}
               placeholder="Digite informações adicionais sobre o cliente"
               rows={3}
+              required
             />
           </div>
 
