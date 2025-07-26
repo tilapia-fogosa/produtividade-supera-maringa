@@ -145,9 +145,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
           {/* Seleção da Data */}
           <div className="space-y-2">
             <Label>Data da Reposição *</Label>
-            <div className="text-sm text-muted-foreground mb-2">
-              Datas disponíveis para {turma.dia_semana}
-            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -159,7 +156,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dataSelecionada ? 
-                    format(dataSelecionada, "dd/MM/yyyy", { locale: ptBR }) : 
+                    format(dataSelecionada, "PPP", { locale: ptBR }) : 
                     "Selecione a data da reposição"
                   }
                 </Button>
