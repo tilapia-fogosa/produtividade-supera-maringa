@@ -1,5 +1,5 @@
 
-import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-tur
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
+import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -129,6 +130,9 @@ export default function CalendarioAulas() {
   const [modalTurmaId, setModalTurmaId] = useState<string | null>(null);
   const [modalDataConsulta, setModalDataConsulta] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Estado para o modal da lista de reposições
+  const [isListaReposicoesOpen, setIsListaReposicoesOpen] = useState(false);
 
 
   // Extrair perfis únicos dos dados (excluindo domingo)
@@ -342,6 +346,15 @@ export default function CalendarioAulas() {
             <FileText className="w-4 h-4 mr-2" />
             PDF
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsListaReposicoesOpen(true)}
+          >
+            <List className="w-4 h-4 mr-2" />
+            Lista de Reposições
+          </Button>
         </div>
       </div>
 
@@ -519,6 +532,12 @@ export default function CalendarioAulas() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         dataConsulta={modalDataConsulta || undefined}
+      />
+      
+      {/* Modal da Lista de Reposições */}
+      <ListaReposicoesModal 
+        open={isListaReposicoesOpen}
+        onOpenChange={setIsListaReposicoesOpen}
       />
     </div>
   );

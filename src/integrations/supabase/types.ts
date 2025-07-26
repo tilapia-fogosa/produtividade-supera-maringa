@@ -3297,6 +3297,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_reposicao: {
+        Args: { p_reposicao_id: string }
+        Returns: boolean
+      }
       get_activity_funnel_stats: {
         Args: {
           p_unit_id: string
