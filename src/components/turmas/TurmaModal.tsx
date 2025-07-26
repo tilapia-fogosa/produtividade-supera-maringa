@@ -78,7 +78,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 className="flex items-center gap-2"
               >
                 <School className="h-4 w-4" />
-                Lançar Aula Experimental na Turma
+                Lançar Aula Experimental
               </Button>
             </div>
           </div>
