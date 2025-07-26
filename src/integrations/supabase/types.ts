@@ -3352,6 +3352,24 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_calendario_turmas_semana_com_reposicoes: {
+        Args: { p_data_inicio: string; p_data_fim: string }
+        Returns: {
+          turma_id: string
+          unit_id: string
+          nome_completo: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          sala: string
+          professor_id: string
+          professor_nome: string
+          professor_slack: string
+          horario_inicio: string
+          categoria: string
+          total_alunos_ativos: number
+          total_reposicoes: number
+          created_at: string
+        }[]
+      }
       get_commercial_unit_stats: {
         Args: {
           p_start_date: string
