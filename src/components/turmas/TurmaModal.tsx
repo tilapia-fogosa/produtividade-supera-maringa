@@ -194,9 +194,9 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
           {/* Seção Reposições e Experimentais */}
           {dataConsulta && (
             <div>
-              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <RefreshCw className="h-5 w-5" />
-                Reposições e Experimentais ({isLoading ? '...' : ((data?.reposicoes?.length || 0) + (data?.aulas_experimentais?.length || 0))})
+              <h3 className="text-md font-medium mb-4 flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Reposições ({isLoading ? '...' : (data?.reposicoes?.length || 0)})
               </h3>
               
               {isLoading ? (
