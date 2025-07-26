@@ -48,10 +48,11 @@ export const useTurmaModal = (turmaId: string | null, dataConsulta?: Date) => {
     queryFn: async () => {
       if (!turmaId) return null;
       
-      const params: any = { p_turma_id: turmaId };
-      if (dataConsulta) {
-        params.p_data_consulta = dataConsulta.toISOString().split('T')[0];
-      }
+      // Sempre passa ambos os parâmetros para evitar ambiguidade
+      const params = { 
+        p_turma_id: turmaId,
+        p_data_consulta: dataConsulta ? dataConsulta.toISOString().split('T')[0] : null
+      };
       
       const { data, error } = await supabase.rpc("get_turma_modal_data", params);
       

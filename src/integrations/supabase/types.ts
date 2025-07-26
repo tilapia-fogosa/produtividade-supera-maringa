@@ -3531,9 +3531,7 @@ export type Database = {
         }[]
       }
       get_turma_modal_data: {
-        Args:
-          | { p_turma_id: string }
-          | { p_turma_id: string; p_data_consulta?: string }
+        Args: { p_turma_id: string; p_data_consulta?: string }
         Returns: Json
       }
       get_user_access_info: {
