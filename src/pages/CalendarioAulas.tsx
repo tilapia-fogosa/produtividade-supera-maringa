@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
+import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -136,6 +137,9 @@ export default function CalendarioAulas() {
   
   // Estado para o modal da lista de reposições
   const [isListaReposicoesOpen, setIsListaReposicoesOpen] = useState(false);
+  
+  // Estado para o modal da lista de aulas experimentais
+  const [isListaAulasExperimentaisOpen, setIsListaAulasExperimentaisOpen] = useState(false);
 
 
   // Extrair perfis únicos dos dados (excluindo domingo)
@@ -358,6 +362,15 @@ export default function CalendarioAulas() {
             <List className="w-4 h-4 mr-2" />
             Lista de Reposições
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsListaAulasExperimentaisOpen(true)}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Lista de Experimentais
+          </Button>
         </div>
       </div>
 
@@ -541,6 +554,12 @@ export default function CalendarioAulas() {
       <ListaReposicoesModal 
         open={isListaReposicoesOpen}
         onOpenChange={setIsListaReposicoesOpen}
+      />
+      
+      {/* Modal da Lista de Aulas Experimentais */}
+      <ListaAulasExperimentaisModal 
+        open={isListaAulasExperimentaisOpen}
+        onOpenChange={setIsListaAulasExperimentaisOpen}
       />
     </div>
   );
