@@ -18,28 +18,18 @@ export type CalendarioTurma = {
   created_at: string;
 };
 
-export const useCalendarioTurmas = (dataConsulta: Date) => {
+export const useCalendarioTurmas = (dataInicio: Date, dataFim: Date) => {
   return useQuery({
-    queryKey: ["calendario-turmas", dataConsulta.toISOString().split('T')[0]],
+    queryKey: ["calendario-turmas", dataInicio.toISOString().split('T')[0], dataFim.toISOString().split('T')[0]],
     queryFn: async () => {
-      // Calcular início e fim da semana (segunda a sábado)
-      const startOfWeek = new Date(dataConsulta);
-      const dayOfWeek = startOfWeek.getDay();
-      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
-      
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 5); // Segunda a sábado (6 dias)
-      
-      console.log('🗓️ useCalendarioTurmas - Data consulta:', dataConsulta.toISOString().split('T')[0]);
       console.log('🗓️ useCalendarioTurmas - Período:', {
-        inicio: startOfWeek.toISOString().split('T')[0],
-        fim: endOfWeek.toISOString().split('T')[0]
+        inicio: dataInicio.toISOString().split('T')[0],
+        fim: dataFim.toISOString().split('T')[0]
       });
       
       const { data, error } = await supabase.rpc("get_calendario_turmas_semana_com_reposicoes", {
-        p_data_inicio: startOfWeek.toISOString().split('T')[0],
-        p_data_fim: endOfWeek.toISOString().split('T')[0]
+        p_data_inicio: dataInicio.toISOString().split('T')[0],
+        p_data_fim: dataFim.toISOString().split('T')[0]
       });
       
       if (error) {

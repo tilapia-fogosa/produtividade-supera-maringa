@@ -123,8 +123,12 @@ export default function CalendarioAulas() {
   const [semanaAtual, setSemanaAtual] = useState(new Date());
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   
-  // Buscar dados das turmas para a primeira data da semana
-  const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(datasSemanais[0]);
+  // Calcular datas da semana para o hook
+  const dataInicio = datasSemanais[0]; // Segunda-feira
+  const dataFim = datasSemanais[5]; // Sábado
+  
+  // Buscar dados das turmas para a semana
+  const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(dataInicio, dataFim);
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
