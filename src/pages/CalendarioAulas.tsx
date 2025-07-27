@@ -43,11 +43,12 @@ const calcularDatasSemanais = (dataReferencia: Date): Date[] => {
   
   // Gerar as 6 datas da semana (segunda a sábado)
   const datasSemanais = [];
-  const segundaDate = segunda.getDate(); // Salvar o valor fixo da segunda-feira
+  const ano = segunda.getFullYear();
+  const mes = segunda.getMonth();
+  const diaInicial = segunda.getDate();
   
   for (let i = 0; i < 6; i++) {
-    const data = new Date(segunda);
-    data.setDate(segundaDate + i); // Usar o valor fixo
+    const data = new Date(ano, mes, diaInicial + i);
     datasSemanais.push(data);
   }
   
