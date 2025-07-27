@@ -31,34 +31,23 @@ const diasSemanaNomes = {
 };
 
 // Função para calcular as datas da semana atual (segunda a sábado)
-const calcularDatasSemanais = (dataReferencia: Date) => {
-  const inicio = new Date(dataReferencia);
-  const diaSemana = inicio.getDay(); // 0 = domingo, 1 = segunda, etc.
+const calcularDatasSemanais = (dataReferencia: Date): Date[] => {
+  const diaSemana = dataReferencia.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+  
+  // Calcular quantos dias voltar para chegar na segunda-feira
+  const diasParaVoltar = diaSemana === 0 ? 6 : diaSemana - 1;
   
   // Calcular a segunda-feira da semana
-  const segunda = new Date(inicio);
-  // Se for domingo (0), voltar 6 dias para a segunda anterior
-  // Se for segunda (1), não voltar nenhum dia (1-1=0)
-  // Se for terça (2), voltar 1 dia (2-1=1), etc.
-  const diasParaVoltar = diaSemana === 0 ? 6 : diaSemana - 1;
-  segunda.setDate(inicio.getDate() - diasParaVoltar);
+  const segunda = new Date(dataReferencia);
+  segunda.setDate(dataReferencia.getDate() - diasParaVoltar);
   
-  console.log('🗓️ calcularDatasSemanais - Debug:', {
-    dataReferencia: dataReferencia.toISOString().split('T')[0],
-    diaSemanaNativo: diaSemana,
-    diasParaVoltar,
-    segundaFeiraCalculada: segunda.toISOString().split('T')[0]
-  });
-  
+  // Gerar as 6 datas da semana (segunda a sábado)
   const datasSemanais = [];
-  for (let i = 0; i < 6; i++) { // Segunda a sábado (6 dias)
+  for (let i = 0; i < 6; i++) {
     const data = new Date(segunda);
     data.setDate(segunda.getDate() + i);
     datasSemanais.push(data);
   }
-  
-  console.log('🗓️ calcularDatasSemanais - Datas da semana:', 
-    datasSemanais.map((d, i) => `${Object.values(diasSemana)[i]}: ${d.toISOString().split('T')[0]}`));
   
   return datasSemanais;
 };
