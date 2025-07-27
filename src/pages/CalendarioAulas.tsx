@@ -37,7 +37,11 @@ const calcularDatasSemanais = (dataReferencia: Date) => {
   
   // Calcular a segunda-feira da semana
   const segunda = new Date(inicio);
-  segunda.setDate(inicio.getDate() - diaSemana + 1);
+  // Se for domingo (0), voltar 6 dias para a segunda anterior
+  // Se for segunda (1), não voltar nenhum dia (1-1=0)
+  // Se for terça (2), voltar 1 dia (2-1=1), etc.
+  const diasParaVoltar = diaSemana === 0 ? 6 : diaSemana - 1;
+  segunda.setDate(inicio.getDate() - diasParaVoltar);
   
   const datasSemanais = [];
   for (let i = 0; i < 6; i++) { // Segunda a sábado (6 dias)
