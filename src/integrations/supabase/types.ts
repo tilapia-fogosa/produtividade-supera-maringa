@@ -450,6 +450,7 @@ export type Database = {
       }
       aulas_experimentais: {
         Row: {
+          active: boolean | null
           cliente_nome: string
           created_at: string
           created_by: string | null
@@ -462,6 +463,7 @@ export type Database = {
           unit_id: string
         }
         Insert: {
+          active?: boolean | null
           cliente_nome: string
           created_at?: string
           created_by?: string | null
@@ -474,6 +476,7 @@ export type Database = {
           unit_id: string
         }
         Update: {
+          active?: boolean | null
           cliente_nome?: string
           created_at?: string
           created_by?: string | null
@@ -3336,6 +3339,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_aula_experimental: {
+        Args: { p_aula_experimental_id: string }
+        Returns: boolean
+      }
       delete_reposicao: {
         Args: { p_reposicao_id: string }
         Returns: boolean
@@ -3521,6 +3528,21 @@ export type Database = {
       get_leads_stats: {
         Args: { p_unit_ids: string[] }
         Returns: Json
+      }
+      get_lista_aulas_experimentais: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aula_experimental_id: string
+          data_aula_experimental: string
+          cliente_nome: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          descricao_cliente: string
+          turma_nome: string
+          unit_id: string
+          turma_id: string
+          responsavel_id: string
+        }[]
       }
       get_lista_completa_reposicoes: {
         Args: Record<PropertyKey, never>
