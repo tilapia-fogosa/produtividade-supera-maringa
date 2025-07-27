@@ -357,33 +357,21 @@ export default function CalendarioAulas() {
         </div>
       </div>
 
-      {/* Seção de Ações */}
-      <div className="mb-4 p-4 bg-muted/10 rounded-lg">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsListaReposicoesOpen(true)}
-          >
-            <List className="w-4 h-4 mr-2" />
-            Lista de Reposições
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsListaAulasExperimentaisOpen(true)}
-          >
-            <Users className="w-4 h-4 mr-2" />
-            Lista de Experimentais
-          </Button>
-        </div>
-      </div>
 
       {/* Seção de Filtros */}
       <div className="space-y-4 mb-6 p-4 bg-muted/20 rounded-lg">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Perfil:</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Perfil:</label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsListaReposicoesOpen(true)}
+            >
+              <List className="w-4 h-4 mr-2" />
+              Lista de Reposições
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {perfisDisponiveis.map((perfil) => (
               <Toggle
@@ -401,7 +389,17 @@ export default function CalendarioAulas() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Dia da Semana:</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Dia da Semana:</label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsListaAulasExperimentaisOpen(true)}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Lista de Experimentais
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(diasSemanaNomes).map(([chave, nome]) => (
               <Toggle
