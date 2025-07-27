@@ -58,18 +58,34 @@ export const useTurmaModal = (turmaId: string | null, dataConsulta?: Date) => {
     queryFn: async () => {
       if (!turmaId) return null;
       
+      const dataConsultaStr = dataConsulta ? dataConsulta.toISOString().split('T')[0] : null;
+      
+      console.log('🎯 useTurmaModal - Parâmetros:', {
+        turmaId,
+        dataConsulta: dataConsultaStr
+      });
+      
       // Sempre passa ambos os parâmetros para evitar ambiguidade
       const params = { 
         p_turma_id: turmaId,
-        p_data_consulta: dataConsulta ? dataConsulta.toISOString().split('T')[0] : null
+        p_data_consulta: dataConsultaStr
       };
       
       const { data, error } = await supabase.rpc("get_turma_modal_data", params);
       
       if (error) {
-        console.error("Erro ao buscar dados da turma:", error);
+        console.error("❌ Erro ao buscar dados da turma:", error);
         throw error;
       }
+      
+      const typedData = data as TurmaModalData;
+      console.log('✅ Dados retornados get_turma_modal_data:', {
+        turma: typedData?.turma?.nome,
+        alunos: typedData?.alunos?.length || 0,
+        reposicoes: typedData?.reposicoes?.length || 0,
+        aulas_experimentais: typedData?.aulas_experimentais?.length || 0,
+        estatisticas: typedData?.estatisticas
+      });
       
       return data as TurmaModalData;
     },

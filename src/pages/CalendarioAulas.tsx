@@ -264,8 +264,15 @@ export default function CalendarioAulas() {
 
   // Funções para o modal da turma
   const handleTurmaClick = (turmaId: string, diaIndex: number) => {
+    const dataModal = datasSemanais[diaIndex];
+    console.log('🎯 handleTurmaClick - Clicou na turma:', {
+      turmaId,
+      diaIndex,
+      dataModal: dataModal?.toISOString().split('T')[0],
+      semanaAtual: semanaAtual.toISOString().split('T')[0]
+    });
     setModalTurmaId(turmaId);
-    setModalDataConsulta(datasSemanais[diaIndex]);
+    setModalDataConsulta(dataModal);
     setIsModalOpen(true);
   };
 
