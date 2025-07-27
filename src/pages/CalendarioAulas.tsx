@@ -43,12 +43,22 @@ const calcularDatasSemanais = (dataReferencia: Date) => {
   const diasParaVoltar = diaSemana === 0 ? 6 : diaSemana - 1;
   segunda.setDate(inicio.getDate() - diasParaVoltar);
   
+  console.log('🗓️ calcularDatasSemanais - Debug:', {
+    dataReferencia: dataReferencia.toISOString().split('T')[0],
+    diaSemanaNativo: diaSemana,
+    diasParaVoltar,
+    segundaFeiraCalculada: segunda.toISOString().split('T')[0]
+  });
+  
   const datasSemanais = [];
   for (let i = 0; i < 6; i++) { // Segunda a sábado (6 dias)
     const data = new Date(segunda);
     data.setDate(segunda.getDate() + i);
     datasSemanais.push(data);
   }
+  
+  console.log('🗓️ calcularDatasSemanais - Datas da semana:', 
+    datasSemanais.map((d, i) => `${Object.values(diasSemana)[i]}: ${d.toISOString().split('T')[0]}`));
   
   return datasSemanais;
 };
