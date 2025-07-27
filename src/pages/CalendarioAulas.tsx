@@ -354,6 +354,12 @@ export default function CalendarioAulas() {
             PDF
           </Button>
           
+        </div>
+      </div>
+
+      {/* Seção de Ações */}
+      <div className="mb-4 p-4 bg-muted/10 rounded-lg">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
