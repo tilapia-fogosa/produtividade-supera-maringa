@@ -197,19 +197,14 @@ export default function CalendarioAulas() {
     return resultado;
   }, [turmasPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Estrutura do grid reorganizada - criar mapa de turmas por posição (excluindo domingo)
+  // Estrutura do grid reorganizada - mapear turmas por dia da semana diretamente
   const turmasGrid = useMemo(() => {
     const grid: Record<string, CalendarioTurma[]> = {};
     
     Object.entries(turmasFiltradasPorDia).forEach(([diaSemana, turmas]) => {
-      const diaIndex = obterDiaSemanaIndex(diaSemana);
-      
-      // Pular se for um dia inválido (domingo retorna -1)
-      if (diaIndex === -1) return;
-      
       turmas.forEach(turma => {
         const slotInicio = horarioParaSlot(turma.horario_inicio);
-        const chave = `${slotInicio}-${diaIndex}`;
+        const chave = `${slotInicio}-${diaSemana}`;
         
         if (!grid[chave]) {
           grid[chave] = [];
@@ -262,10 +257,13 @@ export default function CalendarioAulas() {
   };
 
   // Funções para o modal da turma
-  const handleTurmaClick = (turmaId: string, diaIndex: number) => {
+  const handleTurmaClick = (turmaId: string, diaSemana: string) => {
+    // Mapear o dia da semana para o índice da array datasSemanais
+    const diaIndex = obterDiaSemanaIndex(diaSemana);
     const dataModal = datasSemanais[diaIndex];
     console.log('🎯 handleTurmaClick - Clicou na turma:', {
       turmaId,
+      diaSemana,
       diaIndex,
       dataModal: dataModal?.toISOString().split('T')[0],
       semanaAtual: semanaAtual.toISOString().split('T')[0]
@@ -528,9 +526,9 @@ export default function CalendarioAulas() {
 
           {/* Renderizar blocos de turmas com posicionamento absoluto */}
           {Object.entries(turmasGrid).map(([chave, turmas]) => {
-            const [slotStr, diaStr] = chave.split('-');
+            const [slotStr, diaSemana] = chave.split('-');
             const slot = parseInt(slotStr);
-            const dia = parseInt(diaStr);
+            const diaIndex = obterDiaSemanaIndex(diaSemana);
             
             return (
               <div
@@ -538,7 +536,7 @@ export default function CalendarioAulas() {
                 className="border border-gray-300 bg-white rounded-sm overflow-hidden"
                 style={{
                   gridRow: `${slot + 1} / ${slot + 5}`, // 4 slots (2 horas)
-                  gridColumn: dia + 2,
+                  gridColumn: diaIndex + 2,
                   display: 'grid',
                   gridTemplateColumns: `repeat(${turmas.length}, 1fr)`,
                   gap: '2px',
@@ -550,7 +548,7 @@ export default function CalendarioAulas() {
                   <BlocoTurma 
                     key={`${turma.turma_id}-${turmaIndex}`} 
                     turma={turma} 
-                    onClick={() => handleTurmaClick(turma.turma_id, dia)}
+                    onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
                   />
                 ))}
               </div>
