@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaAulasExperimentais, type AulaExperimentalLista } from "@/hooks/use-lista-aulas-experimentais";
 
@@ -44,7 +44,7 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
 
   const podeExcluir = (dataAula: string) => {
     const hoje = new Date();
-    const dataAulaDate = new Date(dataAula);
+    const dataAulaDate = parseISO(dataAula);
     return dataAulaDate > hoje;
   };
 
@@ -53,7 +53,12 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+    try {
+      return format(parseISO(dateString), "dd/MM/yyyy", { locale: ptBR });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return dateString;
+    }
   };
 
   return (
