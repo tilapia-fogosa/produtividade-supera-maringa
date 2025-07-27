@@ -18,7 +18,7 @@ export type AulaExperimentalLista = {
 export const useListaAulasExperimentais = () => {
   const queryClient = useQueryClient();
 
-  const { data: aulasExperimentais, isLoading, error } = useQuery({
+  const { data: aulasExperimentais, isLoading, error, refetch } = useQuery({
     queryKey: ["lista-aulas-experimentais"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_lista_aulas_experimentais");
@@ -26,7 +26,9 @@ export const useListaAulasExperimentais = () => {
       if (error) throw error;
       
       return data as AulaExperimentalLista[];
-    }
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
 
   const deletarAulaExperimental = useMutation({
@@ -68,5 +70,6 @@ export const useListaAulasExperimentais = () => {
     isLoading,
     error,
     deletarAulaExperimental,
+    refetch,
   };
 };

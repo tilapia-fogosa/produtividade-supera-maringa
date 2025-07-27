@@ -22,7 +22,8 @@ export const useListaReposicoes = () => {
   const {
     data: reposicoes = [],
     isLoading,
-    error
+    error,
+    refetch
   } = useQuery({
     queryKey: ["lista-reposicoes"],
     queryFn: async () => {
@@ -31,7 +32,9 @@ export const useListaReposicoes = () => {
       if (error) throw error;
       
       return data as ListaReposicaoData[];
-    }
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
 
   const deleteMutation = useMutation({
@@ -74,6 +77,7 @@ export const useListaReposicoes = () => {
     isLoading,
     error,
     deletarReposicao: deleteMutation.mutate,
-    isDeletingReposicao: deleteMutation.isPending
+    isDeletingReposicao: deleteMutation.isPending,
+    refetch
   };
 };

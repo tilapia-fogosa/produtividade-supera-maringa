@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +40,13 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
   open,
   onOpenChange,
 }) => {
-  const { aulasExperimentais, isLoading, error, deletarAulaExperimental } = useListaAulasExperimentais();
+  const { aulasExperimentais, isLoading, error, deletarAulaExperimental, refetch } = useListaAulasExperimentais();
+
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, refetch]);
 
   const podeExcluir = (dataAula: string) => {
     const hoje = new Date();
@@ -87,12 +93,12 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead>Descrição Detalhada</TableHead>
-                  <TableHead>Turma</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
+                  <TableHead className="w-28">Data</TableHead>
+                  <TableHead className="w-32">Turma</TableHead>
+                  <TableHead className="w-40">Cliente</TableHead>
+                  <TableHead className="w-80">Descrição Detalhada</TableHead>
+                  <TableHead className="w-40">Responsável</TableHead>
+                  <TableHead className="w-20 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -104,17 +110,17 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                       <TableCell className="font-medium">
                         {formatDate(aula.data_aula_experimental)}
                       </TableCell>
+                      <TableCell>{aula.turma_nome}</TableCell>
                       <TableCell>{aula.cliente_nome}</TableCell>
+                      <TableCell className="text-sm max-w-80 break-words">
+                        {aula.descricao_cliente || "Sem descrição"}
+                      </TableCell>
                       <TableCell>
                         {aula.responsavel_nome}
                         <div className="text-xs text-muted-foreground">
                           ({aula.responsavel_tipo})
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {aula.descricao_cliente || "Sem descrição"}
-                      </TableCell>
-                      <TableCell>{aula.turma_nome}</TableCell>
                       <TableCell className="text-center">
                         {canDelete ? (
                           <AlertDialog>

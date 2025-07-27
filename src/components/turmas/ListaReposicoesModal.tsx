@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,13 @@ interface ListaReposicoesModalProps {
 }
 
 export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModalProps) {
-  const { reposicoes, isLoading, error, deletarReposicao, isDeletingReposicao } = useListaReposicoes();
+  const { reposicoes, isLoading, error, deletarReposicao, isDeletingReposicao, refetch } = useListaReposicoes();
+
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, refetch]);
 
   const handleDeleteReposicao = (reposicaoId: string) => {
     deletarReposicao(reposicaoId);
