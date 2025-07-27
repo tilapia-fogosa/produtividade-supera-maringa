@@ -360,18 +360,31 @@ export default function CalendarioAulas() {
 
       {/* Seção de Filtros */}
       <div className="space-y-4 mb-6 p-4 bg-muted/20 rounded-lg">
+        {/* Cabeçalho com botões de ação */}
+        <div className="flex justify-end gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsListaReposicoesOpen(true)}
+            className="min-w-[140px]"
+          >
+            <List className="w-4 h-4 mr-2" />
+            Lista de Reposições
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsListaAulasExperimentaisOpen(true)}
+            className="min-w-[140px]"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Lista de Experimentais
+          </Button>
+        </div>
+
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Perfil:</label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsListaReposicoesOpen(true)}
-            >
-              <List className="w-4 h-4 mr-2" />
-              Lista de Reposições
-            </Button>
-          </div>
+          <label className="text-sm font-medium">Perfil:</label>
           <div className="flex flex-wrap gap-2">
             {perfisDisponiveis.map((perfil) => (
               <Toggle
@@ -389,17 +402,7 @@ export default function CalendarioAulas() {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Dia da Semana:</label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsListaAulasExperimentaisOpen(true)}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Lista de Experimentais
-            </Button>
-          </div>
+          <label className="text-sm font-medium">Dia da Semana:</label>
           <div className="flex flex-wrap gap-2">
             {Object.entries(diasSemanaNomes).map(([chave, nome]) => (
               <Toggle
