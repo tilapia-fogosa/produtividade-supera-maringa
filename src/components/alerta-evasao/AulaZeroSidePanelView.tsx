@@ -34,7 +34,7 @@ export function AulaZeroSidePanelView({ dadosAulaZero, onClose }: AulaZeroSidePa
       </div>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-0">
         <div className="p-4 space-y-4">
           {dadosAulaZero.motivo_procura && (
             <div className="space-y-2">
