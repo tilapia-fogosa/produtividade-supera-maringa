@@ -135,6 +135,13 @@ export type Database = {
             foreignKeyName: "alertas_falta_turma_id_fkey"
             columns: ["turma_id"]
             isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
@@ -188,6 +195,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "professores"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_lancamento_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
           },
           {
             foreignKeyName: "alertas_lancamento_turma_id_fkey"
@@ -431,6 +445,48 @@ export type Database = {
           id?: string
           nome?: string
           total_paginas?: number
+        }
+        Relationships: []
+      }
+      aulas_experimentais: {
+        Row: {
+          active: boolean | null
+          cliente_nome: string
+          created_at: string
+          created_by: string | null
+          data_aula_experimental: string
+          descricao_cliente: string | null
+          id: string
+          responsavel_id: string
+          responsavel_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          cliente_nome: string
+          created_at?: string
+          created_by?: string | null
+          data_aula_experimental: string
+          descricao_cliente?: string | null
+          id?: string
+          responsavel_id: string
+          responsavel_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Update: {
+          active?: boolean | null
+          cliente_nome?: string
+          created_at?: string
+          created_by?: string | null
+          data_aula_experimental?: string
+          descricao_cliente?: string | null
+          id?: string
+          responsavel_id?: string
+          responsavel_tipo?: string
+          turma_id?: string
+          unit_id?: string
         }
         Relationships: []
       }
@@ -878,6 +934,7 @@ export type Database = {
           registration_name: string | null
           scheduled_date: string | null
           status: string
+          tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id: string | null
           updated_at: string
           valorization_confirmed: boolean | null
@@ -903,6 +960,7 @@ export type Database = {
           registration_name?: string | null
           scheduled_date?: string | null
           status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -928,6 +986,7 @@ export type Database = {
           registration_name?: string | null
           scheduled_date?: string | null
           status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -1366,6 +1425,13 @@ export type Database = {
             foreignKeyName: "funcionarios_turma_id_fkey"
             columns: ["turma_id"]
             isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "funcionarios_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
@@ -1646,6 +1712,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      n8n_bot_mensagens: {
+        Row: {
+          concatena: boolean | null
+          concatena_tempo: string | null
+          created_at: string
+          id: number
+          msg_concatenada: string[] | null
+          nome: string | null
+        }
+        Insert: {
+          concatena?: boolean | null
+          concatena_tempo?: string | null
+          created_at?: string
+          id?: number
+          msg_concatenada?: string[] | null
+          nome?: string | null
+        }
+        Update: {
+          concatena?: boolean | null
+          concatena_tempo?: string | null
+          created_at?: string
+          id?: number
+          msg_concatenada?: string[] | null
+          nome?: string | null
+        }
+        Relationships: []
       }
       pedagogical_enrollments: {
         Row: {
@@ -2053,11 +2146,19 @@ export type Database = {
         Row: {
           access_blocked: boolean | null
           avatar_url: string | null
+          calendar_id: string | null
           created_at: string
           email: string | null
           email_confirmed: boolean | null
           first_access_at: string | null
           full_name: string | null
+          g_access_token: string | null
+          g_refresh_token: string | null
+          g_token_expiration: string | null
+          gcalendar_id: string | null
+          google_calendars: Json | null
+          google_email: string | null
+          google_id: string | null
           id: string
           is_admin: boolean | null
           must_change_password: boolean | null
@@ -2067,11 +2168,19 @@ export type Database = {
         Insert: {
           access_blocked?: boolean | null
           avatar_url?: string | null
+          calendar_id?: string | null
           created_at?: string
           email?: string | null
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          g_access_token?: string | null
+          g_refresh_token?: string | null
+          g_token_expiration?: string | null
+          gcalendar_id?: string | null
+          google_calendars?: Json | null
+          google_email?: string | null
+          google_id?: string | null
           id: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
@@ -2081,11 +2190,19 @@ export type Database = {
         Update: {
           access_blocked?: boolean | null
           avatar_url?: string | null
+          calendar_id?: string | null
           created_at?: string
           email?: string | null
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          g_access_token?: string | null
+          g_refresh_token?: string | null
+          g_token_expiration?: string | null
+          gcalendar_id?: string | null
+          google_calendars?: Json | null
+          google_email?: string | null
+          google_id?: string | null
           id?: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
@@ -2138,6 +2255,67 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      reposicoes: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          created_by: string | null
+          data_reposicao: string
+          id: string
+          observacoes: string | null
+          responsavel_id: string
+          responsavel_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          created_by?: string | null
+          data_reposicao: string
+          id?: string
+          observacoes?: string | null
+          responsavel_id: string
+          responsavel_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_reposicao?: string
+          id?: string
+          observacoes?: string | null
+          responsavel_id?: string
+          responsavel_tipo?: string
+          turma_id?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposicoes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reposicoes_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "reposicoes_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sale_webhooks: {
         Row: {
@@ -3023,6 +3201,38 @@ export type Database = {
       }
     }
     Views: {
+      calendario_turmas_view: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          dia_semana: Database["public"]["Enums"]["dia_semana"] | null
+          horario_inicio: string | null
+          nome_completo: string | null
+          professor_id: string | null
+          professor_nome: string | null
+          professor_slack: string | null
+          sala: string | null
+          total_alunos_ativos: number | null
+          turma_id: string | null
+          unit_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turmas_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turmas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanban_client_summary: {
         Row: {
           created_at: string | null
@@ -3129,6 +3339,14 @@ export type Database = {
         }
         Returns: string
       }
+      delete_aula_experimental: {
+        Args: { p_aula_experimental_id: string }
+        Returns: boolean
+      }
+      delete_reposicao: {
+        Args: { p_reposicao_id: string }
+        Returns: boolean
+      }
       get_activity_funnel_stats: {
         Args: {
           p_unit_id: string
@@ -3165,6 +3383,43 @@ export type Database = {
           p_unit_ids: string[]
         }
         Returns: Json
+      }
+      get_calendario_turmas_com_reposicoes: {
+        Args: { p_data_consulta: string }
+        Returns: {
+          turma_id: string
+          unit_id: string
+          nome_completo: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          sala: string
+          professor_id: string
+          professor_nome: string
+          professor_slack: string
+          horario_inicio: string
+          categoria: string
+          total_alunos_ativos: number
+          total_reposicoes: number
+          created_at: string
+        }[]
+      }
+      get_calendario_turmas_semana_com_reposicoes: {
+        Args: { p_data_inicio: string; p_data_fim: string }
+        Returns: {
+          turma_id: string
+          unit_id: string
+          nome_completo: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          sala: string
+          professor_id: string
+          professor_nome: string
+          professor_slack: string
+          horario_inicio: string
+          categoria: string
+          total_alunos_ativos: number
+          total_reposicoes: number
+          total_aulas_experimentais: number
+          created_at: string
+        }[]
       }
       get_commercial_unit_stats: {
         Args: {
@@ -3262,9 +3517,47 @@ export type Database = {
         Args: { p_funcionario_id: string; p_data_inicial: string }
         Returns: Json
       }
+      get_leads_by_month_and_source: {
+        Args: { p_unit_ids: string[]; p_months_back?: number }
+        Returns: {
+          month_year: string
+          lead_source: string
+          lead_count: number
+        }[]
+      }
       get_leads_stats: {
         Args: { p_unit_ids: string[] }
         Returns: Json
+      }
+      get_lista_aulas_experimentais: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aula_experimental_id: string
+          data_aula_experimental: string
+          cliente_nome: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          descricao_cliente: string
+          turma_nome: string
+          unit_id: string
+          turma_id: string
+          responsavel_id: string
+        }[]
+      }
+      get_lista_completa_reposicoes: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          reposicao_id: string
+          data_reposicao: string
+          aluno_nome: string
+          turma_original_nome: string
+          turma_reposicao_nome: string
+          observacoes: string
+          unit_id: string
+          aluno_id: string
+          turma_original_id: string
+          turma_reposicao_id: string
+        }[]
       }
       get_periodo_data: {
         Args: { p_periodo: string }
@@ -3317,6 +3610,10 @@ export type Database = {
           at_conversion_rate: number
           ma_conversion_rate: number
         }[]
+      }
+      get_turma_modal_data: {
+        Args: { p_turma_id: string; p_data_consulta?: string }
+        Returns: Json
       }
       get_user_access_info: {
         Args: { user_id: string }
@@ -3454,6 +3751,7 @@ export type Database = {
       sale_type: "matricula" | "outros"
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
+      tipo_atendimento: "bot" | "humano"
       user_role:
         | "consultor"
         | "franqueado"
@@ -3619,6 +3917,7 @@ export const Constants = {
       sale_type: ["matricula", "outros"],
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
+      tipo_atendimento: ["bot", "humano"],
       user_role: [
         "consultor",
         "franqueado",

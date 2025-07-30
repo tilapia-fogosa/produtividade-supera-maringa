@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { AlertaEvasaoForm } from './AlertaEvasaoForm';
+import { AulaZeroSidePanelView } from './AulaZeroSidePanelView';
 import { useAlertasEvasao } from '@/hooks/use-alertas-evasao';
 
 interface AlertaEvasaoModalProps {
@@ -16,6 +17,8 @@ interface AlertaEvasaoModalProps {
 }
 
 export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
+  const [showAulaZeroPanel, setShowAulaZeroPanel] = useState(false);
+  
   const {
     filtroAluno,
     setFiltroAluno,
@@ -47,9 +50,18 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     handleSubmit(onClose);
   };
 
+  const handleToggleAulaZero = () => {
+    setShowAulaZeroPanel(!showAulaZeroPanel);
+  };
+
+  const handleCloseModal = () => {
+    setShowAulaZeroPanel(false);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
+      <DialogContent className={`transition-all duration-300 ${showAulaZeroPanel ? 'max-w-5xl' : 'max-w-md'}`}>
         <DialogHeader>
           <DialogTitle>Registrar Alerta de Evasão</DialogTitle>
           <DialogDescription>
@@ -57,33 +69,50 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <AlertaEvasaoForm
-          filtroAluno={filtroAluno}
-          setFiltroAluno={setFiltroAluno}
-          alunoSelecionado={alunoSelecionado}
-          setAlunoSelecionado={setAlunoSelecionado}
-          dataAlerta={dataAlerta}
-          setDataAlerta={setDataAlerta}
-          origemAlerta={origemAlerta}
-          setOrigemAlerta={setOrigemAlerta as (value: string) => void}
-          descritivo={descritivo}
-          setDescritivo={setDescritivo}
-          responsavelId={responsavelId}
-          setResponsavelId={setResponsavelId as (value: string) => void}
-          responsavelNome={responsavelNome}
-          dataRetencao={dataRetencao}
-          setDataRetencao={setDataRetencao}
-          alunosFiltrados={alunosFiltrados}
-          alertasAnteriores={alertasAnteriores}
-          historicoAlertas={historicoAlertas}
-          carregandoHistorico={carregandoHistorico}
-          dadosAulaZero={dadosAulaZero}
-          isSubmitting={isSubmitting}
-          responsaveis={responsaveis}
-          carregandoResponsaveis={carregandoResponsaveis}
-          onSubmit={handleFormSubmit}
-          onCancel={onClose}
-        />
+        <div className={`grid transition-all duration-300 ${showAulaZeroPanel ? 'grid-cols-2 gap-6' : 'grid-cols-1'}`}>
+          {/* Formulário Principal */}
+          <div className="space-y-4">
+            <AlertaEvasaoForm
+              filtroAluno={filtroAluno}
+              setFiltroAluno={setFiltroAluno}
+              alunoSelecionado={alunoSelecionado}
+              setAlunoSelecionado={setAlunoSelecionado}
+              dataAlerta={dataAlerta}
+              setDataAlerta={setDataAlerta}
+              origemAlerta={origemAlerta}
+              setOrigemAlerta={setOrigemAlerta as (value: string) => void}
+              descritivo={descritivo}
+              setDescritivo={setDescritivo}
+              responsavelId={responsavelId}
+              setResponsavelId={setResponsavelId as (value: string) => void}
+              responsavelNome={responsavelNome}
+              dataRetencao={dataRetencao}
+              setDataRetencao={setDataRetencao}
+              alunosFiltrados={alunosFiltrados}
+              alertasAnteriores={alertasAnteriores}
+              historicoAlertas={historicoAlertas}
+              carregandoHistorico={carregandoHistorico}
+              dadosAulaZero={dadosAulaZero}
+              isSubmitting={isSubmitting}
+              responsaveis={responsaveis}
+              carregandoResponsaveis={carregandoResponsaveis}
+              onSubmit={handleFormSubmit}
+              onCancel={handleCloseModal}
+              onToggleAulaZero={handleToggleAulaZero}
+              showAulaZeroPanel={showAulaZeroPanel}
+            />
+          </div>
+
+          {/* Painel Lateral - Dados da Aula Zero */}
+          {showAulaZeroPanel && (
+            <div className="min-h-[400px]">
+              <AulaZeroSidePanelView
+                dadosAulaZero={dadosAulaZero}
+                onClose={handleToggleAulaZero}
+              />
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

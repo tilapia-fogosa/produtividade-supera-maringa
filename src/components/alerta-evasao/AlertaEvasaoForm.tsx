@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { origensAlerta } from '@/hooks/use-alertas-evasao';
 import { HistoricoAlertasView } from './HistoricoAlertasView';
-import { DadosAulaZeroView } from './DadosAulaZeroView';
 import { Responsavel } from '@/hooks/use-responsaveis';
 
 interface AlertaEvasaoFormProps {
@@ -41,6 +40,8 @@ interface AlertaEvasaoFormProps {
   carregandoResponsaveis: boolean;
   onSubmit: () => void;
   onCancel: () => void;
+  onToggleAulaZero: () => void;
+  showAulaZeroPanel: boolean;
 }
 
 export function AlertaEvasaoForm({
@@ -68,7 +69,9 @@ export function AlertaEvasaoForm({
   responsaveis,
   carregandoResponsaveis,
   onSubmit,
-  onCancel
+  onCancel,
+  onToggleAulaZero,
+  showAulaZeroPanel
 }: AlertaEvasaoFormProps) {
   return (
     <div className="space-y-4 mt-4">
@@ -175,7 +178,19 @@ export function AlertaEvasaoForm({
         carregandoHistorico={carregandoHistorico}
       />
 
-      <DadosAulaZeroView dadosAulaZero={dadosAulaZero} />
+      {/* Botão para ver Dados da Aula Zero */}
+      {alunoSelecionado && dadosAulaZero && (
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onToggleAulaZero}
+            className="w-full"
+          >
+            {showAulaZeroPanel ? 'Ocultar' : 'Ver'} Dados da Aula Zero
+          </Button>
+        </div>
+      )}
 
       <div className="flex justify-end space-x-2">
         <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>

@@ -31,6 +31,7 @@ import AlunosAtivos from "./pages/AlunosAtivos";
 import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
 import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
+import CalendarioAulas from "./pages/CalendarioAulas";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ function App() {
                       <Route path="/fichas" element={<Fichas />} />
                       <Route path="/lancamentos" element={<Lancamentos />} />
                       <Route path="/diario" element={<Diario />} />
+                      <Route path="/calendario-aulas" element={<CalendarioAulas />} />
                       <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
                       <Route path="/funcionarios" element={<Funcionarios />} />
                       <Route path="/alunos" element={<Alunos />} />
