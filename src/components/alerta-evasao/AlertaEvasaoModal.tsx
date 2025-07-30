@@ -7,6 +7,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { AlertaEvasaoForm } from './AlertaEvasaoForm';
 import { AulaZeroSidePanelView } from './AulaZeroSidePanelView';
 import { useAlertasEvasao } from '@/hooks/use-alertas-evasao';
@@ -60,17 +66,16 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
-      <DialogContent className={`transition-all duration-300 ${showAulaZeroPanel ? 'max-w-5xl' : 'max-w-md'}`}>
-        <DialogHeader>
-          <DialogTitle>Registrar Alerta de Evasão</DialogTitle>
-          <DialogDescription>
-            Preencha os dados abaixo para registrar um novo alerta de evasão.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleCloseModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registrar Alerta de Evasão</DialogTitle>
+            <DialogDescription>
+              Preencha os dados abaixo para registrar um novo alerta de evasão.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className={`grid transition-all duration-300 ${showAulaZeroPanel ? 'grid-cols-2 gap-6' : 'grid-cols-1'}`}>
-          {/* Formulário Principal */}
           <div className="space-y-4">
             <AlertaEvasaoForm
               filtroAluno={filtroAluno}
@@ -102,18 +107,23 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               showAulaZeroPanel={showAulaZeroPanel}
             />
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Painel Lateral - Dados da Aula Zero */}
-          {showAulaZeroPanel && (
-            <div className="min-h-[400px]">
-              <AulaZeroSidePanelView
-                dadosAulaZero={dadosAulaZero}
-                onClose={handleToggleAulaZero}
-              />
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      {/* Sheet lateral para Dados da Aula Zero */}
+      <Sheet open={showAulaZeroPanel} onOpenChange={setShowAulaZeroPanel}>
+        <SheetContent side="right" className="w-[400px] sm:w-[500px]">
+          <SheetHeader>
+            <SheetTitle>Dados da Aula Zero</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <AulaZeroSidePanelView
+              dadosAulaZero={dadosAulaZero}
+              onClose={handleToggleAulaZero}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
