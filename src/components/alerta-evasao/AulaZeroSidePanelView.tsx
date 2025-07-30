@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { DadosAulaZero } from '@/types/alertas';
 
@@ -33,63 +34,65 @@ export function AulaZeroSidePanelView({ dadosAulaZero, onClose }: AulaZeroSidePa
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-        {dadosAulaZero.motivo_procura && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-foreground">Motivo da Procura</h4>
-            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-              {dadosAulaZero.motivo_procura}
-            </p>
-          </div>
-        )}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {dadosAulaZero.motivo_procura && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-foreground">Motivo da Procura</h4>
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                {dadosAulaZero.motivo_procura}
+              </p>
+            </div>
+          )}
 
-        {dadosAulaZero.percepcao_coordenador && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-foreground">Percepção do Coordenador</h4>
-            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-              {dadosAulaZero.percepcao_coordenador}
-            </p>
-          </div>
-        )}
+          {dadosAulaZero.percepcao_coordenador && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-foreground">Percepção do Coordenador</h4>
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                {dadosAulaZero.percepcao_coordenador}
+              </p>
+            </div>
+          )}
 
-        {dadosAulaZero.avaliacao_abaco && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-foreground">Avaliação no Ábaco</h4>
-            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-              {dadosAulaZero.avaliacao_abaco}
-            </p>
-          </div>
-        )}
+          {dadosAulaZero.avaliacao_abaco && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-foreground">Avaliação no Ábaco</h4>
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                {dadosAulaZero.avaliacao_abaco}
+              </p>
+            </div>
+          )}
 
-        {dadosAulaZero.avaliacao_ah && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-foreground">Avaliação no AH</h4>
-            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-              {dadosAulaZero.avaliacao_ah}
-            </p>
-          </div>
-        )}
+          {dadosAulaZero.avaliacao_ah && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-foreground">Avaliação no AH</h4>
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                {dadosAulaZero.avaliacao_ah}
+              </p>
+            </div>
+          )}
 
-        {dadosAulaZero.pontos_atencao && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-foreground">Pontos de Atenção</h4>
-            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-              {dadosAulaZero.pontos_atencao}
-            </p>
-          </div>
-        )}
+          {dadosAulaZero.pontos_atencao && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-foreground">Pontos de Atenção</h4>
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                {dadosAulaZero.pontos_atencao}
+              </p>
+            </div>
+          )}
 
-        {/* Caso não tenha nenhum dado */}
-        {!dadosAulaZero.motivo_procura && 
-         !dadosAulaZero.percepcao_coordenador && 
-         !dadosAulaZero.avaliacao_abaco && 
-         !dadosAulaZero.avaliacao_ah && 
-         !dadosAulaZero.pontos_atencao && (
-          <div className="text-center text-muted-foreground py-8">
-            <p>Nenhum dado da Aula Zero foi preenchido para este aluno.</p>
-          </div>
-        )}
-      </div>
+          {/* Caso não tenha nenhum dado */}
+          {!dadosAulaZero.motivo_procura && 
+           !dadosAulaZero.percepcao_coordenador && 
+           !dadosAulaZero.avaliacao_abaco && 
+           !dadosAulaZero.avaliacao_ah && 
+           !dadosAulaZero.pontos_atencao && (
+            <div className="text-center text-muted-foreground py-8">
+              <p>Nenhum dado da Aula Zero foi preenchido para este aluno.</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
