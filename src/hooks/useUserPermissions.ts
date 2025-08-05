@@ -30,20 +30,36 @@ export const useUserPermissions = () => {
   const hasPageAccess = (path: string): boolean => {
     if (loading || !profile) return false;
     
+    // Debug log para identificar o problema
+    console.log('Debug - hasPageAccess:', {
+      path,
+      userRole: profile.role,
+      loading,
+      profile: profile
+    });
+    
     // Admin sempre tem acesso a tudo
     if (profile.role === 'admin') return true;
 
     // Verifica se é uma rota dinâmica (contém parâmetros)
     const normalizedPath = normalizePath(path);
     
+    console.log('Debug - normalizedPath:', normalizedPath);
+    
     const allowedRoles = PAGE_PERMISSIONS[normalizedPath as keyof typeof PAGE_PERMISSIONS];
+    
+    console.log('Debug - allowedRoles:', allowedRoles);
     
     if (!allowedRoles) {
       // Se a rota não está mapeada, assume que é pública ou deve ser negada
+      console.log('Debug - Rota não mapeada:', normalizedPath);
       return false;
     }
 
-    return profile.role ? (allowedRoles as readonly string[]).includes(profile.role) : false;
+    const hasAccess = profile.role ? (allowedRoles as readonly string[]).includes(profile.role) : false;
+    console.log('Debug - hasAccess:', hasAccess);
+    
+    return hasAccess;
   };
 
   const getAccessiblePages = () => {
