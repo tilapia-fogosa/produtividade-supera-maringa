@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Package, MessageCircle, CalendarDays, ClipboardList, User, FileText, Users, Calendar } from "lucide-react";
+import { Package, MessageCircle, CalendarDays, ClipboardList, User, FileText, Users, Calendar, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +11,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { useAuth } from "@/contexts/AuthContext";
 
 const menuItems = [
   {
@@ -58,6 +60,16 @@ const menuItems = [
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPageAccess } = useUserPermissions();
+  const { signOut, profile } = useAuth();
+
+  // Filtrar itens do menu baseado nas permissões do usuário
+  const accessibleMenuItems = menuItems.filter(item => hasPageAccess(item.path));
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth/login');
+  };
 
   return (
     <Sidebar 
@@ -68,7 +80,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground font-medium">Menu</SidebarGroupLabel>
           <SidebarMenu>
-            {menuItems.map((item) => {
+            {accessibleMenuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <SidebarMenuItem key={item.title}>
@@ -88,6 +100,25 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               );
             })}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Seção do usuário */}
+        <SidebarGroup className="mt-auto">
+          <div className="px-3 py-2 text-sm text-sidebar-foreground/80">
+            <p className="font-medium">{profile?.full_name || 'Usuário'}</p>
+            <p className="text-xs capitalize">{profile?.role || 'Sem perfil'}</p>
+          </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleSignOut}
+                className="text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-primary/10"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Sair</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

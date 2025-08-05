@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Turmas from "./pages/Turmas";
 import DiarioTurma from "./pages/DiarioTurma";
 import ProdutividadeTurma from "./pages/ProdutividadeTurma";
@@ -32,6 +34,8 @@ import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
 import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
 import CalendarioAulas from "./pages/CalendarioAulas";
+import Login from "./pages/Login";
+import AccessDenied from "./pages/AccessDenied";
 
 const queryClient = new QueryClient();
 
@@ -43,49 +47,61 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <SidebarProvider>
-              <div className="flex min-h-screen w-full overflow-hidden">
-                <AppSidebar />
-                <main className="flex-1 overflow-auto">
-                  <div className="p-2 md:p-4">
-                    <SidebarTrigger className="mb-2 md:mb-4" />
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/lancamentos" />} />
-                      <Route path="/dias-lancamento" element={<DiasLancamento />} />
-                      <Route path="/turmas/dia" element={<Turmas />} />
-                      <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
-                      <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
-                      <Route path="/turma/:turmaId/diario" element={<DiarioTurma />} />
-                      <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
-                      <Route path="/estoque" element={<Estoque />} />
-                      <Route path="/devolutivas" element={<Devolutivas />} />
-                      <Route path="/devolutivas/alunos" element={<AlunosDevolutivas />} />
-                      <Route path="/devolutivas/turmas" element={<Turmas />} />
-                      <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
-                      <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
-                      <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
-                      <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafael />} />
-                      <Route path="/fichas" element={<Fichas />} />
-                      <Route path="/lancamentos" element={<Lancamentos />} />
-                      <Route path="/diario" element={<Diario />} />
-                      <Route path="/calendario-aulas" element={<CalendarioAulas />} />
-                      <Route path="/diario" element={<Navigate to="/dias-lancamento" state={{ serviceType: 'diario_turma' }} />} />
-                      <Route path="/funcionarios" element={<Funcionarios />} />
-                      <Route path="/alunos" element={<Alunos />} />
-                      <Route path="/alunos-ativos" element={<AlunosAtivos />} />
-                      <Route path="/aula-zero" element={<AulaZero />} />
-                      <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
-                      <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </div>
-                </main>
-              </div>
-            </SidebarProvider>
+            <AuthProvider>
+              <Routes>
+                {/* Rotas públicas */}
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/access-denied" element={<AccessDenied />} />
+                
+                {/* Rotas protegidas */}
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <SidebarProvider>
+                      <div className="flex min-h-screen w-full overflow-hidden">
+                        <AppSidebar />
+                        <main className="flex-1 overflow-auto">
+                          <div className="p-2 md:p-4">
+                            <SidebarTrigger className="mb-2 md:mb-4" />
+                            <Routes>
+                              <Route path="/" element={<Navigate to="/lancamentos" />} />
+                              <Route path="/dias-lancamento" element={<DiasLancamento />} />
+                              <Route path="/turmas/dia" element={<Turmas />} />
+                              <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
+                              <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
+                              <Route path="/turma/:turmaId/diario" element={<DiarioTurma />} />
+                              <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
+                              <Route path="/estoque" element={<Estoque />} />
+                              <Route path="/devolutivas" element={<Devolutivas />} />
+                              <Route path="/devolutivas/alunos" element={<AlunosDevolutivas />} />
+                              <Route path="/devolutivas/turmas" element={<Turmas />} />
+                              <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
+                              <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
+                              <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
+                              <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafael />} />
+                              <Route path="/fichas" element={<Fichas />} />
+                              <Route path="/lancamentos" element={<Lancamentos />} />
+                              <Route path="/diario" element={<Diario />} />
+                              <Route path="/calendario-aulas" element={<CalendarioAulas />} />
+                              <Route path="/funcionarios" element={<Funcionarios />} />
+                              <Route path="/alunos" element={<Alunos />} />
+                              <Route path="/alunos-ativos" element={<AlunosAtivos />} />
+                              <Route path="/aula-zero" element={<AulaZero />} />
+                              <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
+                              <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
+                              <Route path="*" element={<NotFound />} />
+                            </Routes>
+                          </div>
+                        </main>
+                      </div>
+                      <div className="fixed bottom-4 right-4">
+                        <ThemeToggle />
+                      </div>
+                    </SidebarProvider>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </AuthProvider>
           </BrowserRouter>
-          <div className="fixed bottom-4 right-4">
-            <ThemeToggle />
-          </div>
         </div>
       </TooltipProvider>
     </QueryClientProvider>
