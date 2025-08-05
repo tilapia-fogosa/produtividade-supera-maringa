@@ -68,6 +68,10 @@ const Lancamentos = () => {
           <AlertTriangle className="mr-2 h-6 w-6" />
           Lançar Alerta de Evasão
         </Button>
+        
+        <div className="text-center text-lg font-medium text-foreground">
+          TESTE
+        </div>
       </div>
 
       <AlertaEvasaoModal 
