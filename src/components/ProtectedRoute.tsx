@@ -9,9 +9,19 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { hasPageAccess, loading: permissionsLoading } = useUserPermissions();
   const location = useLocation();
+
+  // Debug logs
+  console.log('ProtectedRoute Debug:', {
+    pathname: location.pathname,
+    user: user ? 'exists' : 'null',
+    profile: profile,
+    authLoading,
+    permissionsLoading,
+    hasPageAccess: hasPageAccess(location.pathname)
+  });
 
   // Mostrar loading enquanto verifica autenticação e permissões
   if (authLoading || permissionsLoading) {
