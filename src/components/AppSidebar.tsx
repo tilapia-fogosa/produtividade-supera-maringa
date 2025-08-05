@@ -11,8 +11,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useUserPermissions } from "@/hooks/useUserPermissions";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useUserPermissions } from "@/hooks/useUserPermissions";
+// import { useAuth } from "@/contexts/AuthContext";
 
 const menuItems = [
   {
@@ -60,16 +60,11 @@ const menuItems = [
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPageAccess } = useUserPermissions();
-  const { signOut, profile } = useAuth();
+  // const { hasPageAccess } = useUserPermissions();
+  // const { signOut, profile } = useAuth();
 
-  // Filtrar itens do menu baseado nas permissões do usuário
-  const accessibleMenuItems = menuItems.filter(item => hasPageAccess(item.path));
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth/login');
-  };
+  // Mostrar todos os itens do menu sem filtro de permissões
+  const accessibleMenuItems = menuItems;
 
   return (
     <Sidebar 
@@ -106,20 +101,9 @@ export function AppSidebar() {
         {/* Seção do usuário */}
         <SidebarGroup className="mt-auto">
           <div className="px-3 py-2 text-sm text-sidebar-foreground/80">
-            <p className="font-medium">{profile?.full_name || 'Usuário'}</p>
-            <p className="text-xs capitalize">{profile?.role?.replace(/_/g, ' ') || 'Sem perfil'}</p>
+            <p className="font-medium">Sistema Supera</p>
+            <p className="text-xs">Acesso completo</p>
           </div>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={handleSignOut}
-                className="text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-primary/10"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sair</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
