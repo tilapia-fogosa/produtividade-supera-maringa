@@ -107,7 +107,7 @@ export function AppSidebar() {
         <SidebarGroup className="mt-auto">
           <div className="px-3 py-2 text-sm text-sidebar-foreground/80">
             <p className="font-medium">{profile?.full_name || 'Usuário'}</p>
-            <p className="text-xs capitalize">{profile?.role || 'Sem perfil'}</p>
+            <p className="text-xs capitalize">{profile?.role?.replace(/_/g, ' ') || 'Sem perfil'}</p>
           </div>
           <SidebarMenu>
             <SidebarMenuItem>
