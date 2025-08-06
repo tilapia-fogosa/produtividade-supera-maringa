@@ -316,9 +316,9 @@ const DevolutivaAluno = () => {
             alt="Projeto São Rafael"
             className="opacity-80 print:opacity-100"
             style={{ 
-              width: '120px', 
+              width: '80px', 
               height: 'auto',
-              maxWidth: '120px'
+              maxWidth: '80px'
             }}
           />
         </div>
