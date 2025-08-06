@@ -89,7 +89,7 @@ const DevolutivaAluno = () => {
 
   return (
     <div className="container mx-auto py-2 px-2 space-y-3 bg-background dark:bg-background min-h-screen">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <Button 
           onClick={handleVoltar} 
           variant="outline" 
