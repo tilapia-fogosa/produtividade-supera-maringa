@@ -121,9 +121,14 @@
     display: none !important;
   }
   
-  /* Esconde elementos de navegação mas mantém footer com logo */
+  /* Esconde elementos de navegação mas permite footers específicos */
   nav, header, .no-print {
     display: none !important;
+  }
+  
+  /* Permite footers com classe específica aparecerem na impressão */
+  footer {
+    display: block !important;
   }
   
   /* Garante que imagens sejam exibidas na impressão */

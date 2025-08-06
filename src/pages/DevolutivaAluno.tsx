@@ -306,15 +306,6 @@ const DevolutivaAluno = () => {
             </p>
           )}
         </div>
-        
-        {/* Logo da Supera abaixo do informativo oficial */}
-        <div className="flex justify-center mt-4">
-          <img 
-            src="/lovable-uploads/8d83acfe-5f42-4bcc-869e-62dd972ebf81.png" 
-            alt="Supera"
-            className="h-12 w-auto opacity-80 print:opacity-100"
-          />
-        </div>
       </div>
 
       {/* Rodapé com logo da São Rafael - visível na impressão */}
