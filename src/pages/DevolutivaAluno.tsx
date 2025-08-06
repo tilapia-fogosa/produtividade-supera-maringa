@@ -314,7 +314,12 @@ const DevolutivaAluno = () => {
           <img 
             src="/lovable-uploads/5407bd2f-e771-477d-ad1c-dd4ec2e14a8d.png" 
             alt="Projeto São Rafael"
-            className="h-16 w-auto opacity-80 print:h-4 print:opacity-100"
+            className="opacity-80 print:opacity-100"
+            style={{ 
+              width: '120px', 
+              height: 'auto',
+              maxWidth: '120px'
+            }}
           />
         </div>
       </footer>
