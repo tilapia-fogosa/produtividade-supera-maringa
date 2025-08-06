@@ -99,3 +99,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos específicos para impressão */
+@media print {
+  /* Esconder elementos de cabeçalho do browser que mostram data/hora e info do usuário */
+  @page {
+    margin: 0.5in;
+  }
+  
+  /* Esconder elementos que podem aparecer no cabeçalho da impressão */
+  body::before,
+  body::after {
+    display: none !important;
+  }
+}

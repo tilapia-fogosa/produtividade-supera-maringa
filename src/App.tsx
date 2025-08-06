@@ -54,10 +54,12 @@ function App() {
                 <ProtectedRoute>
                   <SidebarProvider>
                     <div className="flex min-h-screen w-full overflow-hidden bg-background text-foreground">
-                      <AppSidebar />
+                      <div className="print:hidden">
+                        <AppSidebar />
+                      </div>
                       <main className="flex-1 overflow-auto">
                         <div className="p-2 md:p-4">
-                          <SidebarTrigger className="mb-2 md:mb-4" />
+                          <SidebarTrigger className="mb-2 md:mb-4 print:hidden" />
                           <Routes>
                             <Route path="/" element={<Navigate to="/lancamentos" />} />
                             <Route path="/dias-lancamento" element={<DiasLancamento />} />
@@ -89,7 +91,7 @@ function App() {
                         </div>
                       </main>
                     </div>
-                    <div className="fixed bottom-4 right-4">
+                    <div className="fixed bottom-4 right-4 print:hidden">
                       <ThemeToggle />
                     </div>
                   </SidebarProvider>
