@@ -105,53 +105,69 @@ export const InformativoGlobalDialog: React.FC<InformativoGlobalDialogProps> = (
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-6xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Editar Informativo Oficial Global</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Texto do Informativo Global
-            </label>
-            <p className="text-sm text-muted-foreground mb-3">
-              Este texto será exibido em todas as devolutivas como "Informativo Oficial". 
-              Você pode usar quebras de linha para organizar o conteúdo.
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[60vh]">
+          {/* Coluna de Edição */}
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Texto do Informativo Global
+              </label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Este texto será exibido em todas as devolutivas como "Informativo Oficial".
+              </p>
+            </div>
             <Textarea
               placeholder="Digite aqui o texto que aparecerá em todas as devolutivas..."
               value={textoGlobal}
               onChange={(e) => setTextoGlobal(e.target.value)}
-              className="min-h-[300px]"
+              className="h-full resize-none"
               disabled={loading}
             />
           </div>
 
-          {textoGlobal && (
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h4 className="font-semibold mb-2">Visualização:</h4>
-              <p className="whitespace-pre-wrap text-sm">{textoGlobal}</p>
+          {/* Coluna de Visualização */}
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Visualização
+              </label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Como ficará exibido nas devolutivas:
+              </p>
             </div>
-          )}
-
-          <div className="flex gap-2 justify-end">
-            <Button 
-              variant="outline" 
-              onClick={() => setOpen(false)}
-              disabled={salvando}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={salvarTextoGlobal}
-              disabled={salvando || loading}
-              className="gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {salvando ? 'Salvando...' : 'Salvar'}
-            </Button>
+            <div className="bg-gray-50 p-4 rounded-lg border h-full overflow-y-auto">
+              {textoGlobal ? (
+                <p className="whitespace-pre-wrap text-sm">{textoGlobal}</p>
+              ) : (
+                <p className="text-gray-400 text-sm italic">
+                  Digite algo no campo ao lado para ver a visualização...
+                </p>
+              )}
+            </div>
           </div>
+        </div>
+
+        <div className="flex gap-2 justify-end pt-4 border-t">
+          <Button 
+            variant="outline" 
+            onClick={() => setOpen(false)}
+            disabled={salvando}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={salvarTextoGlobal}
+            disabled={salvando || loading}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {salvando ? 'Salvando...' : 'Salvar'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
