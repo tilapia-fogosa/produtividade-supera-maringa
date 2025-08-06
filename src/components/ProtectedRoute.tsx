@@ -9,42 +9,6 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, profile, loading: authLoading } = useAuth();
-  const { hasPageAccess, loading: permissionsLoading } = useUserPermissions();
-  const location = useLocation();
-
-  // Debug logs
-  console.log('ProtectedRoute Debug:', {
-    pathname: location.pathname,
-    user: user ? 'exists' : 'null',
-    profile: profile,
-    authLoading,
-    permissionsLoading,
-    hasPageAccess: hasPageAccess(location.pathname)
-  });
-
-  // Mostrar loading enquanto verifica autenticação e permissões
-  if (authLoading || permissionsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Verificando permissões...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se não está logado, redireciona para login
-  if (!user) {
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
-  }
-
-  // Se não tem permissão para a página, redireciona para acesso negado
-  if (!hasPageAccess(location.pathname)) {
-    return <Navigate to="/access-denied" replace />;
-  }
-
-  // Se passou em todas as verificações, renderiza o conteúdo
+  // Autenticação temporariamente desabilitada
   return <>{children}</>;
 };
