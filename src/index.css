@@ -102,14 +102,34 @@
 
 /* Estilos específicos para impressão */
 @media print {
-  /* Esconder elementos de cabeçalho do browser que mostram data/hora e info do usuário */
+  /* Configurações da página para impressão */
   @page {
-    margin: 0.5in;
+    margin: 0.3in 0.5in; /* Margens reduzidas */
+    size: A4;
+    /* Tenta remover cabeçalhos e rodapés do navegador */
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
   }
   
-  /* Esconder elementos que podem aparecer no cabeçalho da impressão */
+  /* Remove elementos desnecessários */
   body::before,
   body::after {
     display: none !important;
+  }
+  
+  /* Esconde elementos de navegação */
+  nav, header, footer, .no-print {
+    display: none !important;
+  }
+  
+  /* Otimiza cores para impressão */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
