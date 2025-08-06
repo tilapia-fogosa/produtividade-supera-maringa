@@ -99,3 +99,49 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos específicos para impressão */
+@media print {
+  /* Configurações da página para impressão */
+  @page {
+    margin: 0.3in 0.5in; /* Margens reduzidas */
+    size: A4;
+    /* Tenta remover cabeçalhos e rodapés do navegador */
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
+  }
+  
+  /* Remove elementos desnecessários */
+  body::before,
+  body::after {
+    display: none !important;
+  }
+  
+  /* Esconde elementos de navegação mas permite footers específicos */
+  nav, header, .no-print {
+    display: none !important;
+  }
+  
+  /* Permite footers com classe específica aparecerem na impressão */
+  footer {
+    display: block !important;
+  }
+  
+  /* Garante que imagens sejam exibidas na impressão */
+  img {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Otimiza cores para impressão */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

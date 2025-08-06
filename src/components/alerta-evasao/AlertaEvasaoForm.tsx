@@ -179,7 +179,7 @@ export function AlertaEvasaoForm({
       />
 
       {/* Botão para ver Dados da Aula Zero */}
-      {alunoSelecionado && dadosAulaZero && (
+      {alunoSelecionado && (
         <div className="space-y-2">
           <Button
             type="button"

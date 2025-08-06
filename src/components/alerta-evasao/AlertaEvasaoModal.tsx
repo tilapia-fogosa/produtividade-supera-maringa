@@ -105,7 +105,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
 
           {/* Painel Lateral - Dados da Aula Zero */}
           {showAulaZeroPanel && (
-            <div className="min-h-[400px]">
+            <div className="h-[500px]">
               <AulaZeroSidePanelView
                 dadosAulaZero={dadosAulaZero}
                 onClose={handleToggleAulaZero}

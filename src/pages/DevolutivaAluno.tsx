@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
 import { 
   Table,
   TableBody,
@@ -44,6 +45,7 @@ const DevolutivaAluno = () => {
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
   const [textoDevolutiva, setTextoDevolutiva] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  
 
   // Atualizar texto da devolutiva quando os dados carregarem
   React.useEffect(() => {
@@ -51,15 +53,6 @@ const DevolutivaAluno = () => {
       setTextoDevolutiva(aluno.texto_devolutiva);
     }
   }, [aluno?.texto_devolutiva]);
-
-  const getPrimeiroNome = (nomeCompleto: string) => {
-    const nomeSplit = nomeCompleto.trim().split(' ');
-    return nomeSplit[0];
-  };
-
-  const handleVoltar = () => {
-    navigate(-1);
-  };
 
   const handleSalvarDevolutiva = async () => {
     if (!alunoId) return;
@@ -85,6 +78,16 @@ const DevolutivaAluno = () => {
       });
     }
   };
+
+  const getPrimeiroNome = (nomeCompleto: string) => {
+    const nomeSplit = nomeCompleto.trim().split(' ');
+    return nomeSplit[0];
+  };
+
+  const handleVoltar = () => {
+    navigate(-1);
+  };
+
 
   const formatarTextoInformativo = (texto: string | null, nomeAluno: string) => {
     const primeiroNome = getPrimeiroNome(nomeAluno);
@@ -117,8 +120,8 @@ const DevolutivaAluno = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 space-y-6 bg-background dark:bg-background min-h-screen">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto py-2 px-2 space-y-3 bg-background dark:bg-background min-h-screen print:py-0 print:pt-2">
+      <div className="flex items-center justify-between print:hidden">
         <Button 
           onClick={handleVoltar} 
           variant="outline" 
@@ -141,17 +144,17 @@ const DevolutivaAluno = () => {
         </Select>
       </div>
 
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-azul-500">
+      <div className="text-center mb-2 print:mb-1 print:mt-0">
+        <h1 className="text-xl font-bold text-azul-500 print:text-lg print:mb-1">
           Desempenho do Aluno: {aluno.nome}
         </h1>
       </div>
 
-      {/* Informativo Personalizado movido para o topo */}
+      {/* Informativo Personalizado - escondido na impressão */}
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
-        className="w-full space-y-2"
+        className="w-full space-y-2 print:hidden"
       >
         <CollapsibleTrigger asChild>
           <Button
@@ -186,16 +189,17 @@ const DevolutivaAluno = () => {
         </CollapsibleContent>
       </Collapsible>
 
-      <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
+
+      <div className="bg-white p-2 rounded-lg border border-orange-200 text-center">
         <div className="flex items-center justify-center gap-2">
-          <Brain className="h-6 w-6 text-orange-500" />
-          <span className="text-xl font-semibold text-azul-500">
+          <Brain className="h-4 w-4 text-orange-500" />
+          <span className="text-lg font-semibold text-azul-500">
             {aluno.desafios_feitos} Desafios Realizados
           </span>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         {/* Tabela Ábaco */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
           <div className="bg-gray-50 px-4 py-2">
@@ -287,7 +291,7 @@ const DevolutivaAluno = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <h2 className="text-xl font-semibold text-azul-500">
           Informativo Oficial - {new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
         </h2>
@@ -304,13 +308,18 @@ const DevolutivaAluno = () => {
         </div>
       </div>
 
-      {/* Rodapé com logo da São Rafael */}
-      <footer className="mt-8 pt-6 border-t border-orange-200">
+      {/* Rodapé com logo da São Rafael - tamanho pequeno na impressão */}
+      <footer className="mt-8 pt-6 border-t border-orange-200 print:mt-2 print:pt-2">
         <div className="flex justify-center items-center">
           <img 
             src="/lovable-uploads/5407bd2f-e771-477d-ad1c-dd4ec2e14a8d.png" 
             alt="Projeto São Rafael"
-            className="h-16 w-auto opacity-80"
+            className="opacity-80 print:opacity-100"
+            style={{ 
+              width: '80px', 
+              height: 'auto',
+              maxWidth: '80px'
+            }}
           />
         </div>
       </footer>

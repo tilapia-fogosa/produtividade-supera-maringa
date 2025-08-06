@@ -916,6 +916,8 @@ export type Database = {
         Row: {
           active: boolean
           age_range: string | null
+          concatena: boolean | null
+          concatena_tempo: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -924,12 +926,14 @@ export type Database = {
           lead_quality_score: number | null
           lead_source: string
           meta_id: string | null
+          msg_concatenada: string[]
           name: string
           next_contact_date: string | null
           observations: string | null
           original_ad: string | null
           original_adset: string | null
           phone_number: string
+          primeiro_nome: string | null
           registration_cpf: string | null
           registration_name: string | null
           scheduled_date: string | null
@@ -942,6 +946,8 @@ export type Database = {
         Insert: {
           active?: boolean
           age_range?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -950,12 +956,14 @@ export type Database = {
           lead_quality_score?: number | null
           lead_source: string
           meta_id?: string | null
+          msg_concatenada?: string[]
           name: string
           next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
           original_adset?: string | null
           phone_number: string
+          primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
           scheduled_date?: string | null
@@ -968,6 +976,8 @@ export type Database = {
         Update: {
           active?: boolean
           age_range?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -976,12 +986,14 @@ export type Database = {
           lead_quality_score?: number | null
           lead_source?: string
           meta_id?: string | null
+          msg_concatenada?: string[]
           name?: string
           next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
           original_adset?: string | null
           phone_number?: string
+          primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
           scheduled_date?: string | null
@@ -1015,10 +1027,12 @@ export type Database = {
           },
         ]
       }
-      clients_backup: {
+      clients_duplicate: {
         Row: {
           active: boolean
           age_range: string | null
+          concatena: boolean | null
+          concatena_tempo: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -1027,16 +1041,19 @@ export type Database = {
           lead_quality_score: number | null
           lead_source: string
           meta_id: string | null
+          msg_concatenada: string[]
           name: string
           next_contact_date: string | null
           observations: string | null
           original_ad: string | null
           original_adset: string | null
           phone_number: string
+          primeiro_nome: string | null
           registration_cpf: string | null
           registration_name: string | null
           scheduled_date: string | null
           status: string
+          tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id: string | null
           updated_at: string
           valorization_confirmed: boolean | null
@@ -1044,6 +1061,8 @@ export type Database = {
         Insert: {
           active?: boolean
           age_range?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1052,16 +1071,19 @@ export type Database = {
           lead_quality_score?: number | null
           lead_source: string
           meta_id?: string | null
+          msg_concatenada?: string[]
           name: string
           next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
           original_adset?: string | null
           phone_number: string
+          primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
           scheduled_date?: string | null
           status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -1069,6 +1091,8 @@ export type Database = {
         Update: {
           active?: boolean
           age_range?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1077,37 +1101,40 @@ export type Database = {
           lead_quality_score?: number | null
           lead_source?: string
           meta_id?: string | null
+          msg_concatenada?: string[]
           name?: string
           next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
           original_adset?: string | null
           phone_number?: string
+          primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
           scheduled_date?: string | null
           status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
         }
         Relationships: [
           {
-            foreignKeyName: "clients_backup_lead_source_fkey"
+            foreignKeyName: "clients_duplicate_lead_source_fkey"
             columns: ["lead_source"]
             isOneToOne: false
             referencedRelation: "lead_sources"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "clients_backup_unit_id_fkey"
+            foreignKeyName: "clients_duplicate_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "clients_backup_unit_id_fkey1"
+            foreignKeyName: "clients_duplicate_unit_id_fkey1"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
@@ -3662,6 +3689,10 @@ export type Database = {
       mark_update_as_read: {
         Args: { p_update_id: string }
         Returns: boolean
+      }
+      normalizar_telefone_brasil: {
+        Args: { telefone_raw: string }
+        Returns: string
       }
       publish_update: {
         Args: { p_update_id: string }
