@@ -104,7 +104,7 @@
 @media print {
   /* Configurações da página para impressão */
   @page {
-    margin: 0.3in 0.5in 0.8in 0.5in; /* Top Right Bottom Left - espaço extra no bottom para o rodapé */
+    margin: 0.3in 0.5in; /* Margens reduzidas */
     size: A4;
     /* Tenta remover cabeçalhos e rodapés do navegador */
     @top-left { content: ""; }
@@ -143,10 +143,5 @@
     -webkit-print-color-adjust: exact !important;
     color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-  
-  /* Adiciona espaço no final do conteúdo para o rodapé fixo */
-  .container {
-    margin-bottom: 1in !important;
   }
 }
