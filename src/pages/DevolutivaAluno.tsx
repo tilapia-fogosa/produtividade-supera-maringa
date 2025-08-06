@@ -119,16 +119,16 @@ const DevolutivaAluno = () => {
       </div>
 
 
-      <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
+      <div className="bg-white p-2 rounded-lg border border-orange-200 text-center">
         <div className="flex items-center justify-center gap-2">
-          <Brain className="h-6 w-6 text-orange-500" />
-          <span className="text-xl font-semibold text-azul-500">
+          <Brain className="h-4 w-4 text-orange-500" />
+          <span className="text-lg font-semibold text-azul-500">
             {aluno.desafios_feitos} Desafios Realizados
           </span>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         {/* Tabela Ábaco */}
         <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
           <div className="bg-gray-50 px-4 py-2">
@@ -220,7 +220,7 @@ const DevolutivaAluno = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <h2 className="text-xl font-semibold text-azul-500">
           Informativo Oficial - {new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
         </h2>
