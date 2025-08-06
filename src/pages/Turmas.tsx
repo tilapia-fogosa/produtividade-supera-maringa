@@ -6,6 +6,7 @@ import { useProjetoSaoRafael } from '@/hooks/use-projeto-sao-rafael';
 import DayTurmasList from '@/components/turmas/DayTurmasList';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar } from 'lucide-react';
+import { InformativoGlobalDialog } from '@/components/devolutivas/InformativoGlobalDialog';
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,13 +127,20 @@ const Turmas = () => {
   return (
     <div className="w-full min-h-screen bg-background dark:bg-background text-azul-500 dark:text-orange-100">
       <div className="container mx-auto py-4 px-2">
-        <Button 
-          onClick={handleVoltar} 
-          variant="outline" 
-          className="mb-4 text-azul-500 border-orange-200"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button 
+            onClick={handleVoltar} 
+            variant="outline" 
+            className="text-azul-500 border-orange-200"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+          </Button>
+          
+          {/* Mostrar botão de informativo global apenas para devolutivas */}
+          {serviceType === 'devolutiva' && (
+            <InformativoGlobalDialog />
+          )}
+        </div>
         
         <h1 className="text-xl font-bold mb-4">
           {getTituloTexto()}
