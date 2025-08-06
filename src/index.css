@@ -121,9 +121,16 @@
     display: none !important;
   }
   
-  /* Esconde elementos de navegação */
-  nav, header, footer, .no-print {
+  /* Esconde elementos de navegação mas mantém footer com logo */
+  nav, header, .no-print {
     display: none !important;
+  }
+  
+  /* Garante que imagens sejam exibidas na impressão */
+  img {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
   
   /* Otimiza cores para impressão */

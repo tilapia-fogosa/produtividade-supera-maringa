@@ -308,13 +308,13 @@ const DevolutivaAluno = () => {
         </div>
       </div>
 
-      {/* Rodapé com logo da São Rafael */}
-      <footer className="mt-8 pt-6 border-t border-orange-200">
+      {/* Rodapé com logo da São Rafael - visível na impressão */}
+      <footer className="mt-8 pt-6 border-t border-orange-200 print:mt-4 print:pt-4">
         <div className="flex justify-center items-center">
           <img 
             src="/lovable-uploads/5407bd2f-e771-477d-ad1c-dd4ec2e14a8d.png" 
             alt="Projeto São Rafael"
-            className="h-16 w-auto opacity-80"
+            className="h-16 w-auto opacity-80 print:h-12 print:opacity-100"
           />
         </div>
       </footer>
