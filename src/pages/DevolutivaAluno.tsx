@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronDown, Brain } from "lucide-react";
+import { ArrowLeft, Brain } from "lucide-react";
 import { useAlunoDevolutiva, PeriodoFiltro } from '@/hooks/use-aluno-devolutiva';
 import {
   Select,
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+
 import { 
   Table,
   TableBody,
@@ -22,11 +22,6 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
   { value: 'mes_atual', label: 'Mês atual' },
@@ -43,7 +38,7 @@ const DevolutivaAluno = () => {
   const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes_atual');
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
   const [textoDevolutiva, setTextoDevolutiva] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
+  
 
   // Atualizar texto da devolutiva quando os dados carregarem
   React.useEffect(() => {
@@ -61,30 +56,6 @@ const DevolutivaAluno = () => {
     navigate(-1);
   };
 
-  const handleSalvarDevolutiva = async () => {
-    if (!alunoId) return;
-
-    try {
-      const { error } = await supabase
-        .from('alunos')
-        .update({ texto_devolutiva: textoDevolutiva })
-        .eq('id', alunoId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Devolutiva salva",
-        description: "O texto da devolutiva foi atualizado com sucesso.",
-      });
-    } catch (err) {
-      console.error('Erro ao salvar devolutiva:', err);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar a devolutiva.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const formatarTextoInformativo = (texto: string | null, nomeAluno: string) => {
     const primeiroNome = getPrimeiroNome(nomeAluno);
@@ -147,44 +118,6 @@ const DevolutivaAluno = () => {
         </h1>
       </div>
 
-      {/* Informativo Personalizado movido para o topo */}
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="w-full space-y-2"
-      >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="outline"
-            className="flex items-center justify-between w-full"
-          >
-            <span>Informativo Personalizado</span>
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${
-                isOpen ? "transform rotate-180" : ""
-              }`}
-            />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4">
-          <Textarea
-            placeholder="Digite aqui sua mensagem para o aluno ou responsável..."
-            value={textoDevolutiva}
-            onChange={(e) => setTextoDevolutiva(e.target.value)}
-            className="min-h-[200px]"
-          />
-          <Button onClick={handleSalvarDevolutiva} className="w-full">
-            Salvar Informativo
-          </Button>
-
-          {textoDevolutiva && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h3 className="font-semibold mb-2">Informativo Atual:</h3>
-              <p className="whitespace-pre-wrap">{textoDevolutiva}</p>
-            </div>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
 
       <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
         <div className="flex items-center justify-center gap-2">
