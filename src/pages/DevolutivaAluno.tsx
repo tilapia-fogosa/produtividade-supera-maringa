@@ -88,7 +88,7 @@ const DevolutivaAluno = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 space-y-6 bg-background dark:bg-background min-h-screen">
+    <div className="container mx-auto py-2 px-2 space-y-3 bg-background dark:bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <Button 
           onClick={handleVoltar} 
@@ -112,8 +112,8 @@ const DevolutivaAluno = () => {
         </Select>
       </div>
 
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-azul-500">
+      <div className="text-center mb-2">
+        <h1 className="text-xl font-bold text-azul-500">
           Desempenho do Aluno: {aluno.nome}
         </h1>
       </div>
