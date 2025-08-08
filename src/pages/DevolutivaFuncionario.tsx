@@ -176,6 +176,56 @@ const DevolutivaFuncionario = () => {
         </div>
       </div>
 
+      <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <Users className="h-6 w-6 text-blue-500" />
+          <span className="text-xl font-semibold text-azul-500">
+            Funcionário - Produtividade Ábaco
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">Mês</TableHead>
+                <TableHead>Livro</TableHead>
+                <TableHead>Página</TableHead>
+                <TableHead>Exercícios</TableHead>
+                <TableHead>Erros</TableHead>
+                <TableHead>% Acerto</TableHead>
+                <TableHead>Presenças</TableHead>
+                <TableHead>Desafios</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {funcionario.desempenho_abaco.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.mes}</TableCell>
+                  <TableCell>{item.livro}</TableCell>
+                  <TableCell>{item.pagina}</TableCell>
+                  <TableCell>{item.exercicios}</TableCell>
+                  <TableCell>{item.erros}</TableCell>
+                  <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+                  <TableCell>{item.presencas}</TableCell>
+                  <TableCell>{item.desafios_feitos}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow className="font-bold bg-gray-50">
+                <TableCell colSpan={3}>Total</TableCell>
+                <TableCell>{funcionario.abaco_total_exercicios}</TableCell>
+                <TableCell>{funcionario.abaco_total_erros}</TableCell>
+                <TableCell>{funcionario.abaco_percentual_total.toFixed(1)}%</TableCell>
+                <TableCell>{funcionario.abaco_total_presencas}</TableCell>
+                <TableCell>{funcionario.abaco_total_desafios}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-azul-500">
           Informativo Oficial - {new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
