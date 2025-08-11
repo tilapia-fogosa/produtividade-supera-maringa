@@ -191,7 +191,7 @@ export default function EditarEvento() {
       });
       navigate('/eventos');
     }
-  }, [id, navigate, toast]);
+  }, [id]); // Removido navigate e toast das dependências
 
   const adicionarAluno = (novoAluno: any) => {
     setAlunosEvento(prev => [...prev, novoAluno]);
