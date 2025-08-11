@@ -448,6 +448,51 @@ export type Database = {
         }
         Relationships: []
       }
+      aulas: {
+        Row: {
+          created_at: string
+          data_aula: string
+          descricao: string | null
+          display_order: number | null
+          duracao_minutos: number | null
+          hls_url: string
+          id: string
+          mes: string | null
+          published: boolean
+          thumbnail_url: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_aula: string
+          descricao?: string | null
+          display_order?: number | null
+          duracao_minutos?: number | null
+          hls_url: string
+          id?: string
+          mes?: string | null
+          published?: boolean
+          thumbnail_url?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_aula?: string
+          descricao?: string | null
+          display_order?: number | null
+          duracao_minutos?: number | null
+          hls_url?: string
+          id?: string
+          mes?: string | null
+          published?: boolean
+          thumbnail_url?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       aulas_experimentais: {
         Row: {
           active: boolean | null
@@ -936,6 +981,7 @@ export type Database = {
           primeiro_nome: string | null
           registration_cpf: string | null
           registration_name: string | null
+          resumo_atendimento: string | null
           scheduled_date: string | null
           status: string
           tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
@@ -966,6 +1012,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -996,6 +1043,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -1261,6 +1309,111 @@ export type Database = {
           tipo_item?: string
           unit_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      evento_participantes: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          evento_id: string
+          forma_pagamento: string
+          id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          evento_id: string
+          forma_pagamento: string
+          id?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          evento_id?: string
+          forma_pagamento?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evento_participantes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_participantes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          data_evento: string
+          descricao: string | null
+          id: string
+          local: string | null
+          numero_vagas: number
+          responsavel: string | null
+          tipo: string
+          titulo: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_evento: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          numero_vagas?: number
+          responsavel?: string | null
+          tipo?: string
+          titulo: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          numero_vagas?: number
+          responsavel?: string | null
+          tipo?: string
+          titulo?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      faq: {
+        Row: {
+          created_at: string
+          faq: string | null
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          faq?: string | null
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          faq?: string | null
+          id?: number
         }
         Relationships: []
       }
@@ -2581,7 +2734,7 @@ export type Database = {
           new_data: Json | null
           old_data: Json | null
           operation: string
-          student_id: string
+          student_id: string | null
         }
         Insert: {
           created_at?: string
@@ -2591,7 +2744,7 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           operation: string
-          student_id: string
+          student_id?: string | null
         }
         Update: {
           created_at?: string
@@ -2601,7 +2754,7 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           operation?: string
-          student_id?: string
+          student_id?: string | null
         }
         Relationships: [
           {

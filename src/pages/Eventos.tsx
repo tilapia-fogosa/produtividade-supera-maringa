@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, User, Plus, Edit, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,48 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
-const eventosIniciais = [
-  {
-    id: 1,
-    titulo: "Reunião Pedagógica Mensal",
-    descricao: "Revisão de metodologias e planejamento do próximo mês",
-    data: "2024-01-25T14:00:00",
-    local: "Sala de Reuniões - Unidade Centro",
-    responsavel: "Ana Silva",
-    tipo: "Reunião",
-    numeroVagas: 20
-  },
-  {
-    id: 2,
-    titulo: "Workshop AH Avançado",
-    descricao: "Treinamento para novos educadores sobre metodologia AH",
-    data: "2024-01-20T09:00:00",
-    local: "Auditório Principal",
-    responsavel: "Carlos Santos",
-    tipo: "Treinamento",
-    numeroVagas: 15
-  },
-  {
-    id: 3,
-    titulo: "Avaliação Trimestral",
-    descricao: "Apresentação dos resultados do trimestre",
-    data: "2023-12-15T16:00:00",
-    local: "Sala de Reuniões - Unidade Norte",
-    responsavel: "Maria Oliveira",
-    tipo: "Avaliação",
-    numeroVagas: 10
-  },
-  {
-    id: 4,
-    titulo: "Capacitação Ábaco",
-    descricao: "Curso de capacitação para uso avançado do ábaco",
-    data: "2023-11-28T08:30:00",
-    local: "Laboratório de Matemática",
-    responsavel: "João Costa",
-    tipo: "Treinamento",
-    numeroVagas: 12
-  }
-];
 
 const getTipoColor = (tipo: string) => {
   switch (tipo) {
@@ -75,8 +34,8 @@ const formatarData = (dataString: string) => {
   };
 };
 
-const EventCard = ({ evento }: { evento: typeof eventosIniciais[0] }) => {
-  const { data, hora } = formatarData(evento.data);
+const EventCard = ({ evento }: { evento: any }) => {
+  const { data, hora } = formatarData(evento.data_evento || evento.data);
   const navigate = useNavigate();
   
   return (
@@ -125,7 +84,7 @@ const EventCard = ({ evento }: { evento: typeof eventosIniciais[0] }) => {
           </div>
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            <span>{evento.numeroVagas} vagas</span>
+            <span>{evento.numero_vagas || evento.numeroVagas} vagas</span>
           </div>
         </div>
       </CardContent>
@@ -310,20 +269,67 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
 };
 
 export default function Eventos() {
-  const [eventosData, setEventosData] = useState(eventosIniciais);
+  const [eventosData, setEventosData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const agora = new Date();
+
+  useEffect(() => {
+    buscarEventos();
+  }, []);
+
+  const buscarEventos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('active', true)
+        .order('data_evento');
+
+      if (error) throw error;
+      setEventosData(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar eventos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const adicionarEvento = (novoEvento: any) => {
-    setEventosData(prev => [...prev, novoEvento]);
+  const adicionarEvento = async (novoEvento: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .insert({
+          titulo: novoEvento.titulo,
+          descricao: novoEvento.descricao,
+          data_evento: `${novoEvento.data}T${novoEvento.hora}:00`,
+          local: novoEvento.local,
+          responsavel: novoEvento.responsavel,
+          tipo: novoEvento.tipo,
+          numero_vagas: parseInt(novoEvento.numeroVagas),
+          unit_id: '00000000-0000-0000-0000-000000000000' // TODO: pegar da sessão do usuário
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setEventosData(prev => [...prev, data]);
+    } catch (error) {
+      console.error('Erro ao criar evento:', error);
+    }
   };
   
   const eventosFuturos = eventosData.filter(evento => 
-    new Date(evento.data) >= agora
-  ).sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    new Date(evento.data_evento) >= agora
+  ).sort((a, b) => new Date(a.data_evento).getTime() - new Date(b.data_evento).getTime());
   
   const eventosAnteriores = eventosData.filter(evento => 
-    new Date(evento.data) < agora
-  ).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    new Date(evento.data_evento) < agora
+  ).sort((a, b) => new Date(b.data_evento).getTime() - new Date(a.data_evento).getTime());
+
+  if (loading) {
+    return <div>Carregando eventos...</div>;
+  }
 
   return (
     <div className="space-y-6">

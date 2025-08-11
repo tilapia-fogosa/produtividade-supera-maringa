@@ -13,29 +13,80 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data - seria substituído por dados reais
-const eventosIniciais = [
-  {
-    id: 1,
-    titulo: "Reunião Pedagógica Mensal",
-    descricao: "Revisão de metodologias e planejamento do próximo mês",
-    data: "2024-01-25T14:00:00",
-    local: "Sala de Reuniões - Unidade Centro",
-    responsavel: "Ana Silva",
-    tipo: "Reunião",
-    numeroVagas: 20
-  },
-  {
-    id: 2,
-    titulo: "Workshop AH Avançado",
-    descricao: "Treinamento para novos educadores sobre metodologia AH",
-    data: "2024-01-20T09:00:00",
-    local: "Auditório Principal",
-    responsavel: "Carlos Santos",
-    tipo: "Treinamento",
-    numeroVagas: 15
-  }
-];
+export default function EditarEvento() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [evento, setEvento] = useState<any>(null);
+  const [alunosEvento, setAlunosEvento] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      buscarEvento();
+    }
+  }, [id]);
+
+  const buscarEvento = async () => {
+    setLoading(true);
+    try {
+      // Buscar evento
+      const { data: eventoData, error: eventoError } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('id', id)
+        .eq('active', true)
+        .single();
+
+      if (eventoError) throw eventoError;
+
+      if (eventoData) {
+        setEvento(eventoData);
+        
+        // Buscar participantes do evento
+        const { data: participantesData, error: participantesError } = await supabase
+          .from('evento_participantes')
+          .select(`
+            id,
+            forma_pagamento,
+            alunos!inner(
+              id,
+              nome,
+              turmas(nome, professores(nome))
+            )
+          `)
+          .eq('evento_id', id);
+
+        if (participantesError) throw participantesError;
+
+        const participantesFormatados = participantesData.map((p: any) => ({
+          id: p.alunos.id,
+          nome: p.alunos.nome,
+          turma: p.alunos.turmas?.nome || 'Sem turma',
+          professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
+          formaPagamento: p.forma_pagamento
+        }));
+
+        setAlunosEvento(participantesFormatados);
+      } else {
+        toast({
+          title: "Evento não encontrado",
+          description: "O evento solicitado não existe.",
+          variant: "destructive"
+        });
+        navigate('/eventos');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar evento:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar dados do evento",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 const getTipoColor = (tipo: string) => {
@@ -230,45 +281,69 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
   );
 };
 
-export default function EditarEvento() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [evento, setEvento] = useState<any>(null);
-  const [alunosEvento, setAlunosEvento] = useState<any[]>([]);
+  const adicionarAluno = async (novoAluno: any) => {
+    try {
+      const { error } = await supabase
+        .from('evento_participantes')
+        .insert({
+          evento_id: id,
+          aluno_id: novoAluno.id,
+          forma_pagamento: novoAluno.formaPagamento
+        });
 
-  useEffect(() => {
-    // Simular busca do evento - seria substituído por chamada real
-    const eventoEncontrado = eventosIniciais.find(e => e.id === parseInt(id || ''));
-    if (eventoEncontrado) {
-      setEvento(eventoEncontrado);
-    } else {
+      if (error) throw error;
+
+      setAlunosEvento(prev => [...prev, novoAluno]);
+      
       toast({
-        title: "Evento não encontrado",
-        description: "O evento solicitado não existe.",
+        title: "Sucesso",
+        description: "Aluno adicionado ao evento!"
+      });
+    } catch (error) {
+      console.error('Erro ao adicionar aluno:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar aluno ao evento",
         variant: "destructive"
       });
-      navigate('/eventos');
     }
-  }, [id]); // Removido navigate e toast das dependências
-
-  const adicionarAluno = (novoAluno: any) => {
-    setAlunosEvento(prev => [...prev, novoAluno]);
   };
 
-  const removerAluno = (alunoId: number) => {
-    setAlunosEvento(prev => prev.filter(aluno => aluno.id !== alunoId));
-    toast({
-      title: "Aluno removido",
-      description: "Aluno removido do evento com sucesso."
-    });
+  const removerAluno = async (alunoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('evento_participantes')
+        .delete()
+        .eq('evento_id', id)
+        .eq('aluno_id', alunoId);
+
+      if (error) throw error;
+
+      setAlunosEvento(prev => prev.filter(aluno => aluno.id !== alunoId));
+      
+      toast({
+        title: "Aluno removido",
+        description: "Aluno removido do evento com sucesso."
+      });
+    } catch (error) {
+      console.error('Erro ao remover aluno:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover aluno do evento",
+        variant: "destructive"
+      });
+    }
   };
 
-  const vagasDisponiveis = evento ? evento.numeroVagas - alunosEvento.length : 0;
-  const { data, hora } = evento ? formatarData(evento.data) : { data: '', hora: '' };
+  const vagasDisponiveis = evento ? evento.numero_vagas - alunosEvento.length : 0;
+  const { data, hora } = evento ? formatarData(evento.data_evento) : { data: '', hora: '' };
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
 
   if (!evento) {
-    return <div>Carregando...</div>;
+    return <div>Evento não encontrado</div>;
   }
 
   return (
@@ -324,7 +399,7 @@ export default function EditarEvento() {
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span>{evento.numeroVagas} vagas totais</span>
+              <span>{evento.numero_vagas} vagas totais</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
