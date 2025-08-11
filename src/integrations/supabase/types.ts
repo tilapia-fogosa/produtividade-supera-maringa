@@ -3100,13 +3100,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "turmas_professor_id_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
-            referencedRelation: "professores"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "turmas_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
@@ -3483,13 +3476,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_turmas_professor_id"
-            columns: ["professor_id"]
-            isOneToOne: false
-            referencedRelation: "professores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "turmas_professor_id_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
