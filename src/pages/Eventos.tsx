@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, MapPin, User, Plus, Edit, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, Edit, Users, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,10 +34,36 @@ const formatarData = (dataString: string) => {
   };
 };
 
-const EventCard = ({ evento }: { evento: any }) => {
+const EventCard = ({ evento, onEventoRemovido }: { evento: any; onEventoRemovido: (eventoId: string) => void }) => {
   const { data, hora } = formatarData(evento.data_evento || evento.data);
   const navigate = useNavigate();
+  const { toast } = useToast();
   
+  const handleRemoverEvento = async () => {
+    if (confirm("Tem certeza que deseja remover este evento? Esta ação não pode ser desfeita.")) {
+      try {
+        const { error } = await supabase
+          .from('eventos')
+          .update({ active: false })
+          .eq('id', evento.id);
+
+        if (error) throw error;
+
+        onEventoRemovido(evento.id);
+        toast({
+          title: "Evento removido",
+          description: "O evento foi removido com sucesso.",
+        });
+      } catch (error) {
+        console.error('Erro ao remover evento:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover o evento. Tente novamente.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
   return (
     <Card className="mb-4">
       <CardHeader>
@@ -60,6 +86,15 @@ const EventCard = ({ evento }: { evento: any }) => {
             >
               <Edit className="h-3 w-3" />
               Editar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRemoverEvento}
+              className="gap-1 text-red-600 hover:text-red-700 hover:border-red-300"
+            >
+              <Trash2 className="h-3 w-3" />
+              Remover
             </Button>
           </div>
         </div>
@@ -357,6 +392,10 @@ export default function Eventos() {
     }
   };
   
+  const removerEvento = (eventoId: string) => {
+    setEventosData(prev => prev.filter(evento => evento.id !== eventoId));
+  };
+  
   const eventosFuturos = eventosData.filter(evento => 
     new Date(evento.data_evento) >= agora
   ).sort((a, b) => new Date(a.data_evento).getTime() - new Date(b.data_evento).getTime());
@@ -389,7 +428,7 @@ export default function Eventos() {
         {eventosFuturos.length > 0 ? (
           <div className="space-y-4">
             {eventosFuturos.map(evento => (
-              <EventCard key={evento.id} evento={evento} />
+              <EventCard key={evento.id} evento={evento} onEventoRemovido={removerEvento} />
             ))}
           </div>
         ) : (
@@ -411,7 +450,7 @@ export default function Eventos() {
         {eventosAnteriores.length > 0 ? (
           <div className="space-y-4">
             {eventosAnteriores.map(evento => (
-              <EventCard key={evento.id} evento={evento} />
+              <EventCard key={evento.id} evento={evento} onEventoRemovido={removerEvento} />
             ))}
           </div>
         ) : (
