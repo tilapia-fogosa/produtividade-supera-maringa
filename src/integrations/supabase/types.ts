@@ -3093,7 +3093,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_turmas_professor_id"
+            foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
@@ -3475,7 +3475,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_turmas_professor_id"
+            foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
