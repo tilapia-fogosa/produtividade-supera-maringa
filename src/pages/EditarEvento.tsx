@@ -49,10 +49,12 @@ export default function EditarEvento() {
           .select(`
             id,
             forma_pagamento,
+            aluno_id,
             alunos!inner(
               id,
               nome,
-              turmas(nome, professores(nome))
+              turma_id,
+              turmas(id, nome, professor_id, professores(id, nome))
             )
           `)
           .eq('evento_id', id);
@@ -138,7 +140,8 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
         .select(`
           id,
           nome,
-          turmas(nome, professores(nome))
+          turma_id,
+          turmas(id, nome, professor_id, professores(id, nome))
         `)
         .eq('active', true)
         .order('nome');
@@ -240,7 +243,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
               </SelectTrigger>
               <SelectContent>
                 {alunosDisponivelsFiltrados.length === 0 && !loading ? (
-                  <SelectItem value="" disabled>Nenhum aluno encontrado</SelectItem>
+                  <div className="p-2 text-center text-muted-foreground">Nenhum aluno encontrado</div>
                 ) : (
                   alunosDisponivelsFiltrados.map(aluno => (
                     <SelectItem key={aluno.id} value={aluno.id.toString()}>
