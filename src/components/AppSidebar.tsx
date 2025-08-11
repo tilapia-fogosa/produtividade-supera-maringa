@@ -51,6 +51,11 @@ const items = [
     icon: Calendar,
   },
   {
+    title: "Eventos",
+    url: "/eventos",
+    icon: Calendar,
+  },
+  {
     title: "Estoque",
     url: "/estoque",
     icon: Package,

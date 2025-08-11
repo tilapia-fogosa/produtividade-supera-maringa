@@ -34,6 +34,7 @@ import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
 import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
 import CalendarioAulas from "./pages/CalendarioAulas";
+import Eventos from "./pages/Eventos";
 import Login from "./pages/Login";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -86,6 +87,7 @@ function App() {
                             <Route path="/aula-zero" element={<AulaZero />} />
                             <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
                             <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
+                            <Route path="/eventos" element={<Eventos />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
