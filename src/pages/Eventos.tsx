@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Calendar, Clock, MapPin, User, Plus } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, Edit, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,8 @@ const eventosIniciais = [
     data: "2024-01-25T14:00:00",
     local: "Sala de Reuniões - Unidade Centro",
     responsavel: "Ana Silva",
-    tipo: "Reunião"
+    tipo: "Reunião",
+    numeroVagas: 20
   },
   {
     id: 2,
@@ -27,7 +29,8 @@ const eventosIniciais = [
     data: "2024-01-20T09:00:00",
     local: "Auditório Principal",
     responsavel: "Carlos Santos",
-    tipo: "Treinamento"
+    tipo: "Treinamento",
+    numeroVagas: 15
   },
   {
     id: 3,
@@ -36,7 +39,8 @@ const eventosIniciais = [
     data: "2023-12-15T16:00:00",
     local: "Sala de Reuniões - Unidade Norte",
     responsavel: "Maria Oliveira",
-    tipo: "Avaliação"
+    tipo: "Avaliação",
+    numeroVagas: 10
   },
   {
     id: 4,
@@ -45,7 +49,8 @@ const eventosIniciais = [
     data: "2023-11-28T08:30:00",
     local: "Laboratório de Matemática",
     responsavel: "João Costa",
-    tipo: "Treinamento"
+    tipo: "Treinamento",
+    numeroVagas: 12
   }
 ];
 
@@ -72,6 +77,7 @@ const formatarData = (dataString: string) => {
 
 const EventCard = ({ evento }: { evento: typeof eventosIniciais[0] }) => {
   const { data, hora } = formatarData(evento.data);
+  const navigate = useNavigate();
   
   return (
     <Card className="mb-4">
@@ -83,9 +89,20 @@ const EventCard = ({ evento }: { evento: typeof eventosIniciais[0] }) => {
               {evento.descricao}
             </CardDescription>
           </div>
-          <Badge className={getTipoColor(evento.tipo)}>
-            {evento.tipo}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={getTipoColor(evento.tipo)}>
+              {evento.tipo}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/eventos/${evento.id}/editar`)}
+              className="gap-1"
+            >
+              <Edit className="h-3 w-3" />
+              Editar
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -106,6 +123,10 @@ const EventCard = ({ evento }: { evento: typeof eventosIniciais[0] }) => {
             <User className="h-4 w-4" />
             <span>{evento.responsavel}</span>
           </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span>{evento.numeroVagas} vagas</span>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -121,14 +142,15 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
     hora: '',
     local: '',
     responsavel: '',
-    tipo: ''
+    tipo: '',
+    numeroVagas: ''
   });
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.titulo || !formData.data || !formData.hora || !formData.tipo) {
+    if (!formData.titulo || !formData.data || !formData.hora || !formData.tipo || !formData.numeroVagas) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -144,7 +166,8 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
       data: `${formData.data}T${formData.hora}:00`,
       local: formData.local,
       responsavel: formData.responsavel,
-      tipo: formData.tipo
+      tipo: formData.tipo,
+      numeroVagas: parseInt(formData.numeroVagas)
     };
 
     onEventoCriado(novoEvento);
@@ -155,7 +178,8 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
       hora: '',
       local: '',
       responsavel: '',
-      tipo: ''
+      tipo: '',
+      numeroVagas: ''
     });
     setOpen(false);
     
@@ -257,6 +281,18 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
                 <SelectItem value="Apresentação">Apresentação</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="numeroVagas">Número de Vagas *</Label>
+            <Input
+              id="numeroVagas"
+              type="number"
+              min="1"
+              value={formData.numeroVagas}
+              onChange={(e) => setFormData(prev => ({ ...prev, numeroVagas: e.target.value }))}
+              placeholder="Número de vagas disponíveis"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
