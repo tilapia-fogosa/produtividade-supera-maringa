@@ -1,8 +1,16 @@
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { useState } from "react";
+import { Calendar, Clock, MapPin, User, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
-const eventosExample = [
+const eventosIniciais = [
   {
     id: 1,
     titulo: "Reunião Pedagógica Mensal",
@@ -62,7 +70,7 @@ const formatarData = (dataString: string) => {
   };
 };
 
-const EventCard = ({ evento }: { evento: typeof eventosExample[0] }) => {
+const EventCard = ({ evento }: { evento: typeof eventosIniciais[0] }) => {
   const { data, hora } = formatarData(evento.data);
   
   return (
@@ -104,24 +112,193 @@ const EventCard = ({ evento }: { evento: typeof eventosExample[0] }) => {
   );
 };
 
+const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    titulo: '',
+    descricao: '',
+    data: '',
+    hora: '',
+    local: '',
+    responsavel: '',
+    tipo: ''
+  });
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.titulo || !formData.data || !formData.hora || !formData.tipo) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const novoEvento = {
+      id: Date.now(),
+      titulo: formData.titulo,
+      descricao: formData.descricao,
+      data: `${formData.data}T${formData.hora}:00`,
+      local: formData.local,
+      responsavel: formData.responsavel,
+      tipo: formData.tipo
+    };
+
+    onEventoCriado(novoEvento);
+    setFormData({
+      titulo: '',
+      descricao: '',
+      data: '',
+      hora: '',
+      local: '',
+      responsavel: '',
+      tipo: ''
+    });
+    setOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Evento criado com sucesso!"
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Novo Evento
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Criar Novo Evento</DialogTitle>
+          <DialogDescription>
+            Preencha as informações do evento abaixo.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="titulo">Título *</Label>
+            <Input
+              id="titulo"
+              value={formData.titulo}
+              onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
+              placeholder="Nome do evento"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="descricao">Descrição</Label>
+            <Textarea
+              id="descricao"
+              value={formData.descricao}
+              onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+              placeholder="Descrição do evento"
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="data">Data *</Label>
+              <Input
+                id="data"
+                type="date"
+                value={formData.data}
+                onChange={(e) => setFormData(prev => ({ ...prev, data: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hora">Hora *</Label>
+              <Input
+                id="hora"
+                type="time"
+                value={formData.hora}
+                onChange={(e) => setFormData(prev => ({ ...prev, hora: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="local">Local</Label>
+            <Input
+              id="local"
+              value={formData.local}
+              onChange={(e) => setFormData(prev => ({ ...prev, local: e.target.value }))}
+              placeholder="Local do evento"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="responsavel">Responsável</Label>
+            <Input
+              id="responsavel"
+              value={formData.responsavel}
+              onChange={(e) => setFormData(prev => ({ ...prev, responsavel: e.target.value }))}
+              placeholder="Nome do responsável"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tipo">Tipo *</Label>
+            <Select value={formData.tipo} onValueChange={(value) => setFormData(prev => ({ ...prev, tipo: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Reunião">Reunião</SelectItem>
+                <SelectItem value="Treinamento">Treinamento</SelectItem>
+                <SelectItem value="Avaliação">Avaliação</SelectItem>
+                <SelectItem value="Workshop">Workshop</SelectItem>
+                <SelectItem value="Apresentação">Apresentação</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              Criar Evento
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function Eventos() {
+  const [eventosData, setEventosData] = useState(eventosIniciais);
   const agora = new Date();
   
-  const eventosFuturos = eventosExample.filter(evento => 
+  const adicionarEvento = (novoEvento: any) => {
+    setEventosData(prev => [...prev, novoEvento]);
+  };
+  
+  const eventosFuturos = eventosData.filter(evento => 
     new Date(evento.data) >= agora
   ).sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
   
-  const eventosAnteriores = eventosExample.filter(evento => 
+  const eventosAnteriores = eventosData.filter(evento => 
     new Date(evento.data) < agora
   ).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Eventos</h1>
-        <p className="text-muted-foreground">
-          Gerencie e acompanhe os eventos da unidade
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Eventos</h1>
+          <p className="text-muted-foreground">
+            Gerencie e acompanhe os eventos da unidade
+          </p>
+        </div>
+        <NovoEventoModal onEventoCriado={adicionarEvento} />
       </div>
 
       {/* Eventos Futuros */}
