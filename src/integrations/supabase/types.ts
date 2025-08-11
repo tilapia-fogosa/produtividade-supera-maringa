@@ -238,7 +238,7 @@ export type Database = {
           pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
-          turma_id: string
+          turma_id: string | null
           ultima_correcao_ah: string | null
           ultima_falta: string | null
           ultima_pagina: number | null
@@ -272,7 +272,7 @@ export type Database = {
           pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
-          turma_id: string
+          turma_id?: string | null
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
@@ -306,7 +306,7 @@ export type Database = {
           pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
-          turma_id?: string
+          turma_id?: string | null
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
@@ -316,6 +316,20 @@ export type Database = {
           vencimento_contrato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_alunos_unit_id"
             columns: ["unit_id"]
@@ -3079,6 +3093,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_turmas_professor_id"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "turmas_professor_id_fkey"
             columns: ["professor_id"]
             isOneToOne: false
@@ -3460,6 +3481,13 @@ export type Database = {
           unit_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_turmas_professor_id"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "turmas_professor_id_fkey"
             columns: ["professor_id"]
