@@ -54,7 +54,7 @@ export default function EditarEvento() {
               id,
               nome,
               turma_id,
-              turmas(id, nome, professor_id, professores(id, nome))
+              turmas(id, nome, professor_id, professores!turmas_professor_fkey(id, nome))
             )
           `)
           .eq('evento_id', id);
@@ -141,7 +141,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
           id,
           nome,
           turma_id,
-          turmas(id, nome, professor_id, professores(id, nome))
+          turmas(id, nome, professor_id, professores!turmas_professor_fkey(id, nome))
         `)
         .eq('active', true)
         .order('nome');

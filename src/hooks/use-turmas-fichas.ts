@@ -32,7 +32,7 @@ export function useTurmasFichas() {
         // Buscar todas as turmas com informações do professor
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
-          .select('*, professores!turmas_professor_id_fkey(nome)')
+          .select('*, professores!turmas_professor_fkey(nome)')
           .order('nome');
 
         if (turmasError) {
