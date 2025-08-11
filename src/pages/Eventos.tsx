@@ -106,7 +106,7 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
   });
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.titulo || !formData.data || !formData.hora || !formData.tipo || !formData.numeroVagas) {
@@ -119,33 +119,41 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
     }
 
     const novoEvento = {
-      id: Date.now(),
       titulo: formData.titulo,
       descricao: formData.descricao,
-      data: `${formData.data}T${formData.hora}:00`,
+      data: formData.data,
+      hora: formData.hora,
       local: formData.local,
       responsavel: formData.responsavel,
       tipo: formData.tipo,
-      numeroVagas: parseInt(formData.numeroVagas)
+      numeroVagas: formData.numeroVagas
     };
 
-    onEventoCriado(novoEvento);
-    setFormData({
-      titulo: '',
-      descricao: '',
-      data: '',
-      hora: '',
-      local: '',
-      responsavel: '',
-      tipo: '',
-      numeroVagas: ''
-    });
-    setOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Evento criado com sucesso!"
-    });
+    try {
+      await onEventoCriado(novoEvento);
+      setFormData({
+        titulo: '',
+        descricao: '',
+        data: '',
+        hora: '',
+        local: '',
+        responsavel: '',
+        tipo: '',
+        numeroVagas: ''
+      });
+      setOpen(false);
+      
+      toast({
+        title: "Sucesso",
+        description: "Evento criado com sucesso!"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar evento. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -295,27 +303,57 @@ export default function Eventos() {
   };
   
   const adicionarEvento = async (novoEvento: any) => {
+    console.log('Tentando criar evento:', novoEvento);
     try {
+      // Primeiro, vamos buscar uma unit_id real
+      const { data: units, error: unitsError } = await supabase
+        .from('units')
+        .select('id')
+        .limit(1);
+
+      if (unitsError) {
+        console.error('Erro ao buscar units:', unitsError);
+        throw unitsError;
+      }
+
+      const unitId = units && units.length > 0 ? units[0].id : null;
+      
+      if (!unitId) {
+        throw new Error('Nenhuma unidade encontrada no sistema');
+      }
+
+      console.log('Unit ID encontrado:', unitId);
+
+      const eventoData = {
+        titulo: novoEvento.titulo,
+        descricao: novoEvento.descricao,
+        data_evento: `${novoEvento.data}T${novoEvento.hora}:00`,
+        local: novoEvento.local,
+        responsavel: novoEvento.responsavel,
+        tipo: novoEvento.tipo,
+        numero_vagas: parseInt(novoEvento.numeroVagas),
+        unit_id: unitId
+      };
+
+      console.log('Dados do evento a ser inserido:', eventoData);
+
       const { data, error } = await supabase
         .from('eventos')
-        .insert({
-          titulo: novoEvento.titulo,
-          descricao: novoEvento.descricao,
-          data_evento: `${novoEvento.data}T${novoEvento.hora}:00`,
-          local: novoEvento.local,
-          responsavel: novoEvento.responsavel,
-          tipo: novoEvento.tipo,
-          numero_vagas: parseInt(novoEvento.numeroVagas),
-          unit_id: '00000000-0000-0000-0000-000000000000' // TODO: pegar da sessão do usuário
-        })
+        .insert(eventoData)
         .select()
         .single();
+
+      console.log('Resposta do insert:', { data, error });
 
       if (error) throw error;
       
       setEventosData(prev => [...prev, data]);
+      console.log('Evento adicionado com sucesso:', data);
+      
     } catch (error) {
       console.error('Erro ao criar evento:', error);
+      // Adicionar toast de erro para o usuário ver
+      throw error;
     }
   };
   
