@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Calendar, Clock, MapPin, User, Users, Plus, Trash2 } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Users, Plus, Trash2, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,13 +37,6 @@ const eventosIniciais = [
   }
 ];
 
-const alunosDisponiveis = [
-  { id: 1, nome: "João Silva", turma: "Turma A", professor: "Prof. Ana" },
-  { id: 2, nome: "Maria Santos", turma: "Turma B", professor: "Prof. Carlos" },
-  { id: 3, nome: "Pedro Costa", turma: "Turma A", professor: "Prof. Ana" },
-  { id: 4, nome: "Ana Oliveira", turma: "Turma C", professor: "Prof. Maria" },
-  { id: 5, nome: "Lucas Ferreira", turma: "Turma B", professor: "Prof. Carlos" }
-];
 
 const getTipoColor = (tipo: string) => {
   switch (tipo) {
@@ -70,15 +64,58 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
   alunosJaCadastrados: any[];
 }) => {
   const [open, setOpen] = useState(false);
+  const [alunos, setAlunos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     alunoId: '',
     formaPagamento: ''
   });
   const { toast } = useToast();
 
-  const alunosDisponivelsFiltrados = alunosDisponiveis.filter(
-    aluno => !alunosJaCadastrados.some(cadastrado => cadastrado.id === aluno.id)
-  );
+  useEffect(() => {
+    if (open) {
+      buscarAlunos();
+    }
+  }, [open]);
+
+  const buscarAlunos = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select(`
+          id,
+          nome,
+          turmas(nome, professores(nome))
+        `)
+        .eq('active', true)
+        .order('nome');
+
+      if (error) throw error;
+
+      const alunosFormatados = data.map((aluno: any) => ({
+        id: aluno.id,
+        nome: aluno.nome,
+        turma: aluno.turmas?.nome || 'Sem turma',
+        professor: aluno.turmas?.professores?.nome || 'Sem professor'
+      }));
+
+      setAlunos(alunosFormatados);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar alunos",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const alunosDisponivelsFiltrados = alunos
+    .filter(aluno => !alunosJaCadastrados.some(cadastrado => cadastrado.id === aluno.id))
+    .filter(aluno => aluno.nome.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +129,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
       return;
     }
 
-    const alunoSelecionado = alunosDisponiveis.find(a => a.id === parseInt(formData.alunoId));
+    const alunoSelecionado = alunos.find(a => a.id === formData.alunoId);
     if (alunoSelecionado) {
       const novoAlunoEvento = {
         ...alunoSelecionado,
@@ -101,6 +138,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
 
       onAlunoAdicionado(novoAlunoEvento);
       setFormData({ alunoId: '', formaPagamento: '' });
+      setSearchTerm('');
       setOpen(false);
       
       toast({
@@ -127,17 +165,38 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="aluno">Aluno *</Label>
-            <Select value={formData.alunoId} onValueChange={(value) => setFormData(prev => ({ ...prev, alunoId: value }))}>
+            <Label htmlFor="search">Buscar Aluno</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Digite o nome do aluno..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="aluno">Aluno * {loading && "(Carregando...)"}</Label>
+            <Select 
+              value={formData.alunoId} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, alunoId: value }))}
+              disabled={loading}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um aluno" />
+                <SelectValue placeholder={loading ? "Carregando alunos..." : "Selecione um aluno"} />
               </SelectTrigger>
               <SelectContent>
-                {alunosDisponivelsFiltrados.map(aluno => (
-                  <SelectItem key={aluno.id} value={aluno.id.toString()}>
-                    {aluno.nome} - {aluno.turma}
-                  </SelectItem>
-                ))}
+                {alunosDisponivelsFiltrados.length === 0 && !loading ? (
+                  <SelectItem value="" disabled>Nenhum aluno encontrado</SelectItem>
+                ) : (
+                  alunosDisponivelsFiltrados.map(aluno => (
+                    <SelectItem key={aluno.id} value={aluno.id.toString()}>
+                      {aluno.nome} - {aluno.turma} ({aluno.professor})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
