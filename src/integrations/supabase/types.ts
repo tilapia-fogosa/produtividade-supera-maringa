@@ -1190,6 +1190,39 @@ export type Database = {
           },
         ]
       }
+      course_enrollments: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          enrolled_at: string
+          id: string
+          student_id: string
+          student_source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          enrolled_at?: string
+          id?: string
+          student_id: string
+          student_source: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          enrolled_at?: string
+          id?: string
+          student_id?: string
+          student_source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dados_importantes: {
         Row: {
           data: string | null
@@ -2496,6 +2529,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      resultados_alunos: {
+        Row: {
+          acertos_calculo_mental: number
+          aluno_id: string
+          created_at: string
+          data_aula: string
+          id: string
+          quantidade_acertos: number
+          updated_at: string
+        }
+        Insert: {
+          acertos_calculo_mental: number
+          aluno_id: string
+          created_at?: string
+          data_aula: string
+          id?: string
+          quantidade_acertos: number
+          updated_at?: string
+        }
+        Update: {
+          acertos_calculo_mental?: number
+          aluno_id?: string
+          created_at?: string
+          data_aula?: string
+          id?: string
+          quantidade_acertos?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       sale_webhooks: {
         Row: {
