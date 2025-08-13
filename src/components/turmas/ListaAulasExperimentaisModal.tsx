@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,89 +91,97 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
               Nenhuma aula experimental encontrada
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-28">Data</TableHead>
-                  <TableHead className="w-32">Turma</TableHead>
-                  <TableHead className="w-40">Cliente</TableHead>
-                  <TableHead className="w-80">Descrição Detalhada</TableHead>
-                  <TableHead className="w-40">Responsável</TableHead>
-                  <TableHead className="w-20 text-center">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {aulasExperimentais.map((aula: AulaExperimentalLista) => {
-                  const canDelete = podeExcluir(aula.data_aula_experimental);
-                  
-                  return (
-                    <TableRow key={aula.aula_experimental_id}>
-                      <TableCell className="font-medium">
-                        {formatDate(aula.data_aula_experimental)}
-                      </TableCell>
-                      <TableCell>{aula.turma_nome}</TableCell>
-                      <TableCell>{aula.cliente_nome}</TableCell>
-                      <TableCell className="text-sm max-w-80 break-words">
-                        {aula.descricao_cliente || "Sem descrição"}
-                      </TableCell>
-                      <TableCell>
-                        {aula.responsavel_nome}
-                        <div className="text-xs text-muted-foreground">
-                          ({aula.responsavel_tipo})
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {canDelete ? (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive"
-                                disabled={deletarAulaExperimental.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir a aula experimental de{" "}
-                                  <strong>{aula.cliente_nome}</strong> agendada para{" "}
-                                  <strong>{formatDate(aula.data_aula_experimental)}</strong>?
-                                  <br />
-                                  Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(aula.aula_experimental_id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <TooltipProvider>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-28">Data</TableHead>
+                    <TableHead className="w-32">Turma</TableHead>
+                    <TableHead className="w-40">Cliente</TableHead>
+                    <TableHead className="w-80">Descrição Detalhada</TableHead>
+                    <TableHead className="w-40">Responsável</TableHead>
+                    <TableHead className="w-20 text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {aulasExperimentais.map((aula: AulaExperimentalLista) => {
+                    const canDelete = podeExcluir(aula.data_aula_experimental);
+                    
+                    return (
+                      <TableRow key={aula.aula_experimental_id}>
+                        <TableCell className="font-medium">
+                          {formatDate(aula.data_aula_experimental)}
+                        </TableCell>
+                        <TableCell>{aula.turma_nome}</TableCell>
+                        <TableCell>{aula.cliente_nome}</TableCell>
+                        <TableCell className="text-sm max-w-80 break-words">
+                          {aula.descricao_cliente || "Sem descrição"}
+                        </TableCell>
+                        <TableCell>
+                          {aula.responsavel_nome}
+                          <div className="text-xs text-muted-foreground">
+                            ({aula.responsavel_tipo})
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {canDelete ? (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive"
+                                  disabled={deletarAulaExperimental.isPending}
                                 >
-                                  Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground cursor-not-allowed"
-                            disabled
-                            title="Só é possível excluir aulas experimentais futuras"
-                          >
-                            <AlertTriangle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja excluir a aula experimental de{" "}
+                                    <strong>{aula.cliente_nome}</strong> agendada para{" "}
+                                    <strong>{formatDate(aula.data_aula_experimental)}</strong>?
+                                    <br />
+                                    Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(aula.aula_experimental_id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-muted-foreground cursor-not-allowed"
+                                  disabled
+                                >
+                                  <AlertTriangle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Aulas experimentais passadas não podem ser excluídas</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TooltipProvider>
           )}
         </div>
       </DialogContent>
