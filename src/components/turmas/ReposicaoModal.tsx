@@ -55,6 +55,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
 
   const [alunoSelecionado, setAlunoSelecionado] = useState<string>("");
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<string>("");
+  const [dataFalta, setDataFalta] = useState<Date | undefined>();
   const [dataSelecionada, setDataSelecionada] = useState<Date | undefined>();
   const [observacoes, setObservacoes] = useState<string>("");
 
@@ -77,6 +78,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
         aluno_id: alunoSelecionado,
         turma_id: turma.id,
         data_reposicao: format(dataSelecionada, 'yyyy-MM-dd'),
+        data_falta: dataFalta ? format(dataFalta, 'yyyy-MM-dd') : undefined,
         responsavel_id: responsavelSelecionado,
         responsavel_tipo: determinarTipoResponsavel(responsavelSelecionado),
         observacoes: observacoes || undefined,
@@ -87,6 +89,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
       // Resetar form
       setAlunoSelecionado("");
       setResponsavelSelecionado("");
+      setDataFalta(undefined);
       setDataSelecionada(undefined);
       setObservacoes("");
       onClose();
@@ -140,6 +143,39 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Data da Falta */}
+          <div className="space-y-2">
+            <Label>Data da Falta</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dataFalta && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataFalta ? 
+                    format(dataFalta, "PPP", { locale: ptBR }) : 
+                    "Selecione a data da falta"
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dataFalta}
+                  onSelect={setDataFalta}
+                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                  initialFocus
+                  locale={ptBR}
+                  className={cn("p-3 pointer-events-auto", isMobile && "text-sm")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Seleção da Data */}
