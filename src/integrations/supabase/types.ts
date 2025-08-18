@@ -3812,6 +3812,7 @@ export type Database = {
         Returns: {
           aluno_id: string
           aluno_nome: string
+          data_falta: string
           data_reposicao: string
           observacoes: string
           reposicao_id: string

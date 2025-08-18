@@ -93,10 +93,11 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
               Nenhuma reposição encontrada
             </div>
           ) : (
-            <Table>
+              <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-28">Data</TableHead>
+                  <TableHead className="w-28">Data Reposição</TableHead>
+                  <TableHead className="w-28">Data Falta</TableHead>
                   <TableHead>Aluno</TableHead>
                   <TableHead>Turma Original</TableHead>
                   <TableHead className="font-semibold bg-primary/5">
@@ -111,6 +112,9 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
                   <TableRow key={reposicao.reposicao_id}>
                     <TableCell className="font-medium">
                       {formatDate(reposicao.data_reposicao)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {reposicao.data_falta ? formatDate(reposicao.data_falta) : "-"}
                     </TableCell>
                     <TableCell>{reposicao.aluno_nome}</TableCell>
                     <TableCell>{reposicao.turma_original_nome}</TableCell>
