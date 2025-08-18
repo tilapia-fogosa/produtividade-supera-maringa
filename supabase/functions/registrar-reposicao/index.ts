@@ -41,7 +41,7 @@ serve(async (req) => {
       .select(`
         *,
         alunos!inner(nome, telefone, email, dias_supera),
-        turmas!inner(nome, dia_semana, horario_inicio, professor_id, professores(nome, slack_username))
+        turmas!inner(nome, dia_semana, professor_id, professores(nome, slack_username))
       `)
       .eq('id', reposicaoInsert.id)
       .single();
@@ -87,8 +87,7 @@ serve(async (req) => {
       turma_reposicao: {
         id: dadosCompletos.turma_id,
         nome: dadosCompletos.turmas.nome,
-        dia_semana: dadosCompletos.turmas.dia_semana,
-        horario_inicio: dadosCompletos.turmas.horario_inicio
+        dia_semana: dadosCompletos.turmas.dia_semana
       },
       professor: {
         id: dadosCompletos.turmas.professor_id,
