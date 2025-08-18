@@ -73,6 +73,10 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
       return;
     }
 
+    // Encontrar o nome do responsável selecionado
+    const responsavelSelecionadoObj = responsaveis.find(r => r.id === responsavelSelecionado);
+    const nomeResponsavel = responsavelSelecionadoObj?.nome || '';
+
     try {
       await criarReposicao.mutateAsync({
         aluno_id: alunoSelecionado,
@@ -81,6 +85,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
         data_falta: dataFalta ? format(dataFalta, 'yyyy-MM-dd') : undefined,
         responsavel_id: responsavelSelecionado,
         responsavel_tipo: determinarTipoResponsavel(responsavelSelecionado),
+        nome_responsavel: nomeResponsavel,
         observacoes: observacoes || undefined,
         unit_id: turma.unit_id,
         created_by: 'sistema', // Por enquanto fixo, pois não há login
