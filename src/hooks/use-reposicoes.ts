@@ -7,6 +7,7 @@ interface ReposicaoData {
   aluno_id: string;
   turma_id: string;
   data_reposicao: string;
+  data_falta?: string;
   responsavel_id: string;
   responsavel_tipo: 'professor' | 'funcionario';
   observacoes?: string;
