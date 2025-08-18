@@ -215,6 +215,7 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
                     disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                     initialFocus
                     locale={ptBR}
+                    className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
