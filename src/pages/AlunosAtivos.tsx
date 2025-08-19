@@ -243,15 +243,18 @@ export default function AlunosAtivos() {
                       {getSortIcon('dias_supera')}
                     </Button>
                   </th>
-                  <th className="text-left p-4 w-[180px]">
-                    <span className="font-semibold flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp para contato
-                    </span>
-                  </th>
-                  <th className="text-left p-4 w-[120px]">
-                    <span className="font-semibold">Ações</span>
-                  </th>
+                   <th className="text-left p-4 w-[180px]">
+                     <span className="font-semibold flex items-center gap-2">
+                       <MessageCircle className="w-4 h-4" />
+                       WhatsApp para contato
+                     </span>
+                   </th>
+                   <th className="text-left p-4 w-[150px]">
+                     <span className="font-semibold">Responsável</span>
+                   </th>
+                   <th className="text-left p-4 w-[120px]">
+                     <span className="font-semibold">Ações</span>
+                   </th>
                 </tr>
               </thead>
               <tbody>
@@ -327,18 +330,23 @@ export default function AlunosAtivos() {
                           )}
                         </div>
                       )}
-                    </td>
-                    <td className="p-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleVerDetalhes(aluno)}
-                        className="flex items-center gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Ver Detalhes
-                      </Button>
-                    </td>
+                     </td>
+                     <td className="p-4">
+                       <span className="text-sm">
+                         {aluno.responsavel || 'Não informado'}
+                       </span>
+                     </td>
+                     <td className="p-4">
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => handleVerDetalhes(aluno)}
+                         className="flex items-center gap-2"
+                       >
+                         <Eye className="w-4 h-4" />
+                         Ver Detalhes
+                       </Button>
+                     </td>
                   </tr>
                 ))}
               </tbody>

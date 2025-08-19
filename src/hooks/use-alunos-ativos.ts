@@ -15,6 +15,7 @@ export interface AlunoAtivo {
   email: string | null;
   telefone: string | null;
   whatapp_contato: string | null;
+  responsavel: string | null;
   matricula: string | null;
   codigo: string | null;
   indice: string | null;
