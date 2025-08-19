@@ -3,12 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { useFaltasAntecipadas } from "@/hooks/use-faltas-antecipadas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 
@@ -34,14 +31,13 @@ const FaltaAntecipadaModal: React.FC<FaltaAntecipadaModalProps> = ({
 }) => {
   const [selectedAluno, setSelectedAluno] = useState<string>("");
   const [selectedResponsavel, setSelectedResponsavel] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(dataConsulta);
   const [observacoes, setObservacoes] = useState<string>("");
   
   const { criarFaltaAntecipada } = useFaltasAntecipadas();
   const { responsaveis, isLoading: isLoadingResponsaveis } = useResponsaveis();
 
   const handleSubmit = () => {
-    if (!selectedAluno || !selectedResponsavel || !selectedDate) {
+    if (!selectedAluno || !selectedResponsavel || !dataConsulta) {
       return;
     }
 
@@ -51,7 +47,7 @@ const FaltaAntecipadaModal: React.FC<FaltaAntecipadaModalProps> = ({
     criarFaltaAntecipada.mutate({
       aluno_id: selectedAluno,
       turma_id: turmaId,
-      data_falta: format(selectedDate, 'yyyy-MM-dd'),
+      data_falta: format(dataConsulta, 'yyyy-MM-dd'),
       responsavel_aviso_id: responsavel.id,
       responsavel_aviso_tipo: responsavel.tipo,
       responsavel_aviso_nome: responsavel.nome,
@@ -62,14 +58,11 @@ const FaltaAntecipadaModal: React.FC<FaltaAntecipadaModalProps> = ({
     // Reset form
     setSelectedAluno("");
     setSelectedResponsavel("");
-    setSelectedDate(dataConsulta);
     setObservacoes("");
     onClose();
   };
 
-  const isFormValid = selectedAluno && selectedResponsavel && selectedDate;
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isFormValid = selectedAluno && selectedResponsavel && dataConsulta;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -96,36 +89,14 @@ const FaltaAntecipadaModal: React.FC<FaltaAntecipadaModalProps> = ({
             </Select>
           </div>
 
-          {/* Data da Falta */}
+          {/* Data da Falta (Fixa) */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Data da Falta</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate ? (
-                    format(selectedDate, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>Selecione a data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < tomorrow}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-sm">
+                {dataConsulta ? format(dataConsulta, "PPP", { locale: ptBR }) : "Data não informada"}
+              </p>
+            </div>
           </div>
 
           {/* Responsável pelo Aviso */}
