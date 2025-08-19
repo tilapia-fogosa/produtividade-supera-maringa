@@ -17,7 +17,8 @@ export default function AlunosAtivos() {
     alunos,
     loading,
     error,
-    atualizarWhatsApp
+    atualizarWhatsApp,
+    atualizarResponsavel
   } = useAlunosAtivos();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,6 +31,9 @@ export default function AlunosAtivos() {
   const [editandoWhatsApp, setEditandoWhatsApp] = useState<string | null>(null);
   const [whatsappTemp, setWhatsappTemp] = useState('');
   const [salvandoWhatsApp, setSalvandoWhatsApp] = useState<string | null>(null);
+  const [editandoResponsavel, setEditandoResponsavel] = useState<string | null>(null);
+  const [responsavelTemp, setResponsavelTemp] = useState('');
+  const [salvandoResponsavel, setSalvandoResponsavel] = useState<string | null>(null);
 
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
@@ -133,6 +137,25 @@ export default function AlunosAtivos() {
   const handleCancelarEdicao = () => {
     setEditandoWhatsApp(null);
     setWhatsappTemp('');
+  };
+
+  const handleEditarResponsavel = (aluno: AlunoAtivo) => {
+    setEditandoResponsavel(aluno.id);
+    setResponsavelTemp(aluno.responsavel || '');
+  };
+
+  const handleSalvarResponsavel = async (alunoId: string) => {
+    setSalvandoResponsavel(alunoId);
+    const sucesso = await atualizarResponsavel(alunoId, responsavelTemp);
+    if (sucesso) {
+      setEditandoResponsavel(null);
+    }
+    setSalvandoResponsavel(null);
+  };
+
+  const handleCancelarEdicaoResponsavel = () => {
+    setEditandoResponsavel(null);
+    setResponsavelTemp('');
   };
 
   if (loading) {
@@ -332,9 +355,47 @@ export default function AlunosAtivos() {
                       )}
                      </td>
                      <td className="p-4">
-                       <span className="text-sm">
-                         {aluno.responsavel || 'Não informado'}
-                       </span>
+                       {editandoResponsavel === aluno.id ? (
+                         <div className="flex items-center gap-2">
+                           <Input
+                             value={responsavelTemp}
+                             onChange={(e) => setResponsavelTemp(e.target.value)}
+                             placeholder="Responsável"
+                             className="h-8 text-sm"
+                             onKeyDown={(e) => {
+                               if (e.key === 'Enter') {
+                                 handleSalvarResponsavel(aluno.id);
+                               } else if (e.key === 'Escape') {
+                                 handleCancelarEdicaoResponsavel();
+                               }
+                             }}
+                             autoFocus
+                           />
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => handleSalvarResponsavel(aluno.id)}
+                             disabled={salvandoResponsavel === aluno.id}
+                           >
+                             {salvandoResponsavel === aluno.id ? (
+                               <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                             ) : (
+                               <Save className="w-4 h-4" />
+                             )}
+                           </Button>
+                         </div>
+                       ) : (
+                         <div 
+                           className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center"
+                           onClick={() => handleEditarResponsavel(aluno)}
+                         >
+                           {aluno.responsavel ? (
+                             <span className="text-sm">{aluno.responsavel}</span>
+                           ) : (
+                             <span className="text-gray-400 text-sm">Clique para adicionar</span>
+                           )}
+                         </div>
+                       )}
                      </td>
                      <td className="p-4">
                        <Button

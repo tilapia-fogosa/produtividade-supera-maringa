@@ -214,11 +214,45 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarResponsavel = async (alunoId: string, responsavel: string) => {
+    try {
+      const { error } = await supabase
+        .from('alunos')
+        .update({ responsavel: responsavel } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setAlunos(prev => prev.map(aluno => 
+        aluno.id === alunoId 
+          ? { ...aluno, responsavel: responsavel }
+          : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Responsável atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar responsável:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o responsável.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
     error,
     refetch: buscarAlunosAtivos,
-    atualizarWhatsApp
+    atualizarWhatsApp,
+    atualizarResponsavel
   };
 }
