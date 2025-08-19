@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -31,6 +31,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaAulasExperimentais, type AulaExperimentalLista } from "@/hooks/use-lista-aulas-experimentais";
+import { ObservacoesView } from "./ObservacoesView";
 
 interface ListaAulasExperimentaisModalProps {
   open: boolean;
@@ -42,6 +43,11 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
   onOpenChange,
 }) => {
   const { aulasExperimentais, isLoading, error, deletarAulaExperimental, refetch } = useListaAulasExperimentais();
+  const [selectedObservacoes, setSelectedObservacoes] = useState<{
+    observacoes: string;
+    alunoNome: string;
+    dataAula: string;
+  } | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -59,6 +65,14 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
     deletarAulaExperimental.mutate(aulaExperimentalId);
   };
 
+  const handleVerObservacoes = (observacoes: string, clienteNome: string, dataAula: string) => {
+    setSelectedObservacoes({
+      observacoes,
+      alunoNome: clienteNome,
+      dataAula: formatDate(dataAula)
+    });
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return format(parseISO(dateString), "dd/MM/yyyy", { locale: ptBR });
@@ -67,6 +81,17 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
       return dateString;
     }
   };
+
+  if (selectedObservacoes) {
+    return (
+      <ObservacoesView
+        observacoes={selectedObservacoes.observacoes}
+        alunoNome={selectedObservacoes.alunoNome}
+        dataReposicao={selectedObservacoes.dataAula}
+        onVoltar={() => setSelectedObservacoes(null)}
+      />
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,9 +123,9 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                     <TableHead className="w-28">Data</TableHead>
                     <TableHead className="w-32">Turma</TableHead>
                     <TableHead className="w-40">Cliente</TableHead>
-                    <TableHead className="w-80">Descrição Detalhada</TableHead>
+                    <TableHead className="w-60">Descrição Detalhada</TableHead>
                     <TableHead className="w-40">Responsável</TableHead>
-                    <TableHead className="w-20 text-center">Ações</TableHead>
+                    <TableHead className="w-32 text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -114,8 +139,12 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                         </TableCell>
                         <TableCell>{aula.turma_nome}</TableCell>
                         <TableCell>{aula.cliente_nome}</TableCell>
-                        <TableCell className="text-sm max-w-80 break-words">
-                          {aula.descricao_cliente || "Sem descrição"}
+                        <TableCell className="text-sm max-w-60 break-words">
+                          {aula.descricao_cliente ? (
+                            <span className="truncate block">
+                              {aula.descricao_cliente}
+                            </span>
+                          ) : "Sem descrição"}
                         </TableCell>
                         <TableCell>
                           {aula.responsavel_nome}
@@ -124,7 +153,22 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          {canDelete ? (
+                          <div className="flex gap-1 justify-center">
+                            {aula.descricao_cliente && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleVerObservacoes(
+                                  aula.descricao_cliente!,
+                                  aula.cliente_nome,
+                                  aula.data_aula_experimental
+                                )}
+                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete ? (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button
@@ -175,6 +219,7 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                               </TooltipContent>
                             </Tooltip>
                           )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
