@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, User, FileText, Trash2 } from "lucide-react";
+import { Calendar, User, FileText, Trash2, History, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,9 +22,10 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { data: faltas, isLoading } = useListaFaltasFuturas();
+  const { data: todasFaltas, isLoading } = useListaFaltasFuturas();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
 
   const deleteFaltaFutura = useMutation({
     mutationFn: async (faltaId: string) => {
@@ -51,6 +52,25 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
       });
     },
   });
+
+  // Filtrar faltas baseado no estado do toggle
+  const faltas = useMemo(() => {
+    if (!todasFaltas) return [];
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    if (mostrarAnteriores) {
+      return todasFaltas; // Mostra todas
+    } else {
+      // Mostra apenas futuras
+      return todasFaltas.filter(falta => {
+        const dataFalta = new Date(falta.data_falta);
+        dataFalta.setHours(0, 0, 0, 0);
+        return dataFalta > hoje;
+      });
+    }
+  }, [todasFaltas, mostrarAnteriores]);
 
   const canDelete = (falta: FaltaFutura) => {
     const dataFalta = new Date(falta.data_falta);
@@ -84,9 +104,29 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Faltas Futuras
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              {mostrarAnteriores ? 'Todas as Faltas' : 'Faltas Futuras'}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMostrarAnteriores(!mostrarAnteriores)}
+              className="flex items-center gap-2"
+            >
+              {mostrarAnteriores ? (
+                <>
+                  <CalendarDays className="h-4 w-4" />
+                  Apenas Futuras
+                </>
+              ) : (
+                <>
+                  <History className="h-4 w-4" />
+                  Incluir Anteriores
+                </>
+              )}
+            </Button>
           </DialogTitle>
         </DialogHeader>
 
@@ -99,15 +139,18 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
             <div className="text-center py-8">
               <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">
-                Faltas Futuras ({faltas?.length || 0})
+                {mostrarAnteriores ? 'Todas as Faltas' : 'Faltas Futuras'} ({faltas?.length || 0})
               </h3>
               <div className="bg-muted/50 rounded-lg p-6 mx-4">
                 <div className="text-muted-foreground space-y-2">
                   <p className="font-medium">
-                    Nenhuma falta futura encontrada
+                    {mostrarAnteriores ? 'Nenhuma falta encontrada' : 'Nenhuma falta futura encontrada'}
                   </p>
                   <p className="text-sm">
-                    Não há faltas futuras registradas no sistema no momento.
+                    {mostrarAnteriores 
+                      ? 'Não há faltas registradas no sistema no momento.'
+                      : 'Não há faltas futuras registradas no sistema no momento.'
+                    }
                   </p>
                 </div>
               </div>
@@ -116,7 +159,7 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-lg font-medium">
-                  Faltas Futuras ({faltas.length})
+                  {mostrarAnteriores ? 'Todas as Faltas' : 'Faltas Futuras'} ({faltas.length})
                 </h3>
               </div>
               
