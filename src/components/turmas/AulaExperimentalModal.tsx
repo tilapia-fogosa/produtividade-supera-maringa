@@ -49,12 +49,17 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
       return;
     }
 
+    // Encontrar o nome do responsável selecionado
+    const responsavelSelecionado = responsaveis.find(r => r.id === responsavelId);
+    const nomeResponsavel = responsavelSelecionado?.nome || '';
+
     criarAulaExperimental.mutate({
       cliente_nome: clienteNome,
       turma_id: turmaId,
       data_aula_experimental: format(dataAulaExperimental, 'yyyy-MM-dd'),
       responsavel_id: responsavelId,
       responsavel_tipo: responsavelTipo,
+      responsavel_nome: nomeResponsavel,
       descricao_cliente: descricaoCliente || undefined,
       unit_id: unitId,
     }, {

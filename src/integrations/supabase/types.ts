@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -238,7 +238,7 @@ export type Database = {
           pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
-          turma_id: string
+          turma_id: string | null
           ultima_correcao_ah: string | null
           ultima_falta: string | null
           ultima_pagina: number | null
@@ -272,7 +272,7 @@ export type Database = {
           pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
-          turma_id: string
+          turma_id?: string | null
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
@@ -306,7 +306,7 @@ export type Database = {
           pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
-          turma_id?: string
+          turma_id?: string | null
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
@@ -316,6 +316,20 @@ export type Database = {
           vencimento_contrato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_alunos_unit_id"
             columns: ["unit_id"]
@@ -445,6 +459,51 @@ export type Database = {
           id?: string
           nome?: string
           total_paginas?: number
+        }
+        Relationships: []
+      }
+      aulas: {
+        Row: {
+          created_at: string
+          data_aula: string
+          descricao: string | null
+          display_order: number | null
+          duracao_minutos: number | null
+          hls_url: string
+          id: string
+          mes: string | null
+          published: boolean
+          thumbnail_url: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_aula: string
+          descricao?: string | null
+          display_order?: number | null
+          duracao_minutos?: number | null
+          hls_url: string
+          id?: string
+          mes?: string | null
+          published?: boolean
+          thumbnail_url?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_aula?: string
+          descricao?: string | null
+          display_order?: number | null
+          duracao_minutos?: number | null
+          hls_url?: string
+          id?: string
+          mes?: string | null
+          published?: boolean
+          thumbnail_url?: string | null
+          titulo?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -922,6 +981,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           email: string | null
+          etapa_bot: Database["public"]["Enums"]["etapa-do-bot"] | null
           id: string
           lead_quality_score: number | null
           lead_source: string
@@ -936,6 +996,7 @@ export type Database = {
           primeiro_nome: string | null
           registration_cpf: string | null
           registration_name: string | null
+          resumo_atendimento: string | null
           scheduled_date: string | null
           status: string
           tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
@@ -952,6 +1013,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
           id?: string
           lead_quality_score?: number | null
           lead_source: string
@@ -966,6 +1028,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -982,6 +1045,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
           id?: string
           lead_quality_score?: number | null
           lead_source?: string
@@ -996,6 +1060,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -1142,6 +1207,39 @@ export type Database = {
           },
         ]
       }
+      course_enrollments: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          enrolled_at: string
+          id: string
+          student_id: string
+          student_source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          enrolled_at?: string
+          id?: string
+          student_id: string
+          student_source: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          enrolled_at?: string
+          id?: string
+          student_id?: string
+          student_source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dados_importantes: {
         Row: {
           data: string | null
@@ -1261,6 +1359,111 @@ export type Database = {
           tipo_item?: string
           unit_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      evento_participantes: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          evento_id: string
+          forma_pagamento: string
+          id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          evento_id: string
+          forma_pagamento: string
+          id?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          evento_id?: string
+          forma_pagamento?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evento_participantes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_participantes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          data_evento: string
+          descricao: string | null
+          id: string
+          local: string | null
+          numero_vagas: number
+          responsavel: string | null
+          tipo: string
+          titulo: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_evento: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          numero_vagas?: number
+          responsavel?: string | null
+          tipo?: string
+          titulo: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          numero_vagas?: number
+          responsavel?: string | null
+          tipo?: string
+          titulo?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      faq: {
+        Row: {
+          created_at: string
+          faq: string | null
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          faq?: string | null
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          faq?: string | null
+          id?: number
         }
         Relationships: []
       }
@@ -2288,6 +2491,7 @@ export type Database = {
           aluno_id: string
           created_at: string
           created_by: string | null
+          data_falta: string | null
           data_reposicao: string
           id: string
           observacoes: string | null
@@ -2300,6 +2504,7 @@ export type Database = {
           aluno_id: string
           created_at?: string
           created_by?: string | null
+          data_falta?: string | null
           data_reposicao: string
           id?: string
           observacoes?: string | null
@@ -2312,6 +2517,7 @@ export type Database = {
           aluno_id?: string
           created_at?: string
           created_by?: string | null
+          data_falta?: string | null
           data_reposicao?: string
           id?: string
           observacoes?: string | null
@@ -2343,6 +2549,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      resultados_alunos: {
+        Row: {
+          acertos_calculo_mental: number
+          aluno_id: string
+          created_at: string
+          data_aula: string
+          id: string
+          quantidade_acertos: number
+          updated_at: string
+        }
+        Insert: {
+          acertos_calculo_mental: number
+          aluno_id: string
+          created_at?: string
+          data_aula: string
+          id?: string
+          quantidade_acertos: number
+          updated_at?: string
+        }
+        Update: {
+          acertos_calculo_mental?: number
+          aluno_id?: string
+          created_at?: string
+          data_aula?: string
+          id?: string
+          quantidade_acertos?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       sale_webhooks: {
         Row: {
@@ -2581,7 +2817,7 @@ export type Database = {
           new_data: Json | null
           old_data: Json | null
           operation: string
-          student_id: string
+          student_id: string | null
         }
         Insert: {
           created_at?: string
@@ -2591,7 +2827,7 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           operation: string
-          student_id: string
+          student_id?: string | null
         }
         Update: {
           created_at?: string
@@ -2601,7 +2837,7 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           operation?: string
-          student_id?: string
+          student_id?: string | null
         }
         Relationships: [
           {
@@ -2863,7 +3099,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "turmas_professor_id_fkey"
+            foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
@@ -3245,7 +3481,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "turmas_professor_id_fkey"
+            foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
@@ -3311,9 +3547,9 @@ export type Database = {
         Returns: {
           ano_mes: string
           nome_aluno: string
-          total_exercicios: number
-          total_erros: number
           percentual_acerto: number
+          total_erros: number
+          total_exercicios: number
           total_presencas: number
         }[]
       }
@@ -3322,13 +3558,13 @@ export type Database = {
         Returns: {
           ano_mes: string
           nome_aluno: string
-          total_exercicios: number
-          total_erros: number
           percentual_acerto: number
+          total_erros: number
+          total_exercicios: number
         }[]
       }
       change_initial_password: {
-        Args: { user_id: string; new_password: string }
+        Args: { new_password: string; user_id: string }
         Returns: boolean
       }
       check_lancamentos_pendentes: {
@@ -3343,8 +3579,8 @@ export type Database = {
         Args: {
           p_email: string
           p_full_name: string
-          p_unit_ids: string[]
           p_role: Database["public"]["Enums"]["user_role"]
+          p_unit_ids: string[]
         }
         Returns: string
       }
@@ -3353,8 +3589,8 @@ export type Database = {
           p_creator_id: string
           p_email: string
           p_full_name: string
-          p_unit_ids: string[]
           p_role: Database["public"]["Enums"]["user_role"]
+          p_unit_ids: string[]
         }
         Returns: string
       }
@@ -3376,19 +3612,19 @@ export type Database = {
       }
       get_activity_funnel_stats: {
         Args: {
-          p_unit_id: string
-          p_start_date: string
           p_end_date: string
-          p_previous_start_date: string
           p_previous_end_date: string
+          p_previous_start_date: string
+          p_start_date: string
+          p_unit_id: string
         }
         Returns: Json
       }
       get_aluno_desempenho: {
         Args: {
           p_aluno_id: string
-          p_data_inicial: string
           p_data_final?: string
+          p_data_inicial: string
         }
         Returns: Json
       }
@@ -3396,17 +3632,17 @@ export type Database = {
         Args: { p_aluno_nome: string }
         Returns: {
           aluno_id: string
-          turma: string
           educador: string
           faltas_recorrentes: boolean
+          turma: string
         }[]
       }
       get_attendance_rate_stats: {
         Args: {
-          p_start_date: string
           p_end_date: string
-          p_prev_start_date: string
           p_prev_end_date: string
+          p_prev_start_date: string
+          p_start_date: string
           p_unit_ids: string[]
         }
         Returns: Json
@@ -3414,142 +3650,142 @@ export type Database = {
       get_calendario_turmas_com_reposicoes: {
         Args: { p_data_consulta: string }
         Returns: {
-          turma_id: string
-          unit_id: string
-          nome_completo: string
+          categoria: string
+          created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          sala: string
+          horario_inicio: string
+          nome_completo: string
           professor_id: string
           professor_nome: string
           professor_slack: string
-          horario_inicio: string
-          categoria: string
+          sala: string
           total_alunos_ativos: number
           total_reposicoes: number
-          created_at: string
+          turma_id: string
+          unit_id: string
         }[]
       }
       get_calendario_turmas_semana_com_reposicoes: {
-        Args: { p_data_inicio: string; p_data_fim: string }
+        Args: { p_data_fim: string; p_data_inicio: string }
         Returns: {
-          turma_id: string
-          unit_id: string
-          nome_completo: string
+          categoria: string
+          created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          sala: string
+          horario_inicio: string
+          nome_completo: string
           professor_id: string
           professor_nome: string
           professor_slack: string
-          horario_inicio: string
-          categoria: string
+          sala: string
           total_alunos_ativos: number
-          total_reposicoes: number
           total_aulas_experimentais: number
-          created_at: string
+          total_reposicoes: number
+          turma_id: string
+          unit_id: string
         }[]
       }
       get_commercial_unit_stats: {
         Args: {
-          p_start_date: string
           p_end_date: string
-          p_unit_ids: string[]
           p_source_id: string
+          p_start_date: string
+          p_unit_ids: string[]
         }
         Returns: {
-          unit_id: string
-          unit_name: string
-          new_clients: number
-          contact_attempts: number
-          effective_contacts: number
-          scheduled_visits: number
-          awaiting_visits: number
-          completed_visits: number
-          enrollments: number
-          ce_conversion_rate: number
           ag_conversion_rate: number
           at_conversion_rate: number
+          awaiting_visits: number
+          ce_conversion_rate: number
+          completed_visits: number
+          contact_attempts: number
+          effective_contacts: number
+          enrollments: number
           ma_conversion_rate: number
+          new_clients: number
+          scheduled_visits: number
+          unit_id: string
+          unit_name: string
         }[]
       }
       get_commercial_user_stats: {
         Args: {
-          p_start_date: string
           p_end_date: string
-          p_unit_ids: string[]
           p_source_id: string
+          p_start_date: string
+          p_unit_ids: string[]
         }
         Returns: {
-          user_id: string
-          user_name: string
-          new_clients: number
-          contact_attempts: number
-          effective_contacts: number
-          scheduled_visits: number
-          awaiting_visits: number
-          completed_visits: number
-          enrollments: number
-          ce_conversion_rate: number
           ag_conversion_rate: number
           at_conversion_rate: number
+          awaiting_visits: number
+          ce_conversion_rate: number
+          completed_visits: number
+          contact_attempts: number
+          effective_contacts: number
+          enrollments: number
           ma_conversion_rate: number
+          new_clients: number
+          scheduled_visits: number
+          user_id: string
+          user_name: string
         }[]
       }
       get_correcoes_ah_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          professor_correcao: string
-          mes_atual: number
           mes_anterior: number
+          mes_atual: number
+          professor_correcao: string
+          ultimos_12_meses: number
           ultimos_3_meses: number
           ultimos_6_meses: number
-          ultimos_12_meses: number
         }[]
       }
       get_daily_activities_by_type: {
-        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
         Returns: {
-          date: string
-          tipo_atividade: string
-          source: string
           count: number
+          date: string
+          source: string
+          tipo_atividade: string
         }[]
       }
       get_daily_new_clients: {
-        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
         Returns: {
+          count: number
           date: string
           lead_source: string
-          count: number
         }[]
       }
       get_daily_scheduled_activities: {
-        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
         Returns: {
+          count: number
           date: string
           source: string
-          count: number
         }[]
       }
       get_dashboard_activity_funnel_stats: {
         Args: {
-          p_start_date: string
           p_end_date: string
-          p_prev_start_date: string
           p_prev_end_date: string
+          p_prev_start_date: string
+          p_start_date: string
           p_unit_ids: string[]
         }
         Returns: Json
       }
       get_funcionario_devolutiva: {
-        Args: { p_funcionario_id: string; p_data_inicial: string }
+        Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
       }
       get_leads_by_month_and_source: {
-        Args: { p_unit_ids: string[]; p_months_back?: number }
+        Args: { p_months_back?: number; p_unit_ids: string[] }
         Returns: {
-          month_year: string
-          lead_source: string
           lead_count: number
+          lead_source: string
+          month_year: string
         }[]
       }
       get_leads_stats: {
@@ -3560,30 +3796,31 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           aula_experimental_id: string
-          data_aula_experimental: string
           cliente_nome: string
+          data_aula_experimental: string
+          descricao_cliente: string
+          responsavel_id: string
           responsavel_nome: string
           responsavel_tipo: string
-          descricao_cliente: string
+          turma_id: string
           turma_nome: string
           unit_id: string
-          turma_id: string
-          responsavel_id: string
         }[]
       }
       get_lista_completa_reposicoes: {
         Args: Record<PropertyKey, never>
         Returns: {
-          reposicao_id: string
-          data_reposicao: string
-          aluno_nome: string
-          turma_original_nome: string
-          turma_reposicao_nome: string
-          observacoes: string
-          unit_id: string
           aluno_id: string
+          aluno_nome: string
+          data_falta: string
+          data_reposicao: string
+          observacoes: string
+          reposicao_id: string
           turma_original_id: string
+          turma_original_nome: string
           turma_reposicao_id: string
+          turma_reposicao_nome: string
+          unit_id: string
         }[]
       }
       get_periodo_data: {
@@ -3592,61 +3829,61 @@ export type Database = {
       }
       get_produtividade_abaco_limpa: {
         Args: {
-          p_pessoa_id: string
-          p_data_inicial: string
           p_data_final: string
+          p_data_inicial: string
+          p_pessoa_id: string
         }
         Returns: {
-          id: string
-          pessoa_id: string
-          tipo_pessoa: string
-          data_aula: string
-          presente: boolean
-          apostila: string
-          pagina: string
-          exercicios: number
-          erros: number
-          fez_desafio: boolean
-          comentario: string
-          motivo_falta: string
-          is_reposicao: boolean
           aluno_nome: string
+          apostila: string
+          comentario: string
           created_at: string
+          data_aula: string
+          erros: number
+          exercicios: number
+          fez_desafio: boolean
+          id: string
+          is_reposicao: boolean
+          motivo_falta: string
+          pagina: string
+          pessoa_id: string
+          presente: boolean
+          tipo_pessoa: string
           updated_at: string
         }[]
       }
       get_registration_stats: {
         Args: {
-          p_start_date: string
           p_end_date: string
-          p_unit_ids: string[]
           p_source_id: string
+          p_start_date: string
+          p_unit_ids: string[]
         }
         Returns: {
-          registration_name: string
-          lead_source: string
-          new_clients: number
-          contact_attempts: number
-          effective_contacts: number
-          scheduled_visits: number
-          awaiting_visits: number
-          completed_visits: number
-          enrollments: number
-          ce_conversion_rate: number
           ag_conversion_rate: number
           at_conversion_rate: number
+          awaiting_visits: number
+          ce_conversion_rate: number
+          completed_visits: number
+          contact_attempts: number
+          effective_contacts: number
+          enrollments: number
+          lead_source: string
           ma_conversion_rate: number
+          new_clients: number
+          registration_name: string
+          scheduled_visits: number
         }[]
       }
       get_turma_modal_data: {
-        Args: { p_turma_id: string; p_data_consulta?: string }
+        Args: { p_data_consulta?: string; p_turma_id: string }
         Returns: Json
       }
       get_user_access_info: {
         Args: { user_id: string }
         Returns: {
-          last_sign_in_at: string
           has_first_access: boolean
+          last_sign_in_at: string
         }[]
       }
       has_unread_updates: {
@@ -3676,9 +3913,9 @@ export type Database = {
       manage_user_units: {
         Args: {
           p_creator_id: string
-          p_user_id: string
-          p_unit_ids: string[]
           p_role: Database["public"]["Enums"]["user_role"]
+          p_unit_ids: string[]
+          p_user_id: string
         }
         Returns: string
       }
@@ -3707,12 +3944,12 @@ export type Database = {
         Returns: undefined
       }
       rpc_funnel_conversion: {
-        Args: { data_inicio: string; data_fim: string; unit_ids: string[] }
+        Args: { data_fim: string; data_inicio: string; unit_ids: string[] }
         Returns: {
-          leads: number
-          contatos_efetivos: number
           agendamentos: number
           atendimentos: number
+          contatos_efetivos: number
+          leads: number
           matriculas: number
         }[]
       }
@@ -3735,21 +3972,21 @@ export type Database = {
       verificar_criterios_alerta_falta: {
         Args: { p_aluno_id: string }
         Returns: {
-          tipo_criterio: string
-          detalhes: Json
-          data_falta: string
           aluno_nome: string
-          turma_id: string
-          professor_id: string
-          unit_id: string
+          data_falta: string
+          detalhes: Json
           dias_supera: number
           motivo_falta: string
+          professor_id: string
           professor_nome: string
           professor_slack: string
+          tipo_criterio: string
+          turma_id: string
+          unit_id: string
         }[]
       }
       verify_webhook_credentials: {
-        Args: { p_username: string; p_password: string }
+        Args: { p_password: string; p_username: string }
         Returns: boolean
       }
     }
@@ -3763,6 +4000,7 @@ export type Database = {
         | "sabado"
         | "domingo"
       due_day: "5" | "10" | "15" | "20" | "25"
+      "etapa-do-bot": "apresentador" | "rapport" | "agendador" | "negociador"
       gender: "masculino" | "feminino"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
       origem_alerta:
@@ -3927,6 +4165,7 @@ export const Constants = {
         "domingo",
       ],
       due_day: ["5", "10", "15", "20", "25"],
+      "etapa-do-bot": ["apresentador", "rapport", "agendador", "negociador"],
       gender: ["masculino", "feminino"],
       marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],
       origem_alerta: [

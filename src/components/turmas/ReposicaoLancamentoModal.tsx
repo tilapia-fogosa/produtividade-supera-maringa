@@ -5,13 +5,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
 import { useAlunosReposicao } from "@/hooks/use-alunos-reposicao";
+import { cn } from "@/lib/utils";
 
 interface ReposicaoLancamentoModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
   const [alunoSelecionado, setAlunoSelecionado] = useState<string>("");
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<string>("");
   const [dataSelecionada, setDataSelecionada] = useState<Date | undefined>();
+  const [dataFalta, setDataFalta] = useState<Date | undefined>();
   const [observacoes, setObservacoes] = useState<string>("");
 
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -61,13 +64,19 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
       return;
     }
 
+    // Encontrar o nome do responsável selecionado
+    const responsavelSelecionadoObj = responsaveis.find(r => r.id === responsavelSelecionado);
+    const nomeResponsavel = responsavelSelecionadoObj?.nome || '';
+
     try {
       await criarReposicao.mutateAsync({
         aluno_id: alunoSelecionado,
         turma_id: turma.id,
         data_reposicao: format(dataSelecionada, 'yyyy-MM-dd'),
+        data_falta: dataFalta ? format(dataFalta, 'yyyy-MM-dd') : undefined,
         responsavel_id: responsavelSelecionado,
         responsavel_tipo: determinarTipoResponsavel(responsavelSelecionado),
+        nome_responsavel: nomeResponsavel,
         observacoes: observacoes || undefined,
         unit_id: turma.unit_id,
         created_by: 'sistema',
@@ -79,6 +88,7 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
       setAlunoSelecionado("");
       setResponsavelSelecionado("");
       setDataSelecionada(undefined);
+      setDataFalta(undefined);
       setObservacoes("");
       onClose();
     } catch (error) {
@@ -92,6 +102,7 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
     setAlunoSelecionado("");
     setResponsavelSelecionado("");
     setDataSelecionada(undefined);
+    setDataFalta(undefined);
     setObservacoes("");
     onClose();
   };
@@ -183,6 +194,36 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Data da Falta */}
+            <div className="space-y-2">
+              <Label>Data da Falta</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dataFalta && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dataFalta ? format(dataFalta, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data da falta"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dataFalta}
+                    onSelect={setDataFalta}
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                    initialFocus
+                    locale={ptBR}
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Seleção da Data */}

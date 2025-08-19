@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 export type ListaReposicaoData = {
   reposicao_id: string;
   data_reposicao: string;
+  data_falta?: string;
   aluno_nome: string;
   turma_original_nome: string;
   turma_reposicao_nome: string;
