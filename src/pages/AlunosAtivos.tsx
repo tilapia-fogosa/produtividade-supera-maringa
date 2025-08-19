@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
 
@@ -16,7 +16,8 @@ export default function AlunosAtivos() {
   const {
     alunos,
     loading,
-    error
+    error,
+    atualizarWhatsApp
   } = useAlunosAtivos();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,6 +27,9 @@ export default function AlunosAtivos() {
   const [sortField, setSortField] = useState<SortField>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoAtivo | null>(null);
+  const [editandoWhatsApp, setEditandoWhatsApp] = useState<string | null>(null);
+  const [whatsappTemp, setWhatsappTemp] = useState('');
+  const [salvandoWhatsApp, setSalvandoWhatsApp] = useState<string | null>(null);
 
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
@@ -110,6 +114,25 @@ export default function AlunosAtivos() {
 
   const handleFecharModal = () => {
     setAlunoSelecionado(null);
+  };
+
+  const handleEditarWhatsApp = (aluno: AlunoAtivo) => {
+    setEditandoWhatsApp(aluno.id);
+    setWhatsappTemp(aluno.whatapp_contato || '');
+  };
+
+  const handleSalvarWhatsApp = async (alunoId: string) => {
+    setSalvandoWhatsApp(alunoId);
+    const sucesso = await atualizarWhatsApp(alunoId, whatsappTemp);
+    if (sucesso) {
+      setEditandoWhatsApp(null);
+    }
+    setSalvandoWhatsApp(null);
+  };
+
+  const handleCancelarEdicao = () => {
+    setEditandoWhatsApp(null);
+    setWhatsappTemp('');
   };
 
   if (loading) {
@@ -220,6 +243,12 @@ export default function AlunosAtivos() {
                       {getSortIcon('dias_supera')}
                     </Button>
                   </th>
+                  <th className="text-left p-4 w-[180px]">
+                    <span className="font-semibold flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </span>
+                  </th>
                   <th className="text-left p-4 w-[120px]">
                     <span className="font-semibold">Ações</span>
                   </th>
@@ -255,6 +284,49 @@ export default function AlunosAtivos() {
                       >
                         {aluno.dias_supera || 0} dias
                       </Badge>
+                    </td>
+                    <td className="p-4">
+                      {editandoWhatsApp === aluno.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={whatsappTemp}
+                            onChange={(e) => setWhatsappTemp(e.target.value)}
+                            placeholder="WhatsApp"
+                            className="h-8 text-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSalvarWhatsApp(aluno.id);
+                              } else if (e.key === 'Escape') {
+                                handleCancelarEdicao();
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSalvarWhatsApp(aluno.id)}
+                            disabled={salvandoWhatsApp === aluno.id}
+                          >
+                            {salvandoWhatsApp === aluno.id ? (
+                              <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            ) : (
+                              <Save className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center"
+                          onClick={() => handleEditarWhatsApp(aluno)}
+                        >
+                          {aluno.whatapp_contato ? (
+                            <span className="text-sm">{aluno.whatapp_contato}</span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Clique para adicionar</span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4">
                       <Button
