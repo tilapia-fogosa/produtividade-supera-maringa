@@ -11,7 +11,7 @@ import { useState, useMemo } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
-import ListaFaltasAntecipadasModal from "@/components/turmas/ListaFaltasAntecipadasModal";
+import ListaFaltasFuturasModal from "@/components/turmas/ListaFaltasFuturasModal";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -152,8 +152,8 @@ export default function CalendarioAulas() {
   // Estado para o modal da lista de aulas experimentais
   const [isListaAulasExperimentaisOpen, setIsListaAulasExperimentaisOpen] = useState(false);
 
-  // Estado para o modal da lista de faltas antecipadas
-  const [isListaFaltasAntecipadasOpen, setIsListaFaltasAntecipadasOpen] = useState(false);
+  // Estado para o modal da lista de faltas futuras
+  const [isListaFaltasFuturasOpen, setIsListaFaltasFuturasOpen] = useState(false);
 
 
   // Extrair perfis únicos dos dados (excluindo domingo)
@@ -404,11 +404,11 @@ export default function CalendarioAulas() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsListaFaltasAntecipadasOpen(true)}
+            onClick={() => setIsListaFaltasFuturasOpen(true)}
             className="min-w-[140px]"
           >
             <UserMinus className="w-4 h-4 mr-2" />
-            Lista de Faltas Antecipadas
+            Lista de Faltas Futuras
           </Button>
         </div>
 
@@ -598,10 +598,10 @@ export default function CalendarioAulas() {
         onOpenChange={setIsListaAulasExperimentaisOpen}
       />
       
-      {/* Modal da Lista de Faltas Antecipadas */}
-      <ListaFaltasAntecipadasModal 
-        isOpen={isListaFaltasAntecipadasOpen}
-        onClose={() => setIsListaFaltasAntecipadasOpen(false)}
+      {/* Modal da Lista de Faltas Futuras */}
+      <ListaFaltasFuturasModal 
+        isOpen={isListaFaltasFuturasOpen}
+        onClose={() => setIsListaFaltasFuturasOpen(false)}
       />
     </div>
   );

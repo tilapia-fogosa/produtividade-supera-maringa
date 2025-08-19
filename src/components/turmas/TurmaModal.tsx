@@ -12,7 +12,7 @@ import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReposicaoModal from "./ReposicaoModal";
 import AulaExperimentalModal from "./AulaExperimentalModal";
-import FaltaAntecipadaModal from "./FaltaAntecipadaModal";
+import FaltaFuturaModal from "./FaltaFuturaModal";
 
 interface TurmaModalProps {
   turmaId: string | null;
@@ -30,7 +30,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
   const { data, isLoading, error } = useTurmaModal(turmaId, dataConsulta);
   const [reposicaoModalOpen, setReposicaoModalOpen] = useState(false);
   const [aulaExperimentalModalOpen, setAulaExperimentalModalOpen] = useState(false);
-  const [faltaAntecipadaModalOpen, setFaltaAntecipadaModalOpen] = useState(false);
+  const [faltaFuturaModalOpen, setFaltaFuturaModalOpen] = useState(false);
 
   if (error) {
     return (
@@ -85,12 +85,12 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => setFaltaAntecipadaModalOpen(true)}
+                onClick={() => setFaltaFuturaModalOpen(true)}
                 disabled={isLoading || !data?.turma}
                 className="flex items-center gap-2"
               >
                 <UserMinus className="h-4 w-4" />
-                Lançar Falta Antecipada
+                Lançar Falta Futura
               </Button>
             </div>
           </div>
@@ -405,15 +405,13 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
         />
       )}
 
-      {/* Modal de Falta Antecipada */}
+      {/* Modal de Falta Futura */}
       {data?.turma && (
-        <FaltaAntecipadaModal
-          isOpen={faltaAntecipadaModalOpen}
-          onClose={() => setFaltaAntecipadaModalOpen(false)}
-          alunos={data.alunos || []}
+        <FaltaFuturaModal
+          isOpen={faltaFuturaModalOpen}
+          onClose={() => setFaltaFuturaModalOpen(false)}
           turmaId={data.turma.id}
           unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
-          dataConsulta={dataConsulta}
         />
       )}
     </Dialog>
