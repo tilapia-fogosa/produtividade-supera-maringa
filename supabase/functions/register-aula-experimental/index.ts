@@ -40,7 +40,7 @@ serve(async (req) => {
       // Buscar dados da turma
       supabase
         .from('turmas')
-        .select('nome, professor_id, dia_semana, horario_inicio, categoria')
+        .select('nome, professor_id, dia_semana')
         .eq('id', aulaExperimental.turma_id)
         .single(),
       
@@ -79,21 +79,29 @@ serve(async (req) => {
       console.error('❌ Erro ao buscar unidade:', unitResult.error);
     }
 
-    // 3. Buscar URL do webhook
-    const { data: webhookConfig, error: webhookError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('key', 'webhook_aula_experimental')
+    // 3. Buscar URL do webhook (usando RPC para lidar com espaços em branco)
+    const { data: webhookRows, error: webhookError } = await supabase
+      .rpc('get_webhook_url', { webhook_key: 'webhook_aula_experimental' })
       .single();
+    
+    // Se não funcionou com RPC, tenta com busca direta
+    let webhookConfig = null;
+    if (!webhookError && webhookRows) {
+      webhookConfig = webhookRows;
+    } else {
+      const { data: directConfig } = await supabase
+        .from('dados_importantes')
+        .select('data')
+        .ilike('key', '%webhook_aula_experimental%')
+        .maybeSingle();
+      webhookConfig = directConfig;
+    }
 
     let webhookSent = false;
     let webhookError_msg = null;
 
-    if (webhookError) {
-      console.error('⚠️ Erro ao buscar configuração do webhook:', webhookError);
-      webhookError_msg = `Erro ao buscar configuração: ${webhookError.message}`;
-    } else if (!webhookConfig?.data) {
-      console.log('⚠️ URL do webhook não configurada');
+    if (!webhookConfig?.data) {
+      console.log('⚠️ URL do webhook não configurada ou não encontrada');
       webhookError_msg = 'URL do webhook não configurada';
     } else {
       // 4. Preparar payload do webhook
@@ -108,9 +116,7 @@ serve(async (req) => {
         turma: {
           id: aulaExperimental.turma_id,
           nome: turma?.nome || 'Nome não encontrado',
-          dia_semana: turma?.dia_semana || null,
-          horario_inicio: turma?.horario_inicio || null,
-          categoria: turma?.categoria || null
+          dia_semana: turma?.dia_semana || null
         },
         responsavel: {
           id: aulaExperimental.responsavel_id,
