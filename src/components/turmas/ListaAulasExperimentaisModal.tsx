@@ -122,10 +122,10 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                   <TableRow>
                     <TableHead className="w-28">Data</TableHead>
                     <TableHead className="w-32">Turma</TableHead>
-                    <TableHead className="w-40">Cliente</TableHead>
-                    <TableHead className="w-60">Descrição Detalhada</TableHead>
-                    <TableHead className="w-40">Responsável</TableHead>
-                    <TableHead className="w-32 text-center">Ações</TableHead>
+                    <TableHead className="w-32">Cliente</TableHead>
+                    <TableHead className="w-40">Descrição</TableHead>
+                    <TableHead className="w-32">Responsável</TableHead>
+                    <TableHead className="w-28 text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -139,14 +139,14 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                         </TableCell>
                         <TableCell>{aula.turma_nome}</TableCell>
                         <TableCell>{aula.cliente_nome}</TableCell>
-                        <TableCell className="text-sm max-w-60 break-words">
+                        <TableCell className="text-sm max-w-40 break-words">
                           {aula.descricao_cliente ? (
                             <span className="truncate block">
                               {aula.descricao_cliente}
                             </span>
                           ) : "Sem descrição"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-sm">
                           {aula.responsavel_nome}
                           <div className="text-xs text-muted-foreground">
                             ({aula.responsavel_tipo})
