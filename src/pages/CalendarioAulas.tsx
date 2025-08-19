@@ -1,5 +1,5 @@
 
-import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List } from "lucide-react";
+import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useState, useMemo } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
+import ListaFaltasAntecipadasModal from "@/components/turmas/ListaFaltasAntecipadasModal";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -150,6 +151,9 @@ export default function CalendarioAulas() {
   
   // Estado para o modal da lista de aulas experimentais
   const [isListaAulasExperimentaisOpen, setIsListaAulasExperimentaisOpen] = useState(false);
+
+  // Estado para o modal da lista de faltas antecipadas
+  const [isListaFaltasAntecipadasOpen, setIsListaFaltasAntecipadasOpen] = useState(false);
 
 
   // Extrair perfis únicos dos dados (excluindo domingo)
@@ -396,6 +400,16 @@ export default function CalendarioAulas() {
             <Users className="w-4 h-4 mr-2" />
             Lista de Experimentais
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsListaFaltasAntecipadasOpen(true)}
+            className="min-w-[140px]"
+          >
+            <UserMinus className="w-4 h-4 mr-2" />
+            Lista de Faltas Antecipadas
+          </Button>
         </div>
 
         <div className="space-y-2">
@@ -582,6 +596,12 @@ export default function CalendarioAulas() {
       <ListaAulasExperimentaisModal 
         open={isListaAulasExperimentaisOpen}
         onOpenChange={setIsListaAulasExperimentaisOpen}
+      />
+      
+      {/* Modal da Lista de Faltas Antecipadas */}
+      <ListaFaltasAntecipadasModal 
+        isOpen={isListaFaltasAntecipadasOpen}
+        onClose={() => setIsListaFaltasAntecipadasOpen(false)}
       />
     </div>
   );
