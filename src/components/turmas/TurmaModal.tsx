@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Calendar, RefreshCw, School, UserMinus } from "lucide-react";
+import { Users, Calendar, RefreshCw, School, UserMinus, User } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReposicaoModal from "./ReposicaoModal";
@@ -124,24 +124,28 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 <Users className="h-5 w-5" />
                 Estatísticas da Turma
               </h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-2xl font-bold text-blue-600">{data.estatisticas.total_alunos_ativos}</p>
-                  <p className="text-sm text-muted-foreground">Alunos Ativos</p>
-                </div>
-                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-2xl font-bold text-green-600">
-                    {data.estatisticas.media_idade ? `${data.estatisticas.media_idade}` : '-'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Idade Média</p>
-                </div>
-                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-2xl font-bold text-purple-600">
-                    {data.estatisticas.media_dias_supera ? `${data.estatisticas.media_dias_supera}` : '-'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Dias Médio na Supera</p>
-                </div>
-              </div>
+               <div className="grid grid-cols-4 gap-4">
+                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                   <p className="text-2xl font-bold text-blue-600">{data.estatisticas.total_alunos_ativos}</p>
+                   <p className="text-sm text-muted-foreground">Alunos Ativos</p>
+                 </div>
+                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                   <p className="text-2xl font-bold text-orange-600">{data.estatisticas.total_funcionarios_ativos}</p>
+                   <p className="text-sm text-muted-foreground">Funcionários Ativos</p>
+                 </div>
+                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                   <p className="text-2xl font-bold text-green-600">
+                     {data.estatisticas.media_idade ? `${data.estatisticas.media_idade}` : '-'}
+                   </p>
+                   <p className="text-sm text-muted-foreground">Idade Média</p>
+                 </div>
+                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                   <p className="text-2xl font-bold text-purple-600">
+                     {data.estatisticas.media_dias_supera ? `${data.estatisticas.media_dias_supera}` : '-'}
+                   </p>
+                   <p className="text-sm text-muted-foreground">Dias Médio na Supera</p>
+                 </div>
+               </div>
             </div>
           )}
 
@@ -200,10 +204,73 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 <p className="text-lg font-medium mb-2">Nenhum aluno ativo encontrado</p>
                 <p className="text-sm">Esta turma não possui alunos ativos no momento.</p>
               </div>
-            )}
-          </div>
+           )}
+         </div>
 
-          {/* Seção Reposições e Experimentais */}
+         {/* Lista de Funcionários */}
+         <div>
+           <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+             <User className="h-5 w-5" />
+             Funcionários Ativos ({isLoading ? '...' : data?.funcionarios?.length || 0})
+           </h3>
+           
+           {isLoading ? (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+               {Array.from({ length: 3 }).map((_, index) => (
+                 <div key={index} className="flex items-center space-x-3 p-4 border rounded-lg">
+                   <Skeleton className="h-12 w-12 rounded-full" />
+                   <div className="space-y-2 flex-1">
+                     <Skeleton className="h-4 w-32" />
+                     <Skeleton className="h-3 w-24" />
+                     <Skeleton className="h-3 w-28" />
+                   </div>
+                 </div>
+               ))}
+             </div>
+           ) : (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+               {data?.funcionarios?.map((funcionario) => (
+                 <div
+                   key={funcionario.id}
+                   className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-orange-200 bg-orange-50"
+                 >
+                   <Avatar className="h-12 w-12">
+                     <AvatarImage src={funcionario.foto_url || undefined} />
+                     <AvatarFallback className="bg-orange-100 text-orange-600">
+                       {funcionario.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                     </AvatarFallback>
+                   </Avatar>
+                   <div className="flex-1 min-w-0">
+                     <p className="font-medium text-sm truncate">{funcionario.nome}</p>
+                     <div className="space-y-1">
+                       {funcionario.cargo && (
+                         <div className="text-xs text-orange-600 font-medium">
+                           <span>{funcionario.cargo}</span>
+                         </div>
+                       )}
+                       {(funcionario.idade || funcionario.dias_supera) && (
+                         <div className="flex gap-3 text-xs text-muted-foreground">
+                           {funcionario.idade && <span>{funcionario.idade} anos</span>}
+                           {funcionario.dias_supera && <span>{funcionario.dias_supera} dias na Supera</span>}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+           )}
+
+           {!isLoading && (!data?.funcionarios || data.funcionarios.length === 0) && (
+             <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+               <User className="h-12 w-12 mx-auto mb-3 opacity-30" />
+               <p className="text-sm font-medium mb-1">Nenhum funcionário ativo encontrado</p>
+               <p className="text-xs">Esta turma não possui funcionários ativos no momento.</p>
+             </div>
+           )}
+         </div>
+
+         {/* Seção Reposições e Experimentais */}
           {dataConsulta && (
             <div>
               <h3 className="text-md font-medium mb-4 flex items-center gap-2">
