@@ -75,19 +75,23 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
     } else {
       // Mostra apenas futuras
       return todasFaltas.filter(falta => {
-        const dataFalta = new Date(falta.data_falta);
+        // Criar data local para evitar problemas de timezone
+        const [year, month, day] = falta.data_falta.split('-');
+        const dataFalta = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         dataFalta.setHours(0, 0, 0, 0);
-        return dataFalta > hoje;
+        return dataFalta >= hoje; // Incluir faltas de hoje e futuras
       });
     }
   }, [todasFaltas, mostrarAnteriores]);
 
   const canDelete = (falta: FaltaFutura) => {
-    const dataFalta = new Date(falta.data_falta);
+    // Criar data local para evitar problemas de timezone
+    const [year, month, day] = falta.data_falta.split('-');
+    const dataFalta = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     dataFalta.setHours(0, 0, 0, 0);
-    return dataFalta > hoje;
+    return dataFalta > hoje; // Só pode deletar faltas futuras (não de hoje)
   };
 
   const formatDate = (dateString: string) => {
