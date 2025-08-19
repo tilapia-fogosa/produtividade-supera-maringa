@@ -111,6 +111,7 @@ export const useTurmaModal = (turmaId: string | null, dataConsulta?: Date) => {
         funcionarios: typedData?.funcionarios?.length || 0,
         reposicoes: typedData?.reposicoes?.length || 0,
         aulas_experimentais: typedData?.aulas_experimentais?.length || 0,
+        faltas_futuras: typedData?.faltas_futuras?.length || 0,
         estatisticas: typedData?.estatisticas
       });
       
