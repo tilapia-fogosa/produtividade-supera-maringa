@@ -7,11 +7,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Calendar, RefreshCw, School } from "lucide-react";
+import { Users, Calendar, RefreshCw, School, UserMinus } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReposicaoModal from "./ReposicaoModal";
 import AulaExperimentalModal from "./AulaExperimentalModal";
+import FaltaAntecipadaModal from "./FaltaAntecipadaModal";
 
 interface TurmaModalProps {
   turmaId: string | null;
@@ -29,6 +30,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
   const { data, isLoading, error } = useTurmaModal(turmaId, dataConsulta);
   const [reposicaoModalOpen, setReposicaoModalOpen] = useState(false);
   const [aulaExperimentalModalOpen, setAulaExperimentalModalOpen] = useState(false);
+  const [faltaAntecipadaModalOpen, setFaltaAntecipadaModalOpen] = useState(false);
 
   if (error) {
     return (
@@ -79,6 +81,16 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
               >
                 <School className="h-4 w-4" />
                 Lançar Aula Experimental
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setFaltaAntecipadaModalOpen(true)}
+                disabled={isLoading || !data?.turma}
+                className="flex items-center gap-2"
+              >
+                <UserMinus className="h-4 w-4" />
+                Lançar Falta Antecipada
               </Button>
             </div>
           </div>
@@ -323,6 +335,18 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
           turmaNome={data.turma.nome}
           diaSemana={data.turma.dia_semana}
           unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
+        />
+      )}
+
+      {/* Modal de Falta Antecipada */}
+      {data?.turma && (
+        <FaltaAntecipadaModal
+          isOpen={faltaAntecipadaModalOpen}
+          onClose={() => setFaltaAntecipadaModalOpen(false)}
+          alunos={data.alunos || []}
+          turmaId={data.turma.id}
+          unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
+          dataConsulta={dataConsulta}
         />
       )}
     </Dialog>
