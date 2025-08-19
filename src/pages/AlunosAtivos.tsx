@@ -246,7 +246,7 @@ export default function AlunosAtivos() {
                   <th className="text-left p-4 w-[180px]">
                     <span className="font-semibold flex items-center gap-2">
                       <MessageCircle className="w-4 h-4" />
-                      WhatsApp
+                      WhatsApp para contato
                     </span>
                   </th>
                   <th className="text-left p-4 w-[120px]">
