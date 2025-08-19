@@ -246,6 +246,7 @@ export type Database = {
           unit_id: string
           valor_mensalidade: number | null
           vencimento_contrato: string | null
+          whatapp_contato: string | null
         }
         Insert: {
           active?: boolean
@@ -280,6 +281,7 @@ export type Database = {
           unit_id: string
           valor_mensalidade?: number | null
           vencimento_contrato?: string | null
+          whatapp_contato?: string | null
         }
         Update: {
           active?: boolean
@@ -314,6 +316,7 @@ export type Database = {
           unit_id?: string
           valor_mensalidade?: number | null
           vencimento_contrato?: string | null
+          whatapp_contato?: string | null
         }
         Relationships: [
           {
