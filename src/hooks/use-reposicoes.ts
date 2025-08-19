@@ -21,11 +21,14 @@ export const useReposicoes = () => {
 
   const criarReposicao = useMutation({
     mutationFn: async (data: ReposicaoData) => {
-      const { error } = await supabase
-        .from('reposicoes')
-        .insert([data]);
+      const { data: result, error } = await supabase.functions.invoke('register-reposicao', {
+        body: data
+      });
 
       if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || 'Erro ao criar reposição');
+      
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reposicoes'] });
