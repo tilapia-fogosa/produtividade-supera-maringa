@@ -55,6 +55,18 @@ export type TurmaModalData = {
     descricao_cliente?: string;
     responsavel_nome?: string;
   }>;
+  faltas_futuras: Array<{
+    id: string;
+    nome: string;
+    idade?: number;
+    dias_supera?: number;
+    foto_url: string | null;
+    telefone?: string;
+    email?: string;
+    data_falta: string;
+    responsavel_aviso_nome?: string;
+    observacoes?: string;
+  }>;
   estatisticas: {
     total_alunos_ativos: number;
     total_funcionarios_ativos: number;
