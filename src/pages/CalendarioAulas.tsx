@@ -94,6 +94,19 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
 
 // Componente para o bloco de turma
 const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () => void }) => {
+  // Calcular vagas disponíveis
+  const capacidadeMaxima = turma.categoria === 'infantil' ? 6 : 12;
+  const ocupacao = turma.total_alunos_ativos + turma.total_reposicoes + turma.total_aulas_experimentais;
+  const vagasDisponiveis = Math.max(0, capacidadeMaxima - ocupacao);
+  
+  // Determinar cor das vagas
+  const getVagasColor = (vagas: number, capacidade: number) => {
+    const percentualVagas = (vagas / capacidade) * 100;
+    if (percentualVagas > 40) return 'text-emerald-600';
+    if (percentualVagas > 20) return 'text-amber-600';
+    return 'text-red-600';
+  };
+
   return (
     <div 
       className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between"
@@ -106,10 +119,10 @@ const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () =
         <div className="text-blue-700 mb-1">
           {formatarNomeProfessor(turma.professor_nome)}
         </div>
-        <div className="flex items-center gap-1 text-blue-600">
+        <div className="flex items-center gap-1 text-blue-600 mb-1">
           <Users className="w-3 h-3" />
           <span>
-            {turma.total_alunos_ativos}/{turma.categoria === 'infantil' ? '6' : '12'}
+            {turma.total_alunos_ativos}/{capacidadeMaxima}
             {turma.total_reposicoes > 0 && (
               <span className="text-red-500 font-medium"> Rep: {turma.total_reposicoes}</span>
             )}
@@ -117,6 +130,9 @@ const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () =
               <span className="text-green-500 font-medium"> Exp: {turma.total_aulas_experimentais}</span>
             )}
           </span>
+        </div>
+        <div className={`text-xs font-medium ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
+          {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''} disponível{vagasDisponiveis !== 1 ? 'eis' : ''}
         </div>
       </div>
     </div>
