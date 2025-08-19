@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, User, FileText, Trash2, History, CalendarDays } from "lucide-react";
+import { Calendar, User, FileText, Trash2, History, CalendarDays, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,10 +22,20 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { data: todasFaltas, isLoading } = useListaFaltasFuturas();
+  const { data: todasFaltas, isLoading, refetch } = useListaFaltasFuturas();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
+
+  const handleRefresh = async () => {
+    // Forçar invalidação do cache e refetch
+    queryClient.invalidateQueries({ queryKey: ['lista-faltas-futuras'] });
+    await refetch();
+    toast({
+      title: "Dados atualizados!",
+      description: "Lista de faltas futuras foi atualizada.",
+    });
+  };
 
   const deleteFaltaFutura = useMutation({
     mutationFn: async (faltaId: string) => {
@@ -109,24 +119,36 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
               <Calendar className="h-5 w-5" />
               {mostrarAnteriores ? 'Todas as Faltas' : 'Faltas Futuras'}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMostrarAnteriores(!mostrarAnteriores)}
-              className="flex items-center gap-2"
-            >
-              {mostrarAnteriores ? (
-                <>
-                  <CalendarDays className="h-4 w-4" />
-                  Apenas Futuras
-                </>
-              ) : (
-                <>
-                  <History className="h-4 w-4" />
-                  Incluir Anteriores
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Atualizar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarAnteriores(!mostrarAnteriores)}
+                className="flex items-center gap-2"
+              >
+                {mostrarAnteriores ? (
+                  <>
+                    <CalendarDays className="h-4 w-4" />
+                    Apenas Futuras
+                  </>
+                ) : (
+                  <>
+                    <History className="h-4 w-4" />
+                    Incluir Anteriores
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -180,11 +202,18 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
                             </div>
                           </div>
 
-                           {/* Linha 2: Data da falta */}
+                           {/* Linha 2: Data da falta - DEBUG */}
                            <div className="flex items-center gap-2">
                              <Calendar className="h-4 w-4 text-red-500" />
                              <span className="text-sm font-medium">
-                               <strong className="text-red-600">Data da falta:</strong> {formatDate(falta.data_falta)}
+                               <strong className="text-red-600">Data da falta:</strong> 
+                               <span className="ml-1 text-red-700 font-bold">
+                                 {formatDate(falta.data_falta)}
+                               </span>
+                               {/* Debug info */}
+                               <span className="ml-2 text-xs text-muted-foreground">
+                                 (Raw: {falta.data_falta})
+                               </span>
                              </span>
                            </div>
 
