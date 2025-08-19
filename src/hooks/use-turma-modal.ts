@@ -60,6 +60,7 @@ export type TurmaModalData = {
     total_funcionarios_ativos: number;
     total_reposicoes_dia: number;
     total_aulas_experimentais_dia: number;
+    total_faltas_futuras_dia: number;
     media_idade: number;
     media_dias_supera: number;
   };

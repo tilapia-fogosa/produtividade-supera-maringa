@@ -124,28 +124,50 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                 <Users className="h-5 w-5" />
                 Estatísticas da Turma
               </h3>
-               <div className="grid grid-cols-4 gap-4">
-                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                   <p className="text-2xl font-bold text-blue-600">{data.estatisticas.total_alunos_ativos}</p>
-                   <p className="text-sm text-muted-foreground">Alunos Ativos</p>
-                 </div>
-                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                   <p className="text-2xl font-bold text-orange-600">{data.estatisticas.total_funcionarios_ativos}</p>
-                   <p className="text-sm text-muted-foreground">Funcionários Ativos</p>
-                 </div>
-                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                   <p className="text-2xl font-bold text-green-600">
-                     {data.estatisticas.media_idade ? `${data.estatisticas.media_idade}` : '-'}
-                   </p>
-                   <p className="text-sm text-muted-foreground">Idade Média</p>
-                 </div>
-                 <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                   <p className="text-2xl font-bold text-purple-600">
-                     {data.estatisticas.media_dias_supera ? `${data.estatisticas.media_dias_supera}` : '-'}
-                   </p>
-                   <p className="text-sm text-muted-foreground">Dias Médio na Supera</p>
-                 </div>
-               </div>
+              <div className="grid grid-cols-5 gap-4">
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-blue-600">{data.estatisticas.total_alunos_ativos}</p>
+                  <p className="text-sm text-muted-foreground">Alunos Ativos</p>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-orange-600">{data.estatisticas.total_funcionarios_ativos}</p>
+                  <p className="text-sm text-muted-foreground">Funcionários Ativos</p>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-green-600">
+                    {data.estatisticas.media_idade ? `${data.estatisticas.media_idade}` : '-'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Idade Média</p>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                  <p className="text-2xl font-bold text-purple-600">
+                    {data.estatisticas.media_dias_supera ? `${data.estatisticas.media_dias_supera}` : '-'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Dias Médio na Supera</p>
+                </div>
+                {dataConsulta && (
+                  <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                    {(() => {
+                      const vagas = Math.max(0, 12 - 
+                        data.estatisticas.total_alunos_ativos - 
+                        data.estatisticas.total_funcionarios_ativos - 
+                        data.estatisticas.total_reposicoes_dia - 
+                        data.estatisticas.total_aulas_experimentais_dia +
+                        data.estatisticas.total_faltas_futuras_dia
+                      );
+                      const colorClass = vagas > 5 ? 'text-emerald-600' : 
+                                        vagas > 2 ? 'text-amber-600' : 
+                                        'text-red-600';
+                      return (
+                        <>
+                          <p className={`text-2xl font-bold ${colorClass}`}>{vagas}</p>
+                          <p className="text-sm text-muted-foreground">Vagas do Dia</p>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
