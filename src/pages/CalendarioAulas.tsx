@@ -93,7 +93,11 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
 };
 
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () => void }) => {
+const BlocoTurma = ({ turma, onClick, isCompact = false }: { 
+  turma: CalendarioTurma; 
+  onClick?: () => void; 
+  isCompact?: boolean; 
+}) => {
   // Calcular vagas disponíveis
   const capacidadeMaxima = turma.categoria === 'infantil' ? 6 : 12;
   const ocupacao = turma.total_alunos_ativos + turma.total_reposicoes + turma.total_aulas_experimentais;
@@ -107,9 +111,47 @@ const BlocoTurma = ({ turma, onClick }: { turma: CalendarioTurma; onClick?: () =
     return 'text-red-600';
   };
 
+  if (isCompact) {
+    return (
+      <div 
+        className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
+        onClick={onClick}
+      >
+        <div className="space-y-0.5">
+          <div className="font-medium text-blue-900 text-xs leading-tight">
+            {turma.categoria}
+          </div>
+          <div className="text-blue-700 text-xs leading-tight">
+            {formatarNomeProfessor(turma.professor_nome)}
+          </div>
+          <div className="flex items-center gap-1 text-blue-600">
+            <Users className="w-2.5 h-2.5 flex-shrink-0" />
+            <span className="text-xs">
+              {turma.total_alunos_ativos}/{capacidadeMaxima}
+            </span>
+          </div>
+          {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0) && (
+            <div className="text-xs leading-tight">
+              {turma.total_reposicoes > 0 && (
+                <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
+              )}
+              {turma.total_reposicoes > 0 && turma.total_aulas_experimentais > 0 && ' '}
+              {turma.total_aulas_experimentais > 0 && (
+                <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
+              )}
+            </div>
+          )}
+          <div className={`text-xs font-medium leading-tight ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
+            {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
-      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between"
+      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[90px]"
       onClick={onClick}
     >
       <div>
@@ -529,7 +571,7 @@ export default function CalendarioAulas() {
           className="relative"
           style={{
             display: 'grid',
-            gridTemplateRows: `repeat(${slots.length}, 40px)`,
+            gridTemplateRows: `repeat(${slots.length}, 50px)`, // Aumentado de 40px para 50px
             gridTemplateColumns: '45px repeat(6, 1fr)',
           }}
         >
@@ -567,17 +609,21 @@ export default function CalendarioAulas() {
             const slot = parseInt(slotStr);
             const diaIndex = obterDiaSemanaIndex(diaSemana);
             
+            // Determinar altura baseada no número de turmas
+            const alturaSlots = turmas.length > 2 ? 5 : 4; // Mais slots quando há mais turmas
+            const isCompact = turmas.length > 1; // Usar layout compacto quando há múltiplas turmas
+            
             return (
               <div
                 key={chave}
                 className="border border-gray-300 bg-white rounded-sm overflow-hidden"
                 style={{
-                  gridRow: `${slot + 1} / ${slot + 5}`, // 4 slots (2 horas)
+                  gridRow: `${slot + 1} / ${slot + 1 + alturaSlots}`,
                   gridColumn: diaIndex + 2,
                   display: 'grid',
                   gridTemplateColumns: `repeat(${turmas.length}, 1fr)`,
-                  gap: '2px',
-                  padding: '2px',
+                  gap: '1px',
+                  padding: '1px',
                   zIndex: 1,
                 }}
               >
@@ -586,6 +632,7 @@ export default function CalendarioAulas() {
                     key={`${turma.turma_id}-${turmaIndex}`} 
                     turma={turma} 
                     onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
+                    isCompact={isCompact}
                   />
                 ))}
               </div>
