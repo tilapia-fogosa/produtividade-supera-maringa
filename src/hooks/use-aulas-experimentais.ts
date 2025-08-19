@@ -9,6 +9,7 @@ interface AulaExperimentalData {
   data_aula_experimental: string;
   responsavel_id: string;
   responsavel_tipo: 'professor' | 'funcionario';
+  responsavel_nome: string;
   descricao_cliente?: string;
   unit_id: string;
   created_by?: string;
