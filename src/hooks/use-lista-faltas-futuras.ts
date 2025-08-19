@@ -33,8 +33,7 @@ export const useListaFaltasFuturas = () => {
           turma_id
         `)
         .eq('active', true)
-        .order('data_falta', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('data_falta', { ascending: true }); // Ordenar por data da falta (mais antiga primeiro)
 
       if (error) {
         console.error('❌ Erro ao buscar faltas futuras:', error);

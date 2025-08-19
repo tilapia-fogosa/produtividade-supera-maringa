@@ -180,13 +180,13 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
                             </div>
                           </div>
 
-                          {/* Linha 2: Data da falta */}
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              <strong>Data da falta:</strong> {formatDate(falta.data_falta)}
-                            </span>
-                          </div>
+                           {/* Linha 2: Data da falta */}
+                           <div className="flex items-center gap-2">
+                             <Calendar className="h-4 w-4 text-red-500" />
+                             <span className="text-sm font-medium">
+                               <strong className="text-red-600">Data da falta:</strong> {formatDate(falta.data_falta)}
+                             </span>
+                           </div>
 
                           {/* Linha 3: Responsável pelo aviso */}
                           <div className="flex items-center gap-2">
