@@ -54,27 +54,17 @@ export const useListaFaltasFuturas = () => {
       const alunosMap = new Map(alunosData.data?.map(a => [a.id, a.nome]) || []);
       const turmasMap = new Map(turmasData.data?.map(t => [t.id, t.nome]) || []);
 
-      const faltasFormatadas: FaltaFutura[] = (data || []).map(falta => {
-        // Debug: Log para verificar os valores das datas
-        console.log(`🔍 Falta ID: ${falta.id}`, {
-          data_falta: falta.data_falta,
-          created_at: falta.created_at,
-          aluno_id: falta.aluno_id,
-          turma_id: falta.turma_id
-        });
-
-        return {
-          id: falta.id,
-          aluno_nome: alunosMap.get(falta.aluno_id) || 'Nome não encontrado',
-          turma_nome: turmasMap.get(falta.turma_id) || 'Turma não encontrada',
-          data_falta: falta.data_falta,
-          responsavel_aviso_nome: falta.responsavel_aviso_nome,
-          responsavel_aviso_tipo: falta.responsavel_aviso_tipo,
-          observacoes: falta.observacoes,
-          created_at: falta.created_at,
-          unit_id: falta.unit_id,
-        };
-      });
+      const faltasFormatadas: FaltaFutura[] = (data || []).map(falta => ({
+        id: falta.id,
+        aluno_nome: alunosMap.get(falta.aluno_id) || 'Nome não encontrado',
+        turma_nome: turmasMap.get(falta.turma_id) || 'Turma não encontrada',
+        data_falta: falta.data_falta,
+        responsavel_aviso_nome: falta.responsavel_aviso_nome,
+        responsavel_aviso_tipo: falta.responsavel_aviso_tipo,
+        observacoes: falta.observacoes,
+        created_at: falta.created_at,
+        unit_id: falta.unit_id,
+      }));
 
       return faltasFormatadas;
     },

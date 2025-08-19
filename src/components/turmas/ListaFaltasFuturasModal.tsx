@@ -92,7 +92,10 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+      // Para datas no formato YYYY-MM-DD, criar date local para evitar problema de timezone
+      const [year, month, day] = dateString.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return format(date, "dd/MM/yyyy", { locale: ptBR });
     } catch (error) {
       return dateString;
     }
@@ -202,17 +205,13 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
                             </div>
                           </div>
 
-                           {/* Linha 2: Data da falta - DEBUG */}
+                           {/* Linha 2: Data da falta */}
                            <div className="flex items-center gap-2">
                              <Calendar className="h-4 w-4 text-red-500" />
                              <span className="text-sm font-medium">
                                <strong className="text-red-600">Data da falta:</strong> 
                                <span className="ml-1 text-red-700 font-bold">
                                  {formatDate(falta.data_falta)}
-                               </span>
-                               {/* Debug info */}
-                               <span className="ml-2 text-xs text-muted-foreground">
-                                 (Raw: {falta.data_falta})
                                </span>
                              </span>
                            </div>
