@@ -412,6 +412,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
           onClose={() => setFaltaFuturaModalOpen(false)}
           turmaId={data.turma.id}
           unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
+          dataConsulta={dataConsulta}
         />
       )}
     </Dialog>
