@@ -32,6 +32,7 @@ export const useReposicoes = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reposicoes'] });
+      queryClient.invalidateQueries({ queryKey: ['calendario-turmas'] });
       toast({
         title: "Sucesso",
         description: "Reposição registrada com sucesso!",

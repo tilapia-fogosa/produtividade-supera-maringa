@@ -236,6 +236,7 @@ export type Database = {
           nome: string
           percepcao_coordenador: string | null
           pontos_atencao: string | null
+          responsavel: string
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -271,6 +272,7 @@ export type Database = {
           nome: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
+          responsavel?: string
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -306,6 +308,7 @@ export type Database = {
           nome?: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
+          responsavel?: string
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -3733,6 +3736,7 @@ export type Database = {
           sala: string
           total_alunos_ativos: number
           total_aulas_experimentais: number
+          total_faltas_futuras: number
           total_reposicoes: number
           turma_id: string
           unit_id: string
