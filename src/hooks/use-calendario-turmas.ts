@@ -15,6 +15,7 @@ export type CalendarioTurma = {
   total_alunos_ativos: number;
   total_reposicoes: number;
   total_aulas_experimentais: number;
+  total_faltas_futuras: number;
   created_at: string;
 };
 
