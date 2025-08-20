@@ -236,6 +236,7 @@ export type Database = {
           nome: string
           percepcao_coordenador: string | null
           pontos_atencao: string | null
+          responsavel: string
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -271,6 +272,7 @@ export type Database = {
           nome: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
+          responsavel?: string
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -306,6 +308,7 @@ export type Database = {
           nome?: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
+          responsavel?: string
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
