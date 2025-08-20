@@ -130,14 +130,18 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
               {turma.total_alunos_ativos}/{capacidadeMaxima}
             </span>
           </div>
-          {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0) && (
+          {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && (
             <div className="text-xs leading-tight">
               {turma.total_reposicoes > 0 && (
                 <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
               )}
-              {turma.total_reposicoes > 0 && turma.total_aulas_experimentais > 0 && ' '}
+              {turma.total_reposicoes > 0 && (turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && ' '}
               {turma.total_aulas_experimentais > 0 && (
                 <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
+              )}
+              {turma.total_aulas_experimentais > 0 && turma.total_faltas_futuras > 0 && ' '}
+              {turma.total_faltas_futuras > 0 && (
+                <span className="font-medium" style={{ color: '#e17021' }}>Fal: {turma.total_faltas_futuras}</span>
               )}
             </div>
           )}
@@ -170,6 +174,9 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
             )}
             {turma.total_aulas_experimentais > 0 && (
               <span className="text-green-500 font-medium"> Exp: {turma.total_aulas_experimentais}</span>
+            )}
+            {turma.total_faltas_futuras > 0 && (
+              <span className="font-medium" style={{ color: '#e17021' }}> Fal: {turma.total_faltas_futuras}</span>
             )}
           </span>
         </div>
