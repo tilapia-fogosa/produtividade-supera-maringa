@@ -34,6 +34,7 @@ export const useAulasExperimentais = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['aulas-experimentais'] });
       queryClient.invalidateQueries({ queryKey: ['turma-modal'] });
+      queryClient.invalidateQueries({ queryKey: ['calendario-turmas'] });
       toast({
         title: "Sucesso",
         description: "Aula experimental registrada com sucesso!",

@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,6 +16,7 @@ interface FaltaFuturaData {
 
 export const useFaltasFuturas = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const criarFaltaFutura = useMutation({
     mutationFn: async (data: FaltaFuturaData) => {
@@ -26,6 +27,7 @@ export const useFaltasFuturas = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendario-turmas'] });
       toast({
         title: "Sucesso!",
         description: "Falta futura registrada com sucesso!",
