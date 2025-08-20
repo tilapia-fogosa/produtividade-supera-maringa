@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,10 +27,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, AlertCircle } from "lucide-react";
+import { Trash2, AlertCircle, FileText } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaReposicoes } from "@/hooks/use-lista-reposicoes";
+import { ObservacoesView } from "./ObservacoesView";
 
 interface ListaReposicoesModalProps {
   open: boolean;
@@ -39,6 +40,11 @@ interface ListaReposicoesModalProps {
 
 export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModalProps) {
   const { reposicoes, isLoading, error, deletarReposicao, isDeletingReposicao, refetch } = useListaReposicoes();
+  const [selectedObservacoes, setSelectedObservacoes] = useState<{
+    observacoes: string;
+    alunoNome: string;
+    dataReposicao: string;
+  } | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -50,6 +56,14 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
     deletarReposicao(reposicaoId);
   };
 
+  const handleVerObservacoes = (observacoes: string, alunoNome: string, dataReposicao: string) => {
+    setSelectedObservacoes({
+      observacoes,
+      alunoNome,
+      dataReposicao: formatDate(dataReposicao)
+    });
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return format(parseISO(dateString), "dd/MM/yyyy", { locale: ptBR });
@@ -57,6 +71,17 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
       return dateString;
     }
   };
+
+  if (selectedObservacoes) {
+    return (
+      <ObservacoesView
+        observacoes={selectedObservacoes.observacoes}
+        alunoNome={selectedObservacoes.alunoNome}
+        dataReposicao={selectedObservacoes.dataReposicao}
+        onVoltar={() => setSelectedObservacoes(null)}
+      />
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -104,7 +129,7 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
                     Turma de Reposição
                   </TableHead>
                   <TableHead className="w-32">Observações</TableHead>
-                  <TableHead className="w-20 text-center">Ações</TableHead>
+                  <TableHead className="w-32 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -122,10 +147,29 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
                       {reposicao.turma_reposicao_nome}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {reposicao.observacoes || "-"}
+                      {reposicao.observacoes ? (
+                        <span className="truncate block max-w-32">
+                          {reposicao.observacoes}
+                        </span>
+                      ) : "-"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <AlertDialog>
+                      <div className="flex gap-1 justify-center">
+                        {reposicao.observacoes && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVerObservacoes(
+                              reposicao.observacoes!,
+                              reposicao.aluno_nome,
+                              reposicao.data_reposicao
+                            )}
+                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="ghost"
@@ -164,6 +208,7 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

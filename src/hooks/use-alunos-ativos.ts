@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -15,6 +14,8 @@ export interface AlunoAtivo {
   idade: number | null;
   email: string | null;
   telefone: string | null;
+  whatapp_contato: string | null;
+  responsavel: string | null;
   matricula: string | null;
   codigo: string | null;
   indice: string | null;
@@ -57,14 +58,7 @@ export function useAlunosAtivos() {
       // Primeira consulta: buscar alunos ativos com todos os campos
       const { data: alunosData, error: alunosError } = await supabase
         .from('alunos')
-        .select(`
-          id, nome, turma_id, dias_supera, active, idade, email, telefone,
-          matricula, codigo, indice, curso, ultima_pagina, ultimo_nivel,
-          niveldesafio, dias_apostila, data_onboarding, motivo_procura,
-          coordenador_responsavel, percepcao_coordenador, pontos_atencao,
-          avaliacao_abaco, avaliacao_ah, texto_devolutiva, vencimento_contrato,
-          ultima_falta, ultima_correcao_ah, is_funcionario, valor_mensalidade
-        `)
+        .select('*')
         .eq('active', true)
         .order('nome');
 
@@ -129,7 +123,7 @@ export function useAlunosAtivos() {
 
       // Mapear dados dos alunos com informações das turmas e professores
       const alunosComDados = await Promise.all(
-        alunosData.map(async (aluno) => {
+        alunosData.map(async (aluno: any) => {
           console.log('Processando aluno:', aluno.nome);
           
           // Encontrar dados da turma
@@ -187,10 +181,78 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarWhatsApp = async (alunoId: string, whatsapp: string) => {
+    try {
+      const { error } = await supabase
+        .from('alunos')
+        .update({ whatapp_contato: whatsapp } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setAlunos(prev => prev.map(aluno => 
+        aluno.id === alunoId 
+          ? { ...aluno, whatapp_contato: whatsapp }
+          : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "WhatsApp atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar WhatsApp:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o WhatsApp.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarResponsavel = async (alunoId: string, responsavel: string) => {
+    try {
+      const { error } = await supabase
+        .from('alunos')
+        .update({ responsavel: responsavel } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setAlunos(prev => prev.map(aluno => 
+        aluno.id === alunoId 
+          ? { ...aluno, responsavel: responsavel }
+          : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Responsável atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar responsável:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o responsável.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
     error,
-    refetch: buscarAlunosAtivos
+    refetch: buscarAlunosAtivos,
+    atualizarWhatsApp,
+    atualizarResponsavel
   };
 }

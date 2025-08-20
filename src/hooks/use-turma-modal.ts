@@ -22,6 +22,18 @@ export type TurmaModalData = {
     foto_url: string | null;
     telefone?: string;
     email?: string;
+    is_funcionario?: boolean;
+  }>;
+  funcionarios: Array<{
+    id: string;
+    nome: string;
+    idade: number;
+    dias_supera: number;
+    foto_url: string | null;
+    telefone?: string;
+    email?: string;
+    cargo?: string;
+    is_funcionario: boolean;
   }>;
   reposicoes: Array<{
     id: string;
@@ -43,10 +55,24 @@ export type TurmaModalData = {
     descricao_cliente?: string;
     responsavel_nome?: string;
   }>;
+  faltas_futuras: Array<{
+    id: string;
+    nome: string;
+    idade?: number;
+    dias_supera?: number;
+    foto_url: string | null;
+    telefone?: string;
+    email?: string;
+    data_falta: string;
+    responsavel_aviso_nome?: string;
+    observacoes?: string;
+  }>;
   estatisticas: {
     total_alunos_ativos: number;
+    total_funcionarios_ativos: number;
     total_reposicoes_dia: number;
     total_aulas_experimentais_dia: number;
+    total_faltas_futuras_dia: number;
     media_idade: number;
     media_dias_supera: number;
   };
@@ -82,8 +108,10 @@ export const useTurmaModal = (turmaId: string | null, dataConsulta?: Date) => {
       console.log('✅ Dados retornados get_turma_modal_data:', {
         turma: typedData?.turma?.nome,
         alunos: typedData?.alunos?.length || 0,
+        funcionarios: typedData?.funcionarios?.length || 0,
         reposicoes: typedData?.reposicoes?.length || 0,
         aulas_experimentais: typedData?.aulas_experimentais?.length || 0,
+        faltas_futuras: typedData?.faltas_futuras?.length || 0,
         estatisticas: typedData?.estatisticas
       });
       

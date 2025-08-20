@@ -20,11 +20,16 @@ export const useAulasExperimentais = () => {
 
   const criarAulaExperimental = useMutation({
     mutationFn: async (data: AulaExperimentalData) => {
-      const { error } = await supabase
-        .from('aulas_experimentais')
-        .insert([data]);
+      const { data: result, error } = await supabase.functions.invoke('register-aula-experimental', {
+        body: data
+      });
 
       if (error) throw error;
+      if (!result?.success) {
+        throw new Error(result?.error || 'Erro ao registrar aula experimental');
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['aulas-experimentais'] });

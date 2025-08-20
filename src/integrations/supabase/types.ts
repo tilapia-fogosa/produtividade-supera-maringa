@@ -246,6 +246,7 @@ export type Database = {
           unit_id: string
           valor_mensalidade: number | null
           vencimento_contrato: string | null
+          whatapp_contato: string | null
         }
         Insert: {
           active?: boolean
@@ -280,6 +281,7 @@ export type Database = {
           unit_id: string
           valor_mensalidade?: number | null
           vencimento_contrato?: string | null
+          whatapp_contato?: string | null
         }
         Update: {
           active?: boolean
@@ -314,6 +316,7 @@ export type Database = {
           unit_id?: string
           valor_mensalidade?: number | null
           vencimento_contrato?: string | null
+          whatapp_contato?: string | null
         }
         Relationships: [
           {
@@ -517,6 +520,7 @@ export type Database = {
           descricao_cliente: string | null
           id: string
           responsavel_id: string
+          responsavel_nome: string | null
           responsavel_tipo: string
           turma_id: string
           unit_id: string
@@ -530,6 +534,7 @@ export type Database = {
           descricao_cliente?: string | null
           id?: string
           responsavel_id: string
+          responsavel_nome?: string | null
           responsavel_tipo: string
           turma_id: string
           unit_id: string
@@ -543,6 +548,7 @@ export type Database = {
           descricao_cliente?: string | null
           id?: string
           responsavel_id?: string
+          responsavel_nome?: string | null
           responsavel_tipo?: string
           turma_id?: string
           unit_id?: string
@@ -1446,6 +1452,51 @@ export type Database = {
           titulo?: string
           unit_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      faltas_antecipadas: {
+        Row: {
+          active: boolean
+          aluno_id: string
+          created_at: string
+          created_by: string | null
+          data_falta: string
+          id: string
+          observacoes: string | null
+          responsavel_aviso_id: string
+          responsavel_aviso_nome: string
+          responsavel_aviso_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean
+          aluno_id: string
+          created_at?: string
+          created_by?: string | null
+          data_falta: string
+          id?: string
+          observacoes?: string | null
+          responsavel_aviso_id: string
+          responsavel_aviso_nome: string
+          responsavel_aviso_tipo: string
+          turma_id: string
+          unit_id: string
+        }
+        Update: {
+          active?: boolean
+          aluno_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_falta?: string
+          id?: string
+          observacoes?: string | null
+          responsavel_aviso_id?: string
+          responsavel_aviso_nome?: string
+          responsavel_aviso_tipo?: string
+          turma_id?: string
+          unit_id?: string
         }
         Relationships: []
       }
@@ -2494,6 +2545,7 @@ export type Database = {
           data_falta: string | null
           data_reposicao: string
           id: string
+          nome_responsavel: string | null
           observacoes: string | null
           responsavel_id: string
           responsavel_tipo: string
@@ -2507,6 +2559,7 @@ export type Database = {
           data_falta?: string | null
           data_reposicao: string
           id?: string
+          nome_responsavel?: string | null
           observacoes?: string | null
           responsavel_id: string
           responsavel_tipo: string
@@ -2520,6 +2573,7 @@ export type Database = {
           data_falta?: string | null
           data_reposicao?: string
           id?: string
+          nome_responsavel?: string | null
           observacoes?: string | null
           responsavel_id?: string
           responsavel_tipo?: string
