@@ -107,6 +107,8 @@ export function getTipoTitle(tipo: string): string {
       return 'Items';
     case 'kit':
       return 'Kits de Material';
+    case 'camiseta':
+      return 'Camisetas';
     default:
       return tipo.charAt(0).toUpperCase() + tipo.slice(1);
   }
@@ -124,6 +126,8 @@ export function getTipoColor(tipo: string): string {
       return 'bg-[#4E2CA3] border-roxo-DEFAULT text-white';
     case 'item':
       return 'bg-[#4B4B24] border-cinza-medium text-white';
+    case 'camiseta':
+      return 'bg-[#1E40AF] border-blue-400 text-white';
     default:
       return 'bg-[#603808] border-supera-600 text-white';
   }
