@@ -100,7 +100,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 }) => {
   // Calcular vagas disponíveis
   const capacidadeMaxima = turma.categoria === 'infantil' ? 6 : 12;
-  const ocupacao = turma.total_alunos_ativos + turma.total_reposicoes + turma.total_aulas_experimentais;
+  const ocupacao = turma.total_alunos_ativos + turma.total_reposicoes + turma.total_aulas_experimentais - turma.total_faltas_futuras;
   const vagasDisponiveis = Math.max(0, capacidadeMaxima - ocupacao);
   
   // Determinar cor das vagas
