@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Trash2, FileText } from "lucide-react";
+import { AlertTriangle, Trash2, FileText, History, CalendarDays, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -42,18 +42,38 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
   open,
   onOpenChange,
 }) => {
-  const { aulasExperimentais, isLoading, error, deletarAulaExperimental, refetch } = useListaAulasExperimentais();
+  const { aulasExperimentais: todasAulas, isLoading, error, deletarAulaExperimental, refetch } = useListaAulasExperimentais();
   const [selectedObservacoes, setSelectedObservacoes] = useState<{
     observacoes: string;
     alunoNome: string;
     dataAula: string;
   } | null>(null);
+  const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
 
   useEffect(() => {
     if (open) {
       refetch();
     }
   }, [open, refetch]);
+
+  // Filtrar aulas baseado no estado do toggle
+  const aulasExperimentais = useMemo(() => {
+    if (!todasAulas) return [];
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    if (mostrarAnteriores) {
+      return todasAulas; // Mostra todas
+    } else {
+      // Mostra apenas futuras
+      return todasAulas.filter(aula => {
+        const dataAula = parseISO(aula.data_aula_experimental);
+        dataAula.setHours(0, 0, 0, 0);
+        return dataAula >= hoje; // Incluir aulas de hoje e futuras
+      });
+    }
+  }, [todasAulas, mostrarAnteriores]);
 
   const podeExcluir = (dataAula: string) => {
     const hoje = new Date();
@@ -95,12 +115,46 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Lista de Aulas Experimentais</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {mostrarAnteriores ? 'Todas as Aulas Experimentais' : 'Aulas Experimentais Futuras'}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Atualizar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarAnteriores(!mostrarAnteriores)}
+                className="flex items-center gap-2"
+              >
+                {mostrarAnteriores ? (
+                  <>
+                    <CalendarDays className="h-4 w-4" />
+                    Apenas Futuras
+                  </>
+                ) : (
+                  <>
+                    <History className="h-4 w-4" />
+                    Incluir Anteriores
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -113,9 +167,25 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
             </div>
           ) : aulasExperimentais.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhuma aula experimental encontrada
+              <div className="space-y-2">
+                <p className="font-medium">
+                  {mostrarAnteriores ? 'Nenhuma aula experimental encontrada' : 'Nenhuma aula experimental futura encontrada'}
+                </p>
+                <p className="text-sm">
+                  {mostrarAnteriores 
+                    ? 'Não há aulas experimentais registradas no sistema no momento.'
+                    : 'Não há aulas experimentais futuras registradas no sistema no momento.'
+                  }
+                </p>
+              </div>
             </div>
           ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-lg font-medium">
+                  {mostrarAnteriores ? 'Todas as Aulas Experimentais' : 'Aulas Experimentais Futuras'} ({aulasExperimentais.length})
+                </h3>
+              </div>
             <TooltipProvider>
               <Table>
                 <TableHeader>
@@ -227,6 +297,7 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
                 </TableBody>
               </Table>
             </TooltipProvider>
+            </div>
           )}
         </div>
       </DialogContent>

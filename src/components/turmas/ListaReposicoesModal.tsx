@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, AlertCircle, FileText } from "lucide-react";
+import { Trash2, AlertCircle, FileText, History, CalendarDays, RefreshCw } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaReposicoes } from "@/hooks/use-lista-reposicoes";
@@ -39,18 +39,38 @@ interface ListaReposicoesModalProps {
 }
 
 export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModalProps) {
-  const { reposicoes, isLoading, error, deletarReposicao, isDeletingReposicao, refetch } = useListaReposicoes();
+  const { reposicoes: todasReposicoes, isLoading, error, deletarReposicao, isDeletingReposicao, refetch } = useListaReposicoes();
   const [selectedObservacoes, setSelectedObservacoes] = useState<{
     observacoes: string;
     alunoNome: string;
     dataReposicao: string;
   } | null>(null);
+  const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
 
   useEffect(() => {
     if (open) {
       refetch();
     }
   }, [open, refetch]);
+
+  // Filtrar reposições baseado no estado do toggle
+  const reposicoes = useMemo(() => {
+    if (!todasReposicoes) return [];
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    if (mostrarAnteriores) {
+      return todasReposicoes; // Mostra todas
+    } else {
+      // Mostra apenas futuras
+      return todasReposicoes.filter(reposicao => {
+        const dataReposicao = parseISO(reposicao.data_reposicao);
+        dataReposicao.setHours(0, 0, 0, 0);
+        return dataReposicao >= hoje; // Incluir reposições de hoje e futuras
+      });
+    }
+  }, [todasReposicoes, mostrarAnteriores]);
 
   const handleDeleteReposicao = (reposicaoId: string) => {
     deletarReposicao(reposicaoId);
@@ -87,11 +107,46 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            Lista de Reposições
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {mostrarAnteriores ? 'Todas as Reposições' : 'Reposições Futuras'}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Atualizar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarAnteriores(!mostrarAnteriores)}
+                className="flex items-center gap-2"
+              >
+                {mostrarAnteriores ? (
+                  <>
+                    <CalendarDays className="h-4 w-4" />
+                    Apenas Futuras
+                  </>
+                ) : (
+                  <>
+                    <History className="h-4 w-4" />
+                    Incluir Anteriores
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogTitle>
           <DialogDescription>
-            Todas as reposições registradas no sistema. Use o botão de exclusão para remover uma reposição.
+            {mostrarAnteriores 
+              ? 'Todas as reposições registradas no sistema. Use o botão de exclusão para remover uma reposição.'
+              : 'Reposições futuras registradas no sistema. Use o botão de exclusão para remover uma reposição.'
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -114,10 +169,26 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
               Erro ao carregar reposições
             </div>
           ) : reposicoes.length === 0 ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">
-              Nenhuma reposição encontrada
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="space-y-2">
+                <p className="font-medium">
+                  {mostrarAnteriores ? 'Nenhuma reposição encontrada' : 'Nenhuma reposição futura encontrada'}
+                </p>
+                <p className="text-sm">
+                  {mostrarAnteriores 
+                    ? 'Não há reposições registradas no sistema no momento.'
+                    : 'Não há reposições futuras registradas no sistema no momento.'
+                  }
+                </p>
+              </div>
             </div>
           ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-lg font-medium">
+                  {mostrarAnteriores ? 'Todas as Reposições' : 'Reposições Futuras'} ({reposicoes.length})
+                </h3>
+              </div>
               <Table>
               <TableHeader>
                 <TableRow>
@@ -214,6 +285,7 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </div>
       </DialogContent>
