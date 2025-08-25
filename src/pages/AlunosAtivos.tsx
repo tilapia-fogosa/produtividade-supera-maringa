@@ -158,6 +158,21 @@ export default function AlunosAtivos() {
     setResponsavelTemp('');
   };
 
+  const handleAbrirWhatsApp = (aluno: AlunoAtivo) => {
+    const numero = aluno.whatapp_contato;
+    if (!numero) {
+      alert('Este aluno não possui WhatsApp cadastrado');
+      return;
+    }
+    
+    // Remove caracteres especiais e espaços do número
+    const numeroLimpo = numero.replace(/\D/g, '');
+    
+    // Abre o WhatsApp Web/App
+    const url = `https://wa.me/55${numeroLimpo}`;
+    window.open(url, '_blank');
+  };
+
   if (loading) {
     return <div className="p-4 text-center">
         <p>Carregando alunos ativos...</p>
@@ -397,17 +412,28 @@ export default function AlunosAtivos() {
                          </div>
                        )}
                      </td>
-                     <td className="p-4">
-                       <Button
-                         variant="ghost"
-                         size="sm"
-                         onClick={() => handleVerDetalhes(aluno)}
-                         className="flex items-center gap-2"
-                       >
-                         <Eye className="w-4 h-4" />
-                         Ver Detalhes
-                       </Button>
-                     </td>
+                      <td className="p-4">
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVerDetalhes(aluno)}
+                            className="flex items-center gap-2 w-full justify-start"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Ver Detalhes
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAbrirWhatsApp(aluno)}
+                            className="flex items-center gap-2 w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            WhatsApp
+                          </Button>
+                        </div>
+                      </td>
                   </tr>
                 ))}
               </tbody>
