@@ -290,7 +290,7 @@ export default function AlunosAtivos() {
                    <th className="text-left p-4 w-[150px]">
                      <span className="font-semibold">Responsável</span>
                    </th>
-                   <th className="text-left p-4 w-[120px]">
+                   <th className="text-left p-4 w-[100px]">
                      <span className="font-semibold">Ações</span>
                    </th>
                 </tr>
@@ -412,28 +412,28 @@ export default function AlunosAtivos() {
                          </div>
                        )}
                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-col gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleVerDetalhes(aluno)}
-                            className="flex items-center gap-2 w-full justify-start"
-                          >
-                            <Eye className="w-4 h-4" />
-                            Ver Detalhes
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleAbrirWhatsApp(aluno)}
-                            className="flex items-center gap-2 w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            WhatsApp
-                          </Button>
-                        </div>
-                      </td>
+                       <td className="p-4">
+                         <div className="flex gap-1">
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             onClick={() => handleVerDetalhes(aluno)}
+                             className="h-8 w-8"
+                             title="Ver Detalhes"
+                           >
+                             <Eye className="w-4 h-4" />
+                           </Button>
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             onClick={() => handleAbrirWhatsApp(aluno)}
+                             className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                             title="Abrir WhatsApp"
+                           >
+                             <MessageCircle className="w-4 h-4" />
+                           </Button>
+                         </div>
+                       </td>
                   </tr>
                 ))}
               </tbody>
