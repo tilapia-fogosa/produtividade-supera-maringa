@@ -11,7 +11,7 @@ import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { useAlunos } from "@/hooks/use-alunos";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
-import { useReposicoes, calcularDatasValidas, calcularDatasValidasFalta } from "@/hooks/use-reposicoes";
+import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 interface Turma {
@@ -48,20 +48,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
 
   // Calcular datas válidas baseadas no dia da semana da turma
   const datasValidas = calcularDatasValidas(turma.dia_semana);
-
-  // Calcular datas válidas para faltas (incluindo passadas)
-  const datasValidasFalta = calcularDatasValidasFalta(turma.dia_semana);
-
-  // Obter nome do dia da semana para exibição
-  const nomeDiaSemana = {
-    'domingo': 'domingos',
-    'segunda': 'segundas-feiras', 
-    'terca': 'terças-feiras',
-    'quarta': 'quartas-feiras',
-    'quinta': 'quintas-feiras',
-    'sexta': 'sextas-feiras',
-    'sabado': 'sábados'
-  }[turma.dia_semana.toLowerCase()] || turma.dia_semana;
 
   // Função para determinar o tipo do responsável
   const determinarTipoResponsavel = (responsavelId: string): 'professor' | 'funcionario' => {
@@ -143,9 +129,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
           {/* Data da Falta */}
           <div className="space-y-2">
             <Label>Data da Falta (opcional)</Label>
-            <div className="text-xs text-muted-foreground mb-2">
-              📅 Apenas {nomeDiaSemana} (dia da turma)
-            </div>
             {dataFalta && dataFalta > new Date() && (
               <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md">
                 ⚠️ Falta futura: Será criado um registro de falta antecipada para esta data.
@@ -161,34 +144,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar 
-                  mode="single" 
-                  selected={dataFalta} 
-                  onSelect={setDataFalta} 
-                  disabled={date => 
-                    date < new Date("1900-01-01") || 
-                    !datasValidasFalta.some(d => format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
-                  }
-                  modifiers={{
-                    available: datasValidasFalta,
-                    selected: dataFalta ? [dataFalta] : undefined
-                  }}
-                  modifiersStyles={{
-                    available: {
-                      backgroundColor: 'hsl(var(--primary))',
-                      color: 'hsl(var(--primary-foreground))'
-                    },
-                    selected: {
-                      backgroundColor: 'hsl(var(--secondary))',
-                      color: 'hsl(var(--secondary-foreground))',
-                      border: '2px solid hsl(var(--secondary))',
-                      fontWeight: '600'
-                    }
-                  }}
-                  initialFocus 
-                  locale={ptBR} 
-                  className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} 
-                />
+                <Calendar mode="single" selected={dataFalta} onSelect={setDataFalta} disabled={date => date < new Date("1900-01-01")} initialFocus locale={ptBR} className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} />
               </PopoverContent>
             </Popover>
           </div>
