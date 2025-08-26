@@ -46,43 +46,6 @@ serve(async (req) => {
 
     console.log('Reposição inserted successfully:', reposicaoData);
 
-    // Check if we need to create a future absence
-    let faltaFuturaData = null;
-    if (body.data_falta) {
-      const dataFalta = new Date(body.data_falta);
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      dataFalta.setHours(0, 0, 0, 0);
-      
-      if (dataFalta > hoje) {
-        console.log('Creating future absence for date:', body.data_falta);
-        
-        // Create future absence record
-        const { data: faltaData, error: faltaError } = await supabase
-          .from('faltas_antecipadas')
-          .insert([{
-            aluno_id: body.aluno_id,
-            turma_id: body.turma_id,
-            unit_id: body.unit_id,
-            data_falta: body.data_falta,
-            responsavel_aviso_id: body.responsavel_id,
-            responsavel_aviso_tipo: body.responsavel_tipo,
-            responsavel_aviso_nome: body.nome_responsavel,
-            observacoes: body.observacoes ? `Falta futura registrada via reposição: ${body.observacoes}` : 'Falta futura registrada via reposição',
-            created_by: body.created_by
-          }])
-          .select()
-          .single();
-
-        if (faltaError) {
-          console.error('Error creating future absence:', faltaError);
-          // Note: We don't throw here to avoid breaking the reposition creation
-        } else {
-          faltaFuturaData = faltaData;
-          console.log('Future absence created successfully:', faltaFuturaData);
-        }
-      }
-    }
 
     // Get webhook URL from dados_importantes
     const { data: webhookData, error: webhookError } = await supabase
@@ -97,11 +60,8 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           reposicao: reposicaoData,
-          falta_futura: faltaFuturaData,
           webhook_sent: false,
-          message: faltaFuturaData 
-            ? 'Reposição e falta futura registradas, mas webhook não configurado'
-            : 'Reposição registrada, mas webhook não configurado'
+          message: 'Reposição registrada, mas webhook não configurado'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -209,13 +169,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         reposicao: reposicaoData,
-        falta_futura: faltaFuturaData,
         webhook_sent: webhookSuccess,
         webhook_status: webhookResponse?.status || null,
         execution_time: executionTime,
-        message: faltaFuturaData 
-          ? 'Reposição e falta futura registradas com sucesso'
-          : 'Reposição registrada com sucesso'
+        message: 'Reposição registrada com sucesso'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
