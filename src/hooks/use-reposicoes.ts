@@ -56,6 +56,7 @@ export const useReposicoes = () => {
 // Função para calcular datas válidas baseadas no dia da semana da turma
 export const calcularDatasValidas = (diaSemana: string): Date[] => {
   const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0); // Zerar horas para comparação correta
   const datas: Date[] = [];
   
   // Mapear dia da semana para número (domingo = 0, segunda = 1, etc.)
@@ -75,17 +76,26 @@ export const calcularDatasValidas = (diaSemana: string): Date[] => {
     return [];
   }
 
-  // Encontrar a próxima data válida
+  // Verificar se hoje é o dia da turma
+  const diaHoje = getDay(hoje);
+  
+  // Se hoje é o dia da turma, incluir hoje como primeira opção
+  if (diaHoje === diaAlvo) {
+    datas.push(new Date(hoje));
+  }
+
+  // Encontrar a próxima data válida (próxima semana)
   let dataAtual = new Date(hoje);
   let diasParaProximaData = (diaAlvo - getDay(dataAtual) + 7) % 7;
   
-  // Se é hoje e ainda não passou, começar de hoje
+  // Se é hoje, a próxima data será na próxima semana
   if (diasParaProximaData === 0) {
-    diasParaProximaData = 7; // Próxima semana
+    diasParaProximaData = 7;
   }
 
-  // Gerar as próximas 10 datas válidas
-  for (let i = 0; i < 10; i++) {
+  // Gerar as próximas 10 datas válidas (incluindo hoje se for o caso)
+  const totalDatas = diaHoje === diaAlvo ? 9 : 10; // Se incluiu hoje, gerar 9 a mais
+  for (let i = 0; i < totalDatas; i++) {
     const proximaData = addDays(dataAtual, diasParaProximaData + (i * 7));
     datas.push(proximaData);
   }
