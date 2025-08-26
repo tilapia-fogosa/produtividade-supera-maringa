@@ -46,6 +46,7 @@ serve(async (req) => {
 
     console.log('Reposição inserted successfully:', reposicaoData);
 
+
     // Get webhook URL from dados_importantes
     const { data: webhookData, error: webhookError } = await supabase
       .from('dados_importantes')
@@ -60,7 +61,7 @@ serve(async (req) => {
           success: true, 
           reposicao: reposicaoData,
           webhook_sent: false,
-          message: 'Reposição registered but no webhook configured'
+          message: 'Reposição registrada, mas webhook não configurado'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -170,7 +171,8 @@ serve(async (req) => {
         reposicao: reposicaoData,
         webhook_sent: webhookSuccess,
         webhook_status: webhookResponse?.status || null,
-        execution_time: executionTime
+        execution_time: executionTime,
+        message: 'Reposição registrada com sucesso'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

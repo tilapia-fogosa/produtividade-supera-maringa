@@ -128,8 +128,12 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
 
           {/* Data da Falta */}
           <div className="space-y-2">
-            <Label>Data da Falta (opcional)
-          </Label>
+            <Label>Data da Falta (opcional)</Label>
+            {dataFalta && dataFalta > new Date() && (
+              <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md">
+                ⚠️ Falta futura: Será criado um registro de falta antecipada para esta data.
+              </div>
+            )}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataFalta && "text-muted-foreground")}>
@@ -140,7 +144,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dataFalta} onSelect={setDataFalta} disabled={date => date > new Date() || date < new Date("1900-01-01")} initialFocus locale={ptBR} className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} />
+                <Calendar mode="single" selected={dataFalta} onSelect={setDataFalta} disabled={date => date < new Date("1900-01-01")} initialFocus locale={ptBR} className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} />
               </PopoverContent>
             </Popover>
           </div>
