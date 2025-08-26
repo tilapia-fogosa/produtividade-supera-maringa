@@ -144,7 +144,21 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dataFalta} onSelect={setDataFalta} disabled={date => date < new Date("1900-01-01")} initialFocus locale={ptBR} className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} />
+                <Calendar 
+                  mode="single" 
+                  selected={dataFalta} 
+                  onSelect={setDataFalta} 
+                  disabled={date => {
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    const dataComparacao = new Date(date);
+                    dataComparacao.setHours(0, 0, 0, 0);
+                    return dataComparacao < hoje;
+                  }} 
+                  initialFocus 
+                  locale={ptBR} 
+                  className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} 
+                />
               </PopoverContent>
             </Popover>
           </div>
