@@ -148,13 +148,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
                   mode="single" 
                   selected={dataFalta} 
                   onSelect={setDataFalta} 
-                  disabled={date => {
-                    const hoje = new Date();
-                    hoje.setHours(0, 0, 0, 0);
-                    const dataComparacao = new Date(date);
-                    dataComparacao.setHours(0, 0, 0, 0);
-                    return dataComparacao < hoje;
-                  }} 
                   initialFocus 
                   locale={ptBR} 
                   className={cn("p-3 pointer-events-auto", isMobile && "text-sm")} 
