@@ -470,6 +470,7 @@ export type Database = {
       }
       aulas: {
         Row: {
+          conteudo: string | null
           created_at: string
           data_aula: string
           descricao: string | null
@@ -479,11 +480,15 @@ export type Database = {
           id: string
           mes: string | null
           published: boolean
+          quantidade_contas_ditadas: number | null
           thumbnail_url: string | null
           titulo: string
+          total_abaco_absoluto: number | null
+          total_calculo_mental_absoluto: number | null
           updated_at: string
         }
         Insert: {
+          conteudo?: string | null
           created_at?: string
           data_aula: string
           descricao?: string | null
@@ -493,11 +498,15 @@ export type Database = {
           id?: string
           mes?: string | null
           published?: boolean
+          quantidade_contas_ditadas?: number | null
           thumbnail_url?: string | null
           titulo: string
+          total_abaco_absoluto?: number | null
+          total_calculo_mental_absoluto?: number | null
           updated_at?: string
         }
         Update: {
+          conteudo?: string | null
           created_at?: string
           data_aula?: string
           descricao?: string | null
@@ -507,8 +516,11 @@ export type Database = {
           id?: string
           mes?: string | null
           published?: boolean
+          quantidade_contas_ditadas?: number | null
           thumbnail_url?: string | null
           titulo?: string
+          total_abaco_absoluto?: number | null
+          total_calculo_mental_absoluto?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1101,7 +1113,7 @@ export type Database = {
           },
         ]
       }
-      clients_duplicate: {
+      clients_backup: {
         Row: {
           active: boolean
           age_range: string | null
@@ -1111,6 +1123,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           email: string | null
+          etapa_bot: Database["public"]["Enums"]["etapa-do-bot"] | null
           id: string
           lead_quality_score: number | null
           lead_source: string
@@ -1125,6 +1138,109 @@ export type Database = {
           primeiro_nome: string | null
           registration_cpf: string | null
           registration_name: string | null
+          resumo_atendimento: string | null
+          scheduled_date: string | null
+          status: string
+          tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
+          unit_api_key: string | null
+          unit_id: string | null
+          updated_at: string
+          valorization_confirmed: boolean | null
+        }
+        Insert: {
+          active?: boolean
+          age_range?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source: string
+          meta_id?: string | null
+          msg_concatenada?: string[]
+          name: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number: string
+          primeiro_nome?: string | null
+          registration_cpf?: string | null
+          registration_name?: string | null
+          resumo_atendimento?: string | null
+          scheduled_date?: string | null
+          status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
+          unit_api_key?: string | null
+          unit_id?: string | null
+          updated_at?: string
+          valorization_confirmed?: boolean | null
+        }
+        Update: {
+          active?: boolean
+          age_range?: string | null
+          concatena?: boolean | null
+          concatena_tempo?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source?: string
+          meta_id?: string | null
+          msg_concatenada?: string[]
+          name?: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number?: string
+          primeiro_nome?: string | null
+          registration_cpf?: string | null
+          registration_name?: string | null
+          resumo_atendimento?: string | null
+          scheduled_date?: string | null
+          status?: string
+          tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
+          unit_api_key?: string | null
+          unit_id?: string | null
+          updated_at?: string
+          valorization_confirmed?: boolean | null
+        }
+        Relationships: []
+      }
+      clients_duplicate: {
+        Row: {
+          active: boolean
+          age_range: string | null
+          concatena: boolean | null
+          concatena_tempo: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          etapa_bot: Database["public"]["Enums"]["etapa-do-bot"] | null
+          id: string
+          lead_quality_score: number | null
+          lead_source: string
+          meta_id: string | null
+          msg_concatenada: string[]
+          name: string
+          next_contact_date: string | null
+          observations: string | null
+          original_ad: string | null
+          original_adset: string | null
+          phone_number: string
+          primeiro_nome: string | null
+          registration_cpf: string | null
+          registration_name: string | null
+          resumo_atendimento: string | null
           scheduled_date: string | null
           status: string
           tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
@@ -1141,6 +1257,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
           id?: string
           lead_quality_score?: number | null
           lead_source: string
@@ -1155,6 +1272,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -1171,6 +1289,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
           id?: string
           lead_quality_score?: number | null
           lead_source?: string
@@ -1185,6 +1304,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -1597,6 +1717,50 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionalidades_unidade: {
+        Row: {
+          ativa: boolean
+          configuracao: Json | null
+          created_at: string | null
+          data_habilitacao: string | null
+          id: string
+          tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          unit_id: string
+          updated_at: string | null
+          usuario_habilitou: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          configuracao?: Json | null
+          created_at?: string | null
+          data_habilitacao?: string | null
+          id?: string
+          tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          unit_id: string
+          updated_at?: string | null
+          usuario_habilitou?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          configuracao?: Json | null
+          created_at?: string | null
+          data_habilitacao?: string | null
+          id?: string
+          tipo_funcionalidade?: Database["public"]["Enums"]["tipo_funcionalidade"]
+          unit_id?: string
+          updated_at?: string | null
+          usuario_habilitou?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionalidades_unidade_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -2609,33 +2773,44 @@ export type Database = {
       }
       resultados_alunos: {
         Row: {
-          acertos_calculo_mental: number
+          abaco_absoluto: number
           aluno_id: string
+          aula_id: string | null
           created_at: string
           data_aula: string
           id: string
-          quantidade_acertos: number
+          mental_absoluto: number
           updated_at: string
         }
         Insert: {
-          acertos_calculo_mental: number
+          abaco_absoluto: number
           aluno_id: string
+          aula_id?: string | null
           created_at?: string
           data_aula: string
           id?: string
-          quantidade_acertos: number
+          mental_absoluto: number
           updated_at?: string
         }
         Update: {
-          acertos_calculo_mental?: number
+          abaco_absoluto?: number
           aluno_id?: string
+          aula_id?: string | null
           created_at?: string
           data_aula?: string
           id?: string
-          quantidade_acertos?: number
+          mental_absoluto?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resultados_alunos_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "aulas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sale_webhooks: {
         Row: {
@@ -3881,6 +4056,25 @@ export type Database = {
           unit_id: string
         }[]
       }
+      get_loss_reasons_report: {
+        Args: {
+          p_created_by_ids?: string[]
+          p_current_user_id?: string
+          p_end_date?: string
+          p_start_date?: string
+          p_unit_ids?: string[]
+        }
+        Returns: {
+          atendimento_agendado: number
+          contato_efetivo: number
+          motivo_perda: string
+          negociacao: number
+          novo_cadastro: number
+          perdido: number
+          tentativa_contato: number
+          total_motivo: number
+        }[]
+      }
       get_periodo_data: {
         Args: { p_periodo: string }
         Returns: string
@@ -3931,6 +4125,38 @@ export type Database = {
           new_clients: number
           registration_name: string
           scheduled_visits: number
+        }[]
+      }
+      get_temporal_loss_reasons_report: {
+        Args: {
+          p_created_by_ids?: string[]
+          p_current_user_id?: string
+          p_end_date?: string
+          p_start_date?: string
+          p_unit_ids?: string[]
+        }
+        Returns: {
+          mes_1_count: number
+          mes_1_header: string
+          mes_1_percent: number
+          mes_2_count: number
+          mes_2_header: string
+          mes_2_percent: number
+          mes_3_count: number
+          mes_3_header: string
+          mes_3_percent: number
+          mes_4_count: number
+          mes_4_header: string
+          mes_4_percent: number
+          mes_5_count: number
+          mes_5_header: string
+          mes_5_percent: number
+          mes_6_count: number
+          mes_6_header: string
+          mes_6_percent: number
+          motivo_perda: string
+          total_n: number
+          total_percent: number
         }[]
       }
       get_turma_modal_data: {
@@ -3989,6 +4215,13 @@ export type Database = {
         Args: { telefone_raw: string }
         Returns: string
       }
+      obter_config_funcionalidade: {
+        Args: {
+          p_tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          p_unit_id: string
+        }
+        Returns: Json
+      }
       publish_update: {
         Args: { p_update_id: string }
         Returns: boolean
@@ -4010,6 +4243,13 @@ export type Database = {
           leads: number
           matriculas: number
         }[]
+      }
+      unidade_tem_funcionalidade: {
+        Args: {
+          p_tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          p_unit_id: string
+        }
+        Returns: boolean
       }
       unpublish_update: {
         Args: { p_update_id: string }
@@ -4079,6 +4319,11 @@ export type Database = {
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
+      tipo_funcionalidade:
+        | "assistente_whatsapp"
+        | "google_agenda"
+        | "relatorios_avancados"
+        | "integracao_telefonia_net2phone"
       user_role:
         | "consultor"
         | "franqueado"
@@ -4246,6 +4491,12 @@ export const Constants = {
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
       tipo_atendimento: ["bot", "humano"],
+      tipo_funcionalidade: [
+        "assistente_whatsapp",
+        "google_agenda",
+        "relatorios_avancados",
+        "integracao_telefonia_net2phone",
+      ],
       user_role: [
         "consultor",
         "franqueado",
