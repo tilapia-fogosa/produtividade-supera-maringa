@@ -36,6 +36,7 @@ import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
 import CalendarioAulas from "./pages/CalendarioAulas";
 import Eventos from "./pages/Eventos";
 import EditarEvento from "./pages/EditarEvento";
+import Trofeus1000Dias from "./pages/Trofeus1000Dias";
 import Login from "./pages/Login";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -90,6 +91,7 @@ function App() {
                             <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
                             <Route path="/eventos" element={<Eventos />} />
                             <Route path="/eventos/:id/editar" element={<EditarEvento />} />
+                            <Route path="/trofeus-1000-dias" element={<Trofeus1000Dias />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>

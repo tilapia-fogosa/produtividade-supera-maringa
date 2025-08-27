@@ -3301,6 +3301,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trofeus_1000_dias: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          trofeu_confeccionado: boolean
+          trofeu_entregue: boolean
+          trofeu_pedido: boolean
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          trofeu_confeccionado?: boolean
+          trofeu_entregue?: boolean
+          trofeu_pedido?: boolean
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          trofeu_confeccionado?: boolean
+          trofeu_entregue?: boolean
+          trofeu_pedido?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       turmas: {
         Row: {
           created_at: string
