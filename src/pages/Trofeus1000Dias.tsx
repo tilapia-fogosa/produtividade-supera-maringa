@@ -52,7 +52,7 @@ export default function Trofeus1000Dias() {
       );
     } else if (dias >= 1965) {
       return (
-        <Badge variant="default" className="bg-[hsl(var(--trophy-orange-light))] text-white">
+        <Badge variant="default" className="bg-[hsl(var(--trophy-orange-light))] text-black">
           <Trophy className="h-3 w-3 mr-1" />
           {dias} dias
         </Badge>
@@ -66,7 +66,7 @@ export default function Trofeus1000Dias() {
       );
     } else if (dias >= 965) {
       return (
-        <Badge variant="default" className="bg-[hsl(var(--trophy-purple-light))] text-white">
+        <Badge variant="default" className="bg-[hsl(var(--trophy-purple-light))] text-black">
           <Trophy className="h-3 w-3 mr-1" />
           {dias} dias
         </Badge>
