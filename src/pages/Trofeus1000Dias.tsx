@@ -36,30 +36,44 @@ export default function Trofeus1000Dias() {
 
   const getStatusIcon = (status: boolean) => {
     return status ? 
-      <CheckCircle className="h-4 w-4 text-green-600" /> : 
-      <XCircle className="h-4 w-4 text-red-500" />;
+      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+      <XCircle className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getDiasSupera = (dias: number | null) => {
     if (!dias) return "N/A";
     
-    if (dias >= 1000) {
+    if (dias > 2000) {
       return (
-        <Badge variant="default" className="bg-yellow-500 text-white">
+        <Badge variant="default" className="bg-[hsl(var(--trophy-orange))] text-white">
           <Trophy className="h-3 w-3 mr-1" />
           {dias} dias
         </Badge>
       );
-    } else if (dias >= 900) {
+    } else if (dias >= 1965) {
       return (
-        <Badge variant="secondary" className="bg-orange-500 text-white">
-          <Medal className="h-3 w-3 mr-1" />
+        <Badge variant="default" className="bg-[hsl(var(--trophy-red))] text-white">
+          <Trophy className="h-3 w-3 mr-1" />
+          {dias} dias
+        </Badge>
+      );
+    } else if (dias >= 1000) {
+      return (
+        <Badge variant="default" className="bg-[hsl(var(--trophy-purple))] text-white">
+          <Trophy className="h-3 w-3 mr-1" />
+          {dias} dias
+        </Badge>
+      );
+    } else if (dias >= 965) {
+      return (
+        <Badge variant="default" className="bg-[hsl(var(--trophy-blue))] text-white">
+          <Trophy className="h-3 w-3 mr-1" />
           {dias} dias
         </Badge>
       );
     } else {
       return (
-        <Badge variant="outline">
+        <Badge variant="outline" className="bg-background text-foreground">
           {dias} dias
         </Badge>
       );
@@ -273,6 +287,7 @@ export default function Trofeus1000Dias() {
                             onCheckedChange={(checked) => 
                               handleCheckboxChange(aluno.id, 'trofeu_pedido', !!checked)
                             }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
                         </div>
                       </TableCell>
@@ -284,6 +299,7 @@ export default function Trofeus1000Dias() {
                             onCheckedChange={(checked) => 
                               handleCheckboxChange(aluno.id, 'trofeu_confeccionado', !!checked)
                             }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
                         </div>
                       </TableCell>
@@ -295,6 +311,7 @@ export default function Trofeus1000Dias() {
                             onCheckedChange={(checked) => 
                               handleCheckboxChange(aluno.id, 'trofeu_entregue', !!checked)
                             }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
                         </div>
                       </TableCell>

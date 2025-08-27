@@ -44,6 +44,12 @@
     --sidebar-border: 215 25% 27%;
     --sidebar-ring: 32 100% 50%;
     
+    /* Cores para troféus */
+    --trophy-orange: 25 100% 55%;
+    --trophy-red: 0 84% 60%;
+    --trophy-purple: 280 87% 65%;
+    --trophy-blue: 217 91% 60%;
+    
     /* Adicionando variáveis para controlar o tamanho da sidebar */
     --sidebar-width: 240px;
     --sidebar-width-icon: 60px;
@@ -87,6 +93,12 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 255 50% 30%;
     --sidebar-ring: 32 100% 50%;
+    
+    /* Cores para troféus - tema escuro */
+    --trophy-orange: 25 100% 60%;
+    --trophy-red: 0 84% 65%;
+    --trophy-purple: 280 87% 70%;
+    --trophy-blue: 217 91% 65%;
   }
 }
 
