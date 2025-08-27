@@ -273,6 +273,7 @@ export default function Trofeus1000Dias() {
                             onCheckedChange={(checked) => 
                               handleCheckboxChange(aluno.id, 'trofeu_pedido', !!checked)
                             }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
                         </div>
                       </TableCell>
@@ -284,6 +285,7 @@ export default function Trofeus1000Dias() {
                             onCheckedChange={(checked) => 
                               handleCheckboxChange(aluno.id, 'trofeu_confeccionado', !!checked)
                             }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
                         </div>
                       </TableCell>
@@ -295,6 +297,7 @@ export default function Trofeus1000Dias() {
                             onCheckedChange={(checked) => 
                               handleCheckboxChange(aluno.id, 'trofeu_entregue', !!checked)
                             }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
                         </div>
                       </TableCell>
