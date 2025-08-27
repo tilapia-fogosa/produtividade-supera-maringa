@@ -43,23 +43,23 @@ export default function Trofeus1000Dias() {
   const getDiasSupera = (dias: number | null) => {
     if (!dias) return "N/A";
     
-    if (dias >= 1000) {
+    if (dias > 2000) {
       return (
-        <Badge variant="default" className="bg-yellow-500 text-white">
+        <Badge variant="default" className="bg-[hsl(var(--trophy-orange))] text-white">
           <Trophy className="h-3 w-3 mr-1" />
           {dias} dias
         </Badge>
       );
-    } else if (dias >= 900) {
+    } else if (dias >= 1000) {
       return (
-        <Badge variant="secondary" className="bg-orange-500 text-white">
-          <Medal className="h-3 w-3 mr-1" />
+        <Badge variant="default" className="bg-[hsl(var(--trophy-purple))] text-white">
+          <Trophy className="h-3 w-3 mr-1" />
           {dias} dias
         </Badge>
       );
     } else {
       return (
-        <Badge variant="outline">
+        <Badge variant="outline" className="bg-background text-foreground">
           {dias} dias
         </Badge>
       );
