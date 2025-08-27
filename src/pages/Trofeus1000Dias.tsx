@@ -36,8 +36,8 @@ export default function Trofeus1000Dias() {
 
   const getStatusIcon = (status: boolean) => {
     return status ? 
-      <CheckCircle className="h-4 w-4 text-green-600" /> : 
-      <XCircle className="h-4 w-4 text-red-500" />;
+      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+      <XCircle className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getDiasSupera = (dias: number | null) => {
