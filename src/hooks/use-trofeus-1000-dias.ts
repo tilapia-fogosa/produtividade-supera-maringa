@@ -198,11 +198,6 @@ export function useTrofeus1000Dias() {
         ));
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Troféu atualizado com sucesso.",
-      });
-
     } catch (error) {
       console.error('Erro ao atualizar troféu:', error);
       toast({
