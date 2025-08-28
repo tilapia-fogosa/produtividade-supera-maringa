@@ -221,8 +221,14 @@ export function useTrofeus1000Dias() {
     });
   };
 
+  // Contador de alunos com +965 dias sem troféu entregue
+  const contadorTrofeusNaoEntregues = alunos.filter(aluno => 
+    (aluno.dias_supera || 0) >= 965 && !aluno.trofeu_entregue
+  ).length;
+
   return {
     alunos: filteredAlunos,
+    contadorTrofeusNaoEntregues,
     loading,
     error,
     filtros,
