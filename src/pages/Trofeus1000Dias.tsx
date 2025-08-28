@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Trofeus1000Dias() {
   const { 
     alunos, 
+    contadorTrofeusNaoEntregues,
     loading, 
     error, 
     filtros, 
@@ -137,10 +138,13 @@ export default function Trofeus1000Dias() {
     <div className="container mx-auto py-4 px-2">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Trophy className="h-6 w-6 text-yellow-500" />
           <h1 className="text-2xl font-bold">Troféus de 1000 Dias</h1>
           <Badge variant="secondary">{alunos.length} alunos</Badge>
+          <Badge variant="destructive" className="bg-[hsl(var(--trophy-red))] text-white">
+            {contadorTrofeusNaoEntregues} pendentes (+965 dias)
+          </Badge>
         </div>
         
         <div className="flex gap-2">

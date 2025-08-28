@@ -198,11 +198,6 @@ export function useTrofeus1000Dias() {
         ));
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Troféu atualizado com sucesso.",
-      });
-
     } catch (error) {
       console.error('Erro ao atualizar troféu:', error);
       toast({
@@ -221,8 +216,14 @@ export function useTrofeus1000Dias() {
     });
   };
 
+  // Contador de alunos com +965 dias sem troféu entregue
+  const contadorTrofeusNaoEntregues = alunos.filter(aluno => 
+    (aluno.dias_supera || 0) >= 965 && !aluno.trofeu_entregue
+  ).length;
+
   return {
     alunos: filteredAlunos,
+    contadorTrofeusNaoEntregues,
     loading,
     error,
     filtros,
