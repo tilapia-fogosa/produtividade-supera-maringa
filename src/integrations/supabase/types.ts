@@ -2706,7 +2706,7 @@ export type Database = {
       }
       reposicoes: {
         Row: {
-          aluno_id: string
+          aluno_id: string | null
           created_at: string
           created_by: string | null
           data_falta: string | null
@@ -2714,13 +2714,15 @@ export type Database = {
           id: string
           nome_responsavel: string | null
           observacoes: string | null
+          pessoa_id: string
+          pessoa_tipo: string | null
           responsavel_id: string
           responsavel_tipo: string
           turma_id: string
           unit_id: string
         }
         Insert: {
-          aluno_id: string
+          aluno_id?: string | null
           created_at?: string
           created_by?: string | null
           data_falta?: string | null
@@ -2728,13 +2730,15 @@ export type Database = {
           id?: string
           nome_responsavel?: string | null
           observacoes?: string | null
+          pessoa_id: string
+          pessoa_tipo?: string | null
           responsavel_id: string
           responsavel_tipo: string
           turma_id: string
           unit_id: string
         }
         Update: {
-          aluno_id?: string
+          aluno_id?: string | null
           created_at?: string
           created_by?: string | null
           data_falta?: string | null
@@ -2742,19 +2746,14 @@ export type Database = {
           id?: string
           nome_responsavel?: string | null
           observacoes?: string | null
+          pessoa_id?: string
+          pessoa_tipo?: string | null
           responsavel_id?: string
           responsavel_tipo?: string
           turma_id?: string
           unit_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "reposicoes_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "reposicoes_turma_id_fkey"
             columns: ["turma_id"]
@@ -4078,6 +4077,7 @@ export type Database = {
           data_falta: string
           data_reposicao: string
           observacoes: string
+          pessoa_tipo: string
           reposicao_id: string
           turma_original_id: string
           turma_original_nome: string
