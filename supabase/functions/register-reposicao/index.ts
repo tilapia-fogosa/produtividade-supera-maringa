@@ -32,10 +32,48 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Determine if it's an aluno or funcionario
+    let pessoaTipo = 'aluno';
+    let pessoaId = body.aluno_id;
+
+    // First check if it exists in alunos table
+    const { data: alunoCheck } = await supabase
+      .from('alunos')
+      .select('id')
+      .eq('id', body.aluno_id)
+      .maybeSingle();
+
+    if (!alunoCheck) {
+      // If not found in alunos, check funcionarios table
+      const { data: funcionarioCheck } = await supabase
+        .from('funcionarios')
+        .select('id')
+        .eq('id', body.aluno_id)
+        .maybeSingle();
+      
+      if (funcionarioCheck) {
+        pessoaTipo = 'funcionario';
+      } else {
+        return new Response(
+          JSON.stringify({ error: 'Person not found in alunos or funcionarios' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Prepare reposição data with new structure
+    const reposicaoData = {
+      ...body,
+      pessoa_id: pessoaId,
+      pessoa_tipo: pessoaTipo
+    };
+
+    console.log('Inserting reposição with pessoa_tipo:', pessoaTipo, 'pessoa_id:', pessoaId);
+
     // Insert reposição data
-    const { data: reposicaoData, error: reposicaoError } = await supabase
+    const { data: insertedReposicao, error: reposicaoError } = await supabase
       .from('reposicoes')
-      .insert([body])
+      .insert([reposicaoData])
       .select()
       .single();
 
@@ -44,7 +82,7 @@ serve(async (req) => {
       throw reposicaoError;
     }
 
-    console.log('Reposição inserted successfully:', reposicaoData);
+    console.log('Reposição inserted successfully:', insertedReposicao);
 
 
     // Get webhook URL from dados_importantes
@@ -59,7 +97,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          reposicao: reposicaoData,
+          reposicao: insertedReposicao,
           webhook_sent: false,
           message: 'Reposição registrada, mas webhook não configurado'
         }),
@@ -107,11 +145,11 @@ serve(async (req) => {
       tipo_evento: 'reposicao_registrada',
       data_evento: new Date().toISOString(),
       reposicao: {
-        id: reposicaoData.id,
-        data_reposicao: reposicaoData.data_reposicao,
-        data_falta: reposicaoData.data_falta,
-        observacoes: reposicaoData.observacoes,
-        created_at: reposicaoData.created_at
+        id: insertedReposicao.id,
+        data_reposicao: insertedReposicao.data_reposicao,
+        data_falta: insertedReposicao.data_falta,
+        observacoes: insertedReposicao.observacoes,
+        created_at: insertedReposicao.created_at
       },
       aluno: {
         id: body.aluno_id,
@@ -176,7 +214,7 @@ serve(async (req) => {
         success: webhookSuccess,
         error_message: webhookSuccess ? null : 'Webhook delivery failed',
         entity_type: 'reposicao',
-        entity_id: reposicaoData.id
+        entity_id: insertedReposicao.id
       });
 
     const executionTime = Date.now() - startTime;
@@ -184,7 +222,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        reposicao: reposicaoData,
+        reposicao: insertedReposicao,
         webhook_sent: webhookSuccess,
         webhook_status: webhookResponse?.status || null,
         execution_time: executionTime,
