@@ -68,11 +68,27 @@ serve(async (req) => {
     }
 
     // Get additional data for webhook payload
+    // Try to find the person in both alunos and funcionarios tables
+    let pessoaData;
+    
+    // First try alunos table
     const { data: alunoData } = await supabase
       .from('alunos')
       .select('nome, telefone, email')
       .eq('id', body.aluno_id)
-      .single();
+      .maybeSingle();
+    
+    if (alunoData) {
+      pessoaData = alunoData;
+    } else {
+      // If not found in alunos, try funcionarios table
+      const { data: funcionarioData } = await supabase
+        .from('funcionarios')
+        .select('nome, telefone, email')
+        .eq('id', body.aluno_id)
+        .maybeSingle();
+      pessoaData = funcionarioData;
+    }
 
     const { data: turmaData } = await supabase
       .from('turmas')
@@ -99,9 +115,9 @@ serve(async (req) => {
       },
       aluno: {
         id: body.aluno_id,
-        nome: alunoData?.nome,
-        telefone: alunoData?.telefone,
-        email: alunoData?.email
+        nome: pessoaData?.nome,
+        telefone: pessoaData?.telefone,
+        email: pessoaData?.email
       },
       turma: {
         id: body.turma_id,
