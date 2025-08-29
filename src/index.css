@@ -117,7 +117,6 @@
   /* Configurações da página para impressão */
   @page {
     margin: 0.3in 0.5in; /* Margens reduzidas */
-    size: A4;
     /* Tenta remover cabeçalhos e rodapés do navegador */
     @top-left { content: ""; }
     @top-center { content: ""; }
