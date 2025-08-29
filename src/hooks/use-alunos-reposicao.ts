@@ -13,8 +13,6 @@ export const usePessoasReposicao = (turmaIdExcluir: string | null) => {
   return useQuery({
     queryKey: ["pessoas-reposicao", turmaIdExcluir],
     queryFn: async () => {
-      if (!turmaIdExcluir) return [];
-      
       // Buscar alunos
       const { data: alunos, error: alunosError } = await supabase
         .from('alunos')
@@ -39,13 +37,13 @@ export const usePessoasReposicao = (turmaIdExcluir: string | null) => {
         throw funcionariosError;
       }
 
-      // Filtrar para excluir da turma selecionada e adicionar tipo
+      // Filtrar para excluir da turma selecionada (se houver) e adicionar tipo
       const alunosReposicao = (alunos || [])
-        .filter(aluno => aluno.turma_id !== turmaIdExcluir)
+        .filter(aluno => turmaIdExcluir ? aluno.turma_id !== turmaIdExcluir : true)
         .map(aluno => ({ ...aluno, tipo: 'aluno' as const }));
       
       const funcionariosReposicao = (funcionarios || [])
-        .filter(funcionario => funcionario.turma_id !== turmaIdExcluir)
+        .filter(funcionario => turmaIdExcluir ? funcionario.turma_id !== turmaIdExcluir : true)
         .map(funcionario => ({ ...funcionario, tipo: 'funcionario' as const }));
       
       // Combinar e ordenar por nome
@@ -54,7 +52,6 @@ export const usePessoasReposicao = (turmaIdExcluir: string | null) => {
       
       return todasPessoas as PessoaReposicao[];
     },
-    enabled: !!turmaIdExcluir,
   });
 };
 
