@@ -14,6 +14,7 @@ export type ListaReposicaoData = {
   aluno_id: string;
   turma_original_id: string;
   turma_reposicao_id: string;
+  pessoa_tipo: 'aluno' | 'funcionario';
 };
 
 export const useListaReposicoes = () => {

@@ -4077,6 +4077,7 @@ export type Database = {
           data_falta: string
           data_reposicao: string
           observacoes: string
+          pessoa_tipo: string
           reposicao_id: string
           turma_original_id: string
           turma_original_nome: string
