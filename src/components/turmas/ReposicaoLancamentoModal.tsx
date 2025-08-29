@@ -42,8 +42,8 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
   // Filtrar alunos baseado no texto digitado
   const alunosFiltrados = useMemo(() => {
     if (!filtroAluno.trim()) return alunos;
-    return alunos.filter(aluno => 
-      aluno.nome.toLowerCase().includes(filtroAluno.toLowerCase())
+    return alunos.filter(pessoa => 
+      pessoa.nome.toLowerCase().includes(filtroAluno.toLowerCase())
     );
   }, [alunos, filtroAluno]);
 
@@ -168,10 +168,10 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
           <div className="space-y-4">
             {/* Filtro de Alunos */}
             <div className="space-y-2">
-              <Label htmlFor="filtroAluno">Buscar Aluno</Label>
+              <Label htmlFor="filtroAluno">Buscar Pessoa (Aluno ou Funcionário)</Label>
               <Input
                 id="filtroAluno"
-                placeholder="Digite o nome do aluno..."
+                placeholder="Digite o nome da pessoa..."
                 value={filtroAluno}
                 onChange={(e) => setFiltroAluno(e.target.value)}
                 className="w-full"
@@ -180,24 +180,24 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
 
             {/* Seleção do Aluno */}
             <div className="space-y-2">
-              <Label htmlFor="aluno">Aluno *</Label>
+              <Label htmlFor="aluno">Pessoa *</Label>
               <Select 
                 value={alunoSelecionado} 
                 onValueChange={setAlunoSelecionado}
                 disabled={loadingAlunos}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={loadingAlunos ? "Carregando alunos..." : "Selecione o aluno"} />
+                  <SelectValue placeholder={loadingAlunos ? "Carregando pessoas..." : "Selecione a pessoa"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {alunosFiltrados.map((aluno) => (
-                    <SelectItem key={aluno.id} value={aluno.id}>
-                      {aluno.nome}
+                  {alunosFiltrados.map((pessoa) => (
+                    <SelectItem key={pessoa.id} value={pessoa.id}>
+                      {pessoa.nome} {pessoa.tipo && `(${pessoa.tipo === 'aluno' ? 'Aluno' : 'Funcionário'})`}
                     </SelectItem>
                   ))}
                   {alunosFiltrados.length === 0 && !loadingAlunos && (
                     <div className="p-2 text-sm text-muted-foreground">
-                      Nenhum aluno encontrado
+                      Nenhuma pessoa encontrada
                     </div>
                   )}
                 </SelectContent>

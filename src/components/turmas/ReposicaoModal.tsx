@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
-import { useAlunos } from "@/hooks/use-alunos";
+import { usePessoasReposicao } from "@/hooks/use-alunos-reposicao";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -32,11 +32,9 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const {
-    alunos
-  } = useAlunos();
-  const {
     responsaveis
   } = useResponsaveis();
+  const { data: pessoas = [], isLoading: loadingPessoas } = usePessoasReposicao(null); // null para buscar todas as pessoas ativas
   const {
     criarReposicao
   } = useReposicoes();
@@ -96,16 +94,16 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Seleção do Aluno */}
+          {/* Seleção da Pessoa */}
           <div className="space-y-2">
-            <Label htmlFor="aluno">Aluno *</Label>
-            <Select value={alunoSelecionado} onValueChange={setAlunoSelecionado}>
+            <Label htmlFor="pessoa">Pessoa (Aluno ou Funcionário) *</Label>
+            <Select value={alunoSelecionado} onValueChange={setAlunoSelecionado} disabled={loadingPessoas}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o aluno" />
+                <SelectValue placeholder={loadingPessoas ? "Carregando..." : "Selecione a pessoa"} />
               </SelectTrigger>
               <SelectContent>
-                {alunos.map(aluno => <SelectItem key={aluno.id} value={aluno.id}>
-                    {aluno.nome}
+                {pessoas.map(pessoa => <SelectItem key={pessoa.id} value={pessoa.id}>
+                    {pessoa.nome} ({pessoa.tipo === 'aluno' ? 'Aluno' : 'Funcionário'})
                   </SelectItem>)}
               </SelectContent>
             </Select>
