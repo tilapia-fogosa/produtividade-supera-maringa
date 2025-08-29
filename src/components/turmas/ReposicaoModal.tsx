@@ -127,11 +127,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
           {/* Data da Falta */}
           <div className="space-y-2">
             <Label>Data da Falta (opcional)</Label>
-            {dataFalta && dataFalta > new Date() && (
-              <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md">
-                ⚠️ Falta futura: Será criado um registro de falta antecipada para esta data.
-              </div>
-            )}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataFalta && "text-muted-foreground")}>
