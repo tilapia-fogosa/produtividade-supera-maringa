@@ -1,5 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
+// Custom debounce hook para otimizar pesquisa
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 interface AlunoRetencao {
   id: string;
@@ -38,108 +55,57 @@ export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHis
     criticos: 0
   });
 
+  // Debounce do termo de busca para evitar muitas requisições
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const fetchAlunosComHistorico = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Buscar alunos que têm alertas de evasão ou retenções
-      let query = supabase
-        .from('alunos')
-        .select(`
-          id,
-          nome,
-          turmas!inner(
-            nome,
-            professores(nome)
-          )
-        `)
-        .eq('active', true);
+      // Usar função RPC otimizada para buscar todos os dados em uma única consulta
+      const { data, error: queryError } = await supabase
+        .rpc('get_alunos_retencoes_historico', {
+          p_search_term: debouncedSearchTerm || '',
+          p_status_filter: statusFilter
+        });
 
-      // Aplicar filtro de busca
-      if (searchTerm) {
-        query = query.ilike('nome', `%${searchTerm}%`);
-      }
-
-      const { data: alunosData, error: alunosError } = await query;
-
-      if (alunosError) {
-        console.error('Erro ao buscar alunos:', alunosError);
-        setError(alunosError.message);
+      if (queryError) {
+        console.error('Erro na query RPC:', queryError);
+        setError(queryError.message);
         return;
       }
 
-      // Para cada aluno, buscar alertas e retenções
-      const alunosComHistorico: AlunoRetencao[] = [];
+      if (data) {
+        // Transformar os dados para o formato esperado
+        const alunosFormatados: AlunoRetencao[] = data.map((item: any) => ({
+          id: item.id,
+          nome: item.nome,
+          turma: item.turma,
+          educador: item.educador,
+          totalAlertas: item.total_alertas,
+          alertasAtivos: item.alertas_ativos,
+          totalRetencoes: item.total_retencoes,
+          ultimoAlerta: item.ultimo_alerta,
+          ultimaRetencao: item.ultima_retencao,
+          status: item.status as 'critico' | 'alerta' | 'retencao' | 'normal'
+        }));
 
-      for (const aluno of alunosData || []) {
-        // Buscar alertas
-        const { data: alertas } = await supabase
-          .from('alerta_evasao')
-          .select('*')
-          .eq('aluno_id', aluno.id)
-          .order('created_at', { ascending: false });
+        setAlunos(alunosFormatados);
+        
+        // Calcular totais
+        const totalAlunos = alunosFormatados.length;
+        const alertasAtivosCount = alunosFormatados.filter(a => a.alertasAtivos > 0).length;
+        const comRetencoesCount = alunosFormatados.filter(a => a.totalRetencoes > 0).length;
+        const criticosCount = alunosFormatados.filter(a => a.status === 'critico').length;
 
-        // Buscar retenções
-        const { data: retencoes } = await supabase
-          .from('retencoes')
-          .select('*')
-          .eq('aluno_id', aluno.id)
-          .order('created_at', { ascending: false });
-
-        const totalAlertas = alertas?.length || 0;
-        const alertasAtivos = alertas?.filter(a => a.status === 'pendente').length || 0;
-        const totalRetencoes = retencoes?.length || 0;
-
-        const ultimoAlerta = alertas?.[0]?.created_at || null;
-        const ultimaRetencao = retencoes?.[0]?.created_at || null;
-
-        // Determinar status
-        let status: 'critico' | 'alerta' | 'retencao' | 'normal' = 'normal';
-        if (alertasAtivos >= 2) {
-          status = 'critico';
-        } else if (alertasAtivos > 0) {
-          status = 'alerta';
-        } else if (totalRetencoes > 0) {
-          status = 'retencao';
-        }
-
-        // Aplicar filtro de status
-        const shouldInclude = statusFilter === 'todos' ||
-          (statusFilter === 'alertas-ativos' && alertasAtivos > 0) ||
-          (statusFilter === 'com-retencoes' && totalRetencoes > 0) ||
-          (statusFilter === 'criticos' && status === 'critico');
-
-        if (shouldInclude && (totalAlertas > 0 || totalRetencoes > 0)) {
-          alunosComHistorico.push({
-            id: aluno.id,
-            nome: aluno.nome,
-            turma: aluno.turmas?.nome || 'Sem turma',
-            educador: aluno.turmas?.professores?.nome || 'Sem professor',
-            totalAlertas,
-            alertasAtivos,
-            totalRetencoes,
-            ultimoAlerta,
-            ultimaRetencao,
-            status
-          });
-        }
+        setTotals({
+          totalAlunos,
+          alertasAtivos: alertasAtivosCount,
+          comRetencoes: comRetencoesCount,
+          criticos: criticosCount
+        });
       }
-
-      setAlunos(alunosComHistorico);
-      
-      // Calcular totais
-      const totalAlunos = alunosComHistorico.length;
-      const alertasAtivosCount = alunosComHistorico.filter(a => a.alertasAtivos > 0).length;
-      const comRetencoesCount = alunosComHistorico.filter(a => a.totalRetencoes > 0).length;
-      const criticosCount = alunosComHistorico.filter(a => a.status === 'critico').length;
-
-      setTotals({
-        totalAlunos,
-        alertasAtivos: alertasAtivosCount,
-        comRetencoes: comRetencoesCount,
-        criticos: criticosCount
-      });
     } catch (err) {
       console.error('Erro ao buscar alunos:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -207,7 +173,7 @@ export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHis
 
   useEffect(() => {
     fetchAlunosComHistorico();
-  }, [searchTerm, statusFilter]);
+  }, [debouncedSearchTerm, statusFilter]);
 
   return {
     alunos,

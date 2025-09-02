@@ -3943,6 +3943,21 @@ export type Database = {
           turma: string
         }[]
       }
+      get_alunos_retencoes_historico: {
+        Args: { p_search_term?: string; p_status_filter?: string }
+        Returns: {
+          alertas_ativos: number
+          educador: string
+          id: string
+          nome: string
+          status: string
+          total_alertas: number
+          total_retencoes: number
+          turma: string
+          ultima_retencao: string
+          ultimo_alerta: string
+        }[]
+      }
       get_attendance_rate_stats: {
         Args: {
           p_end_date: string
