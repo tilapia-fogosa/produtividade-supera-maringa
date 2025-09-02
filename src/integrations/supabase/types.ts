@@ -2811,6 +2811,51 @@ export type Database = {
           },
         ]
       }
+      retencoes: {
+        Row: {
+          acoes_tomadas: string
+          active: boolean
+          aluno_id: string
+          created_at: string
+          data_retencao: string
+          descritivo_responsavel: string
+          id: string
+          responsavel_id: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          acoes_tomadas: string
+          active?: boolean
+          aluno_id: string
+          created_at?: string
+          data_retencao: string
+          descritivo_responsavel: string
+          id?: string
+          responsavel_id: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          acoes_tomadas?: string
+          active?: boolean
+          aluno_id?: string
+          created_at?: string
+          data_retencao?: string
+          descritivo_responsavel?: string
+          id?: string
+          responsavel_id?: string
+          responsavel_nome?: string
+          responsavel_tipo?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sale_webhooks: {
         Row: {
           active: boolean
