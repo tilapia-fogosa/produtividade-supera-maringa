@@ -18,6 +18,7 @@ interface AlunoRetencaoCardProps {
     ultimoAlerta: string | null;
     ultimaRetencao: string | null;
     status: 'critico' | 'alerta' | 'retencao' | 'normal';
+    ocultoRetencoes?: boolean;
   };
   onClick: () => void;
 }
@@ -37,6 +38,10 @@ export function AlunoRetencaoCard({ aluno, onClick }: AlunoRetencaoCardProps) {
   };
 
   const getStatusText = () => {
+    if (aluno.ocultoRetencoes) {
+      return 'Resolvido';
+    }
+    
     switch (aluno.status) {
       case 'critico':
         return 'Crítico';
@@ -59,16 +64,20 @@ export function AlunoRetencaoCard({ aluno, onClick }: AlunoRetencaoCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer group">
+    <Card className={`hover:shadow-md transition-shadow cursor-pointer group ${
+      aluno.ocultoRetencoes ? 'opacity-60 bg-muted/30' : ''
+    }`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <User className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+            <h3 className={`font-semibold text-lg group-hover:text-primary transition-colors ${
+              aluno.ocultoRetencoes ? 'line-through text-muted-foreground' : ''
+            }`}>
               {aluno.nome}
             </h3>
           </div>
-          <Badge className={getStatusColor()}>
+          <Badge className={aluno.ocultoRetencoes ? 'bg-muted text-muted-foreground' : getStatusColor()}>
             {getStatusText()}
           </Badge>
         </div>

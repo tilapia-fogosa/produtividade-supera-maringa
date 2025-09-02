@@ -29,12 +29,14 @@ interface AlunoRetencao {
   ultimoAlerta: string | null;
   ultimaRetencao: string | null;
   status: 'critico' | 'alerta' | 'retencao' | 'normal';
+  ocultoRetencoes?: boolean;
   dadosAulaZero?: any;
 }
 
 interface RetencoesHistoricoParams {
   searchTerm: string;
   statusFilter: string;
+  incluirOcultos?: boolean;
 }
 
 interface Totals {
@@ -44,7 +46,7 @@ interface Totals {
   criticos: number;
 }
 
-export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHistoricoParams) {
+export function useRetencoesHistorico({ searchTerm, statusFilter, incluirOcultos = false }: RetencoesHistoricoParams) {
   const [alunos, setAlunos] = useState<AlunoRetencao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +69,8 @@ export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHis
       const { data, error: queryError } = await supabase
         .rpc('get_alunos_retencoes_historico', {
           p_search_term: debouncedSearchTerm || '',
-          p_status_filter: statusFilter
+          p_status_filter: statusFilter,
+          p_incluir_ocultos: incluirOcultos
         });
 
       if (queryError) {
@@ -88,7 +91,8 @@ export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHis
           totalRetencoes: item.total_retencoes,
           ultimoAlerta: item.ultimo_alerta,
           ultimaRetencao: item.ultima_retencao,
-          status: item.status as 'critico' | 'alerta' | 'retencao' | 'normal'
+          status: item.status as 'critico' | 'alerta' | 'retencao' | 'normal',
+          ocultoRetencoes: item.oculto_retencoes || false
         }));
 
         setAlunos(alunosFormatados);
@@ -171,9 +175,30 @@ export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHis
     }
   };
 
+  // Função para resolver caso (marcar como oculto)
+  const resolverCaso = async (alunoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('alunos')
+        .update({ oculto_retencoes: true })
+        .eq('id', alunoId);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Recarregar dados após atualização
+      await fetchAlunosComHistorico();
+      return true;
+    } catch (err) {
+      console.error('Erro ao resolver caso:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchAlunosComHistorico();
-  }, [debouncedSearchTerm, statusFilter]);
+  }, [debouncedSearchTerm, statusFilter, incluirOcultos]);
 
   return {
     alunos,
@@ -181,6 +206,7 @@ export function useRetencoesHistorico({ searchTerm, statusFilter }: RetencoesHis
     error,
     totals,
     refetch: fetchAlunosComHistorico,
-    fetchHistoricoAluno
+    fetchHistoricoAluno,
+    resolverCaso
   };
 }

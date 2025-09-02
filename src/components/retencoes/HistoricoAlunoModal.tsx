@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { User, GraduationCap, Calendar, AlertTriangle, Shield, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { User, GraduationCap, Calendar, AlertTriangle, Shield, BookOpen, CheckCircle2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { HistoricoTimeline } from './HistoricoTimeline';
 import { HistoricoRetencoes } from './HistoricoRetencoes';
 import { HistoricoAlertas } from './HistoricoAlertas';
@@ -13,12 +16,14 @@ interface HistoricoAlunoModalProps {
   isOpen: boolean;
   onClose: () => void;
   aluno: any;
+  onCasoResolvido?: () => void;
 }
 
-export function HistoricoAlunoModal({ isOpen, onClose, aluno }: HistoricoAlunoModalProps) {
+export function HistoricoAlunoModal({ isOpen, onClose, aluno, onCasoResolvido }: HistoricoAlunoModalProps) {
   const [historicoCompleto, setHistoricoCompleto] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const { fetchHistoricoAluno } = useRetencoesHistorico({ searchTerm: '', statusFilter: 'todos' });
+  const [resolvendo, setResolvendo] = useState(false);
+  const { fetchHistoricoAluno, resolverCaso } = useRetencoesHistorico({ searchTerm: '', statusFilter: 'todos' });
 
   useEffect(() => {
     if (isOpen && aluno) {
@@ -37,6 +42,31 @@ export function HistoricoAlunoModal({ isOpen, onClose, aluno }: HistoricoAlunoMo
       console.error('Erro ao carregar histórico:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResolverCaso = async () => {
+    if (!aluno || aluno.ocultoRetencoes) return;
+    
+    try {
+      setResolvendo(true);
+      await resolverCaso(aluno.id);
+      
+      toast({
+        title: "Caso resolvido",
+        description: "O caso foi marcado como resolvido e removido da lista principal.",
+      });
+      
+      onCasoResolvido?.();
+    } catch (error) {
+      console.error('Erro ao resolver caso:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível resolver o caso. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setResolvendo(false);
     }
   };
 
@@ -77,9 +107,36 @@ export function HistoricoAlunoModal({ isOpen, onClose, aluno }: HistoricoAlunoMo
               <User className="h-6 w-6 text-primary" />
               <span className="text-2xl">{aluno.nome}</span>
             </DialogTitle>
-            <Badge className={getStatusColor()}>
-              {getStatusText()}
-            </Badge>
+            <div className="flex items-center gap-3">
+              {!aluno.ocultoRetencoes && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" size="sm" disabled={resolvendo}>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Resolver Caso
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Resolver caso de {aluno.nome}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação marcará o caso como resolvido e o removerá da lista principal de retenções. 
+                        O histórico permanecerá disponível no modo "Mostrar histórico completo".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleResolverCaso}>
+                        {resolvendo ? "Resolvendo..." : "Resolver Caso"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              <Badge className={getStatusColor()}>
+                {aluno.ocultoRetencoes ? 'Resolvido' : getStatusText()}
+              </Badge>
+            </div>
           </div>
 
           {/* Informações básicas */}

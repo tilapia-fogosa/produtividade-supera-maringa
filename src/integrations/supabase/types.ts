@@ -234,6 +234,7 @@ export type Database = {
           motivo_procura: string | null
           niveldesafio: string | null
           nome: string
+          oculto_retencoes: boolean
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
@@ -270,6 +271,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome: string
+          oculto_retencoes?: boolean
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
@@ -306,6 +308,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome?: string
+          oculto_retencoes?: boolean
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string

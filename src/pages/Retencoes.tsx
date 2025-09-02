@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Filter, Users, AlertTriangle, Shield } from 'lucide-react';
+import { Search, Filter, Users, AlertTriangle, Shield, History, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlunoRetencaoCard } from '@/components/retencoes/AlunoRetencaoCard';
 import { HistoricoAlunoModal } from '@/components/retencoes/HistoricoAlunoModal';
@@ -14,13 +16,17 @@ export default function Retencoes() {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [selectedAluno, setSelectedAluno] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [incluirOcultos, setIncluirOcultos] = useState(() => {
+    return localStorage.getItem('retencoes-incluir-ocultos') === 'true';
+  });
 
   const { 
     alunos, 
     loading, 
     error,
-    totals 
-  } = useRetencoesHistorico({ searchTerm, statusFilter });
+    totals,
+    refetch
+  } = useRetencoesHistorico({ searchTerm, statusFilter, incluirOcultos });
 
   const handleAlunoClick = (aluno: any) => {
     setSelectedAluno(aluno);
@@ -30,6 +36,17 @@ export default function Retencoes() {
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedAluno(null);
+  };
+
+  const handleToggleIncluirOcultos = (checked: boolean) => {
+    setIncluirOcultos(checked);
+    localStorage.setItem('retencoes-incluir-ocultos', checked.toString());
+  };
+
+  const handleCasoResolvido = () => {
+    // Fechar modal e recarregar dados
+    handleCloseModal();
+    refetch();
   };
 
   if (loading) {
@@ -59,9 +76,31 @@ export default function Retencoes() {
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-primary">Gestão de Retenções</h1>
-            <Badge variant="secondary" className="text-sm">
-              {alunos.length} alunos
-            </Badge>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="incluir-ocultos"
+                  checked={incluirOcultos}
+                  onCheckedChange={handleToggleIncluirOcultos}
+                />
+                <Label htmlFor="incluir-ocultos" className="text-sm font-medium cursor-pointer">
+                  {incluirOcultos ? (
+                    <span className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Mostrar histórico completo
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <EyeOff className="h-4 w-4" />
+                      Casos ativos apenas
+                    </span>
+                  )}
+                </Label>
+              </div>
+              <Badge variant="secondary" className="text-sm">
+                {alunos.length} alunos
+              </Badge>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -158,6 +197,7 @@ export default function Retencoes() {
         isOpen={modalOpen}
         onClose={handleCloseModal}
         aluno={selectedAluno}
+        onCasoResolvido={handleCasoResolvido}
       />
     </>
   );
