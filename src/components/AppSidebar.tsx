@@ -15,7 +15,8 @@ import {
   TrendingUp,
   BookOpen,
   Target,
-  Building
+  Building,
+  Shield
 } from "lucide-react";
 import {
   Sidebar,
@@ -98,6 +99,12 @@ const items = [
     url: "/projeto-sao-rafael",
     icon: Target,
     requiresTeacher: true,
+  },
+  {
+    title: "Gestão de Retenções",
+    url: "/retencoes",
+    icon: Shield,
+    requiresAdmin: true,
   },
 ];
 
