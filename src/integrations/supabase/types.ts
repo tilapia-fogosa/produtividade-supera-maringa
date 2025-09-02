@@ -3947,7 +3947,13 @@ export type Database = {
         }[]
       }
       get_alunos_retencoes_historico: {
-        Args: { p_search_term?: string; p_status_filter?: string }
+        Args:
+          | {
+              p_incluir_ocultos?: boolean
+              p_search_term?: string
+              p_status_filter?: string
+            }
+          | { p_search_term?: string; p_status_filter?: string }
         Returns: {
           alertas_ativos: number
           educador: string
