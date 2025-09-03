@@ -6,7 +6,7 @@ interface UserProfile {
   id: string;
   full_name: string | null;
   email: string | null;
-  role: 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | null;
+  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | null;
   unit_ids: string[];
 }
 
@@ -61,10 +61,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // Se não tem dados de unidade, considerar como admin
+      // Se não tem dados de unidade, considerar como consultor
       const role = unitUserData && unitUserData.length > 0 
         ? unitUserData[0].role as UserProfile['role']
-        : 'admin';
+        : 'consultor';
       
       const unit_ids = unitUserData?.map(u => u.unit_id) || [];
 
