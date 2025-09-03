@@ -4242,6 +4242,21 @@ export type Database = {
           turma_nome: string
         }[]
       }
+      get_resultados_retencao_temporal: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          media_dias_retencao: number
+          mesmo_periodo_ano_anterior_media_dias: number
+          mesmo_periodo_ano_anterior_total_casos: number
+          periodo_anterior_media_dias: number
+          periodo_anterior_total_casos: number
+          periodo_nome: string
+          periodo_tipo: string
+          total_casos: number
+          variacao_percentual_ano_anterior: number
+          variacao_percentual_anterior: number
+        }[]
+      }
       get_temporal_loss_reasons_report: {
         Args: {
           p_created_by_ids?: string[]

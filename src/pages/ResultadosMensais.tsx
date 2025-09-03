@@ -1,61 +1,28 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Users, Clock, AlertTriangle, CheckCircle } from "lucide-react";
-import { useResultadosMensaisRetencao } from "@/hooks/use-resultados-mensais-retencao";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import React from "react";
+import { useResultadosTemporaisRetencao } from "@/hooks/use-resultados-temporais-retencao";
+import { ComparacaoTemporalCard } from "@/components/retencoes/ComparacaoTemporalCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, Calendar, BarChart3, Clock } from "lucide-react";
 
 export default function ResultadosMensais() {
-  const { data: resultados, isLoading, error } = useResultadosMensaisRetencao();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("todos");
+  const { data: resultados, isLoading, error } = useResultadosTemporaisRetencao();
 
-  // Filtrar resultados
-  const resultadosFiltrados = resultados?.filter((resultado) => {
-    const matchesSearch = resultado.aluno_nome.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "todos" || 
-      (statusFilter === "ativos" && resultado.aluno_ativo) ||
-      (statusFilter === "inativos" && !resultado.aluno_ativo) ||
-      (statusFilter === "com-alertas" && resultado.total_alertas > 0) ||
-      (statusFilter === "com-retencoes" && resultado.total_retencoes > 0);
-    
-    return matchesSearch && matchesStatus;
-  }) || [];
-
-  // Calcular estatísticas
-  const stats = resultados ? {
-    totalAlunos: resultados.length,
-    alunosAtivos: resultados.filter(r => r.aluno_ativo).length,
-    alunosInativos: resultados.filter(r => !r.aluno_ativo).length,
-    mediaDiasAlertas: Math.round(
-      resultados
-        .filter(r => r.dias_desde_primeiro_alerta !== null)
-        .reduce((acc, r) => acc + (r.dias_desde_primeiro_alerta || 0), 0) /
-      resultados.filter(r => r.dias_desde_primeiro_alerta !== null).length || 1
-    ),
-    mediaDiasRetencoes: Math.round(
-      resultados
-        .filter(r => r.dias_desde_primeira_retencao !== null)
-        .reduce((acc, r) => acc + (r.dias_desde_primeira_retencao || 0), 0) /
-      resultados.filter(r => r.dias_desde_primeira_retencao !== null).length || 1
-    ),
-  } : null;
+  // Organizar dados por período
+  const dadosPorPeriodo = {
+    mes: resultados?.find(r => r.periodo_tipo === 'mes'),
+    trimestre: resultados?.find(r => r.periodo_tipo === 'trimestre'),
+    semestre: resultados?.find(r => r.periodo_tipo === 'semestre'),
+    ano: resultados?.find(r => r.periodo_tipo === 'ano')
+  };
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-6">
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-destructive">
-              <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
-              <p>Erro ao carregar os resultados mensais</p>
-            </div>
+          <CardContent className="p-6">
+            <p className="text-destructive">
+              Erro ao carregar a análise temporal de retenção.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -63,213 +30,133 @@ export default function ResultadosMensais() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Resultados Mensais de Retenção</h1>
-          <p className="text-muted-foreground">
-            Análise de tempo desde primeiros alertas e retenções
-          </p>
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <TrendingUp className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Análise Temporal de Retenção</h1>
+            <p className="text-muted-foreground">
+              Média de dias que alunos permaneceram matriculados após primeira retenção
+            </p>
+          </div>
         </div>
+        <div className="h-px bg-border" />
       </div>
 
-      {/* Cards de estatísticas */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-20" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-12" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : stats ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Total de Alunos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.totalAlunos}</div>
-            </CardContent>
-          </Card>
+      {/* Cards de Análise Temporal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Último Mês */}
+        <ComparacaoTemporalCard
+          titulo="Último Mês"
+          periodo={dadosPorPeriodo.mes?.periodo_nome || "-"}
+          valorAtual={dadosPorPeriodo.mes?.media_dias_retencao || 0}
+          totalCasos={dadosPorPeriodo.mes?.total_casos || 0}
+          variacaoAnterior={dadosPorPeriodo.mes?.variacao_percentual_anterior || 0}
+          variacaoAnoAnterior={dadosPorPeriodo.mes?.variacao_percentual_ano_anterior || 0}
+          isLoading={isLoading}
+        />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                Alunos Ativos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.alunosAtivos}</div>
-            </CardContent>
-          </Card>
+        {/* Último Trimestre */}
+        <ComparacaoTemporalCard
+          titulo="Último Trimestre"
+          periodo={dadosPorPeriodo.trimestre?.periodo_nome || "-"}
+          valorAtual={dadosPorPeriodo.trimestre?.media_dias_retencao || 0}
+          totalCasos={dadosPorPeriodo.trimestre?.total_casos || 0}
+          variacaoAnterior={dadosPorPeriodo.trimestre?.variacao_percentual_anterior || 0}
+          variacaoAnoAnterior={dadosPorPeriodo.trimestre?.variacao_percentual_ano_anterior || 0}
+          isLoading={isLoading}
+        />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                Alunos Inativos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.alunosInativos}</div>
-            </CardContent>
-          </Card>
+        {/* Último Semestre */}
+        <ComparacaoTemporalCard
+          titulo="Último Semestre"
+          periodo={dadosPorPeriodo.semestre?.periodo_nome || "-"}
+          valorAtual={dadosPorPeriodo.semestre?.media_dias_retencao || 0}
+          totalCasos={dadosPorPeriodo.semestre?.total_casos || 0}
+          variacaoAnterior={dadosPorPeriodo.semestre?.variacao_percentual_anterior || 0}
+          variacaoAnoAnterior={dadosPorPeriodo.semestre?.variacao_percentual_ano_anterior || 0}
+          isLoading={isLoading}
+        />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4 text-orange-500" />
-                Média Dias Alertas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {isNaN(stats.mediaDiasAlertas) ? "N/A" : `${stats.mediaDiasAlertas}d`}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Este Ano */}
+        <ComparacaoTemporalCard
+          titulo="Este Ano"
+          periodo={dadosPorPeriodo.ano?.periodo_nome || "-"}
+          valorAtual={dadosPorPeriodo.ano?.media_dias_retencao || 0}
+          totalCasos={dadosPorPeriodo.ano?.total_casos || 0}
+          variacaoAnterior={dadosPorPeriodo.ano?.variacao_percentual_anterior || 0}
+          variacaoAnoAnterior={dadosPorPeriodo.ano?.variacao_percentual_ano_anterior || 0}
+          isLoading={isLoading}
+        />
+      </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-500" />
-                Média Dias Retenções
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {isNaN(stats.mediaDiasRetencoes) ? "N/A" : `${stats.mediaDiasRetencoes}d`}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
-
-      {/* Filtros */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar por nome do aluno..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+      {/* Insights Rápidos */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <div>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Período Mais Recente
+              </p>
+              <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                {dadosPorPeriodo.mes?.periodo_nome || "Carregando..."}
+              </p>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="ativos">Ativos</SelectItem>
-                <SelectItem value="inativos">Inativos</SelectItem>
-                <SelectItem value="com-alertas">Com Alertas</SelectItem>
-                <SelectItem value="com-retencoes">Com Retenções</SelectItem>
-              </SelectContent>
-            </Select>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <BarChart3 className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div>
+              <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                Total de Casos (Ano)
+              </p>
+              <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                {dadosPorPeriodo.ano?.total_casos || 0}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border-amber-200 dark:border-amber-800">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                Média Anual
+              </p>
+              <p className="text-lg font-bold text-amber-700 dark:text-amber-300">
+                {dadosPorPeriodo.ano?.media_dias_retencao?.toFixed(1) || "0"} dias
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Explicação */}
+      <Card className="border-l-4 border-l-primary">
+        <CardContent className="p-6">
+          <h3 className="font-semibold mb-2">Como interpretar estes dados</h3>
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p>
+              • <strong>Média de dias:</strong> Tempo médio que um aluno permanece matriculado após receber sua primeira retenção
+            </p>
+            <p>
+              • <strong>Variação positiva (verde):</strong> Indica que os alunos estão permanecendo mais tempo após retenção
+            </p>
+            <p>
+              • <strong>Variação negativa (vermelha):</strong> Indica que os alunos estão saindo mais rapidamente após retenção
+            </p>
+            <p>
+              • <strong>Comparações:</strong> Período anterior vs. mesmo período do ano passado para identificar tendências
+            </p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabela de resultados */}
-      <Card>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Aluno</TableHead>
-                    <TableHead>Turma</TableHead>
-                    <TableHead>Professor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Primeiro Alerta</TableHead>
-                    <TableHead>Dias desde Alerta</TableHead>
-                    <TableHead>Primeira Retenção</TableHead>
-                    <TableHead>Dias desde Retenção</TableHead>
-                    <TableHead>Total Alertas</TableHead>
-                    <TableHead>Total Retenções</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {resultadosFiltrados.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8">
-                        <div className="text-muted-foreground">
-                          {searchTerm || statusFilter !== "todos" 
-                            ? "Nenhum resultado encontrado com os filtros aplicados"
-                            : "Nenhum aluno com alertas ou retenções encontrado"
-                          }
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    resultadosFiltrados.map((resultado) => (
-                      <TableRow key={resultado.aluno_id}>
-                        <TableCell className="font-medium">{resultado.aluno_nome}</TableCell>
-                        <TableCell>{resultado.turma_nome}</TableCell>
-                        <TableCell>{resultado.professor_nome}</TableCell>
-                        <TableCell>
-                          <Badge variant={resultado.aluno_ativo ? "default" : "secondary"}>
-                            {resultado.aluno_ativo ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {resultado.primeiro_alerta 
-                            ? format(new Date(resultado.primeiro_alerta), "dd/MM/yyyy", { locale: ptBR })
-                            : "-"
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {resultado.dias_desde_primeiro_alerta !== null 
-                            ? `${resultado.dias_desde_primeiro_alerta} dias`
-                            : "-"
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {resultado.primeira_retencao 
-                            ? format(new Date(resultado.primeira_retencao), "dd/MM/yyyy", { locale: ptBR })
-                            : "-"
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {resultado.dias_desde_primeira_retencao !== null 
-                            ? `${resultado.dias_desde_primeira_retencao} dias`
-                            : "-"
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{resultado.total_alertas}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{resultado.total_retencoes}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
