@@ -6,8 +6,9 @@ interface UserProfile {
   id: string;
   full_name: string | null;
   email: string | null;
-  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | null;
+  role: 'admin' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'consultor' | null;
   unit_ids: string[];
+  is_admin?: boolean;
 }
 
 interface AuthContextType {
@@ -40,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Buscar perfil básico
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, full_name, email, is_admin')
         .eq('id', userId)
         .single();
 
@@ -72,8 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: profileData.id,
         full_name: profileData.full_name,
         email: profileData.email,
-        role,
-        unit_ids
+        role: profileData.is_admin ? 'admin' : role, // Se is_admin=true, sempre admin
+        unit_ids,
+        is_admin: profileData.is_admin
       };
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);

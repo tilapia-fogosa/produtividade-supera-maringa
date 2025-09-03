@@ -58,8 +58,8 @@ export const useUserPermissions = () => {
       .map(([path]) => path);
   };
 
-  const isAdmin = profile?.role === 'admin';
-  const isManagement = profile?.role && (['franqueado', 'gestor_pedagogico', 'admin'] as const).includes(profile.role as any);
+  const isAdmin = profile?.is_admin === true || profile?.role === 'admin';
+  const isManagement = isAdmin || (profile?.role && (['franqueado', 'gestor_pedagogico'] as const).includes(profile.role as any));
 
   return {
     hasPageAccess,
