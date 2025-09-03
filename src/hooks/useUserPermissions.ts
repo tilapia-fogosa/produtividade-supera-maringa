@@ -2,25 +2,25 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Mapeamento de permissões por página
 const PAGE_PERMISSIONS = {
-  '/lancamentos': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/dias-lancamento': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/turmas/dia': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/diario': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/calendario-aulas': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/estoque': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/devolutivas': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/fichas': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/funcionarios': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/alunos': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/alunos-ativos': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/turma': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'], // rotas dinâmicas de turma
-  '/devolutivas/turma': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/devolutivas/aluno': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/devolutivas/funcionario': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/painel-pedagogico': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/projeto-sao-rafael': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/correcoes-ah': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/aula-zero': ['franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/lancamentos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/dias-lancamento': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/turmas/dia': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/diario': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/calendario-aulas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/estoque': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/devolutivas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/fichas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/funcionarios': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/alunos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/alunos-ativos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/turma': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'], // rotas dinâmicas de turma
+  '/devolutivas/turma': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/devolutivas/aluno': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/devolutivas/funcionario': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/painel-pedagogico': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/projeto-sao-rafael': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/admin/configuracao': ['admin'], // Só admin tem acesso
 } as const;
 
