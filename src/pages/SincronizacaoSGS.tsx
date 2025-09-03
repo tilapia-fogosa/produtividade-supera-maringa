@@ -4,8 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Video, Upload } from "lucide-react";
 import VideoPlayer from '@/components/VideoPlayer';
 import SGSUploadComponent from '@/components/upload/SGSUploadComponent';
+import { useVideoTutorialSGS } from '@/hooks/use-video-tutorial-sgs';
 
 const SincronizacaoSGS = () => {
+  const { videoUrl } = useVideoTutorialSGS();
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-azul-500">Sincronização com SGS</h1>
@@ -29,7 +32,7 @@ const SincronizacaoSGS = () => {
               Assista ao tutorial abaixo para aprender como fazer a sincronização dos dados do SGS.
             </p>
             <div className="w-full max-w-4xl mx-auto">
-              <VideoPlayer />
+              <VideoPlayer src={videoUrl} />
             </div>
           </Card>
         </TabsContent>
