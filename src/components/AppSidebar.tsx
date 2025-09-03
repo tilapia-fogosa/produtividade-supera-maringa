@@ -111,7 +111,6 @@ const items = [
     title: "Sincronização com SGS",
     url: "/sincronizacao-sgs",
     icon: RefreshCw,
-    requiresFuncionario: true,
   },
 ];
 
