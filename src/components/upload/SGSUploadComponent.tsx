@@ -4,13 +4,35 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
-import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
 import * as XLSX from 'xlsx';
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const SGSUploadComponent = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [uploadResult, setUploadResult] = useState<any>(null);
+  const { profile } = useAuth();
+
+  // Colunas esperadas do SGS
+  const expectedColumns = [
+    'Índice', 'Código', 'Nome', 'Telefone', 'E-mail', 'Curso', 
+    'Matrícula', 'Turma atual', 'Professor', 'Idade', 'Último nível', 
+    'Dias na apostila', 'Dias no Supera', 'Vencimento do contrato'
+  ];
+
+  const validateColumns = (headers: string[]) => {
+    const normalizedHeaders = headers.map(h => h.trim());
+    const missingColumns = expectedColumns.filter(col => 
+      !normalizedHeaders.some(header => 
+        header.toLowerCase().includes(col.toLowerCase()) || 
+        col.toLowerCase().includes(header.toLowerCase())
+      )
+    );
+    return missingColumns;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,9 +60,15 @@ const SGSUploadComponent = () => {
       return;
     }
 
+    if (!profile?.unit_ids || profile.unit_ids.length === 0) {
+      setErrorMessage('Usuário não possui unidade associada. Entre em contato com o administrador.');
+      return;
+    }
+
     try {
       setIsUploading(true);
       setErrorMessage(null);
+      setUploadResult(null);
 
       // Ler o arquivo Excel
       const arrayBuffer = await selectedFile.arrayBuffer();
@@ -54,26 +82,45 @@ const SGSUploadComponent = () => {
 
       // Processar os dados do Excel
       const [headers, ...rows] = jsonData as any[][];
+      
+      // Validar colunas esperadas
+      const missingColumns = validateColumns(headers);
+      if (missingColumns.length > 0) {
+        throw new Error(`Colunas obrigatórias não encontradas: ${missingColumns.join(', ')}`);
+      }
+
       const processedData = rows
         .filter(row => row && row.some(cell => cell !== null && cell !== undefined && cell !== ''))
         .map((row: any[]) => {
           const rowData: any = {};
           headers.forEach((header: string, index: number) => {
             if (header && typeof header === 'string') {
-              rowData[header.toLowerCase().trim()] = row[index] || '';
+              rowData[header.trim()] = row[index] || '';
             }
           });
           return rowData;
         });
 
       console.log(`Dados processados do Excel: ${processedData.length} registros`);
-      console.log('Primeira linha:', processedData[0]);
 
-      // Aqui você pode adicionar a lógica de processamento específica do SGS
-      // Por enquanto, apenas mostra um toast de sucesso
+      // Chamar edge function para sincronizar
+      const { data, error } = await supabase.functions.invoke('sync-students-sgs', {
+        body: {
+          studentsData: processedData,
+          unitId: profile.unit_ids[0],
+          uploadedBy: profile.id
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erro na sincronização com SGS');
+      }
+
+      setUploadResult(data);
+      
       toast({
-        title: "Upload Realizado",
-        description: `Arquivo processado com ${processedData.length} registros. Funcionalidade de sincronização em desenvolvimento.`,
+        title: "Sincronização Concluída",
+        description: `${data.processedCount} alunos processados com sucesso. ${data.newStudents} novos alunos adicionados.`,
       });
 
       // Limpar o arquivo selecionado
@@ -91,7 +138,7 @@ const SGSUploadComponent = () => {
         
       setErrorMessage(mensagemErro);
       toast({
-        title: "Erro no Upload",
+        title: "Erro na Sincronização",
         description: mensagemErro,
         variant: "destructive"
       });
@@ -154,6 +201,21 @@ const SGSUploadComponent = () => {
         </Alert>
       )}
 
+      {uploadResult && (
+        <Alert className="mb-4">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Resultado da Sincronização:</strong><br />
+            • Total processado: {uploadResult.processedCount} alunos<br />
+            • Novos alunos: {uploadResult.newStudents}<br />
+            • Alunos atualizados: {uploadResult.updatedStudents}<br />
+            {uploadResult.errors && uploadResult.errors.length > 0 && (
+              <>• Erros encontrados: {uploadResult.errors.length}</>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex justify-center">
         <Button 
           onClick={handleUpload} 
@@ -163,12 +225,12 @@ const SGSUploadComponent = () => {
           {isUploading ? (
             <>
               <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Processando...
+              Sincronizando...
             </>
           ) : (
             <>
               <Upload className="h-4 w-4" />
-              Fazer Upload
+              Sincronizar SGS
             </>
           )}
         </Button>
@@ -177,10 +239,10 @@ const SGSUploadComponent = () => {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>Colunas esperadas no arquivo Excel:</strong><br />
-          Nome, Código, Turma, Email, Telefone, Idade, etc.
+          <strong>Colunas esperadas no arquivo Excel (na ordem):</strong><br />
+          Índice, Código, Nome, Telefone, E-mail, Curso, Matrícula, Turma atual, Professor, Idade, Último nível, Dias na apostila, Dias no Supera, Vencimento do contrato
           <br /><br />
-          Certifique-se de que a primeira linha contém os cabeçalhos das colunas.
+          <strong>Importante:</strong> A primeira linha deve conter os cabeçalhos das colunas. Todos os alunos importados serão associados à sua unidade atual.
         </AlertDescription>
       </Alert>
     </div>
