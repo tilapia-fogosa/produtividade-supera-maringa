@@ -231,6 +231,31 @@ export function useAlertasEvasao() {
       // Formatar a data de retenção, se existir (mantém data e hora)
       const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
 
+      // Inserir dados na tabela alerta_evasao após o envio para Slack
+      try {
+        console.log('Salvando alerta no banco de dados...');
+        const { data: alertaData, error: alertaError } = await supabase
+          .from('alerta_evasao')
+          .insert({
+            aluno_id: alunoSelecionado,
+            data_alerta: dataAlertaFormatada,
+            origem_alerta: origemAlerta,
+            descritivo: descritivo,
+            responsavel: responsavelNome,
+            data_retencao: dataRetencaoFormatada,
+            status: 'pendente',
+            kanban_status: 'todo'
+          });
+
+        if (alertaError) {
+          console.error('Erro ao salvar alerta no banco:', alertaError);
+        } else {
+          console.log('Alerta salvo no banco com sucesso:', alertaData);
+        }
+      } catch (dbError) {
+        console.error('Erro ao inserir no banco de dados:', dbError);
+      }
+
       // Sempre envia para o webhook geral de alertas
       const webhookUrl = 'https://hook.us1.make.com/v8b7u98lehutsqqk9tox27b2bn7x1mmx';
       
@@ -268,7 +293,7 @@ export function useAlertasEvasao() {
 
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão enviado para Slack e webhook com sucesso! (Banco temporariamente desabilitado)",
+        description: "Alerta de evasão processado com sucesso! Dados enviados para Slack, webhook e salvos no banco.",
       });
       
       resetForm();

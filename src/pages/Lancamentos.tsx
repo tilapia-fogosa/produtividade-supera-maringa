@@ -2,13 +2,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, AlertTriangle, School } from "lucide-react";
+import { TrendingUp, BookOpen, AlertTriangle, School, Shield } from "lucide-react";
 import GoogleSheetsSync from '@/components/sync/GoogleSheetsSync';
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
+import { RetencaoModal } from '@/components/retencao/RetencaoModal';
 
 const Lancamentos = () => {
   const navigate = useNavigate();
   const [showAlertaModal, setShowAlertaModal] = useState(false);
+  const [showRetencaoModal, setShowRetencaoModal] = useState(false);
 
   const handleProdutividadeClick = () => {
     navigate('/dias-lancamento', { state: { serviceType: 'produtividade' } });
@@ -68,11 +70,25 @@ const Lancamentos = () => {
           <AlertTriangle className="mr-2 h-6 w-6" />
           Lançar Alerta de Evasão
         </Button>
+
+        <Button 
+          size="lg" 
+          className="py-8 text-lg bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+          onClick={() => setShowRetencaoModal(true)}
+        >
+          <Shield className="mr-2 h-6 w-6" />
+          Lançar Retenção
+        </Button>
       </div>
 
       <AlertaEvasaoModal 
         isOpen={showAlertaModal} 
         onClose={() => setShowAlertaModal(false)} 
+      />
+
+      <RetencaoModal 
+        isOpen={showRetencaoModal} 
+        onClose={() => setShowRetencaoModal(false)} 
       />
     </div>
   );

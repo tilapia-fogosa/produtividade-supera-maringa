@@ -234,6 +234,7 @@ export type Database = {
           motivo_procura: string | null
           niveldesafio: string | null
           nome: string
+          oculto_retencoes: boolean
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
@@ -270,6 +271,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome: string
+          oculto_retencoes?: boolean
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
@@ -306,6 +308,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome?: string
+          oculto_retencoes?: boolean
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
@@ -2811,6 +2814,51 @@ export type Database = {
           },
         ]
       }
+      retencoes: {
+        Row: {
+          acoes_tomadas: string
+          active: boolean
+          aluno_id: string
+          created_at: string
+          data_retencao: string
+          descritivo_responsavel: string
+          id: string
+          responsavel_id: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          acoes_tomadas: string
+          active?: boolean
+          aluno_id: string
+          created_at?: string
+          data_retencao: string
+          descritivo_responsavel: string
+          id?: string
+          responsavel_id: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          acoes_tomadas?: string
+          active?: boolean
+          aluno_id?: string
+          created_at?: string
+          data_retencao?: string
+          descritivo_responsavel?: string
+          id?: string
+          responsavel_id?: string
+          responsavel_nome?: string
+          responsavel_tipo?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sale_webhooks: {
         Row: {
           active: boolean
@@ -3898,6 +3946,27 @@ export type Database = {
           turma: string
         }[]
       }
+      get_alunos_retencoes_historico: {
+        Args:
+          | {
+              p_incluir_ocultos?: boolean
+              p_search_term?: string
+              p_status_filter?: string
+            }
+          | { p_search_term?: string; p_status_filter?: string }
+        Returns: {
+          alertas_ativos: number
+          educador: string
+          id: string
+          nome: string
+          status: string
+          total_alertas: number
+          total_retencoes: number
+          turma: string
+          ultima_retencao: string
+          ultimo_alerta: string
+        }[]
+      }
       get_attendance_rate_stats: {
         Args: {
           p_end_date: string
@@ -4155,6 +4224,37 @@ export type Database = {
           new_clients: number
           registration_name: string
           scheduled_visits: number
+        }[]
+      }
+      get_resultados_mensais_retencao: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aluno_ativo: boolean
+          aluno_id: string
+          aluno_nome: string
+          dias_desde_primeira_retencao: number
+          dias_desde_primeiro_alerta: number
+          primeira_retencao: string
+          primeiro_alerta: string
+          professor_nome: string
+          total_alertas: number
+          total_retencoes: number
+          turma_nome: string
+        }[]
+      }
+      get_resultados_retencao_temporal: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          media_dias_retencao: number
+          mesmo_periodo_ano_anterior_media_dias: number
+          mesmo_periodo_ano_anterior_total_casos: number
+          periodo_anterior_media_dias: number
+          periodo_anterior_total_casos: number
+          periodo_nome: string
+          periodo_tipo: string
+          total_casos: number
+          variacao_percentual_ano_anterior: number
+          variacao_percentual_anterior: number
         }[]
       }
       get_temporal_loss_reasons_report: {
