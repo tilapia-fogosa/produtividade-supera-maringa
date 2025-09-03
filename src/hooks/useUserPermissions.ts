@@ -21,6 +21,7 @@ const PAGE_PERMISSIONS = {
   '/projeto-sao-rafael': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/sincronizacao-sgs': ['franqueado', 'gestor_pedagogico', 'admin'], // Apenas gestão pode sincronizar SGS
   '/admin/configuracao': ['admin'], // Só admin tem acesso
 } as const;
 
