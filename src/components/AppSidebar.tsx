@@ -16,7 +16,8 @@ import {
   BookOpen,
   Target,
   Building,
-  Shield
+  Shield,
+  RefreshCw
 } from "lucide-react";
 import {
   Sidebar,
@@ -104,6 +105,12 @@ const items = [
     title: "Gestão de Retenções",
     url: "/retencoes",
     icon: Shield,
+    requiresAdmin: true,
+  },
+  {
+    title: "Sincronização com SGS",
+    url: "/sincronizacao-sgs",
+    icon: RefreshCw,
     requiresAdmin: true,
   },
 ];
