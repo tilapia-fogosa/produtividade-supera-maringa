@@ -22,7 +22,7 @@ const PAGE_PERMISSIONS = {
   '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/sincronizacao-sgs': ['franqueado', 'gestor_pedagogico', 'admin'], // Apenas gestão pode sincronizar SGS
-  '/admin/configuracao': ['admin'], // Só admin tem acesso
+  // '/admin/configuracao': removido - não deve aparecer para ninguém
 } as const;
 
 export const useUserPermissions = () => {
@@ -31,7 +31,10 @@ export const useUserPermissions = () => {
   const hasPageAccess = (path: string): boolean => {
     if (loading || !profile) return false;
     
-    // Admin sempre tem acesso a tudo
+    // Bloqueia completamente o acesso à página de configuração para TODOS os usuários
+    if (path === '/admin/configuracao') return false;
+    
+    // Admin sempre tem acesso a tudo (exceto configuração)
     if (profile.role === 'admin') return true;
 
     // Verifica se é uma rota dinâmica (contém parâmetros)
