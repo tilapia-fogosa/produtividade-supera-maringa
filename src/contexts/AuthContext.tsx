@@ -73,9 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: profileData.id,
         full_name: profileData.full_name,
         email: profileData.email,
-        role: profileData.is_admin ? 'admin' : role, // Se is_admin=true, sempre admin
+        role: (profileData as any).is_admin ? 'admin' : role, // Se is_admin=true, sempre admin
         unit_ids,
-        is_admin: profileData.is_admin
+        is_admin: (profileData as any).is_admin
       };
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);

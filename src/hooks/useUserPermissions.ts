@@ -22,6 +22,7 @@ const PAGE_PERMISSIONS = {
   '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/sincronizacao-sgs': ['franqueado', 'gestor_pedagogico', 'admin'], // Apenas gestão pode sincronizar SGS
+  '/admin/gestao': ['admin'], // Apenas admins podem gerenciar sistema
   // '/admin/configuracao': removido - não deve aparecer para ninguém
 } as const;
 

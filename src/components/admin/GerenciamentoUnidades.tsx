@@ -59,7 +59,7 @@ const GerenciamentoUnidades = () => {
           .from('funcionalidades_unidade')
           .upsert({
             unit_id: unitId,
-            tipo_funcionalidade: tipoFuncionalidade,
+            tipo_funcionalidade: tipoFuncionalidade as any,
             ativa: true,
             configuracao: {},
             data_habilitacao: new Date().toISOString()
@@ -72,7 +72,7 @@ const GerenciamentoUnidades = () => {
           .from('funcionalidades_unidade')
           .update({ ativa: false })
           .eq('unit_id', unitId)
-          .eq('tipo_funcionalidade', tipoFuncionalidade);
+          .eq('tipo_funcionalidade', tipoFuncionalidade as any);
         
         if (error) throw error;
       }
@@ -206,7 +206,7 @@ const GerenciamentoUnidades = () => {
                                   variant={isAtiva ? "default" : "outline"}
                                   onClick={() => handleToggleFuncionalidade(unidade.id, funcionalidade.key, !isAtiva)}
                                 >
-                                  {isAtiva ? 'Ativar' : 'Desativar'}
+                                  {isAtiva ? 'Desativar' : 'Ativar'}
                                 </Button>
                               </div>
                             );

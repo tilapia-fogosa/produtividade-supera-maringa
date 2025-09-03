@@ -127,7 +127,7 @@ const GerenciamentoFuncionalidades = () => {
       const promises = unidades.map(unidade => 
         supabase.from('funcionalidades_unidade').upsert({
           unit_id: unidade.id,
-          tipo_funcionalidade: tipoFuncionalidade,
+          tipo_funcionalidade: tipoFuncionalidade as any,
           ativa: true,
           configuracao: {},
           data_habilitacao: new Date().toISOString()
@@ -156,7 +156,7 @@ const GerenciamentoFuncionalidades = () => {
       const { error } = await supabase
         .from('funcionalidades_unidade')
         .update({ ativa: false })
-        .eq('tipo_funcionalidade', tipoFuncionalidade);
+        .eq('tipo_funcionalidade', tipoFuncionalidade as any);
       
       if (error) throw error;
       

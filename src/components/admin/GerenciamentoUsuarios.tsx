@@ -110,7 +110,7 @@ const GerenciamentoUsuarios = () => {
     try {
       const { error } = await supabase
         .from('unit_users')
-        .update({ role: newRole })
+        .update({ role: newRole as any })
         .eq('user_id', userId)
         .eq('unit_id', unitId);
       

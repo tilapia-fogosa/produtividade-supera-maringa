@@ -115,7 +115,12 @@ const items = [
 ];
 
 const additionalItems = [
-  // Página de configuração removida - não deve aparecer para ninguém
+  {
+    title: "Administração",
+    url: "/admin/gestao", 
+    icon: Settings,
+    requiresAdmin: true,
+  },
 ];
 
 export function AppSidebar() {
