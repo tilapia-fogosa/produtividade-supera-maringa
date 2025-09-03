@@ -4226,6 +4226,22 @@ export type Database = {
           scheduled_visits: number
         }[]
       }
+      get_resultados_mensais_retencao: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aluno_ativo: boolean
+          aluno_id: string
+          aluno_nome: string
+          dias_desde_primeira_retencao: number
+          dias_desde_primeiro_alerta: number
+          primeira_retencao: string
+          primeiro_alerta: string
+          professor_nome: string
+          total_alertas: number
+          total_retencoes: number
+          turma_nome: string
+        }[]
+      }
       get_temporal_loss_reasons_report: {
         Args: {
           p_created_by_ids?: string[]
