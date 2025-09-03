@@ -9,6 +9,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ActiveUnitProvider } from "@/contexts/ActiveUnitContext";
+import { UnitSelector } from "@/components/UnitSelector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Turmas from "./pages/Turmas";
 import DiarioTurma from "./pages/DiarioTurma";
@@ -51,20 +53,24 @@ function App() {
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/access-denied" element={<AccessDenied />} />
-              <Route path="/*" element={
-                <ProtectedRoute>
-                  <SidebarProvider>
+          <ActiveUnitProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/access-denied" element={<AccessDenied />} />
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <SidebarProvider>
                     <div className="flex min-h-screen w-full overflow-hidden bg-background text-foreground">
                       <div className="print:hidden">
                         <AppSidebar />
                       </div>
                       <main className="flex-1 overflow-auto">
                         <div className="p-2 md:p-4">
-                          <SidebarTrigger className="mb-2 md:mb-4 print:hidden" />
+                          <div className="flex items-center justify-between gap-4 mb-2 md:mb-4 print:hidden">
+                            <SidebarTrigger />
+                            <UnitSelector />
+                          </div>
                           <Routes>
                             <Route path="/" element={<Navigate to="/lancamentos" />} />
                             <Route path="/dias-lancamento" element={<DiasLancamento />} />
@@ -104,11 +110,12 @@ function App() {
                     <div className="fixed bottom-4 right-4 print:hidden">
                       <ThemeToggle />
                     </div>
-                  </SidebarProvider>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </BrowserRouter>
+                    </SidebarProvider>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </BrowserRouter>
+          </ActiveUnitProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
