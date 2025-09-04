@@ -90,6 +90,7 @@ serve(async (req) => {
       erros: data.erros,
       professor_correcao: data.professor_correcao,
       comentario: data.comentario,
+      data_fim_correcao: data.data_fim_correcao,
       aluno_nome: pessoaData?.nome
     };
     
@@ -144,6 +145,7 @@ serve(async (req) => {
       erros: data.erros,
       professor_correcao: nomeCorretor,
       comentario: data.comentario,
+      data_fim_correcao: data.data_fim_correcao,
       data_registro: new Date().toISOString()
     };
 

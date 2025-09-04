@@ -10,6 +10,7 @@ interface ProdutividadeAH {
   erros: number;
   professor_correcao: string;
   comentario?: string;
+  data_fim_correcao?: string;
 }
 
 export const useAhLancamento = (pessoaId?: string) => {

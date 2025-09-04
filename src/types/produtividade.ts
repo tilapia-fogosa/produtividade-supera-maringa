@@ -32,6 +32,7 @@ export interface ProdutividadeAH {
   erros: number | null;
   professor_correcao: string | null;
   comentario: string | null;
+  data_fim_correcao: string | null;
   created_at: string;
   updated_at: string;
 }

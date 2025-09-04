@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PessoaAH } from '@/types/pessoa-ah';
@@ -41,6 +42,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
   const [errosAh, setErrosAh] = useState("");
   const [professorCorrecao, setProfessorCorrecao] = useState("");
   const [comentario, setComentario] = useState("");
+  const [dataFimCorrecao, setDataFimCorrecao] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
@@ -50,6 +52,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
       setErrosAh("");
       setProfessorCorrecao("");
       setComentario("");
+      setDataFimCorrecao("");
     }
   }, [isOpen]);
 
@@ -103,6 +106,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
           erros: parseInt(errosAh) || 0,
           professor_correcao: professorCorrecao,
           comentario: comentario || undefined,
+          data_fim_correcao: dataFimCorrecao ? new Date(dataFimCorrecao).toISOString() : undefined,
         };
 
         console.log('AhLancamentoModal: Dados do lançamento preparados:', lancamentoData);
@@ -178,16 +182,29 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
             />
             
             {lancouAh === "sim" && (
-              <div className="space-y-2">
-                <label htmlFor="comentario" className="text-sm font-medium">Comentários (opcional)</label>
-                <Textarea
-                  id="comentario"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  placeholder="Observações sobre a correção"
-                  rows={3}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="dataFimCorrecao" className="text-sm font-medium">Data do Fim da Correção (opcional)</label>
+                  <Input
+                    id="dataFimCorrecao"
+                    type="datetime-local"
+                    value={dataFimCorrecao}
+                    onChange={(e) => setDataFimCorrecao(e.target.value)}
+                    className={isMobile ? "text-base" : ""}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="comentario" className="text-sm font-medium">Comentários (opcional)</label>
+                  <Textarea
+                    id="comentario"
+                    value={comentario}
+                    onChange={(e) => setComentario(e.target.value)}
+                    placeholder="Observações sobre a correção"
+                    rows={3}
+                  />
+                </div>
+              </>
             )}
             
             <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
