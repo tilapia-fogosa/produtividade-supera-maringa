@@ -149,121 +149,70 @@ serve(async (req) => {
 
     console.log('Enviando para webhook:', JSON.stringify(webhookPayload, null, 2));
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout para dar mais tempo
+    // Processar webhook em background para não bloquear a resposta
+    const webhookPromise = (async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-      console.log('Iniciando envio para webhook...');
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': 'Supera-AH-Webhook'
-        },
-        body: JSON.stringify(webhookPayload),
-        signal: controller.signal
-      });
+        console.log('Iniciando envio para webhook em background...');
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Supera-AH-Webhook'
+          },
+          body: JSON.stringify(webhookPayload),
+          signal: controller.signal
+        });
 
-      clearTimeout(timeoutId);
-
-      const responseText = await response.text();
-      const responseTime = performance.now() - startTime;
-      
-      console.log('Status da resposta:', response.status);
-      console.log('Headers da resposta:', JSON.stringify(Object.fromEntries([...response.headers]), null, 2));
-      console.log('Corpo da resposta:', responseText);
-      console.log('Tempo total de execução:', responseTime.toFixed(2), 'ms');
-
-      if (!response.ok) {
-        throw new Error(`Erro no webhook: Status ${response.status} - ${responseText}`);
-      }
-
-      // Atualizar última correção AH da pessoa na tabela apropriada
-      const { error: updateError } = await supabase
-        .from(tipoTabela)
-        .update({ 
-          ultima_correcao_ah: new Date().toISOString() 
-        })
-        .eq('id', data.aluno_id);
-
-      if (updateError) {
-        console.error('Erro ao atualizar data da última correção AH:', updateError);
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
-          tipo_pessoa: tipoPessoa,
-          webhookUrl: WEBHOOK_URL,
-          payload: webhookPayload,
-          response: {
-            status: response.status,
-            body: responseText,
-            headers: Object.fromEntries([...response.headers]),
-            executionTime: responseTime
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-
-    } catch (webhookError) {
-      console.error('Erro no webhook:', webhookError);
-      
-      if (webhookError.name === 'AbortError') {
-        console.error('Timeout ao tentar enviar dados para o webhook após 15 segundos');
+        clearTimeout(timeoutId);
         
-        // Mesmo com erro no webhook, salvar a última correção AH
-        const { error: updateError } = await supabase
-          .from(tipoTabela)
-          .update({ 
-            ultima_correcao_ah: new Date().toISOString() 
-          })
-          .eq('id', data.aluno_id);
+        const responseText = await response.text();
+        console.log('Webhook status:', response.status);
+        console.log('Webhook response:', responseText);
 
-        if (updateError) {
-          console.error('Erro ao atualizar data da última correção AH:', updateError);
+        if (!response.ok) {
+          throw new Error(`Webhook error: Status ${response.status} - ${responseText}`);
         }
-        
-        // Retornar sucesso parcial
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            webhookError: true,
-            message: 'Lançamento de AH registrado com sucesso, mas não foi possível sincronizar com o webhook externo (timeout).',
-            tipo_pessoa: tipoPessoa
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Para outros erros de webhook, também tentar salvar parcialmente
-      console.error('Erro de webhook, mas dados já foram salvos:', webhookError.message);
-      
-      // Atualizar última correção AH mesmo com erro no webhook
-      const { error: updateError } = await supabase
-        .from(tipoTabela)
-        .update({ 
-          ultima_correcao_ah: new Date().toISOString() 
-        })
-        .eq('id', data.aluno_id);
 
-      if (updateError) {
-        console.error('Erro ao atualizar data da última correção AH:', updateError);
+        console.log('Webhook enviado com sucesso!');
+        return { success: true };
+      } catch (webhookError) {
+        console.error('Erro no webhook (background):', webhookError.message);
+        return { success: false, error: webhookError.message };
       }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          webhookError: true,
-          message: 'Lançamento de AH registrado com sucesso, mas não foi possível sincronizar com o webhook externo.',
-          tipo_pessoa: tipoPessoa,
-          error_details: webhookError.message
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    })();
+
+    // Usar waitUntil para processar em background
+    EdgeRuntime.waitUntil(webhookPromise);
+
+    // Atualizar última correção AH imediatamente
+    const { error: updateError } = await supabase
+      .from(tipoTabela)
+      .update({ 
+        ultima_correcao_ah: new Date().toISOString() 
+      })
+      .eq('id', data.aluno_id);
+
+    if (updateError) {
+      console.error('Erro ao atualizar data da última correção AH:', updateError);
     }
+
+    const responseTime = performance.now() - startTime;
+    console.log('Tempo de resposta otimizado:', responseTime.toFixed(2), 'ms');
+
+    // Retornar sucesso imediato
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Lançamento de AH registrado com sucesso! Sincronização com webhook em andamento.',
+        tipo_pessoa: tipoPessoa,
+        executionTime: responseTime
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     const errorTime = performance.now() - startTime;

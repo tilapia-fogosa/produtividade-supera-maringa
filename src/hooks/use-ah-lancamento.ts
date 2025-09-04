@@ -40,19 +40,11 @@ export const useAhLancamento = (pessoaId?: string) => {
       console.log('Resposta da edge function:', data);
       
       if (data && data.success) {
-        if (data.webhookError) {
-          toast({
-            title: "Parcialmente concluído",
-            description: data.message || "Dados salvos, mas não sincronizados com webhook externo.",
-            variant: "default"
-          });
-        } else {
-          const tipoPessoa = data?.tipo_pessoa === 'funcionario' ? 'funcionário' : 'aluno';
-          toast({
-            title: "Sucesso",
-            description: `Lançamento de Abrindo Horizontes registrado com sucesso para ${tipoPessoa}!`,
-          });
-        }
+        const tipoPessoa = data?.tipo_pessoa === 'funcionario' ? 'funcionário' : 'aluno';
+        toast({
+          title: "Sucesso",
+          description: `Lançamento de AH registrado para ${tipoPessoa}! Resposta em ${Math.round(data.executionTime || 0)}ms`,
+        });
         return true;
       } else if (data && data.error) {
         throw new Error(data.error);
