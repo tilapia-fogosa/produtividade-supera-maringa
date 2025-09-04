@@ -83,7 +83,7 @@ const AbrindoHorizontesAlunos = () => {
               placeholder="Digite o nome do aluno ou da turma..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
-              className="pl-10 dark:bg-background dark:border-border"
+              className="pl-12 dark:bg-background dark:border-border"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
