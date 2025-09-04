@@ -4454,9 +4454,6 @@ export type Database = {
         | "google_agenda"
         | "relatorios_avancados"
         | "integracao_telefonia_net2phone"
-        | "disparo_slack"
-        | "gestao_estoque"
-        | "gestao_eventos"
       user_role:
         | "consultor"
         | "franqueado"
@@ -4629,9 +4626,6 @@ export const Constants = {
         "google_agenda",
         "relatorios_avancados",
         "integracao_telefonia_net2phone",
-        "disparo_slack",
-        "gestao_estoque",
-        "gestao_eventos",
       ],
       user_role: [
         "consultor",

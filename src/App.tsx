@@ -43,8 +43,6 @@ import Retencoes from "./pages/Retencoes";
 import ResultadosMensais from "./pages/ResultadosMensais";
 import Login from "./pages/Login";
 import AccessDenied from "./pages/AccessDenied";
-import AdminGestao from "./pages/AdminGestao";
-import SincronizacaoSGS from "./pages/SincronizacaoSGS";
 
 const queryClient = new QueryClient();
 
@@ -103,8 +101,6 @@ function App() {
                             <Route path="/eventos/:id/editar" element={<EditarEvento />} />
                             <Route path="/trofeus-1000-dias" element={<Trofeus1000Dias />} />
                             <Route path="/retencoes" element={<Retencoes />} />
-            <Route path="/admin/gestao" element={<AdminGestao />} />
-            <Route path="/sincronizacao-sgs" element={<SincronizacaoSGS />} />
                             <Route path="/resultados-mensais" element={<ResultadosMensais />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>

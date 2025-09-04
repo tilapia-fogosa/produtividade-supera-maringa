@@ -21,9 +21,7 @@ const PAGE_PERMISSIONS = {
   '/projeto-sao-rafael': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
   '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/sincronizacao-sgs': ['franqueado', 'gestor_pedagogico', 'admin'], // Apenas gestão pode sincronizar SGS
-  '/admin/gestao': ['admin'], // Apenas admins podem gerenciar sistema
-  // '/admin/configuracao': removido - não deve aparecer para ninguém
+  '/admin/configuracao': ['admin'], // Só admin tem acesso
 } as const;
 
 export const useUserPermissions = () => {
@@ -32,10 +30,7 @@ export const useUserPermissions = () => {
   const hasPageAccess = (path: string): boolean => {
     if (loading || !profile) return false;
     
-    // Bloqueia completamente o acesso à página de configuração para TODOS os usuários
-    if (path === '/admin/configuracao') return false;
-    
-    // Admin sempre tem acesso a tudo (exceto configuração)
+    // Admin sempre tem acesso a tudo
     if (profile.role === 'admin') return true;
 
     // Verifica se é uma rota dinâmica (contém parâmetros)
@@ -62,8 +57,8 @@ export const useUserPermissions = () => {
       .map(([path]) => path);
   };
 
-  const isAdmin = profile?.is_admin === true || profile?.role === 'admin';
-  const isManagement = isAdmin || (profile?.role && (['franqueado', 'gestor_pedagogico'] as const).includes(profile.role as any));
+  const isAdmin = profile?.role === 'admin';
+  const isManagement = profile?.role && (['franqueado', 'gestor_pedagogico', 'admin'] as const).includes(profile.role as any);
 
   return {
     hasPageAccess,

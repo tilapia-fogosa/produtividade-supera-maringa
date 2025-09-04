@@ -16,8 +16,7 @@ import {
   BookOpen,
   Target,
   Building,
-  Shield,
-  RefreshCw
+  Shield
 } from "lucide-react";
 import {
   Sidebar,
@@ -107,17 +106,12 @@ const items = [
     icon: Shield,
     requiresAdmin: true,
   },
-  {
-    title: "Sincronização com SGS",
-    url: "/sincronizacao-sgs",
-    icon: RefreshCw,
-  },
 ];
 
 const additionalItems = [
   {
-    title: "Administração",
-    url: "/admin/gestao", 
+    title: "Configuração",
+    url: "/admin/configuracao",
     icon: Settings,
     requiresAdmin: true,
   },

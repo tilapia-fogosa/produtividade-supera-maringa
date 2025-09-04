@@ -9,25 +9,6 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
-  const { hasPageAccess } = useUserPermissions();
-  const location = useLocation();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
-  }
-
-  if (!hasPageAccess(location.pathname)) {
-    return <Navigate to="/access-denied" replace />;
-  }
-
+  // Autenticação temporariamente desabilitada
   return <>{children}</>;
 };
