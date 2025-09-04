@@ -17,7 +17,7 @@ const Lancamentos = () => {
   };
 
   const handleAHClick = () => {
-    navigate('/dias-lancamento', { state: { serviceType: 'abrindo_horizontes' } });
+    navigate('/abrindo-horizontes/selecao');
   };
 
   const handleAula0Click = () => {
