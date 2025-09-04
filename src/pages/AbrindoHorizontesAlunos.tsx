@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Search, BookOpen, Clock } from "lucide-react";
 import { useTodosAlunos, TodosAlunosItem } from '@/hooks/use-todos-alunos';
 import AhLancamentoModal from '@/components/turmas/AhLancamentoModal';
+import { PessoaAH, todosAlunosItemToPessoaAH } from '@/types/pessoa-ah';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -14,14 +15,17 @@ const AbrindoHorizontesAlunos = () => {
   const navigate = useNavigate();
   const { alunos, loading, filtro, setFiltro, totalFiltrados } = useTodosAlunos();
   const [modalAberto, setModalAberto] = useState(false);
-  const [alunoSelecionado, setAlunoSelecionado] = useState<TodosAlunosItem | null>(null);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<PessoaAH | null>(null);
 
   const handleVoltar = () => {
     navigate('/abrindo-horizontes/selecao');
   };
 
   const handleLancarAH = (aluno: TodosAlunosItem) => {
-    setAlunoSelecionado(aluno);
+    console.log('AbrindoHorizontesAlunos: Selecionando aluno para AH:', aluno);
+    const pessoaAH = todosAlunosItemToPessoaAH(aluno);
+    console.log('AbrindoHorizontesAlunos: PessoaAH convertida:', pessoaAH);
+    setAlunoSelecionado(pessoaAH);
     setModalAberto(true);
   };
 
@@ -30,7 +34,8 @@ const AbrindoHorizontesAlunos = () => {
     setAlunoSelecionado(null);
   };
 
-  const handleModalSuccess = () => {
+  const handleModalSuccess = (alunoId: string) => {
+    console.log('AbrindoHorizontesAlunos: Lançamento AH bem-sucedido para aluno:', alunoId);
     // Atualizar a data da última correção no estado local se necessário
     // Por enquanto apenas fechar o modal
     handleFecharModal();
