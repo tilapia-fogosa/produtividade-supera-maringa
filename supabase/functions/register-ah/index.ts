@@ -82,17 +82,22 @@ serve(async (req) => {
 
     // Registrar na tabela produtividade_ah usando a nova estrutura
     console.log('Registrando dados na tabela produtividade_ah...');
+    const insertData = {
+      pessoa_id: data.aluno_id,
+      tipo_pessoa: tipoPessoa,
+      apostila: data.apostila,
+      exercicios: data.exercicios,
+      erros: data.erros,
+      professor_correcao: data.professor_correcao,
+      comentario: data.comentario,
+      aluno_nome: pessoaData?.nome
+    };
+    
+    console.log('Dados para inserção:', JSON.stringify(insertData, null, 2));
+    
     const { error: produtividadeError } = await supabase
       .from('produtividade_ah')
-      .insert({
-        pessoa_id: data.aluno_id,
-        tipo_pessoa: tipoPessoa,
-        apostila: data.apostila,
-        exercicios: data.exercicios,
-        erros: data.erros,
-        professor_correcao: data.professor_correcao,
-        comentario: data.comentario
-      });
+      .insert(insertData);
 
     if (produtividadeError) {
       console.error('Erro ao registrar na tabela produtividade_ah:', produtividadeError);
@@ -146,7 +151,7 @@ serve(async (req) => {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout para dar mais tempo
 
       console.log('Iniciando envio para webhook...');
       const response = await fetch(WEBHOOK_URL, {
@@ -204,11 +209,60 @@ serve(async (req) => {
       );
 
     } catch (webhookError) {
+      console.error('Erro no webhook:', webhookError);
+      
       if (webhookError.name === 'AbortError') {
-        console.error('Timeout ao tentar enviar dados para o webhook');
-        throw new Error('Timeout ao tentar enviar dados para o webhook após 10 segundos');
+        console.error('Timeout ao tentar enviar dados para o webhook após 15 segundos');
+        
+        // Mesmo com erro no webhook, salvar a última correção AH
+        const { error: updateError } = await supabase
+          .from(tipoTabela)
+          .update({ 
+            ultima_correcao_ah: new Date().toISOString() 
+          })
+          .eq('id', data.aluno_id);
+
+        if (updateError) {
+          console.error('Erro ao atualizar data da última correção AH:', updateError);
+        }
+        
+        // Retornar sucesso parcial
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            webhookError: true,
+            message: 'Lançamento de AH registrado com sucesso, mas não foi possível sincronizar com o webhook externo (timeout).',
+            tipo_pessoa: tipoPessoa
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
-      throw webhookError;
+      
+      // Para outros erros de webhook, também tentar salvar parcialmente
+      console.error('Erro de webhook, mas dados já foram salvos:', webhookError.message);
+      
+      // Atualizar última correção AH mesmo com erro no webhook
+      const { error: updateError } = await supabase
+        .from(tipoTabela)
+        .update({ 
+          ultima_correcao_ah: new Date().toISOString() 
+        })
+        .eq('id', data.aluno_id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar data da última correção AH:', updateError);
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          webhookError: true,
+          message: 'Lançamento de AH registrado com sucesso, mas não foi possível sincronizar com o webhook externo.',
+          tipo_pessoa: tipoPessoa,
+          error_details: webhookError.message
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
   } catch (error) {
