@@ -117,11 +117,6 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
           if (onSuccess) {
             onSuccess(aluno.id);
           }
-          toast({
-            title: "Sucesso",
-            description: `AH registrado para ${aluno.nome}`,
-            variant: "default"
-          });
           onClose();
         } else {
           console.log('AhLancamentoModal: Registro falhou');
