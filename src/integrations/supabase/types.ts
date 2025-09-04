@@ -2480,6 +2480,7 @@ export type Database = {
           apostila: string | null
           comentario: string | null
           created_at: string
+          data_fim_correcao: string | null
           erros: number | null
           exercicios: number | null
           id: string
@@ -2493,6 +2494,7 @@ export type Database = {
           apostila?: string | null
           comentario?: string | null
           created_at?: string
+          data_fim_correcao?: string | null
           erros?: number | null
           exercicios?: number | null
           id?: string
@@ -2506,6 +2508,7 @@ export type Database = {
           apostila?: string | null
           comentario?: string | null
           created_at?: string
+          data_fim_correcao?: string | null
           erros?: number | null
           exercicios?: number | null
           id?: string
@@ -2562,6 +2565,7 @@ export type Database = {
           id: string
           nome: string
           slack_username: string | null
+          status: boolean | null
           telefone: string | null
           unit_id: string
         }
@@ -2571,6 +2575,7 @@ export type Database = {
           id?: string
           nome: string
           slack_username?: string | null
+          status?: boolean | null
           telefone?: string | null
           unit_id: string
         }
@@ -2580,6 +2585,7 @@ export type Database = {
           id?: string
           nome?: string
           slack_username?: string | null
+          status?: boolean | null
           telefone?: string | null
           unit_id?: string
         }
@@ -4454,6 +4460,9 @@ export type Database = {
         | "google_agenda"
         | "relatorios_avancados"
         | "integracao_telefonia_net2phone"
+        | "disparo_slack"
+        | "gestao_estoque"
+        | "gestao_eventos"
       user_role:
         | "consultor"
         | "franqueado"
@@ -4626,6 +4635,9 @@ export const Constants = {
         "google_agenda",
         "relatorios_avancados",
         "integracao_telefonia_net2phone",
+        "disparo_slack",
+        "gestao_estoque",
+        "gestao_eventos",
       ],
       user_role: [
         "consultor",

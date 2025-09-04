@@ -10,6 +10,7 @@ interface ProdutividadeAH {
   erros: number;
   professor_correcao: string;
   comentario?: string;
+  data_fim_correcao?: string;
 }
 
 export const useAhLancamento = (pessoaId?: string) => {
@@ -37,26 +38,21 @@ export const useAhLancamento = (pessoaId?: string) => {
         throw new Error(error.message);
       }
       
-      if (data && data.webhookError) {
-        toast({
-          title: "Parcialmente concluído",
-          description: data.message || "Dados salvos, mas não sincronizados com webhook externo.",
-          variant: "default"
-        });
+      console.log('Resposta da edge function:', data);
+      
+      if (data && data.success) {
+        return true;
+      } else if (data && data.error) {
+        throw new Error(data.error);
       } else {
-        const tipoPessoa = data?.tipo_pessoa === 'funcionario' ? 'funcionário' : 'aluno';
-        toast({
-          title: "Sucesso",
-          description: `Lançamento de Abrindo Horizontes registrado com sucesso para ${tipoPessoa}!`,
-        });
+        throw new Error('Resposta inválida da edge function');
       }
       
-      return true;
     } catch (error) {
       console.error('Erro ao registrar lançamento AH:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível registrar o lançamento de Abrindo Horizontes",
+        description: error.message || "Não foi possível registrar o lançamento de Abrindo Horizontes",
         variant: "destructive"
       });
       return false;

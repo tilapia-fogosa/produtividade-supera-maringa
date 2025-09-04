@@ -7,6 +7,7 @@ import { PessoaTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 import { useIsMobile } from "@/hooks/use-mobile";
 import AlunosAHTable from './AlunosAHTable';
 import AhLancamentoModal from '../AhLancamentoModal';
+import { PessoaAH, pessoaTurmaDetalhesToPessoaAH } from '@/types/pessoa-ah';
 
 interface AbindoHorizontesScreenProps {
   turma: Turma;
@@ -23,12 +24,14 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [modalAberto, setModalAberto] = React.useState(false);
-  const [pessoaSelecionada, setPessoaSelecionada] = React.useState<PessoaTurmaDetalhes | null>(null);
+  const [pessoaSelecionada, setPessoaSelecionada] = React.useState<PessoaAH | null>(null);
   const [ahRegistrado, setAhRegistrado] = React.useState<Record<string, boolean>>({});
   
   const handleSelecionarPessoa = (pessoa: PessoaTurmaDetalhes) => {
-    console.log("Pessoa selecionada para correção AH:", pessoa.nome, "- Tipo:", pessoa.origem);
-    setPessoaSelecionada(pessoa);
+    console.log("AbindoHorizontesScreen: Pessoa selecionada para correção AH:", pessoa.nome, "- Tipo:", pessoa.origem);
+    const pessoaAH = pessoaTurmaDetalhesToPessoaAH(pessoa);
+    console.log("AbindoHorizontesScreen: PessoaAH convertida:", pessoaAH);
+    setPessoaSelecionada(pessoaAH);
     setModalAberto(true);
   };
   
@@ -38,10 +41,12 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
   };
   
   const handleModalSuccess = (pessoaId: string) => {
+    console.log("AbindoHorizontesScreen: Lançamento AH bem-sucedido para pessoa:", pessoaId);
     setAhRegistrado(prev => ({
       ...prev,
       [pessoaId]: true
     }));
+    handleFecharModal();
   };
 
   return (

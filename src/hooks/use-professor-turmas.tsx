@@ -46,12 +46,18 @@ export function useProfessorTurmas() {
       try {
         setLoading(true);
         
-        const { data: professorData, error: professorError } = await supabase
+        // Query simples para professores
+        const professorQuery = await supabase
           .from('professores')
-          .select('*')
-          .single();
+          .select('id, nome, email, telefone, unit_id')
+          .limit(1);
           
-        if (professorError) throw professorError;
+        if (professorQuery.error) throw professorQuery.error;
+        
+        const professorData = professorQuery.data?.[0];
+        if (!professorData) {
+          throw new Error('Professor não encontrado ou inativo');
+        }
         
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
@@ -62,9 +68,11 @@ export function useProfessorTurmas() {
         if (turmasError) throw turmasError;
         
         const professorCompleto: Professor = {
-          ...professorData,
+          id: professorData.id,
+          nome: professorData.nome,
           email: professorData.email || '',
-          telefone: professorData.telefone || ''
+          telefone: professorData.telefone || '',
+          unit_id: professorData.unit_id
         };
         
         const turmasCompletas: Turma[] = (turmasData || []).map(turma => ({

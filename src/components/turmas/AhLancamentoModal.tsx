@@ -9,16 +9,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Aluno } from '@/hooks/use-professor-turmas';
+import { PessoaAH } from '@/types/pessoa-ah';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAhLancamento } from '@/hooks/use-ah-lancamento';
 import AhSection from './produtividade/AhSection';
 
 interface AhLancamentoModalProps {
   isOpen: boolean;
-  aluno: Aluno;
+  aluno: PessoaAH;
   onClose: () => void;
   onSuccess?: (alunoId: string) => void;
   onError?: (errorMessage: string) => void;
@@ -41,6 +42,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
   const [errosAh, setErrosAh] = useState("");
   const [professorCorrecao, setProfessorCorrecao] = useState("");
   const [comentario, setComentario] = useState("");
+  const [dataFimCorrecao, setDataFimCorrecao] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
@@ -50,14 +52,19 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
       setErrosAh("");
       setProfessorCorrecao("");
       setComentario("");
+      setDataFimCorrecao("");
     }
   }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('AhLancamentoModal: Iniciando submit para aluno:', aluno);
+    console.log('AhLancamentoModal: Status lancouAh:', lancouAh);
+    
     if (lancouAh === "sim") {
       if (!apostilaAh) {
+        console.log('AhLancamentoModal: Erro - apostila não selecionada');
         toast({
           title: "Erro",
           description: "Selecione a apostila AH",
@@ -67,6 +74,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
       }
       
       if (!exerciciosAh) {
+        console.log('AhLancamentoModal: Erro - exercícios não informados');
         toast({
           title: "Erro",
           description: "Informe a quantidade de exercícios realizados",
@@ -76,6 +84,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
       }
       
       if (!professorCorrecao) {
+        console.log('AhLancamentoModal: Erro - professor correção não selecionado');
         toast({
           title: "Erro",
           description: "Selecione quem corrigiu",
@@ -87,6 +96,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
 
     try {
       setIsSubmitting(true);
+      console.log('AhLancamentoModal: Definindo isSubmitting como true');
       
       if (lancouAh === "sim") {
         const lancamentoData = {
@@ -96,19 +106,28 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
           erros: parseInt(errosAh) || 0,
           professor_correcao: professorCorrecao,
           comentario: comentario || undefined,
+          data_fim_correcao: dataFimCorrecao ? new Date(dataFimCorrecao).toISOString() : undefined,
         };
 
-        console.log('AH lançamento data:', lancamentoData);
+        console.log('AhLancamentoModal: Dados do lançamento preparados:', lancamentoData);
+        console.log('AhLancamentoModal: Chamando registrarLancamentoAH...');
         
         const success = await registrarLancamentoAH(lancamentoData);
         
+        console.log('AhLancamentoModal: Resultado do registro:', success);
+        
         if (success) {
+          console.log('AhLancamentoModal: Registro bem-sucedido, chamando onSuccess');
           if (onSuccess) {
             onSuccess(aluno.id);
           }
           onClose();
+        } else {
+          console.log('AhLancamentoModal: Registro falhou');
+          throw new Error('Falha ao registrar lançamento AH');
         }
       } else {
+        console.log('AhLancamentoModal: Não lançou AH, apenas fechando modal');
         // Se não lançou AH, apenas fecha o modal
         onClose();
       }
@@ -121,6 +140,8 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
         errorMessage = error.message;
       }
       
+      console.log('AhLancamentoModal: Mensagem de erro:', errorMessage);
+      
       if (onError) {
         onError(errorMessage);
       }
@@ -131,6 +152,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
         variant: "destructive"
       });
     } finally {
+      console.log('AhLancamentoModal: Definindo isSubmitting como false');
       setIsSubmitting(false);
     }
   };
@@ -160,16 +182,29 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
             />
             
             {lancouAh === "sim" && (
-              <div className="space-y-2">
-                <label htmlFor="comentario" className="text-sm font-medium">Comentários (opcional)</label>
-                <Textarea
-                  id="comentario"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  placeholder="Observações sobre a correção"
-                  rows={3}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="dataFimCorrecao" className="text-sm font-medium">Data do Fim da Correção (opcional)</label>
+                  <Input
+                    id="dataFimCorrecao"
+                    type="datetime-local"
+                    value={dataFimCorrecao}
+                    onChange={(e) => setDataFimCorrecao(e.target.value)}
+                    className={isMobile ? "text-base" : ""}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="comentario" className="text-sm font-medium">Comentários (opcional)</label>
+                  <Textarea
+                    id="comentario"
+                    value={comentario}
+                    onChange={(e) => setComentario(e.target.value)}
+                    placeholder="Observações sobre a correção"
+                    rows={3}
+                  />
+                </div>
+              </>
             )}
             
             <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>

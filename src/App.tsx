@@ -25,6 +25,8 @@ import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
 import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
+import AbrindoHorizontesSelecao from "./pages/AbrindoHorizontesSelecao";
+import AbrindoHorizontesAlunos from "./pages/AbrindoHorizontesAlunos";
 import Diario from "./pages/Diario";
 import Funcionarios from "./pages/Funcionarios";
 import Alunos from "./pages/Alunos";
@@ -43,7 +45,6 @@ import Retencoes from "./pages/Retencoes";
 import ResultadosMensais from "./pages/ResultadosMensais";
 import Login from "./pages/Login";
 import AccessDenied from "./pages/AccessDenied";
-import SincronizacaoSGS from "./pages/SincronizacaoSGS";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,8 @@ function App() {
                             <Route path="/turmas/dia" element={<Turmas />} />
                             <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
                             <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
+                            <Route path="/abrindo-horizontes/selecao" element={<AbrindoHorizontesSelecao />} />
+                            <Route path="/abrindo-horizontes/alunos" element={<AbrindoHorizontesAlunos />} />
                             <Route path="/turma/:turmaId/diario" element={<DiarioTurma />} />
                             <Route path="/painel-pedagogico" element={<PainelPedagogico />} />
                             <Route path="/estoque" element={<Estoque />} />
@@ -102,7 +105,6 @@ function App() {
                             <Route path="/eventos/:id/editar" element={<EditarEvento />} />
                             <Route path="/trofeus-1000-dias" element={<Trofeus1000Dias />} />
                             <Route path="/retencoes" element={<Retencoes />} />
-                            <Route path="/sincronizacao-sgs" element={<SincronizacaoSGS />} />
                             <Route path="/resultados-mensais" element={<ResultadosMensais />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>

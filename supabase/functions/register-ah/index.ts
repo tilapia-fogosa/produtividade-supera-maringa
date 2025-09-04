@@ -82,17 +82,23 @@ serve(async (req) => {
 
     // Registrar na tabela produtividade_ah usando a nova estrutura
     console.log('Registrando dados na tabela produtividade_ah...');
+    const insertData = {
+      pessoa_id: data.aluno_id,
+      tipo_pessoa: tipoPessoa,
+      apostila: data.apostila,
+      exercicios: data.exercicios,
+      erros: data.erros,
+      professor_correcao: data.professor_correcao,
+      comentario: data.comentario,
+      data_fim_correcao: data.data_fim_correcao,
+      aluno_nome: pessoaData?.nome
+    };
+    
+    console.log('Dados para inserção:', JSON.stringify(insertData, null, 2));
+    
     const { error: produtividadeError } = await supabase
       .from('produtividade_ah')
-      .insert({
-        pessoa_id: data.aluno_id,
-        tipo_pessoa: tipoPessoa,
-        apostila: data.apostila,
-        exercicios: data.exercicios,
-        erros: data.erros,
-        professor_correcao: data.professor_correcao,
-        comentario: data.comentario
-      });
+      .insert(insertData);
 
     if (produtividadeError) {
       console.error('Erro ao registrar na tabela produtividade_ah:', produtividadeError);
@@ -139,77 +145,76 @@ serve(async (req) => {
       erros: data.erros,
       professor_correcao: nomeCorretor,
       comentario: data.comentario,
+      data_fim_correcao: data.data_fim_correcao,
       data_registro: new Date().toISOString()
     };
 
     console.log('Enviando para webhook:', JSON.stringify(webhookPayload, null, 2));
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    // Processar webhook em background para não bloquear a resposta
+    const webhookPromise = (async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-      console.log('Iniciando envio para webhook...');
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': 'Supera-AH-Webhook'
-        },
-        body: JSON.stringify(webhookPayload),
-        signal: controller.signal
-      });
+        console.log('Iniciando envio para webhook em background...');
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Supera-AH-Webhook'
+          },
+          body: JSON.stringify(webhookPayload),
+          signal: controller.signal
+        });
 
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
+        
+        const responseText = await response.text();
+        console.log('Webhook status:', response.status);
+        console.log('Webhook response:', responseText);
 
-      const responseText = await response.text();
-      const responseTime = performance.now() - startTime;
-      
-      console.log('Status da resposta:', response.status);
-      console.log('Headers da resposta:', JSON.stringify(Object.fromEntries([...response.headers]), null, 2));
-      console.log('Corpo da resposta:', responseText);
-      console.log('Tempo total de execução:', responseTime.toFixed(2), 'ms');
+        if (!response.ok) {
+          throw new Error(`Webhook error: Status ${response.status} - ${responseText}`);
+        }
 
-      if (!response.ok) {
-        throw new Error(`Erro no webhook: Status ${response.status} - ${responseText}`);
+        console.log('Webhook enviado com sucesso!');
+        return { success: true };
+      } catch (webhookError) {
+        console.error('Erro no webhook (background):', webhookError.message);
+        return { success: false, error: webhookError.message };
       }
+    })();
 
-      // Atualizar última correção AH da pessoa na tabela apropriada
-      const { error: updateError } = await supabase
-        .from(tipoTabela)
-        .update({ 
-          ultima_correcao_ah: new Date().toISOString() 
-        })
-        .eq('id', data.aluno_id);
+    // Usar waitUntil para processar em background
+    EdgeRuntime.waitUntil(webhookPromise);
 
-      if (updateError) {
-        console.error('Erro ao atualizar data da última correção AH:', updateError);
-      }
+    // Atualizar última correção AH imediatamente
+    const { error: updateError } = await supabase
+      .from(tipoTabela)
+      .update({ 
+        ultima_correcao_ah: new Date().toISOString() 
+      })
+      .eq('id', data.aluno_id);
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Lançamento de AH registrado e enviado ao webhook com sucesso!',
-          tipo_pessoa: tipoPessoa,
-          webhookUrl: WEBHOOK_URL,
-          payload: webhookPayload,
-          response: {
-            status: response.status,
-            body: responseText,
-            headers: Object.fromEntries([...response.headers]),
-            executionTime: responseTime
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-
-    } catch (webhookError) {
-      if (webhookError.name === 'AbortError') {
-        console.error('Timeout ao tentar enviar dados para o webhook');
-        throw new Error('Timeout ao tentar enviar dados para o webhook após 10 segundos');
-      }
-      throw webhookError;
+    if (updateError) {
+      console.error('Erro ao atualizar data da última correção AH:', updateError);
     }
+
+    const responseTime = performance.now() - startTime;
+    console.log('Tempo de resposta otimizado:', responseTime.toFixed(2), 'ms');
+
+    // Retornar sucesso imediato
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Lançamento de AH registrado com sucesso! Sincronização com webhook em andamento.',
+        tipo_pessoa: tipoPessoa,
+        executionTime: responseTime
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     const errorTime = performance.now() - startTime;
