@@ -96,38 +96,85 @@ serve(async (req) => {
         }
 
         try {
-          // Buscar professor existente por nome (case sensitive)
-          const { data: existingProf, error: searchError } = await supabase
+          // Buscar professor por nome em TODAS as unidades
+          const { data: existingProfs, error: searchError } = await supabase
             .from('professores')
-            .select('id')
-            .eq('nome', nome)
-            .eq('unit_id', MARINGA_UNIT_ID)
-            .maybeSingle();
+            .select('id, unit_id, status')
+            .eq('nome', nome);
 
           if (searchError) {
             result.errors.push(`Erro ao buscar professor ${nome}: ${searchError.message}`);
             continue;
           }
 
-          if (existingProf) {
-            // Reativar professor existente
-            const { error: updateError } = await supabase
-              .from('professores')
-              .update({ 
-                status: true, 
-                slack_username: profData.slack_username || null,
-                ultima_sincronizacao: new Date().toISOString()
-              })
-              .eq('id', existingProf.id);
+          let professorProcessado = false;
 
-            if (updateError) {
-              result.errors.push(`Erro ao reativar professor ${nome}: ${updateError.message}`);
-            } else {
-              result.professores_reativados++;
-              console.log(`Professor reativado: ${nome}`);
+          if (existingProfs && existingProfs.length > 0) {
+            // Verificar se já existe na unidade atual
+            const profNaUnidadeAtual = existingProfs.find(p => p.unit_id === MARINGA_UNIT_ID);
+            const profEmOutraUnidade = existingProfs.find(p => p.unit_id !== MARINGA_UNIT_ID);
+            
+            if (profNaUnidadeAtual) {
+              // Professor já existe na unidade atual, apenas reativar
+              const { error: updateError } = await supabase
+                .from('professores')
+                .update({ 
+                  status: true, 
+                  slack_username: profData.slack_username || null,
+                  ultima_sincronizacao: new Date().toISOString()
+                })
+                .eq('id', profNaUnidadeAtual.id);
+
+              if (updateError) {
+                result.errors.push(`Erro ao reativar professor ${nome}: ${updateError.message}`);
+              } else {
+                result.professores_reativados++;
+                console.log(`Professor reativado: ${nome}`);
+              }
+              professorProcessado = true;
+            } else if (profEmOutraUnidade) {
+              // Professor existe em outra unidade, mover para unidade atual
+              const { error: updateError } = await supabase
+                .from('professores')
+                .update({ 
+                  unit_id: MARINGA_UNIT_ID,
+                  status: true, 
+                  slack_username: profData.slack_username || null,
+                  ultima_sincronizacao: new Date().toISOString()
+                })
+                .eq('id', profEmOutraUnidade.id);
+
+              if (updateError) {
+                result.errors.push(`Erro ao mover professor ${nome}: ${updateError.message}`);
+              } else {
+                result.professores_reativados++;
+                console.log(`Professor movido para unidade atual: ${nome}`);
+              }
+              professorProcessado = true;
             }
-          } else {
-            // Criar novo professor
+            
+            // Remover duplicatas se existirem
+            if (existingProfs.length > 1) {
+              const profParaManter = profNaUnidadeAtual || profEmOutraUnidade;
+              const profsParaRemover = existingProfs.filter(p => p.id !== profParaManter.id);
+              
+              for (const profDuplicado of profsParaRemover) {
+                const { error: deleteError } = await supabase
+                  .from('professores')
+                  .delete()
+                  .eq('id', profDuplicado.id);
+                
+                if (deleteError) {
+                  console.error('Erro ao remover duplicata:', deleteError);
+                } else {
+                  console.log(`Professor duplicado removido: ${nome} (ID: ${profDuplicado.id})`);
+                }
+              }
+            }
+          }
+
+          // Se não foi processado, criar novo professor
+          if (!professorProcessado) {
             const { error: insertError } = await supabase
               .from('professores')
               .insert({
@@ -214,7 +261,6 @@ serve(async (req) => {
                 dia_semana: diaSemana as any,
                 sala: turmaData.sala || null,
                 horario_inicio: turmaData.horario_inicio || null,
-                categoria: turmaData.categoria || null,
                 active: true,
                 ultima_sincronizacao: new Date().toISOString()
               })
@@ -236,7 +282,6 @@ serve(async (req) => {
                 dia_semana: diaSemana as any,
                 sala: turmaData.sala || null,
                 horario_inicio: turmaData.horario_inicio || null,
-                categoria: turmaData.categoria || null,
                 unit_id: MARINGA_UNIT_ID,
                 active: true,
                 ultima_sincronizacao: new Date().toISOString()
