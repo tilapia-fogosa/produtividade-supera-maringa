@@ -184,38 +184,60 @@ const XlsUploadComponent = () => {
       return;
     }
 
+    setIsUploading(true);
+
+    // Criar backup automático se habilitado
     if (autoBackup) {
-      setIsUploading(true);
-      toast.info("Criando backup automático...");
-      
       try {
+        toast.info("Criando backup automático antes da sincronização...");
+        console.log('Iniciando backup automático no slot:', selectedBackupSlot);
+        
         const { data: backupData, error: backupError } = await supabase.functions.invoke('create-backup', {
           body: {
             slotNumber: selectedBackupSlot,
             backupName: `Auto-backup ${new Date().toLocaleString('pt-BR')}`,
-            description: `Backup automático antes da sincronização`,
+            description: `Backup automático criado antes da sincronização do arquivo ${selectedFile?.name}`,
             unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
           }
         });
 
-        if (backupError || !backupData.success) {
-          const continueWithoutBackup = confirm('Erro ao criar backup automático. Continuar?');
+        console.log('Resultado do backup:', { backupData, backupError });
+
+        if (backupError) {
+          console.error('Erro na função de backup:', backupError);
+          toast.error("Erro ao criar backup automático: " + backupError.message);
+          const continueWithoutBackup = confirm('Erro ao criar backup automático. Deseja continuar com a sincronização mesmo assim?');
+          if (!continueWithoutBackup) {
+            setIsUploading(false);
+            return;
+          }
+        } else if (!backupData?.success) {
+          console.error('Backup falhou:', backupData);
+          toast.error("Erro ao criar backup automático: " + (backupData?.error || 'Erro desconhecido'));
+          const continueWithoutBackup = confirm('Erro ao criar backup automático. Deseja continuar com a sincronização mesmo assim?');
           if (!continueWithoutBackup) {
             setIsUploading(false);
             return;
           }
         } else {
-          toast.success(`Backup automático criado no slot ${selectedBackupSlot}`);
+          toast.success(`Backup automático criado no slot ${selectedBackupSlot} com ${backupData.statistics?.totalAlunos || 0} alunos, ${backupData.statistics?.totalProfessores || 0} professores, ${backupData.statistics?.totalTurmas || 0} turmas`);
           await loadBackupsList();
         }
       } catch (error) {
-        console.error('Erro no backup automático:', error);
+        console.error('Erro inesperado no backup automático:', error);
+        toast.error("Erro inesperado ao criar backup automático");
+        const continueWithoutBackup = confirm('Erro inesperado ao criar backup automático. Deseja continuar com a sincronização mesmo assim?');
+        if (!continueWithoutBackup) {
+          setIsUploading(false);
+          return;
+        }
       }
-    } else {
-      setIsUploading(true);
     }
 
+    // Proceder com a sincronização
     try {
+      toast.info("Iniciando sincronização dos dados...");
+      
       const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
         body: {
           xlsData: previewData,
@@ -223,19 +245,36 @@ const XlsUploadComponent = () => {
         }
       });
 
-      if (error || data?.error) {
-        toast.error("Erro ao sincronizar: " + (error?.message || data.error));
+      if (error) {
+        console.error('Erro na função de sincronização:', error);
+        toast.error("Erro ao sincronizar: " + error.message);
         return;
       }
 
-      toast.success("Sincronização concluída com sucesso!");
+      if (data?.error) {
+        console.error('Erro retornado pela sincronização:', data.error);
+        toast.error("Erro ao processar dados: " + data.error);
+        return;
+      }
 
+      console.log('Resultado da sincronização:', data);
+      
+      const stats = data.result || {};
+      const totalCriados = (stats.professoresCriados || 0) + (stats.turmasCriadas || 0) + (stats.alunosCriados || 0);
+      const totalReativados = (stats.professoresReativados || 0) + (stats.turmasReativadas || 0) + (stats.alunosReativados || 0);
+      
+      toast.success(`Sincronização concluída! ${totalCriados} registros criados, ${totalReativados} reativados.`, { duration: 5000 });
+
+      // Limpar dados após sucesso
       setSelectedFile(null);
       setPreviewData(null);
       setShowPreview(false);
       
+      // Recarregar lista de backups para mostrar mudanças
+      await loadBackupsList();
+      
     } catch (error) {
-      console.error('Erro na sincronização:', error);
+      console.error('Erro inesperado na sincronização:', error);
       toast.error("Erro inesperado durante a sincronização");
     } finally {
       setIsUploading(false);
