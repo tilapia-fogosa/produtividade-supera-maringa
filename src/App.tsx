@@ -101,7 +101,7 @@ function App() {
                             <Route path="/alunos-ativos" element={<AlunosAtivos />} />
                             <Route path="/aula-zero" element={<AulaZero />} />
                             <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
-                            <Route path="/admin/sincronizar-turmas" element={<SincronizarTurmas />} />
+                            <Route path="/sincronizar-turmas" element={<SincronizarTurmas />} />
                             <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
                             <Route path="/eventos" element={<Eventos />} />
                             <Route path="/eventos/:id/editar" element={<EditarEvento />} />

@@ -85,9 +85,8 @@ const items = [
   },
   {
     title: "Sincronizar Turmas",
-    url: "/admin/sincronizar-turmas",
+    url: "/sincronizar-turmas",
     icon: FileSpreadsheet,
-    requiresAdmin: true,
   },
   {
     title: "Painel Pedagógico",
