@@ -207,6 +207,8 @@ serve(async (req) => {
         const nome = turmaData.nome?.trim();
         const professorNome = turmaData.professor_nome?.trim();
         
+        console.log(`Processando turma: ${nome}, Professor: ${professorNome}`);
+        
         if (!nome || !professorNome) {
           result.errors.push('Turma sem nome ou professor encontrada');
           continue;
@@ -222,6 +224,8 @@ serve(async (req) => {
             .eq('status', true)
             .maybeSingle();
 
+          console.log(`Professor encontrado para turma ${nome}:`, professor);
+
           if (profSearchError) {
             result.errors.push(`Erro ao buscar professor ${professorNome}: ${profSearchError.message}`);
             continue;
@@ -232,14 +236,25 @@ serve(async (req) => {
             continue;
           }
 
-          // Validar dia da semana
-          const diaSemanaValidos = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
-          const diaSemana = turmaData.dia_semana?.toLowerCase()?.trim();
+          // Como o Excel tem o dia da semana errado, vou extrair do nome da turma
+          let diaSemana = 'segunda'; // default
+          const nomeLower = nome.toLowerCase();
           
-          if (!diaSemana || !diaSemanaValidos.includes(diaSemana)) {
-            result.errors.push(`Dia da semana inválido para turma ${nome}: ${turmaData.dia_semana}`);
-            continue;
+          if (nomeLower.includes('2ª') || nomeLower.includes('segunda')) {
+            diaSemana = 'segunda';
+          } else if (nomeLower.includes('3ª') || nomeLower.includes('terca')) {
+            diaSemana = 'terca';
+          } else if (nomeLower.includes('4ª') || nomeLower.includes('quarta')) {
+            diaSemana = 'quarta';
+          } else if (nomeLower.includes('5ª') || nomeLower.includes('quinta')) {
+            diaSemana = 'quinta';
+          } else if (nomeLower.includes('6ª') || nomeLower.includes('sexta')) {
+            diaSemana = 'sexta';
+          } else if (nomeLower.includes('sábado') || nomeLower.includes('sabado')) {
+            diaSemana = 'sabado';
           }
+
+          console.log(`Dia da semana extraído para turma ${nome}: ${diaSemana}`);
 
           // Buscar turma existente por nome (case sensitive)
           const { data: existingTurma, error: turmaSearchError } = await supabase
@@ -248,6 +263,8 @@ serve(async (req) => {
             .eq('nome', nome)
             .eq('unit_id', MARINGA_UNIT_ID)
             .maybeSingle();
+
+          console.log(`Turma existente encontrada:`, existingTurma);
 
           if (turmaSearchError) {
             result.errors.push(`Erro ao buscar turma ${nome}: ${turmaSearchError.message}`);
@@ -262,7 +279,6 @@ serve(async (req) => {
                 professor_id: professor.id,
                 dia_semana: diaSemana as any,
                 sala: turmaData.sala || null,
-                horario_inicio: turmaData.horario_inicio || null,
                 active: true,
                 ultima_sincronizacao: new Date().toISOString()
               })
@@ -283,7 +299,6 @@ serve(async (req) => {
                 professor_id: professor.id,
                 dia_semana: diaSemana as any,
                 sala: turmaData.sala || null,
-                horario_inicio: turmaData.horario_inicio || null,
                 unit_id: MARINGA_UNIT_ID,
                 active: true,
                 ultima_sincronizacao: new Date().toISOString()
@@ -309,6 +324,8 @@ serve(async (req) => {
         const nome = alunoData.nome?.trim();
         const turmaNome = alunoData.turma_atual?.trim();
         
+        console.log(`Processando aluno: ${nome}, Turma: ${turmaNome}`);
+        
         if (!nome) {
           result.errors.push('Aluno sem nome encontrado');
           continue;
@@ -326,6 +343,8 @@ serve(async (req) => {
               .eq('unit_id', MARINGA_UNIT_ID)
               .eq('active', true)
               .maybeSingle();
+
+            console.log(`Turma encontrada para aluno ${nome}:`, turma);
 
             if (turmaSearchError) {
               result.errors.push(`Erro ao buscar turma ${turmaNome} para aluno ${nome}: ${turmaSearchError.message}`);
@@ -348,6 +367,8 @@ serve(async (req) => {
             .eq('unit_id', MARINGA_UNIT_ID)
             .maybeSingle();
 
+          console.log(`Aluno existente encontrado:`, existingAluno);
+
           if (alunoSearchError) {
             result.errors.push(`Erro ao buscar aluno ${nome}: ${alunoSearchError.message}`);
             continue;
@@ -369,6 +390,8 @@ serve(async (req) => {
             ultima_sincronizacao: new Date().toISOString()
           };
 
+          console.log(`Dados do aluno preparados:`, alunoUpdate);
+
           if (existingAluno) {
             // Reativar e atualizar aluno existente
             const { error: updateError } = await supabase
@@ -378,6 +401,7 @@ serve(async (req) => {
 
             if (updateError) {
               result.errors.push(`Erro ao reativar aluno ${nome}: ${updateError.message}`);
+              console.error(`Erro ao reativar aluno ${nome}:`, updateError);
             } else {
               result.alunos_reativados++;
               console.log(`Aluno reativado: ${nome}`);
@@ -393,6 +417,7 @@ serve(async (req) => {
 
             if (insertError) {
               result.errors.push(`Erro ao criar aluno ${nome}: ${insertError.message}`);
+              console.error(`Erro ao criar aluno ${nome}:`, insertError);
             } else {
               result.alunos_criados++;
               console.log(`Aluno criado: ${nome}`);
@@ -400,6 +425,7 @@ serve(async (req) => {
           }
         } catch (error) {
           result.errors.push(`Erro ao processar aluno ${nome}: ${error.message}`);
+          console.error(`Erro ao processar aluno ${nome}:`, error);
         }
       }
     }
