@@ -80,25 +80,67 @@ const XlsUploadComponent = () => {
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: 'buffer' });
       
+      console.log('Abas encontradas:', workbook.SheetNames);
+      
       const data: XlsData = {
         turmas: [],
         professores: [],
         alunos: []
       };
 
-      if (workbook.SheetNames.includes('Turmas')) {
-        const turmasSheet = workbook.Sheets['Turmas'];
-        data.turmas = XLSX.utils.sheet_to_json(turmasSheet);
+      // Procurar pela aba "novo" ou usar a primeira aba disponível
+      let targetSheetName = 'novo';
+      if (!workbook.SheetNames.includes('novo')) {
+        targetSheetName = workbook.SheetNames[0];
+        console.log(`Aba 'novo' não encontrada, usando: ${targetSheetName}`);
       }
 
-      if (workbook.SheetNames.includes('Professores')) {
-        const professoresSheet = workbook.Sheets['Professores'];
-        data.professores = XLSX.utils.sheet_to_json(professoresSheet);
-      }
-
-      if (workbook.SheetNames.includes('Alunos')) {
-        const alunosSheet = workbook.Sheets['Alunos'];
-        data.alunos = XLSX.utils.sheet_to_json(alunosSheet);
+      if (targetSheetName && workbook.Sheets[targetSheetName]) {
+        const sheet = workbook.Sheets[targetSheetName];
+        const allData = XLSX.utils.sheet_to_json(sheet);
+        
+        console.log(`Dados encontrados na aba ${targetSheetName}:`, allData.length, 'registros');
+        console.log('Amostra dos dados:', allData.slice(0, 3));
+        
+        // Separar os dados por tipo baseado nas colunas
+        allData.forEach((row: any) => {
+          // Verificar se tem dados de turma (geralmente tem sala, horário, etc.)
+          if (row.sala || row.horario_inicio || row.dia_semana || row.professor_nome) {
+            data.turmas.push(row);
+          }
+          // Verificar se tem dados de professor (geralmente tem slack, telefone sem ser de aluno)
+          else if (row.slack || (row.telefone && !row.turma_id && !row.matricula)) {
+            data.professores.push(row);
+          }
+          // Verificar se tem dados de aluno (geralmente tem matricula, turma_id, idade)
+          else if (row.matricula || row.turma_id || row.idade || row.responsavel || row.vencimento_contrato) {
+            data.alunos.push(row);
+          }
+          // Se não conseguir identificar, tentar pelo campo "tipo" se existir
+          else if (row.tipo) {
+            const tipo = String(row.tipo).toLowerCase();
+            if (tipo.includes('turma')) {
+              data.turmas.push(row);
+            } else if (tipo.includes('professor')) {
+              data.professores.push(row);
+            } else if (tipo.includes('aluno')) {
+              data.alunos.push(row);
+            }
+          }
+          // Caso padrão: se não conseguir identificar, considerar como aluno
+          else {
+            data.alunos.push(row);
+          }
+        });
+        
+        console.log('Dados separados:', {
+          turmas: data.turmas.length,
+          professores: data.professores.length,
+          alunos: data.alunos.length
+        });
+      } else {
+        toast.error(`Aba '${targetSheetName}' não encontrada no arquivo`);
+        return;
       }
 
       setPreviewData(data);
