@@ -4312,6 +4312,16 @@ export type Database = {
           },
         ]
       }
+      corretores_view: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          nome: string | null
+          tipo: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
       kanban_client_summary: {
         Row: {
           created_at: string | null
@@ -4355,6 +4365,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pessoas_turma_view: {
+        Row: {
+          active: boolean | null
+          cargo: string | null
+          codigo: string | null
+          data_onboarding: string | null
+          dias_supera: number | null
+          email: string | null
+          id: string | null
+          idade: number | null
+          niveldesafio: string | null
+          nome: string | null
+          origem: string | null
+          telefone: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
+      responsaveis_view: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          nome: string | null
+          tipo: string | null
+          unit_id: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
@@ -4685,6 +4727,21 @@ export type Database = {
         Args: { p_periodo: string }
         Returns: string
       }
+      get_pessoas_turma: {
+        Args: { p_turma_id: string }
+        Returns: {
+          cargo: string
+          dias_supera: number
+          email: string
+          id: string
+          idade: number
+          nome: string
+          origem: string
+          telefone: string
+          ultimo_registro_data: string
+          ultimo_registro_id: string
+        }[]
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -4794,6 +4851,20 @@ export type Database = {
           motivo_perda: string
           total_n: number
           total_percent: number
+        }[]
+      }
+      get_todas_pessoas: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cargo: string
+          email: string
+          id: string
+          nome: string
+          origem: string
+          telefone: string
+          turma_id: string
+          turma_nome: string
+          ultima_correcao_ah: string
         }[]
       }
       get_turma_modal_data: {
@@ -4918,6 +4989,14 @@ export type Database = {
           tipo_criterio: string
           turma_id: string
           unit_id: string
+        }[]
+      }
+      verificar_pessoa_existe: {
+        Args: { p_pessoa_id: string }
+        Returns: {
+          id: string
+          nome: string
+          tipo: string
         }[]
       }
       verify_webhook_credentials: {

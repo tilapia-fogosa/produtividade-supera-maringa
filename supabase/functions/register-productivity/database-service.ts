@@ -190,25 +190,22 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
     const pessoaId = data.pessoa_id || data.aluno_id;
     console.log('Registrando produtividade para pessoa:', pessoaId);
     
-    // Verificar se é aluno ou funcionário antes de inserir
-    const { data: alunoExiste } = await supabaseClient
-      .from('alunos')
-      .select('id')
-      .eq('id', pessoaId)
-      .maybeSingle();
-    
-    const { data: funcionarioExiste } = await supabaseClient
-      .from('funcionarios')
-      .select('id')
-      .eq('id', pessoaId)
-      .maybeSingle();
-    
-    if (!alunoExiste && !funcionarioExiste) {
+    // Usar a função SQL verificar_pessoa_existe que combina alunos e funcionários ativos
+    const { data: pessoaData, error: pessoaError } = await supabaseClient
+      .rpc('verificar_pessoa_existe', { p_pessoa_id: pessoaId });
+
+    if (pessoaError) {
+      console.error('Erro ao verificar pessoa:', pessoaError);
+      return false;
+    }
+
+    const pessoa = pessoaData?.[0];
+    if (!pessoa) {
       console.error('ID não encontrado nem em alunos nem em funcionários');
       return false;
     }
-    
-    const tipoPessoa = alunoExiste ? 'aluno' : 'funcionario';
+
+    const tipoPessoa = pessoa.tipo;
     console.log('Registrando para o', tipoPessoa + ':', pessoaId);
     
     // Preparar dados para inserção usando pessoa_id
