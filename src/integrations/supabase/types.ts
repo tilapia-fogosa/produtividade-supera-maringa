@@ -479,6 +479,7 @@ export type Database = {
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
+          status: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -520,6 +521,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          status?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -561,6 +563,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          status?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -605,6 +608,7 @@ export type Database = {
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
+          status: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -646,6 +650,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          status?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -687,6 +692,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          status?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -2905,8 +2911,10 @@ export type Database = {
           email: string | null
           id: string
           nome: string
+          observacoes: string | null
           original_id: string
           slack_username: string | null
+          status: string | null
           telefone: string | null
           ultima_sincronizacao: string | null
           unit_id: string
@@ -2919,8 +2927,10 @@ export type Database = {
           email?: string | null
           id?: string
           nome: string
+          observacoes?: string | null
           original_id: string
           slack_username?: string | null
+          status?: string | null
           telefone?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
@@ -2933,8 +2943,10 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string
+          observacoes?: string | null
           original_id?: string
           slack_username?: string | null
+          status?: string | null
           telefone?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
@@ -2950,8 +2962,10 @@ export type Database = {
           email: string | null
           id: string
           nome: string
+          observacoes: string | null
           original_id: string
           slack_username: string | null
+          status: string | null
           telefone: string | null
           ultima_sincronizacao: string | null
           unit_id: string
@@ -2964,8 +2978,10 @@ export type Database = {
           email?: string | null
           id?: string
           nome: string
+          observacoes?: string | null
           original_id: string
           slack_username?: string | null
+          status?: string | null
           telefone?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
@@ -2978,8 +2994,10 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string
+          observacoes?: string | null
           original_id?: string
           slack_username?: string | null
+          status?: string | null
           telefone?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
@@ -3828,51 +3846,66 @@ export type Database = {
           backup_created_at: string
           backup_created_by: string | null
           categoria: string | null
+          cor_identificacao: string | null
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           horario_fim: string
           horario_inicio: string
           id: string
+          max_alunos: number | null
           nome: string
+          observacoes: string | null
           original_id: string
           professor_id: string | null
           sala: string | null
+          status: string | null
           ultima_sincronizacao: string | null
           unit_id: string
+          whatsapp_grupo: string | null
         }
         Insert: {
           active?: boolean
           backup_created_at?: string
           backup_created_by?: string | null
           categoria?: string | null
+          cor_identificacao?: string | null
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           horario_fim?: string
           horario_inicio?: string
           id?: string
+          max_alunos?: number | null
           nome: string
+          observacoes?: string | null
           original_id: string
           professor_id?: string | null
           sala?: string | null
+          status?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
+          whatsapp_grupo?: string | null
         }
         Update: {
           active?: boolean
           backup_created_at?: string
           backup_created_by?: string | null
           categoria?: string | null
+          cor_identificacao?: string | null
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
           horario_fim?: string
           horario_inicio?: string
           id?: string
+          max_alunos?: number | null
           nome?: string
+          observacoes?: string | null
           original_id?: string
           professor_id?: string | null
           sala?: string | null
+          status?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
+          whatsapp_grupo?: string | null
         }
         Relationships: []
       }
@@ -3882,51 +3915,66 @@ export type Database = {
           backup_created_at: string
           backup_created_by: string | null
           categoria: string | null
+          cor_identificacao: string | null
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           horario_fim: string
           horario_inicio: string
           id: string
+          max_alunos: number | null
           nome: string
+          observacoes: string | null
           original_id: string
           professor_id: string | null
           sala: string | null
+          status: string | null
           ultima_sincronizacao: string | null
           unit_id: string
+          whatsapp_grupo: string | null
         }
         Insert: {
           active?: boolean
           backup_created_at?: string
           backup_created_by?: string | null
           categoria?: string | null
+          cor_identificacao?: string | null
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           horario_fim?: string
           horario_inicio?: string
           id?: string
+          max_alunos?: number | null
           nome: string
+          observacoes?: string | null
           original_id: string
           professor_id?: string | null
           sala?: string | null
+          status?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
+          whatsapp_grupo?: string | null
         }
         Update: {
           active?: boolean
           backup_created_at?: string
           backup_created_by?: string | null
           categoria?: string | null
+          cor_identificacao?: string | null
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
           horario_fim?: string
           horario_inicio?: string
           id?: string
+          max_alunos?: number | null
           nome?: string
+          observacoes?: string | null
           original_id?: string
           professor_id?: string | null
           sala?: string | null
+          status?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
+          whatsapp_grupo?: string | null
         }
         Relationships: []
       }
