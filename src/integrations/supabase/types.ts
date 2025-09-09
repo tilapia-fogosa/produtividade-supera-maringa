@@ -244,6 +244,7 @@ export type Database = {
           ultima_correcao_ah: string | null
           ultima_falta: string | null
           ultima_pagina: number | null
+          ultima_sincronizacao: string | null
           ultimo_nivel: string | null
           unit_id: string
           valor_mensalidade: number | null
@@ -281,6 +282,7 @@ export type Database = {
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
           ultimo_nivel?: string | null
           unit_id: string
           valor_mensalidade?: number | null
@@ -318,6 +320,7 @@ export type Database = {
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
           ultimo_nivel?: string | null
           unit_id?: string
           valor_mensalidade?: number | null
@@ -447,6 +450,264 @@ export type Database = {
         }
         Relationships: []
       }
+      alunos_backup1: {
+        Row: {
+          active: boolean
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          backup_created_at: string
+          backup_created_by: string | null
+          codigo: string | null
+          coordenador_responsavel: string | null
+          created_at: string
+          curso: string | null
+          data_onboarding: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
+          faltas_consecutivas: number
+          id: string
+          idade: number | null
+          indice: string | null
+          is_funcionario: boolean | null
+          matricula: string | null
+          motivo_procura: string | null
+          niveldesafio: string | null
+          nome: string
+          oculto_retencoes: boolean
+          original_id: string
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          responsavel: string
+          status: string | null
+          telefone: string | null
+          texto_devolutiva: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultima_sincronizacao: string | null
+          ultimo_nivel: string | null
+          unit_id: string
+          valor_mensalidade: number | null
+          vencimento_contrato: string | null
+          whatapp_contato: string | null
+        }
+        Insert: {
+          active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          backup_created_at?: string
+          backup_created_by?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          faltas_consecutivas?: number
+          id?: string
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome: string
+          oculto_retencoes?: boolean
+          original_id: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          responsavel?: string
+          status?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
+          ultimo_nivel?: string | null
+          unit_id: string
+          valor_mensalidade?: number | null
+          vencimento_contrato?: string | null
+          whatapp_contato?: string | null
+        }
+        Update: {
+          active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          backup_created_at?: string
+          backup_created_by?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          faltas_consecutivas?: number
+          id?: string
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string
+          oculto_retencoes?: boolean
+          original_id?: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          responsavel?: string
+          status?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
+          ultimo_nivel?: string | null
+          unit_id?: string
+          valor_mensalidade?: number | null
+          vencimento_contrato?: string | null
+          whatapp_contato?: string | null
+        }
+        Relationships: []
+      }
+      alunos_backup2: {
+        Row: {
+          active: boolean
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          backup_created_at: string
+          backup_created_by: string | null
+          codigo: string | null
+          coordenador_responsavel: string | null
+          created_at: string
+          curso: string | null
+          data_onboarding: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
+          faltas_consecutivas: number
+          id: string
+          idade: number | null
+          indice: string | null
+          is_funcionario: boolean | null
+          matricula: string | null
+          motivo_procura: string | null
+          niveldesafio: string | null
+          nome: string
+          oculto_retencoes: boolean
+          original_id: string
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          responsavel: string
+          status: string | null
+          telefone: string | null
+          texto_devolutiva: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultima_sincronizacao: string | null
+          ultimo_nivel: string | null
+          unit_id: string
+          valor_mensalidade: number | null
+          vencimento_contrato: string | null
+          whatapp_contato: string | null
+        }
+        Insert: {
+          active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          backup_created_at?: string
+          backup_created_by?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          faltas_consecutivas?: number
+          id?: string
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome: string
+          oculto_retencoes?: boolean
+          original_id: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          responsavel?: string
+          status?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
+          ultimo_nivel?: string | null
+          unit_id: string
+          valor_mensalidade?: number | null
+          vencimento_contrato?: string | null
+          whatapp_contato?: string | null
+        }
+        Update: {
+          active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          backup_created_at?: string
+          backup_created_by?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          faltas_consecutivas?: number
+          id?: string
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string
+          oculto_retencoes?: boolean
+          original_id?: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          responsavel?: string
+          status?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
+          ultimo_nivel?: string | null
+          unit_id?: string
+          valor_mensalidade?: number | null
+          vencimento_contrato?: string | null
+          whatapp_contato?: string | null
+        }
+        Relationships: []
+      }
       apostilas: {
         Row: {
           created_at: string
@@ -569,6 +830,45 @@ export type Database = {
           responsavel_nome?: string | null
           responsavel_tipo?: string
           turma_id?: string
+          unit_id?: string
+        }
+        Relationships: []
+      }
+      backup_metadata: {
+        Row: {
+          backup_name: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          slot_number: number
+          total_alunos: number
+          total_professores: number
+          total_turmas: number
+          unit_id: string
+        }
+        Insert: {
+          backup_name: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          slot_number: number
+          total_alunos?: number
+          total_professores?: number
+          total_turmas?: number
+          unit_id: string
+        }
+        Update: {
+          backup_name?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          slot_number?: number
+          total_alunos?: number
+          total_professores?: number
+          total_turmas?: number
           unit_id?: string
         }
         Relationships: []
@@ -2567,6 +2867,7 @@ export type Database = {
           slack_username: string | null
           status: boolean | null
           telefone: string | null
+          ultima_sincronizacao: string | null
           unit_id: string
         }
         Insert: {
@@ -2577,6 +2878,7 @@ export type Database = {
           slack_username?: string | null
           status?: boolean | null
           telefone?: string | null
+          ultima_sincronizacao?: string | null
           unit_id: string
         }
         Update: {
@@ -2587,6 +2889,7 @@ export type Database = {
           slack_username?: string | null
           status?: boolean | null
           telefone?: string | null
+          ultima_sincronizacao?: string | null
           unit_id?: string
         }
         Relationships: [
@@ -2598,6 +2901,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      professores_backup1: {
+        Row: {
+          active: boolean
+          backup_created_at: string
+          backup_created_by: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          original_id: string
+          slack_username: string | null
+          status: string | null
+          telefone: string | null
+          ultima_sincronizacao: string | null
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          original_id: string
+          slack_username?: string | null
+          status?: string | null
+          telefone?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id: string
+        }
+        Update: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          original_id?: string
+          slack_username?: string | null
+          status?: string | null
+          telefone?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id?: string
+        }
+        Relationships: []
+      }
+      professores_backup2: {
+        Row: {
+          active: boolean
+          backup_created_at: string
+          backup_created_by: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          original_id: string
+          slack_username: string | null
+          status: string | null
+          telefone: string | null
+          ultima_sincronizacao: string | null
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          original_id: string
+          slack_username?: string | null
+          status?: string | null
+          telefone?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id: string
+        }
+        Update: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          original_id?: string
+          slack_username?: string | null
+          status?: string | null
+          telefone?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -3386,30 +3791,36 @@ export type Database = {
       }
       turmas: {
         Row: {
+          active: boolean | null
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           id: string
           nome: string
           professor_id: string
           sala: string | null
+          ultima_sincronizacao: string | null
           unit_id: string
         }
         Insert: {
+          active?: boolean | null
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           id?: string
           nome: string
           professor_id: string
           sala?: string | null
+          ultima_sincronizacao?: string | null
           unit_id: string
         }
         Update: {
+          active?: boolean | null
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
           id?: string
           nome?: string
           professor_id?: string
           sala?: string | null
+          ultima_sincronizacao?: string | null
           unit_id?: string
         }
         Relationships: [
@@ -3428,6 +3839,144 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      turmas_backup1: {
+        Row: {
+          active: boolean
+          backup_created_at: string
+          backup_created_by: string | null
+          categoria: string | null
+          cor_identificacao: string | null
+          created_at: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          max_alunos: number | null
+          nome: string
+          observacoes: string | null
+          original_id: string
+          professor_id: string | null
+          sala: string | null
+          status: string | null
+          ultima_sincronizacao: string | null
+          unit_id: string
+          whatsapp_grupo: string | null
+        }
+        Insert: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          categoria?: string | null
+          cor_identificacao?: string | null
+          created_at?: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          max_alunos?: number | null
+          nome: string
+          observacoes?: string | null
+          original_id: string
+          professor_id?: string | null
+          sala?: string | null
+          status?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id: string
+          whatsapp_grupo?: string | null
+        }
+        Update: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          categoria?: string | null
+          cor_identificacao?: string | null
+          created_at?: string
+          dia_semana?: Database["public"]["Enums"]["dia_semana"]
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          max_alunos?: number | null
+          nome?: string
+          observacoes?: string | null
+          original_id?: string
+          professor_id?: string | null
+          sala?: string | null
+          status?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id?: string
+          whatsapp_grupo?: string | null
+        }
+        Relationships: []
+      }
+      turmas_backup2: {
+        Row: {
+          active: boolean
+          backup_created_at: string
+          backup_created_by: string | null
+          categoria: string | null
+          cor_identificacao: string | null
+          created_at: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          max_alunos: number | null
+          nome: string
+          observacoes: string | null
+          original_id: string
+          professor_id: string | null
+          sala: string | null
+          status: string | null
+          ultima_sincronizacao: string | null
+          unit_id: string
+          whatsapp_grupo: string | null
+        }
+        Insert: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          categoria?: string | null
+          cor_identificacao?: string | null
+          created_at?: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          max_alunos?: number | null
+          nome: string
+          observacoes?: string | null
+          original_id: string
+          professor_id?: string | null
+          sala?: string | null
+          status?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id: string
+          whatsapp_grupo?: string | null
+        }
+        Update: {
+          active?: boolean
+          backup_created_at?: string
+          backup_created_by?: string | null
+          categoria?: string | null
+          cor_identificacao?: string | null
+          created_at?: string
+          dia_semana?: Database["public"]["Enums"]["dia_semana"]
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          max_alunos?: number | null
+          nome?: string
+          observacoes?: string | null
+          original_id?: string
+          professor_id?: string | null
+          sala?: string | null
+          status?: string | null
+          ultima_sincronizacao?: string | null
+          unit_id?: string
+          whatsapp_grupo?: string | null
+        }
+        Relationships: []
       }
       unidades: {
         Row: {
@@ -3811,6 +4360,16 @@ export type Database = {
           },
         ]
       }
+      corretores_view: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          nome: string | null
+          tipo: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
       kanban_client_summary: {
         Row: {
           created_at: string | null
@@ -3854,6 +4413,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pessoas_turma_view: {
+        Row: {
+          active: boolean | null
+          cargo: string | null
+          codigo: string | null
+          data_onboarding: string | null
+          dias_supera: number | null
+          email: string | null
+          id: string | null
+          idade: number | null
+          niveldesafio: string | null
+          nome: string | null
+          origem: string | null
+          telefone: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
+      responsaveis_view: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          nome: string | null
+          tipo: string | null
+          unit_id: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
@@ -4184,6 +4775,21 @@ export type Database = {
         Args: { p_periodo: string }
         Returns: string
       }
+      get_pessoas_turma: {
+        Args: { p_turma_id: string }
+        Returns: {
+          cargo: string
+          dias_supera: number
+          email: string
+          id: string
+          idade: number
+          nome: string
+          origem: string
+          telefone: string
+          ultimo_registro_data: string
+          ultimo_registro_id: string
+        }[]
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -4293,6 +4899,20 @@ export type Database = {
           motivo_perda: string
           total_n: number
           total_percent: number
+        }[]
+      }
+      get_todas_pessoas: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cargo: string
+          email: string
+          id: string
+          nome: string
+          origem: string
+          telefone: string
+          turma_id: string
+          turma_nome: string
+          ultima_correcao_ah: string
         }[]
       }
       get_turma_modal_data: {
@@ -4417,6 +5037,14 @@ export type Database = {
           tipo_criterio: string
           turma_id: string
           unit_id: string
+        }[]
+      }
+      verificar_pessoa_existe: {
+        Args: { p_pessoa_id: string }
+        Returns: {
+          id: string
+          nome: string
+          tipo: string
         }[]
       }
       verify_webhook_credentials: {

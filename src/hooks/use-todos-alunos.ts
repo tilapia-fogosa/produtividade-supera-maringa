@@ -5,7 +5,7 @@ export interface TodosAlunosItem {
   id: string;
   nome: string;
   turma_nome: string | null;
-  unit_id: string;
+  unit_id: string | null;
   ultima_correcao_ah: string | null;
   origem: 'aluno' | 'funcionario';
   turma_id: string | null;
@@ -27,103 +27,47 @@ export const useTodosAlunos = () => {
     const buscarTodosAlunos = async () => {
       try {
         setLoading(true);
+        console.log('Buscando todas as pessoas usando função SQL...');
 
-        // Buscar alunos ativos
-        const { data: alunosData, error: alunosError } = await supabase
-          .from('alunos')
-          .select(`
-            id,
-            nome,
-            unit_id,
-            turma_id,
-            active,
-            ultima_correcao_ah,
-            codigo,
-            email,
-            telefone,
-            ultimo_nivel,
-            ultima_pagina,
-            niveldesafio,
-            turmas!left (
-              nome
-            )
-          `)
-          .eq('active', true)
-          .order('nome');
+        // Usar a função SQL get_todas_pessoas que já combina alunos e funcionários ativos
+        const { data: pessoasData, error } = await supabase
+          .rpc('get_todas_pessoas');
 
-        if (alunosError) {
-          console.error('Erro ao buscar alunos:', alunosError);
-          return;
+        if (error) {
+          console.error('Erro ao buscar pessoas:', error);
+          throw error;
         }
 
-        // Buscar funcionários ativos
-        const { data: funcionariosData, error: funcionariosError } = await supabase
-          .from('funcionarios')
-          .select(`
-            id,
-            nome,
-            unit_id,
-            turma_id,
-            active,
-            ultima_correcao_ah,
-            codigo,
-            email,
-            telefone,
-            ultimo_nivel,
-            ultima_pagina,
-            niveldesafio,
-            turmas!left (
-              nome
-            )
-          `)
-          .eq('active', true)
-          .order('nome');
+        // Formatar os dados para o formato esperado
+        const todosPessoas = pessoasData?.map(pessoa => ({
+          id: pessoa.id,
+          nome: pessoa.nome,
+          turma_nome: pessoa.turma_nome || 'Sem turma',
+          turma_id: pessoa.turma_id,
+          unit_id: null, // A função não retorna unit_id atualmente
+          active: true, // A view já filtra por active = true
+          ultima_correcao_ah: pessoa.ultima_correcao_ah,
+          origem: pessoa.origem as 'aluno' | 'funcionario',
+          codigo: null, // Não disponível na função atual
+          email: pessoa.email,
+          telefone: pessoa.telefone,
+          ultimo_nivel: null, // Não disponível na função atual
+          ultima_pagina: null, // Não disponível na função atual
+          niveldesafio: null // Não disponível na função atual
+        })) || [];
 
-        if (funcionariosError) {
-          console.error('Erro ao buscar funcionários:', funcionariosError);
-          return;
-        }
-
-        // Combinar e formatar dados
-        const todosAlunos: TodosAlunosItem[] = [
-          ...(alunosData || []).map(aluno => ({
-            id: aluno.id,
-            nome: aluno.nome,
-            turma_nome: aluno.turmas?.nome || null,
-            turma_id: aluno.turma_id,
-            unit_id: aluno.unit_id,
-            active: aluno.active,
-            ultima_correcao_ah: aluno.ultima_correcao_ah,
-            codigo: aluno.codigo,
-            email: aluno.email,
-            telefone: aluno.telefone,
-            ultimo_nivel: aluno.ultimo_nivel,
-            ultima_pagina: aluno.ultima_pagina,
-            niveldesafio: aluno.niveldesafio,
-            origem: 'aluno' as const
-          })),
-          ...(funcionariosData || []).map(funcionario => ({
-            id: funcionario.id,
-            nome: funcionario.nome,
-            turma_nome: funcionario.turmas?.nome || null,
-            turma_id: funcionario.turma_id,
-            unit_id: funcionario.unit_id,
-            active: funcionario.active,
-            ultima_correcao_ah: funcionario.ultima_correcao_ah,
-            codigo: funcionario.codigo,
-            email: funcionario.email,
-            telefone: funcionario.telefone,
-            ultimo_nivel: funcionario.ultimo_nivel,
-            ultima_pagina: funcionario.ultima_pagina,
-            niveldesafio: funcionario.niveldesafio,
-            origem: 'funcionario' as const
-          }))
-        ];
+        console.log('Pessoas carregadas da função SQL:', {
+          total: todosPessoas.length,
+          porOrigem: todosPessoas.reduce((acc, p) => {
+            acc[p.origem] = (acc[p.origem] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        });
 
         // Ordenar por nome
-        todosAlunos.sort((a, b) => a.nome.localeCompare(b.nome));
+        todosPessoas.sort((a, b) => a.nome.localeCompare(b.nome));
 
-        setAlunos(todosAlunos);
+        setAlunos(todosPessoas);
       } catch (error) {
         console.error('Erro ao buscar todos os alunos:', error);
       } finally {

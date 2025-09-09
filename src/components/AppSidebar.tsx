@@ -16,7 +16,8 @@ import {
   BookOpen,
   Target,
   Building,
-  Shield
+  Shield,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   Sidebar,
@@ -81,6 +82,11 @@ const items = [
     title: "Alunos Ativos",
     url: "/alunos-ativos",
     icon: Users,
+  },
+  {
+    title: "Sincronizar Turmas",
+    url: "/sincronizar-turmas",
+    icon: FileSpreadsheet,
   },
   {
     title: "Painel Pedagógico",
