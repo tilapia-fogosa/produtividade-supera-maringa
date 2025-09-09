@@ -58,7 +58,7 @@ serve(async (req) => {
     // Desativar todos professores da unidade
     const { error: profDeactivateError } = await supabase
       .from('professores')
-      .update({ status: false })
+      .update({ active: false })
       .eq('unit_id', MARINGA_UNIT_ID);
 
     if (profDeactivateError) {
@@ -96,16 +96,18 @@ serve(async (req) => {
         }
 
         try {
-          // Buscar professor por nome em TODAS as unidades
+          // Buscar professor por nome em TODAS as unidades (ignorando case e espaços extras)
           const { data: existingProfs, error: searchError } = await supabase
             .from('professores')
-            .select('id, unit_id, status')
-            .eq('nome', nome);
+            .select('id, unit_id, active')
+            .ilike('nome', nome);
 
           if (searchError) {
             result.errors.push(`Erro ao buscar professor ${nome}: ${searchError.message}`);
             continue;
           }
+
+          console.log(`Buscando professor: ${nome}, encontrados: ${existingProfs?.length || 0}`);
 
           let professorProcessado = false;
 
@@ -119,7 +121,7 @@ serve(async (req) => {
               const { error: updateError } = await supabase
                 .from('professores')
                 .update({ 
-                  status: true, 
+                  active: true, 
                   slack_username: profData.slack_username || null,
                   ultima_sincronizacao: new Date().toISOString()
                 })
@@ -138,7 +140,7 @@ serve(async (req) => {
                 .from('professores')
                 .update({ 
                   unit_id: MARINGA_UNIT_ID,
-                  status: true, 
+                  active: true, 
                   slack_username: profData.slack_username || null,
                   ultima_sincronizacao: new Date().toISOString()
                 })
@@ -181,7 +183,7 @@ serve(async (req) => {
                 nome,
                 slack_username: profData.slack_username || null,
                 unit_id: MARINGA_UNIT_ID,
-                status: true,
+                active: true,
                 ultima_sincronizacao: new Date().toISOString()
               });
 
@@ -217,7 +219,7 @@ serve(async (req) => {
             .select('id')
             .eq('nome', professorNome)
             .eq('unit_id', MARINGA_UNIT_ID)
-            .eq('status', true)
+            .eq('active', true)
             .maybeSingle();
 
           if (profSearchError) {
