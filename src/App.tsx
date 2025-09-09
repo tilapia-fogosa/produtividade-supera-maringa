@@ -33,6 +33,7 @@ import Alunos from "./pages/Alunos";
 import AulaZero from "./pages/AulaZero";
 import Fichas from "./pages/Fichas";
 import AdminConfiguracao from "./pages/AdminConfiguracao";
+import SincronizarTurmas from "./pages/SincronizarTurmas";
 import AlunosAtivos from "./pages/AlunosAtivos";
 import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
@@ -100,6 +101,7 @@ function App() {
                             <Route path="/alunos-ativos" element={<AlunosAtivos />} />
                             <Route path="/aula-zero" element={<AulaZero />} />
                             <Route path="/admin/configuracao" element={<AdminConfiguracao />} />
+                            <Route path="/admin/sincronizar-turmas" element={<SincronizarTurmas />} />
                             <Route path="/correcoes-ah" element={<CorrecoesAbrindoHorizontes />} />
                             <Route path="/eventos" element={<Eventos />} />
                             <Route path="/eventos/:id/editar" element={<EditarEvento />} />

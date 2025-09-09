@@ -16,7 +16,8 @@ import {
   BookOpen,
   Target,
   Building,
-  Shield
+  Shield,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   Sidebar,
@@ -109,6 +110,12 @@ const items = [
 ];
 
 const additionalItems = [
+  {
+    title: "Sincronizar Turmas",
+    url: "/admin/sincronizar-turmas",
+    icon: FileSpreadsheet,
+    requiresAdmin: true,
+  },
   {
     title: "Configuração",
     url: "/admin/configuracao",
