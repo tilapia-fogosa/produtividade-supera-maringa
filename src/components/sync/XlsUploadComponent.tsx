@@ -102,42 +102,73 @@ const XlsUploadComponent = () => {
         console.log(`Dados encontrados na aba ${targetSheetName}:`, allData.length, 'registros');
         console.log('Amostra dos dados:', allData.slice(0, 3));
         
-        // Separar os dados por tipo baseado nas colunas
+        // Todos os dados são alunos - vamos extrair professores e turmas únicos
+        const professoresUnicos = new Set<string>();
+        const turmasUnicas = new Set<string>();
+        
+        // Processar todos os dados como alunos e extrair informações únicas
         allData.forEach((row: any) => {
-          // Verificar se tem dados de turma (geralmente tem sala, horário, etc.)
-          if (row.sala || row.horario_inicio || row.dia_semana || row.professor_nome) {
-            data.turmas.push(row);
+          // Mapear campos do aluno corretamente
+          const aluno = {
+            nome: row['Nome'] || row.nome,
+            telefone: row['Telefone'] || row.telefone,
+            email: row['E-mail'] || row.email,
+            idade: row['Idade'] || row.idade,
+            turma_atual: row['Turma atual'] || row.turma_atual,
+            professor: row['Professor'] || row.professor,
+            matricula: row['Matrícula'] || row.matricula,
+            responsavel: row['Responsável'] || row.responsavel || 'o próprio',
+            vencimento_contrato: row['Vencimento contrato'] || row.vencimento_contrato,
+            // Manter outros campos que possam existir
+            ...row
+          };
+          
+          data.alunos.push(aluno);
+          
+          // Coletar professores únicos
+          if (aluno.professor && aluno.professor.trim()) {
+            professoresUnicos.add(aluno.professor.trim());
           }
-          // Verificar se tem dados de professor (geralmente tem slack, telefone sem ser de aluno)
-          else if (row.slack || (row.telefone && !row.turma_id && !row.matricula)) {
-            data.professores.push(row);
-          }
-          // Verificar se tem dados de aluno (geralmente tem matricula, turma_id, idade)
-          else if (row.matricula || row.turma_id || row.idade || row.responsavel || row.vencimento_contrato) {
-            data.alunos.push(row);
-          }
-          // Se não conseguir identificar, tentar pelo campo "tipo" se existir
-          else if (row.tipo) {
-            const tipo = String(row.tipo).toLowerCase();
-            if (tipo.includes('turma')) {
-              data.turmas.push(row);
-            } else if (tipo.includes('professor')) {
-              data.professores.push(row);
-            } else if (tipo.includes('aluno')) {
-              data.alunos.push(row);
-            }
-          }
-          // Caso padrão: se não conseguir identificar, considerar como aluno
-          else {
-            data.alunos.push(row);
+          
+          // Coletar turmas únicas
+          if (aluno.turma_atual && aluno.turma_atual.trim()) {
+            turmasUnicas.add(aluno.turma_atual.trim());
           }
         });
         
-        console.log('Dados separados:', {
+        // Criar estrutura de professores únicos
+        professoresUnicos.forEach(nomeProfessor => {
+          data.professores.push({
+            nome: nomeProfessor,
+            // Campos padrão para professores
+            active: true,
+            slack: '', // Será preenchido manualmente se necessário
+          });
+        });
+        
+        // Criar estrutura de turmas únicas
+        turmasUnicas.forEach(nomeTurma => {
+          // Encontrar o primeiro aluno desta turma para extrair informações do professor
+          const alunoExemplo = data.alunos.find(a => a.turma_atual === nomeTurma);
+          
+          data.turmas.push({
+            nome: nomeTurma,
+            professor_nome: alunoExemplo?.professor || '',
+            // Campos padrão para turmas
+            active: true,
+            dia_semana: 'segunda', // Padrão - será ajustado manualmente se necessário
+            horario_inicio: '14:00', // Padrão
+            sala: '', // Será preenchido manualmente
+          });
+        });
+        
+        console.log('Dados processados:', {
           turmas: data.turmas.length,
           professores: data.professores.length,
           alunos: data.alunos.length
         });
+        console.log('Professores únicos:', Array.from(professoresUnicos));
+        console.log('Turmas únicas:', Array.from(turmasUnicas));
       } else {
         toast.error(`Aba '${targetSheetName}' não encontrada no arquivo`);
         return;
