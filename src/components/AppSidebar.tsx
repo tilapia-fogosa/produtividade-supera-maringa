@@ -84,6 +84,12 @@ const items = [
     icon: Users,
   },
   {
+    title: "Sincronizar Turmas",
+    url: "/admin/sincronizar-turmas",
+    icon: FileSpreadsheet,
+    requiresAdmin: true,
+  },
+  {
     title: "Painel Pedagógico",
     url: "/painel-pedagogico",
     icon: TrendingUp,
@@ -110,12 +116,6 @@ const items = [
 ];
 
 const additionalItems = [
-  {
-    title: "Sincronizar Turmas",
-    url: "/admin/sincronizar-turmas",
-    icon: FileSpreadsheet,
-    requiresAdmin: true,
-  },
   {
     title: "Configuração",
     url: "/admin/configuracao",
