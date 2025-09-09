@@ -244,6 +244,7 @@ export type Database = {
           ultima_correcao_ah: string | null
           ultima_falta: string | null
           ultima_pagina: number | null
+          ultima_sincronizacao: string | null
           ultimo_nivel: string | null
           unit_id: string
           valor_mensalidade: number | null
@@ -281,6 +282,7 @@ export type Database = {
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
           ultimo_nivel?: string | null
           unit_id: string
           valor_mensalidade?: number | null
@@ -318,6 +320,7 @@ export type Database = {
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
+          ultima_sincronizacao?: string | null
           ultimo_nivel?: string | null
           unit_id?: string
           valor_mensalidade?: number | null
@@ -2567,6 +2570,7 @@ export type Database = {
           slack_username: string | null
           status: boolean | null
           telefone: string | null
+          ultima_sincronizacao: string | null
           unit_id: string
         }
         Insert: {
@@ -2577,6 +2581,7 @@ export type Database = {
           slack_username?: string | null
           status?: boolean | null
           telefone?: string | null
+          ultima_sincronizacao?: string | null
           unit_id: string
         }
         Update: {
@@ -2587,6 +2592,7 @@ export type Database = {
           slack_username?: string | null
           status?: boolean | null
           telefone?: string | null
+          ultima_sincronizacao?: string | null
           unit_id?: string
         }
         Relationships: [
@@ -3386,30 +3392,36 @@ export type Database = {
       }
       turmas: {
         Row: {
+          active: boolean | null
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           id: string
           nome: string
           professor_id: string
           sala: string | null
+          ultima_sincronizacao: string | null
           unit_id: string
         }
         Insert: {
+          active?: boolean | null
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
           id?: string
           nome: string
           professor_id: string
           sala?: string | null
+          ultima_sincronizacao?: string | null
           unit_id: string
         }
         Update: {
+          active?: boolean | null
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
           id?: string
           nome?: string
           professor_id?: string
           sala?: string | null
+          ultima_sincronizacao?: string | null
           unit_id?: string
         }
         Relationships: [

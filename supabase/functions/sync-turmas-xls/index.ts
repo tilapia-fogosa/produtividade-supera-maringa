@@ -13,8 +13,11 @@ interface XlsData {
 }
 
 interface ProcessResult {
-  turmas_criadas: number;
+  professores_reativados: number;
   professores_criados: number;
+  turmas_reativadas: number;
+  turmas_criadas: number;
+  alunos_reativados: number;
   alunos_criados: number;
   errors: string[];
 }
@@ -32,193 +35,329 @@ serve(async (req) => {
     );
 
     const { xlsData, fileName }: { xlsData: XlsData; fileName: string } = await req.json();
+
+    // Unit ID fixo da unidade de Maringá
+    const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
     
     console.log(`Processando arquivo: ${fileName}`);
-    console.log(`Dados recebidos - Turmas: ${xlsData.turmas?.length}, Professores: ${xlsData.professores?.length}, Alunos: ${xlsData.alunos?.length}`);
+    console.log(`Iniciando sincronização completa - Dados: ${xlsData.professores?.length} professores, ${xlsData.turmas?.length} turmas, ${xlsData.alunos?.length} alunos`);
 
     const result: ProcessResult = {
-      turmas_criadas: 0,
+      professores_reativados: 0,
       professores_criados: 0,
+      turmas_reativadas: 0,
+      turmas_criadas: 0,
+      alunos_reativados: 0,
       alunos_criados: 0,
       errors: []
     };
 
-    // Processar professores primeiro
+    // ETAPA 1: Desativar todos os registros da unidade
+    console.log('Etapa 1: Desativando todos os registros existentes...');
+    
+    // Desativar todos professores da unidade
+    const { error: profDeactivateError } = await supabase
+      .from('professores')
+      .update({ status: false })
+      .eq('unit_id', MARINGA_UNIT_ID);
+
+    if (profDeactivateError) {
+      result.errors.push(`Erro ao desativar professores: ${profDeactivateError.message}`);
+    }
+
+    // Desativar todas turmas da unidade
+    const { error: turmasDeactivateError } = await supabase
+      .from('turmas')
+      .update({ active: false })
+      .eq('unit_id', MARINGA_UNIT_ID);
+
+    if (turmasDeactivateError) {
+      result.errors.push(`Erro ao desativar turmas: ${turmasDeactivateError.message}`);
+    }
+
+    // Desativar todos alunos da unidade
+    const { error: alunosDeactivateError } = await supabase
+      .from('alunos')
+      .update({ active: false })
+      .eq('unit_id', MARINGA_UNIT_ID);
+
+    if (alunosDeactivateError) {
+      result.errors.push(`Erro ao desativar alunos: ${alunosDeactivateError.message}`);
+    }
+
+    // ETAPA 2: Processar Professores
+    console.log('Etapa 2: Processando professores...');
     if (xlsData.professores && xlsData.professores.length > 0) {
-      console.log('Processando professores...');
-      
-      for (const professorData of xlsData.professores) {
+      for (const profData of xlsData.professores) {
+        const nome = profData.nome?.trim();
+        if (!nome) {
+          result.errors.push('Professor sem nome encontrado');
+          continue;
+        }
+
         try {
-          if (!professorData.nome) {
-            result.errors.push('Professor sem nome encontrado');
+          // Buscar professor existente por nome (case sensitive)
+          const { data: existingProf, error: searchError } = await supabase
+            .from('professores')
+            .select('id')
+            .eq('nome', nome)
+            .eq('unit_id', MARINGA_UNIT_ID)
+            .maybeSingle();
+
+          if (searchError) {
+            result.errors.push(`Erro ao buscar professor ${nome}: ${searchError.message}`);
             continue;
           }
 
-          // Verificar se professor já existe
-          const { data: existingProfessor } = await supabase
-            .from('professores')
-            .select('id, nome')
-            .eq('nome', professorData.nome)
-            .single();
-
-          if (!existingProfessor) {
-            const { error } = await supabase
+          if (existingProf) {
+            // Reativar professor existente
+            const { error: updateError } = await supabase
               .from('professores')
-              .insert({
-                nome: professorData.nome,
-                slack_username: professorData.slack_username || null
-              });
+              .update({ 
+                status: true, 
+                slack_username: profData.slack_username || null,
+                ultima_sincronizacao: new Date().toISOString()
+              })
+              .eq('id', existingProf.id);
 
-            if (error) {
-              console.error('Erro ao inserir professor:', error);
-              result.errors.push(`Erro ao inserir professor ${professorData.nome}: ${error.message}`);
+            if (updateError) {
+              result.errors.push(`Erro ao reativar professor ${nome}: ${updateError.message}`);
             } else {
-              result.professores_criados++;
-              console.log(`Professor criado: ${professorData.nome}`);
+              result.professores_reativados++;
+              console.log(`Professor reativado: ${nome}`);
             }
           } else {
-            console.log(`Professor já existe: ${professorData.nome}`);
-          }
+            // Criar novo professor
+            const { error: insertError } = await supabase
+              .from('professores')
+              .insert({
+                nome,
+                slack_username: profData.slack_username || null,
+                unit_id: MARINGA_UNIT_ID,
+                status: true,
+                ultima_sincronizacao: new Date().toISOString()
+              });
 
+            if (insertError) {
+              result.errors.push(`Erro ao criar professor ${nome}: ${insertError.message}`);
+            } else {
+              result.professores_criados++;
+              console.log(`Professor criado: ${nome}`);
+            }
+          }
         } catch (error) {
-          console.error('Erro ao processar professor:', error);
-          result.errors.push(`Erro ao processar professor: ${error.message}`);
+          result.errors.push(`Erro ao processar professor ${nome}: ${error.message}`);
         }
       }
     }
 
-    // Processar turmas
+    // ETAPA 3: Processar Turmas
+    console.log('Etapa 3: Processando turmas...');
     if (xlsData.turmas && xlsData.turmas.length > 0) {
-      console.log('Processando turmas...');
-      
       for (const turmaData of xlsData.turmas) {
-        try {
-          if (!turmaData.nome || !turmaData.professor_nome) {
-            result.errors.push('Turma sem nome ou professor encontrada');
-            continue;
-          }
+        const nome = turmaData.nome?.trim();
+        const professorNome = turmaData.professor_nome?.trim();
+        
+        if (!nome || !professorNome) {
+          result.errors.push('Turma sem nome ou professor encontrada');
+          continue;
+        }
 
-          // Buscar o professor
-          const { data: professor } = await supabase
+        try {
+          // Buscar professor por nome
+          const { data: professor, error: profSearchError } = await supabase
             .from('professores')
             .select('id')
-            .eq('nome', turmaData.professor_nome)
-            .single();
+            .eq('nome', professorNome)
+            .eq('unit_id', MARINGA_UNIT_ID)
+            .eq('status', true)
+            .maybeSingle();
 
-          if (!professor) {
-            result.errors.push(`Professor não encontrado: ${turmaData.professor_nome}`);
+          if (profSearchError) {
+            result.errors.push(`Erro ao buscar professor ${professorNome}: ${profSearchError.message}`);
             continue;
           }
 
-          // Verificar se turma já existe
-          const { data: existingTurma } = await supabase
-            .from('turmas')
-            .select('id, nome')
-            .eq('nome', turmaData.nome)
-            .single();
+          if (!professor) {
+            result.errors.push(`Professor ${professorNome} não encontrado para turma ${nome}`);
+            continue;
+          }
 
-          if (!existingTurma) {
-            // Validar dia_semana
-            const validDays = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
-            const diaSemana = turmaData.dia_semana?.toLowerCase();
-            
-            if (!validDays.includes(diaSemana)) {
-              result.errors.push(`Dia da semana inválido para turma ${turmaData.nome}: ${turmaData.dia_semana}`);
+          // Validar dia da semana
+          const diaSemanaValidos = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
+          const diaSemana = turmaData.dia_semana?.toLowerCase()?.trim();
+          
+          if (!diaSemana || !diaSemanaValidos.includes(diaSemana)) {
+            result.errors.push(`Dia da semana inválido para turma ${nome}: ${turmaData.dia_semana}`);
+            continue;
+          }
+
+          // Buscar turma existente por nome (case sensitive)
+          const { data: existingTurma, error: turmaSearchError } = await supabase
+            .from('turmas')
+            .select('id')
+            .eq('nome', nome)
+            .eq('unit_id', MARINGA_UNIT_ID)
+            .maybeSingle();
+
+          if (turmaSearchError) {
+            result.errors.push(`Erro ao buscar turma ${nome}: ${turmaSearchError.message}`);
+            continue;
+          }
+
+          if (existingTurma) {
+            // Reativar turma existente
+            const { error: updateError } = await supabase
+              .from('turmas')
+              .update({
+                professor_id: professor.id,
+                dia_semana: diaSemana as any,
+                sala: turmaData.sala || null,
+                horario_inicio: turmaData.horario_inicio || null,
+                categoria: turmaData.categoria || null,
+                active: true,
+                ultima_sincronizacao: new Date().toISOString()
+              })
+              .eq('id', existingTurma.id);
+
+            if (updateError) {
+              result.errors.push(`Erro ao reativar turma ${nome}: ${updateError.message}`);
+            } else {
+              result.turmas_reativadas++;
+              console.log(`Turma reativada: ${nome}`);
+            }
+          } else {
+            // Criar nova turma
+            const { error: insertError } = await supabase
+              .from('turmas')
+              .insert({
+                nome,
+                professor_id: professor.id,
+                dia_semana: diaSemana as any,
+                sala: turmaData.sala || null,
+                horario_inicio: turmaData.horario_inicio || null,
+                categoria: turmaData.categoria || null,
+                unit_id: MARINGA_UNIT_ID,
+                active: true,
+                ultima_sincronizacao: new Date().toISOString()
+              });
+
+            if (insertError) {
+              result.errors.push(`Erro ao criar turma ${nome}: ${insertError.message}`);
+            } else {
+              result.turmas_criadas++;
+              console.log(`Turma criada: ${nome}`);
+            }
+          }
+        } catch (error) {
+          result.errors.push(`Erro ao processar turma ${nome}: ${error.message}`);
+        }
+      }
+    }
+
+    // ETAPA 4: Processar Alunos
+    console.log('Etapa 4: Processando alunos...');
+    if (xlsData.alunos && xlsData.alunos.length > 0) {
+      for (const alunoData of xlsData.alunos) {
+        const nome = alunoData.nome?.trim();
+        const turmaNome = alunoData.turma_atual?.trim();
+        
+        if (!nome) {
+          result.errors.push('Aluno sem nome encontrado');
+          continue;
+        }
+
+        try {
+          let turmaId = null;
+          
+          // Buscar turma por nome se especificado
+          if (turmaNome) {
+            const { data: turma, error: turmaSearchError } = await supabase
+              .from('turmas')
+              .select('id')
+              .eq('nome', turmaNome)
+              .eq('unit_id', MARINGA_UNIT_ID)
+              .eq('active', true)
+              .maybeSingle();
+
+            if (turmaSearchError) {
+              result.errors.push(`Erro ao buscar turma ${turmaNome} para aluno ${nome}: ${turmaSearchError.message}`);
               continue;
             }
 
-            const { error } = await supabase
-              .from('turmas')
-              .insert({
-                nome: turmaData.nome,
-                professor_id: professor.id,
-                dia_semana: diaSemana,
-                sala: turmaData.sala || '',
-                horario_inicio: turmaData.horario_inicio || '',
-                categoria: turmaData.categoria || 'Supera',
-                unit_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' // ID padrão, pode ser configurado
-              });
+            if (!turma) {
+              result.errors.push(`Turma ${turmaNome} não encontrada para aluno ${nome}`);
+              continue;
+            }
 
-            if (error) {
-              console.error('Erro ao inserir turma:', error);
-              result.errors.push(`Erro ao inserir turma ${turmaData.nome}: ${error.message}`);
+            turmaId = turma.id;
+          }
+
+          // Buscar aluno existente por nome (case sensitive)
+          const { data: existingAluno, error: alunoSearchError } = await supabase
+            .from('alunos')
+            .select('id')
+            .eq('nome', nome)
+            .eq('unit_id', MARINGA_UNIT_ID)
+            .maybeSingle();
+
+          if (alunoSearchError) {
+            result.errors.push(`Erro ao buscar aluno ${nome}: ${alunoSearchError.message}`);
+            continue;
+          }
+
+          // Preparar dados do aluno (mapeamento de campos)
+          const alunoUpdate = {
+            nome,
+            telefone: alunoData.telefone || null,
+            email: alunoData.email || null,
+            matricula: alunoData.matricula || null,
+            turma_id: turmaId,
+            idade: alunoData.idade ? parseInt(alunoData.idade) : null,
+            ultimo_nivel: alunoData.ultimo_nivel || null,
+            dias_apostila: alunoData.dias_apostila ? parseInt(alunoData.dias_apostila) : null,
+            dias_supera: alunoData.dias_supera ? parseInt(alunoData.dias_supera) : null,
+            vencimento_contrato: alunoData.vencimento_contrato || null,
+            active: true,
+            ultima_sincronizacao: new Date().toISOString()
+          };
+
+          if (existingAluno) {
+            // Reativar e atualizar aluno existente
+            const { error: updateError } = await supabase
+              .from('alunos')
+              .update(alunoUpdate)
+              .eq('id', existingAluno.id);
+
+            if (updateError) {
+              result.errors.push(`Erro ao reativar aluno ${nome}: ${updateError.message}`);
             } else {
-              result.turmas_criadas++;
-              console.log(`Turma criada: ${turmaData.nome}`);
+              result.alunos_reativados++;
+              console.log(`Aluno reativado: ${nome}`);
             }
           } else {
-            console.log(`Turma já existe: ${turmaData.nome}`);
-          }
-
-        } catch (error) {
-          console.error('Erro ao processar turma:', error);
-          result.errors.push(`Erro ao processar turma: ${error.message}`);
-        }
-      }
-    }
-
-    // Processar alunos
-    if (xlsData.alunos && xlsData.alunos.length > 0) {
-      console.log('Processando alunos...');
-      
-      for (const alunoData of xlsData.alunos) {
-        try {
-          if (!alunoData.nome || !alunoData.turma_nome) {
-            result.errors.push('Aluno sem nome ou turma encontrado');
-            continue;
-          }
-
-          // Buscar a turma
-          const { data: turma } = await supabase
-            .from('turmas')
-            .select('id')
-            .eq('nome', alunoData.turma_nome)
-            .single();
-
-          if (!turma) {
-            result.errors.push(`Turma não encontrada: ${alunoData.turma_nome}`);
-            continue;
-          }
-
-          // Verificar se aluno já existe na turma
-          const { data: existingAluno } = await supabase
-            .from('alunos')
-            .select('id, nome')
-            .eq('nome', alunoData.nome)
-            .eq('turma_id', turma.id)
-            .single();
-
-          if (!existingAluno) {
-            const { error } = await supabase
+            // Criar novo aluno
+            const { error: insertError } = await supabase
               .from('alunos')
               .insert({
-                nome: alunoData.nome,
-                turma_id: turma.id,
-                idade: alunoData.idade ? parseInt(alunoData.idade) : null,
-                telefone: alunoData.telefone || null,
-                email: alunoData.email || null,
-                unit_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' // ID padrão, pode ser configurado
+                ...alunoUpdate,
+                unit_id: MARINGA_UNIT_ID
               });
 
-            if (error) {
-              console.error('Erro ao inserir aluno:', error);
-              result.errors.push(`Erro ao inserir aluno ${alunoData.nome}: ${error.message}`);
+            if (insertError) {
+              result.errors.push(`Erro ao criar aluno ${nome}: ${insertError.message}`);
             } else {
               result.alunos_criados++;
-              console.log(`Aluno criado: ${alunoData.nome}`);
+              console.log(`Aluno criado: ${nome}`);
             }
-          } else {
-            console.log(`Aluno já existe: ${alunoData.nome}`);
           }
-
         } catch (error) {
-          console.error('Erro ao processar aluno:', error);
-          result.errors.push(`Erro ao processar aluno: ${error.message}`);
+          result.errors.push(`Erro ao processar aluno ${nome}: ${error.message}`);
         }
       }
     }
 
-    console.log('Resultado final:', result);
+    console.log('Sincronização completa finalizada:', result);
 
     return new Response(
       JSON.stringify(result),
@@ -233,8 +372,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        turmas_criadas: 0,
+        professores_reativados: 0,
         professores_criados: 0,
+        turmas_reativadas: 0,
+        turmas_criadas: 0,
+        alunos_reativados: 0,
         alunos_criados: 0,
         errors: [error.message]
       }),

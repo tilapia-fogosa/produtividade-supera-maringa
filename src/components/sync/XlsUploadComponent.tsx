@@ -117,7 +117,7 @@ const XlsUploadComponent = () => {
 
       toast({
         title: "Sincronização concluída",
-        description: `${data.turmas_criadas} turmas, ${data.professores_criados} professores, ${data.alunos_criados} alunos processados`,
+        description: `${data.professores_reativados + data.professores_criados} professores, ${data.turmas_reativadas + data.turmas_criadas} turmas, ${data.alunos_reativados + data.alunos_criados} alunos processados`,
       });
 
       setSelectedFile(null);
@@ -165,10 +165,10 @@ const XlsUploadComponent = () => {
     const professoresSheet = XLSX.utils.aoa_to_sheet(professoresData);
     XLSX.utils.book_append_sheet(wb, professoresSheet, 'Professores');
 
-    // Aba Alunos
+    // Aba Alunos (11 campos - excluindo índice, código e curso)
     const alunosData = [
-      ['nome', 'turma_nome', 'idade', 'telefone', 'email'],
-      ['Maria Santos', 'Turma Exemplo', '25', '11999999999', 'maria@email.com']
+      ['nome', 'telefone', 'email', 'matricula', 'turma_atual', 'professor', 'idade', 'ultimo_nivel', 'dias_apostila', 'dias_supera', 'vencimento_contrato'],
+      ['Maria Santos', '(44) 99999-9999', 'maria@email.com', 'MAT001', 'Turma Exemplo', 'João Silva', '8', 'Nível 2', '30', '120', '2024-12-31']
     ];
     const alunosSheet = XLSX.utils.aoa_to_sheet(alunosData);
     XLSX.utils.book_append_sheet(wb, alunosSheet, 'Alunos');
@@ -259,7 +259,8 @@ const XlsUploadComponent = () => {
             <p className="font-semibold">Estrutura obrigatória do arquivo Excel:</p>
             <p><strong>Aba "Turmas":</strong> nome, professor_nome, dia_semana, sala, horario_inicio, categoria</p>
             <p><strong>Aba "Professores":</strong> nome, slack_username (opcional)</p>
-            <p><strong>Aba "Alunos":</strong> nome, turma_nome, idade, telefone, email</p>
+            <p><strong>Aba "Alunos":</strong> nome, telefone, email, matricula, turma_atual, professor, idade, ultimo_nivel, dias_apostila, dias_supera, vencimento_contrato</p>
+            <p><em>Nota: Os campos índice, código e curso são ignorados caso existam na planilha</em></p>
           </div>
         </div>
       </CardContent>
