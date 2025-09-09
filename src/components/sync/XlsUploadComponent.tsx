@@ -39,7 +39,7 @@ const XlsUploadComponent = () => {
     try {
       const { data, error } = await supabase.functions.invoke('list-backups', {
         body: {
-          unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' // Maringá
+          unitId: '00000000-0000-0000-0000-000000000000' // Backup completo (todas as unidades)
         }
       });
 
@@ -197,8 +197,7 @@ const XlsUploadComponent = () => {
         body: {
           slotNumber: selectedBackupSlot,
           backupName: backupName.trim(),
-          description: backupDescription.trim(),
-          unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+          description: backupDescription.trim()
         }
       });
 
@@ -231,8 +230,7 @@ const XlsUploadComponent = () => {
     try {
       const { data, error } = await supabase.functions.invoke('restore-backup', {
         body: {
-          slotNumber,
-          unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+          slotNumber
         }
       });
 
@@ -269,8 +267,7 @@ const XlsUploadComponent = () => {
           body: {
             slotNumber: selectedBackupSlot,
             backupName: `Auto-backup ${new Date().toLocaleString('pt-BR')}`,
-            description: `Backup automático criado antes da sincronização do arquivo ${selectedFile?.name}`,
-            unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+            description: `Backup automático criado antes da sincronização do arquivo ${selectedFile?.name}`
           }
         });
 

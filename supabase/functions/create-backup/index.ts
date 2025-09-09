@@ -10,7 +10,6 @@ interface BackupRequest {
   slotNumber: 1 | 2;
   backupName: string;
   description?: string;
-  unitId: string;
 }
 
 interface BackupResult {
@@ -37,17 +36,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { slotNumber, backupName, description, unitId }: BackupRequest = await req.json();
+    const { slotNumber, backupName, description }: BackupRequest = await req.json();
 
-    console.log(`Iniciando backup no slot ${slotNumber} para unidade ${unitId}`);
+    console.log(`Iniciando backup completo no slot ${slotNumber}`);
 
     // Validar entrada
     if (!slotNumber || ![1, 2].includes(slotNumber)) {
       throw new Error('Slot number deve ser 1 ou 2');
     }
 
-    if (!backupName || !unitId) {
-      throw new Error('Nome do backup e ID da unidade são obrigatórios');
+    if (!backupName) {
+      throw new Error('Nome do backup é obrigatório');
     }
 
     const result: BackupResult = {
@@ -76,8 +75,7 @@ serve(async (req) => {
     console.log('Copiando professores...');
     const { data: professores, error: profError } = await supabase
       .from('professores')
-      .select('*')
-      .eq('unit_id', unitId);
+      .select('*');
 
     if (profError) {
       console.error('Erro ao buscar professores:', profError);
@@ -109,8 +107,7 @@ serve(async (req) => {
     console.log('Copiando turmas...');
     const { data: turmas, error: turmasError } = await supabase
       .from('turmas')
-      .select('*')
-      .eq('unit_id', unitId);
+      .select('*');
 
     if (turmasError) {
       console.error('Erro ao buscar turmas:', turmasError);
@@ -142,8 +139,7 @@ serve(async (req) => {
     console.log('Copiando alunos...');
     const { data: alunos, error: alunosError } = await supabase
       .from('alunos')
-      .select('*')
-      .eq('unit_id', unitId);
+      .select('*');
 
     if (alunosError) {
       console.error('Erro ao buscar alunos:', alunosError);
@@ -177,7 +173,7 @@ serve(async (req) => {
       .from('backup_metadata')
       .upsert({
         slot_number: slotNumber,
-        unit_id: unitId,
+        unit_id: '00000000-0000-0000-0000-000000000000', // Valor dummy para backup completo
         backup_name: backupName,
         description: description || '',
         total_alunos: result.statistics.totalAlunos,

@@ -41,17 +41,13 @@ serve(async (req) => {
 
     const { unitId }: ListBackupsRequest = await req.json();
 
-    console.log(`Listando backups para unidade ${unitId}`);
+    console.log('Listando backups completos do sistema');
 
-    if (!unitId) {
-      throw new Error('ID da unidade é obrigatório');
-    }
-
-    // Buscar metadados dos backups
+    // Buscar metadados dos backups completos (usando unit_id padrão)
     const { data: metadataList, error: metadataError } = await supabase
       .from('backup_metadata')
       .select('*')
-      .eq('unit_id', unitId)
+      .eq('unit_id', '00000000-0000-0000-0000-000000000000') // Backups completos
       .order('slot_number', { ascending: true });
 
     if (metadataError) {

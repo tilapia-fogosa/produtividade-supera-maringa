@@ -8,7 +8,6 @@ const corsHeaders = {
 
 interface RestoreRequest {
   slotNumber: 1 | 2;
-  unitId: string;
 }
 
 interface RestoreResult {
@@ -34,25 +33,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { slotNumber, unitId }: RestoreRequest = await req.json();
+    const { slotNumber }: RestoreRequest = await req.json();
 
-    console.log(`Iniciando restauração do slot ${slotNumber} para unidade ${unitId}`);
+    console.log(`Iniciando restauração completa do slot ${slotNumber}`);
 
     // Validar entrada
     if (!slotNumber || ![1, 2].includes(slotNumber)) {
       throw new Error('Slot number deve ser 1 ou 2');
     }
 
-    if (!unitId) {
-      throw new Error('ID da unidade é obrigatório');
-    }
-
-    // Verificar se existe backup no slot
+    // Verificar se existe backup no slot (usando unit_id dummy para backup completo)
     const { data: metadata, error: metadataError } = await supabase
       .from('backup_metadata')
       .select('*')
       .eq('slot_number', slotNumber)
-      .eq('unit_id', unitId)
+      .eq('unit_id', '00000000-0000-0000-0000-000000000000') // Backup completo
       .single();
 
     if (metadataError || !metadata) {
@@ -74,23 +69,20 @@ serve(async (req) => {
     const professoresTable = `professores_backup${slotNumber}`;
     const turmasTable = `turmas_backup${slotNumber}`;
 
-    console.log(`Inativando dados atuais da unidade ${unitId}`);
+    console.log('Inativando todos os dados atuais');
 
-    // Inativar todos os dados atuais da unidade
+    // Inativar todos os dados atuais
     await supabase
       .from('alunos')
-      .update({ active: false })
-      .eq('unit_id', unitId);
+      .update({ active: false });
 
     await supabase
       .from('professores')
-      .update({ active: false })
-      .eq('unit_id', unitId);
+      .update({ active: false });
 
     await supabase
       .from('turmas')
-      .update({ active: false })
-      .eq('unit_id', unitId);
+      .update({ active: false });
 
     // Restaurar professores
     console.log('Restaurando professores...');
@@ -107,8 +99,7 @@ serve(async (req) => {
       // Primeiro, buscar professores existentes pelo nome para reutilizar IDs
       const { data: professoresExistentes } = await supabase
         .from('professores')
-        .select('id, nome')
-        .eq('unit_id', unitId);
+        .select('id, nome');
 
       const professoresMap = new Map(
         professoresExistentes?.map(p => [p.nome, p.id]) || []
@@ -154,8 +145,7 @@ serve(async (req) => {
       // Buscar turmas existentes pelo nome
       const { data: turmasExistentes } = await supabase
         .from('turmas')
-        .select('id, nome')
-        .eq('unit_id', unitId);
+        .select('id, nome');
 
       const turmasMap = new Map(
         turmasExistentes?.map(t => [t.nome, t.id]) || []
@@ -201,8 +191,7 @@ serve(async (req) => {
       // Buscar alunos existentes pelo nome
       const { data: alunosExistentes } = await supabase
         .from('alunos')
-        .select('id, nome')
-        .eq('unit_id', unitId);
+        .select('id, nome');
 
       const alunosMap = new Map(
         alunosExistentes?.map(a => [a.nome, a.id]) || []
