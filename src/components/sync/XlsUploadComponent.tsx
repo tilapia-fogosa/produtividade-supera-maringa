@@ -1,12 +1,15 @@
-import React, { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Upload, FileText, AlertCircle, Download, Eye } from "lucide-react";
-import { toast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { Upload, Download, FileSpreadsheet, Eye, EyeOff, Loader2, Archive, Save, RotateCcw } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 interface XlsData {
   turmas: any[];
@@ -15,26 +18,53 @@ interface XlsData {
 }
 
 const XlsUploadComponent = () => {
-  const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<XlsData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // Estados para backup
+  const [selectedBackupSlot, setSelectedBackupSlot] = useState<1 | 2>(1);
+  const [backupName, setBackupName] = useState('');
+  const [backupDescription, setBackupDescription] = useState('');
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const [backupsList, setBackupsList] = useState<any[]>([]);
+  const [autoBackup, setAutoBackup] = useState(true);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isMobile = useIsMobile();
+
+  // Carregar lista de backups
+  const loadBackupsList = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('list-backups', {
+        body: {
+          unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' // Maringá
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao carregar backups:', error);
+        return;
+      }
+
+      if (data.success) {
+        setBackupsList(data.backups);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar backups:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadBackupsList();
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setErrorMessage(null);
-    setPreviewData(null);
-    setShowPreview(false);
     
     if (file && !file.name.match(/\.(xlsx|xls)$/i)) {
-      toast({
-        title: "Formato inválido",
-        description: "Apenas arquivos Excel (.xlsx, .xls) são aceitos",
-        variant: "destructive"
-      });
+      toast.error("Apenas arquivos Excel (.xlsx, .xls) são aceitos");
       return;
     }
     
@@ -56,19 +86,16 @@ const XlsUploadComponent = () => {
         alunos: []
       };
 
-      // Processar aba Turmas
       if (workbook.SheetNames.includes('Turmas')) {
         const turmasSheet = workbook.Sheets['Turmas'];
         data.turmas = XLSX.utils.sheet_to_json(turmasSheet);
       }
 
-      // Processar aba Professores
       if (workbook.SheetNames.includes('Professores')) {
         const professoresSheet = workbook.Sheets['Professores'];
         data.professores = XLSX.utils.sheet_to_json(professoresSheet);
       }
 
-      // Processar aba Alunos
       if (workbook.SheetNames.includes('Alunos')) {
         const alunosSheet = workbook.Sheets['Alunos'];
         data.alunos = XLSX.utils.sheet_to_json(alunosSheet);
@@ -76,80 +103,148 @@ const XlsUploadComponent = () => {
 
       setPreviewData(data);
       
-      toast({
-        title: "Arquivo processado",
-        description: `Encontradas ${data.turmas.length} turmas, ${data.professores.length} professores, ${data.alunos.length} alunos`,
-      });
+      toast.success(`Arquivo processado: ${data.turmas.length} turmas, ${data.professores.length} professores, ${data.alunos.length} alunos`);
 
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
-      setErrorMessage("Erro ao processar o arquivo Excel. Verifique o formato.");
-      toast({
-        title: "Erro",
-        description: "Não foi possível processar o arquivo Excel",
-        variant: "destructive"
+      toast.error("Erro ao processar o arquivo Excel");
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    if (!backupName.trim()) {
+      toast.error("Nome do backup é obrigatório");
+      return;
+    }
+
+    setIsCreatingBackup(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-backup', {
+        body: {
+          slotNumber: selectedBackupSlot,
+          backupName: backupName.trim(),
+          description: backupDescription.trim(),
+          unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        }
       });
+
+      if (error || !data.success) {
+        toast.error("Erro ao criar backup: " + (error?.message || data.error));
+        return;
+      }
+
+      toast.success(`Backup "${backupName}" criado no slot ${selectedBackupSlot}!`);
+
+      setBackupName('');
+      setBackupDescription('');
+      await loadBackupsList();
+      
+    } catch (error) {
+      console.error('Erro ao criar backup:', error);
+      toast.error("Erro inesperado ao criar backup");
+    } finally {
+      setIsCreatingBackup(false);
+    }
+  };
+
+  const handleRestoreBackup = async (slotNumber: 1 | 2) => {
+    if (!confirm(`Tem certeza que deseja restaurar o backup do slot ${slotNumber}?`)) {
+      return;
+    }
+
+    setIsRestoringBackup(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('restore-backup', {
+        body: {
+          slotNumber,
+          unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        }
+      });
+
+      if (error || !data.success) {
+        toast.error("Erro ao restaurar backup: " + (error?.message || data.error));
+        return;
+      }
+
+      toast.success("Backup restaurado com sucesso!");
+      
+    } catch (error) {
+      console.error('Erro ao restaurar backup:', error);
+      toast.error("Erro inesperado ao restaurar backup");
+    } finally {
+      setIsRestoringBackup(false);
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !previewData) {
-      toast({
-        title: "Nenhum arquivo selecionado",
-        description: "Por favor, selecione um arquivo Excel válido",
-        variant: "destructive"
-      });
+    if (!previewData) {
+      toast.error("Nenhum arquivo selecionado para upload");
       return;
     }
 
-    setIsUploading(true);
-    setErrorMessage(null);
-    
+    if (autoBackup) {
+      setIsUploading(true);
+      toast.info("Criando backup automático...");
+      
+      try {
+        const { data: backupData, error: backupError } = await supabase.functions.invoke('create-backup', {
+          body: {
+            slotNumber: selectedBackupSlot,
+            backupName: `Auto-backup ${new Date().toLocaleString('pt-BR')}`,
+            description: `Backup automático antes da sincronização`,
+            unitId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+          }
+        });
+
+        if (backupError || !backupData.success) {
+          const continueWithoutBackup = confirm('Erro ao criar backup automático. Continuar?');
+          if (!continueWithoutBackup) {
+            setIsUploading(false);
+            return;
+          }
+        } else {
+          toast.success(`Backup automático criado no slot ${selectedBackupSlot}`);
+          await loadBackupsList();
+        }
+      } catch (error) {
+        console.error('Erro no backup automático:', error);
+      }
+    } else {
+      setIsUploading(true);
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
-        body: { 
+        body: {
           xlsData: previewData,
-          fileName: selectedFile.name 
+          fileName: selectedFile?.name || 'arquivo.xlsx'
         }
       });
 
-      if (error) throw error;
+      if (error || data?.error) {
+        toast.error("Erro ao sincronizar: " + (error?.message || data.error));
+        return;
+      }
 
-      toast({
-        title: "Sincronização concluída",
-        description: `${data.professores_reativados + data.professores_criados} professores, ${data.turmas_reativadas + data.turmas_criadas} turmas, ${data.alunos_reativados + data.alunos_criados} alunos processados`,
-      });
+      toast.success("Sincronização concluída com sucesso!");
 
       setSelectedFile(null);
       setPreviewData(null);
       setShowPreview(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
+      
     } catch (error) {
       console.error('Erro na sincronização:', error);
-      const errorMsg = error instanceof Error ? error.message : "Erro durante a sincronização";
-      setErrorMessage(errorMsg);
-      toast({
-        title: "Erro",
-        description: errorMsg,
-        variant: "destructive"
-      });
+      toast.error("Erro inesperado durante a sincronização");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const downloadTemplate = () => {
-    // Criar template Excel
     const wb = XLSX.utils.book_new();
     
-    // Aba Turmas
     const turmasData = [
       ['nome', 'professor_nome', 'dia_semana', 'sala', 'horario_inicio', 'categoria'],
       ['Turma Exemplo', 'João Silva', 'segunda', 'Sala 1', '14:00', 'Supera']
@@ -157,7 +252,6 @@ const XlsUploadComponent = () => {
     const turmasSheet = XLSX.utils.aoa_to_sheet(turmasData);
     XLSX.utils.book_append_sheet(wb, turmasSheet, 'Turmas');
 
-    // Aba Professores
     const professoresData = [
       ['nome', 'slack_username'],
       ['João Silva', 'joao.silva']
@@ -165,7 +259,6 @@ const XlsUploadComponent = () => {
     const professoresSheet = XLSX.utils.aoa_to_sheet(professoresData);
     XLSX.utils.book_append_sheet(wb, professoresSheet, 'Professores');
 
-    // Aba Alunos (11 campos - excluindo índice, código e curso)
     const alunosData = [
       ['nome', 'telefone', 'email', 'matricula', 'turma_atual', 'professor', 'idade', 'ultimo_nivel', 'dias_apostila', 'dias_supera', 'vencimento_contrato'],
       ['Maria Santos', '(44) 99999-9999', 'maria@email.com', 'MAT001', 'Turma Exemplo', 'João Silva', '8', 'Nível 2', '30', '120', '2024-12-31']
@@ -177,36 +270,139 @@ const XlsUploadComponent = () => {
   };
 
   return (
-    <Card className="border-orange-200 bg-white">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg text-azul-500">Sincronização via Excel</CardTitle>
-        <CardDescription className="text-azul-400">
-          Sincronize turmas, professores e alunos via arquivo Excel
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Input
-              ref={fileInputRef}
+    <div className="space-y-6">
+      {/* Sistema de Backup */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Archive className="h-6 w-6" />
+            Sistema de Backup
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Criar Backup */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Criar Backup</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Slot</Label>
+                <Select value={selectedBackupSlot.toString()} onValueChange={(value) => setSelectedBackupSlot(Number(value) as 1 | 2)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Backup 1</SelectItem>
+                    <SelectItem value="2">Backup 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>Nome</Label>
+                <Input
+                  value={backupName}
+                  onChange={(e) => setBackupName(e.target.value)}
+                  placeholder="Nome do backup"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Descrição</Label>
+              <Input
+                value={backupDescription}
+                onChange={(e) => setBackupDescription(e.target.value)}
+                placeholder="Descrição opcional"
+              />
+            </div>
+            
+            <Button onClick={handleCreateBackup} disabled={isCreatingBackup}>
+              {isCreatingBackup ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Criar Backup
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* Lista de Backups */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Backups Disponíveis</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {backupsList.map((backup) => (
+                <Card key={backup.slotNumber} className={backup.hasData ? "border-primary/20" : "border-muted"}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center justify-between">
+                      <span>Slot {backup.slotNumber}</span>
+                      {backup.hasData && <Badge variant="secondary">Ativo</Badge>}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {backup.hasData ? (
+                      <div className="space-y-2">
+                        <p className="font-medium text-sm">{backup.backupName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {backup.totalAlunos} alunos | {backup.totalProfessores} professores | {backup.totalTurmas} turmas
+                        </p>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleRestoreBackup(backup.slotNumber)}
+                          disabled={isRestoringBackup}
+                          className="w-full"
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Restaurar
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Slot vazio</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Upload Excel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-6 w-6" />
+            Importar Excel
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="auto-backup"
+              checked={autoBackup}
+              onChange={(e) => setAutoBackup(e.target.checked)}
+            />
+            <Label htmlFor="auto-backup">
+              Criar backup automático no slot {selectedBackupSlot} antes da sincronização
+            </Label>
+          </div>
+
+          <div className="flex gap-2">
+            <input
               type="file"
-              accept=".xlsx,.xls"
+              ref={fileInputRef}
               onChange={handleFileChange}
+              accept=".xlsx,.xls"
               className="hidden"
             />
-            <Button 
-              variant="outline" 
-              onClick={handleButtonClick}
-              className="flex-1 border-orange-300 text-azul-500 hover:bg-orange-50"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              {selectedFile ? selectedFile.name : "Selecionar arquivo Excel"}
+            
+            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="flex-1">
+              <Upload className="mr-2 h-4 w-4" />
+              {selectedFile ? selectedFile.name : "Selecionar Excel"}
             </Button>
-            <Button 
-              variant="outline"
-              onClick={downloadTemplate}
-              className="border-orange-300 text-azul-500 hover:bg-orange-50"
-            >
+            
+            <Button onClick={downloadTemplate} variant="secondary">
               <Download className="mr-2 h-4 w-4" />
               Template
             </Button>
@@ -214,57 +410,36 @@ const XlsUploadComponent = () => {
 
           {selectedFile && previewData && (
             <div className="space-y-2">
-              <div className="text-xs text-center text-azul-400">
-                Arquivo: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
-              </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                {showPreview ? 'Ocultar' : 'Mostrar'} Preview
+              </Button>
               
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="flex-1"
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  {showPreview ? 'Ocultar' : 'Visualizar'} Dados
-                </Button>
-                <Button 
-                  onClick={handleUpload} 
-                  disabled={isUploading}
-                  className="flex-1 bg-supera hover:bg-supera-600"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? "Sincronizando..." : "Sincronizar"}
-                </Button>
-              </div>
-
               {showPreview && (
-                <div className="bg-gray-50 p-3 rounded text-xs">
-                  <p><strong>Turmas:</strong> {previewData.turmas.length}</p>
-                  <p><strong>Professores:</strong> {previewData.professores.length}</p>
-                  <p><strong>Alunos:</strong> {previewData.alunos.length}</p>
+                <div className="bg-muted p-3 rounded text-sm">
+                  <p>Turmas: {previewData.turmas.length}</p>
+                  <p>Professores: {previewData.professores.length}</p>
+                  <p>Alunos: {previewData.alunos.length}</p>
                 </div>
               )}
+              
+              <Button 
+                onClick={handleUpload} 
+                disabled={isUploading}
+                className="w-full"
+              >
+                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {isUploading ? "Sincronizando..." : "Sincronizar"}
+              </Button>
             </div>
           )}
-          
-          {errorMessage && (
-            <div className="text-xs text-center text-red-500 flex items-center justify-center">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              {errorMessage}
-            </div>
-          )}
-          
-          <div className="text-xs text-center text-azul-400 mt-2 space-y-1">
-            <p className="font-semibold">Estrutura obrigatória do arquivo Excel:</p>
-            <p><strong>Aba "Turmas":</strong> nome, professor_nome, dia_semana, sala, horario_inicio, categoria</p>
-            <p><strong>Aba "Professores":</strong> nome, slack_username (opcional)</p>
-            <p><strong>Aba "Alunos":</strong> nome, telefone, email, matricula, turma_atual, professor, idade, ultimo_nivel, dias_apostila, dias_supera, vencimento_contrato</p>
-            <p><em>Nota: Os campos índice, código e curso são ignorados caso existam na planilha</em></p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
