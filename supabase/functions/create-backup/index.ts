@@ -83,13 +83,15 @@ serve(async (req) => {
     }
 
     if (professores && professores.length > 0) {
-      const professoresBackup = professores.map(prof => ({
-        ...prof,
-        id: undefined, // Remove o ID para gerar novo
-        original_id: prof.id,
-        backup_created_at: new Date().toISOString(),
-        backup_created_by: null
-      }));
+      const professoresBackup = professores.map(prof => {
+        const { id, ...rest } = prof; // Remove o ID original
+        return {
+          ...rest,
+          original_id: id,
+          backup_created_at: new Date().toISOString(),
+          backup_created_by: null
+        };
+      });
 
       const { error: insertProfError } = await supabase
         .from(professoresTable)
@@ -115,13 +117,15 @@ serve(async (req) => {
     }
 
     if (turmas && turmas.length > 0) {
-      const turmasBackup = turmas.map(turma => ({
-        ...turma,
-        id: undefined, // Remove o ID para gerar novo
-        original_id: turma.id,
-        backup_created_at: new Date().toISOString(),
-        backup_created_by: null
-      }));
+      const turmasBackup = turmas.map(turma => {
+        const { id, ...rest } = turma; // Remove o ID original
+        return {
+          ...rest,
+          original_id: id,
+          backup_created_at: new Date().toISOString(),
+          backup_created_by: null
+        };
+      });
 
       const { error: insertTurmasError } = await supabase
         .from(turmasTable)
@@ -147,13 +151,15 @@ serve(async (req) => {
     }
 
     if (alunos && alunos.length > 0) {
-      const alunosBackup = alunos.map(aluno => ({
-        ...aluno,
-        id: undefined, // Remove o ID para gerar novo
-        original_id: aluno.id,
-        backup_created_at: new Date().toISOString(),
-        backup_created_by: null
-      }));
+      const alunosBackup = alunos.map(aluno => {
+        const { id, ...rest } = aluno; // Remove o ID original
+        return {
+          ...rest,
+          original_id: id,
+          backup_created_at: new Date().toISOString(),
+          backup_created_by: null
+        };
+      });
 
       const { error: insertAlunosError } = await supabase
         .from(alunosTable)
