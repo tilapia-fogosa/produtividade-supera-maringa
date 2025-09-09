@@ -58,7 +58,7 @@ serve(async (req) => {
     // Desativar todos professores da unidade
     const { error: profDeactivateError } = await supabase
       .from('professores')
-      .update({ active: false })
+      .update({ status: false })
       .eq('unit_id', MARINGA_UNIT_ID);
 
     if (profDeactivateError) {
@@ -99,7 +99,7 @@ serve(async (req) => {
           // Buscar professor por nome em TODAS as unidades (ignorando case e espaços extras)
           const { data: existingProfs, error: searchError } = await supabase
             .from('professores')
-            .select('id, unit_id, active')
+            .select('id, unit_id, status')
             .ilike('nome', nome);
 
           if (searchError) {
@@ -121,7 +121,7 @@ serve(async (req) => {
               const { error: updateError } = await supabase
                 .from('professores')
                 .update({ 
-                  active: true, 
+                  status: true, 
                   slack_username: profData.slack_username || null,
                   ultima_sincronizacao: new Date().toISOString()
                 })
@@ -140,7 +140,7 @@ serve(async (req) => {
                 .from('professores')
                 .update({ 
                   unit_id: MARINGA_UNIT_ID,
-                  active: true, 
+                  status: true, 
                   slack_username: profData.slack_username || null,
                   ultima_sincronizacao: new Date().toISOString()
                 })
@@ -183,7 +183,7 @@ serve(async (req) => {
                 nome,
                 slack_username: profData.slack_username || null,
                 unit_id: MARINGA_UNIT_ID,
-                active: true,
+                status: true,
                 ultima_sincronizacao: new Date().toISOString()
               });
 
@@ -219,7 +219,7 @@ serve(async (req) => {
             .select('id')
             .eq('nome', professorNome)
             .eq('unit_id', MARINGA_UNIT_ID)
-            .eq('active', true)
+            .eq('status', true)
             .maybeSingle();
 
           if (profSearchError) {
