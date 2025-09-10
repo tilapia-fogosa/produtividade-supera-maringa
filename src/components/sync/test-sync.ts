@@ -15,6 +15,15 @@ export interface SyncResponse {
 }
 
 export async function testStudentSync(): Promise<SyncResponse> {
+  // FUNÇÃO TEMPORARIAMENTE DESABILITADA
+  console.log('Tentativa de sincronização Google Sheets - funcionalidade desabilitada');
+  
+  return {
+    success: false,
+    error: "Sincronização Google Sheets temporariamente desabilitada. Use a importação via Excel disponível na tela de Turmas."
+  };
+  
+  /* CÓDIGO ORIGINAL COMENTADO TEMPORARIAMENTE
   try {
     console.log('Iniciando teste de sincronização manual...');
     
@@ -57,4 +66,5 @@ export async function testStudentSync(): Promise<SyncResponse> {
       error: error instanceof Error ? error.message : "Não foi possível realizar a sincronização"
     };
   }
+  */
 }

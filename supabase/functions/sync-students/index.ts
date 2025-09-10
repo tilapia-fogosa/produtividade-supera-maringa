@@ -640,6 +640,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('Tentativa de uso da sincronização Google Sheets - FUNCIONALIDADE TEMPORARIAMENTE DESABILITADA');
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Sincronização Google Sheets temporariamente desabilitada. Use a importação via Excel disponível na tela de Turmas.'
+    }), {
+      status: 400,
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json' 
+      }
+    });
+    
+    /* CÓDIGO ORIGINAL COMENTADO TEMPORARIAMENTE
     // Get API keys from request body
     const { googleApiKey, spreadsheetId } = await req.json();
     console.log('Chaves recebidas:', { 
@@ -660,20 +674,20 @@ Deno.serve(async (req) => {
         status: result.success ? 200 : 500,
       }
     );
+    */
   } catch (error) {
-    console.error('Erro não tratado:', error.message, error.stack);
+    console.error('Erro:', error.message);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        details: error.stack
+        error: 'Sincronização Google Sheets temporariamente desabilitada. Use a importação via Excel disponível na tela de Turmas.'
       }),
       {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
         },
-        status: 500,
+        status: 400,
       }
     );
   }

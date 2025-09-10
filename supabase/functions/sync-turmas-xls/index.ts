@@ -122,7 +122,6 @@ serve(async (req) => {
                 .from('professores')
                 .update({ 
                   status: true, 
-                  slack_username: profData.slack_username || null,
                   ultima_sincronizacao: new Date().toISOString()
                 })
                 .eq('id', profNaUnidadeAtual.id);
@@ -141,7 +140,6 @@ serve(async (req) => {
                 .update({ 
                   unit_id: MARINGA_UNIT_ID,
                   status: true, 
-                  slack_username: profData.slack_username || null,
                   ultima_sincronizacao: new Date().toISOString()
                 })
                 .eq('id', profEmOutraUnidade.id);
@@ -181,7 +179,6 @@ serve(async (req) => {
               .from('professores')
               .insert({
                 nome,
-                slack_username: profData.slack_username || null,
                 unit_id: MARINGA_UNIT_ID,
                 status: true,
                 ultima_sincronizacao: new Date().toISOString()
