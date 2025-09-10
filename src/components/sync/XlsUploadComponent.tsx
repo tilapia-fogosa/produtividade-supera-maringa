@@ -119,6 +119,9 @@ const XlsUploadComponent = () => {
             matricula: row['Matrícula'] || row.matricula,
             responsavel: row['Responsável'] || row.responsavel || 'o próprio',
             vencimento_contrato: row['Vencimento contrato'] || row.vencimento_contrato,
+            ultimo_nivel: row['Último nível'] || row.ultimo_nivel,
+            dias_apostila: row['Dias na apostila'] || row.dias_apostila,
+            dias_supera: row['Dias no Supera'] || row.dias_supera,
             // Manter outros campos que possam existir
             ...row
           };
