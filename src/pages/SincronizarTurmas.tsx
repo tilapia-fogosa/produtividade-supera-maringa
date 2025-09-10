@@ -1,7 +1,6 @@
 import React from 'react';
 import { FileSpreadsheet } from "lucide-react";
 import XlsUploadComponent from '@/components/sync/XlsUploadComponent';
-import XlsSyncStatus from '@/components/sync/XlsSyncStatus';
 
 const SincronizarTurmas = () => {
   return (
@@ -16,7 +15,6 @@ const SincronizarTurmas = () => {
       
       <div className="space-y-6">
         <XlsUploadComponent />
-        <XlsSyncStatus />
       </div>
     </div>
   );
