@@ -3,8 +3,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from './use-professor-turmas';
 
+export interface TurmaComProfessor extends Turma {
+  professor_nome: string | null;
+}
+
 export function useTodasTurmas() {
-  const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [turmas, setTurmas] = useState<TurmaComProfessor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,10 +20,13 @@ export function useTodasTurmas() {
         
         console.log('Iniciando busca de todas as turmas...');
         
-        // Primeiro, buscar todas as turmas
+        // Buscar turmas com dados do professor
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
-          .select('*')
+          .select(`
+            *,
+            professores(nome)
+          `)
           .order('nome');
 
         if (turmasError) {
@@ -56,7 +63,8 @@ export function useTodasTurmas() {
           if (alunosAtivos && alunosAtivos.length > 0) {
             turmasComAlunos.push({
               ...turma,
-              sala: turma.sala || null
+              sala: turma.sala || null,
+              professor_nome: (turma.professores as any)?.nome || null
             });
           }
         }
