@@ -60,8 +60,11 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
       const nomeArquivo = `aluno_${alunoId}_${Date.now()}.${extensao}`;
       const caminhoArquivo = `alunos/${alunoId}/${nomeArquivo}`;
 
+      console.log('Iniciando upload da foto:', { nomeArquivo, caminhoArquivo });
+
       // Se já tem foto, remover a anterior
       if (fotoUrl) {
+        console.log('Removendo foto anterior:', fotoUrl);
         await removerFotoAnterior();
       }
 
@@ -71,8 +74,11 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
         .upload(caminhoArquivo, file);
 
       if (uploadError) {
+        console.error('Erro no upload:', uploadError);
         throw uploadError;
       }
+
+      console.log('Upload realizado com sucesso');
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
@@ -80,9 +86,11 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
         .getPublicUrl(caminhoArquivo);
 
       const novaFotoUrl = urlData.publicUrl;
+      console.log('URL pública gerada:', novaFotoUrl);
 
       // Atualizar no banco de dados
       const sucesso = await onFotoUpdate(novaFotoUrl);
+      console.log('Resultado da atualização no banco:', sucesso);
       
       if (sucesso) {
         toast({

@@ -286,18 +286,29 @@ export function useAlunosAtivos() {
 
   const atualizarFoto = async (alunoId: string, fotoUrl: string | null) => {
     try {
+      console.log('Atualizando foto no banco:', { alunoId, fotoUrl });
+      
       // Identificar se é aluno ou funcionário
       const pessoa = alunos.find(a => a.id === alunoId);
-      if (!pessoa) throw new Error('Pessoa não encontrada');
+      if (!pessoa) {
+        console.error('Pessoa não encontrada:', alunoId);
+        throw new Error('Pessoa não encontrada');
+      }
 
       const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      console.log('Atualizando na tabela:', tabela);
       
       const { error } = await supabase
         .from(tabela)
         .update({ foto_url: fotoUrl } as any)
         .eq('id', alunoId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na atualização do banco:', error);
+        throw error;
+      }
+
+      console.log('Foto atualizada no banco com sucesso');
 
       // Atualizar o estado local
       setAlunos(prev => prev.map(aluno => 
@@ -305,6 +316,8 @@ export function useAlunosAtivos() {
           ? { ...aluno, foto_url: fotoUrl }
           : aluno
       ));
+
+      console.log('Estado local atualizado');
 
       toast({
         title: "Sucesso",
