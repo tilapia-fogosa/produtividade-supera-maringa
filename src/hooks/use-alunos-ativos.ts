@@ -319,6 +319,12 @@ export function useAlunosAtivos() {
 
       console.log('Estado local atualizado');
 
+      // Re-buscar os dados para garantir sincronização
+      setTimeout(() => {
+        console.log('Re-buscando dados após atualização de foto');
+        buscarAlunosAtivos();
+      }, 500);
+
       toast({
         title: "Sucesso",
         description: fotoUrl ? "Foto atualizada com sucesso." : "Foto removida com sucesso.",

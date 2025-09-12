@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,8 @@ interface FotoUploadProps {
 export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const obterIniciais = (nome: string) => {
@@ -170,20 +172,67 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
     event.target.value = '';
   };
 
+  // Função para gerar URL com cache busting
+  const obterUrlComCacheBust = (url: string | null) => {
+    if (!url) return undefined;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}cb=${Date.now()}`;
+  };
+
+  const handleImageLoad = () => {
+    console.log('Imagem carregada com sucesso:', fotoUrl);
+    setImageLoading(false);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    console.error('Erro ao carregar imagem:', fotoUrl);
+    setImageLoading(false);
+    setImageError(true);
+  };
+
   const iniciais = obterIniciais(alunoNome);
+  const urlComCacheBust = obterUrlComCacheBust(fotoUrl);
+
+  // Reset image loading state when foto URL changes
+  useEffect(() => {
+    if (fotoUrl) {
+      console.log('Nova foto URL detectada:', fotoUrl);
+      setImageLoading(true);
+      setImageError(false);
+    } else {
+      setImageLoading(false);
+      setImageError(false);
+    }
+  }, [fotoUrl]);
 
   return (
     <div className="flex flex-col items-center space-y-3">
       <Avatar className="h-24 w-24 md:h-32 md:w-32">
         <AvatarImage 
-          src={fotoUrl || undefined} 
+          src={urlComCacheBust} 
           alt={`Foto de ${alunoNome}`}
           className="object-cover"
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
         <AvatarFallback className="text-lg md:text-xl font-semibold bg-primary/10">
-          {iniciais}
+          {imageError ? (
+            <div className="text-xs text-center">
+              Erro ao<br/>carregar
+            </div>
+          ) : (
+            iniciais
+          )}
         </AvatarFallback>
       </Avatar>
+
+      {imageLoading && fotoUrl && (
+        <div className="text-xs text-muted-foreground flex items-center gap-1">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Carregando imagem...
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
