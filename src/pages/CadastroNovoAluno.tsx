@@ -17,7 +17,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
-import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+// ID da unidade de Maringá (única unidade que usa esta funcionalidade)
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
 const kitOptions = [
   { value: 'kit1', label: 'Kit 1' },
@@ -178,7 +179,6 @@ function FotoUploadComponent({ foto, onFotoChange, nomeAluno }: FotoUploadProps)
 export default function CadastroNovoAluno() {
   const navigate = useNavigate();
   const { turmas, loading: turmasLoading } = useTodasTurmas();
-  const { activeUnit } = useActiveUnit();
   const [foto, setFoto] = useState<File | null>(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -232,15 +232,6 @@ export default function CadastroNovoAluno() {
   };
 
   const onSubmit = async (data: CadastroAlunoFormData) => {
-    if (!activeUnit) {
-      toast({
-        title: "Erro",
-        description: "Nenhuma unidade ativa selecionada.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
       setSalvando(true);
 
@@ -254,7 +245,7 @@ export default function CadastroNovoAluno() {
         kit_sugerido: data.kit_sugerido,
         responsavel: data.responsavel,
         whatapp_contato: data.whatapp_contato,
-        unit_id: activeUnit.id,
+        unit_id: MARINGA_UNIT_ID,
         active: true,
         foto_url: null, // Será atualizado após upload da foto
       };
@@ -518,7 +509,7 @@ export default function CadastroNovoAluno() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   type="submit"
-                  disabled={salvando || !activeUnit}
+                  disabled={salvando}
                   className="flex items-center gap-2"
                 >
                   {salvando ? (
@@ -538,12 +529,6 @@ export default function CadastroNovoAluno() {
                   Cancelar
                 </Button>
               </div>
-
-              {!activeUnit && (
-                <p className="text-sm text-destructive">
-                  Selecione uma unidade ativa para cadastrar o aluno.
-                </p>
-              )}
             </form>
           </Form>
         </CardContent>
