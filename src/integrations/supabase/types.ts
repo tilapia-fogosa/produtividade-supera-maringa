@@ -226,6 +226,7 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_url: string | null
           id: string
           idade: number | null
           indice: string | null
@@ -264,6 +265,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
@@ -2083,6 +2086,7 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_url: string | null
           id: string
           idade: number | null
           indice: string | null
@@ -2117,6 +2121,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
@@ -2151,6 +2156,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
