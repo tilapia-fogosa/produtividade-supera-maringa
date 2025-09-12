@@ -44,6 +44,7 @@ import EditarEvento from "./pages/EditarEvento";
 import Trofeus1000Dias from "./pages/Trofeus1000Dias";
 import Retencoes from "./pages/Retencoes";
 import ResultadosMensais from "./pages/ResultadosMensais";
+import GerenciarFotosAlunos from "./pages/GerenciarFotosAlunos";
 import Login from "./pages/Login";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -108,6 +109,7 @@ function App() {
                             <Route path="/trofeus-1000-dias" element={<Trofeus1000Dias />} />
                             <Route path="/retencoes" element={<Retencoes />} />
                             <Route path="/resultados-mensais" element={<ResultadosMensais />} />
+                            <Route path="/gerenciar-fotos-alunos" element={<GerenciarFotosAlunos />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
