@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FotoUploadSimples } from '@/components/alunos/FotoUploadSimples';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
@@ -101,9 +101,6 @@ export default function CadastroNovoAluno() {
       <Card>
         <CardHeader>
           <CardTitle>Informações do Aluno</CardTitle>
-          <CardDescription>
-            Lançar EXATAMENTE o nome que está cadastrado no SGS, sem espaços extras ou acentuações diferentes
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -125,6 +122,9 @@ export default function CadastroNovoAluno() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nome Completo do Aluno *</FormLabel>
+                    <FormDescription>
+                      Lançar EXATAMENTE o nome que está cadastrado no SGS, sem espaços extras ou acentuações diferentes
+                    </FormDescription>
                     <FormControl>
                       <Input
                         {...field}
