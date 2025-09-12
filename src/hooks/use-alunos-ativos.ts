@@ -38,6 +38,9 @@ export interface AlunoAtivo {
   is_funcionario: boolean | null;
   valor_mensalidade: number | null;
   foto_url: string | null;
+  // Campos específicos para identificar origem
+  tipo_pessoa: 'aluno' | 'funcionario';
+  cargo?: string | null; // Específico para funcionários
 }
 
 export function useAlunosAtivos() {
@@ -54,7 +57,7 @@ export function useAlunosAtivos() {
       setLoading(true);
       setError(null);
 
-      console.log('Iniciando busca de alunos ativos...');
+      console.log('Iniciando busca de alunos ativos e funcionários ativos...');
 
       // Primeira consulta: buscar apenas alunos ativos (excluindo funcionários)
       const { data: alunosData, error: alunosError } = await supabase
@@ -69,17 +72,35 @@ export function useAlunosAtivos() {
         throw alunosError;
       }
 
-      console.log('Dados dos alunos recebidos:', alunosData);
+      // Segunda consulta: buscar funcionários ativos
+      const { data: funcionariosData, error: funcionariosError } = await supabase
+        .from('funcionarios')
+        .select('*')
+        .eq('active', true)
+        .order('nome');
 
-      if (!alunosData) {
-        console.log('Nenhum aluno encontrado');
+      if (funcionariosError) {
+        console.error('Erro na consulta de funcionários:', funcionariosError);
+        throw funcionariosError;
+      }
+
+      console.log('Dados dos alunos recebidos:', alunosData);
+      console.log('Dados dos funcionários recebidos:', funcionariosData);
+
+      const todasPessoas = [
+        ...(alunosData || []).map((aluno: any) => ({ ...aluno, tipo_pessoa: 'aluno' as const })),
+        ...(funcionariosData || []).map((funcionario: any) => ({ ...funcionario, tipo_pessoa: 'funcionario' as const }))
+      ];
+
+      if (todasPessoas.length === 0) {
+        console.log('Nenhuma pessoa encontrada');
         setAlunos([]);
         return;
       }
 
       // Buscar informações das turmas
-      const turmaIds = alunosData
-        .map(aluno => aluno.turma_id)
+      const turmaIds = todasPessoas
+        .map(pessoa => pessoa.turma_id)
         .filter(Boolean) as string[];
 
       console.log('IDs das turmas para buscar:', turmaIds);
@@ -123,13 +144,13 @@ export function useAlunosAtivos() {
 
       console.log('Dados dos professores recebidos:', professoresData);
 
-      // Mapear dados dos alunos com informações das turmas e professores
-      const alunosComDados = await Promise.all(
-        alunosData.map(async (aluno: any) => {
-          console.log('Processando aluno:', aluno.nome);
+      // Mapear dados das pessoas com informações das turmas e professores
+      const pessoasComDados = await Promise.all(
+        todasPessoas.map(async (pessoa: any) => {
+          console.log('Processando pessoa:', pessoa.nome, '- Tipo:', pessoa.tipo_pessoa);
           
           // Encontrar dados da turma
-          const turma = turmasData.find(t => t.id === aluno.turma_id);
+          const turma = turmasData.find(t => t.id === pessoa.turma_id);
           
           // Encontrar dados do professor
           const professor = turma ? professoresData.find(p => p.id === turma.professor_id) : null;
@@ -140,13 +161,13 @@ export function useAlunosAtivos() {
             const { data: apostilaData, error: apostilaError } = await supabase
               .from('produtividade_abaco')
               .select('apostila')
-              .eq('pessoa_id', aluno.id)
+              .eq('pessoa_id', pessoa.id)
               .not('apostila', 'is', null)
               .order('data_aula', { ascending: false })
               .limit(1);
 
             if (apostilaError) {
-              console.error('Erro ao buscar última apostila para aluno', aluno.nome, ':', apostilaError);
+              console.error('Erro ao buscar última apostila para pessoa', pessoa.nome, ':', apostilaError);
             } else if (apostilaData && apostilaData.length > 0) {
               ultimaApostila = apostilaData[0].apostila;
             }
@@ -154,28 +175,30 @@ export function useAlunosAtivos() {
             console.error('Erro inesperado ao buscar apostila:', error);
           }
 
-          const alunoProcessado: AlunoAtivo = {
-            ...aluno,
+          const pessoaProcessada: AlunoAtivo = {
+            ...pessoa,
             turma_nome: turma?.nome || null,
             professor_nome: professor?.nome || null,
             ultima_apostila: ultimaApostila,
+            // Garantir que funcionários têm is_funcionario = true para compatibilidade
+            is_funcionario: pessoa.tipo_pessoa === 'funcionario' ? true : (pessoa.is_funcionario || false),
           };
 
-          console.log('Aluno processado:', alunoProcessado);
-          return alunoProcessado;
+          console.log('Pessoa processada:', pessoaProcessada);
+          return pessoaProcessada;
         })
       );
 
-      setAlunos(alunosComDados);
-      console.log(`Carregados ${alunosComDados.length} alunos ativos com sucesso`);
+      setAlunos(pessoasComDados);
+      console.log(`Carregadas ${pessoasComDados.length} pessoas ativas com sucesso`);
 
     } catch (err) {
-      console.error('Erro ao buscar alunos ativos:', err);
+      console.error('Erro ao buscar pessoas ativas:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(`Erro ao carregar alunos ativos: ${errorMessage}`);
+      setError(`Erro ao carregar pessoas ativas: ${errorMessage}`);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar a lista de alunos ativos. Verifique o console para mais detalhes.",
+        description: "Não foi possível carregar a lista de pessoas ativas. Verifique o console para mais detalhes.",
         variant: "destructive"
       });
     } finally {
@@ -185,8 +208,14 @@ export function useAlunosAtivos() {
 
   const atualizarWhatsApp = async (alunoId: string, whatsapp: string) => {
     try {
+      // Identificar se é aluno ou funcionário
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
       const { error } = await supabase
-        .from('alunos')
+        .from(tabela)
         .update({ whatapp_contato: whatsapp } as any)
         .eq('id', alunoId);
 
@@ -218,8 +247,14 @@ export function useAlunosAtivos() {
 
   const atualizarResponsavel = async (alunoId: string, responsavel: string) => {
     try {
+      // Identificar se é aluno ou funcionário
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
       const { error } = await supabase
-        .from('alunos')
+        .from(tabela)
         .update({ responsavel: responsavel } as any)
         .eq('id', alunoId);
 
@@ -251,8 +286,14 @@ export function useAlunosAtivos() {
 
   const atualizarFoto = async (alunoId: string, fotoUrl: string | null) => {
     try {
+      // Identificar se é aluno ou funcionário
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
       const { error } = await supabase
-        .from('alunos')
+        .from(tabela)
         .update({ foto_url: fotoUrl } as any)
         .eq('id', alunoId);
 

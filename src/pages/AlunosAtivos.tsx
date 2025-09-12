@@ -187,9 +187,9 @@ export default function AlunosAtivos() {
   return (
     <div className="p-4 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Alunos Ativos</h1>
+        <h1 className="text-2xl font-bold">Pessoas Ativas</h1>
         <Badge variant="secondary" className="text-sm bg-purple-400">
-          {alunosFiltrados.length} de {alunos.length} alunos
+          {alunosFiltrados.length} de {alunos.length} pessoas
         </Badge>
       </div>
 
@@ -202,7 +202,7 @@ export default function AlunosAtivos() {
           {/* Busca por nome */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input placeholder="Buscar por nome do aluno..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+            <Input placeholder="Buscar por nome..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
 
           {/* Filtros por seleção */}
@@ -297,8 +297,22 @@ export default function AlunosAtivos() {
               </thead>
               <tbody>
                 {alunosFiltrados.map(aluno => (
-                  <tr key={aluno.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-medium">{aluno.nome}</td>
+                <tr key={aluno.id} className="border-b hover:bg-gray-50">
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{aluno.nome}</span>
+                      {aluno.tipo_pessoa === 'funcionario' && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+                          Funcionário
+                        </Badge>
+                      )}
+                      {aluno.cargo && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
+                          {aluno.cargo}
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
                     <td className="p-4">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700">
                         {aluno.turma_nome || 'Sem turma'}
@@ -441,7 +455,7 @@ export default function AlunosAtivos() {
 
             {alunosFiltrados.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <p>Nenhum aluno encontrado com os filtros aplicados.</p>
+                <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
               </div>
             )}
           </div>
