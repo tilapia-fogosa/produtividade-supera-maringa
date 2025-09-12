@@ -35,11 +35,11 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
         </DialogHeader>
         
         <ScrollArea className="h-full pr-4">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Section title="Informações Básicas">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
                 {/* Coluna das informações */}
-                <div className="lg:col-span-2 space-y-3">
+                <div className="lg:col-span-3 space-y-2">
                   <InfoItem label="Nome" value={aluno.nome} />
                   <InfoItem label="Ativo" value={aluno.active ? 'Sim' : 'Não'} />
                   <InfoItem label="Dias no Supera" value={aluno.dias_supera?.toString() || 'Não informado'} />
@@ -49,7 +49,7 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
                 </div>
                 
                 {/* Coluna da foto */}
-                <div className="lg:col-span-1 flex justify-center lg:justify-end">
+                <div className="lg:col-span-1 flex justify-center lg:justify-start">
                   <FotoUpload
                     alunoId={aluno.id}
                     alunoNome={aluno.nome}
@@ -121,18 +121,18 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
 
 function Section({ title, children }: { title: string, children: React.ReactNode }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-      <div className="space-y-3 pl-4 border-l-2 border-gray-200">{children}</div>
+      <div className="space-y-2 pl-4 border-l-2 border-gray-200">{children}</div>
     </div>
   );
 }
 
 function InfoItem({ label, value }: { label: string, value: string }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
       <p className="text-sm font-medium text-gray-600">{label}:</p>
-      <p className="text-sm text-gray-900 md:col-span-2">{value}</p>
+      <p className="text-sm text-gray-900 sm:col-span-2 break-words">{value}</p>
     </div>
   );
 }
