@@ -10,6 +10,7 @@ import { useAlunosAtivos } from "@/hooks/use-alunos-ativos";
 export default function GerenciarFotosAlunos() {
   const { alunos, loading, error, atualizarFoto } = useAlunosAtivos();
   const [filtrarComFoto, setFiltrarComFoto] = useState(false);
+  const [filtrarSemFoto, setFiltrarSemFoto] = useState(false);
 
   // Calcular estatísticas
   const stats = useMemo(() => {
@@ -18,11 +19,20 @@ export default function GerenciarFotosAlunos() {
     return { comFoto, semFoto, total: alunos.length };
   }, [alunos]);
 
-  // Filtrar alunos baseado no estado do filtro
+  // Filtrar alunos baseado no estado dos filtros
   const alunosFiltrados = useMemo(() => {
-    if (!filtrarComFoto) return alunos;
-    return alunos.filter(aluno => aluno.foto_url);
-  }, [alunos, filtrarComFoto]);
+    let resultado = alunos;
+    
+    if (filtrarComFoto) {
+      resultado = resultado.filter(aluno => aluno.foto_url);
+    }
+    
+    if (filtrarSemFoto) {
+      resultado = resultado.filter(aluno => !aluno.foto_url);
+    }
+    
+    return resultado;
+  }, [alunos, filtrarComFoto, filtrarSemFoto]);
 
   if (loading) {
     return (
@@ -60,16 +70,35 @@ export default function GerenciarFotosAlunos() {
             </p>
           </div>
           
-          {/* Filtro */}
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="filtrar-com-foto"
-              checked={filtrarComFoto}
-              onCheckedChange={setFiltrarComFoto}
-            />
-            <Label htmlFor="filtrar-com-foto">
-              Mostrar apenas com foto
-            </Label>
+          {/* Filtros */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="filtrar-com-foto"
+                checked={filtrarComFoto}
+                onCheckedChange={(checked) => {
+                  setFiltrarComFoto(checked);
+                  if (checked) setFiltrarSemFoto(false);
+                }}
+              />
+              <Label htmlFor="filtrar-com-foto">
+                Apenas com foto
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="filtrar-sem-foto"
+                checked={filtrarSemFoto}
+                onCheckedChange={(checked) => {
+                  setFiltrarSemFoto(checked);
+                  if (checked) setFiltrarComFoto(false);
+                }}
+              />
+              <Label htmlFor="filtrar-sem-foto">
+                Apenas sem foto
+              </Label>
+            </div>
           </div>
         </div>
 
@@ -121,7 +150,7 @@ export default function GerenciarFotosAlunos() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {filtrarComFoto ? 'Alunos com Foto' : 'Todos os Alunos'} 
+            {filtrarComFoto ? 'Alunos com Foto' : filtrarSemFoto ? 'Alunos sem Foto' : 'Todos os Alunos'} 
             <span className="ml-2 text-muted-foreground">
               ({alunosFiltrados.length})
             </span>
@@ -133,11 +162,16 @@ export default function GerenciarFotosAlunos() {
             <div className="text-center">
               <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium">
-                {filtrarComFoto ? 'Nenhum aluno com foto encontrado' : 'Nenhum aluno encontrado'}
+                {filtrarComFoto 
+                  ? 'Nenhum aluno com foto encontrado' 
+                  : filtrarSemFoto 
+                    ? 'Nenhum aluno sem foto encontrado'
+                    : 'Nenhum aluno encontrado'
+                }
               </p>
               <p className="text-muted-foreground">
-                {filtrarComFoto 
-                  ? 'Tente desativar o filtro para ver todos os alunos'
+                {(filtrarComFoto || filtrarSemFoto)
+                  ? 'Tente desativar os filtros para ver todos os alunos'
                   : 'Verifique se há alunos cadastrados no sistema'
                 }
               </p>
