@@ -35,21 +35,10 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
         </DialogHeader>
         
         <ScrollArea className="h-full pr-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Coluna Esquerda */}
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Coluna Esquerda - Informações */}
+            <div className="lg:col-span-3 space-y-5">
               <Section title="Informações Básicas">
-                {/* Foto no topo */}
-                <div className="flex justify-center mb-4">
-                  <FotoUpload
-                    alunoId={aluno.id}
-                    alunoNome={aluno.nome}
-                    fotoUrl={aluno.foto_url}
-                    onFotoUpdate={(novaFotoUrl) => atualizarFoto(aluno.id, novaFotoUrl)}
-                  />
-                </div>
-                
-                {/* Informações básicas */}
                 <div className="space-y-3">
                   <InfoItem label="Nome" value={aluno.nome} />
                   <InfoItem label="Ativo" value={aluno.active ? 'Sim' : 'Não'} />
@@ -72,10 +61,7 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
                 <InfoItem label="Valor da Mensalidade" value={formatarValorMensalidade(aluno.valor_mensalidade)} />
                 <InfoItem label="Última Falta" value={aluno.ultima_falta ? new Date(aluno.ultima_falta).toLocaleDateString('pt-BR') : 'Não registrado'} />
               </Section>
-            </div>
 
-            {/* Coluna Direita */}
-            <div className="space-y-5">
               <Section title="Turma e Professor">
                 <InfoItem label="Nome da Turma" value={aluno.turma_nome || 'Não atribuído'} />
                 <InfoItem label="Professor" value={aluno.professor_nome || 'Não atribuído'} />
@@ -115,6 +101,18 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
                   )}
                 </div>
               </Section>
+            </div>
+
+            {/* Coluna Direita - Foto */}
+            <div className="lg:col-span-1 flex justify-center lg:justify-start">
+              <div className="lg:sticky lg:top-0">
+                <FotoUpload
+                  alunoId={aluno.id}
+                  alunoNome={aluno.nome}
+                  fotoUrl={aluno.foto_url}
+                  onFotoUpdate={(novaFotoUrl) => atualizarFoto(aluno.id, novaFotoUrl)}
+                />
+              </div>
             </div>
           </div>
         </ScrollArea>
