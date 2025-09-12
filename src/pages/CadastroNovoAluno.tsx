@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FotoUpload } from '@/components/alunos/FotoUpload';
+import { FotoUploadSimples } from '@/components/alunos/FotoUploadSimples';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import { useCadastroAluno, type CadastroAlunoForm } from '@/hooks/use-cadastro-aluno';
 import { toast } from '@/hooks/use-toast';
@@ -124,20 +124,14 @@ export default function CadastroNovoAluno() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Foto do Aluno */}
-              {alunoId && (
-                <div className="space-y-2">
-                  <Label>Foto do Aluno (opcional)</Label>
-                  <FotoUpload
-                    alunoId={alunoId}
-                    alunoNome={form.getValues('nome')}
-                    fotoUrl={fotoUrl}
-                    onFotoUpdate={async (novaUrl) => {
-                      setFotoUrl(novaUrl);
-                      return true;
-                    }}
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label>Foto do Aluno (opcional)</Label>
+                <FotoUploadSimples
+                  fotoUrl={fotoUrl}
+                  onFotoChange={setFotoUrl}
+                  nomeAluno={form.getValues('nome') || 'Novo Aluno'}
+                />
+              </div>
 
               {/* Nome Completo */}
               <FormField
