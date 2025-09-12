@@ -56,11 +56,12 @@ export function useAlunosAtivos() {
 
       console.log('Iniciando busca de alunos ativos...');
 
-      // Primeira consulta: buscar alunos ativos com todos os campos
+      // Primeira consulta: buscar apenas alunos ativos (excluindo funcionários)
       const { data: alunosData, error: alunosError } = await supabase
         .from('alunos')
         .select('*')
         .eq('active', true)
+        .or('is_funcionario.is.null,is_funcionario.eq.false')
         .order('nome');
 
       if (alunosError) {
