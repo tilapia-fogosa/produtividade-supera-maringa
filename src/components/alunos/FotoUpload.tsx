@@ -208,7 +208,7 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
 
   return (
     <div className="flex flex-col items-center space-y-3">
-      <Avatar className="h-24 w-24 md:h-32 md:w-32">
+      <Avatar className="h-32 w-32 md:h-40 md:w-40">
         <AvatarImage 
           src={urlComCacheBust} 
           alt={`Foto de ${alunoNome}`}
@@ -216,7 +216,7 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
-        <AvatarFallback className="text-lg md:text-xl font-semibold bg-primary/10">
+        <AvatarFallback className="text-xl md:text-2xl font-semibold bg-primary/10">
           {imageError ? (
             <div className="text-xs text-center">
               Erro ao<br/>carregar
