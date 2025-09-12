@@ -7,8 +7,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlunoAtivo } from '@/hooks/use-alunos-ativos';
+import { AlunoAtivo, useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { Badge } from "@/components/ui/badge";
+import { FotoUpload } from './FotoUpload';
 
 interface DetalhesAlunoAtivoModalProps {
   aluno: AlunoAtivo;
@@ -16,6 +17,8 @@ interface DetalhesAlunoAtivoModalProps {
 }
 
 export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoModalProps) {
+  const { atualizarFoto } = useAlunosAtivos();
+  
   const formatarValorMensalidade = (valor: number | null) => {
     if (valor === null || valor === undefined) return 'Não informado';
     return new Intl.NumberFormat('pt-BR', {
@@ -34,12 +37,27 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
         <ScrollArea className="h-full pr-4">
           <div className="space-y-6">
             <Section title="Informações Básicas">
-              <InfoItem label="Nome" value={aluno.nome} />
-              <InfoItem label="Ativo" value={aluno.active ? 'Sim' : 'Não'} />
-              <InfoItem label="Dias no Supera" value={aluno.dias_supera?.toString() || 'Não informado'} />
-              <InfoItem label="Idade" value={aluno.idade?.toString() || 'Não informado'} />
-              <InfoItem label="Email" value={aluno.email || 'Não informado'} />
-              <InfoItem label="Telefone" value={aluno.telefone || 'Não informado'} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Coluna das informações */}
+                <div className="lg:col-span-2 space-y-3">
+                  <InfoItem label="Nome" value={aluno.nome} />
+                  <InfoItem label="Ativo" value={aluno.active ? 'Sim' : 'Não'} />
+                  <InfoItem label="Dias no Supera" value={aluno.dias_supera?.toString() || 'Não informado'} />
+                  <InfoItem label="Idade" value={aluno.idade?.toString() || 'Não informado'} />
+                  <InfoItem label="Email" value={aluno.email || 'Não informado'} />
+                  <InfoItem label="Telefone" value={aluno.telefone || 'Não informado'} />
+                </div>
+                
+                {/* Coluna da foto */}
+                <div className="lg:col-span-1 flex justify-center lg:justify-end">
+                  <FotoUpload
+                    alunoId={aluno.id}
+                    alunoNome={aluno.nome}
+                    fotoUrl={aluno.foto_url}
+                    onFotoUpdate={(novaFotoUrl) => atualizarFoto(aluno.id, novaFotoUrl)}
+                  />
+                </div>
+              </div>
             </Section>
 
             <Section title="Turma e Professor">

@@ -37,6 +37,7 @@ export interface AlunoAtivo {
   ultima_correcao_ah: string | null;
   is_funcionario: boolean | null;
   valor_mensalidade: number | null;
+  foto_url: string | null;
 }
 
 export function useAlunosAtivos() {
@@ -247,12 +248,46 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarFoto = async (alunoId: string, fotoUrl: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('alunos')
+        .update({ foto_url: fotoUrl } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setAlunos(prev => prev.map(aluno => 
+        aluno.id === alunoId 
+          ? { ...aluno, foto_url: fotoUrl }
+          : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: fotoUrl ? "Foto atualizada com sucesso." : "Foto removida com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar foto:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a foto.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
     error,
     refetch: buscarAlunosAtivos,
     atualizarWhatsApp,
-    atualizarResponsavel
+    atualizarResponsavel,
+    atualizarFoto
   };
 }
