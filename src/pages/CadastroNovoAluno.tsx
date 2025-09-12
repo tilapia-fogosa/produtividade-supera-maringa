@@ -408,7 +408,7 @@ export default function CadastroNovoAluno() {
                         ) : (
                           turmas.map((turma) => (
                             <SelectItem key={turma.id} value={turma.id}>
-                              {turma.professor_nome ? `${turma.professor_nome} - ` : ''}{turma.nome} {turma.sala ? `- Sala ${turma.sala}` : ''}
+                              {turma.nome} {turma.sala ? `- Sala ${turma.sala}` : ''} {turma.professor_nome ? `- ${turma.professor_nome}` : ''}
                             </SelectItem>
                           ))
                         )}
