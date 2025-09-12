@@ -104,7 +104,7 @@ export function DetalhesAlunoAtivoModal({ aluno, onClose }: DetalhesAlunoAtivoMo
             </div>
 
             {/* Coluna Direita - Foto */}
-            <div className="lg:col-span-1 flex justify-center lg:justify-start">
+            <div className="lg:col-span-1 flex justify-center lg:justify-start lg:pl-0 lg:-ml-8">
               <div className="lg:sticky lg:top-0">
                 <FotoUpload
                   alunoId={aluno.id}
