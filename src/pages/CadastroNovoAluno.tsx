@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
+import { Save, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -89,28 +89,13 @@ export default function CadastroNovoAluno() {
     setFotoUrl(null);
   };
 
-  const voltarPagina = () => {
-    window.history.back();
-  };
-
   return (
     <div className="container max-w-2xl mx-auto p-4 space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={voltarPagina}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Cadastro de Novo Aluno</h1>
-          <p className="text-muted-foreground">
-            Preencha todos os campos obrigatórios para cadastrar o aluno
-          </p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Cadastro de Novo Aluno</h1>
+        <p className="text-muted-foreground">
+          Preencha todos os campos obrigatórios para cadastrar o aluno
+        </p>
       </div>
 
       <Card>
