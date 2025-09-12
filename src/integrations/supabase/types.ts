@@ -231,6 +231,8 @@ export type Database = {
           idade: number | null
           indice: string | null
           is_funcionario: boolean | null
+          kit_sugerido: string | null
+          material_entregue: boolean | null
           matricula: string | null
           motivo_procura: string | null
           niveldesafio: string | null
@@ -270,6 +272,8 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -309,6 +313,8 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
