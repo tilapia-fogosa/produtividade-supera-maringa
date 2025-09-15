@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Calendar, RefreshCw, School, UserMinus, User } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PhotoHoverCard } from "@/components/ui/photo-hover-card";
 import ReposicaoModal from "./ReposicaoModal";
 import AulaExperimentalModal from "./AulaExperimentalModal";
 import FaltaFuturaModal from "./FaltaFuturaModal";
@@ -199,12 +200,18 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                     key={aluno.id}
                     className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md"
                   >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={aluno.foto_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <PhotoHoverCard 
+                      photoUrl={aluno.foto_url}
+                      altText={aluno.nome}
+                      fallbackText={aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    >
+                      <Avatar className="h-12 w-12 cursor-pointer">
+                        <AvatarImage src={aluno.foto_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </PhotoHoverCard>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{aluno.nome}</p>
                       <div className="space-y-1">
@@ -244,12 +251,18 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                     key={funcionario.id}
                     className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-orange-200 bg-orange-50"
                   >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={funcionario.foto_url || undefined} />
-                      <AvatarFallback className="bg-orange-100 text-orange-600">
-                        {funcionario.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <PhotoHoverCard 
+                      photoUrl={funcionario.foto_url}
+                      altText={funcionario.nome}
+                      fallbackText={funcionario.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    >
+                      <Avatar className="h-12 w-12 cursor-pointer">
+                        <AvatarImage src={funcionario.foto_url || undefined} />
+                        <AvatarFallback className="bg-orange-100 text-orange-600">
+                          {funcionario.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </PhotoHoverCard>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{funcionario.nome}</p>
                       <div className="space-y-1">
@@ -304,12 +317,18 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                           key={aluno.id}
                           className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-orange-200 bg-orange-50"
                         >
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={aluno.foto_url || undefined} />
-                            <AvatarFallback className="bg-orange-100 text-orange-600">
-                              {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <PhotoHoverCard 
+                            photoUrl={aluno.foto_url}
+                            altText={aluno.nome}
+                            fallbackText={aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                          >
+                            <Avatar className="h-12 w-12 cursor-pointer">
+                              <AvatarImage src={aluno.foto_url || undefined} />
+                              <AvatarFallback className="bg-orange-100 text-orange-600">
+                                {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </PhotoHoverCard>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">{aluno.nome}</p>
                             <div className="space-y-1">
@@ -345,11 +364,17 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                           key={aulaExp.id}
                           className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-blue-200 bg-blue-50"
                         >
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback className="bg-blue-100 text-blue-600">
-                              {aulaExp.cliente_nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <PhotoHoverCard 
+                            photoUrl={null}
+                            altText={aulaExp.cliente_nome}
+                            fallbackText={aulaExp.cliente_nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                          >
+                            <Avatar className="h-12 w-12 cursor-pointer">
+                              <AvatarFallback className="bg-blue-100 text-blue-600">
+                                {aulaExp.cliente_nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </PhotoHoverCard>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">{aulaExp.cliente_nome}</p>
                             <div className="space-y-1">
@@ -384,12 +409,18 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
                           key={falta.id}
                           className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors hover:shadow-md border-red-200 bg-red-50"
                         >
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={falta.foto_url || undefined} />
-                            <AvatarFallback className="bg-red-100 text-red-600">
-                              {falta.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <PhotoHoverCard 
+                            photoUrl={falta.foto_url}
+                            altText={falta.nome}
+                            fallbackText={falta.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                          >
+                            <Avatar className="h-12 w-12 cursor-pointer">
+                              <AvatarImage src={falta.foto_url || undefined} />
+                              <AvatarFallback className="bg-red-100 text-red-600">
+                                {falta.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </PhotoHoverCard>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">{falta.nome}</p>
                             <div className="space-y-1">
