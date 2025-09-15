@@ -3,7 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, Camera, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Camera, Users, Search } from "lucide-react";
 import { FotoUpload } from "@/components/alunos/FotoUpload";
 import { useAlunosAtivos } from "@/hooks/use-alunos-ativos";
 
@@ -11,6 +12,7 @@ export default function GerenciarFotosAlunos() {
   const { alunos, loading, error, atualizarFoto } = useAlunosAtivos();
   const [filtrarComFoto, setFiltrarComFoto] = useState(false);
   const [filtrarSemFoto, setFiltrarSemFoto] = useState(false);
+  const [filtroNome, setFiltroNome] = useState('');
 
   // Calcular estatísticas
   const stats = useMemo(() => {
@@ -23,6 +25,14 @@ export default function GerenciarFotosAlunos() {
   const alunosFiltrados = useMemo(() => {
     let resultado = alunos;
     
+    // Filtrar por nome se houver busca
+    if (filtroNome.trim()) {
+      resultado = resultado.filter(aluno => 
+        aluno.nome.toLowerCase().includes(filtroNome.toLowerCase().trim())
+      );
+    }
+    
+    // Filtrar por presença de foto
     if (filtrarComFoto) {
       resultado = resultado.filter(aluno => aluno.foto_url);
     }
@@ -32,7 +42,7 @@ export default function GerenciarFotosAlunos() {
     }
     
     return resultado;
-  }, [alunos, filtrarComFoto, filtrarSemFoto]);
+  }, [alunos, filtrarComFoto, filtrarSemFoto, filtroNome]);
 
   if (loading) {
     return (
@@ -72,6 +82,17 @@ export default function GerenciarFotosAlunos() {
           
           {/* Filtros */}
           <div className="flex flex-col sm:flex-row gap-4">
+            {/* Campo de busca por nome */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome..."
+                value={filtroNome}
+                onChange={(e) => setFiltroNome(e.target.value)}
+                className="pl-9 w-full sm:w-[200px]"
+              />
+            </div>
+            
             <div className="flex items-center space-x-2">
               <Switch
                 id="filtrar-com-foto"
