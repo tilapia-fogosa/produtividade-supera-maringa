@@ -42,7 +42,7 @@ export function PhotoHoverCard({
               <AvatarImage
                 src={photoUrl || undefined}
                 alt={altText}
-                className="object-cover"
+                className="object-cover object-top"
                 onLoad={() => setImageLoading(false)}
                 onError={() => {
                   setImageLoading(false);
