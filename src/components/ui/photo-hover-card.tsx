@@ -36,9 +36,9 @@ export function PhotoHoverCard({
         <div className="flex flex-col items-center space-y-2">
           <div className="relative">
             {imageLoading && photoUrl && (
-              <Skeleton className="w-32 h-32 rounded-full absolute inset-0 z-10" />
+              <Skeleton className="w-48 h-48 rounded-full absolute inset-0 z-10" />
             )}
-            <Avatar className="w-32 h-32 border-2 border-border">
+            <Avatar className="w-48 h-48 border-2 border-border">
               <AvatarImage
                 src={photoUrl || undefined}
                 alt={altText}
