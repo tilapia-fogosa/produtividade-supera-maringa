@@ -7,12 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Camera, Users, Search } from "lucide-react";
 import { FotoUpload } from "@/components/alunos/FotoUpload";
 import { useAlunosAtivos } from "@/hooks/use-alunos-ativos";
+import { useScrollPosition } from "@/hooks/use-scroll-position";
 
 export default function GerenciarFotosAlunos() {
   const { alunos, loading, error, atualizarFoto } = useAlunosAtivos();
+  const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const [filtrarComFoto, setFiltrarComFoto] = useState(false);
   const [filtrarSemFoto, setFiltrarSemFoto] = useState(false);
   const [filtroNome, setFiltroNome] = useState('');
+
+  const handleFotoUpdate = async (alunoId: string, novaFotoUrl: string | null) => {
+    // Salvar posição atual do scroll
+    saveScrollPosition();
+    
+    // Executar a atualização da foto
+    const resultado = await atualizarFoto(alunoId, novaFotoUrl);
+    
+    // Restaurar posição do scroll após atualização
+    if (resultado) {
+      restoreScrollPosition();
+    }
+    
+    return resultado;
+  };
 
   // Calcular estatísticas
   const stats = useMemo(() => {
@@ -226,7 +243,7 @@ export default function GerenciarFotosAlunos() {
                       alunoId={aluno.id}
                       alunoNome={aluno.nome}
                       fotoUrl={aluno.foto_url}
-                      onFotoUpdate={(novaFotoUrl) => atualizarFoto(aluno.id, novaFotoUrl)}
+                      onFotoUpdate={(novaFotoUrl) => handleFotoUpdate(aluno.id, novaFotoUrl)}
                     />
                     
                     {aluno.professor_nome && (
