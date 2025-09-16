@@ -28,7 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, AlertCircle, FileText, History, CalendarDays, RefreshCw, Search } from "lucide-react";
+import { Trash2, AlertCircle, FileText, History, CalendarDays, RefreshCw } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaReposicoes } from "@/hooks/use-lista-reposicoes";
@@ -160,15 +160,11 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
             }
           </DialogDescription>
           <div className="mt-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Filtrar por nome do aluno..."
-                value={filtroNome}
-                onChange={(e) => setFiltroNome(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            <Input
+              placeholder="Filtrar por nome do aluno..."
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+            />
           </div>
         </DialogHeader>
 
