@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Trash2, FileText, History, CalendarDays, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,6 +50,7 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
     dataAula: string;
   } | null>(null);
   const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
+  const [filtroNome, setFiltroNome] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -56,24 +58,33 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
     }
   }, [open, refetch]);
 
-  // Filtrar aulas baseado no estado do toggle
+  // Filtrar aulas baseado no estado do toggle e filtro de nome
   const aulasExperimentais = useMemo(() => {
     if (!todasAulas) return [];
     
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    if (mostrarAnteriores) {
-      return todasAulas; // Mostra todas
-    } else {
-      // Mostra apenas futuras
-      return todasAulas.filter(aula => {
+    let aulasFiltradas = todasAulas;
+    
+    // Filtrar por data
+    if (!mostrarAnteriores) {
+      aulasFiltradas = aulasFiltradas.filter(aula => {
         const dataAula = parseISO(aula.data_aula_experimental);
         dataAula.setHours(0, 0, 0, 0);
         return dataAula >= hoje; // Incluir aulas de hoje e futuras
       });
     }
-  }, [todasAulas, mostrarAnteriores]);
+    
+    // Filtrar por nome do cliente
+    if (filtroNome.trim()) {
+      aulasFiltradas = aulasFiltradas.filter(aula =>
+        aula.cliente_nome.toLowerCase().includes(filtroNome.toLowerCase())
+      );
+    }
+    
+    return aulasFiltradas;
+  }, [todasAulas, mostrarAnteriores, filtroNome]);
 
   const podeExcluir = (dataAula: string) => {
     const hoje = new Date();
@@ -152,6 +163,13 @@ const ListaAulasExperimentaisModal: React.FC<ListaAulasExperimentaisModalProps> 
               </Button>
             </div>
           </DialogTitle>
+          <div className="mt-4">
+            <Input
+              placeholder="Filtrar por nome do cliente..."
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+            />
+          </div>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto">
