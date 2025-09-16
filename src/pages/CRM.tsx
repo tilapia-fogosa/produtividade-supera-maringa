@@ -49,7 +49,7 @@ const CRM = () => {
             {isLoading ? <>
                 <Loader2 className="animate-spin" />
                 Processando...
-              </> : 'Executar Webhook'}
+              </> : 'Clique aqui para adicionar 10 leads ao CRM'}
           </Button>
         </CardContent>
       </Card>
