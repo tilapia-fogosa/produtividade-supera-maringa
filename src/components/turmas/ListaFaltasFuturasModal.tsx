@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, User, FileText, Trash2, History, CalendarDays, RefreshCw } from "lucide-react";
@@ -26,6 +27,7 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
+  const [filtroNome, setFiltroNome] = useState("");
 
   const handleRefresh = async () => {
     // Forçar invalidação do cache e refetch
@@ -63,18 +65,18 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
     },
   });
 
-  // Filtrar faltas baseado no estado do toggle
+  // Filtrar faltas baseado no estado do toggle e filtro de nome
   const faltas = useMemo(() => {
     if (!todasFaltas) return [];
     
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    if (mostrarAnteriores) {
-      return todasFaltas; // Mostra todas
-    } else {
-      // Mostra apenas futuras
-      return todasFaltas.filter(falta => {
+    let faltasFiltradas = todasFaltas;
+    
+    // Filtrar por data
+    if (!mostrarAnteriores) {
+      faltasFiltradas = faltasFiltradas.filter(falta => {
         // Criar data local para evitar problemas de timezone
         const [year, month, day] = falta.data_falta.split('-');
         const dataFalta = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -82,7 +84,16 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
         return dataFalta >= hoje; // Incluir faltas de hoje e futuras
       });
     }
-  }, [todasFaltas, mostrarAnteriores]);
+    
+    // Filtrar por nome do aluno
+    if (filtroNome.trim()) {
+      faltasFiltradas = faltasFiltradas.filter(falta =>
+        falta.aluno_nome.toLowerCase().includes(filtroNome.toLowerCase())
+      );
+    }
+    
+    return faltasFiltradas;
+  }, [todasFaltas, mostrarAnteriores, filtroNome]);
 
   const canDelete = (falta: FaltaFutura) => {
     // Criar data local para evitar problemas de timezone
@@ -157,6 +168,13 @@ const ListaFaltasFuturasModal: React.FC<ListaFaltasFuturasModalProps> = ({
               </Button>
             </div>
           </DialogTitle>
+          <div className="mt-4">
+            <Input
+              placeholder="Filtrar por nome do aluno..."
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+            />
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
