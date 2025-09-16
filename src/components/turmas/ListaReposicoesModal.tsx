@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -27,7 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, AlertCircle, FileText, History, CalendarDays, RefreshCw } from "lucide-react";
+import { Trash2, AlertCircle, FileText, History, CalendarDays, RefreshCw, Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useListaReposicoes } from "@/hooks/use-lista-reposicoes";
@@ -46,6 +47,7 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
     dataReposicao: string;
   } | null>(null);
   const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
+  const [filtroNome, setFiltroNome] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -53,24 +55,33 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
     }
   }, [open, refetch]);
 
-  // Filtrar reposições baseado no estado do toggle
+  // Filtrar reposições baseado no estado do toggle e filtro de nome
   const reposicoes = useMemo(() => {
     if (!todasReposicoes) return [];
     
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    if (mostrarAnteriores) {
-      return todasReposicoes; // Mostra todas
-    } else {
-      // Mostra apenas futuras
-      return todasReposicoes.filter(reposicao => {
+    let reposicoesFiltradas = todasReposicoes;
+    
+    // Filtrar por data
+    if (!mostrarAnteriores) {
+      reposicoesFiltradas = reposicoesFiltradas.filter(reposicao => {
         const dataReposicao = parseISO(reposicao.data_reposicao);
         dataReposicao.setHours(0, 0, 0, 0);
         return dataReposicao >= hoje; // Incluir reposições de hoje e futuras
       });
     }
-  }, [todasReposicoes, mostrarAnteriores]);
+    
+    // Filtrar por nome do aluno
+    if (filtroNome.trim()) {
+      reposicoesFiltradas = reposicoesFiltradas.filter(reposicao =>
+        reposicao.aluno_nome.toLowerCase().includes(filtroNome.toLowerCase())
+      );
+    }
+    
+    return reposicoesFiltradas;
+  }, [todasReposicoes, mostrarAnteriores, filtroNome]);
 
   const handleDeleteReposicao = (reposicaoId: string) => {
     deletarReposicao(reposicaoId);
@@ -148,6 +159,17 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
               : 'Reposições futuras registradas no sistema. Use o botão de exclusão para remover uma reposição.'
             }
           </DialogDescription>
+          <div className="mt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar por nome do aluno..."
+                value={filtroNome}
+                onChange={(e) => setFiltroNome(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-auto">
