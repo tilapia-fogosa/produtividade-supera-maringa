@@ -8,7 +8,7 @@ const CRM = () => {
   const handleWebhookCall = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/b2feecc1-8387-4665-99d0-74f6b9fcb1db', {
+      const response = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/convidados', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
