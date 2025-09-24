@@ -28,6 +28,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let importId: string | null = null;
+  
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -42,6 +44,32 @@ serve(async (req) => {
     console.log(`Processando arquivo: ${fileName}`);
     console.log(`Iniciando sincronização completa - Dados: ${xlsData.professores?.length} professores, ${xlsData.turmas?.length} turmas, ${xlsData.alunos?.length} alunos`);
 
+    // Calcular total de registros
+    const totalRows = (xlsData.professores?.length || 0) + (xlsData.turmas?.length || 0) + (xlsData.alunos?.length || 0);
+    
+    // Criar registro inicial na tabela data_imports
+    const { data: importRecord, error: importError } = await supabase
+      .from('data_imports')
+      .insert({
+        import_type: 'turmas-xls',
+        file_name: fileName,
+        status: 'processing',
+        unit_id: MARINGA_UNIT_ID,
+        total_rows: totalRows,
+        processed_rows: 0,
+        created_by: null // Edge Functions não têm acesso ao auth.uid()
+      })
+      .select()
+      .single();
+
+    if (importError) {
+      console.error('Erro ao criar registro de importação:', importError);
+      throw new Error(`Falha ao iniciar rastreamento da sincronização: ${importError.message}`);
+    }
+
+    importId = importRecord.id;
+    console.log(`Registro de importação criado: ${importId}`);
+
     const result: ProcessResult = {
       professores_reativados: 0,
       professores_criados: 0,
@@ -50,6 +78,23 @@ serve(async (req) => {
       alunos_reativados: 0,
       alunos_criados: 0,
       errors: []
+    };
+
+    let processedRows = 0;
+
+    // Função auxiliar para atualizar progresso
+    const updateProgress = async (increment = 1) => {
+      processedRows += increment;
+      
+      // Atualizar a cada 10 registros processados para evitar muitas queries
+      if (processedRows % 10 === 0 || processedRows === totalRows) {
+        await supabase
+          .from('data_imports')
+          .update({ processed_rows: processedRows })
+          .eq('id', importId);
+        
+        console.log(`Progresso: ${processedRows}/${totalRows} registros processados`);
+      }
     };
 
     // ETAPA 1: Desativar todos os registros da unidade
@@ -92,6 +137,7 @@ serve(async (req) => {
         const nome = profData.nome?.trim();
         if (!nome) {
           result.errors.push('Professor sem nome encontrado');
+          await updateProgress();
           continue;
         }
 
@@ -104,6 +150,7 @@ serve(async (req) => {
 
           if (searchError) {
             result.errors.push(`Erro ao buscar professor ${nome}: ${searchError.message}`);
+            await updateProgress();
             continue;
           }
 
@@ -191,8 +238,11 @@ serve(async (req) => {
               console.log(`Professor criado: ${nome}`);
             }
           }
+          
+          await updateProgress();
         } catch (error) {
           result.errors.push(`Erro ao processar professor ${nome}: ${error.message}`);
+          await updateProgress();
         }
       }
     }
@@ -208,6 +258,7 @@ serve(async (req) => {
         
         if (!nome || !professorNome) {
           result.errors.push('Turma sem nome ou professor encontrada');
+          await updateProgress();
           continue;
         }
 
@@ -225,11 +276,13 @@ serve(async (req) => {
 
           if (profSearchError) {
             result.errors.push(`Erro ao buscar professor ${professorNome}: ${profSearchError.message}`);
+            await updateProgress();
             continue;
           }
 
           if (!professor) {
             result.errors.push(`Professor ${professorNome} não encontrado para turma ${nome}`);
+            await updateProgress();
             continue;
           }
 
@@ -265,6 +318,7 @@ serve(async (req) => {
 
           if (turmaSearchError) {
             result.errors.push(`Erro ao buscar turma ${nome}: ${turmaSearchError.message}`);
+            await updateProgress();
             continue;
           }
 
@@ -308,8 +362,11 @@ serve(async (req) => {
               console.log(`Turma criada: ${nome}`);
             }
           }
+          
+          await updateProgress();
         } catch (error) {
           result.errors.push(`Erro ao processar turma ${nome}: ${error.message}`);
+          await updateProgress();
         }
       }
     }
@@ -325,6 +382,7 @@ serve(async (req) => {
         
         if (!nome) {
           result.errors.push('Aluno sem nome encontrado');
+          await updateProgress();
           continue;
         }
 
@@ -345,11 +403,13 @@ serve(async (req) => {
 
             if (turmaSearchError) {
               result.errors.push(`Erro ao buscar turma ${turmaNome} para aluno ${nome}: ${turmaSearchError.message}`);
+              await updateProgress();
               continue;
             }
 
             if (!turma) {
               result.errors.push(`Turma ${turmaNome} não encontrada para aluno ${nome}`);
+              await updateProgress();
               continue;
             }
 
@@ -368,6 +428,7 @@ serve(async (req) => {
 
           if (alunoSearchError) {
             result.errors.push(`Erro ao buscar aluno ${nome}: ${alunoSearchError.message}`);
+            await updateProgress();
             continue;
           }
 
@@ -420,14 +481,30 @@ serve(async (req) => {
               console.log(`Aluno criado: ${nome}`);
             }
           }
+          
+          await updateProgress();
         } catch (error) {
           result.errors.push(`Erro ao processar aluno ${nome}: ${error.message}`);
           console.error(`Erro ao processar aluno ${nome}:`, error);
+          await updateProgress();
         }
       }
     }
 
     console.log('Sincronização completa finalizada:', result);
+
+    // Finalizar registro de importação como sucesso
+    await supabase
+      .from('data_imports')
+      .update({
+        status: 'completed',
+        processed_rows: totalRows,
+        error_log: result.errors.length > 0 ? { 
+          errors: result.errors,
+          summary: result
+        } : null
+      })
+      .eq('id', importId);
 
     return new Response(
       JSON.stringify(result),
@@ -439,6 +516,30 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Erro geral:', error);
+    
+    // Marcar importação como falha se tiver sido criada
+    if (importId) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        
+        await supabase
+          .from('data_imports')
+          .update({
+            status: 'failed',
+            error_log: {
+              error: error.message,
+              stack: error.stack
+            }
+          })
+          .eq('id', importId);
+      } catch (updateError) {
+        console.error('Erro ao atualizar status de falha:', updateError);
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: error.message,
