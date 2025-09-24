@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useUltimaSincronizacao = () => {
   return useQuery({
-    queryKey: ["ultima-sincronizacao"],
+    queryKey: ["ultimas-sincronizacoes"],
     queryFn: async () => {
-      console.log('🔄 Buscando última sincronização de turmas');
+      console.log('🔄 Buscando últimas sincronizações de turmas');
       
       const { data, error } = await supabase
         .from('data_imports')
@@ -13,17 +13,16 @@ export const useUltimaSincronizacao = () => {
         .eq('import_type', 'turmas-xls')
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(10);
       
-      if (error && error.code !== 'PGRST116') {
-        console.error('❌ Erro ao buscar última sincronização:', error);
+      if (error) {
+        console.error('❌ Erro ao buscar sincronizações:', error);
         throw error;
       }
       
-      console.log('✅ Última sincronização encontrada:', data);
+      console.log('✅ Sincronizações encontradas:', data);
       
-      return data || null;
+      return data || [];
     },
     refetchInterval: 30000, // Atualiza a cada 30 segundos
   });

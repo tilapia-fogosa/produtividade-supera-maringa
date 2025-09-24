@@ -6,7 +6,7 @@ import { formatDateBr } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const SincronizarTurmas = () => {
-  const { data: ultimaSincronizacao, isLoading } = useUltimaSincronizacao();
+  const { data: sincronizacoes, isLoading } = useUltimaSincronizacao();
 
   return (
     <div className="container mx-auto p-4">
@@ -19,40 +19,53 @@ const SincronizarTurmas = () => {
       </div>
       
       <div className="space-y-6">
-        {/* Card com informações da última sincronização */}
+        <XlsUploadComponent />
+        
+        {/* Card com histórico das últimas sincronizações */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Clock className="h-5 w-5" />
-              Última Sincronização
+              Histórico de Sincronizações
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : ultimaSincronizacao ? (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Data:</strong> {formatDateBr(new Date(ultimaSincronizacao.created_at))} às {new Date(ultimaSincronizacao.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-                {ultimaSincronizacao.file_name && (
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Arquivo:</strong> {ultimaSincronizacao.file_name}
-                  </p>
-                )}
-                {ultimaSincronizacao.processed_rows > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Registros processados:</strong> {ultimaSincronizacao.processed_rows}
-                  </p>
-                )}
+            ) : sincronizacoes && sincronizacoes.length > 0 ? (
+              <div className="space-y-3">
+                {sincronizacoes.map((sync, index) => (
+                  <div key={sync.id} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">
+                          {formatDateBr(new Date(sync.created_at))} às {new Date(sync.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        {sync.file_name && (
+                          <p className="text-xs text-muted-foreground">
+                            Arquivo: {sync.file_name}
+                          </p>
+                        )}
+                        {sync.processed_rows > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {sync.processed_rows} registros processados
+                          </p>
+                        )}
+                      </div>
+                      {index === 0 && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          Mais recente
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-muted-foreground">Nenhuma sincronização realizada ainda</p>
             )}
           </CardContent>
         </Card>
-
-        <XlsUploadComponent />
       </div>
     </div>
   );
