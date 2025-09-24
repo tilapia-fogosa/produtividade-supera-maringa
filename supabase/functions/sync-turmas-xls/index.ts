@@ -56,8 +56,8 @@ serve(async (req) => {
         status: 'processing',
         unit_id: MARINGA_UNIT_ID,
         total_rows: totalRows,
-        processed_rows: 0,
-        created_by: null // Edge Functions não têm acesso ao auth.uid()
+        processed_rows: 0
+        // created_by removido - Edge Functions não têm acesso ao auth.uid()
       })
       .select()
       .single();
