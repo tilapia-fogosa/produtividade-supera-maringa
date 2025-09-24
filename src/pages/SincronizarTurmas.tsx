@@ -2,7 +2,7 @@ import React from 'react';
 import { FileSpreadsheet, Clock } from "lucide-react";
 import XlsUploadComponent from '@/components/sync/XlsUploadComponent';
 import { useUltimaSincronizacao } from '@/hooks/use-ultima-sincronizacao';
-import { formatDateBr } from '@/lib/utils';
+import { formatDateSaoPaulo } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const SincronizarTurmas = () => {
@@ -39,7 +39,7 @@ const SincronizarTurmas = () => {
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <p className="text-sm font-medium">
-                          {formatDateBr(new Date(sync.created_at))} às {new Date(sync.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {formatDateSaoPaulo(sync.created_at, 'dd/MM/yyyy')} às {formatDateSaoPaulo(sync.created_at, 'HH:mm')}
                         </p>
                         {sync.file_name && (
                           <p className="text-xs text-muted-foreground">
