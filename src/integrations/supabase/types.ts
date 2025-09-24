@@ -231,6 +231,8 @@ export type Database = {
           idade: number | null
           indice: string | null
           is_funcionario: boolean | null
+          kit_sugerido: string | null
+          material_entregue: boolean | null
           matricula: string | null
           motivo_procura: string | null
           niveldesafio: string | null
@@ -270,6 +272,8 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -309,6 +313,8 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -734,6 +740,107 @@ export type Database = {
           total_paginas?: number
         }
         Relationships: []
+      }
+      atividade_pos_venda: {
+        Row: {
+          active: boolean
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          address_street: string | null
+          birth_date: string | null
+          client_activity_id: string
+          client_id: string
+          client_name: string
+          cpf: string | null
+          created_at: string
+          created_by: string
+          full_name: string | null
+          id: string
+          photo_thumbnail_url: string | null
+          photo_url: string | null
+          rg: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          birth_date?: string | null
+          client_activity_id: string
+          client_id: string
+          client_name: string
+          cpf?: string | null
+          created_at?: string
+          created_by: string
+          full_name?: string | null
+          id?: string
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          rg?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          birth_date?: string | null
+          client_activity_id?: string
+          client_id?: string
+          client_name?: string
+          cpf?: string | null
+          created_at?: string
+          created_by?: string
+          full_name?: string | null
+          id?: string
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          rg?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
+            columns: ["client_activity_id"]
+            isOneToOne: true
+            referencedRelation: "client_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_atividade_pos_venda_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_atividade_pos_venda_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_atividade_pos_venda_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aulas: {
         Row: {
@@ -1638,6 +1745,79 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      convidados: {
+        Row: {
+          created_at: string
+          enviado_crm: boolean | null
+          evento: string | null
+          "forma de pagamento":
+            | Database["public"]["Enums"]["forma_de_pagamento"]
+            | null
+          id: string
+          nome: string | null
+          Observaçoes: string | null
+          "perfil-idade": Database["public"]["Enums"]["Perfil_idade"] | null
+          telefone: string | null
+          unidade: string
+          viculado_a_aluno: string | null
+          vinculo_aluno: Database["public"]["Enums"]["Vinculo_aluno"] | null
+        }
+        Insert: {
+          created_at?: string
+          enviado_crm?: boolean | null
+          evento?: string | null
+          "forma de pagamento"?:
+            | Database["public"]["Enums"]["forma_de_pagamento"]
+            | null
+          id?: string
+          nome?: string | null
+          Observaçoes?: string | null
+          "perfil-idade"?: Database["public"]["Enums"]["Perfil_idade"] | null
+          telefone?: string | null
+          unidade: string
+          viculado_a_aluno?: string | null
+          vinculo_aluno?: Database["public"]["Enums"]["Vinculo_aluno"] | null
+        }
+        Update: {
+          created_at?: string
+          enviado_crm?: boolean | null
+          evento?: string | null
+          "forma de pagamento"?:
+            | Database["public"]["Enums"]["forma_de_pagamento"]
+            | null
+          id?: string
+          nome?: string | null
+          Observaçoes?: string | null
+          "perfil-idade"?: Database["public"]["Enums"]["Perfil_idade"] | null
+          telefone?: string | null
+          unidade?: string
+          viculado_a_aluno?: string | null
+          vinculo_aluno?: Database["public"]["Enums"]["Vinculo_aluno"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convidados_evento_fkey"
+            columns: ["evento"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "convidados_unidade_fkey"
+            columns: ["unidade"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "convidados_viculado_a_aluno_fkey"
+            columns: ["viculado_a_aluno"]
+            isOneToOne: false
+            referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
         ]
@@ -2621,6 +2801,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pos_venda_atividades_config: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          created_by: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pos_venda_atividades_realizadas: {
+        Row: {
+          atividade_config_id: string
+          atividade_pos_venda_id: string
+          created_at: string
+          data_realizacao: string | null
+          id: string
+          realizada: boolean
+          updated_at: string
+          usuario_realizou: string | null
+        }
+        Insert: {
+          atividade_config_id: string
+          atividade_pos_venda_id: string
+          created_at?: string
+          data_realizacao?: string | null
+          id?: string
+          realizada?: boolean
+          updated_at?: string
+          usuario_realizou?: string | null
+        }
+        Update: {
+          atividade_config_id?: string
+          atividade_pos_venda_id?: string
+          created_at?: string
+          data_realizacao?: string | null
+          id?: string
+          realizada?: boolean
+          updated_at?: string
+          usuario_realizou?: string | null
+        }
+        Relationships: []
       }
       posts: {
         Row: {
@@ -4796,6 +5045,55 @@ export type Database = {
           ultimo_registro_id: string
         }[]
       }
+      get_pos_venda_activities: {
+        Args: { p_unit_ids?: string[] }
+        Returns: {
+          active: boolean
+          address_city: string
+          address_complement: string
+          address_neighborhood: string
+          address_number: string
+          address_postal_code: string
+          address_state: string
+          address_street: string
+          birth_date: string
+          client_activity_id: string
+          client_id: string
+          client_name: string
+          cpf: string
+          created_at: string
+          created_by: string
+          created_by_name: string
+          full_name: string
+          id: string
+          photo_thumbnail_url: string
+          photo_url: string
+          rg: string
+          unit_id: string
+          updated_at: string
+        }[]
+      }
+      get_pos_venda_activities_config: {
+        Args: { p_unit_id: string }
+        Returns: {
+          ativa: boolean
+          created_at: string
+          created_by: string
+          created_by_name: string
+          descricao: string
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+        }[]
+      }
+      get_pos_venda_activity_status: {
+        Args: {
+          p_atividade_config_id: string
+          p_atividade_pos_venda_id: string
+        }
+        Returns: Json
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -4956,6 +5254,19 @@ export type Database = {
         Args: { p_client_id: string; p_limit?: number; p_offset?: number }
         Returns: Json
       }
+      manage_pos_venda_activity_config: {
+        Args: {
+          p_activity_id?: string
+          p_ativa?: boolean
+          p_descricao?: string
+          p_new_order?: number
+          p_nome?: string
+          p_operation: string
+          p_ordem?: number
+          p_unit_id?: string
+        }
+        Returns: Json
+      }
       manage_user_units: {
         Args: {
           p_creator_id: string
@@ -5005,6 +5316,14 @@ export type Database = {
           leads: number
           matriculas: number
         }[]
+      }
+      toggle_pos_venda_activity_status: {
+        Args: {
+          p_atividade_config_id: string
+          p_atividade_pos_venda_id: string
+          p_realizada: boolean
+        }
+        Returns: Json
       }
       unidade_tem_funcionalidade: {
         Args: {
@@ -5069,6 +5388,7 @@ export type Database = {
         | "domingo"
       due_day: "5" | "10" | "15" | "20" | "25"
       "etapa-do-bot": "apresentador" | "rapport" | "agendador" | "negociador"
+      forma_de_pagamento: "Cartão" | "Pix" | "Dinheiro" | "Carimbo" | "Outro"
       gender: "masculino" | "feminino"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
       origem_alerta:
@@ -5085,6 +5405,12 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
+      Perfil_idade:
+        | "crianca-adolescente"
+        | "adulto"
+        | "idoso-ativo"
+        | "60+"
+        | "80+"
       sale_type: "matricula" | "outros"
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
@@ -5097,6 +5423,8 @@ export type Database = {
         | "disparo_slack"
         | "gestao_estoque"
         | "gestao_eventos"
+        | "automacao_whatsapp"
+        | "pos_venda_comercial"
       user_role:
         | "consultor"
         | "franqueado"
@@ -5104,6 +5432,12 @@ export type Database = {
         | "educador"
         | "gestor_pedagogico"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
+      Vinculo_aluno:
+        | "Pai do aluno"
+        | "Filho(a) do aluno"
+        | "amigo"
+        | "familiar"
+        | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5242,6 +5576,7 @@ export const Constants = {
       ],
       due_day: ["5", "10", "15", "20", "25"],
       "etapa-do-bot": ["apresentador", "rapport", "agendador", "negociador"],
+      forma_de_pagamento: ["Cartão", "Pix", "Dinheiro", "Carimbo", "Outro"],
       gender: ["masculino", "feminino"],
       marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],
       origem_alerta: [
@@ -5260,6 +5595,13 @@ export const Constants = {
         "boleto",
         "recorrencia",
       ],
+      Perfil_idade: [
+        "crianca-adolescente",
+        "adulto",
+        "idoso-ativo",
+        "60+",
+        "80+",
+      ],
       sale_type: ["matricula", "outros"],
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
@@ -5272,6 +5614,8 @@ export const Constants = {
         "disparo_slack",
         "gestao_estoque",
         "gestao_eventos",
+        "automacao_whatsapp",
+        "pos_venda_comercial",
       ],
       user_role: [
         "consultor",
@@ -5281,6 +5625,13 @@ export const Constants = {
         "gestor_pedagogico",
       ],
       user_role_old: ["consultor", "franqueado", "gestor_comercial"],
+      Vinculo_aluno: [
+        "Pai do aluno",
+        "Filho(a) do aluno",
+        "amigo",
+        "familiar",
+        "outro",
+      ],
     },
   },
 } as const
