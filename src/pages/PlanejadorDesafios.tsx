@@ -1,9 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Target, Calendar, BookOpen } from 'lucide-react';
+import { Plus, Target, Calendar, BookOpen, Grid3X3 } from 'lucide-react';
+import CacaPalavrasForm from '@/components/caca-palavras/CacaPalavrasForm';
+import CacaPalavrasGrid from '@/components/caca-palavras/CacaPalavrasGrid';
+import { gerarCacaPalavras } from '@/utils/cacaPalavrasGenerator';
 
 const PlanejadorDesafios = () => {
+  const [mostrarCacaPalavras, setMostrarCacaPalavras] = useState(false);
+  const [gridCacaPalavras, setGridCacaPalavras] = useState<string[][]>([]);
+  const [palavrasAtivas, setPalavrasAtivas] = useState<string[]>([]);
+  const [configGrid, setConfigGrid] = useState({ largura: 15, altura: 15 });
+
+  const handleGerarCacaPalavras = (palavras: string[], largura: number, altura: number) => {
+    const novoGrid = gerarCacaPalavras(palavras, largura, altura);
+    setGridCacaPalavras(novoGrid);
+    setPalavrasAtivas(palavras);
+    setConfigGrid({ largura, altura });
+    setMostrarCacaPalavras(true);
+  };
+
+  const handleRegenerarCacaPalavras = () => {
+    if (palavrasAtivas.length > 0) {
+      handleGerarCacaPalavras(palavrasAtivas, configGrid.largura, configGrid.altura);
+    }
+  };
+
+  const voltarParaInicio = () => {
+    setMostrarCacaPalavras(false);
+    setGridCacaPalavras([]);
+    setPalavrasAtivas([]);
+  };
+
+  if (mostrarCacaPalavras && gridCacaPalavras.length > 0) {
+    return (
+      <div className="container mx-auto p-4 space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Grid3X3 className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Caça-Palavras</h1>
+              <p className="text-muted-foreground">Seu caça-palavras foi gerado com sucesso</p>
+            </div>
+          </div>
+          <Button onClick={voltarParaInicio} variant="outline">
+            Voltar
+          </Button>
+        </div>
+
+        <CacaPalavrasGrid
+          grid={gridCacaPalavras}
+          palavras={palavrasAtivas}
+          onRegenerate={handleRegenerarCacaPalavras}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -19,19 +72,29 @@ const PlanejadorDesafios = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Criar Novo Desafio
+              Tipos de Desafios
             </CardTitle>
             <CardDescription>
-              Defina objetivos, prazos e critérios para novos desafios
+              Escolha o tipo de desafio que deseja criar
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Desafio
-            </Button>
+            <div className="grid gap-3">
+              <Button 
+                onClick={() => setMostrarCacaPalavras(true)}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Grid3X3 className="h-4 w-4 mr-2" />
+                Caça-Palavras
+              </Button>
+            </div>
           </CardContent>
         </Card>
+
+        {mostrarCacaPalavras && !gridCacaPalavras.length && (
+          <CacaPalavrasForm onGenerate={handleGerarCacaPalavras} />
+        )}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card>
