@@ -219,6 +219,65 @@ export function useCamisetas() {
     }
   };
 
+  const marcarComoEntregueComDetalhes = async (dados: {
+    alunoId: string;
+    tamanho_camiseta: string;
+    responsavel_id: string;
+    responsavel_tipo: string;
+    responsavel_nome: string;
+    data_entrega: Date;
+    observacoes?: string;
+  }) => {
+    try {
+      // Criar ou atualizar registro de camiseta com todos os detalhes
+      const { error } = await supabase
+        .from('camisetas')
+        .upsert({
+          aluno_id: dados.alunoId,
+          camiseta_entregue: true,
+          nao_tem_tamanho: false,
+          tamanho_camiseta: dados.tamanho_camiseta,
+          responsavel_entrega_id: dados.responsavel_id,
+          responsavel_entrega_tipo: dados.responsavel_tipo,
+          responsavel_entrega_nome: dados.responsavel_nome,
+          data_entrega: dados.data_entrega.toISOString(),
+          observacoes: dados.observacoes || null,
+        }, { onConflict: 'aluno_id' });
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setAlunos(prev => prev.map(a => 
+        a.id === dados.alunoId 
+          ? { 
+              ...a, 
+              camiseta_entregue: true,
+              nao_tem_tamanho: false,
+              tamanho_camiseta: dados.tamanho_camiseta,
+              responsavel_entrega_nome: dados.responsavel_nome,
+              data_entrega: dados.data_entrega.toISOString(),
+              observacoes: dados.observacoes || null
+            }
+          : a
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Camiseta marcada como entregue com todos os detalhes.",
+        variant: "default"
+      });
+
+    } catch (error) {
+      console.error('Erro ao marcar camiseta com detalhes:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar a camiseta como entregue.",
+        variant: "destructive"
+      });
+      throw error; // Re-throw para o modal tratar
+    }
+  };
+
   const marcarComoNaoTemTamanho = async (alunoId: string, checked: boolean) => {
     try {
       if (checked) {
@@ -327,6 +386,7 @@ export function useCamisetas() {
     filtro,
     setFiltro,
     marcarComoEntregue,
+    marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue,
     marcarComoNaoTemTamanho,
     refetch: buscarDadosCamisetas

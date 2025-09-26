@@ -8,10 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CamisetaEntregueModal } from "@/components/camisetas/CamisetaEntregueModal";
 
 export default function Camisetas() {
+  const [modalAberto, setModalAberto] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string } | null>(null);
+  
   const { 
     alunos, 
     todosAlunos,
@@ -21,6 +24,7 @@ export default function Camisetas() {
     filtro,
     setFiltro,
     marcarComoEntregue,
+    marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue, 
     marcarComoNaoTemTamanho,
     refetch 
@@ -28,10 +32,19 @@ export default function Camisetas() {
 
   const handleCheckboxChange = (alunoId: string, checked: boolean) => {
     if (checked) {
-      marcarComoEntregue(alunoId);
+      // Abrir modal para coletar detalhes
+      const aluno = alunos.find(a => a.id === alunoId);
+      if (aluno) {
+        setAlunoSelecionado({ id: aluno.id, nome: aluno.nome });
+        setModalAberto(true);
+      }
     } else {
       marcarComoNaoEntregue(alunoId);
     }
+  };
+
+  const handleSalvarModal = async (dados: any) => {
+    await marcarComoEntregueComDetalhes(dados);
   };
 
   const handleNaoTemTamanhoChange = (alunoId: string, checked: boolean) => {
@@ -321,6 +334,19 @@ export default function Camisetas() {
         </CardContent>
       </Card>
 
+      {/* Modal de Entrega de Camiseta */}
+      {alunoSelecionado && (
+        <CamisetaEntregueModal
+          open={modalAberto}
+          onOpenChange={(open) => {
+            setModalAberto(open);
+            if (!open) setAlunoSelecionado(null);
+          }}
+          alunoId={alunoSelecionado.id}
+          alunoNome={alunoSelecionado.nome}
+          onSave={handleSalvarModal}
+        />
+      )}
     </div>
   );
 }
