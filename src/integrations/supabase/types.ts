@@ -4791,11 +4791,9 @@ export type Database = {
       }
       responsaveis_view: {
         Row: {
-          active: boolean | null
           id: string | null
           nome: string | null
           tipo: string | null
-          unit_id: string | null
         }
         Relationships: []
       }

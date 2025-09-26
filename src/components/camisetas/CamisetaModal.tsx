@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useResponsaveis } from "@/hooks/use-responsaveis";
 
 interface Props {
   isOpen: boolean;
@@ -24,6 +25,9 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
   const [dataEntrega, setDataEntrega] = useState(new Date().toISOString().split('T')[0]);
   const [responsavelId, setResponsavelId] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  
+  // Hook para buscar responsáveis
+  const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
 
   const handleSubmit = async () => {
     if (modalType === 'entrega') {
@@ -48,16 +52,19 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
     
     setLoading(true);
     try {
+      // Encontrar o responsável selecionado
+      const responsavelSelecionado = responsaveis.find(r => r.id === responsavelId);
+      
       if (modalType === 'entrega') {
-        // Encontrar o responsável selecionado (para futuras melhorias)
-        
         await supabase.from('camisetas').upsert({
           aluno_id: alunoId,
           camiseta_entregue: true,
           nao_tem_tamanho: false,
           tamanho_camiseta: tamanho,
           data_entrega: new Date(dataEntrega).toISOString(),
-          responsavel_entrega_nome: responsavelId, // Por enquanto só o nome
+          responsavel_entrega_id: responsavelId,
+          responsavel_entrega_tipo: responsavelSelecionado?.tipo || null,
+          responsavel_entrega_nome: responsavelSelecionado?.nome || null,
           observacoes: observacoes.trim() || null
         }, { onConflict: 'aluno_id' });
       } else {
@@ -65,7 +72,9 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
           aluno_id: alunoId,
           camiseta_entregue: false,
           nao_tem_tamanho: true,
-          responsavel_entrega_nome: responsavelId,
+          responsavel_entrega_id: responsavelId,
+          responsavel_entrega_tipo: responsavelSelecionado?.tipo || null,
+          responsavel_entrega_nome: responsavelSelecionado?.nome || null,
           observacoes: observacoes.trim()
         }, { onConflict: 'aluno_id' });
       }
@@ -134,11 +143,25 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
           {/* Campo Responsável - sempre visível */}
           <div>
             <Label>Responsável *</Label>
-            <Input
-              placeholder="Nome do responsável (professor ou funcionário)"
-              value={responsavelId}
-              onChange={(e) => setResponsavelId(e.target.value)}
-            />
+            <Select value={responsavelId} onValueChange={setResponsavelId} disabled={loadingResponsaveis}>
+              <SelectTrigger>
+                <SelectValue placeholder={
+                  loadingResponsaveis ? "Carregando..." : "Selecione o responsável"
+                } />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {responsaveis.map((responsavel) => (
+                  <SelectItem key={responsavel.id} value={responsavel.id}>
+                    <div className="flex items-center gap-2">
+                      <span>{responsavel.nome}</span>
+                      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        {responsavel.tipo === 'professor' ? 'Prof.' : 'Func.'}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Campo Observações */}

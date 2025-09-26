@@ -74,7 +74,7 @@ export function useCamisetas() {
       const alunoIds = alunosData.map(aluno => aluno.id);
       const { data: camisetasData, error: camisetasError } = await supabase
         .from('camisetas')
-        .select('id, aluno_id, camiseta_entregue, nao_tem_tamanho, tamanho_camiseta, data_entrega, responsavel_entrega_nome, observacoes')
+        .select('id, aluno_id, camiseta_entregue, nao_tem_tamanho, tamanho_camiseta, data_entrega, responsavel_entrega_nome, responsavel_entrega_id, responsavel_entrega_tipo, observacoes')
         .in('aluno_id', alunoIds);
 
       if (camisetasError) {
@@ -191,7 +191,9 @@ export function useCamisetas() {
             .update({ 
               nao_tem_tamanho: false,
               observacoes: null,
-              responsavel_entrega_nome: null
+              responsavel_entrega_nome: null,
+              responsavel_entrega_id: null,
+              responsavel_entrega_tipo: null
             })
             .eq('id', aluno.camiseta_id);
 
