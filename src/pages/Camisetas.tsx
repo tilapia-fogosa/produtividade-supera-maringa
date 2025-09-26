@@ -10,9 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CamisetaEntregueModal } from "@/components/camisetas/CamisetaEntregueModal";
+import { NaoTemTamanhoModal } from "@/components/camisetas/NaoTemTamanhoModal";
 
 export default function Camisetas() {
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalNaoTemTamanhoAberto, setModalNaoTemTamanhoAberto] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string } | null>(null);
   
   const { 
@@ -25,8 +27,9 @@ export default function Camisetas() {
     setFiltro,
     marcarComoEntregue,
     marcarComoEntregueComDetalhes,
-    marcarComoNaoEntregue, 
+    marcarComoNaoEntregue,
     marcarComoNaoTemTamanho,
+    marcarComoNaoTemTamanhoComDetalhes,
     refetch 
   } = useCamisetas();
 
@@ -48,7 +51,32 @@ export default function Camisetas() {
   };
 
   const handleNaoTemTamanhoChange = (alunoId: string, checked: boolean) => {
-    marcarComoNaoTemTamanho(alunoId, checked);
+    if (checked) {
+      // Abrir modal para preencher detalhes
+      const aluno = alunos.find(a => a.id === alunoId);
+      if (aluno) {
+        setAlunoSelecionado({ id: aluno.id, nome: aluno.nome });
+        setModalNaoTemTamanhoAberto(true);
+      }
+    } else {
+      // Desmarcar diretamente
+      marcarComoNaoTemTamanho(alunoId, false);
+    }
+  };
+
+  const handleSalvarNaoTemTamanho = async (dados: {
+    responsavel_id: string;
+    responsavel_tipo: string;
+    responsavel_nome: string;
+    data_informacao: Date;
+    observacoes: string;
+  }) => {
+    if (!alunoSelecionado) return;
+
+    await marcarComoNaoTemTamanhoComDetalhes({
+      alunoId: alunoSelecionado.id,
+      ...dados
+    });
   };
 
   const getStatusIcon = (status: boolean) => {
@@ -347,6 +375,17 @@ export default function Camisetas() {
           onSave={handleSalvarModal}
         />
       )}
+
+      {/* Modal Não Tem Tamanho */}
+      <NaoTemTamanhoModal
+        isOpen={modalNaoTemTamanhoAberto}
+        onClose={() => {
+          setModalNaoTemTamanhoAberto(false);
+          setAlunoSelecionado(null);
+        }}
+        onConfirm={handleSalvarNaoTemTamanho}
+        alunoNome={alunoSelecionado?.nome || ""}
+      />
     </div>
   );
 }

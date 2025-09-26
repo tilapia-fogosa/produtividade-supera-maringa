@@ -363,6 +363,62 @@ export function useCamisetas() {
     }
   };
 
+  const marcarComoNaoTemTamanhoComDetalhes = async (dados: {
+    alunoId: string;
+    responsavel_id: string;
+    responsavel_tipo: string;
+    responsavel_nome: string;
+    data_informacao: Date;
+    observacoes: string;
+  }) => {
+    try {
+      // Criar ou atualizar registro com todos os detalhes
+      const { error } = await supabase
+        .from('camisetas')
+        .upsert({
+          aluno_id: dados.alunoId,
+          nao_tem_tamanho: true,
+          camiseta_entregue: false,
+          responsavel_entrega_id: dados.responsavel_id,
+          responsavel_entrega_tipo: dados.responsavel_tipo,
+          responsavel_entrega_nome: dados.responsavel_nome,
+          data_entrega: dados.data_informacao.toISOString(),
+          observacoes: dados.observacoes,
+        }, { onConflict: 'aluno_id' });
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setAlunos(prev => prev.map(a => 
+        a.id === dados.alunoId 
+          ? { 
+              ...a, 
+              nao_tem_tamanho: true,
+              camiseta_entregue: false,
+              responsavel_entrega_nome: dados.responsavel_nome,
+              data_entrega: dados.data_informacao.toISOString(),
+              observacoes: dados.observacoes
+            }
+          : a
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Informação 'não tem tamanho' registrada com detalhes.",
+        variant: "default"
+      });
+
+    } catch (error) {
+      console.error('Erro ao registrar não tem tamanho com detalhes:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar a informação.",
+        variant: "destructive"
+      });
+      throw error; // Re-throw para o modal tratar
+    }
+  };
+
   // Filtrar alunos baseado no filtro selecionado
   const alunosFiltrados = alunos.filter(aluno => {
     if (filtro === 'pendentes') {
@@ -389,6 +445,7 @@ export function useCamisetas() {
     marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue,
     marcarComoNaoTemTamanho,
+    marcarComoNaoTemTamanhoComDetalhes,
     refetch: buscarDadosCamisetas
   };
 }
