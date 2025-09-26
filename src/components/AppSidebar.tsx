@@ -17,7 +17,8 @@ import {
   Target,
   Building,
   Shield,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Trophy
 } from "lucide-react";
 import {
   Sidebar,
@@ -111,6 +112,11 @@ const items = [
     url: "/retencoes",
     icon: Shield,
     requiresAdmin: true,
+  },
+  {
+    title: "Troféus 1000 Dias",
+    url: "/trofeus-1000-dias",
+    icon: Trophy,
   },
 ];
 
