@@ -29,6 +29,9 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
   // Hook para buscar responsáveis
   const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
 
+  // Debug logs temporários
+  console.log('Responsáveis carregados:', { responsaveis, loadingResponsaveis, total: responsaveis.length });
+
   const handleSubmit = async () => {
     if (modalType === 'entrega') {
       if (!tamanho || !responsavelId) {
@@ -121,7 +124,7 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
                   <SelectTrigger>
                     <SelectValue placeholder="Tamanho" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border border-border shadow-lg z-50">
+                  <SelectContent className="bg-background border border-border shadow-lg z-[9999]">
                     {['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'].map(t => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
@@ -149,7 +152,7 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
                   loadingResponsaveis ? "Carregando..." : "Selecione o responsável"
                 } />
               </SelectTrigger>
-              <SelectContent className="max-h-60 bg-background border border-border shadow-lg z-50">
+              <SelectContent className="max-h-60 bg-background border border-border shadow-lg z-[9999]">
                 {responsaveis.map((responsavel) => (
                   <SelectItem key={responsavel.id} value={responsavel.id}>
                     <div className="flex items-center gap-2">
