@@ -174,16 +174,86 @@ export function useCamisetas() {
     }
   };
 
-  const marcarComoNaoTemTamanho = async (alunoId: string, alunoNome: string, checked: boolean) => {
-    if (checked) {
-      return { 
-        modalType: 'nao_tem_tamanho' as const,
-        alunoId, 
-        alunoNome 
-      };
-    } else {
-      // Desmarcar "não tem tamanho"
-      try {
+  const marcarComoEntregue = async (alunoId: string) => {
+    try {
+      const aluno = alunos.find(a => a.id === alunoId);
+      if (!aluno) return;
+
+      // Criar ou atualizar registro de camiseta como entregue
+      const { error } = await supabase
+        .from('camisetas')
+        .upsert({
+          aluno_id: alunoId,
+          camiseta_entregue: true,
+          nao_tem_tamanho: false,
+          data_entrega: new Date().toISOString(),
+        }, { onConflict: 'aluno_id' });
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setAlunos(prev => prev.map(a => 
+        a.id === alunoId 
+          ? { 
+              ...a, 
+              camiseta_entregue: true,
+              nao_tem_tamanho: false,
+              data_entrega: new Date().toISOString()
+            }
+          : a
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Camiseta marcada como entregue.",
+        variant: "default"
+      });
+
+    } catch (error) {
+      console.error('Erro ao marcar camiseta:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar a camiseta como entregue.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const marcarComoNaoTemTamanho = async (alunoId: string, checked: boolean) => {
+    try {
+      if (checked) {
+        // Marcar como "não tem tamanho"
+        const { error } = await supabase
+          .from('camisetas')
+          .upsert({
+            aluno_id: alunoId,
+            nao_tem_tamanho: true,
+            camiseta_entregue: false,
+            observacoes: 'Não há tamanho disponível'
+          }, { onConflict: 'aluno_id' });
+
+        if (error) throw error;
+
+        // Atualizar estado local
+        setAlunos(prev => prev.map(a => 
+          a.id === alunoId 
+            ? { 
+                ...a, 
+                nao_tem_tamanho: true,
+                camiseta_entregue: false,
+                observacoes: 'Não há tamanho disponível'
+              }
+            : a
+        ));
+
+        toast({
+          title: "Sucesso",
+          description: "Marcado como 'não tem tamanho'.",
+          variant: "default"
+        });
+
+      } else {
+        // Desmarcar "não tem tamanho"
         const aluno = alunos.find(a => a.id === alunoId);
         if (aluno?.camiseta_id) {
           const { error } = await supabase
@@ -222,17 +292,15 @@ export function useCamisetas() {
           description: "Marcação removida.",
           variant: "default"
         });
-
-      } catch (error) {
-        console.error('Erro ao desmarcar não tem tamanho:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível atualizar.",
-          variant: "destructive"
-        });
       }
-      
-      return null;
+
+    } catch (error) {
+      console.error('Erro ao atualizar não tem tamanho:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -258,6 +326,7 @@ export function useCamisetas() {
     error,
     filtro,
     setFiltro,
+    marcarComoEntregue,
     marcarComoNaoEntregue,
     marcarComoNaoTemTamanho,
     refetch: buscarDadosCamisetas

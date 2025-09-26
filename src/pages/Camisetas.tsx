@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import CamisetaModal from "@/components/camisetas/CamisetaModal";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Camisetas() {
@@ -20,61 +20,22 @@ export default function Camisetas() {
     error, 
     filtro,
     setFiltro,
+    marcarComoEntregue,
     marcarComoNaoEntregue, 
     marcarComoNaoTemTamanho,
     refetch 
   } = useCamisetas();
 
-  const [modalData, setModalData] = useState<{
-    isOpen: boolean;
-    alunoId: string;
-    alunoNome: string;
-    modalType: 'entrega' | 'nao_tem_tamanho';
-  }>({
-    isOpen: false,
-    alunoId: '',
-    alunoNome: '',
-    modalType: 'entrega'
-  });
-
-  const handleCheckboxChange = (alunoId: string, alunoNome: string, checked: boolean) => {
+  const handleCheckboxChange = (alunoId: string, checked: boolean) => {
     if (checked) {
-      // Abrir modal para registrar entrega
-      setModalData({
-        isOpen: true,
-        alunoId,
-        alunoNome,
-        modalType: 'entrega'
-      });
+      marcarComoEntregue(alunoId);
     } else {
-      // Desmarcar como entregue
       marcarComoNaoEntregue(alunoId);
     }
   };
 
-  const handleNaoTemTamanhoChange = async (alunoId: string, alunoNome: string, checked: boolean) => {
-    const result = await marcarComoNaoTemTamanho(alunoId, alunoNome, checked);
-    if (result && result.modalType) {
-      setModalData({
-        isOpen: true,
-        alunoId: result.alunoId,
-        alunoNome: result.alunoNome,
-        modalType: result.modalType
-      });
-    }
-  };
-
-  const handleModalClose = () => {
-    setModalData({
-      isOpen: false,
-      alunoId: '',
-      alunoNome: '',
-      modalType: 'entrega'
-    });
-  };
-
-  const handleModalSuccess = () => {
-    refetch();
+  const handleNaoTemTamanhoChange = (alunoId: string, checked: boolean) => {
+    marcarComoNaoTemTamanho(alunoId, checked);
   };
 
   const getStatusIcon = (status: boolean) => {
@@ -280,7 +241,7 @@ export default function Camisetas() {
                           <Checkbox
                             checked={aluno.camiseta_entregue}
                             onCheckedChange={(checked) => 
-                              handleCheckboxChange(aluno.id, aluno.nome, !!checked)
+                              handleCheckboxChange(aluno.id, !!checked)
                             }
                             className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
@@ -311,7 +272,7 @@ export default function Camisetas() {
                           <Checkbox
                             checked={aluno.nao_tem_tamanho}
                             onCheckedChange={(checked) => 
-                              handleNaoTemTamanhoChange(aluno.id, aluno.nome, !!checked)
+                              handleNaoTemTamanhoChange(aluno.id, !!checked)
                             }
                             className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                           />
@@ -360,15 +321,6 @@ export default function Camisetas() {
         </CardContent>
       </Card>
 
-      {/* Modal de Entrega */}
-      <CamisetaModal
-        isOpen={modalData.isOpen}
-        onClose={handleModalClose}
-        alunoId={modalData.alunoId}
-        alunoNome={modalData.alunoNome}
-        onSuccess={handleModalSuccess}
-        modalType={modalData.modalType}
-      />
     </div>
   );
 }
