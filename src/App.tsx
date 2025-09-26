@@ -50,6 +50,7 @@ import CRM from "./pages/CRM";
 import Login from "./pages/Login";
 import AccessDenied from "./pages/AccessDenied";
 import PlanejadorDesafios from "./pages/PlanejadorDesafios";
+import Camisetas from "./pages/Camisetas";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +117,7 @@ function App() {
                             <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
                             <Route path="/crm" element={<CRM />} />
                             <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
+                            <Route path="/camisetas" element={<Camisetas />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>

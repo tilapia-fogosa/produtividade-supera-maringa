@@ -18,7 +18,8 @@ import {
   Building,
   Shield,
   FileSpreadsheet,
-  Trophy
+  Trophy,
+  Shirt
 } from "lucide-react";
 import {
   Sidebar,
@@ -117,6 +118,11 @@ const items = [
     title: "Troféus 1000 Dias",
     url: "/trofeus-1000-dias",
     icon: Trophy,
+  },
+  {
+    title: "Camisetas",
+    url: "/camisetas",
+    icon: Shirt,
   },
 ];
 
