@@ -21,6 +21,7 @@ export function useCamisetas() {
   const [alunos, setAlunos] = useState<CamisetaAlunoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<'pendentes' | 'todos'>('pendentes');
 
   useEffect(() => {
     buscarDadosCamisetas();
@@ -232,16 +233,28 @@ export function useCamisetas() {
     }
   };
 
+  // Filtrar alunos baseado no filtro selecionado
+  const alunosFiltrados = alunos.filter(aluno => {
+    if (filtro === 'pendentes') {
+      // Mostrar apenas alunos que não receberam camiseta e não foram marcados como "não tem tamanho"
+      return !aluno.camiseta_entregue && !aluno.nao_tem_tamanho;
+    }
+    return true; // 'todos' - mostrar todos os alunos
+  });
+
   // Contador de alunos com +90 dias sem camiseta entregue e que não foram marcados como "não tem tamanho"
   const contadorCamisetasNaoEntregues = alunos.filter(aluno => 
     (aluno.dias_supera || 0) >= 90 && !aluno.camiseta_entregue && !aluno.nao_tem_tamanho
   ).length;
 
   return {
-    alunos,
+    alunos: alunosFiltrados,
+    todosAlunos: alunos,
     contadorCamisetasNaoEntregues,
     loading,
     error,
+    filtro,
+    setFiltro,
     marcarComoNaoEntregue,
     marcarComoNaoTemTamanho,
     refetch: buscarDadosCamisetas

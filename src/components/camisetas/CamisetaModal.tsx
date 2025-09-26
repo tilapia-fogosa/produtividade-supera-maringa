@@ -49,13 +49,15 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
     setLoading(true);
     try {
       if (modalType === 'entrega') {
+        // Encontrar o responsável selecionado (para futuras melhorias)
+        
         await supabase.from('camisetas').upsert({
           aluno_id: alunoId,
           camiseta_entregue: true,
           nao_tem_tamanho: false,
           tamanho_camiseta: tamanho,
           data_entrega: new Date(dataEntrega).toISOString(),
-          responsavel_entrega_nome: responsavelId,
+          responsavel_entrega_nome: responsavelId, // Por enquanto só o nome
           observacoes: observacoes.trim() || null
         }, { onConflict: 'aluno_id' });
       } else {
@@ -72,6 +74,11 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
         description: modalType === 'entrega' ? "Entrega registrada!" : "Registro salvo!",
       });
 
+      // Limpar campos
+      setTamanho('');
+      setResponsavelId('');
+      setObservacoes('');
+      
       onSuccess();
       onClose();
     } catch (error) {
@@ -124,7 +131,7 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
               <div>
                 <Label>Responsável *</Label>
                 <Input
-                  placeholder="Nome do responsável"
+                  placeholder="Nome do responsável (professor ou funcionário)"
                   value={responsavelId}
                   onChange={(e) => setResponsavelId(e.target.value)}
                 />

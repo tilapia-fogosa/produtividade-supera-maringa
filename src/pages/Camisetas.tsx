@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shirt, CheckCircle, XCircle, RotateCcw, Info } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import CamisetaModal from "@/components/camisetas/CamisetaModal";
@@ -13,9 +14,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 export default function Camisetas() {
   const { 
     alunos, 
+    todosAlunos,
     contadorCamisetasNaoEntregues,
     loading, 
     error, 
+    filtro,
+    setFiltro,
     marcarComoNaoEntregue, 
     marcarComoNaoTemTamanho,
     refetch 
@@ -164,13 +168,28 @@ export default function Camisetas() {
         <div className="flex items-center gap-3 flex-wrap">
           <Shirt className="h-6 w-6 text-blue-600" />
           <h1 className="text-2xl font-bold">Controle de Camisetas</h1>
-          <Badge variant="secondary">{alunos.length} alunos elegíveis</Badge>
+          <Badge variant="secondary">
+            {todosAlunos.length} alunos elegíveis 
+            {filtro === 'pendentes' && ` (${alunos.length} pendentes)`}
+          </Badge>
           <Badge variant="destructive" className="bg-blue-600 text-white">
             {contadorCamisetasNaoEntregues} pendentes (+90 dias)
           </Badge>
         </div>
         
         <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filtro} onValueChange={(value: 'pendentes' | 'todos') => setFiltro(value)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pendentes">Apenas pendentes</SelectItem>
+                <SelectItem value="todos">Todos os alunos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -218,17 +237,22 @@ export default function Camisetas() {
                   <TableHead className="w-[120px]">Tempo no Supera</TableHead>
                   <TableHead className="w-[150px]">Turma</TableHead>
                   <TableHead className="w-[150px]">Professor</TableHead>
-                  <TableHead className="w-[200px] text-center">Status Camiseta</TableHead>
+                  <TableHead className="w-[140px] text-center">Camiseta Entregue</TableHead>
+                  <TableHead className="w-[140px] text-center">Não Tem Tamanho</TableHead>
+                  <TableHead className="w-[200px]">Observações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {alunos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Shirt className="h-8 w-8 text-muted-foreground" />
                         <p className="text-muted-foreground">
-                          Nenhum aluno encontrado com mais de 60 dias no Supera
+                          {filtro === 'pendentes' 
+                            ? 'Nenhum aluno pendente encontrado'
+                            : 'Nenhum aluno encontrado com mais de 60 dias no Supera'
+                          }
                         </p>
                       </div>
                     </TableCell>
@@ -248,68 +272,72 @@ export default function Camisetas() {
                       <TableCell>
                         {aluno.professor_nome || "-"}
                       </TableCell>
+                      
+                      {/* Coluna Camiseta Entregue */}
                       <TableCell className="text-center">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          {/* Checkbox Camiseta Entregue */}
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(aluno.camiseta_entregue)}
-                            <Checkbox
-                              checked={aluno.camiseta_entregue}
-                              onCheckedChange={(checked) => 
-                                handleCheckboxChange(aluno.id, aluno.nome, !!checked)
-                              }
-                              className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                            />
-                            <span className="text-xs">Entregue</span>
-                            {aluno.camiseta_entregue && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <Info className="h-4 w-4 text-blue-500" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <div className="text-sm">
-                                      <p><strong>Tamanho:</strong> {aluno.tamanho_camiseta || 'N/A'}</p>
-                                      <p><strong>Responsável:</strong> {aluno.responsavel_entrega_nome || 'N/A'}</p>
-                                      {aluno.data_entrega && (
-                                        <p><strong>Data:</strong> {new Date(aluno.data_entrega).toLocaleDateString('pt-BR')}</p>
-                                      )}
-                                      {aluno.observacoes && (
-                                        <p><strong>Obs:</strong> {aluno.observacoes}</p>
-                                      )}
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                          </div>
-                          
-                          {/* Checkbox Não Tem Tamanho */}
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={aluno.nao_tem_tamanho}
-                              onCheckedChange={(checked) => 
-                                handleNaoTemTamanhoChange(aluno.id, aluno.nome, !!checked)
-                              }
-                              className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-                            />
-                            <span className="text-xs">Não tem tamanho</span>
-                            {aluno.nao_tem_tamanho && aluno.observacoes && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <Info className="h-4 w-4 text-orange-500" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <div className="text-sm">
-                                      <p><strong>Observações:</strong> {aluno.observacoes}</p>
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                          </div>
+                        <div className="flex items-center justify-center gap-2">
+                          {getStatusIcon(aluno.camiseta_entregue)}
+                          <Checkbox
+                            checked={aluno.camiseta_entregue}
+                            onCheckedChange={(checked) => 
+                              handleCheckboxChange(aluno.id, aluno.nome, !!checked)
+                            }
+                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                          />
+                          {aluno.camiseta_entregue && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Info className="h-4 w-4 text-blue-500" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-sm">
+                                    <p><strong>Tamanho:</strong> {aluno.tamanho_camiseta || 'N/A'}</p>
+                                    <p><strong>Responsável:</strong> {aluno.responsavel_entrega_nome || 'N/A'}</p>
+                                    {aluno.data_entrega && (
+                                      <p><strong>Data:</strong> {new Date(aluno.data_entrega).toLocaleDateString('pt-BR')}</p>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
+                      </TableCell>
+
+                      {/* Coluna Não Tem Tamanho */}
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Checkbox
+                            checked={aluno.nao_tem_tamanho}
+                            onCheckedChange={(checked) => 
+                              handleNaoTemTamanhoChange(aluno.id, aluno.nome, !!checked)
+                            }
+                            className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                          />
+                          {aluno.nao_tem_tamanho && (
+                            <span className="text-xs text-orange-600">Sem tamanho</span>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Coluna Observações */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground max-w-[200px] truncate">
+                          {aluno.observacoes || "-"}
+                        </div>
+                        {aluno.observacoes && aluno.observacoes.length > 50 && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="h-3 w-3 text-muted-foreground ml-1 inline" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p className="text-sm">{aluno.observacoes}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
