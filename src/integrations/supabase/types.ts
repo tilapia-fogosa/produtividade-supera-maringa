@@ -1143,6 +1143,7 @@ export type Database = {
           created_at: string
           data_entrega: string | null
           id: string
+          nao_tem_tamanho: boolean | null
           observacoes: string | null
           responsavel_entrega_id: string | null
           responsavel_entrega_nome: string | null
@@ -1156,6 +1157,7 @@ export type Database = {
           created_at?: string
           data_entrega?: string | null
           id?: string
+          nao_tem_tamanho?: boolean | null
           observacoes?: string | null
           responsavel_entrega_id?: string | null
           responsavel_entrega_nome?: string | null
@@ -1169,6 +1171,7 @@ export type Database = {
           created_at?: string
           data_entrega?: string | null
           id?: string
+          nao_tem_tamanho?: boolean | null
           observacoes?: string | null
           responsavel_entrega_id?: string | null
           responsavel_entrega_nome?: string | null

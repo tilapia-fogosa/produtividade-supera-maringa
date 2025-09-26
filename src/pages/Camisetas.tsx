@@ -17,6 +17,7 @@ export default function Camisetas() {
     loading, 
     error, 
     marcarComoNaoEntregue, 
+    marcarComoNaoTemTamanho,
     refetch 
   } = useCamisetas();
 
@@ -24,10 +25,12 @@ export default function Camisetas() {
     isOpen: boolean;
     alunoId: string;
     alunoNome: string;
+    modalType: 'entrega' | 'nao_tem_tamanho';
   }>({
     isOpen: false,
     alunoId: '',
-    alunoNome: ''
+    alunoNome: '',
+    modalType: 'entrega'
   });
 
   const handleCheckboxChange = (alunoId: string, alunoNome: string, checked: boolean) => {
@@ -36,7 +39,8 @@ export default function Camisetas() {
       setModalData({
         isOpen: true,
         alunoId,
-        alunoNome
+        alunoNome,
+        modalType: 'entrega'
       });
     } else {
       // Desmarcar como entregue
@@ -44,11 +48,24 @@ export default function Camisetas() {
     }
   };
 
+  const handleNaoTemTamanhoChange = async (alunoId: string, alunoNome: string, checked: boolean) => {
+    const result = await marcarComoNaoTemTamanho(alunoId, alunoNome, checked);
+    if (result && result.modalType) {
+      setModalData({
+        isOpen: true,
+        alunoId: result.alunoId,
+        alunoNome: result.alunoNome,
+        modalType: result.modalType
+      });
+    }
+  };
+
   const handleModalClose = () => {
     setModalData({
       isOpen: false,
       alunoId: '',
-      alunoNome: ''
+      alunoNome: '',
+      modalType: 'entrega'
     });
   };
 
@@ -201,7 +218,7 @@ export default function Camisetas() {
                   <TableHead className="w-[120px]">Tempo no Supera</TableHead>
                   <TableHead className="w-[150px]">Turma</TableHead>
                   <TableHead className="w-[150px]">Professor</TableHead>
-                  <TableHead className="w-[200px] text-center">Camiseta Entregue</TableHead>
+                  <TableHead className="w-[200px] text-center">Status Camiseta</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -232,33 +249,66 @@ export default function Camisetas() {
                         {aluno.professor_nome || "-"}
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {getStatusIcon(aluno.camiseta_entregue)}
-                          <Checkbox
-                            checked={aluno.camiseta_entregue}
-                            onCheckedChange={(checked) => 
-                              handleCheckboxChange(aluno.id, aluno.nome, !!checked)
-                            }
-                            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                          />
-                          {aluno.camiseta_entregue && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Info className="h-4 w-4 text-blue-500" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <div className="text-sm">
-                                    <p><strong>Tamanho:</strong> {aluno.tamanho_camiseta || 'N/A'}</p>
-                                    <p><strong>Responsável:</strong> {aluno.responsavel_entrega_nome || 'N/A'}</p>
-                                    {aluno.data_entrega && (
-                                      <p><strong>Data:</strong> {new Date(aluno.data_entrega).toLocaleDateString('pt-BR')}</p>
-                                    )}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          {/* Checkbox Camiseta Entregue */}
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(aluno.camiseta_entregue)}
+                            <Checkbox
+                              checked={aluno.camiseta_entregue}
+                              onCheckedChange={(checked) => 
+                                handleCheckboxChange(aluno.id, aluno.nome, !!checked)
+                              }
+                              className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                            />
+                            <span className="text-xs">Entregue</span>
+                            {aluno.camiseta_entregue && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Info className="h-4 w-4 text-blue-500" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="text-sm">
+                                      <p><strong>Tamanho:</strong> {aluno.tamanho_camiseta || 'N/A'}</p>
+                                      <p><strong>Responsável:</strong> {aluno.responsavel_entrega_nome || 'N/A'}</p>
+                                      {aluno.data_entrega && (
+                                        <p><strong>Data:</strong> {new Date(aluno.data_entrega).toLocaleDateString('pt-BR')}</p>
+                                      )}
+                                      {aluno.observacoes && (
+                                        <p><strong>Obs:</strong> {aluno.observacoes}</p>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
+                          
+                          {/* Checkbox Não Tem Tamanho */}
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={aluno.nao_tem_tamanho}
+                              onCheckedChange={(checked) => 
+                                handleNaoTemTamanhoChange(aluno.id, aluno.nome, !!checked)
+                              }
+                              className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                            />
+                            <span className="text-xs">Não tem tamanho</span>
+                            {aluno.nao_tem_tamanho && aluno.observacoes && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Info className="h-4 w-4 text-orange-500" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="text-sm">
+                                      <p><strong>Observações:</strong> {aluno.observacoes}</p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -277,6 +327,7 @@ export default function Camisetas() {
         alunoId={modalData.alunoId}
         alunoNome={modalData.alunoNome}
         onSuccess={handleModalSuccess}
+        modalType={modalData.modalType}
       />
     </div>
   );

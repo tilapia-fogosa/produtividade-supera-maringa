@@ -7,12 +7,14 @@ export interface CamisetaAlunoData {
   nome: string;
   dias_supera: number | null;
   camiseta_entregue: boolean;
+  nao_tem_tamanho: boolean;
   turma_nome: string | null;
   professor_nome: string | null;
   camiseta_id: string | null;
   tamanho_camiseta?: string | null;
   data_entrega?: string | null;
   responsavel_entrega_nome?: string | null;
+  observacoes?: string | null;
 }
 
 export function useCamisetas() {
@@ -71,7 +73,7 @@ export function useCamisetas() {
       const alunoIds = alunosData.map(aluno => aluno.id);
       const { data: camisetasData, error: camisetasError } = await supabase
         .from('camisetas')
-        .select('id, aluno_id, camiseta_entregue, tamanho_camiseta, data_entrega, responsavel_entrega_nome')
+        .select('id, aluno_id, camiseta_entregue, nao_tem_tamanho, tamanho_camiseta, data_entrega, responsavel_entrega_nome, observacoes')
         .in('aluno_id', alunoIds);
 
       if (camisetasError) {
@@ -90,12 +92,14 @@ export function useCamisetas() {
           nome: aluno.nome,
           dias_supera: aluno.dias_supera,
           camiseta_entregue: camiseta?.camiseta_entregue || false,
+          nao_tem_tamanho: camiseta?.nao_tem_tamanho || false,
           turma_nome: aluno.turmas?.nome || null,
           professor_nome: aluno.turmas?.professores?.nome || null,
           camiseta_id: camiseta?.id || null,
           tamanho_camiseta: camiseta?.tamanho_camiseta || null,
           data_entrega: camiseta?.data_entrega || null,
-          responsavel_entrega_nome: camiseta?.responsavel_entrega_nome || null
+          responsavel_entrega_nome: camiseta?.responsavel_entrega_nome || null,
+          observacoes: camiseta?.observacoes || null
         };
       });
 
@@ -126,11 +130,13 @@ export function useCamisetas() {
         .from('camisetas')
         .update({ 
           camiseta_entregue: false,
+          nao_tem_tamanho: false,
           data_entrega: null,
           tamanho_camiseta: null,
           responsavel_entrega_id: null,
           responsavel_entrega_tipo: null,
-          responsavel_entrega_nome: null
+          responsavel_entrega_nome: null,
+          observacoes: null
         })
         .eq('id', aluno.camiseta_id);
 
@@ -142,9 +148,11 @@ export function useCamisetas() {
           ? { 
               ...a, 
               camiseta_entregue: false,
+              nao_tem_tamanho: false,
               tamanho_camiseta: null,
               data_entrega: null,
-              responsavel_entrega_nome: null
+              responsavel_entrega_nome: null,
+              observacoes: null
             }
           : a
       ));
@@ -165,9 +173,68 @@ export function useCamisetas() {
     }
   };
 
-  // Contador de alunos com +90 dias sem camiseta entregue
+  const marcarComoNaoTemTamanho = async (alunoId: string, alunoNome: string, checked: boolean) => {
+    if (checked) {
+      return { 
+        modalType: 'nao_tem_tamanho' as const,
+        alunoId, 
+        alunoNome 
+      };
+    } else {
+      // Desmarcar "não tem tamanho"
+      try {
+        const aluno = alunos.find(a => a.id === alunoId);
+        if (aluno?.camiseta_id) {
+          const { error } = await supabase
+            .from('camisetas')
+            .update({ 
+              nao_tem_tamanho: false,
+              observacoes: null
+            })
+            .eq('id', aluno.camiseta_id);
+
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('camisetas')
+            .upsert({
+              aluno_id: alunoId,
+              nao_tem_tamanho: false,
+              camiseta_entregue: false,
+              observacoes: null
+            }, { onConflict: 'aluno_id' });
+
+          if (error) throw error;
+        }
+
+        setAlunos(prev => prev.map(a => 
+          a.id === alunoId 
+            ? { ...a, nao_tem_tamanho: false, observacoes: null }
+            : a
+        ));
+
+        toast({
+          title: "Sucesso",
+          description: "Marcação removida.",
+          variant: "default"
+        });
+
+      } catch (error) {
+        console.error('Erro ao desmarcar não tem tamanho:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar.",
+          variant: "destructive"
+        });
+      }
+      
+      return null;
+    }
+  };
+
+  // Contador de alunos com +90 dias sem camiseta entregue e que não foram marcados como "não tem tamanho"
   const contadorCamisetasNaoEntregues = alunos.filter(aluno => 
-    (aluno.dias_supera || 0) >= 90 && !aluno.camiseta_entregue
+    (aluno.dias_supera || 0) >= 90 && !aluno.camiseta_entregue && !aluno.nao_tem_tamanho
   ).length;
 
   return {
@@ -176,6 +243,7 @@ export function useCamisetas() {
     loading,
     error,
     marcarComoNaoEntregue,
+    marcarComoNaoTemTamanho,
     refetch: buscarDadosCamisetas
   };
 }

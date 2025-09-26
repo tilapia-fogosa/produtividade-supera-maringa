@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -14,36 +15,61 @@ interface Props {
   alunoId: string;
   alunoNome: string;
   onSuccess: () => void;
+  modalType?: 'entrega' | 'nao_tem_tamanho';
 }
 
-export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onSuccess }: Props) {
+export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onSuccess, modalType = 'entrega' }: Props) {
   const [loading, setLoading] = useState(false);
   const [tamanho, setTamanho] = useState('');
   const [dataEntrega, setDataEntrega] = useState(new Date().toISOString().split('T')[0]);
   const [responsavelId, setResponsavelId] = useState('');
+  const [observacoes, setObservacoes] = useState('');
 
   const handleSubmit = async () => {
-    if (!tamanho || !responsavelId) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos.",
-        variant: "destructive"
-      });
-      return;
+    if (modalType === 'entrega') {
+      if (!tamanho || !responsavelId) {
+        toast({
+          title: "Erro",
+          description: "Preencha todos os campos.",
+          variant: "destructive"
+        });
+        return;
+      }
+    } else if (modalType === 'nao_tem_tamanho') {
+      if (!observacoes.trim()) {
+        toast({
+          title: "Erro",
+          description: "Preencha o campo de observações.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     setLoading(true);
     try {
-      await supabase.from('camisetas').upsert({
-        aluno_id: alunoId,
-        camiseta_entregue: true,
-        tamanho_camiseta: tamanho,
-        data_entrega: new Date(dataEntrega).toISOString()
-      }, { onConflict: 'aluno_id' });
+      if (modalType === 'entrega') {
+        await supabase.from('camisetas').upsert({
+          aluno_id: alunoId,
+          camiseta_entregue: true,
+          nao_tem_tamanho: false,
+          tamanho_camiseta: tamanho,
+          data_entrega: new Date(dataEntrega).toISOString(),
+          responsavel_entrega_nome: responsavelId,
+          observacoes: observacoes.trim() || null
+        }, { onConflict: 'aluno_id' });
+      } else {
+        await supabase.from('camisetas').upsert({
+          aluno_id: alunoId,
+          camiseta_entregue: false,
+          nao_tem_tamanho: true,
+          observacoes: observacoes.trim()
+        }, { onConflict: 'aluno_id' });
+      }
 
       toast({
         title: "Sucesso",
-        description: "Entrega registrada!",
+        description: modalType === 'entrega' ? "Entrega registrada!" : "Registro salvo!",
       });
 
       onSuccess();
@@ -63,40 +89,62 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Registrar Entrega</DialogTitle>
+          <DialogTitle>
+            {modalType === 'entrega' ? 'Registrar Entrega' : 'Não Tem Tamanho'}
+          </DialogTitle>
           <p>Aluno: <strong>{alunoNome}</strong></p>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          <div>
-            <Label>Tamanho *</Label>
-            <Select value={tamanho} onValueChange={setTamanho}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tamanho" />
-              </SelectTrigger>
-              <SelectContent>
-                {['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'].map(t => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {modalType === 'entrega' && (
+            <>
+              <div>
+                <Label>Tamanho *</Label>
+                <Select value={tamanho} onValueChange={setTamanho}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tamanho" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'].map(t => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Data *</Label>
+                <Input
+                  type="date"
+                  value={dataEntrega}
+                  onChange={(e) => setDataEntrega(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label>Responsável *</Label>
+                <Input
+                  placeholder="Nome do responsável"
+                  value={responsavelId}
+                  onChange={(e) => setResponsavelId(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
           <div>
-            <Label>Data *</Label>
-            <Input
-              type="date"
-              value={dataEntrega}
-              onChange={(e) => setDataEntrega(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label>Responsável *</Label>
-            <Input
-              placeholder="Nome do responsável"
-              value={responsavelId}
-              onChange={(e) => setResponsavelId(e.target.value)}
+            <Label>
+              Observações {modalType === 'nao_tem_tamanho' ? '*' : '(opcional)'}
+            </Label>
+            <Textarea
+              placeholder={
+                modalType === 'nao_tem_tamanho' 
+                  ? "Descreva o motivo de não ter tamanho disponível..."
+                  : "Observações adicionais (opcional)..."
+              }
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              rows={3}
             />
           </div>
         </div>
@@ -105,7 +153,7 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Registrar
+            {modalType === 'entrega' ? 'Registrar' : 'Salvar'}
           </Button>
         </DialogFooter>
       </DialogContent>
