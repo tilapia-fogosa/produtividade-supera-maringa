@@ -773,11 +773,30 @@ export type Database = {
           client_activity_id: string
           client_id: string
           client_name: string
+          commercial_observations: string | null
           cpf: string | null
           created_at: string
           created_by: string
+          enrollment_amount: number | null
+          enrollment_installments: number | null
+          enrollment_payment_date: string | null
+          enrollment_payment_method:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          first_monthly_fee_date: string | null
           full_name: string | null
           id: string
+          kit_type: Database["public"]["Enums"]["kit_type"] | null
+          material_amount: number | null
+          material_installments: number | null
+          material_payment_date: string | null
+          material_payment_method:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          monthly_fee_amount: number | null
+          monthly_fee_payment_method:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
           photo_thumbnail_url: string | null
           photo_url: string | null
           rg: string | null
@@ -796,11 +815,30 @@ export type Database = {
           client_activity_id: string
           client_id: string
           client_name: string
+          commercial_observations?: string | null
           cpf?: string | null
           created_at?: string
           created_by: string
+          enrollment_amount?: number | null
+          enrollment_installments?: number | null
+          enrollment_payment_date?: string | null
+          enrollment_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          kit_type?: Database["public"]["Enums"]["kit_type"] | null
+          material_amount?: number | null
+          material_installments?: number | null
+          material_payment_date?: string | null
+          material_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          monthly_fee_amount?: number | null
+          monthly_fee_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
@@ -819,11 +857,30 @@ export type Database = {
           client_activity_id?: string
           client_id?: string
           client_name?: string
+          commercial_observations?: string | null
           cpf?: string | null
           created_at?: string
           created_by?: string
+          enrollment_amount?: number | null
+          enrollment_installments?: number | null
+          enrollment_payment_date?: string | null
+          enrollment_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          kit_type?: Database["public"]["Enums"]["kit_type"] | null
+          material_amount?: number | null
+          material_installments?: number | null
+          material_payment_date?: string | null
+          material_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          monthly_fee_amount?: number | null
+          monthly_fee_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
@@ -1078,6 +1135,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      camisetas: {
+        Row: {
+          aluno_id: string
+          camiseta_entregue: boolean
+          created_at: string
+          data_entrega: string | null
+          id: string
+          nao_tem_tamanho: boolean | null
+          observacoes: string | null
+          responsavel_entrega_id: string | null
+          responsavel_entrega_nome: string | null
+          responsavel_entrega_tipo: string | null
+          tamanho_camiseta: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          camiseta_entregue?: boolean
+          created_at?: string
+          data_entrega?: string | null
+          id?: string
+          nao_tem_tamanho?: boolean | null
+          observacoes?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_entrega_tipo?: string | null
+          tamanho_camiseta?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          camiseta_entregue?: boolean
+          created_at?: string
+          data_entrega?: string | null
+          id?: string
+          nao_tem_tamanho?: boolean | null
+          observacoes?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_entrega_tipo?: string | null
+          tamanho_camiseta?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       class_types: {
         Row: {
@@ -2502,44 +2604,6 @@ export type Database = {
           },
         ]
       }
-      kit_types: {
-        Row: {
-          active: boolean
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          unit_id: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          unit_id: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          unit_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "kit_types_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       kit_versions: {
         Row: {
           active: boolean
@@ -2572,13 +2636,6 @@ export type Database = {
           version?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "kit_versions_kit_type_id_fkey"
-            columns: ["kit_type_id"]
-            isOneToOne: false
-            referencedRelation: "kit_types"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "kit_versions_unit_id_fkey"
             columns: ["unit_id"]
@@ -2854,7 +2911,15 @@ export type Database = {
           unit_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_pos_venda_config_unit"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pos_venda_atividades_realizadas: {
         Row: {
@@ -2887,7 +2952,22 @@ export type Database = {
           updated_at?: string
           usuario_realizou?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_pos_venda_realizadas_config"
+            columns: ["atividade_config_id"]
+            isOneToOne: false
+            referencedRelation: "pos_venda_atividades_config"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_venda_atividades_realizadas_usuario_realizou_fkey"
+            columns: ["usuario_realizou"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
@@ -4711,11 +4791,9 @@ export type Database = {
       }
       responsaveis_view: {
         Row: {
-          active: boolean | null
           id: string | null
           nome: string | null
           tipo: string | null
-          unit_id: string | null
         }
         Relationships: []
       }
@@ -4744,6 +4822,10 @@ export type Database = {
       }
       change_initial_password: {
         Args: { new_password: string; user_id: string }
+        Returns: boolean
+      }
+      check_commercial_data_complete: {
+        Args: { p_activity_id: string }
         Returns: boolean
       }
       check_lancamentos_pendentes: {
@@ -5112,6 +5194,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_pos_venda_commercial_data: {
+        Args: { p_activity_id: string }
+        Returns: Json
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -5335,6 +5421,42 @@ export type Database = {
           matriculas: number
         }[]
       }
+      save_pos_venda_commercial_data: {
+        Args:
+          | {
+              p_activity_id: string
+              p_commercial_observations?: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type?: Database["public"]["Enums"]["kit_type"]
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+            }
+          | {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type_id?: string
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_observations?: string
+            }
+        Returns: boolean
+      }
       toggle_pos_venda_activity_status: {
         Args: {
           p_atividade_config_id: string
@@ -5408,6 +5530,15 @@ export type Database = {
       "etapa-do-bot": "apresentador" | "rapport" | "agendador" | "negociador"
       forma_de_pagamento: "Cartão" | "Pix" | "Dinheiro" | "Carimbo" | "Outro"
       gender: "masculino" | "feminino"
+      kit_type:
+        | "kit_1"
+        | "kit_2"
+        | "kit_3"
+        | "kit_4"
+        | "kit_5"
+        | "kit_6"
+        | "kit_7"
+        | "kit_8"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
       origem_alerta:
         | "conversa_indireta"
@@ -5596,6 +5727,16 @@ export const Constants = {
       "etapa-do-bot": ["apresentador", "rapport", "agendador", "negociador"],
       forma_de_pagamento: ["Cartão", "Pix", "Dinheiro", "Carimbo", "Outro"],
       gender: ["masculino", "feminino"],
+      kit_type: [
+        "kit_1",
+        "kit_2",
+        "kit_3",
+        "kit_4",
+        "kit_5",
+        "kit_6",
+        "kit_7",
+        "kit_8",
+      ],
       marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],
       origem_alerta: [
         "conversa_indireta",
