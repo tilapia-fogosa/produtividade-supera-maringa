@@ -36,10 +36,10 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
         return;
       }
     } else if (modalType === 'nao_tem_tamanho') {
-      if (!observacoes.trim()) {
+      if (!responsavelId.trim() || !observacoes.trim()) {
         toast({
           title: "Erro",
-          description: "Preencha o campo de observações.",
+          description: "Preencha todos os campos obrigatórios.",
           variant: "destructive"
         });
         return;
@@ -65,6 +65,7 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
           aluno_id: alunoId,
           camiseta_entregue: false,
           nao_tem_tamanho: true,
+          responsavel_entrega_nome: responsavelId,
           observacoes: observacoes.trim()
         }, { onConflict: 'aluno_id' });
       }
@@ -137,6 +138,17 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
                 />
               </div>
             </>
+          )}
+
+          {modalType === 'nao_tem_tamanho' && (
+            <div>
+              <Label>Responsável *</Label>
+              <Input
+                placeholder="Nome do responsável (professor ou funcionário)"
+                value={responsavelId}
+                onChange={(e) => setResponsavelId(e.target.value)}
+              />
+            </div>
           )}
 
           <div>

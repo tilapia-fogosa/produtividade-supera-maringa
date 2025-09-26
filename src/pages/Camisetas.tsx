@@ -323,8 +323,20 @@ export default function Camisetas() {
 
                       {/* Coluna Observações */}
                       <TableCell>
-                        <div className="text-sm text-muted-foreground max-w-[200px] truncate">
-                          {aluno.observacoes || "-"}
+                        <div className="flex flex-col gap-1">
+                          {aluno.observacoes && (
+                            <div className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              {aluno.observacoes}
+                            </div>
+                          )}
+                          {aluno.nao_tem_tamanho && aluno.responsavel_entrega_nome && (
+                            <div className="text-xs text-orange-600">
+                              <strong>Responsável:</strong> {aluno.responsavel_entrega_nome}
+                            </div>
+                          )}
+                          {!aluno.observacoes && !aluno.responsavel_entrega_nome && (
+                            <div className="text-sm text-muted-foreground">-</div>
+                          )}
                         </div>
                         {aluno.observacoes && aluno.observacoes.length > 50 && (
                           <TooltipProvider>

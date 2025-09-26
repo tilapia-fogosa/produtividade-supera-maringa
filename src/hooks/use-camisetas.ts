@@ -190,7 +190,8 @@ export function useCamisetas() {
             .from('camisetas')
             .update({ 
               nao_tem_tamanho: false,
-              observacoes: null
+              observacoes: null,
+              responsavel_entrega_nome: null
             })
             .eq('id', aluno.camiseta_id);
 
@@ -210,7 +211,7 @@ export function useCamisetas() {
 
         setAlunos(prev => prev.map(a => 
           a.id === alunoId 
-            ? { ...a, nao_tem_tamanho: false, observacoes: null }
+            ? { ...a, nao_tem_tamanho: false, observacoes: null, responsavel_entrega_nome: null }
             : a
         ));
 
