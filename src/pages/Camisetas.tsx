@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { useCamisetas } from "@/hooks/use-camisetas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shirt, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Shirt, CheckCircle, XCircle, RotateCcw, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import CamisetaModal from "@/components/camisetas/CamisetaModal";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Camisetas() {
   const { 
@@ -13,12 +16,44 @@ export default function Camisetas() {
     contadorCamisetasNaoEntregues,
     loading, 
     error, 
-    atualizarCamiseta, 
+    marcarComoNaoEntregue, 
     refetch 
   } = useCamisetas();
 
-  const handleCheckboxChange = (alunoId: string, checked: boolean) => {
-    atualizarCamiseta(alunoId, checked);
+  const [modalData, setModalData] = useState<{
+    isOpen: boolean;
+    alunoId: string;
+    alunoNome: string;
+  }>({
+    isOpen: false,
+    alunoId: '',
+    alunoNome: ''
+  });
+
+  const handleCheckboxChange = (alunoId: string, alunoNome: string, checked: boolean) => {
+    if (checked) {
+      // Abrir modal para registrar entrega
+      setModalData({
+        isOpen: true,
+        alunoId,
+        alunoNome
+      });
+    } else {
+      // Desmarcar como entregue
+      marcarComoNaoEntregue(alunoId);
+    }
+  };
+
+  const handleModalClose = () => {
+    setModalData({
+      isOpen: false,
+      alunoId: '',
+      alunoNome: ''
+    });
+  };
+
+  const handleModalSuccess = () => {
+    refetch();
   };
 
   const getStatusIcon = (status: boolean) => {
@@ -166,7 +201,7 @@ export default function Camisetas() {
                   <TableHead className="w-[120px]">Tempo no Supera</TableHead>
                   <TableHead className="w-[150px]">Turma</TableHead>
                   <TableHead className="w-[150px]">Professor</TableHead>
-                  <TableHead className="w-[120px] text-center">Camiseta Entregue</TableHead>
+                  <TableHead className="w-[200px] text-center">Camiseta Entregue</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,10 +237,28 @@ export default function Camisetas() {
                           <Checkbox
                             checked={aluno.camiseta_entregue}
                             onCheckedChange={(checked) => 
-                              handleCheckboxChange(aluno.id, !!checked)
+                              handleCheckboxChange(aluno.id, aluno.nome, !!checked)
                             }
                             className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
+                          {aluno.camiseta_entregue && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Info className="h-4 w-4 text-blue-500" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-sm">
+                                    <p><strong>Tamanho:</strong> {aluno.tamanho_camiseta || 'N/A'}</p>
+                                    <p><strong>Responsável:</strong> {aluno.responsavel_entrega_nome || 'N/A'}</p>
+                                    {aluno.data_entrega && (
+                                      <p><strong>Data:</strong> {new Date(aluno.data_entrega).toLocaleDateString('pt-BR')}</p>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -216,6 +269,15 @@ export default function Camisetas() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Entrega */}
+      <CamisetaModal
+        isOpen={modalData.isOpen}
+        onClose={handleModalClose}
+        alunoId={modalData.alunoId}
+        alunoNome={modalData.alunoNome}
+        onSuccess={handleModalSuccess}
+      />
     </div>
   );
 }

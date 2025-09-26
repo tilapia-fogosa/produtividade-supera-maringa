@@ -1144,6 +1144,10 @@ export type Database = {
           data_entrega: string | null
           id: string
           observacoes: string | null
+          responsavel_entrega_id: string | null
+          responsavel_entrega_nome: string | null
+          responsavel_entrega_tipo: string | null
+          tamanho_camiseta: string | null
           updated_at: string
         }
         Insert: {
@@ -1153,6 +1157,10 @@ export type Database = {
           data_entrega?: string | null
           id?: string
           observacoes?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_entrega_tipo?: string | null
+          tamanho_camiseta?: string | null
           updated_at?: string
         }
         Update: {
@@ -1162,6 +1170,10 @@ export type Database = {
           data_entrega?: string | null
           id?: string
           observacoes?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_entrega_tipo?: string | null
+          tamanho_camiseta?: string | null
           updated_at?: string
         }
         Relationships: []

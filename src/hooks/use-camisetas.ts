@@ -10,6 +10,9 @@ export interface CamisetaAlunoData {
   turma_nome: string | null;
   professor_nome: string | null;
   camiseta_id: string | null;
+  tamanho_camiseta?: string | null;
+  data_entrega?: string | null;
+  responsavel_entrega_nome?: string | null;
 }
 
 export function useCamisetas() {
@@ -68,7 +71,7 @@ export function useCamisetas() {
       const alunoIds = alunosData.map(aluno => aluno.id);
       const { data: camisetasData, error: camisetasError } = await supabase
         .from('camisetas')
-        .select('*')
+        .select('id, aluno_id, camiseta_entregue, tamanho_camiseta, data_entrega, responsavel_entrega_nome')
         .in('aluno_id', alunoIds);
 
       if (camisetasError) {
@@ -89,7 +92,10 @@ export function useCamisetas() {
           camiseta_entregue: camiseta?.camiseta_entregue || false,
           turma_nome: aluno.turmas?.nome || null,
           professor_nome: aluno.turmas?.professores?.nome || null,
-          camiseta_id: camiseta?.id || null
+          camiseta_id: camiseta?.id || null,
+          tamanho_camiseta: camiseta?.tamanho_camiseta || null,
+          data_entrega: camiseta?.data_entrega || null,
+          responsavel_entrega_nome: camiseta?.responsavel_entrega_nome || null
         };
       });
 
@@ -110,65 +116,50 @@ export function useCamisetas() {
     }
   };
 
-  const atualizarCamiseta = async (alunoId: string, entregue: boolean) => {
+  const marcarComoNaoEntregue = async (alunoId: string) => {
     try {
       const aluno = alunos.find(a => a.id === alunoId);
-      if (!aluno) {
-        throw new Error('Aluno não encontrado');
-      }
+      if (!aluno || !aluno.camiseta_id) return;
 
-      // Se não existe registro de camiseta, criar um
-      if (!aluno.camiseta_id) {
-        const { data: novaCamiseta, error: insertError } = await supabase
-          .from('camisetas')
-          .insert({
-            aluno_id: alunoId,
-            camiseta_entregue: entregue,
-            data_entrega: entregue ? new Date().toISOString() : null
-          })
-          .select()
-          .single();
+      // Atualizar registro para não entregue
+      const { error } = await supabase
+        .from('camisetas')
+        .update({ 
+          camiseta_entregue: false,
+          data_entrega: null,
+          tamanho_camiseta: null,
+          responsavel_entrega_id: null,
+          responsavel_entrega_tipo: null,
+          responsavel_entrega_nome: null
+        })
+        .eq('id', aluno.camiseta_id);
 
-        if (insertError) throw insertError;
+      if (error) throw error;
 
-        // Atualizar estado local
-        setAlunos(prev => prev.map(a => 
-          a.id === alunoId 
-            ? { ...a, camiseta_entregue: entregue, camiseta_id: novaCamiseta.id }
-            : a
-        ));
-
-      } else {
-        // Atualizar registro existente
-        const { error: updateError } = await supabase
-          .from('camisetas')
-          .update({ 
-            camiseta_entregue: entregue,
-            data_entrega: entregue ? new Date().toISOString() : null
-          })
-          .eq('id', aluno.camiseta_id);
-
-        if (updateError) throw updateError;
-
-        // Atualizar estado local
-        setAlunos(prev => prev.map(a => 
-          a.id === alunoId 
-            ? { ...a, camiseta_entregue: entregue }
-            : a
-        ));
-      }
+      // Atualizar estado local
+      setAlunos(prev => prev.map(a => 
+        a.id === alunoId 
+          ? { 
+              ...a, 
+              camiseta_entregue: false,
+              tamanho_camiseta: null,
+              data_entrega: null,
+              responsavel_entrega_nome: null
+            }
+          : a
+      ));
 
       toast({
         title: "Sucesso",
-        description: `Camiseta ${entregue ? 'marcada como entregue' : 'desmarcada'}.`,
+        description: "Camiseta desmarcada como entregue.",
         variant: "default"
       });
 
     } catch (error) {
-      console.error('Erro ao atualizar camiseta:', error);
+      console.error('Erro ao desmarcar camiseta:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar a camiseta.",
+        description: "Não foi possível desmarcar a camiseta.",
         variant: "destructive"
       });
     }
@@ -184,7 +175,7 @@ export function useCamisetas() {
     contadorCamisetasNaoEntregues,
     loading,
     error,
-    atualizarCamiseta,
+    marcarComoNaoEntregue,
     refetch: buscarDadosCamisetas
   };
 }
