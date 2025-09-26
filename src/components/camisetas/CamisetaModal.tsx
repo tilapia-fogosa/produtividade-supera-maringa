@@ -128,29 +128,20 @@ export default function CamisetaModal({ isOpen, onClose, alunoId, alunoNome, onS
                   onChange={(e) => setDataEntrega(e.target.value)}
                 />
               </div>
-
-              <div>
-                <Label>Responsável *</Label>
-                <Input
-                  placeholder="Nome do responsável (professor ou funcionário)"
-                  value={responsavelId}
-                  onChange={(e) => setResponsavelId(e.target.value)}
-                />
-              </div>
             </>
           )}
 
-          {modalType === 'nao_tem_tamanho' && (
-            <div>
-              <Label>Responsável *</Label>
-              <Input
-                placeholder="Nome do responsável (professor ou funcionário)"
-                value={responsavelId}
-                onChange={(e) => setResponsavelId(e.target.value)}
-              />
-            </div>
-          )}
+          {/* Campo Responsável - sempre visível */}
+          <div>
+            <Label>Responsável *</Label>
+            <Input
+              placeholder="Nome do responsável (professor ou funcionário)"
+              value={responsavelId}
+              onChange={(e) => setResponsavelId(e.target.value)}
+            />
+          </div>
 
+          {/* Campo Observações */}
           <div>
             <Label>
               Observações {modalType === 'nao_tem_tamanho' ? '*' : '(opcional)'}
