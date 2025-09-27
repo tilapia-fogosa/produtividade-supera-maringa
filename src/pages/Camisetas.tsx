@@ -274,14 +274,14 @@ export default function Camisetas() {
         <CardContent className="p-0">
           {/* Cabeçalho fixo */}
           <div className="border-b bg-muted/50 sticky top-0 z-10">
-            <div className="flex items-center px-4 py-3 font-semibold text-sm">
-              <div className="w-[200px] flex-shrink-0">Aluno</div>
-              <div className="w-[120px] flex-shrink-0">Tempo no Supera</div>
-              <div className="w-[150px] flex-shrink-0">Turma</div>
-              <div className="w-[150px] flex-shrink-0">Professor</div>
-              <div className="w-[140px] flex-shrink-0 text-center">Camiseta Entregue</div>
-              <div className="w-[140px] flex-shrink-0 text-center">Não Tem Tamanho</div>
-              <div className="w-[200px] flex-shrink-0">Observações</div>
+            <div className="flex items-center px-1 py-2 font-semibold text-sm">
+              <div className="w-[250px] flex-shrink-0 px-1 py-1">Aluno</div>
+              <div className="w-[140px] flex-shrink-0 px-1 py-1">Tempo no Supera</div>
+              <div className="w-[140px] flex-shrink-0 px-1 py-1">Turma</div>
+              <div className="w-[140px] flex-shrink-0 px-1 py-1">Professor</div>
+              <div className="w-[160px] flex-shrink-0 px-1 py-1 text-center">Camiseta Entregue</div>
+              <div className="w-[140px] flex-shrink-0 px-1 py-1 text-center">Não Tem Tamanho</div>
+              <div className="flex-1 min-w-[180px] px-1 py-1">Observações</div>
             </div>
           </div>
           
@@ -306,21 +306,21 @@ export default function Camisetas() {
                 ) : (
                   alunos.map((aluno) => (
                     <TableRow key={aluno.id}>
-                      <TableCell className="font-medium w-[200px]">
-                        {aluno.nome}
+                      <TableCell className="font-medium w-[250px] px-1 py-1">
+                        <div className="truncate">{aluno.nome}</div>
                       </TableCell>
-                      <TableCell className="w-[120px]">
+                      <TableCell className="w-[140px] px-1 py-1">
                         {getDiasSupera(aluno.dias_supera)}
                       </TableCell>
-                      <TableCell className="w-[150px]">
-                        {aluno.turma_nome || "-"}
+                      <TableCell className="w-[140px] px-1 py-1">
+                        <div className="truncate">{aluno.turma_nome || "-"}</div>
                       </TableCell>
-                      <TableCell className="w-[150px]">
-                        {aluno.professor_nome || "-"}
+                      <TableCell className="w-[140px] px-1 py-1">
+                        <div className="truncate">{aluno.professor_nome || "-"}</div>
                       </TableCell>
                       
                       {/* Coluna Camiseta Entregue */}
-                      <TableCell className="text-center w-[140px]">
+                      <TableCell className="text-center w-[160px] px-1 py-1">
                         <div className="flex items-center justify-center gap-2">
                           {getStatusIcon(aluno.camiseta_entregue)}
                           <Checkbox
@@ -352,7 +352,7 @@ export default function Camisetas() {
                       </TableCell>
 
                       {/* Coluna Não Tem Tamanho */}
-                      <TableCell className="text-center w-[140px]">
+                      <TableCell className="text-center w-[140px] px-1 py-1">
                         <div className="flex items-center justify-center gap-2">
                           <Checkbox
                             checked={aluno.nao_tem_tamanho}
@@ -368,7 +368,7 @@ export default function Camisetas() {
                       </TableCell>
 
                       {/* Coluna Observações */}
-                      <TableCell className="w-[200px]">
+                      <TableCell className="flex-1 min-w-[180px] px-1 py-1">
                         <div className="flex flex-col gap-1">
                           {aluno.observacoes && (
                             <div className="text-sm text-muted-foreground max-w-[200px] truncate">
