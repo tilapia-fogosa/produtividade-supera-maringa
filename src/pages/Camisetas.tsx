@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,6 +26,10 @@ export default function Camisetas() {
     error, 
     filtro,
     setFiltro,
+    filtroNome,
+    setFiltroNome,
+    filtroTurma,
+    setFiltroTurma,
     marcarComoEntregue,
     marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue,
@@ -179,19 +184,42 @@ export default function Camisetas() {
           </Badge>
         </div>
         
-        <div className="flex gap-2">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filtro} onValueChange={(value: 'pendentes' | 'todos') => setFiltro(value)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendentes">Apenas pendentes</SelectItem>
-                <SelectItem value="todos">Todos os alunos</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={filtro} onValueChange={(value: 'pendentes' | 'todos') => setFiltro(value)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendentes">Pendentes</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar por nome..."
+                value={filtroNome}
+                onChange={(e) => setFiltroNome(e.target.value)}
+                className="w-[180px]"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar por turma..."
+                value={filtroTurma}
+                onChange={(e) => setFiltroTurma(e.target.value)}
+                className="w-[180px]"
+              />
+            </div>
           </div>
+          
           <Button
             variant="outline"
             size="sm"
@@ -231,17 +259,17 @@ export default function Camisetas() {
       {/* Tabela */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[70vh]">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Aluno</TableHead>
-                  <TableHead className="w-[120px]">Tempo no Supera</TableHead>
-                  <TableHead className="w-[150px]">Turma</TableHead>
-                  <TableHead className="w-[150px]">Professor</TableHead>
-                  <TableHead className="w-[140px] text-center">Camiseta Entregue</TableHead>
-                  <TableHead className="w-[140px] text-center">Não Tem Tamanho</TableHead>
-                  <TableHead className="w-[200px]">Observações</TableHead>
+              <TableHeader className="sticky top-0 bg-background shadow-sm z-10">
+                <TableRow className="hover:bg-background">
+                  <TableHead className="w-[200px] bg-background">Aluno</TableHead>
+                  <TableHead className="w-[120px] bg-background">Tempo no Supera</TableHead>
+                  <TableHead className="w-[150px] bg-background">Turma</TableHead>
+                  <TableHead className="w-[150px] bg-background">Professor</TableHead>
+                  <TableHead className="w-[140px] text-center bg-background">Camiseta Entregue</TableHead>
+                  <TableHead className="w-[140px] text-center bg-background">Não Tem Tamanho</TableHead>
+                  <TableHead className="w-[200px] bg-background">Observações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
