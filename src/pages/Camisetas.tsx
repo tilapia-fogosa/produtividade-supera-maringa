@@ -274,8 +274,8 @@ export default function Camisetas() {
         <CardContent className="p-0">
           <div className="overflow-auto max-h-[70vh]">
             <Table className="relative">
-              <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 border-b shadow-md z-30">
-                <TableRow>
+              <TableHeader>
+                <TableRow className="sticky top-0 bg-background border-b shadow-sm z-50">
                   <TableHead className="w-[200px] font-semibold bg-background">Aluno</TableHead>
                   <TableHead className="w-[120px] font-semibold bg-background">Tempo no Supera</TableHead>
                   <TableHead className="w-[150px] font-semibold bg-background">Turma</TableHead>
