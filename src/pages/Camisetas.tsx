@@ -272,19 +272,22 @@ export default function Camisetas() {
       {/* Tabela */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-auto max-h-[70vh]">
+          {/* Cabeçalho fixo */}
+          <div className="border-b bg-muted/50 sticky top-0 z-10">
+            <div className="flex items-center px-4 py-3 font-semibold text-sm">
+              <div className="w-[200px] flex-shrink-0">Aluno</div>
+              <div className="w-[120px] flex-shrink-0">Tempo no Supera</div>
+              <div className="w-[150px] flex-shrink-0">Turma</div>
+              <div className="w-[150px] flex-shrink-0">Professor</div>
+              <div className="w-[140px] flex-shrink-0 text-center">Camiseta Entregue</div>
+              <div className="w-[140px] flex-shrink-0 text-center">Não Tem Tamanho</div>
+              <div className="w-[200px] flex-shrink-0">Observações</div>
+            </div>
+          </div>
+          
+          {/* Tabela sem cabeçalho */}
+          <div className="overflow-auto max-h-[60vh]">
             <Table className="relative">
-              <TableHeader>
-                <TableRow className="sticky top-0 bg-background border-b shadow-sm z-50">
-                  <TableHead className="w-[200px] font-semibold bg-background">Aluno</TableHead>
-                  <TableHead className="w-[120px] font-semibold bg-background">Tempo no Supera</TableHead>
-                  <TableHead className="w-[150px] font-semibold bg-background">Turma</TableHead>
-                  <TableHead className="w-[150px] font-semibold bg-background">Professor</TableHead>
-                  <TableHead className="w-[140px] text-center font-semibold bg-background">Camiseta Entregue</TableHead>
-                  <TableHead className="w-[140px] text-center font-semibold bg-background">Não Tem Tamanho</TableHead>
-                  <TableHead className="w-[200px] font-semibold bg-background">Observações</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {alunos.length === 0 ? (
                   <TableRow>
@@ -303,21 +306,21 @@ export default function Camisetas() {
                 ) : (
                   alunos.map((aluno) => (
                     <TableRow key={aluno.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium w-[200px]">
                         {aluno.nome}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[120px]">
                         {getDiasSupera(aluno.dias_supera)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {aluno.turma_nome || "-"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {aluno.professor_nome || "-"}
                       </TableCell>
                       
                       {/* Coluna Camiseta Entregue */}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center w-[140px]">
                         <div className="flex items-center justify-center gap-2">
                           {getStatusIcon(aluno.camiseta_entregue)}
                           <Checkbox
@@ -349,7 +352,7 @@ export default function Camisetas() {
                       </TableCell>
 
                       {/* Coluna Não Tem Tamanho */}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center w-[140px]">
                         <div className="flex items-center justify-center gap-2">
                           <Checkbox
                             checked={aluno.nao_tem_tamanho}
@@ -365,7 +368,7 @@ export default function Camisetas() {
                       </TableCell>
 
                       {/* Coluna Observações */}
-                      <TableCell>
+                      <TableCell className="w-[200px]">
                         <div className="flex flex-col gap-1">
                           {aluno.observacoes && (
                             <div className="text-sm text-muted-foreground max-w-[200px] truncate">
