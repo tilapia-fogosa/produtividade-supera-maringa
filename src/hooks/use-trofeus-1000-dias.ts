@@ -18,17 +18,25 @@ export interface FiltrosTrofeus {
   trofeuPedido: 'todos' | 'sim' | 'nao';
   trofeuConfeccionado: 'todos' | 'sim' | 'nao';
   trofeuEntregue: 'todos' | 'sim' | 'nao';
+  nomeAluno: string;
+  turma: string;
+  professor: string;
 }
 
 export function useTrofeus1000Dias() {
   const [alunos, setAlunos] = useState<TrofeuAlunoData[]>([]);
   const [filteredAlunos, setFilteredAlunos] = useState<TrofeuAlunoData[]>([]);
+  const [todasTurmas, setTodasTurmas] = useState<{id: string, nome: string}[]>([]);
+  const [todosProfessores, setTodosProfessores] = useState<{id: string, nome: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filtros, setFiltros] = useState<FiltrosTrofeus>({
     trofeuPedido: 'todos',
     trofeuConfeccionado: 'todos',
-    trofeuEntregue: 'todos'
+    trofeuEntregue: 'todos',
+    nomeAluno: '',
+    turma: '',
+    professor: ''
   });
 
   useEffect(() => {
@@ -130,9 +138,32 @@ export function useTrofeus1000Dias() {
     }
   };
 
+  const buscarTurmasEProfessores = async () => {
+    // Deixar vazio por enquanto - vamos buscar os dados de outra forma na página
+    console.log('Dados de turmas e professores serão buscados diretamente na página');
+  };
+
   const aplicarFiltros = () => {
     let result = [...alunos];
 
+    // Filtro por nome do aluno
+    if (filtros.nomeAluno) {
+      result = result.filter(aluno => 
+        aluno.nome.toLowerCase().includes(filtros.nomeAluno.toLowerCase())
+      );
+    }
+
+    // Filtro por turma
+    if (filtros.turma) {
+      result = result.filter(aluno => aluno.turma_nome === filtros.turma);
+    }
+
+    // Filtro por professor
+    if (filtros.professor) {
+      result = result.filter(aluno => aluno.professor_nome === filtros.professor);
+    }
+
+    // Filtros de troféu existentes
     if (filtros.trofeuPedido === 'sim') {
       result = result.filter(aluno => aluno.trofeu_pedido);
     } else if (filtros.trofeuPedido === 'nao') {
@@ -212,7 +243,10 @@ export function useTrofeus1000Dias() {
     setFiltros({
       trofeuPedido: 'todos',
       trofeuConfeccionado: 'todos',
-      trofeuEntregue: 'todos'
+      trofeuEntregue: 'todos',
+      nomeAluno: '',
+      turma: '',
+      professor: ''
     });
   };
 
@@ -223,6 +257,8 @@ export function useTrofeus1000Dias() {
 
   return {
     alunos: filteredAlunos,
+    todasTurmas,
+    todosProfessores,
     contadorTrofeusNaoEntregues,
     loading,
     error,
