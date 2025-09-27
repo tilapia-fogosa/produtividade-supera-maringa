@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useCamisetas } from "@/hooks/use-camisetas";
+import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Shirt, CheckCircle, XCircle, RotateCcw, Info, Filter, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,6 +27,10 @@ export default function Camisetas() {
     error, 
     filtro,
     setFiltro,
+    filtroNome,
+    setFiltroNome,
+    filtroTurma,
+    setFiltroTurma,
     marcarComoEntregue,
     marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue,
@@ -32,6 +38,8 @@ export default function Camisetas() {
     marcarComoNaoTemTamanhoComDetalhes,
     refetch 
   } = useCamisetas();
+
+  const { turmas } = useTodasTurmas();
 
   const handleCheckboxChange = (alunoId: string, checked: boolean) => {
     if (checked) {
@@ -179,19 +187,52 @@ export default function Camisetas() {
           </Badge>
         </div>
         
-        <div className="flex gap-2">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filtro} onValueChange={(value: 'pendentes' | 'todos') => setFiltro(value)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendentes">Apenas pendentes</SelectItem>
-                <SelectItem value="todos">Todos os alunos</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={filtro} onValueChange={(value: 'pendentes' | 'todos') => setFiltro(value)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendentes">Pendentes</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar por nome..."
+                value={filtroNome}
+                onChange={(e) => setFiltroNome(e.target.value)}
+                className="w-[180px]"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Select 
+                value={filtroTurma || "todas"} 
+                onValueChange={(value) => setFiltroTurma(value === "todas" ? "" : value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por turma..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background border z-50">
+                  <SelectItem value="todas">Todas as turmas</SelectItem>
+                  {turmas?.map((turma) => (
+                    <SelectItem key={turma.id} value={turma.nome}>
+                      {turma.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          
           <Button
             variant="outline"
             size="sm"
@@ -231,19 +272,22 @@ export default function Camisetas() {
       {/* Tabela */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Aluno</TableHead>
-                  <TableHead className="w-[120px]">Tempo no Supera</TableHead>
-                  <TableHead className="w-[150px]">Turma</TableHead>
-                  <TableHead className="w-[150px]">Professor</TableHead>
-                  <TableHead className="w-[140px] text-center">Camiseta Entregue</TableHead>
-                  <TableHead className="w-[140px] text-center">Não Tem Tamanho</TableHead>
-                  <TableHead className="w-[200px]">Observações</TableHead>
-                </TableRow>
-              </TableHeader>
+          {/* Cabeçalho fixo */}
+          <div className="border-b bg-muted/50 sticky top-0 z-10">
+            <div className="flex items-center px-4 py-3 font-semibold text-sm">
+              <div className="w-[200px] flex-shrink-0">Aluno</div>
+              <div className="w-[120px] flex-shrink-0">Tempo no Supera</div>
+              <div className="w-[150px] flex-shrink-0">Turma</div>
+              <div className="w-[150px] flex-shrink-0">Professor</div>
+              <div className="w-[140px] flex-shrink-0 text-center">Camiseta Entregue</div>
+              <div className="w-[140px] flex-shrink-0 text-center">Não Tem Tamanho</div>
+              <div className="w-[200px] flex-shrink-0">Observações</div>
+            </div>
+          </div>
+          
+          {/* Tabela sem cabeçalho */}
+          <div className="overflow-auto max-h-[60vh]">
+            <Table className="relative">
               <TableBody>
                 {alunos.length === 0 ? (
                   <TableRow>
@@ -262,21 +306,21 @@ export default function Camisetas() {
                 ) : (
                   alunos.map((aluno) => (
                     <TableRow key={aluno.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium w-[200px]">
                         {aluno.nome}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[120px]">
                         {getDiasSupera(aluno.dias_supera)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {aluno.turma_nome || "-"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {aluno.professor_nome || "-"}
                       </TableCell>
                       
                       {/* Coluna Camiseta Entregue */}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center w-[140px]">
                         <div className="flex items-center justify-center gap-2">
                           {getStatusIcon(aluno.camiseta_entregue)}
                           <Checkbox
@@ -308,7 +352,7 @@ export default function Camisetas() {
                       </TableCell>
 
                       {/* Coluna Não Tem Tamanho */}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center w-[140px]">
                         <div className="flex items-center justify-center gap-2">
                           <Checkbox
                             checked={aluno.nao_tem_tamanho}
@@ -324,7 +368,7 @@ export default function Camisetas() {
                       </TableCell>
 
                       {/* Coluna Observações */}
-                      <TableCell>
+                      <TableCell className="w-[200px]">
                         <div className="flex flex-col gap-1">
                           {aluno.observacoes && (
                             <div className="text-sm text-muted-foreground max-w-[200px] truncate">

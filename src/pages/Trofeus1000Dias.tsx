@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useTrofeus1000Dias, FiltrosTrofeus } from "@/hooks/use-trofeus-1000-dias";
+import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Medal, Gift, CheckCircle, XCircle, Filter, RotateCcw } from "lucide-react";
+import { Trophy, Medal, Gift, CheckCircle, XCircle, Filter, RotateCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,7 +24,13 @@ export default function Trofeus1000Dias() {
     refetch 
   } = useTrofeus1000Dias();
 
+  const { turmas } = useTodasTurmas();
   const [showFilters, setShowFilters] = useState(false);
+
+  // Extrair professores únicos dos alunos carregados
+  const professoresUnicos = Array.from(new Set(
+    alunos.map(aluno => aluno.professor_nome).filter(Boolean)
+  )).sort();
 
   const handleFiltroChange = (campo: keyof FiltrosTrofeus, valor: string) => {
     setFiltros(prev => ({
@@ -178,7 +186,66 @@ export default function Trofeus1000Dias() {
             <CardTitle className="text-lg">Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Nome do Aluno
+                </label>
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Filtrar por nome..."
+                    value={filtros.nomeAluno}
+                    onChange={(e) => setFiltros(prev => ({ ...prev, nomeAluno: e.target.value }))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Turma
+                </label>
+                <Select
+                  value={filtros.turma || "todas"}
+                  onValueChange={(value) => setFiltros(prev => ({ ...prev, turma: value === "todas" ? "" : value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as turmas" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="todas">Todas as turmas</SelectItem>
+                    {turmas?.map((turma) => (
+                      <SelectItem key={turma.id} value={turma.nome}>
+                        {turma.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Professor
+                </label>
+                <Select
+                  value={filtros.professor || "todos"}
+                  onValueChange={(value) => setFiltros(prev => ({ ...prev, professor: value === "todos" ? "" : value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os professores" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="todos">Todos os professores</SelectItem>
+                    {professoresUnicos.map((professor) => (
+                      <SelectItem key={professor} value={professor}>
+                        {professor}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <label className="text-sm font-medium mb-2 block">
                   Troféu Pedido
@@ -190,7 +257,7 @@ export default function Trofeus1000Dias() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border z-50">
                     <SelectItem value="todos">Todos</SelectItem>
                     <SelectItem value="sim">Sim</SelectItem>
                     <SelectItem value="nao">Não</SelectItem>
@@ -209,7 +276,7 @@ export default function Trofeus1000Dias() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border z-50">
                     <SelectItem value="todos">Todos</SelectItem>
                     <SelectItem value="sim">Sim</SelectItem>
                     <SelectItem value="nao">Não</SelectItem>
@@ -228,7 +295,7 @@ export default function Trofeus1000Dias() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border z-50">
                     <SelectItem value="todos">Todos</SelectItem>
                     <SelectItem value="sim">Sim</SelectItem>
                     <SelectItem value="nao">Não</SelectItem>
