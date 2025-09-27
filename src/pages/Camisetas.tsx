@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCamisetas } from "@/hooks/use-camisetas";
+import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,6 +38,8 @@ export default function Camisetas() {
     marcarComoNaoTemTamanhoComDetalhes,
     refetch 
   } = useCamisetas();
+
+  const { turmas } = useTodasTurmas();
 
   const handleCheckboxChange = (alunoId: string, checked: boolean) => {
     if (checked) {
@@ -211,12 +214,22 @@ export default function Camisetas() {
             
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Filtrar por turma..."
-                value={filtroTurma}
-                onChange={(e) => setFiltroTurma(e.target.value)}
-                className="w-[180px]"
-              />
+              <Select 
+                value={filtroTurma || "todas"} 
+                onValueChange={(value) => setFiltroTurma(value === "todas" ? "" : value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por turma..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background border z-50">
+                  <SelectItem value="todas">Todas as turmas</SelectItem>
+                  {turmas?.map((turma) => (
+                    <SelectItem key={turma.id} value={turma.nome}>
+                      {turma.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
@@ -259,17 +272,17 @@ export default function Camisetas() {
       {/* Tabela */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-auto max-h-[70vh] relative">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-sm z-20">
+          <div className="overflow-auto max-h-[70vh]">
+            <Table className="relative">
+              <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 border-b shadow-md z-30">
                 <TableRow>
-                  <TableHead className="w-[200px] font-semibold">Aluno</TableHead>
-                  <TableHead className="w-[120px] font-semibold">Tempo no Supera</TableHead>
-                  <TableHead className="w-[150px] font-semibold">Turma</TableHead>
-                  <TableHead className="w-[150px] font-semibold">Professor</TableHead>
-                  <TableHead className="w-[140px] text-center font-semibold">Camiseta Entregue</TableHead>
-                  <TableHead className="w-[140px] text-center font-semibold">Não Tem Tamanho</TableHead>
-                  <TableHead className="w-[200px] font-semibold">Observações</TableHead>
+                  <TableHead className="w-[200px] font-semibold bg-background">Aluno</TableHead>
+                  <TableHead className="w-[120px] font-semibold bg-background">Tempo no Supera</TableHead>
+                  <TableHead className="w-[150px] font-semibold bg-background">Turma</TableHead>
+                  <TableHead className="w-[150px] font-semibold bg-background">Professor</TableHead>
+                  <TableHead className="w-[140px] text-center font-semibold bg-background">Camiseta Entregue</TableHead>
+                  <TableHead className="w-[140px] text-center font-semibold bg-background">Não Tem Tamanho</TableHead>
+                  <TableHead className="w-[200px] font-semibold bg-background">Observações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
