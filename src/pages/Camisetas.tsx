@@ -259,17 +259,17 @@ export default function Camisetas() {
       {/* Tabela */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto max-h-[70vh]">
+          <div className="overflow-auto max-h-[70vh] relative">
             <Table>
-              <TableHeader className="sticky top-0 bg-background shadow-sm z-10">
-                <TableRow className="hover:bg-background">
-                  <TableHead className="w-[200px] bg-background">Aluno</TableHead>
-                  <TableHead className="w-[120px] bg-background">Tempo no Supera</TableHead>
-                  <TableHead className="w-[150px] bg-background">Turma</TableHead>
-                  <TableHead className="w-[150px] bg-background">Professor</TableHead>
-                  <TableHead className="w-[140px] text-center bg-background">Camiseta Entregue</TableHead>
-                  <TableHead className="w-[140px] text-center bg-background">Não Tem Tamanho</TableHead>
-                  <TableHead className="w-[200px] bg-background">Observações</TableHead>
+              <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-sm z-20">
+                <TableRow>
+                  <TableHead className="w-[200px] font-semibold">Aluno</TableHead>
+                  <TableHead className="w-[120px] font-semibold">Tempo no Supera</TableHead>
+                  <TableHead className="w-[150px] font-semibold">Turma</TableHead>
+                  <TableHead className="w-[150px] font-semibold">Professor</TableHead>
+                  <TableHead className="w-[140px] text-center font-semibold">Camiseta Entregue</TableHead>
+                  <TableHead className="w-[140px] text-center font-semibold">Não Tem Tamanho</TableHead>
+                  <TableHead className="w-[200px] font-semibold">Observações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
