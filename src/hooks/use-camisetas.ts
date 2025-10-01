@@ -24,6 +24,7 @@ export function useCamisetas() {
   const [filtro, setFiltro] = useState<'pendentes' | 'todos'>('pendentes');
   const [filtroNome, setFiltroNome] = useState('');
   const [filtroTurma, setFiltroTurma] = useState('');
+  const [filtroProfessor, setFiltroProfessor] = useState('');
 
   useEffect(() => {
     buscarDadosCamisetas();
@@ -432,7 +433,10 @@ export function useCamisetas() {
     // Filtro por turma
     const turmaFilter = !filtroTurma || (aluno.turma_nome && aluno.turma_nome.toLowerCase().includes(filtroTurma.toLowerCase()));
     
-    return statusFilter && nomeFilter && turmaFilter;
+    // Filtro por professor
+    const professorFilter = !filtroProfessor || (aluno.professor_nome && aluno.professor_nome.toLowerCase().includes(filtroProfessor.toLowerCase()));
+    
+    return statusFilter && nomeFilter && turmaFilter && professorFilter;
   });
 
   // Contador de alunos com +90 dias sem camiseta entregue e que não foram marcados como "não tem tamanho"
@@ -452,6 +456,8 @@ export function useCamisetas() {
     setFiltroNome,
     filtroTurma,
     setFiltroTurma,
+    filtroProfessor,
+    setFiltroProfessor,
     marcarComoEntregue,
     marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue,
