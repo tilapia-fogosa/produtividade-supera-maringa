@@ -31,6 +31,8 @@ export default function Camisetas() {
     setFiltroNome,
     filtroTurma,
     setFiltroTurma,
+    filtroProfessor,
+    setFiltroProfessor,
     marcarComoEntregue,
     marcarComoEntregueComDetalhes,
     marcarComoNaoEntregue,
@@ -40,6 +42,11 @@ export default function Camisetas() {
   } = useCamisetas();
 
   const { turmas } = useTodasTurmas();
+
+  // Extrair professores únicos dos alunos
+  const professoresUnicos = Array.from(
+    new Set(todosAlunos.map(a => a.professor_nome).filter(Boolean))
+  ).sort();
 
   const handleCheckboxChange = (alunoId: string, checked: boolean) => {
     if (checked) {
@@ -226,6 +233,26 @@ export default function Camisetas() {
                   {turmas?.map((turma) => (
                     <SelectItem key={turma.id} value={turma.nome}>
                       {turma.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Select 
+                value={filtroProfessor || "todos"} 
+                onValueChange={(value) => setFiltroProfessor(value === "todos" ? "" : value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por professor..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background border z-50">
+                  <SelectItem value="todos">Todos os professores</SelectItem>
+                  {professoresUnicos.map((professor) => (
+                    <SelectItem key={professor} value={professor}>
+                      {professor}
                     </SelectItem>
                   ))}
                 </SelectContent>
