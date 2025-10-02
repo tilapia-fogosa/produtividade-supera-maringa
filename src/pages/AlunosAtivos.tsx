@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save } from "lucide-react";
@@ -18,9 +19,9 @@ export default function AlunosAtivos() {
     atualizarResponsavel
   } = useAlunosAtivos();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTurma, setFilterTurma] = useState('todas');
-  const [filterProfessor, setFilterProfessor] = useState('todos');
-  const [filterApostila, setFilterApostila] = useState('todas');
+  const [filterTurma, setFilterTurma] = useState<string[]>([]);
+  const [filterProfessor, setFilterProfessor] = useState<string[]>([]);
+  const [filterApostila, setFilterApostila] = useState<string[]>([]);
   const [sortField, setSortField] = useState<SortField>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoAtivo | null>(null);
@@ -33,22 +34,22 @@ export default function AlunosAtivos() {
 
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
-    return Array.from(new Set(alunos.map(aluno => aluno.turma_nome).filter(Boolean)));
+    return Array.from(new Set(alunos.map(aluno => aluno.turma_nome).filter(Boolean))).sort();
   }, [alunos]);
   const professoresUnicos = useMemo(() => {
-    return Array.from(new Set(alunos.map(aluno => aluno.professor_nome).filter(Boolean)));
+    return Array.from(new Set(alunos.map(aluno => aluno.professor_nome).filter(Boolean))).sort();
   }, [alunos]);
   const apostilasUnicas = useMemo(() => {
-    return Array.from(new Set(alunos.map(aluno => aluno.ultima_apostila).filter(Boolean)));
+    return Array.from(new Set(alunos.map(aluno => aluno.ultima_apostila).filter(Boolean))).sort();
   }, [alunos]);
 
   // Filtrar e ordenar alunos
   const alunosFiltrados = useMemo(() => {
     let resultado = alunos.filter(aluno => {
       const matchSearch = aluno.nome.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchTurma = filterTurma === 'todas' || aluno.turma_nome === filterTurma;
-      const matchProfessor = filterProfessor === 'todos' || aluno.professor_nome === filterProfessor;
-      const matchApostila = filterApostila === 'todas' || aluno.ultima_apostila === filterApostila;
+      const matchTurma = filterTurma.length === 0 || filterTurma.includes(aluno.turma_nome || '');
+      const matchProfessor = filterProfessor.length === 0 || filterProfessor.includes(aluno.professor_nome || '');
+      const matchApostila = filterApostila.length === 0 || filterApostila.includes(aluno.ultima_apostila || '');
       return matchSearch && matchTurma && matchProfessor && matchApostila;
     });
 
@@ -100,9 +101,9 @@ export default function AlunosAtivos() {
   };
   const clearFilters = () => {
     setSearchTerm('');
-    setFilterTurma('todas');
-    setFilterProfessor('todos');
-    setFilterApostila('todas');
+    setFilterTurma([]);
+    setFilterProfessor([]);
+    setFilterApostila([]);
   };
   const handleVerDetalhes = (aluno: AlunoAtivo) => {
     setAlunoSelecionado(aluno);
@@ -188,35 +189,95 @@ export default function AlunosAtivos() {
 
           {/* Filtros por seleção */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={filterTurma} onValueChange={setFilterTurma}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por turma" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as turmas</SelectItem>
-                {turmasUnicas.map(turma => <SelectItem key={turma} value={turma}>{turma}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  {filterTurma.length === 0 ? "Filtrar por turma" : `${filterTurma.length} turma(s) selecionada(s)`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4">
+                <div className="space-y-2">
+                  {turmasUnicas.map(turma => (
+                    <div key={turma} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`turma-${turma}`}
+                        checked={filterTurma.includes(turma)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFilterTurma([...filterTurma, turma]);
+                          } else {
+                            setFilterTurma(filterTurma.filter(t => t !== turma));
+                          }
+                        }}
+                      />
+                      <label htmlFor={`turma-${turma}`} className="text-sm cursor-pointer">
+                        {turma}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
 
-            <Select value={filterProfessor} onValueChange={setFilterProfessor}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por professor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os professores</SelectItem>
-                {professoresUnicos.map(professor => <SelectItem key={professor} value={professor}>{professor}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  {filterProfessor.length === 0 ? "Filtrar por professor" : `${filterProfessor.length} professor(es) selecionado(s)`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4">
+                <div className="space-y-2">
+                  {professoresUnicos.map(professor => (
+                    <div key={professor} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`professor-${professor}`}
+                        checked={filterProfessor.includes(professor)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFilterProfessor([...filterProfessor, professor]);
+                          } else {
+                            setFilterProfessor(filterProfessor.filter(p => p !== professor));
+                          }
+                        }}
+                      />
+                      <label htmlFor={`professor-${professor}`} className="text-sm cursor-pointer">
+                        {professor}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
 
-            <Select value={filterApostila} onValueChange={setFilterApostila}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por apostila" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as apostilas</SelectItem>
-                {apostilasUnicas.map(apostila => <SelectItem key={apostila} value={apostila}>{apostila}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  {filterApostila.length === 0 ? "Filtrar por apostila" : `${filterApostila.length} apostila(s) selecionada(s)`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4">
+                <div className="space-y-2">
+                  {apostilasUnicas.map(apostila => (
+                    <div key={apostila} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`apostila-${apostila}`}
+                        checked={filterApostila.includes(apostila)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFilterApostila([...filterApostila, apostila]);
+                          } else {
+                            setFilterApostila(filterApostila.filter(a => a !== apostila));
+                          }
+                        }}
+                      />
+                      <label htmlFor={`apostila-${apostila}`} className="text-sm cursor-pointer">
+                        {apostila}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <Button variant="outline" onClick={clearFilters} className="w-full md:w-auto">
