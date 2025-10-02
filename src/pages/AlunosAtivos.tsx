@@ -187,7 +187,7 @@ export default function AlunosAtivos() {
   return (
     <div className="p-4 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Pessoas Ativas</h1>
+        <h1 className="text-2xl font-bold">Alunos</h1>
         <Badge variant="secondary" className="text-sm bg-purple-400">
           {alunosFiltrados.length} de {alunos.length} pessoas
         </Badge>
