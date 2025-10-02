@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,10 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
-
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera';
 type SortDirection = 'asc' | 'desc';
-
 export default function AlunosAtivos() {
   const {
     alunos,
@@ -20,7 +17,6 @@ export default function AlunosAtivos() {
     atualizarWhatsApp,
     atualizarResponsavel
   } = useAlunosAtivos();
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState('todas');
   const [filterProfessor, setFilterProfessor] = useState('todos');
@@ -90,7 +86,6 @@ export default function AlunosAtivos() {
     });
     return resultado;
   }, [alunos, searchTerm, filterTurma, filterProfessor, filterApostila, sortField, sortDirection]);
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -99,32 +94,26 @@ export default function AlunosAtivos() {
       setSortDirection('asc');
     }
   };
-
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="w-4 h-4" />;
     return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
   };
-
   const clearFilters = () => {
     setSearchTerm('');
     setFilterTurma('todas');
     setFilterProfessor('todos');
     setFilterApostila('todas');
   };
-
   const handleVerDetalhes = (aluno: AlunoAtivo) => {
     setAlunoSelecionado(aluno);
   };
-
   const handleFecharModal = () => {
     setAlunoSelecionado(null);
   };
-
   const handleEditarWhatsApp = (aluno: AlunoAtivo) => {
     setEditandoWhatsApp(aluno.id);
     setWhatsappTemp(aluno.whatapp_contato || '');
   };
-
   const handleSalvarWhatsApp = async (alunoId: string) => {
     setSalvandoWhatsApp(alunoId);
     const sucesso = await atualizarWhatsApp(alunoId, whatsappTemp);
@@ -133,17 +122,14 @@ export default function AlunosAtivos() {
     }
     setSalvandoWhatsApp(null);
   };
-
   const handleCancelarEdicao = () => {
     setEditandoWhatsApp(null);
     setWhatsappTemp('');
   };
-
   const handleEditarResponsavel = (aluno: AlunoAtivo) => {
     setEditandoResponsavel(aluno.id);
     setResponsavelTemp(aluno.responsavel || '');
   };
-
   const handleSalvarResponsavel = async (alunoId: string) => {
     setSalvandoResponsavel(alunoId);
     const sucesso = await atualizarResponsavel(alunoId, responsavelTemp);
@@ -152,27 +138,24 @@ export default function AlunosAtivos() {
     }
     setSalvandoResponsavel(null);
   };
-
   const handleCancelarEdicaoResponsavel = () => {
     setEditandoResponsavel(null);
     setResponsavelTemp('');
   };
-
   const handleAbrirWhatsApp = (aluno: AlunoAtivo) => {
     const numero = aluno.whatapp_contato;
     if (!numero) {
       alert('Este aluno não possui WhatsApp cadastrado');
       return;
     }
-    
+
     // Remove caracteres especiais e espaços do número
     const numeroLimpo = numero.replace(/\D/g, '');
-    
+
     // Abre o WhatsApp Web/App
     const url = `https://wa.me/55${numeroLimpo}`;
     window.open(url, '_blank');
   };
-
   if (loading) {
     return <div className="p-4 text-center">
         <p>Carregando alunos ativos...</p>
@@ -183,11 +166,9 @@ export default function AlunosAtivos() {
         <p>Erro ao carregar alunos: {error}</p>
       </div>;
   }
-  
-  return (
-    <div className="p-4 space-y-6">
+  return <div className="p-4 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Alunos</h1>
+        <h1 className="text-2xl font-bold">Alunos Ativos</h1>
         <Badge variant="secondary" className="text-sm bg-purple-400">
           {alunosFiltrados.length} de {alunos.length} pessoas
         </Badge>
@@ -296,21 +277,16 @@ export default function AlunosAtivos() {
                 </tr>
               </thead>
               <tbody>
-                {alunosFiltrados.map(aluno => (
-                <tr key={aluno.id} className="border-b hover:bg-gray-50">
+                {alunosFiltrados.map(aluno => <tr key={aluno.id} className="border-b hover:bg-gray-50">
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{aluno.nome}</span>
-                      {aluno.tipo_pessoa === 'funcionario' && (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+                      {aluno.tipo_pessoa === 'funcionario' && <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
                           Funcionário
-                        </Badge>
-                      )}
-                      {aluno.cargo && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
+                        </Badge>}
+                      {aluno.cargo && <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
                           {aluno.cargo}
-                        </Badge>
-                      )}
+                        </Badge>}
                     </div>
                   </td>
                     <td className="p-4">
@@ -320,155 +296,67 @@ export default function AlunosAtivos() {
                     </td>
                     <td className="p-4">{aluno.professor_nome || 'Não atribuído'}</td>
                     <td className="p-4">
-                      {aluno.ultima_apostila ? (
-                        <Badge variant="secondary" className="bg-violet-400">{aluno.ultima_apostila}</Badge>
-                      ) : (
-                        <span className="text-gray-400">Não registrado</span>
-                      )}
+                      {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400">{aluno.ultima_apostila}</Badge> : <span className="text-gray-400">Não registrado</span>}
                     </td>
                     <td className="p-4">
-                      <Badge 
-                        variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} 
-                        className={
-                          aluno.dias_supera && aluno.dias_supera < 90 
-                            ? "bg-orange-200 text-orange-800 border-orange-300" 
-                            : aluno.dias_supera && aluno.dias_supera > 30 
-                              ? "bg-green-100 text-green-800" 
-                              : ""
-                        }
-                      >
+                      <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}>
                         {aluno.dias_supera || 0} dias
                       </Badge>
                     </td>
                     <td className="p-4">
-                      {editandoWhatsApp === aluno.id ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={whatsappTemp}
-                            onChange={(e) => setWhatsappTemp(e.target.value)}
-                            placeholder="WhatsApp"
-                            className="h-8 text-sm"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSalvarWhatsApp(aluno.id);
-                              } else if (e.key === 'Escape') {
-                                handleCancelarEdicao();
-                              }
-                            }}
-                            autoFocus
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSalvarWhatsApp(aluno.id)}
-                            disabled={salvandoWhatsApp === aluno.id}
-                          >
-                            {salvandoWhatsApp === aluno.id ? (
-                              <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            ) : (
-                              <Save className="w-4 h-4" />
-                            )}
+                      {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-2">
+                          <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-8 text-sm" onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        handleSalvarWhatsApp(aluno.id);
+                      } else if (e.key === 'Escape') {
+                        handleCancelarEdicao();
+                      }
+                    }} autoFocus />
+                          <Button variant="ghost" size="sm" onClick={() => handleSalvarWhatsApp(aluno.id)} disabled={salvandoWhatsApp === aluno.id}>
+                            {salvandoWhatsApp === aluno.id ? <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-4 h-4" />}
                           </Button>
-                        </div>
-                      ) : (
-                        <div 
-                          className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center"
-                          onClick={() => handleEditarWhatsApp(aluno)}
-                        >
-                          {aluno.whatapp_contato ? (
-                            <span className="text-sm">{aluno.whatapp_contato}</span>
-                          ) : (
-                            <span className="text-gray-400 text-sm">Clique para adicionar</span>
-                          )}
-                        </div>
-                      )}
+                        </div> : <div className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarWhatsApp(aluno)}>
+                          {aluno.whatapp_contato ? <span className="text-sm">{aluno.whatapp_contato}</span> : <span className="text-gray-400 text-sm">Clique para adicionar</span>}
+                        </div>}
                      </td>
                      <td className="p-4">
-                       {editandoResponsavel === aluno.id ? (
-                         <div className="flex items-center gap-2">
-                           <Input
-                             value={responsavelTemp}
-                             onChange={(e) => setResponsavelTemp(e.target.value)}
-                             placeholder="Responsável"
-                             className="h-8 text-sm"
-                             onKeyDown={(e) => {
-                               if (e.key === 'Enter') {
-                                 handleSalvarResponsavel(aluno.id);
-                               } else if (e.key === 'Escape') {
-                                 handleCancelarEdicaoResponsavel();
-                               }
-                             }}
-                             autoFocus
-                           />
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => handleSalvarResponsavel(aluno.id)}
-                             disabled={salvandoResponsavel === aluno.id}
-                           >
-                             {salvandoResponsavel === aluno.id ? (
-                               <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                             ) : (
-                               <Save className="w-4 h-4" />
-                             )}
+                       {editandoResponsavel === aluno.id ? <div className="flex items-center gap-2">
+                           <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-8 text-sm" onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        handleSalvarResponsavel(aluno.id);
+                      } else if (e.key === 'Escape') {
+                        handleCancelarEdicaoResponsavel();
+                      }
+                    }} autoFocus />
+                           <Button variant="ghost" size="sm" onClick={() => handleSalvarResponsavel(aluno.id)} disabled={salvandoResponsavel === aluno.id}>
+                             {salvandoResponsavel === aluno.id ? <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-4 h-4" />}
                            </Button>
-                         </div>
-                       ) : (
-                         <div 
-                           className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center"
-                           onClick={() => handleEditarResponsavel(aluno)}
-                         >
-                           {aluno.responsavel ? (
-                             <span className="text-sm">{aluno.responsavel}</span>
-                           ) : (
-                             <span className="text-gray-400 text-sm">Clique para adicionar</span>
-                           )}
-                         </div>
-                       )}
+                         </div> : <div className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarResponsavel(aluno)}>
+                           {aluno.responsavel ? <span className="text-sm">{aluno.responsavel}</span> : <span className="text-gray-400 text-sm">Clique para adicionar</span>}
+                         </div>}
                      </td>
                        <td className="p-4">
                          <div className="flex gap-1">
-                           <Button
-                             variant="ghost"
-                             size="icon"
-                             onClick={() => handleVerDetalhes(aluno)}
-                             className="h-8 w-8"
-                             title="Ver Detalhes"
-                           >
+                           <Button variant="ghost" size="icon" onClick={() => handleVerDetalhes(aluno)} className="h-8 w-8" title="Ver Detalhes">
                              <Eye className="w-4 h-4" />
                            </Button>
-                           <Button
-                             variant="ghost"
-                             size="icon"
-                             onClick={() => handleAbrirWhatsApp(aluno)}
-                             className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                             title="Abrir WhatsApp"
-                           >
+                           <Button variant="ghost" size="icon" onClick={() => handleAbrirWhatsApp(aluno)} className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" title="Abrir WhatsApp">
                              <MessageCircle className="w-4 h-4" />
                            </Button>
                          </div>
                        </td>
-                  </tr>
-                ))}
+                  </tr>)}
               </tbody>
             </table>
 
-            {alunosFiltrados.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+            {alunosFiltrados.length === 0 && <div className="text-center py-8 text-gray-500">
                 <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
-              </div>
-            )}
+              </div>}
           </div>
         </CardContent>
       </Card>
 
       {/* Modal de detalhes do aluno */}
-      {alunoSelecionado && (
-        <DetalhesAlunoAtivoModal
-          aluno={alunoSelecionado}
-          onClose={handleFecharModal}
-        />
-      )}
-    </div>
-  );
+      {alunoSelecionado && <DetalhesAlunoAtivoModal aluno={alunoSelecionado} onClose={handleFecharModal} />}
+    </div>;
 }
