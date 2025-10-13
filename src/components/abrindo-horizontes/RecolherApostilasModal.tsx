@@ -22,6 +22,28 @@ interface ApostilaRecolhida {
   apostilaNome: string;
 }
 
+// Lista de apostilas Abrindo Horizontes disponíveis
+const APOSTILAS_AH = [
+  'AH 1',
+  'AH 2',
+  'AH 3',
+  'AH 4',
+  'AH 4A',
+  'AH 5',
+  'AH 5A',
+  'AH 6',
+  'AH 7',
+  'AH 8',
+  'AH 9',
+  'AH 10',
+  'AH 11',
+  'AH I Iniciar',
+  'AH II Focar',
+  'AH III Persistir',
+  'AH IV Avançar',
+  'AH Alta Performance'
+];
+
 export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilasModalProps) => {
   const [etapa, setEtapa] = useState<Etapa>('selecao-pessoas');
   const [pessoasSelecionadas, setPessoasSelecionadas] = useState<TodosAlunosItem[]>([]);
@@ -29,12 +51,6 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [searchTerm, setSearchTerm] = useState('');
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
-  const { apostilas, loading: loadingApostilas } = useApostilas();
-
-  // Filtrar apenas apostilas Abrindo Horizontes (que contêm "AH" no nome)
-  const apostilasAH = apostilas.filter(apostila => 
-    apostila.nome.toUpperCase().includes('AH')
-  );
 
   // Filtrar pessoas pelo termo de busca
   const pessoasFiltradas = alunos.filter(pessoa =>
@@ -212,9 +228,9 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                           onChange={(e) => handleApostilaChange(pessoa.id, e.target.value)}
                         >
                           <option value="">Selecione uma apostila AH</option>
-                          {apostilasAH.map((apostila) => (
-                            <option key={apostila.nome} value={apostila.nome}>
-                              {apostila.nome}
+                          {APOSTILAS_AH.map((apostila) => (
+                            <option key={apostila} value={apostila}>
+                              {apostila}
                             </option>
                           ))}
                         </select>
@@ -222,10 +238,6 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                     </div>
                   );
                 })}
-
-                {loadingApostilas && (
-                  <p className="text-center text-muted-foreground py-8">Carregando apostilas...</p>
-                )}
               </div>
             </ScrollArea>
 
