@@ -31,6 +31,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
   const { apostilas, loading: loadingApostilas } = useApostilas();
 
+  // Filtrar apenas apostilas Abrindo Horizontes (que contêm "AH" no nome)
+  const apostilasAH = apostilas.filter(apostila => 
+    apostila.nome.toUpperCase().includes('AH')
+  );
+
   // Filtrar pessoas pelo termo de busca
   const pessoasFiltradas = alunos.filter(pessoa =>
     pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -206,8 +211,8 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                           value={apostilaAtual?.apostilaNome || ''}
                           onChange={(e) => handleApostilaChange(pessoa.id, e.target.value)}
                         >
-                          <option value="">Selecione uma apostila</option>
-                          {apostilas.map((apostila) => (
+                          <option value="">Selecione uma apostila AH</option>
+                          {apostilasAH.map((apostila) => (
                             <option key={apostila.nome} value={apostila.nome}>
                               {apostila.nome}
                             </option>
