@@ -20,8 +20,7 @@ serve(async (req) => {
   try {
     console.log('Processando requisição...');
     
-    const requestData = await req.json();
-    const data = requestData.data;
+    const data = await req.json();
     
     console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     

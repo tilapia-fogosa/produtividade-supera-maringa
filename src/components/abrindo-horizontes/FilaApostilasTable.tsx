@@ -269,6 +269,10 @@ export const FilaApostilasTable = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleCorrecao(apostila)}
+                        disabled={apostila.total_correcoes > 0}
+                        className={cn(
+                          apostila.total_correcoes > 0 && "bg-green-500/20 border-green-500 text-green-700 dark:text-green-400 hover:bg-green-500/30"
+                        )}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Correção
