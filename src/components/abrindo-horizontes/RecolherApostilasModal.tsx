@@ -259,7 +259,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
             </div>
 
             {/* Lista de pessoas */}
-            <ScrollArea className="flex-1 rounded-md border h-[400px]">
+            <ScrollArea className="rounded-md border h-[400px]">
               <div className="p-4 space-y-2">
                 {loadingPessoas ? (
                   <p className="text-center text-muted-foreground py-8">Carregando...</p>
