@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useProfessores } from "@/hooks/use-professores";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -52,10 +53,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [apostilasRecolhidas, setApostilasRecolhidas] = useState<ApostilaRecolhida[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [professorSelecionado, setProfessorSelecionado] = useState<string>('');
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { professores, isLoading: loadingProfessores } = useProfessores();
 
   // Filtrar pessoas pelo termo de busca
   const pessoasFiltradas = alunos.filter(pessoa =>
@@ -97,10 +99,10 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   };
 
   const handleConfirmar = async () => {
-    if (!user) {
+    if (!professorSelecionado) {
       toast({
         title: "Erro",
-        description: "Você precisa estar autenticado para realizar esta ação",
+        description: "Selecione o professor responsável pelo recolhimento",
         variant: "destructive",
       });
       return;
@@ -111,13 +113,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     try {
       // Preparar os registros para inserção
       const registrosParaInserir = apostilasRecolhidas.map(item => {
-        const pessoa = pessoasSelecionadas.find(p => p.id === item.pessoaId);
-        
         return {
           pessoa_id: item.pessoaId,
           apostila: item.apostilaNome,
-          professor_id: null, // Pode ser atualizado posteriormente se necessário
-          responsavel_id: user.id,
+          professor_id: professorSelecionado,
+          responsavel_id: professorSelecionado,
         };
       });
 
@@ -138,6 +138,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
       setApostilasRecolhidas([]);
       setEtapa('selecao-pessoas');
       setSearchTerm('');
+      setProfessorSelecionado('');
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao salvar apostilas recolhidas:', error);
@@ -156,6 +157,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     setApostilasRecolhidas([]);
     setEtapa('selecao-pessoas');
     setSearchTerm('');
+    setProfessorSelecionado('');
     onOpenChange(false);
   };
 
@@ -175,6 +177,32 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               : 'Selecione a apostila recolhida de cada pessoa'}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Seletor de Professor */}
+        <div className="space-y-2 pb-4 border-b">
+          <Label htmlFor="professor-responsavel">Professor responsável pelo recolhimento *</Label>
+          <Select
+            value={professorSelecionado}
+            onValueChange={setProfessorSelecionado}
+          >
+            <SelectTrigger id="professor-responsavel">
+              <SelectValue placeholder="Selecione um professor" />
+            </SelectTrigger>
+            <SelectContent>
+              {loadingProfessores ? (
+                <SelectItem value="loading" disabled>Carregando...</SelectItem>
+              ) : professores.length === 0 ? (
+                <SelectItem value="empty" disabled>Nenhum professor encontrado</SelectItem>
+              ) : (
+                professores.map((professor) => (
+                  <SelectItem key={professor.id} value={professor.id}>
+                    {professor.nome}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
         {etapa === 'selecao-pessoas' ? (
           <div className="flex flex-col gap-4 flex-1 min-h-0">
@@ -240,7 +268,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               </Button>
               <Button 
                 onClick={handleAvancar}
-                disabled={pessoasSelecionadas.length === 0}
+                disabled={pessoasSelecionadas.length === 0 || !professorSelecionado}
               >
                 Avançar
                 <ChevronRight className="h-4 w-4 ml-2" />
@@ -301,7 +329,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                 </Button>
                 <Button 
                   onClick={handleConfirmar}
-                  disabled={!todasApostilasPreenchidas || isSubmitting}
+                  disabled={!todasApostilasPreenchidas || isSubmitting || !professorSelecionado}
                 >
                   {isSubmitting ? "Salvando..." : "Confirmar Recolhimento"}
                 </Button>
