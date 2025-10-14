@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useProfessores } from "@/hooks/use-professores";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -54,15 +55,19 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [professorSelecionado, setProfessorSelecionado] = useState<string>('');
+  const [turmaSelecionada, setTurmaSelecionada] = useState<string>('');
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
   const { toast } = useToast();
   const { professores, isLoading: loadingProfessores } = useProfessores();
+  const { turmas, loading: loadingTurmas } = useTodasTurmas();
 
-  // Filtrar pessoas pelo termo de busca
-  const pessoasFiltradas = alunos.filter(pessoa =>
-    pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrar pessoas pelo termo de busca e turma
+  const pessoasFiltradas = alunos.filter(pessoa => {
+    const matchNome = pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchTurma = !turmaSelecionada || pessoa.turma_id === turmaSelecionada;
+    return matchNome && matchTurma;
+  });
 
   const togglePessoa = (pessoa: TodosAlunosItem) => {
     setPessoasSelecionadas(prev => {
@@ -158,6 +163,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     setEtapa('selecao-pessoas');
     setSearchTerm('');
     setProfessorSelecionado('');
+    setTurmaSelecionada('');
     onOpenChange(false);
   };
 
@@ -206,6 +212,33 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
 
         {etapa === 'selecao-pessoas' ? (
           <div className="flex flex-col gap-4 flex-1 min-h-0">
+            {/* Filtro por turma */}
+            <div className="space-y-2">
+              <Label htmlFor="filtro-turma">Filtrar por turma</Label>
+              <Select
+                value={turmaSelecionada}
+                onValueChange={setTurmaSelecionada}
+              >
+                <SelectTrigger id="filtro-turma">
+                  <SelectValue placeholder="Todas as turmas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas as turmas</SelectItem>
+                  {loadingTurmas ? (
+                    <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                  ) : turmas.length === 0 ? (
+                    <SelectItem value="empty" disabled>Nenhuma turma encontrada</SelectItem>
+                  ) : (
+                    turmas.map((turma) => (
+                      <SelectItem key={turma.id} value={turma.id}>
+                        {turma.nome}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Campo de busca */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
