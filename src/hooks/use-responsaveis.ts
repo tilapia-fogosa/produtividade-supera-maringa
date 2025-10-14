@@ -23,16 +23,24 @@ export function useResponsaveis(): { responsaveis: Responsavel[]; isLoading: boo
           .select('id, nome')
           .eq('status', true);
 
-        if (errorProfessores) throw errorProfessores;
+        if (errorProfessores) {
+          console.error('Erro ao buscar professores:', errorProfessores);
+          throw errorProfessores;
+        }
 
-        // Buscar funcionários com cargo = 'estagiario' e active = true
+        // Buscar funcionários com cargo contendo 'estagi' (para pegar estagiario/estagiário) e active = true
         const { data: funcionarios, error: errorFuncionarios } = await supabase
           .from('funcionarios')
-          .select('id, nome')
-          .eq('cargo', 'estagiario')
+          .select('id, nome, cargo')
+          .ilike('cargo', '%estagi%')
           .eq('active', true);
 
-        if (errorFuncionarios) throw errorFuncionarios;
+        if (errorFuncionarios) {
+          console.error('Erro ao buscar funcionários:', errorFuncionarios);
+          throw errorFuncionarios;
+        }
+
+        console.log('Funcionários encontrados:', funcionarios);
 
         // Combinar e formatar os dados
         const responsaveisFormatados: Responsavel[] = [

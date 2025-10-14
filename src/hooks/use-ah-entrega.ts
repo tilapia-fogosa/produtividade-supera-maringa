@@ -24,19 +24,12 @@ export const useAhEntrega = () => {
         throw new Error("Nome do responsável é obrigatório");
       }
 
-      // Buscar o usuário autenticado
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Usuário não autenticado");
-      }
-
       // Atualizar a apostila recolhida com dados de entrega
+      // A RLS policy permite acesso público, então não precisa verificar usuário
       const { error } = await supabase
         .from("ah_recolhidas")
         .update({
           data_entrega_real: data.dataEntrega,
-          responsavel_entrega_id: user.id,
           responsavel_entrega_nome: data.responsavelNome,
         })
         .eq("id", parseInt(data.apostilaRecolhidaId));
