@@ -14,6 +14,8 @@ import { useProfessores } from "@/hooks/use-professores";
 import { useEstagiarios } from "@/hooks/use-estagiarios";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
+import { usePessoasComRecolhimentoAberto } from "@/hooks/use-pessoas-com-recolhimento-aberto";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -63,9 +65,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { professores, isLoading: loadingProfessores } = useProfessores();
   const { estagiarios, isLoading: loadingEstagiarios } = useEstagiarios();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
+  const { data: pessoasComRecolhimentoAberto = [] } = usePessoasComRecolhimentoAberto();
 
   // Combinar professores e estagiários em uma lista de responsáveis
   const responsaveis = useMemo(() => {
@@ -88,11 +92,12 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
 
   const loadingResponsaveis = loadingProfessores || loadingEstagiarios;
 
-  // Filtrar pessoas pelo termo de busca e turma
+  // Filtrar pessoas pelo termo de busca, turma e excluir aquelas com recolhimento aberto
   const pessoasFiltradas = alunos.filter(pessoa => {
     const matchNome = pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase());
     const matchTurma = turmaSelecionada === 'all' || pessoa.turma_id === turmaSelecionada;
-    return matchNome && matchTurma;
+    const temRecolhimentoAberto = pessoasComRecolhimentoAberto.includes(pessoa.id);
+    return matchNome && matchTurma && !temRecolhimentoAberto;
   });
 
   const togglePessoa = (pessoa: TodosAlunosItem) => {
@@ -168,6 +173,10 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
         .insert(registrosParaInserir);
 
       if (error) throw error;
+
+      // Invalidar queries
+      queryClient.invalidateQueries({ queryKey: ["apostilas-recolhidas"] });
+      queryClient.invalidateQueries({ queryKey: ["pessoas-com-recolhimento-aberto"] });
 
       toast({
         title: "Sucesso!",

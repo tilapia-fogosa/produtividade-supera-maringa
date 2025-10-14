@@ -62,6 +62,7 @@ export const useAhCorrecao = () => {
       toast.success("Correção de AH registrada com sucesso!");
       // Invalidar queries para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["apostilas-recolhidas"] });
+      queryClient.invalidateQueries({ queryKey: ["pessoas-com-recolhimento-aberto"] });
     },
     onError: (error: Error) => {
       console.error("Erro ao registrar correção AH:", error);

@@ -17,6 +17,7 @@ export const useDeleteRecolhimento = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["apostilas-recolhidas"] });
+      queryClient.invalidateQueries({ queryKey: ["pessoas-com-recolhimento-aberto"] });
       toast({
         title: "Recolhimento removido",
         description: "O recolhimento foi removido com sucesso.",
