@@ -55,7 +55,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [professorSelecionado, setProfessorSelecionado] = useState<string>('');
-  const [turmaSelecionada, setTurmaSelecionada] = useState<string>('');
+  const [turmaSelecionada, setTurmaSelecionada] = useState<string>('all');
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
   const { toast } = useToast();
@@ -65,7 +65,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   // Filtrar pessoas pelo termo de busca e turma
   const pessoasFiltradas = alunos.filter(pessoa => {
     const matchNome = pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchTurma = !turmaSelecionada || pessoa.turma_id === turmaSelecionada;
+    const matchTurma = turmaSelecionada === 'all' || pessoa.turma_id === turmaSelecionada;
     return matchNome && matchTurma;
   });
 
@@ -163,7 +163,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     setEtapa('selecao-pessoas');
     setSearchTerm('');
     setProfessorSelecionado('');
-    setTurmaSelecionada('');
+    setTurmaSelecionada('all');
     onOpenChange(false);
   };
 
@@ -223,7 +223,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                   <SelectValue placeholder="Todas as turmas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as turmas</SelectItem>
+                  <SelectItem value="all">Todas as turmas</SelectItem>
                   {loadingTurmas ? (
                     <SelectItem value="loading" disabled>Carregando...</SelectItem>
                   ) : turmas.length === 0 ? (
