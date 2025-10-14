@@ -17,7 +17,7 @@ export const usePessoasComRecolhimentoAberto = () => {
       // Buscar todas as correções
       const { data: correcoes, error: errorCorrecoes } = await supabase
         .from("produtividade_ah")
-        .select("apostila_recolhida_id");
+        .select("ah_recolhida_id");
 
       if (errorCorrecoes) throw errorCorrecoes;
 
@@ -25,7 +25,7 @@ export const usePessoasComRecolhimentoAberto = () => {
 
       // Criar Set com IDs dos recolhimentos que têm correções
       const recolhimentosComCorrecao = new Set(
-        (correcoes || []).map((c: any) => c.apostila_recolhida_id).filter(Boolean)
+        (correcoes || []).map((c: any) => c.ah_recolhida_id).filter(Boolean)
       );
 
       console.log("IDs de recolhimentos COM correção:", Array.from(recolhimentosComCorrecao));

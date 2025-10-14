@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { usePessoasComRecolhimentoAberto } from "@/hooks/use-pessoas-com-recolhimento-aberto";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatDateSaoPaulo, toUtcFromSaoPauloDate } from "@/lib/utils";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -60,7 +61,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<string>('');
   const [turmaSelecionada, setTurmaSelecionada] = useState<string>('all');
   const [dataRecolhimento, setDataRecolhimento] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    formatDateSaoPaulo(new Date(), 'yyyy-MM-dd')
   );
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
@@ -163,7 +164,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
           apostila: item.apostilaNome,
           professor_id: responsavelSelecionado,
           responsavel_id: responsavelSelecionado,
-          created_at: new Date(dataRecolhimento).toISOString(),
+          created_at: toUtcFromSaoPauloDate(dataRecolhimento),
         };
       });
 
@@ -189,7 +190,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
       setEtapa('selecao-pessoas');
       setSearchTerm('');
       setResponsavelSelecionado('');
-      setDataRecolhimento(new Date().toISOString().split('T')[0]);
+      setDataRecolhimento(formatDateSaoPaulo(new Date(), 'yyyy-MM-dd'));
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao salvar apostilas recolhidas:', error);
@@ -210,7 +211,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     setSearchTerm('');
     setResponsavelSelecionado('');
     setTurmaSelecionada('all');
-    setDataRecolhimento(new Date().toISOString().split('T')[0]);
+    setDataRecolhimento(formatDateSaoPaulo(new Date(), 'yyyy-MM-dd'));
     onOpenChange(false);
   };
 
@@ -241,7 +242,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               type="date"
               value={dataRecolhimento}
               onChange={(e) => setDataRecolhimento(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
+              max={formatDateSaoPaulo(new Date(), 'yyyy-MM-dd')}
             />
           </div>
 
