@@ -12,6 +12,8 @@ export const usePessoasComRecolhimentoAberto = () => {
 
       if (errorRecolhidas) throw errorRecolhidas;
 
+      console.log("Recolhimentos encontrados:", recolhidas);
+
       // Buscar todas as correções
       const { data: correcoes, error: errorCorrecoes } = await supabase
         .from("produtividade_ah")
@@ -19,10 +21,14 @@ export const usePessoasComRecolhimentoAberto = () => {
 
       if (errorCorrecoes) throw errorCorrecoes;
 
+      console.log("Correções encontradas:", correcoes);
+
       // Criar Set com IDs dos recolhimentos que têm correções
       const recolhimentosComCorrecao = new Set(
         (correcoes || []).map((c: any) => c.apostila_recolhida_id).filter(Boolean)
       );
+
+      console.log("IDs de recolhimentos COM correção:", Array.from(recolhimentosComCorrecao));
 
       // Filtrar pessoas cujos recolhimentos não têm correções
       const pessoasComRecolhimentoAberto = new Set<string>();
@@ -30,9 +36,12 @@ export const usePessoasComRecolhimentoAberto = () => {
       (recolhidas || []).forEach((recolhida: any) => {
         // Se este recolhimento não tem correções
         if (!recolhimentosComCorrecao.has(recolhida.id)) {
+          console.log(`Recolhimento ${recolhida.id} da pessoa ${recolhida.pessoa_id} NÃO tem correção`);
           pessoasComRecolhimentoAberto.add(recolhida.pessoa_id);
         }
       });
+
+      console.log("Pessoas com recolhimento aberto (IDs):", Array.from(pessoasComRecolhimentoAberto));
 
       return Array.from(pessoasComRecolhimentoAberto);
     },
