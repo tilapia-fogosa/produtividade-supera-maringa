@@ -15,29 +15,43 @@ export function useResponsaveis(): { responsaveis: Responsavel[]; isLoading: boo
     const fetchResponsaveis = async () => {
       try {
         setIsLoading(true);
-        console.log('Buscando responsáveis usando view unificada...');
+        console.log('Buscando responsáveis (professores ativos e estagiários)...');
         
-        // Usar a view unificada responsaveis_view que já filtra por active = true
-        // e exclui cargos como 'Filha' e 'familiar'
-        const { data, error } = await supabase
-          .from('responsaveis_view')
-          .select('*');
+        // Buscar professores com status = true
+        const { data: professores, error: errorProfessores } = await supabase
+          .from('professores')
+          .select('id, nome')
+          .eq('status', true);
 
-        if (error) throw error;
+        if (errorProfessores) throw errorProfessores;
 
-        // Mapear os dados para o formato esperado
-        const responsaveisFormatados = data?.map(resp => ({
-          id: resp.id,
-          nome: resp.nome,
-          tipo: resp.tipo as 'professor' | 'funcionario'
-        })) || [];
+        // Buscar funcionários com cargo = 'estagiario' e active = true
+        const { data: funcionarios, error: errorFuncionarios } = await supabase
+          .from('funcionarios')
+          .select('id, nome')
+          .eq('cargo', 'estagiario')
+          .eq('active', true);
 
-        console.log('Responsáveis carregados da view:', {
+        if (errorFuncionarios) throw errorFuncionarios;
+
+        // Combinar e formatar os dados
+        const responsaveisFormatados: Responsavel[] = [
+          ...(professores || []).map(prof => ({
+            id: prof.id,
+            nome: prof.nome,
+            tipo: 'professor' as const
+          })),
+          ...(funcionarios || []).map(func => ({
+            id: func.id,
+            nome: func.nome,
+            tipo: 'funcionario' as const
+          }))
+        ];
+
+        console.log('Responsáveis carregados:', {
           total: responsaveisFormatados.length,
-          porTipo: responsaveisFormatados.reduce((acc, r) => {
-            acc[r.tipo] = (acc[r.tipo] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>)
+          professores: professores?.length || 0,
+          estagiarios: funcionarios?.length || 0
         });
 
         // Ordenar por nome
