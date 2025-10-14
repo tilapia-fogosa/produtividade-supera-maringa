@@ -186,7 +186,8 @@ export const FilaApostilasTable = () => {
                       onClick={() => handleSort("data_recolhida")}
                       className="h-8 px-2"
                     >
-                      Data Recolhida
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Recolhida
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
