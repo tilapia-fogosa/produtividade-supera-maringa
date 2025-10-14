@@ -11,9 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Calendar } from "lucide-react";
+import { ArrowUpDown, Calendar, CheckCircle } from "lucide-react";
 import { formatDateSaoPaulo } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
+import { toast } from "sonner";
 
 type SortField = "pessoa_nome" | "turma_nome" | "apostila" | "data_recolhida" | "data_entrega";
 type SortDirection = "asc" | "desc";
@@ -83,6 +84,11 @@ export const FilaApostilasTable = () => {
     const hoje = new Date();
     const entrega = new Date(dataEntrega);
     return entrega < hoje;
+  };
+
+  const handleCorrecao = (apostila: ApostilaRecolhida) => {
+    // TODO: Implementar lógica de correção
+    toast.info(`Correção da apostila ${apostila.apostila} de ${apostila.pessoa_nome}`);
   };
 
   if (isLoading) {
@@ -191,6 +197,7 @@ export const FilaApostilasTable = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -216,6 +223,16 @@ export const FilaApostilasTable = () => {
                       >
                         {formatDateSaoPaulo(apostila.data_entrega, "dd/MM/yyyy")}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCorrecao(apostila)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Correção
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
