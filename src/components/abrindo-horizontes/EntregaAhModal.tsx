@@ -10,7 +10,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAhEntrega } from "@/hooks/use-ah-entrega";
+import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { Badge } from "@/components/ui/badge";
 
 interface EntregaAhModalProps {
@@ -29,22 +37,25 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
   pessoaNome,
 }) => {
   const [dataEntrega, setDataEntrega] = useState("");
-  const [responsavelNome, setResponsavelNome] = useState("");
+  const [responsavelId, setResponsavelId] = useState("");
 
   const { registrarEntregaAH, isLoading } = useAhEntrega();
+  const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const responsavel = responsaveis.find(r => r.id === responsavelId);
+
     await registrarEntregaAH.mutateAsync({
       apostilaRecolhidaId,
       dataEntrega,
-      responsavelNome,
+      responsavelNome: responsavel?.nome || "",
     });
 
     // Limpar formulário e fechar modal
     setDataEntrega("");
-    setResponsavelNome("");
+    setResponsavelId("");
     onOpenChange(false);
   };
 
@@ -80,17 +91,35 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="responsavelNome">
+            <Label htmlFor="responsavel">
               Responsável pela Entrega <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="responsavelNome"
-              type="text"
-              placeholder="Nome de quem entregou a apostila"
-              value={responsavelNome}
-              onChange={(e) => setResponsavelNome(e.target.value)}
+            <Select
+              value={responsavelId}
+              onValueChange={setResponsavelId}
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione quem entregou" />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingResponsaveis ? (
+                  <SelectItem value="loading" disabled>
+                    Carregando...
+                  </SelectItem>
+                ) : responsaveis.length === 0 ? (
+                  <SelectItem value="empty" disabled>
+                    Nenhum responsável disponível
+                  </SelectItem>
+                ) : (
+                  responsaveis.map((responsavel) => (
+                    <SelectItem key={responsavel.id} value={responsavel.id}>
+                      {responsavel.nome} ({responsavel.tipo === 'professor' ? 'Professor' : 'Funcionário'})
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
