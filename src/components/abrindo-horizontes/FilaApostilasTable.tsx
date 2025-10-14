@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Calendar, CheckCircle } from "lucide-react";
 import { formatDateSaoPaulo } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
-import { toast } from "sonner";
+import { CorrecaoAhModal } from "./CorrecaoAhModal";
 
 type SortField = "pessoa_nome" | "turma_nome" | "apostila" | "data_recolhida" | "data_entrega";
 type SortDirection = "asc" | "desc";
@@ -27,6 +27,10 @@ export const FilaApostilasTable = () => {
   const [filterApostila, setFilterApostila] = useState("");
   const [sortField, setSortField] = useState<SortField>("data_entrega");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  
+  // Estado para o modal de correção
+  const [modalCorrecaoOpen, setModalCorrecaoOpen] = useState(false);
+  const [apostilaSelecionada, setApostilaSelecionada] = useState<ApostilaRecolhida | null>(null);
 
   const filteredAndSorted = useMemo(() => {
     if (!apostilas) return [];
@@ -87,8 +91,8 @@ export const FilaApostilasTable = () => {
   };
 
   const handleCorrecao = (apostila: ApostilaRecolhida) => {
-    // TODO: Implementar lógica de correção
-    toast.info(`Correção da apostila ${apostila.apostila} de ${apostila.pessoa_nome}`);
+    setApostilaSelecionada(apostila);
+    setModalCorrecaoOpen(true);
   };
 
   if (isLoading) {
@@ -241,6 +245,18 @@ export const FilaApostilasTable = () => {
           </div>
         )}
       </CardContent>
+
+      {/* Modal de Correção */}
+      {apostilaSelecionada && (
+        <CorrecaoAhModal
+          open={modalCorrecaoOpen}
+          onOpenChange={setModalCorrecaoOpen}
+          apostilaRecolhidaId={apostilaSelecionada.id}
+          pessoaId={apostilaSelecionada.pessoa_id}
+          pessoaNome={apostilaSelecionada.pessoa_nome}
+          apostilaNome={apostilaSelecionada.apostila}
+        />
+      )}
     </Card>
   );
 };

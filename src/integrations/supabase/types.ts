@@ -3329,6 +3329,7 @@ export type Database = {
       }
       produtividade_ah: {
         Row: {
+          ah_recolhida_id: number | null
           aluno_nome: string | null
           apostila: string | null
           comentario: string | null
@@ -3343,6 +3344,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ah_recolhida_id?: number | null
           aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
@@ -3357,6 +3359,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ah_recolhida_id?: number | null
           aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
@@ -3370,7 +3373,15 @@ export type Database = {
           tipo_pessoa?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_ah_ah_recolhida_id_fkey"
+            columns: ["ah_recolhida_id"]
+            isOneToOne: false
+            referencedRelation: "ah_recolhidas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtividade_ah_backup: {
         Row: {

@@ -91,7 +91,8 @@ serve(async (req) => {
       professor_correcao: data.professor_correcao,
       comentario: data.comentario,
       data_fim_correcao: data.data_fim_correcao,
-      aluno_nome: pessoaData?.nome
+      aluno_nome: pessoaData?.nome,
+      ah_recolhida_id: data.ah_recolhida_id || null
     };
     
     console.log('Dados para inserção:', JSON.stringify(insertData, null, 2));
