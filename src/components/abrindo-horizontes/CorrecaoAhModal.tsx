@@ -89,7 +89,7 @@ export function CorrecaoAhModal({
           {/* Apostila - Readonly */}
           <div className="space-y-2">
             <Label>Apostila</Label>
-            <Badge variant="secondary" className="w-full justify-center py-2">
+            <Badge variant="secondary" className="w-full justify-center py-2 text-white">
               {apostilaNome}
             </Badge>
           </div>
