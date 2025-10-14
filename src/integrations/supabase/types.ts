@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ah_recolhidas: {
+        Row: {
+          apostila: string
+          created_at: string
+          id: number
+          pessoa_id: string
+          professor_id: string | null
+          responsavel_id: string | null
+        }
+        Insert: {
+          apostila: string
+          created_at?: string
+          id?: number
+          pessoa_id: string
+          professor_id?: string | null
+          responsavel_id?: string | null
+        }
+        Update: {
+          apostila?: string
+          created_at?: string
+          id?: number
+          pessoa_id?: string
+          professor_id?: string | null
+          responsavel_id?: string | null
+        }
+        Relationships: []
+      }
       alerta_evasao: {
         Row: {
           aluno_id: string
@@ -779,6 +806,7 @@ export type Database = {
           created_by: string
           enrollment_amount: number | null
           enrollment_installments: number | null
+          enrollment_payment_confirmed: boolean | null
           enrollment_payment_date: string | null
           enrollment_payment_method:
             | Database["public"]["Enums"]["payment_method"]
@@ -789,6 +817,7 @@ export type Database = {
           kit_type: Database["public"]["Enums"]["kit_type"] | null
           material_amount: number | null
           material_installments: number | null
+          material_payment_confirmed: boolean | null
           material_payment_date: string | null
           material_payment_method:
             | Database["public"]["Enums"]["payment_method"]
@@ -821,6 +850,7 @@ export type Database = {
           created_by: string
           enrollment_amount?: number | null
           enrollment_installments?: number | null
+          enrollment_payment_confirmed?: boolean | null
           enrollment_payment_date?: string | null
           enrollment_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -831,6 +861,7 @@ export type Database = {
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
+          material_payment_confirmed?: boolean | null
           material_payment_date?: string | null
           material_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -863,6 +894,7 @@ export type Database = {
           created_by?: string
           enrollment_amount?: number | null
           enrollment_installments?: number | null
+          enrollment_payment_confirmed?: boolean | null
           enrollment_payment_date?: string | null
           enrollment_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -873,6 +905,7 @@ export type Database = {
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
+          material_payment_confirmed?: boolean | null
           material_payment_date?: string | null
           material_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -1865,6 +1898,173 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_calculations: {
+        Row: {
+          consolidated_at: string | null
+          consolidated_by: string | null
+          consultant_id: string
+          created_at: string
+          details: Json
+          formula_id: string | null
+          id: string
+          is_consolidated: boolean
+          month: string
+          total_commission: number
+          total_sales: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          consultant_id: string
+          created_at?: string
+          details?: Json
+          formula_id?: string | null
+          id?: string
+          is_consolidated?: boolean
+          month: string
+          total_commission?: number
+          total_sales?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          consultant_id?: string
+          created_at?: string
+          details?: Json
+          formula_id?: string | null
+          id?: string
+          is_consolidated?: boolean
+          month?: string
+          total_commission?: number
+          total_sales?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_calculations_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "commission_formulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_calculations_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_formulas: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          formula_expression: string
+          formula_name: string
+          id: string
+          unit_id: string
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+          variables_config: Json
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          formula_expression: string
+          formula_name: string
+          id?: string
+          unit_id: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          variables_config?: Json
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          formula_expression?: string
+          formula_name?: string
+          id?: string
+          unit_id?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          variables_config?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_formulas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_sale_details: {
+        Row: {
+          activity_id: string
+          calculation_id: string
+          client_name: string
+          created_at: string
+          enrollment_amount: number | null
+          id: string
+          material_amount: number | null
+          monthly_fee_amount: number | null
+          sale_commission: number
+          sale_date: string
+        }
+        Insert: {
+          activity_id: string
+          calculation_id: string
+          client_name: string
+          created_at?: string
+          enrollment_amount?: number | null
+          id?: string
+          material_amount?: number | null
+          monthly_fee_amount?: number | null
+          sale_commission?: number
+          sale_date: string
+        }
+        Update: {
+          activity_id?: string
+          calculation_id?: string
+          client_name?: string
+          created_at?: string
+          enrollment_amount?: number | null
+          id?: string
+          material_amount?: number | null
+          monthly_fee_amount?: number | null
+          sale_commission?: number
+          sale_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_sale_details_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_sale_details_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "commission_calculations"
             referencedColumns: ["id"]
           },
         ]
@@ -3851,6 +4051,53 @@ export type Database = {
           },
         ]
       }
+      schedule_occupations: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          start_datetime: string
+          title: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          start_datetime: string
+          title: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          start_datetime?: string
+          title?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_occupations_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_logs: {
         Row: {
           created_at: string
@@ -4820,6 +5067,15 @@ export type Database = {
           total_exercicios: number
         }[]
       }
+      calculate_monthly_commission: {
+        Args: {
+          p_consultant_id: string
+          p_force_recalculate?: boolean
+          p_month: string
+          p_unit_id: string
+        }
+        Returns: Json
+      }
       change_initial_password: {
         Args: { new_password: string; user_id: string }
         Returns: boolean
@@ -4831,6 +5087,10 @@ export type Database = {
       check_lancamentos_pendentes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      consolidate_monthly_commission: {
+        Args: { p_calculation_id: string }
+        Returns: boolean
       }
       count_draft_updates: {
         Args: Record<PropertyKey, never>
@@ -4870,6 +5130,15 @@ export type Database = {
       delete_reposicao: {
         Args: { p_reposicao_id: string }
         Returns: boolean
+      }
+      evaluate_formula: {
+        Args: {
+          p_formula: string
+          p_material: number
+          p_matricula: number
+          p_mensalidade: number
+        }
+        Returns: number
       }
       get_activity_funnel_stats: {
         Args: {
@@ -5011,6 +5280,29 @@ export type Database = {
           scheduled_visits: number
           user_id: string
           user_name: string
+        }[]
+      }
+      get_commission_summary: {
+        Args: {
+          p_consultant_id?: string
+          p_end_month?: string
+          p_start_month?: string
+          p_unit_id: string
+        }
+        Returns: {
+          calculation_id: string
+          consolidated_at: string
+          consultant_id: string
+          consultant_name: string
+          created_at: string
+          formula_name: string
+          is_consolidated: boolean
+          month: string
+          sales_confirmed: number
+          sales_pending: number
+          total_commission: number
+          total_sales: number
+          unit_id: string
         }[]
       }
       get_correcoes_ah_stats: {
@@ -5434,6 +5726,23 @@ export type Database = {
               p_kit_type?: Database["public"]["Enums"]["kit_type"]
               p_material_amount?: number
               p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+            }
+          | {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_confirmed?: boolean
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type?: Database["public"]["Enums"]["kit_type"]
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_confirmed?: boolean
               p_material_payment_date?: string
               p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
               p_monthly_fee_amount?: number

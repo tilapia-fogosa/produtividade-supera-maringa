@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTodosAlunos, TodosAlunosItem } from "@/hooks/use-todos-alunos";
-import { useApostilas } from "@/hooks/use-apostilas";
 import { Search, ChevronRight, ChevronLeft, BookOpen, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -49,8 +51,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [pessoasSelecionadas, setPessoasSelecionadas] = useState<TodosAlunosItem[]>([]);
   const [apostilasRecolhidas, setApostilasRecolhidas] = useState<ApostilaRecolhida[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   // Filtrar pessoas pelo termo de busca
   const pessoasFiltradas = alunos.filter(pessoa =>
@@ -91,16 +96,59 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     );
   };
 
-  const handleConfirmar = () => {
-    console.log('Apostilas recolhidas:', apostilasRecolhidas);
-    // Aqui você pode adicionar a lógica para salvar no banco de dados
-    
-    // Resetar estado e fechar modal
-    setPessoasSelecionadas([]);
-    setApostilasRecolhidas([]);
-    setEtapa('selecao-pessoas');
-    setSearchTerm('');
-    onOpenChange(false);
+  const handleConfirmar = async () => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar autenticado para realizar esta ação",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Preparar os registros para inserção
+      const registrosParaInserir = apostilasRecolhidas.map(item => {
+        const pessoa = pessoasSelecionadas.find(p => p.id === item.pessoaId);
+        
+        return {
+          pessoa_id: item.pessoaId,
+          apostila: item.apostilaNome,
+          professor_id: null, // Pode ser atualizado posteriormente se necessário
+          responsavel_id: user.id,
+        };
+      });
+
+      // Inserir todos os registros no banco
+      const { error } = await supabase
+        .from('ah_recolhidas')
+        .insert(registrosParaInserir);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: `${registrosParaInserir.length} apostila(s) recolhida(s) com sucesso`,
+      });
+
+      // Resetar estado e fechar modal
+      setPessoasSelecionadas([]);
+      setApostilasRecolhidas([]);
+      setEtapa('selecao-pessoas');
+      setSearchTerm('');
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erro ao salvar apostilas recolhidas:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar os dados. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -253,9 +301,9 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                 </Button>
                 <Button 
                   onClick={handleConfirmar}
-                  disabled={!todasApostilasPreenchidas}
+                  disabled={!todasApostilasPreenchidas || isSubmitting}
                 >
-                  Confirmar Recolhimento
+                  {isSubmitting ? "Salvando..." : "Confirmar Recolhimento"}
                 </Button>
               </div>
             </div>
