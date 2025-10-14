@@ -198,7 +198,7 @@ export const FilaApostilasTable = () => {
                       onClick={() => handleSort("data_entrega")}
                       className="h-8 px-2"
                     >
-                      Data Entrega
+                      Previsão de Entrega
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
