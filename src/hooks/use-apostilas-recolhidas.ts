@@ -7,8 +7,12 @@ export interface ApostilaRecolhida {
   turma_nome: string;
   apostila: string;
   data_recolhida: string;
-  data_entrega: string;
+  data_entrega: string; // Previsão calculada (14 dias)
   pessoa_id: string;
+  total_correcoes: number;
+  data_entrega_real?: string;
+  responsavel_entrega_nome?: string;
+  foi_entregue: boolean;
 }
 
 export const useApostilasRecolhidas = () => {
@@ -23,9 +27,14 @@ export const useApostilasRecolhidas = () => {
 
       if (error) throw error;
 
-      // Para cada recolhida, buscar informações da pessoa (aluno ou funcionário)
+      // Para cada recolhida, buscar informações da pessoa (aluno ou funcionário) e contagem de correções
       const apostilasComDetalhes = await Promise.all(
         recolhidas.map(async (recolhida) => {
+          // Contar correções desta apostila
+          const { count: totalCorrecoes } = await supabase
+            .from("produtividade_ah")
+            .select("*", { count: 'exact', head: true })
+            .eq("ah_recolhida_id", recolhida.id);
           // Tentar buscar como aluno
           const { data: aluno } = await supabase
             .from("alunos")
@@ -46,6 +55,10 @@ export const useApostilasRecolhidas = () => {
               data_recolhida: recolhida.created_at,
               data_entrega: dataEntrega.toISOString(),
               pessoa_id: recolhida.pessoa_id,
+              total_correcoes: totalCorrecoes || 0,
+              data_entrega_real: recolhida.data_entrega_real,
+              responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
+              foi_entregue: !!recolhida.data_entrega_real,
             };
           }
 
@@ -69,6 +82,10 @@ export const useApostilasRecolhidas = () => {
               data_recolhida: recolhida.created_at,
               data_entrega: dataEntrega.toISOString(),
               pessoa_id: recolhida.pessoa_id,
+              total_correcoes: totalCorrecoes || 0,
+              data_entrega_real: recolhida.data_entrega_real,
+              responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
+              foi_entregue: !!recolhida.data_entrega_real,
             };
           }
 
@@ -85,6 +102,10 @@ export const useApostilasRecolhidas = () => {
             data_recolhida: recolhida.created_at,
             data_entrega: dataEntrega.toISOString(),
             pessoa_id: recolhida.pessoa_id,
+            total_correcoes: totalCorrecoes || 0,
+            data_entrega_real: recolhida.data_entrega_real,
+            responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
+            foi_entregue: !!recolhida.data_entrega_real,
           };
         })
       );

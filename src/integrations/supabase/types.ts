@@ -18,28 +18,45 @@ export type Database = {
         Row: {
           apostila: string
           created_at: string
+          data_entrega_real: string | null
           id: number
           pessoa_id: string
           professor_id: string | null
+          responsavel_entrega_id: string | null
+          responsavel_entrega_nome: string | null
           responsavel_id: string | null
         }
         Insert: {
           apostila: string
           created_at?: string
+          data_entrega_real?: string | null
           id?: number
           pessoa_id: string
           professor_id?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
           responsavel_id?: string | null
         }
         Update: {
           apostila?: string
           created_at?: string
+          data_entrega_real?: string | null
           id?: number
           pessoa_id?: string
           professor_id?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
           responsavel_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ah_recolhidas_responsavel_entrega_id_fkey"
+            columns: ["responsavel_entrega_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       alerta_evasao: {
         Row: {

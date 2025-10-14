@@ -11,10 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Calendar, CheckCircle } from "lucide-react";
-import { formatDateSaoPaulo } from "@/lib/utils";
+import { ArrowUpDown, Calendar, CheckCircle, PackageCheck } from "lucide-react";
+import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
 import { CorrecaoAhModal } from "./CorrecaoAhModal";
+import { EntregaAhModal } from "./EntregaAhModal";
 
 type SortField = "pessoa_nome" | "turma_nome" | "apostila" | "data_recolhida" | "data_entrega";
 type SortDirection = "asc" | "desc";
@@ -28,8 +29,9 @@ export const FilaApostilasTable = () => {
   const [sortField, setSortField] = useState<SortField>("data_entrega");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
-  // Estado para o modal de correção
+  // Estado para os modais
   const [modalCorrecaoOpen, setModalCorrecaoOpen] = useState(false);
+  const [modalEntregaOpen, setModalEntregaOpen] = useState(false);
   const [apostilaSelecionada, setApostilaSelecionada] = useState<ApostilaRecolhida | null>(null);
 
   const filteredAndSorted = useMemo(() => {
@@ -77,22 +79,44 @@ export const FilaApostilasTable = () => {
     setSortDirection("asc");
   };
 
-  const isEntregaProxima = (dataEntrega: string) => {
+  // Função para determinar a cor de fundo da célula de entrega
+  const getEntregaBackgroundColor = (apostila: ApostilaRecolhida) => {
+    // Se já foi entregue ou corrigida, sem destaque
+    if (apostila.foi_entregue || apostila.total_correcoes > 0) {
+      return "";
+    }
+    
     const hoje = new Date();
-    const entrega = new Date(dataEntrega);
+    const entrega = new Date(apostila.data_entrega);
     const diasRestantes = Math.ceil((entrega.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-    return diasRestantes <= 3 && diasRestantes >= 0;
+    
+    if (diasRestantes <= 0) return "bg-red-100 dark:bg-red-950"; // Atrasada
+    if (diasRestantes <= 3) return "bg-yellow-100 dark:bg-yellow-950"; // Próxima (3 dias)
+    return "";
   };
 
-  const isEntregaAtrasada = (dataEntrega: string) => {
+  const getEntregaTextColor = (apostila: ApostilaRecolhida) => {
     const hoje = new Date();
-    const entrega = new Date(dataEntrega);
-    return entrega < hoje;
+    const entrega = new Date(apostila.data_entrega);
+    const diasRestantes = Math.ceil((entrega.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diasRestantes <= 0 && !apostila.foi_entregue && apostila.total_correcoes === 0) {
+      return "text-destructive font-semibold";
+    }
+    if (diasRestantes <= 3 && diasRestantes >= 0 && !apostila.foi_entregue && apostila.total_correcoes === 0) {
+      return "text-orange-600 dark:text-orange-400 font-semibold";
+    }
+    return "";
   };
 
   const handleCorrecao = (apostila: ApostilaRecolhida) => {
     setApostilaSelecionada(apostila);
     setModalCorrecaoOpen(true);
+  };
+
+  const handleEntrega = (apostila: ApostilaRecolhida) => {
+    setApostilaSelecionada(apostila);
+    setModalEntregaOpen(true);
   };
 
   if (isLoading) {
@@ -179,6 +203,7 @@ export const FilaApostilasTable = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead>Correções</TableHead>
                   <TableHead>
                     <Button
                       variant="ghost"
@@ -214,22 +239,24 @@ export const FilaApostilasTable = () => {
                       <Badge variant="outline">{apostila.apostila}</Badge>
                     </TableCell>
                     <TableCell>
+                      <Badge variant={apostila.total_correcoes > 0 ? "default" : "outline"}>
+                        {apostila.total_correcoes} {apostila.total_correcoes === 1 ? "correção" : "correções"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       {formatDateSaoPaulo(apostila.data_recolhida, "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell>
-                      <span
-                        className={
-                          isEntregaAtrasada(apostila.data_entrega)
-                            ? "text-destructive font-semibold"
-                            : isEntregaProxima(apostila.data_entrega)
-                            ? "text-orange-600 font-semibold"
-                            : ""
-                        }
-                      >
-                        {formatDateSaoPaulo(apostila.data_entrega, "dd/MM/yyyy")}
-                      </span>
+                      <div className={cn(
+                        "inline-block px-2 py-1 rounded",
+                        getEntregaBackgroundColor(apostila)
+                      )}>
+                        <span className={getEntregaTextColor(apostila)}>
+                          {formatDateSaoPaulo(apostila.data_entrega, "dd/MM/yyyy")}
+                        </span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -237,6 +264,15 @@ export const FilaApostilasTable = () => {
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Correção
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleEntrega(apostila)}
+                        disabled={apostila.foi_entregue || apostila.total_correcoes === 0}
+                      >
+                        <PackageCheck className="h-4 w-4 mr-2" />
+                        Entregar
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -249,14 +285,23 @@ export const FilaApostilasTable = () => {
 
       {/* Modal de Correção */}
       {apostilaSelecionada && (
-        <CorrecaoAhModal
-          open={modalCorrecaoOpen}
-          onOpenChange={setModalCorrecaoOpen}
-          apostilaRecolhidaId={apostilaSelecionada.id}
-          pessoaId={apostilaSelecionada.pessoa_id}
-          pessoaNome={apostilaSelecionada.pessoa_nome}
-          apostilaNome={apostilaSelecionada.apostila}
-        />
+        <>
+          <CorrecaoAhModal
+            open={modalCorrecaoOpen}
+            onOpenChange={setModalCorrecaoOpen}
+            apostilaRecolhidaId={apostilaSelecionada.id}
+            pessoaId={apostilaSelecionada.pessoa_id}
+            pessoaNome={apostilaSelecionada.pessoa_nome}
+            apostilaNome={apostilaSelecionada.apostila}
+          />
+          <EntregaAhModal
+            open={modalEntregaOpen}
+            onOpenChange={setModalEntregaOpen}
+            apostilaRecolhidaId={apostilaSelecionada.id}
+            apostilaNome={apostilaSelecionada.apostila}
+            pessoaNome={apostilaSelecionada.pessoa_nome}
+          />
+        </>
       )}
     </Card>
   );
