@@ -11,9 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Calendar, CheckCircle, PackageCheck } from "lucide-react";
+import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2 } from "lucide-react";
 import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
+import { useDeleteRecolhimento } from "@/hooks/use-delete-recolhimento";
 import { CorrecaoAhModal } from "./CorrecaoAhModal";
 import { EntregaAhModal } from "./EntregaAhModal";
 
@@ -22,6 +23,7 @@ type SortDirection = "asc" | "desc";
 
 export const FilaApostilasTable = () => {
   const { data: apostilas, isLoading } = useApostilasRecolhidas();
+  const { mutate: deleteRecolhimento } = useDeleteRecolhimento();
   
   const [filterPessoa, setFilterPessoa] = useState("");
   const [filterTurma, setFilterTurma] = useState("");
@@ -117,6 +119,12 @@ export const FilaApostilasTable = () => {
   const handleEntrega = (apostila: ApostilaRecolhida) => {
     setApostilaSelecionada(apostila);
     setModalEntregaOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Tem certeza que deseja remover este recolhimento?")) {
+      deleteRecolhimento(id);
+    }
   };
 
   if (isLoading) {
@@ -273,6 +281,13 @@ export const FilaApostilasTable = () => {
                       >
                         <PackageCheck className="h-4 w-4 mr-2" />
                         Entregar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(apostila.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
