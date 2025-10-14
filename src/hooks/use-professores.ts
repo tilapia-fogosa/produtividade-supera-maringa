@@ -13,6 +13,7 @@ export const useProfessores = () => {
       const { data, error } = await supabase
         .from("professores")
         .select("id, nome")
+        .eq("status", true)
         .order("nome");
 
       if (error) throw error;
