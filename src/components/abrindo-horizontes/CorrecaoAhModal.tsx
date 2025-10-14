@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useProfessores } from "@/hooks/use-professores";
+import { useEstagiarios } from "@/hooks/use-estagiarios";
 import { useAhCorrecao } from "@/hooks/use-ah-correcao";
 import { BookOpen } from "lucide-react";
 
@@ -41,6 +42,7 @@ export function CorrecaoAhModal({
   apostilaNome,
 }: CorrecaoAhModalProps) {
   const { professores } = useProfessores();
+  const { estagiarios, isLoading: loadingEstagiarios } = useEstagiarios();
   const { registrarCorrecaoAH, isLoading } = useAhCorrecao();
 
   const [exercicios, setExercicios] = useState("");
@@ -48,6 +50,25 @@ export function CorrecaoAhModal({
   const [professorCorrecao, setProfessorCorrecao] = useState("");
   const [dataFimCorrecao, setDataFimCorrecao] = useState("");
   const [comentario, setComentario] = useState("");
+
+  // Combinar professores ativos e estagiários em uma lista de corretores
+  const corretores = useMemo(() => {
+    const todosProfessores = professores.map(p => ({
+      id: p.id,
+      nome: p.nome,
+      tipo: 'Professor' as const
+    }));
+    
+    const todosEstagiarios = estagiarios.map(e => ({
+      id: e.id,
+      nome: e.nome,
+      tipo: 'Estagiário' as const
+    }));
+    
+    return [...todosProfessores, ...todosEstagiarios].sort((a, b) => 
+      a.nome.localeCompare(b.nome)
+    );
+  }, [professores, estagiarios]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,11 +157,17 @@ export function CorrecaoAhModal({
                 <SelectValue placeholder="Selecione o corretor" />
               </SelectTrigger>
               <SelectContent>
-                {professores.map((prof) => (
-                  <SelectItem key={prof.id} value={prof.id}>
-                    {prof.nome}
-                  </SelectItem>
-                ))}
+                {loadingEstagiarios ? (
+                  <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                ) : corretores.length === 0 ? (
+                  <SelectItem value="empty" disabled>Nenhum corretor encontrado</SelectItem>
+                ) : (
+                  corretores.map((corretor) => (
+                    <SelectItem key={corretor.id} value={corretor.id}>
+                      {corretor.nome} ({corretor.tipo})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
