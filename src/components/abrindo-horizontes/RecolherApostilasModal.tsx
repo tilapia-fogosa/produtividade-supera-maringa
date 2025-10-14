@@ -311,7 +311,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
         ) : (
           <div className="flex flex-col gap-4 flex-1 min-h-0">
             {/* Lista de pessoas selecionadas com dropdown de apostilas */}
-            <ScrollArea className="flex-1 rounded-md border">
+            <ScrollArea className="rounded-md border h-[400px]">
               <div className="p-4 space-y-4">
                 {pessoasSelecionadas.map((pessoa) => {
                   const apostilaAtual = apostilasRecolhidas.find(a => a.pessoaId === pessoa.id);
