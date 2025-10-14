@@ -83,7 +83,7 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
             </Label>
             <Input
               id="dataEntrega"
-              type="datetime-local"
+              type="date"
               value={dataEntrega}
               onChange={(e) => setDataEntrega(e.target.value)}
               required
