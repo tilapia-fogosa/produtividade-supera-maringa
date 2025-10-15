@@ -11,6 +11,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2 } from "lucide-react";
 import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
@@ -34,7 +44,9 @@ export const FilaApostilasTable = () => {
   // Estado para os modais
   const [modalCorrecaoOpen, setModalCorrecaoOpen] = useState(false);
   const [modalEntregaOpen, setModalEntregaOpen] = useState(false);
+  const [modalRemoverOpen, setModalRemoverOpen] = useState(false);
   const [apostilaSelecionada, setApostilaSelecionada] = useState<ApostilaRecolhida | null>(null);
+  const [mensagemRemover, setMensagemRemover] = useState("");
 
   const filteredAndSorted = useMemo(() => {
     if (!apostilas) return [];
@@ -125,20 +137,27 @@ export const FilaApostilasTable = () => {
     let mensagem = "";
     
     if (apostila.foi_entregue) {
-      mensagem = "Tem certeza que deseja remover a entrega desta apostila?";
+      mensagem = `Tem certeza que deseja desfazer a entrega da apostila ${apostila.apostila} para ${apostila.pessoa_nome}?`;
     } else if (apostila.total_correcoes > 0) {
-      mensagem = "Tem certeza que deseja remover a correção desta apostila?";
+      mensagem = `Tem certeza que deseja remover a correção da apostila ${apostila.apostila} de ${apostila.pessoa_nome}?`;
     } else {
-      mensagem = "Tem certeza que deseja remover este recolhimento?";
+      mensagem = `Tem certeza que deseja remover o recolhimento da apostila ${apostila.apostila} de ${apostila.pessoa_nome}?`;
     }
     
-    if (confirm(mensagem)) {
+    setMensagemRemover(mensagem);
+    setApostilaSelecionada(apostila);
+    setModalRemoverOpen(true);
+  };
+
+  const confirmarRemover = () => {
+    if (apostilaSelecionada) {
       removerAcao.mutate({
-        apostilaRecolhidaId: apostila.id,
-        foiEntregue: apostila.foi_entregue,
-        totalCorrecoes: apostila.total_correcoes,
+        apostilaRecolhidaId: apostilaSelecionada.id,
+        foiEntregue: apostilaSelecionada.foi_entregue,
+        totalCorrecoes: apostilaSelecionada.total_correcoes,
       });
     }
+    setModalRemoverOpen(false);
   };
 
   if (isLoading) {
@@ -365,6 +384,24 @@ export const FilaApostilasTable = () => {
           />
         </>
       )}
+
+      {/* Modal de Confirmação de Remoção */}
+      <AlertDialog open={modalRemoverOpen} onOpenChange={setModalRemoverOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
+            <AlertDialogDescription>
+              {mensagemRemover}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmarRemover}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
