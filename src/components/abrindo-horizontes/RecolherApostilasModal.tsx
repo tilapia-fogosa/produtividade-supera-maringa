@@ -14,7 +14,6 @@ import { useProfessores } from "@/hooks/use-professores";
 import { useEstagiarios } from "@/hooks/use-estagiarios";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
-import { usePessoasComRecolhimentoAberto } from "@/hooks/use-pessoas-com-recolhimento-aberto";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateSaoPaulo, toUtcFromSaoPauloDate } from "@/lib/utils";
 
@@ -70,7 +69,6 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const { professores, isLoading: loadingProfessores } = useProfessores();
   const { estagiarios, isLoading: loadingEstagiarios } = useEstagiarios();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
-  const { data: pessoasComRecolhimentoAberto = [] } = usePessoasComRecolhimentoAberto();
 
   // Combinar professores e estagiários em uma lista de responsáveis
   const responsaveis = useMemo(() => {
@@ -93,12 +91,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
 
   const loadingResponsaveis = loadingProfessores || loadingEstagiarios;
 
-  // Filtrar pessoas pelo termo de busca, turma e excluir aquelas com recolhimento aberto
+  // Filtrar pessoas pelo termo de busca e turma
   const pessoasFiltradas = alunos.filter(pessoa => {
     const matchNome = pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase());
     const matchTurma = turmaSelecionada === 'all' || pessoa.turma_id === turmaSelecionada;
-    const temRecolhimentoAberto = pessoasComRecolhimentoAberto.includes(pessoa.id);
-    return matchNome && matchTurma && !temRecolhimentoAberto;
+    return matchNome && matchTurma;
   });
 
   const togglePessoa = (pessoa: TodosAlunosItem) => {
