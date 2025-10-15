@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2 } from "lucide-react";
 import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
-import { useDeleteRecolhimento } from "@/hooks/use-delete-recolhimento";
+import { useRemoverApostilaAcao } from "@/hooks/use-remover-apostila-acao";
 import { CorrecaoAhModal } from "./CorrecaoAhModal";
 import { EntregaAhModal } from "./EntregaAhModal";
 
@@ -23,7 +23,7 @@ type SortDirection = "asc" | "desc";
 
 export const FilaApostilasTable = () => {
   const { data: apostilas, isLoading } = useApostilasRecolhidas();
-  const { mutate: deleteRecolhimento } = useDeleteRecolhimento();
+  const { removerAcao } = useRemoverApostilaAcao();
   
   const [filterPessoa, setFilterPessoa] = useState("");
   const [filterTurma, setFilterTurma] = useState("");
@@ -121,9 +121,23 @@ export const FilaApostilasTable = () => {
     setModalEntregaOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Tem certeza que deseja remover este recolhimento?")) {
-      deleteRecolhimento(id);
+  const handleRemover = (apostila: ApostilaRecolhida) => {
+    let mensagem = "";
+    
+    if (apostila.foi_entregue) {
+      mensagem = "Tem certeza que deseja remover a entrega desta apostila?";
+    } else if (apostila.total_correcoes > 0) {
+      mensagem = "Tem certeza que deseja remover a correção desta apostila?";
+    } else {
+      mensagem = "Tem certeza que deseja remover este recolhimento?";
+    }
+    
+    if (confirm(mensagem)) {
+      removerAcao.mutate({
+        apostilaRecolhidaId: apostila.id,
+        foiEntregue: apostila.foi_entregue,
+        totalCorrecoes: apostila.total_correcoes,
+      });
     }
   };
 
@@ -296,7 +310,14 @@ export const FilaApostilasTable = () => {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => handleDelete(apostila.id)}
+                        onClick={() => handleRemover(apostila)}
+                        title={
+                          apostila.foi_entregue
+                            ? "Remover entrega"
+                            : apostila.total_correcoes > 0
+                            ? "Remover correção"
+                            : "Remover recolhimento"
+                        }
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
