@@ -50,19 +50,11 @@ export const useRemoverApostilaAcao = () => {
       if (error) throw error;
       return { tipo: "recolhimento" };
     },
-    onSuccess: (result) => {
-      const mensagens = {
-        entrega: "Entrega removida com sucesso!",
-        correcao: "Correção removida com sucesso!",
-        recolhimento: "Recolhimento removido com sucesso!",
-      };
-      
-      toast.success(mensagens[result.tipo]);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["apostilas-recolhidas"] });
     },
     onError: (error: Error) => {
       console.error("Erro ao remover ação:", error);
-      toast.error(`Erro ao remover: ${error.message}`);
     },
   });
 
