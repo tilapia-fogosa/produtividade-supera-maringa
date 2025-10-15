@@ -4425,7 +4425,6 @@ export type Database = {
           id: string
           nome: string
           professor_id: string
-          projeto: boolean | null
           sala: string | null
           ultima_sincronizacao: string | null
           unit_id: string
@@ -4437,7 +4436,6 @@ export type Database = {
           id?: string
           nome: string
           professor_id: string
-          projeto?: boolean | null
           sala?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
@@ -4449,7 +4447,6 @@ export type Database = {
           id?: string
           nome?: string
           professor_id?: string
-          projeto?: boolean | null
           sala?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
