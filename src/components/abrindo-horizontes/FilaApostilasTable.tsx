@@ -278,49 +278,63 @@ export const FilaApostilasTable = () => {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleCorrecao(apostila)}
-                        disabled={apostila.total_correcoes > 0}
-                        className={cn(
-                          apostila.total_correcoes > 0 && "bg-green-500/20 border-green-500 text-green-700 dark:text-green-400 hover:bg-green-500/30"
-                        )}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Correção
-                      </Button>
-                      {apostila.foi_entregue ? (
-                        <Badge variant="success" className="px-3 py-1">
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Entregue
-                        </Badge>
-                      ) : (
+                    <TableCell>
+                      <div className="flex flex-col gap-2 min-w-[200px]">
                         <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => handleEntrega(apostila)}
-                          disabled={apostila.total_correcoes === 0}
+                          size="lg"
+                          variant="outline"
+                          onClick={() => handleCorrecao(apostila)}
+                          disabled={apostila.total_correcoes > 0}
+                          className={cn(
+                            "w-full justify-start h-12 text-base font-medium rounded-2xl",
+                            apostila.total_correcoes > 0 
+                              ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 cursor-not-allowed" 
+                              : "bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900"
+                          )}
                         >
-                          <PackageCheck className="h-4 w-4 mr-2" />
-                          Entregar
+                          <CheckCircle className="h-6 w-6 mr-3" />
+                          Correção
                         </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleRemover(apostila)}
-                        title={
-                          apostila.foi_entregue
-                            ? "Remover entrega"
-                            : apostila.total_correcoes > 0
-                            ? "Remover correção"
-                            : "Remover recolhimento"
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        
+                        <div className="flex gap-2">
+                          {apostila.foi_entregue ? (
+                            <Badge 
+                              variant="outline" 
+                              className="flex-1 h-12 justify-start px-4 text-base rounded-2xl bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-700 dark:text-green-300"
+                            >
+                              <CheckCircle className="h-6 w-6 mr-3" />
+                              Entregue
+                            </Badge>
+                          ) : (
+                            <Button
+                              size="lg"
+                              variant="outline"
+                              onClick={() => handleEntrega(apostila)}
+                              disabled={apostila.total_correcoes === 0}
+                              className="flex-1 justify-start h-12 text-base font-medium rounded-2xl bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-950 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
+                            >
+                              <PackageCheck className="h-6 w-6 mr-3" />
+                              Entregar
+                            </Button>
+                          )}
+                          
+                          <Button
+                            size="lg"
+                            variant="destructive"
+                            onClick={() => handleRemover(apostila)}
+                            className="h-12 w-16 rounded-2xl"
+                            title={
+                              apostila.foi_entregue
+                                ? "Remover entrega"
+                                : apostila.total_correcoes > 0
+                                ? "Remover correção"
+                                : "Remover recolhimento"
+                            }
+                          >
+                            <Trash2 className="h-6 w-6" />
+                          </Button>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
