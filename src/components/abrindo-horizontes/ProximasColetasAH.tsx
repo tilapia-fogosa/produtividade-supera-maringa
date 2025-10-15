@@ -238,15 +238,16 @@ export const ProximasColetasAH = () => {
                       
                       {pessoa.origem === 'aluno' && (
                         <Button
-                          variant="ghost"
+                          variant="destructive"
                           size="icon"
+                          className="h-8 w-8 rounded-sm"
                           onClick={() => {
                             setPessoaSelecionada({ id: pessoa.id, nome: pessoa.nome });
                             setModalIgnorarOpen(true);
                           }}
                           title="Ignorar temporariamente"
                         >
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-4 w-4 text-white" />
                         </Button>
                       )}
                     </div>
