@@ -4,7 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ProximaColetaAH {
   id: string;
   nome: string;
+  turma_id: string | null;
   turma_nome: string | null;
+  professor_id: string | null;
+  professor_nome: string | null;
   ultima_correcao_ah: string | null;
   dias_desde_ultima_correcao: number | null;
   origem: 'aluno' | 'funcionario';
@@ -23,7 +26,11 @@ export const useProximasColetasAH = () => {
           ultima_correcao_ah,
           turma_id,
           turmas (
-            nome
+            nome,
+            professor_id,
+            professores (
+              nome
+            )
           )
         `)
         .eq('active', true)
@@ -39,7 +46,11 @@ export const useProximasColetasAH = () => {
           ultima_correcao_ah,
           turma_id,
           turmas (
-            nome
+            nome,
+            professor_id,
+            professores (
+              nome
+            )
           )
         `)
         .eq('active', true)
@@ -52,7 +63,10 @@ export const useProximasColetasAH = () => {
         ...(alunos || []).map((aluno: any) => ({
           id: aluno.id,
           nome: aluno.nome,
+          turma_id: aluno.turma_id,
           turma_nome: aluno.turmas?.nome || null,
+          professor_id: aluno.turmas?.professor_id || null,
+          professor_nome: aluno.turmas?.professores?.nome || null,
           ultima_correcao_ah: aluno.ultima_correcao_ah,
           dias_desde_ultima_correcao: aluno.ultima_correcao_ah 
             ? Math.floor((Date.now() - new Date(aluno.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24))
@@ -62,7 +76,10 @@ export const useProximasColetasAH = () => {
         ...(funcionarios || []).map((func: any) => ({
           id: func.id,
           nome: func.nome,
+          turma_id: func.turma_id,
           turma_nome: func.turmas?.nome || null,
+          professor_id: func.turmas?.professor_id || null,
+          professor_nome: func.turmas?.professores?.nome || null,
           ultima_correcao_ah: func.ultima_correcao_ah,
           dias_desde_ultima_correcao: func.ultima_correcao_ah 
             ? Math.floor((Date.now() - new Date(func.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24))
@@ -80,8 +97,8 @@ export const useProximasColetasAH = () => {
         return b.dias_desde_ultima_correcao - a.dias_desde_ultima_correcao;
       });
 
-      // Retornar apenas os 30 primeiros
-      return ordenadas.slice(0, 30);
+      // Retornar todos os resultados
+      return ordenadas;
     },
   });
 };

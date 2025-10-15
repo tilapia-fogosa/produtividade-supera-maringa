@@ -1,13 +1,50 @@
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProximasColetasAH } from "@/hooks/use-proximas-coletas-ah";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useProximasColetasAH } from "@/hooks/use-proximas-coletas-ah";
+import { useProfessores } from "@/hooks/use-professores";
+import { useTodasTurmas } from "@/hooks/use-todas-turmas";
+import { Calendar, Clock, Search, Users, GraduationCap } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const ProximasColetasAH = () => {
   const { data: pessoas, isLoading } = useProximasColetasAH();
+  const { professores } = useProfessores();
+  const { turmas } = useTodasTurmas();
+
+  // Estados dos filtros
+  const [filtroNome, setFiltroNome] = useState("");
+  const [filtroProfessor, setFiltroProfessor] = useState<string>("todos");
+  const [filtroTurma, setFiltroTurma] = useState<string>("todos");
+
+  // Aplicar filtros
+  const pessoasFiltradas = useMemo(() => {
+    if (!pessoas) return [];
+    
+    return pessoas.filter(pessoa => {
+      // Filtro por nome (case insensitive)
+      const matchNome = pessoa.nome
+        .toLowerCase()
+        .includes(filtroNome.toLowerCase());
+      
+      // Filtro por professor
+      const matchProfessor = 
+        filtroProfessor === "todos" || 
+        pessoa.professor_id === filtroProfessor;
+      
+      // Filtro por turma
+      const matchTurma = 
+        filtroTurma === "todos" || 
+        pessoa.turma_id === filtroTurma;
+      
+      return matchNome && matchProfessor && matchTurma;
+    });
+  }, [pessoas, filtroNome, filtroProfessor, filtroTurma]);
 
   if (isLoading) {
     return (
@@ -31,17 +68,14 @@ export const ProximasColetasAH = () => {
             Próximas Coletas
           </CardTitle>
           <CardDescription>
-            Lista dos 30 alunos/funcionários que estão há mais tempo sem correção AH
+            Nenhum dado disponível no momento
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-8">
-            Nenhum dado disponível
-          </p>
-        </CardContent>
       </Card>
     );
   }
+
+  const hasFiltrosAtivos = filtroNome || filtroProfessor !== "todos" || filtroTurma !== "todos";
 
   return (
     <Card>
@@ -51,53 +85,128 @@ export const ProximasColetasAH = () => {
           Próximas Coletas
         </CardTitle>
         <CardDescription>
-          Lista dos 30 alunos/funcionários que estão há mais tempo sem correção AH
+          Todos os alunos e funcionários ativos ordenados por tempo sem correção AH
+          {pessoasFiltradas.length > 0 && (
+            <span className="ml-2 font-semibold">
+              ({pessoasFiltradas.length} {pessoasFiltradas.length === 1 ? 'pessoa' : 'pessoas'})
+            </span>
+          )}
         </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {pessoas.map((pessoa, index) => (
-            <div
-              key={pessoa.id}
-              className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                  {index + 1}
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{pessoa.nome}</p>
-                    <Badge variant="outline" className="text-xs">
-                      {pessoa.origem === 'aluno' ? 'Aluno' : 'Funcionário'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {pessoa.turma_nome || 'Sem turma'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                {pessoa.ultima_correcao_ah ? (
-                  <>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <div className="text-right">
-                      <p className="font-medium">
-                        {pessoa.dias_desde_ultima_correcao} {pessoa.dias_desde_ultima_correcao === 1 ? 'dia' : 'dias'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(pessoa.ultima_correcao_ah), "dd/MM/yyyy", { locale: ptBR })}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <Badge variant="secondary">Sem correção registrada</Badge>
-                )}
-              </div>
-            </div>
-          ))}
+
+        {/* Filtros */}
+        <div className="grid grid-cols-1 gap-4 pt-4">
+          {/* Filtro por Nome */}
+          <div className="space-y-2">
+            <Label htmlFor="filtro-nome" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Buscar por nome
+            </Label>
+            <Input
+              id="filtro-nome"
+              placeholder="Digite o nome..."
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          {/* Filtro por Professor */}
+          <div className="space-y-2">
+            <Label htmlFor="filtro-professor" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Filtrar por professor
+            </Label>
+            <Select value={filtroProfessor} onValueChange={setFiltroProfessor}>
+              <SelectTrigger id="filtro-professor">
+                <SelectValue placeholder="Todos os professores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os professores</SelectItem>
+                {professores.map((prof) => (
+                  <SelectItem key={prof.id} value={prof.id}>
+                    {prof.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro por Turma */}
+          <div className="space-y-2">
+            <Label htmlFor="filtro-turma" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Filtrar por turma
+            </Label>
+            <Select value={filtroTurma} onValueChange={setFiltroTurma}>
+              <SelectTrigger id="filtro-turma">
+                <SelectValue placeholder="Todas as turmas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas as turmas</SelectItem>
+                {turmas.map((turma) => (
+                  <SelectItem key={turma.id} value={turma.id}>
+                    {turma.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+      </CardHeader>
+
+      <CardContent>
+        {pessoasFiltradas.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">
+            {hasFiltrosAtivos 
+              ? "Nenhuma pessoa encontrada com os filtros aplicados" 
+              : "Nenhum dado disponível"
+            }
+          </p>
+        ) : (
+          <div className="max-h-[600px] overflow-y-auto space-y-3 pr-2">
+            {pessoasFiltradas.map((pessoa, index) => (
+              <div
+                key={pessoa.id}
+                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                    {index + 1}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{pessoa.nome}</p>
+                      <Badge variant="outline" className="text-xs">
+                        {pessoa.origem === 'aluno' ? 'Aluno' : 'Funcionário'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {pessoa.turma_nome || 'Sem turma'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm">
+                  {pessoa.ultima_correcao_ah ? (
+                    <>
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div className="text-right">
+                        <p className="font-medium">
+                          {pessoa.dias_desde_ultima_correcao} {pessoa.dias_desde_ultima_correcao === 1 ? 'dia' : 'dias'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(pessoa.ultima_correcao_ah), "dd/MM/yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <Badge variant="secondary">Sem correção registrada</Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
