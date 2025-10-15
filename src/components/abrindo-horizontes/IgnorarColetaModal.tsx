@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useIgnorarColetaAH } from "@/hooks/use-ignorar-coleta-ah";
+import { useProfessores } from "@/hooks/use-professores";
+import { useEstagiarios } from "@/hooks/use-estagiarios";
 
 const ignorarColetaSchema = z.object({
   dias: z.number().min(1, "Informe pelo menos 1 dia").max(365, "Máximo de 365 dias"),
@@ -31,11 +34,14 @@ export const IgnorarColetaModal = ({
   pessoaNome 
 }: IgnorarColetaModalProps) => {
   const { mutate: ignorarColeta, isPending } = useIgnorarColetaAH();
+  const { professores } = useProfessores();
+  const { estagiarios } = useEstagiarios();
   
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors }
   } = useForm<IgnorarColetaForm>({
     resolver: zodResolver(ignorarColetaSchema),
@@ -111,10 +117,29 @@ export const IgnorarColetaModal = ({
             <Label htmlFor="responsavel">
               Responsável <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="responsavel"
-              placeholder="Seu nome"
-              {...register("responsavel")}
+            <Controller
+              name="responsavel"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger id="responsavel" className="bg-background">
+                    <SelectValue placeholder="Selecione o responsável" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="coordenacao">Coordenação</SelectItem>
+                    {professores.map((prof) => (
+                      <SelectItem key={`prof-${prof.id}`} value={prof.nome}>
+                        {prof.nome} (Professor)
+                      </SelectItem>
+                    ))}
+                    {estagiarios.map((est) => (
+                      <SelectItem key={`est-${est.id}`} value={est.nome}>
+                        {est.nome} (Estagiário)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
             {errors.responsavel && (
               <p className="text-sm text-destructive">{errors.responsavel.message}</p>
