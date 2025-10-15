@@ -290,7 +290,7 @@ export const ProximasColetasAH = () => {
                         </p>
                       </div>
                       
-                      <Badge variant="secondary" className="flex-shrink-0">
+                      <Badge variant="secondary" className="flex-shrink-0 text-primary-foreground">
                         {ignorado.dias_restantes} {ignorado.dias_restantes === 1 ? 'dia restante' : 'dias restantes'}
                       </Badge>
                     </div>
