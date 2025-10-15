@@ -94,7 +94,7 @@ export const ProximasColetasAH = () => {
         </CardDescription>
 
         {/* Filtros */}
-        <div className="grid grid-cols-1 gap-4 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
           {/* Filtro por Nome */}
           <div className="space-y-2">
             <Label htmlFor="filtro-nome" className="flex items-center gap-2">
