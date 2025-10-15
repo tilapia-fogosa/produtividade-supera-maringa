@@ -191,20 +191,14 @@ export const FilaApostilasTable = () => {
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <CardTitle>Apostilas Recolhidas</CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setMostrarEntregues(!mostrarEntregues)} 
-              variant="outline" 
-              size="sm"
-            >
-              {mostrarEntregues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-              {mostrarEntregues ? "Ocultar Entregues" : "Mostrar Entregues"}
-            </Button>
-            <Button onClick={handleSortByEntrega} variant="outline" size="sm">
-              <Calendar className="h-4 w-4 mr-2" />
-              Ordenar por Entrega
-            </Button>
-          </div>
+          <Button 
+            onClick={() => setMostrarEntregues(!mostrarEntregues)} 
+            variant="outline" 
+            size="sm"
+          >
+            {mostrarEntregues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+            {mostrarEntregues ? "Ocultar Entregues" : "Mostrar Entregues"}
+          </Button>
         </div>
         
         {/* Filtros */}
