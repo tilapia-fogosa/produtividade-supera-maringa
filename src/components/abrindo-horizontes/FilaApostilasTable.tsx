@@ -356,9 +356,10 @@ export const FilaApostilasTable = () => {
                             variant="outline"
                             onClick={() => handleEntrega(apostila)}
                             disabled={apostila.total_correcoes === 0}
-                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-950 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg border-[#FF7C00] disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-300"
+                            style={apostila.total_correcoes > 0 ? { backgroundColor: '#FF7C00', color: 'white' } : undefined}
                           >
-                            <PackageCheck className="h-3.5 w-3.5 mr-1.5" />
+                            <PackageCheck className={`h-3.5 w-3.5 mr-1.5 ${apostila.total_correcoes > 0 ? 'text-white' : ''}`} />
                             Entregar
                           </Button>
                         )}
