@@ -5,12 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useProximasColetasAH } from "@/hooks/use-proximas-coletas-ah";
 import { useProfessores } from "@/hooks/use-professores";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
-import { Calendar, Clock, Search, Users, GraduationCap } from "lucide-react";
+import { Calendar, Clock, Search, Users, GraduationCap, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { IgnorarColetaModal } from "./IgnorarColetaModal";
 
 export const ProximasColetasAH = () => {
   const { data: pessoas, isLoading } = useProximasColetasAH();
@@ -21,6 +23,10 @@ export const ProximasColetasAH = () => {
   const [filtroNome, setFiltroNome] = useState("");
   const [filtroProfessor, setFiltroProfessor] = useState<string>("todos");
   const [filtroTurma, setFiltroTurma] = useState<string>("todos");
+  
+  // Estado do modal de ignorar
+  const [modalIgnorarOpen, setModalIgnorarOpen] = useState(false);
+  const [pessoaSelecionada, setPessoaSelecionada] = useState<{ id: string; nome: string } | null>(null);
 
   // Aplicar filtros
   const pessoasFiltradas = useMemo(() => {
@@ -167,45 +173,70 @@ export const ProximasColetasAH = () => {
             {pessoasFiltradas.map((pessoa, index) => (
               <div
                 key={pessoa.id}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-3"
               >
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
                     {index + 1}
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{pessoa.nome}</p>
-                      <Badge variant="outline" className="text-xs">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-medium truncate">{pessoa.nome}</p>
+                      <Badge variant="outline" className="text-xs flex-shrink-0">
                         {pessoa.origem === 'aluno' ? 'Aluno' : 'Funcionário'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate">
                       {pessoa.turma_nome || 'Sem turma'}
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 text-sm">
-                  {pessoa.ultima_correcao_ah ? (
-                    <>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {pessoa.dias_desde_ultima_correcao} {pessoa.dias_desde_ultima_correcao === 1 ? 'dia' : 'dias'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(pessoa.ultima_correcao_ah), "dd/MM/yyyy", { locale: ptBR })}
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <Badge variant="secondary">Sem correção registrada</Badge>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    {pessoa.ultima_correcao_ah ? (
+                      <>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div className="text-right">
+                          <p className="font-medium whitespace-nowrap">
+                            {pessoa.dias_desde_ultima_correcao} {pessoa.dias_desde_ultima_correcao === 1 ? 'dia' : 'dias'}
+                          </p>
+                          <p className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(new Date(pessoa.ultima_correcao_ah), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <Badge variant="secondary" className="whitespace-nowrap">Sem correção registrada</Badge>
+                    )}
+                  </div>
+                  
+                  {pessoa.origem === 'aluno' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setPessoaSelecionada({ id: pessoa.id, nome: pessoa.nome });
+                        setModalIgnorarOpen(true);
+                      }}
+                      title="Ignorar temporariamente"
+                    >
+                      <EyeOff className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
               </div>
             ))}
           </div>
+        )}
+        
+        {pessoaSelecionada && (
+          <IgnorarColetaModal
+            open={modalIgnorarOpen}
+            onOpenChange={setModalIgnorarOpen}
+            pessoaId={pessoaSelecionada.id}
+            pessoaNome={pessoaSelecionada.nome}
+          />
         )}
       </CardContent>
     </Card>

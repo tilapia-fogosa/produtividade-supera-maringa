@@ -259,6 +259,9 @@ export type Database = {
       alunos: {
         Row: {
           active: boolean
+          ah_ignorar_ate: string | null
+          ah_ignorar_motivo: string | null
+          ah_ignorar_responsavel: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           codigo: string | null
@@ -300,6 +303,9 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          ah_ignorar_ate?: string | null
+          ah_ignorar_motivo?: string | null
+          ah_ignorar_responsavel?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null
@@ -341,6 +347,9 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          ah_ignorar_ate?: string | null
+          ah_ignorar_motivo?: string | null
+          ah_ignorar_responsavel?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null

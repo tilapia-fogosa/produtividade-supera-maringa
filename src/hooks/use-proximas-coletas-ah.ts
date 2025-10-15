@@ -17,7 +17,10 @@ export const useProximasColetasAH = () => {
   return useQuery({
     queryKey: ['proximas-coletas-ah'],
     queryFn: async () => {
-      // Buscar alunos e funcionários ativos com suas turmas
+      const dataAtual = new Date().toISOString();
+      
+      // Buscar alunos ativos com suas turmas
+      // Filtrar alunos que não estão no período de ignorar
       const { data: alunos, error: errorAlunos } = await supabase
         .from('alunos')
         .select(`
@@ -25,6 +28,7 @@ export const useProximasColetasAH = () => {
           nome,
           ultima_correcao_ah,
           turma_id,
+          ah_ignorar_ate,
           turmas (
             nome,
             professor_id,
@@ -35,6 +39,7 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
+        .or(`ah_ignorar_ate.is.null,ah_ignorar_ate.lt.${dataAtual}`)
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorAlunos) throw errorAlunos;
