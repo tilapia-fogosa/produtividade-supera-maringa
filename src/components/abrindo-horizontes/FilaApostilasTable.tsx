@@ -277,15 +277,22 @@ export const FilaApostilasTable = () => {
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Correção
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={() => handleEntrega(apostila)}
-                        disabled={apostila.foi_entregue || apostila.total_correcoes === 0}
-                      >
-                        <PackageCheck className="h-4 w-4 mr-2" />
-                        Entregar
-                      </Button>
+                      {apostila.foi_entregue ? (
+                        <Badge variant="success" className="px-3 py-1">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Entregue
+                        </Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => handleEntrega(apostila)}
+                          disabled={apostila.total_correcoes === 0}
+                        >
+                          <PackageCheck className="h-4 w-4 mr-2" />
+                          Entregar
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="destructive"
