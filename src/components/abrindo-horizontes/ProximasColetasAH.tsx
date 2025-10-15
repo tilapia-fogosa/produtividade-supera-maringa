@@ -297,12 +297,13 @@ export const ProximasColetasAH = () => {
                           {ignorado.dias_restantes} {ignorado.dias_restantes === 1 ? 'dia restante' : 'dias restantes'}
                         </Badge>
                         <Button
-                          variant="ghost"
+                          variant="destructive"
                           size="icon"
+                          className="h-8 w-8 rounded-sm"
                           onClick={() => removerIgnorar(ignorado.id)}
                           title="Remover da lista de ignorados"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-4 w-4 text-white" />
                         </Button>
                       </div>
                     </div>
