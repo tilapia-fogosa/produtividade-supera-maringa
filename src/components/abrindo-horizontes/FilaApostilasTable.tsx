@@ -248,7 +248,7 @@ export const FilaApostilasTable = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="text-right w-[280px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -277,7 +277,7 @@ export const FilaApostilasTable = () => {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right w-[280px]">
                       <div className="flex gap-1.5 justify-end items-center">
                         <Button
                           size="sm"
@@ -285,7 +285,7 @@ export const FilaApostilasTable = () => {
                           onClick={() => handleCorrecao(apostila)}
                           disabled={apostila.total_correcoes > 0}
                           className={cn(
-                            "h-8 px-2.5 text-xs rounded-lg",
+                            "h-8 w-[90px] px-2.5 text-xs rounded-lg",
                             apostila.total_correcoes > 0 
                               ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 cursor-not-allowed" 
                               : "bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900"
@@ -298,7 +298,7 @@ export const FilaApostilasTable = () => {
                         {apostila.foi_entregue ? (
                           <Badge 
                             variant="outline" 
-                            className="h-8 px-2.5 text-xs rounded-lg bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-700 dark:text-green-300"
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-700 dark:text-green-300 inline-flex items-center justify-center"
                           >
                             <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                             Entregue
@@ -309,7 +309,7 @@ export const FilaApostilasTable = () => {
                             variant="outline"
                             onClick={() => handleEntrega(apostila)}
                             disabled={apostila.total_correcoes === 0}
-                            className="h-8 px-2.5 text-xs rounded-lg bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-950 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-950 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
                           >
                             <PackageCheck className="h-3.5 w-3.5 mr-1.5" />
                             Entregar
