@@ -520,9 +520,11 @@ async function syncStudents(rawData, turmas) {
         }
         
         // Atualizar aluno existente (incluindo nova turma se houve troca)
+        // Remove ultima_correcao_ah do update para preservar o valor existente
+        const { ultima_correcao_ah, ...dadosAtualizacao } = studentData;
         const { error: updateError } = await supabase
           .from('alunos')
-          .update({ ...studentData })
+          .update(dadosAtualizacao)
           .eq('id', existingStudent.id);
           
         if (updateError) {
@@ -535,11 +537,14 @@ async function syncStudents(rawData, turmas) {
           }
         }
       } else {
-        // Inserir novo aluno
+        // Inserir novo aluno com ultima_correcao_ah definida
         console.log(`➕ Novo aluno detectado: ${studentData.nome}`);
         const { error: insertError } = await supabase
           .from('alunos')
-          .insert([studentData]);
+          .insert([{
+            ...studentData,
+            ultima_correcao_ah: new Date().toISOString() // Define data de entrada para novos alunos
+          }]);
           
         if (insertError) {
           console.error(`❌ Erro ao inserir aluno ${studentData.nome}:`, insertError);

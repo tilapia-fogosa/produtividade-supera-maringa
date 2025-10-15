@@ -248,6 +248,7 @@ export default function CadastroNovoAluno() {
         unit_id: MARINGA_UNIT_ID,
         active: true,
         foto_url: null, // Será atualizado após upload da foto
+        ultima_correcao_ah: new Date().toISOString(), // Define data de entrada para controle de coletas AH
       };
 
       const { data: novoAluno, error: insertError } = await supabase
