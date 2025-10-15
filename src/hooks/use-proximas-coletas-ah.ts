@@ -35,7 +35,7 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
-        .eq('turmas.projeto', false)
+        .or('turmas.projeto.is.null,turmas.projeto.eq.false')
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorAlunos) throw errorAlunos;
@@ -57,7 +57,7 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
-        .eq('turmas.projeto', false)
+        .or('turmas.projeto.is.null,turmas.projeto.eq.false')
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorFuncionarios) throw errorFuncionarios;
