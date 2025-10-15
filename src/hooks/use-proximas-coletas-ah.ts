@@ -20,7 +20,6 @@ export const useProximasColetasAH = () => {
       const dataAtual = new Date().toISOString();
       
       // Buscar alunos ativos com suas turmas
-      // Filtrar alunos que não estão no período de ignorar
       const { data: alunos, error: errorAlunos } = await supabase
         .from('alunos')
         .select(`
@@ -28,7 +27,6 @@ export const useProximasColetasAH = () => {
           nome,
           ultima_correcao_ah,
           turma_id,
-          ah_ignorar_ate,
           turmas (
             nome,
             professor_id,
@@ -39,7 +37,6 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
-        .or(`ah_ignorar_ate.is.null,ah_ignorar_ate.lt.${dataAtual}`)
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorAlunos) throw errorAlunos;
@@ -65,10 +62,28 @@ export const useProximasColetasAH = () => {
 
       if (errorFuncionarios) throw errorFuncionarios;
 
+      // Buscar registros ativos de ignorar coleta que ainda não expiraram
+      const { data: ignorarColetas, error: errorIgnorar } = await supabase
+        .from('ah_ignorar_coleta')
+        .select('pessoa_id, data_fim')
+        .eq('active', true)
+        .gte('data_fim', dataAtual);
+
+      if (errorIgnorar) throw errorIgnorar;
+
+      // Criar um Set com os IDs das pessoas que devem ser ignoradas
+      const pessoasIgnoradas = new Set(
+        (ignorarColetas || []).map(registro => registro.pessoa_id)
+      );
+
       // Combinar e formatar os dados, filtrando turmas com projeto = true
+      // e pessoas que estão sendo ignoradas
       const todasPessoas: ProximaColetaAH[] = [
         ...(alunos || [])
-          .filter(aluno => !aluno.turmas?.projeto)  // Exclui turmas com projeto = true
+          .filter(aluno => 
+            !aluno.turmas?.projeto && // Exclui turmas com projeto = true
+            !pessoasIgnoradas.has(aluno.id) // Exclui alunos ignorados
+          )
           .map((aluno: any) => ({
             id: aluno.id,
             nome: aluno.nome,
@@ -83,7 +98,10 @@ export const useProximasColetasAH = () => {
             origem: 'aluno' as const
           })),
         ...(funcionarios || [])
-          .filter(func => !func.turmas?.projeto)  // Exclui turmas com projeto = true
+          .filter(func => 
+            !func.turmas?.projeto && // Exclui turmas com projeto = true
+            !pessoasIgnoradas.has(func.id) // Exclui funcionários ignorados
+          )
           .map((func: any) => ({
             id: func.id,
             nome: func.nome,

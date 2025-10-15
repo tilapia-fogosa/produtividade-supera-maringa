@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ah_ignorar_coleta: {
+        Row: {
+          active: boolean
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          dias: number
+          id: string
+          motivo: string
+          pessoa_id: string
+          pessoa_tipo: string
+          responsavel: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          data_fim: string
+          data_inicio?: string
+          dias: number
+          id?: string
+          motivo: string
+          pessoa_id: string
+          pessoa_tipo: string
+          responsavel: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          dias?: number
+          id?: string
+          motivo?: string
+          pessoa_id?: string
+          pessoa_tipo?: string
+          responsavel?: string
+        }
+        Relationships: []
+      }
       ah_recolhidas: {
         Row: {
           apostila: string
@@ -259,9 +298,6 @@ export type Database = {
       alunos: {
         Row: {
           active: boolean
-          ah_ignorar_ate: string | null
-          ah_ignorar_motivo: string | null
-          ah_ignorar_responsavel: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           codigo: string | null
@@ -303,9 +339,6 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          ah_ignorar_ate?: string | null
-          ah_ignorar_motivo?: string | null
-          ah_ignorar_responsavel?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null
@@ -347,9 +380,6 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          ah_ignorar_ate?: string | null
-          ah_ignorar_motivo?: string | null
-          ah_ignorar_responsavel?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null

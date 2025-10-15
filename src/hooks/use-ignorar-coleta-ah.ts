@@ -15,17 +15,23 @@ export const useIgnorarColetaAH = () => {
   return useMutation({
     mutationFn: async ({ pessoaId, dias, motivo, responsavel }: IgnorarColetaParams) => {
       // Calcular data final (hoje + dias)
+      const dataInicio = new Date();
       const dataFim = new Date();
       dataFim.setDate(dataFim.getDate() + dias);
 
+      // Inserir novo registro na tabela ah_ignorar_coleta
       const { error } = await supabase
-        .from("alunos")
-        .update({
-          ah_ignorar_ate: dataFim.toISOString(),
-          ah_ignorar_motivo: motivo,
-          ah_ignorar_responsavel: responsavel
-        })
-        .eq("id", pessoaId);
+        .from("ah_ignorar_coleta")
+        .insert({
+          pessoa_id: pessoaId,
+          pessoa_tipo: 'aluno', // Por enquanto só alunos
+          data_inicio: dataInicio.toISOString(),
+          data_fim: dataFim.toISOString(),
+          dias,
+          motivo,
+          responsavel,
+          active: true
+        });
 
       if (error) throw error;
     },
