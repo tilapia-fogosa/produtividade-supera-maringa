@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProximasColetasAH } from "@/hooks/use-proximas-coletas-ah";
 import { useAlunosIgnoradosAH } from "@/hooks/use-alunos-ignorados-ah";
+import { useRemoverIgnorarColetaAH } from "@/hooks/use-remover-ignorar-coleta-ah";
 import { useProfessores } from "@/hooks/use-professores";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
-import { Calendar, Clock, Search, Users, GraduationCap, EyeOff, Eye } from "lucide-react";
+import { Calendar, Clock, Search, Users, GraduationCap, EyeOff, Eye, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { IgnorarColetaModal } from "./IgnorarColetaModal";
@@ -19,6 +20,7 @@ import { IgnorarColetaModal } from "./IgnorarColetaModal";
 export const ProximasColetasAH = () => {
   const { data: pessoas, isLoading } = useProximasColetasAH();
   const { data: ignorados, isLoading: isLoadingIgnorados } = useAlunosIgnoradosAH();
+  const { mutate: removerIgnorar } = useRemoverIgnorarColetaAH();
   const { professores } = useProfessores();
   const { turmas } = useTodasTurmas();
 
@@ -290,9 +292,19 @@ export const ProximasColetasAH = () => {
                         </p>
                       </div>
                       
-                      <Badge variant="secondary" className="flex-shrink-0 text-primary-foreground">
-                        {ignorado.dias_restantes} {ignorado.dias_restantes === 1 ? 'dia restante' : 'dias restantes'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="flex-shrink-0 text-primary-foreground">
+                          {ignorado.dias_restantes} {ignorado.dias_restantes === 1 ? 'dia restante' : 'dias restantes'}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removerIgnorar(ignorado.id)}
+                          title="Remover da lista de ignorados"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-2 text-sm">
