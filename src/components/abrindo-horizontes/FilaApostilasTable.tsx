@@ -279,21 +279,25 @@ export const FilaApostilasTable = () => {
                     </TableCell>
                     <TableCell className="text-right w-[280px]">
                       <div className="flex gap-1.5 justify-end items-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCorrecao(apostila)}
-                          disabled={apostila.total_correcoes > 0}
-                          className={cn(
-                            "h-8 w-[90px] px-2.5 text-xs rounded-lg",
-                            apostila.total_correcoes > 0 
-                              ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 cursor-not-allowed" 
-                              : "bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900"
-                          )}
-                        >
-                          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-                          Correção
-                        </Button>
+                        {apostila.total_correcoes > 0 ? (
+                          <Badge 
+                            variant="outline" 
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-700 dark:text-green-300 inline-flex items-center justify-center"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                            Corrigido
+                          </Badge>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCorrecao(apostila)}
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                            Correção
+                          </Button>
+                        )}
                         
                         {apostila.foi_entregue ? (
                           <Badge 
