@@ -102,7 +102,7 @@ export const ProximasColetasAH = () => {
               <Calendar className="h-4 w-4" />
               Próximas Coletas
               {pessoasFiltradas.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant="secondary" className="ml-1 text-primary-foreground">
                   {pessoasFiltradas.length}
                 </Badge>
               )}
@@ -111,7 +111,7 @@ export const ProximasColetasAH = () => {
               <EyeOff className="h-4 w-4" />
               Ignorados
               {ignorados && ignorados.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant="secondary" className="ml-1 text-primary-foreground">
                   {ignorados.length}
                 </Badge>
               )}
