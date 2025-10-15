@@ -5178,6 +5178,16 @@ export type Database = {
         }
         Returns: Json
       }
+      get_ah_tempo_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          tempo_medio_coleta_correcao: number
+          tempo_medio_coleta_entrega: number
+          tempo_medio_correcao_entrega: number
+          total_apostilas_corrigidas: number
+          total_apostilas_entregues: number
+        }[]
+      }
       get_aluno_desempenho: {
         Args: {
           p_aluno_id: string

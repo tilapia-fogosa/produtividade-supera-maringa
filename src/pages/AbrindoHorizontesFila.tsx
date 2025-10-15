@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, BookOpen } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, BookOpen, BarChart3 } from "lucide-react";
 import { RecolherApostilasModal } from "@/components/abrindo-horizontes/RecolherApostilasModal";
 import { FilaApostilasTable } from "@/components/abrindo-horizontes/FilaApostilasTable";
+import { EstatisticasAH } from "@/components/abrindo-horizontes/EstatisticasAH";
 
 const AbrindoHorizontesFila = () => {
   const [modalRecolherOpen, setModalRecolherOpen] = useState(false);
@@ -31,7 +33,26 @@ const AbrindoHorizontesFila = () => {
           </Button>
         </div>
 
-        <FilaApostilasTable />
+        <Tabs defaultValue="fila" className="w-full">
+          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+            <TabsTrigger value="fila" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Fila de Apostilas
+            </TabsTrigger>
+            <TabsTrigger value="estatisticas" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Estatísticas
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="fila" className="mt-6">
+            <FilaApostilasTable />
+          </TabsContent>
+
+          <TabsContent value="estatisticas" className="mt-6">
+            <EstatisticasAH />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <RecolherApostilasModal 
