@@ -25,7 +25,7 @@ export const useProximasColetasAH = () => {
           nome,
           ultima_correcao_ah,
           turma_id,
-          turmas!inner (
+          turmas (
             nome,
             professor_id,
             projeto,
@@ -35,7 +35,6 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
-        .or('turmas.projeto.is.null,turmas.projeto.eq.false')
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorAlunos) throw errorAlunos;
@@ -47,7 +46,7 @@ export const useProximasColetasAH = () => {
           nome,
           ultima_correcao_ah,
           turma_id,
-          turmas!inner (
+          turmas (
             nome,
             professor_id,
             projeto,
@@ -57,39 +56,42 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
-        .or('turmas.projeto.is.null,turmas.projeto.eq.false')
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorFuncionarios) throw errorFuncionarios;
 
-      // Combinar e formatar os dados
+      // Combinar e formatar os dados, filtrando turmas com projeto = true
       const todasPessoas: ProximaColetaAH[] = [
-        ...(alunos || []).map((aluno: any) => ({
-          id: aluno.id,
-          nome: aluno.nome,
-          turma_id: aluno.turma_id,
-          turma_nome: aluno.turmas?.nome || null,
-          professor_id: aluno.turmas?.professor_id || null,
-          professor_nome: aluno.turmas?.professores?.nome || null,
-          ultima_correcao_ah: aluno.ultima_correcao_ah,
-          dias_desde_ultima_correcao: aluno.ultima_correcao_ah 
-            ? Math.floor((Date.now() - new Date(aluno.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24))
-            : null,
-          origem: 'aluno' as const
-        })),
-        ...(funcionarios || []).map((func: any) => ({
-          id: func.id,
-          nome: func.nome,
-          turma_id: func.turma_id,
-          turma_nome: func.turmas?.nome || null,
-          professor_id: func.turmas?.professor_id || null,
-          professor_nome: func.turmas?.professores?.nome || null,
-          ultima_correcao_ah: func.ultima_correcao_ah,
-          dias_desde_ultima_correcao: func.ultima_correcao_ah 
-            ? Math.floor((Date.now() - new Date(func.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24))
-            : null,
-          origem: 'funcionario' as const
-        }))
+        ...(alunos || [])
+          .filter(aluno => !aluno.turmas?.projeto)  // Exclui turmas com projeto = true
+          .map((aluno: any) => ({
+            id: aluno.id,
+            nome: aluno.nome,
+            turma_id: aluno.turma_id,
+            turma_nome: aluno.turmas?.nome || null,
+            professor_id: aluno.turmas?.professor_id || null,
+            professor_nome: aluno.turmas?.professores?.nome || null,
+            ultima_correcao_ah: aluno.ultima_correcao_ah,
+            dias_desde_ultima_correcao: aluno.ultima_correcao_ah 
+              ? Math.floor((Date.now() - new Date(aluno.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24))
+              : null,
+            origem: 'aluno' as const
+          })),
+        ...(funcionarios || [])
+          .filter(func => !func.turmas?.projeto)  // Exclui turmas com projeto = true
+          .map((func: any) => ({
+            id: func.id,
+            nome: func.nome,
+            turma_id: func.turma_id,
+            turma_nome: func.turmas?.nome || null,
+            professor_id: func.turmas?.professor_id || null,
+            professor_nome: func.turmas?.professores?.nome || null,
+            ultima_correcao_ah: func.ultima_correcao_ah,
+            dias_desde_ultima_correcao: func.ultima_correcao_ah 
+              ? Math.floor((Date.now() - new Date(func.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24))
+              : null,
+            origem: 'funcionario' as const
+          }))
       ];
 
       // Ordenar por dias desde última correção (do maior para o menor)
