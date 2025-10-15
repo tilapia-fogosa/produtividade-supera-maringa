@@ -13,6 +13,10 @@ export interface ApostilaRecolhida {
   data_entrega_real?: string;
   responsavel_entrega_nome?: string;
   foi_entregue: boolean;
+  correcao_iniciada: boolean;
+  responsavel_correcao_nome?: string;
+  responsavel_correcao_tipo?: string;
+  data_inicio_correcao?: string;
 }
 
 export const useApostilasRecolhidas = () => {
@@ -59,6 +63,10 @@ export const useApostilasRecolhidas = () => {
               data_entrega_real: recolhida.data_entrega_real,
               responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
               foi_entregue: !!recolhida.data_entrega_real,
+              correcao_iniciada: recolhida.correcao_iniciada || false,
+              responsavel_correcao_nome: recolhida.responsavel_correcao_nome,
+              responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
+              data_inicio_correcao: recolhida.data_inicio_correcao,
             };
           }
 
@@ -86,6 +94,10 @@ export const useApostilasRecolhidas = () => {
               data_entrega_real: recolhida.data_entrega_real,
               responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
               foi_entregue: !!recolhida.data_entrega_real,
+              correcao_iniciada: recolhida.correcao_iniciada || false,
+              responsavel_correcao_nome: recolhida.responsavel_correcao_nome,
+              responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
+              data_inicio_correcao: recolhida.data_inicio_correcao,
             };
           }
 
@@ -106,6 +118,10 @@ export const useApostilasRecolhidas = () => {
             data_entrega_real: recolhida.data_entrega_real,
             responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
             foi_entregue: !!recolhida.data_entrega_real,
+            correcao_iniciada: recolhida.correcao_iniciada || false,
+            responsavel_correcao_nome: recolhida.responsavel_correcao_nome,
+            responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
+            data_inicio_correcao: recolhida.data_inicio_correcao,
           };
         })
       );

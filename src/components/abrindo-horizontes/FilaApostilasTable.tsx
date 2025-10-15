@@ -21,11 +21,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
 import { useRemoverApostilaAcao } from "@/hooks/use-remover-apostila-acao";
-import { CorrecaoAhModal } from "./CorrecaoAhModal";
+import { IniciarCorrecaoAhModal } from "./IniciarCorrecaoAhModal";
+import { FinalizarCorrecaoAhModal } from "./FinalizarCorrecaoAhModal";
 import { EntregaAhModal } from "./EntregaAhModal";
 
 type SortField = "pessoa_nome" | "turma_nome" | "apostila" | "data_recolhida" | "data_entrega";
@@ -46,7 +47,8 @@ export const FilaApostilasTable = () => {
   const ITENS_POR_PAGINA = 50;
   
   // Estado para os modais
-  const [modalCorrecaoOpen, setModalCorrecaoOpen] = useState(false);
+  const [modalIniciarCorrecaoOpen, setModalIniciarCorrecaoOpen] = useState(false);
+  const [modalFinalizarCorrecaoOpen, setModalFinalizarCorrecaoOpen] = useState(false);
   const [modalEntregaOpen, setModalEntregaOpen] = useState(false);
   const [modalRemoverOpen, setModalRemoverOpen] = useState(false);
   const [apostilaSelecionada, setApostilaSelecionada] = useState<ApostilaRecolhida | null>(null);
@@ -139,9 +141,14 @@ export const FilaApostilasTable = () => {
     return "";
   };
 
-  const handleCorrecao = (apostila: ApostilaRecolhida) => {
+  const handleIniciarCorrecao = (apostila: ApostilaRecolhida) => {
     setApostilaSelecionada(apostila);
-    setModalCorrecaoOpen(true);
+    setModalIniciarCorrecaoOpen(true);
+  };
+
+  const handleFinalizarCorrecao = (apostila: ApostilaRecolhida) => {
+    setApostilaSelecionada(apostila);
+    setModalFinalizarCorrecaoOpen(true);
   };
 
   const handleEntrega = (apostila: ApostilaRecolhida) => {
@@ -156,6 +163,8 @@ export const FilaApostilasTable = () => {
       mensagem = `Tem certeza que deseja desfazer a entrega da apostila ${apostila.apostila} para ${apostila.pessoa_nome}?`;
     } else if (apostila.total_correcoes > 0) {
       mensagem = `Tem certeza que deseja remover a correção da apostila ${apostila.apostila} de ${apostila.pessoa_nome}?`;
+    } else if (apostila.correcao_iniciada) {
+      mensagem = `Tem certeza que deseja remover o início de correção da apostila ${apostila.apostila} de ${apostila.pessoa_nome}?`;
     } else {
       mensagem = `Tem certeza que deseja remover o recolhimento da apostila ${apostila.apostila} de ${apostila.pessoa_nome}?`;
     }
@@ -171,6 +180,7 @@ export const FilaApostilasTable = () => {
         apostilaRecolhidaId: apostilaSelecionada.id,
         foiEntregue: apostilaSelecionada.foi_entregue,
         totalCorrecoes: apostilaSelecionada.total_correcoes,
+        correcaoIniciada: apostilaSelecionada.correcao_iniciada,
       });
     }
     setModalRemoverOpen(false);
@@ -268,6 +278,7 @@ export const FilaApostilasTable = () => {
                     </Button>
                   </TableHead>
                   <TableHead>Correções</TableHead>
+                  <TableHead>Sendo corrigida por</TableHead>
                   <TableHead>
                     <Button
                       variant="ghost"
@@ -306,6 +317,17 @@ export const FilaApostilasTable = () => {
                         {apostila.total_correcoes} {apostila.total_correcoes === 1 ? "correção" : "correções"}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {apostila.correcao_iniciada && apostila.total_correcoes === 0 ? (
+                        <div className="text-sm">
+                          <span className="font-medium">{apostila.responsavel_correcao_nome}</span>
+                          <br />
+                          <span className="text-muted-foreground text-xs">({apostila.responsavel_correcao_tipo})</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-left">
                       {formatDateSaoPaulo(apostila.data_recolhida, "dd/MM/yyyy")}
                     </TableCell>
@@ -321,6 +343,7 @@ export const FilaApostilasTable = () => {
                     </TableCell>
                     <TableCell className="text-right w-[280px]">
                       <div className="flex gap-1.5 justify-end items-center">
+                        {/* Estado 3: Corrigido */}
                         {apostila.total_correcoes > 0 ? (
                           <Badge 
                             variant="outline" 
@@ -329,16 +352,29 @@ export const FilaApostilasTable = () => {
                             <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                             Corrigido
                           </Badge>
-                        ) : (
+                        ) : apostila.correcao_iniciada ? (
+                          /* Estado 2: Em correção - Botão Finalizar */
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCorrecao(apostila)}
+                            onClick={() => handleFinalizarCorrecao(apostila)}
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg border-[#FF7C00]"
+                            style={{ backgroundColor: '#FF7C00', color: 'white' }}
+                          >
+                            <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white" />
+                            Finalizar
+                          </Button>
+                        ) : (
+                          /* Estado 1: Não iniciada - Botão Iniciar */
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleIniciarCorrecao(apostila)}
                             className="h-8 w-[90px] px-2.5 text-xs rounded-lg border-[#4E2CA3]"
                             style={{ backgroundColor: '#4E2CA3', color: 'white' }}
                           >
-                            <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white" />
-                            Correção
+                            <Play className="h-3.5 w-3.5 mr-1.5 text-white" />
+                            Iniciar
                           </Button>
                         )}
                         
@@ -374,6 +410,8 @@ export const FilaApostilasTable = () => {
                               ? "Remover entrega"
                               : apostila.total_correcoes > 0
                               ? "Remover correção"
+                              : apostila.correcao_iniciada
+                              ? "Remover início de correção"
                               : "Remover recolhimento"
                           }
                         >
@@ -422,12 +460,20 @@ export const FilaApostilasTable = () => {
         )}
       </CardContent>
 
-      {/* Modal de Correção */}
+      {/* Modais */}
       {apostilaSelecionada && (
         <>
-          <CorrecaoAhModal
-            open={modalCorrecaoOpen}
-            onOpenChange={setModalCorrecaoOpen}
+          <IniciarCorrecaoAhModal
+            open={modalIniciarCorrecaoOpen}
+            onOpenChange={setModalIniciarCorrecaoOpen}
+            apostilaRecolhidaId={apostilaSelecionada.id}
+            pessoaId={apostilaSelecionada.pessoa_id}
+            pessoaNome={apostilaSelecionada.pessoa_nome}
+            apostilaNome={apostilaSelecionada.apostila}
+          />
+          <FinalizarCorrecaoAhModal
+            open={modalFinalizarCorrecaoOpen}
+            onOpenChange={setModalFinalizarCorrecaoOpen}
             apostilaRecolhidaId={apostilaSelecionada.id}
             pessoaId={apostilaSelecionada.pessoa_id}
             pessoaNome={apostilaSelecionada.pessoa_nome}

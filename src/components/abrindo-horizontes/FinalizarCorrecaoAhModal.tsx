@@ -24,7 +24,7 @@ import { useEstagiarios } from "@/hooks/use-estagiarios";
 import { useAhCorrecao } from "@/hooks/use-ah-correcao";
 import { BookOpen } from "lucide-react";
 
-interface CorrecaoAhModalProps {
+interface FinalizarCorrecaoAhModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   apostilaRecolhidaId: string;
@@ -33,14 +33,14 @@ interface CorrecaoAhModalProps {
   apostilaNome: string;
 }
 
-export function CorrecaoAhModal({
+export function FinalizarCorrecaoAhModal({
   open,
   onOpenChange,
   apostilaRecolhidaId,
   pessoaId,
   pessoaNome,
   apostilaNome,
-}: CorrecaoAhModalProps) {
+}: FinalizarCorrecaoAhModalProps) {
   const { professores } = useProfessores();
   const { estagiarios, isLoading: loadingEstagiarios } = useEstagiarios();
   const { registrarCorrecaoAH, isLoading } = useAhCorrecao();
@@ -99,10 +99,10 @@ export function CorrecaoAhModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Correção de Apostila - {pessoaNome}
+            Finalizar Correção - {pessoaNome}
           </DialogTitle>
           <DialogDescription>
-            Registre a correção da apostila recolhida
+            Complete o registro da correção da apostila recolhida
           </DialogDescription>
         </DialogHeader>
 

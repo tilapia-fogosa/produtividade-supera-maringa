@@ -56,33 +56,48 @@ export type Database = {
       ah_recolhidas: {
         Row: {
           apostila: string
+          correcao_iniciada: boolean | null
           created_at: string
           data_entrega_real: string | null
+          data_inicio_correcao: string | null
           id: number
           pessoa_id: string
           professor_id: string | null
+          responsavel_correcao_id: string | null
+          responsavel_correcao_nome: string | null
+          responsavel_correcao_tipo: string | null
           responsavel_entrega_id: string | null
           responsavel_entrega_nome: string | null
           responsavel_id: string | null
         }
         Insert: {
           apostila: string
+          correcao_iniciada?: boolean | null
           created_at?: string
           data_entrega_real?: string | null
+          data_inicio_correcao?: string | null
           id?: number
           pessoa_id: string
           professor_id?: string | null
+          responsavel_correcao_id?: string | null
+          responsavel_correcao_nome?: string | null
+          responsavel_correcao_tipo?: string | null
           responsavel_entrega_id?: string | null
           responsavel_entrega_nome?: string | null
           responsavel_id?: string | null
         }
         Update: {
           apostila?: string
+          correcao_iniciada?: boolean | null
           created_at?: string
           data_entrega_real?: string | null
+          data_inicio_correcao?: string | null
           id?: number
           pessoa_id?: string
           professor_id?: string | null
+          responsavel_correcao_id?: string | null
+          responsavel_correcao_nome?: string | null
+          responsavel_correcao_tipo?: string | null
           responsavel_entrega_id?: string | null
           responsavel_entrega_nome?: string | null
           responsavel_id?: string | null
