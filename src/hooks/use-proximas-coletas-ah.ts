@@ -25,15 +25,17 @@ export const useProximasColetasAH = () => {
           nome,
           ultima_correcao_ah,
           turma_id,
-          turmas (
+          turmas!inner (
             nome,
             professor_id,
+            projeto,
             professores (
               nome
             )
           )
         `)
         .eq('active', true)
+        .eq('turmas.projeto', false)
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorAlunos) throw errorAlunos;
@@ -45,15 +47,17 @@ export const useProximasColetasAH = () => {
           nome,
           ultima_correcao_ah,
           turma_id,
-          turmas (
+          turmas!inner (
             nome,
             professor_id,
+            projeto,
             professores (
               nome
             )
           )
         `)
         .eq('active', true)
+        .eq('turmas.projeto', false)
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorFuncionarios) throw errorFuncionarios;
