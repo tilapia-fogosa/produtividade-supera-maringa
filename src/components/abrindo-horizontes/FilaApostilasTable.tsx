@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2 } from "lucide-react";
+import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
 import { useRemoverApostilaAcao } from "@/hooks/use-remover-apostila-acao";
@@ -40,6 +40,10 @@ export const FilaApostilasTable = () => {
   const [filterApostila, setFilterApostila] = useState("");
   const [sortField, setSortField] = useState<SortField>("data_entrega");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [mostrarEntregues, setMostrarEntregues] = useState(false);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  
+  const ITENS_POR_PAGINA = 50;
   
   // Estado para os modais
   const [modalCorrecaoOpen, setModalCorrecaoOpen] = useState(false);
@@ -55,8 +59,9 @@ export const FilaApostilasTable = () => {
       const matchPessoa = apostila.pessoa_nome.toLowerCase().includes(filterPessoa.toLowerCase());
       const matchTurma = apostila.turma_nome.toLowerCase().includes(filterTurma.toLowerCase());
       const matchApostila = apostila.apostila.toLowerCase().includes(filterApostila.toLowerCase());
+      const matchEntregue = mostrarEntregues ? true : !apostila.foi_entregue;
       
-      return matchPessoa && matchTurma && matchApostila;
+      return matchPessoa && matchTurma && matchApostila && matchEntregue;
     });
 
     result.sort((a, b) => {
@@ -77,7 +82,18 @@ export const FilaApostilasTable = () => {
     });
 
     return result;
-  }, [apostilas, filterPessoa, filterTurma, filterApostila, sortField, sortDirection]);
+  }, [apostilas, filterPessoa, filterTurma, filterApostila, sortField, sortDirection, mostrarEntregues]);
+
+  // Cálculo de paginação
+  const totalPaginas = Math.ceil(filteredAndSorted.length / ITENS_POR_PAGINA);
+  const indiceInicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+  const indiceFim = indiceInicio + ITENS_POR_PAGINA;
+  const apostilasPaginadas = filteredAndSorted.slice(indiceInicio, indiceFim);
+
+  // Reset página quando filtros mudarem
+  React.useEffect(() => {
+    setPaginaAtual(1);
+  }, [filterPessoa, filterTurma, filterApostila, mostrarEntregues]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -175,10 +191,20 @@ export const FilaApostilasTable = () => {
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <CardTitle>Apostilas Recolhidas</CardTitle>
-          <Button onClick={handleSortByEntrega} variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            Ordenar por Entrega
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setMostrarEntregues(!mostrarEntregues)} 
+              variant="outline" 
+              size="sm"
+            >
+              {mostrarEntregues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+              {mostrarEntregues ? "Ocultar Entregues" : "Mostrar Entregues"}
+            </Button>
+            <Button onClick={handleSortByEntrega} variant="outline" size="sm">
+              <Calendar className="h-4 w-4 mr-2" />
+              Ordenar por Entrega
+            </Button>
+          </div>
         </div>
         
         {/* Filtros */}
@@ -204,9 +230,12 @@ export const FilaApostilasTable = () => {
       <CardContent>
         {filteredAndSorted.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">
-            Nenhuma apostila recolhida encontrada
+            {mostrarEntregues 
+              ? "Nenhuma apostila recolhida encontrada" 
+              : "Nenhuma apostila pendente encontrada"}
           </p>
         ) : (
+          <>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -271,7 +300,7 @@ export const FilaApostilasTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAndSorted.map((apostila) => (
+                {apostilasPaginadas.map((apostila) => (
                   <TableRow key={apostila.id}>
                     <TableCell className="font-medium">{apostila.pessoa_nome}</TableCell>
                     <TableCell>{apostila.turma_nome}</TableCell>
@@ -361,6 +390,39 @@ export const FilaApostilasTable = () => {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Paginação */}
+          {totalPaginas > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {indiceInicio + 1} a {Math.min(indiceFim, filteredAndSorted.length)} de {filteredAndSorted.length} apostilas
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaginaAtual(paginaAtual - 1)}
+                  disabled={paginaAtual === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                <span className="text-sm">
+                  Página {paginaAtual} de {totalPaginas}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaginaAtual(paginaAtual + 1)}
+                  disabled={paginaAtual === totalPaginas}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </CardContent>
 
