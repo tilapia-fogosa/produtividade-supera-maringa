@@ -233,7 +233,6 @@ export const FilaApostilasTable = () => {
                       onClick={() => handleSort("data_recolhida")}
                       className="h-8 px-2"
                     >
-                      <Calendar className="h-4 w-4 mr-2" />
                       Recolhida
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -265,10 +264,10 @@ export const FilaApostilasTable = () => {
                         {apostila.total_correcoes} {apostila.total_correcoes === 1 ? "correção" : "correções"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-left">
                       {formatDateSaoPaulo(apostila.data_recolhida, "dd/MM/yyyy")}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-left">
                       <div className={cn(
                         "inline-block px-2 py-1 rounded",
                         getEntregaBackgroundColor(apostila)
@@ -279,29 +278,29 @@ export const FilaApostilasTable = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end items-center">
+                      <div className="flex gap-1.5 justify-end items-center">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleCorrecao(apostila)}
                           disabled={apostila.total_correcoes > 0}
                           className={cn(
-                            "h-9 rounded-lg",
+                            "h-8 px-2.5 text-xs rounded-lg",
                             apostila.total_correcoes > 0 
                               ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 cursor-not-allowed" 
                               : "bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900"
                           )}
                         >
-                          <CheckCircle className="h-4 w-4 mr-2" />
+                          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                           Correção
                         </Button>
                         
                         {apostila.foi_entregue ? (
                           <Badge 
                             variant="outline" 
-                            className="h-9 px-3 rounded-lg bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-700 dark:text-green-300"
+                            className="h-8 px-2.5 text-xs rounded-lg bg-green-100 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-700 dark:text-green-300"
                           >
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                             Entregue
                           </Badge>
                         ) : (
@@ -310,9 +309,9 @@ export const FilaApostilasTable = () => {
                             variant="outline"
                             onClick={() => handleEntrega(apostila)}
                             disabled={apostila.total_correcoes === 0}
-                            className="h-9 rounded-lg bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-950 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
+                            className="h-8 px-2.5 text-xs rounded-lg bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 disabled:opacity-50 dark:bg-orange-950 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
                           >
-                            <PackageCheck className="h-4 w-4 mr-2" />
+                            <PackageCheck className="h-3.5 w-3.5 mr-1.5" />
                             Entregar
                           </Button>
                         )}
@@ -321,7 +320,7 @@ export const FilaApostilasTable = () => {
                           size="sm"
                           variant="destructive"
                           onClick={() => handleRemover(apostila)}
-                          className="h-9 w-9 p-0 rounded-lg"
+                          className="h-8 w-8 p-0 rounded-lg"
                           title={
                             apostila.foi_entregue
                               ? "Remover entrega"
@@ -330,7 +329,7 @@ export const FilaApostilasTable = () => {
                               : "Remover recolhimento"
                           }
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
