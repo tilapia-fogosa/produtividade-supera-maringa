@@ -334,9 +334,10 @@ export const FilaApostilasTable = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleCorrecao(apostila)}
-                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 dark:bg-purple-950 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900"
+                            className="h-8 w-[90px] px-2.5 text-xs rounded-lg border-[#4E2CA3]"
+                            style={{ backgroundColor: '#4E2CA3', color: 'white' }}
                           >
-                            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                            <CheckCircle className="h-3.5 w-3.5 mr-1.5 text-white" />
                             Correção
                           </Button>
                         )}
