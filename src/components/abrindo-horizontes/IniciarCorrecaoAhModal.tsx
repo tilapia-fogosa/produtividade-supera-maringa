@@ -31,8 +31,7 @@ export const IniciarCorrecaoAhModal = ({
   const [responsavelId, setResponsavelId] = useState("");
   const [dataInicio, setDataInicio] = useState(() => {
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
+    return now.toISOString().slice(0, 10);
   });
 
   // Combinar professores e estagiários em uma lista única
@@ -79,8 +78,7 @@ export const IniciarCorrecaoAhModal = ({
       setResponsavelId("");
       setDataInicio(() => {
         const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        return now.toISOString().slice(0, 16);
+        return now.toISOString().slice(0, 10);
       });
       onOpenChange(false);
     } catch (error) {
@@ -128,7 +126,7 @@ export const IniciarCorrecaoAhModal = ({
             <Label htmlFor="data-inicio">Data de início *</Label>
             <input
               id="data-inicio"
-              type="datetime-local"
+              type="date"
               value={dataInicio}
               onChange={(e) => setDataInicio(e.target.value)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
