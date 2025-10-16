@@ -19,7 +19,8 @@ import {
   Shield,
   FileSpreadsheet,
   Trophy,
-  Shirt
+  Shirt,
+  ListChecks
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,11 @@ const items = [
     title: "Lançamentos",
     url: "/lancamentos",
     icon: ClipboardList,
+  },
+  {
+    title: "Abrindo Horizontes",
+    url: "/abrindo-horizontes-fila",
+    icon: ListChecks,
   },
   {
     title: "Diário de Turma", 

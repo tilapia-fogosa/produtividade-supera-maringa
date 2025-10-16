@@ -20,8 +20,7 @@ serve(async (req) => {
   try {
     console.log('Processando requisição...');
     
-    const requestData = await req.json();
-    const data = requestData.data;
+    const data = await req.json();
     
     console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     
@@ -91,7 +90,8 @@ serve(async (req) => {
       professor_correcao: data.professor_correcao,
       comentario: data.comentario,
       data_fim_correcao: data.data_fim_correcao,
-      aluno_nome: pessoaData?.nome
+      aluno_nome: pessoaData?.nome,
+      ah_recolhida_id: data.ah_recolhida_id || null
     };
     
     console.log('Dados para inserção:', JSON.stringify(insertData, null, 2));

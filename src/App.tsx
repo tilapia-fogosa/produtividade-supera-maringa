@@ -27,6 +27,7 @@ import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import AbrindoHorizontesSelecao from "./pages/AbrindoHorizontesSelecao";
 import AbrindoHorizontesAlunos from "./pages/AbrindoHorizontesAlunos";
+import AbrindoHorizontesFila from "./pages/AbrindoHorizontesFila";
 import Diario from "./pages/Diario";
 import Funcionarios from "./pages/Funcionarios";
 import Alunos from "./pages/Alunos";
@@ -99,6 +100,7 @@ function App() {
                             <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafael />} />
                             <Route path="/fichas" element={<Fichas />} />
                             <Route path="/lancamentos" element={<Lancamentos />} />
+                            <Route path="/abrindo-horizontes-fila" element={<AbrindoHorizontesFila />} />
                             <Route path="/diario" element={<Diario />} />
                             <Route path="/calendario-aulas" element={<CalendarioAulas />} />
                             <Route path="/funcionarios" element={<Funcionarios />} />
