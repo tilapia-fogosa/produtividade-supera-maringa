@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,10 +23,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ArrowUpDown, Calendar, CheckCircle, PackageCheck, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Play, Users } from "lucide-react";
 import { formatDateSaoPaulo, cn } from "@/lib/utils";
 import { useApostilasRecolhidas, ApostilaRecolhida } from "@/hooks/use-apostilas-recolhidas";
 import { useRemoverApostilaAcao } from "@/hooks/use-remover-apostila-acao";
+import { useProfessores } from "@/hooks/use-professores";
 import { IniciarCorrecaoAhModal } from "./IniciarCorrecaoAhModal";
 import { FinalizarCorrecaoAhModal } from "./FinalizarCorrecaoAhModal";
 import { EntregaAhModal } from "./EntregaAhModal";
@@ -35,10 +38,12 @@ type SortDirection = "asc" | "desc";
 export const FilaApostilasTable = () => {
   const { data: apostilas, isLoading } = useApostilasRecolhidas();
   const { removerAcao } = useRemoverApostilaAcao();
+  const { professores } = useProfessores();
   
   const [filterPessoa, setFilterPessoa] = useState("");
   const [filterTurma, setFilterTurma] = useState("");
   const [filterApostila, setFilterApostila] = useState("");
+  const [filtroProfessor, setFiltroProfessor] = useState<string>("todos");
   const [sortField, setSortField] = useState<SortField>("data_entrega");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [mostrarEntregues, setMostrarEntregues] = useState(false);
@@ -61,9 +66,10 @@ export const FilaApostilasTable = () => {
       const matchPessoa = apostila.pessoa_nome.toLowerCase().includes(filterPessoa.toLowerCase());
       const matchTurma = apostila.turma_nome.toLowerCase().includes(filterTurma.toLowerCase());
       const matchApostila = apostila.apostila.toLowerCase().includes(filterApostila.toLowerCase());
+      const matchProfessor = filtroProfessor === "todos" || apostila.professor_id === filtroProfessor;
       const matchEntregue = mostrarEntregues ? true : !apostila.foi_entregue;
       
-      return matchPessoa && matchTurma && matchApostila && matchEntregue;
+      return matchPessoa && matchTurma && matchApostila && matchProfessor && matchEntregue;
     });
 
     result.sort((a, b) => {
@@ -84,7 +90,7 @@ export const FilaApostilasTable = () => {
     });
 
     return result;
-  }, [apostilas, filterPessoa, filterTurma, filterApostila, sortField, sortDirection, mostrarEntregues]);
+  }, [apostilas, filterPessoa, filterTurma, filterApostila, filtroProfessor, sortField, sortDirection, mostrarEntregues]);
 
   // Cálculo de paginação
   const totalPaginas = Math.ceil(filteredAndSorted.length / ITENS_POR_PAGINA);
@@ -95,7 +101,7 @@ export const FilaApostilasTable = () => {
   // Reset página quando filtros mudarem
   React.useEffect(() => {
     setPaginaAtual(1);
-  }, [filterPessoa, filterTurma, filterApostila, mostrarEntregues]);
+  }, [filterPessoa, filterTurma, filterApostila, filtroProfessor, mostrarEntregues]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -212,22 +218,56 @@ export const FilaApostilasTable = () => {
         </div>
         
         {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <Input
-            placeholder="Filtrar por pessoa..."
-            value={filterPessoa}
-            onChange={(e) => setFilterPessoa(e.target.value)}
-          />
-          <Input
-            placeholder="Filtrar por turma..."
-            value={filterTurma}
-            onChange={(e) => setFilterTurma(e.target.value)}
-          />
-          <Input
-            placeholder="Filtrar por apostila..."
-            value={filterApostila}
-            onChange={(e) => setFilterApostila(e.target.value)}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="filtro-pessoa">Buscar por pessoa</Label>
+            <Input
+              id="filtro-pessoa"
+              placeholder="Digite o nome..."
+              value={filterPessoa}
+              onChange={(e) => setFilterPessoa(e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="filtro-turma">Filtrar por turma</Label>
+            <Input
+              id="filtro-turma"
+              placeholder="Digite a turma..."
+              value={filterTurma}
+              onChange={(e) => setFilterTurma(e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="filtro-professor" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Filtrar por professor
+            </Label>
+            <Select value={filtroProfessor} onValueChange={setFiltroProfessor}>
+              <SelectTrigger id="filtro-professor">
+                <SelectValue placeholder="Todos os professores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os professores</SelectItem>
+                {professores.map((prof) => (
+                  <SelectItem key={prof.id} value={prof.id}>
+                    {prof.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="filtro-apostila">Filtrar por apostila</Label>
+            <Input
+              id="filtro-apostila"
+              placeholder="Digite a apostila..."
+              value={filterApostila}
+              onChange={(e) => setFilterApostila(e.target.value)}
+            />
+          </div>
         </div>
       </CardHeader>
       

@@ -17,6 +17,7 @@ export interface ApostilaRecolhida {
   responsavel_correcao_nome?: string;
   responsavel_correcao_tipo?: string;
   data_inicio_correcao?: string;
+  professor_id?: string;
 }
 
 export const useApostilasRecolhidas = () => {
@@ -42,7 +43,7 @@ export const useApostilasRecolhidas = () => {
           // Tentar buscar como aluno
           const { data: aluno } = await supabase
             .from("alunos")
-            .select("nome, turma_id, turmas(nome)")
+            .select("nome, turma_id, turmas(nome, professor_id)")
             .eq("id", recolhida.pessoa_id)
             .single();
 
@@ -67,13 +68,14 @@ export const useApostilasRecolhidas = () => {
               responsavel_correcao_nome: recolhida.responsavel_correcao_nome,
               responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
               data_inicio_correcao: recolhida.data_inicio_correcao,
+              professor_id: aluno.turmas?.professor_id,
             };
           }
 
           // Se não for aluno, tentar como funcionário
           const { data: funcionario } = await supabase
             .from("funcionarios")
-            .select("nome, turma_id, turmas(nome)")
+            .select("nome, turma_id, turmas(nome, professor_id)")
             .eq("id", recolhida.pessoa_id)
             .single();
 
@@ -98,6 +100,7 @@ export const useApostilasRecolhidas = () => {
               responsavel_correcao_nome: recolhida.responsavel_correcao_nome,
               responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
               data_inicio_correcao: recolhida.data_inicio_correcao,
+              professor_id: funcionario.turmas?.professor_id,
             };
           }
 
@@ -122,6 +125,7 @@ export const useApostilasRecolhidas = () => {
             responsavel_correcao_nome: recolhida.responsavel_correcao_nome,
             responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
             data_inicio_correcao: recolhida.data_inicio_correcao,
+            professor_id: undefined,
           };
         })
       );
