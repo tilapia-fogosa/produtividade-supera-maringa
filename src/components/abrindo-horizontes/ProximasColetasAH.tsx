@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProximasColetasAH } from "@/hooks/use-proximas-coletas-ah";
 import { useAlunosIgnoradosAH } from "@/hooks/use-alunos-ignorados-ah";
 import { useRemoverIgnorarColetaAH } from "@/hooks/use-remover-ignorar-coleta-ah";
@@ -194,65 +195,69 @@ export const ProximasColetasAH = () => {
                 }
               </p>
             ) : (
-              <div className="max-h-[600px] overflow-y-auto space-y-3 pr-2">
-                {pessoasFiltradas.map((pessoa, index) => (
-                  <div
-                    key={pessoa.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-3"
-                  >
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm flex-shrink-0">
-                        {index + 1}
-                      </div>
-                      <div className="space-y-1 flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-medium truncate">{pessoa.nome}</p>
-                          <Badge variant="outline" className="text-xs flex-shrink-0">
-                            {pessoa.origem === 'aluno' ? 'Aluno' : 'Funcionário'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {pessoa.turma_nome || 'Sem turma'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        {pessoa.ultima_correcao_ah ? (
-                          <>
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <div className="text-right">
-                              <p className="font-medium whitespace-nowrap">
+              <div className="max-h-[600px] overflow-auto">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50px]">#</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead className="w-[100px]">Tipo</TableHead>
+                        <TableHead>Turma</TableHead>
+                        <TableHead>Professor</TableHead>
+                        <TableHead>Última Correção</TableHead>
+                        <TableHead className="text-right">Dias sem correção</TableHead>
+                        <TableHead className="w-[80px]">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pessoasFiltradas.map((pessoa, index) => (
+                        <TableRow key={pessoa.id}>
+                          <TableCell className="font-medium">{index + 1}</TableCell>
+                          <TableCell className="font-medium">{pessoa.nome}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {pessoa.origem === 'aluno' ? 'Aluno' : 'Funcionário'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{pessoa.turma_nome || '-'}</TableCell>
+                          <TableCell>{pessoa.professor_nome || '-'}</TableCell>
+                          <TableCell>
+                            {pessoa.ultima_correcao_ah ? (
+                              <span className="text-sm">
+                                {format(new Date(pessoa.ultima_correcao_ah), "dd/MM/yyyy")}
+                              </span>
+                            ) : (
+                              <Badge variant="secondary">Sem registro</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {pessoa.dias_desde_ultima_correcao ? (
+                              <span className="font-medium">
                                 {pessoa.dias_desde_ultima_correcao} {pessoa.dias_desde_ultima_correcao === 1 ? 'dia' : 'dias'}
-                              </p>
-                              <p className="text-xs text-muted-foreground whitespace-nowrap">
-                                {format(new Date(pessoa.ultima_correcao_ah), "dd/MM/yyyy", { locale: ptBR })}
-                              </p>
-                            </div>
-                          </>
-                        ) : (
-                          <Badge variant="secondary" className="whitespace-nowrap">Sem correção registrada</Badge>
-                        )}
-                      </div>
-                      
-                      {pessoa.origem === 'aluno' && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="h-8 w-8 rounded-sm"
-                          onClick={() => {
-                            setPessoaSelecionada({ id: pessoa.id, nome: pessoa.nome });
-                            setModalIgnorarOpen(true);
-                          }}
-                          title="Ignorar temporariamente"
-                        >
-                          <EyeOff className="h-4 w-4 text-white" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                              </span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {pessoa.origem === 'aluno' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setPessoaSelecionada({ id: pessoa.id, nome: pessoa.nome });
+                                  setModalIgnorarOpen(true);
+                                }}
+                                title="Ignorar temporariamente"
+                              >
+                                <EyeOff className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </TabsContent>
