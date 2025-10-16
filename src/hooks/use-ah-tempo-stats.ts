@@ -5,6 +5,7 @@ export interface AHTempoStats {
   tempo_medio_coleta_correcao: number | null;
   tempo_medio_coleta_entrega: number | null;
   tempo_medio_correcao_entrega: number | null;
+  tempo_medio_inicio_fim_correcao: number | null;
   total_apostilas_corrigidas: number;
   total_apostilas_entregues: number;
 }

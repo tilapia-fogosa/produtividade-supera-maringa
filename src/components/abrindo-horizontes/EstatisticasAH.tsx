@@ -9,8 +9,8 @@ export const EstatisticasAH = () => {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-6 w-32" />
@@ -45,7 +45,7 @@ export const EstatisticasAH = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -99,6 +99,25 @@ export const EstatisticasAH = () => {
           <CardContent>
             <div className="text-3xl font-bold text-green-700 dark:text-green-300">
               {formatDias(stats.tempo_medio_correcao_entrega)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+              </div>
+              <CardTitle className="text-lg">Início → Fim Correção</CardTitle>
+            </div>
+            <CardDescription>
+              Tempo médio de correção
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+              {formatDias(stats.tempo_medio_inicio_fim_correcao)}
             </div>
           </CardContent>
         </Card>

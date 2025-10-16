@@ -5241,6 +5241,7 @@ export type Database = {
           tempo_medio_coleta_correcao: number
           tempo_medio_coleta_entrega: number
           tempo_medio_correcao_entrega: number
+          tempo_medio_inicio_fim_correcao: number
           total_apostilas_corrigidas: number
           total_apostilas_entregues: number
         }[]
