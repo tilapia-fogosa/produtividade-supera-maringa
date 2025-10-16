@@ -179,7 +179,7 @@ export function FinalizarCorrecaoAhModal({
             </Label>
             <Input
               id="dataFim"
-              type="datetime-local"
+              type="date"
               value={dataFimCorrecao}
               onChange={(e) => setDataFimCorrecao(e.target.value)}
               required
