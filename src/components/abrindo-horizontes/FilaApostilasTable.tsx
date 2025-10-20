@@ -47,6 +47,7 @@ export const FilaApostilasTable = () => {
   const [sortField, setSortField] = useState<SortField>("data_entrega");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [mostrarEntregues, setMostrarEntregues] = useState(false);
+  const [mostrarCorrigidasNaoEntregues, setMostrarCorrigidasNaoEntregues] = useState(true);
   const [paginaAtual, setPaginaAtual] = useState(1);
   
   const ITENS_POR_PAGINA = 50;
@@ -68,8 +69,11 @@ export const FilaApostilasTable = () => {
       const matchApostila = apostila.apostila.toLowerCase().includes(filterApostila.toLowerCase());
       const matchProfessor = filtroProfessor === "todos" || apostila.professor_id === filtroProfessor;
       const matchEntregue = mostrarEntregues ? true : !apostila.foi_entregue;
+      const matchCorrigidaNaoEntregue = mostrarCorrigidasNaoEntregues 
+        ? true 
+        : !(apostila.total_correcoes > 0 && !apostila.foi_entregue);
       
-      return matchPessoa && matchTurma && matchApostila && matchProfessor && matchEntregue;
+      return matchPessoa && matchTurma && matchApostila && matchProfessor && matchEntregue && matchCorrigidaNaoEntregue;
     });
 
     result.sort((a, b) => {
@@ -90,7 +94,7 @@ export const FilaApostilasTable = () => {
     });
 
     return result;
-  }, [apostilas, filterPessoa, filterTurma, filterApostila, filtroProfessor, sortField, sortDirection, mostrarEntregues]);
+  }, [apostilas, filterPessoa, filterTurma, filterApostila, filtroProfessor, sortField, sortDirection, mostrarEntregues, mostrarCorrigidasNaoEntregues]);
 
   // Cálculo de paginação
   const totalPaginas = Math.ceil(filteredAndSorted.length / ITENS_POR_PAGINA);
@@ -101,7 +105,7 @@ export const FilaApostilasTable = () => {
   // Reset página quando filtros mudarem
   React.useEffect(() => {
     setPaginaAtual(1);
-  }, [filterPessoa, filterTurma, filterApostila, filtroProfessor, mostrarEntregues]);
+  }, [filterPessoa, filterTurma, filterApostila, filtroProfessor, mostrarEntregues, mostrarCorrigidasNaoEntregues]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -205,16 +209,28 @@ export const FilaApostilasTable = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <CardTitle>Apostilas Recolhidas</CardTitle>
-          <Button 
-            onClick={() => setMostrarEntregues(!mostrarEntregues)} 
-            variant="outline" 
-            size="sm"
-          >
-            {mostrarEntregues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-            {mostrarEntregues ? "Ocultar Entregues" : "Mostrar Entregues"}
-          </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <CardTitle>Apostilas Recolhidas</CardTitle>
+            <div className="flex flex-col md:flex-row gap-2">
+              <Button 
+                onClick={() => setMostrarEntregues(!mostrarEntregues)} 
+                variant="outline" 
+                size="sm"
+              >
+                {mostrarEntregues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {mostrarEntregues ? "Ocultar Entregues" : "Mostrar Entregues"}
+              </Button>
+              <Button 
+                onClick={() => setMostrarCorrigidasNaoEntregues(!mostrarCorrigidasNaoEntregues)} 
+                variant="outline" 
+                size="sm"
+              >
+                {mostrarCorrigidasNaoEntregues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {mostrarCorrigidasNaoEntregues ? "Ocultar Corrigidas" : "Mostrar Corrigidas"}
+              </Button>
+            </div>
+          </div>
         </div>
         
         {/* Filtros */}
