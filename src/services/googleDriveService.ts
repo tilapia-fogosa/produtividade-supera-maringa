@@ -6,6 +6,79 @@ export interface DownloadAndUploadResult {
   error?: string;
 }
 
+export async function uploadLocalFileToSupabase(
+  file: File,
+  pessoaId: string,
+  tipoPessoa: 'aluno' | 'funcionario'
+): Promise<DownloadAndUploadResult> {
+  console.log('🚀 Iniciando uploadLocalFileToSupabase:', { fileName: file.name, pessoaId, tipoPessoa });
+  
+  try {
+    // 1. Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Por favor, selecione um arquivo de imagem');
+    }
+
+    console.log('✅ Arquivo válido:', { size: file.size, type: file.type });
+
+    // 2. Upload para Supabase Storage
+    console.log('☁️ Iniciando upload para Supabase...');
+    const timestamp = Date.now();
+    const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `devolutivas/${tipoPessoa}/${pessoaId}/${timestamp}-${sanitizedFileName}`;
+    console.log('📁 Caminho no storage:', storagePath);
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('fotos-pessoas')
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('❌ Erro no upload:', uploadError);
+      throw new Error(`Erro ao fazer upload: ${uploadError.message}`);
+    }
+    
+    console.log('✅ Upload concluído:', uploadData);
+
+    // 3. Obter URL pública
+    console.log('🔗 Obtendo URL pública...');
+    const { data: urlData } = supabase.storage
+      .from('fotos-pessoas')
+      .getPublicUrl(storagePath);
+
+    const publicUrl = urlData.publicUrl;
+    console.log('✅ URL pública gerada:', publicUrl);
+
+    // 4. Atualizar banco de dados
+    const tabela = tipoPessoa === 'aluno' ? 'alunos' : 'funcionarios';
+    console.log(`💾 Atualizando tabela ${tabela}...`);
+    
+    const { error: updateError } = await supabase
+      .from(tabela)
+      .update({ foto_devolutiva_url: publicUrl })
+      .eq('id', pessoaId);
+
+    if (updateError) {
+      console.error('❌ Erro ao atualizar banco:', updateError);
+      throw new Error(`Erro ao atualizar banco: ${updateError.message}`);
+    }
+
+    console.log('✅ Banco de dados atualizado com sucesso!');
+    return {
+      success: true,
+      publicUrl,
+    };
+  } catch (error) {
+    console.error('❌ Erro em uploadLocalFileToSupabase:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    };
+  }
+}
+
 export async function downloadAndUploadToSupabase(
   fileId: string,
   fileName: string,

@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Image as ImageIcon, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 import { GOOGLE_CONFIG } from '@/config/google';
 import { useGoogleDrivePhoto } from '@/hooks/use-google-drive-photo';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { uploadLocalFileToSupabase } from '@/services/googleDriveService';
 
 interface GoogleDrivePickerProps {
   onPhotoSelected: () => void;
@@ -23,6 +25,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [gapiLoaded, setGapiLoaded] = useState(false);
   const [pickerLoaded, setPickerLoaded] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const tokenRef = useRef<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<{ id: string; name: string; thumbnail?: string } | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>('Inicializando...');
@@ -30,6 +33,10 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [manualOpen, setManualOpen] = useState<boolean>(false);
   const [manualInput, setManualInput] = useState<string>('');
   const [manualError, setManualError] = useState<string | null>(null);
+  // Upload de arquivo local
+  const [uploadingLocal, setUploadingLocal] = useState(false);
+  const [localFileError, setLocalFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { salvarFotoDevolutiva, loading: salvandoFoto, error } = useGoogleDrivePhoto();
 
@@ -136,6 +143,8 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           if (response.access_token) {
             console.log('✅ Token de acesso obtido');
             setAccessToken(response.access_token);
+            tokenRef.current = response.access_token;
+            console.log('✅ Token armazenado na ref');
             setLoadingStatus('Abrindo seletor de arquivos...');
             showPicker(response.access_token);
           } else {
@@ -198,14 +207,14 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
       setLoadingStatus('Salvando foto...');
 
       // Salvar foto automaticamente
-      if (accessToken) {
-        console.log('💾 Iniciando salvamento da foto...');
+      if (tokenRef.current) {
+        console.log('💾 Iniciando salvamento da foto com token da ref...');
         const success = await salvarFotoDevolutiva(
           file.id,
           file.name,
           pessoaId,
           tipoPessoa,
-          accessToken
+          tokenRef.current
         );
 
         if (success) {
@@ -216,7 +225,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           console.error('❌ Falha ao salvar foto');
         }
       } else {
-        console.error('❌ Token de acesso não disponível');
+        console.error('❌ Token de acesso não disponível na ref');
         setLoadingError('Token de acesso não disponível');
       }
     } else if (data.action === window.google.picker.Action.CANCEL) {
@@ -261,10 +270,97 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
     }
   };
 
+  const handleLocalFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setLocalFileError(null);
+    setUploadingLocal(true);
+    setLoadingStatus('Fazendo upload do arquivo...');
+
+    console.log('📁 Arquivo selecionado:', { name: file.name, size: file.size, type: file.type });
+
+    try {
+      const result = await uploadLocalFileToSupabase(file, pessoaId, tipoPessoa);
+      
+      if (result.success) {
+        console.log('✅ Upload local concluído com sucesso!');
+        setSelectedFile({
+          id: 'local-' + Date.now(),
+          name: file.name,
+        });
+        setLoadingStatus('Concluído!');
+        onPhotoSelected();
+      } else {
+        setLocalFileError(result.error || 'Erro ao fazer upload do arquivo');
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao processar arquivo';
+      console.error('❌ Erro no upload local:', err);
+      setLocalFileError(errorMsg);
+    } finally {
+      setUploadingLocal(false);
+      // Limpar input para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const apisCarregadas = gapiLoaded && pickerLoaded;
 
   return (
     <div className="space-y-3">
+      <Tabs defaultValue="local" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="local">
+            <Upload className="mr-2 h-4 w-4" />
+            Computador
+          </TabsTrigger>
+          <TabsTrigger value="drive">
+            <ImageIcon className="mr-2 h-4 w-4" />
+            Google Drive
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="local" className="space-y-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleLocalFileSelect}
+            className="hidden"
+            id="file-upload"
+          />
+          
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingLocal || salvandoFoto}
+            variant="outline"
+            className="w-full"
+          >
+            {uploadingLocal ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Fazendo upload...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Selecionar Arquivo do Computador
+              </>
+            )}
+          </Button>
+
+          {localFileError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{localFileError}</AlertDescription>
+            </Alert>
+          )}
+        </TabsContent>
+
+        <TabsContent value="drive" className="space-y-3">
       {/* Status de loading detalhado */}
       {!apisCarregadas && !loadingError && (
         <Alert>
@@ -366,6 +462,8 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           )}
         </div>
       </Card>
+        </TabsContent>
+      </Tabs>
 
       {error && (
         <Alert variant="destructive">
@@ -374,7 +472,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
         </Alert>
       )}
 
-      {selectedFile && !salvandoFoto && !error && (
+      {selectedFile && !salvandoFoto && !uploadingLocal && !error && !localFileError && (
         <Card className="p-3">
           <div className="flex items-center gap-3">
             {selectedFile.thumbnail && (

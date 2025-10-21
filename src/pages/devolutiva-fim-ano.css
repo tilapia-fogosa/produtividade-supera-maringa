@@ -17,7 +17,7 @@
 /* Página A4 */
 .a4-page {
   width: 210mm;
-  height: 297mm;
+  aspect-ratio: 3375 / 4219;
   background: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -34,12 +34,13 @@
 /* Foto do aluno sobreposta no quadrado verde */
 .foto-aluno-overlay {
   position: absolute;
-  top: 32%;
-  left: 19%;
-  width: 50%;
-  height: 45%;
+  top: 50.1%;
+  left: 54.0%;
+  width: 19.3%;
+  height: 34.0%;
   object-fit: cover;
-  transform: rotate(-3deg);
+  transform: rotate(-7.72deg);
+  transform-origin: top left;
 }
 
 /* Estilos de impressão */
@@ -65,7 +66,7 @@
 
   .a4-page {
     width: 210mm;
-    height: 297mm;
+    aspect-ratio: 3375 / 4219;
     box-shadow: none;
     page-break-after: always;
     margin: 0;
