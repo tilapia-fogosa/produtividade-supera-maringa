@@ -231,48 +231,46 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
         </DialogHeader>
 
         {/* Campos obrigatórios */}
-        <div className="space-y-4 pb-4 border-b">
-          {/* Data de Recolhimento */}
-          <div className="space-y-2">
-            <Label htmlFor="data-recolhimento">Data do recolhimento *</Label>
-            <Input
-              id="data-recolhimento"
-              type="date"
-              value={dataRecolhimento}
-              onChange={(e) => setDataRecolhimento(e.target.value)}
-              max={formatDateSaoPaulo(new Date(), 'yyyy-MM-dd')}
-            />
-          </div>
+        <div className="pb-4 border-b">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Data de Recolhimento */}
+            <div className="space-y-2">
+              <Label htmlFor="data-recolhimento">Data do recolhimento *</Label>
+              <Input
+                id="data-recolhimento"
+                type="date"
+                value={dataRecolhimento}
+                onChange={(e) => setDataRecolhimento(e.target.value)}
+                max={formatDateSaoPaulo(new Date(), 'yyyy-MM-dd')}
+              />
+            </div>
 
-          {/* Seletor de Responsável */}
-          <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável pelo recolhimento *</Label>
-            <Select
-              value={responsavelSelecionado}
-              onValueChange={setResponsavelSelecionado}
-            >
-              <SelectTrigger id="responsavel">
-                <SelectValue placeholder="Selecione um responsável" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingResponsaveis ? (
-                  <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                ) : responsaveis.length === 0 ? (
-                  <SelectItem value="empty" disabled>Nenhum responsável encontrado</SelectItem>
-                ) : (
-                  responsaveis.map((responsavel) => (
-                    <SelectItem key={responsavel.id} value={responsavel.id}>
-                      {responsavel.nome}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+            {/* Seletor de Responsável */}
+            <div className="space-y-2">
+              <Label htmlFor="responsavel">Responsável *</Label>
+              <Select
+                value={responsavelSelecionado}
+                onValueChange={setResponsavelSelecionado}
+              >
+                <SelectTrigger id="responsavel">
+                  <SelectValue placeholder="Selecione um responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingResponsaveis ? (
+                    <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                  ) : responsaveis.length === 0 ? (
+                    <SelectItem value="empty" disabled>Nenhum responsável encontrado</SelectItem>
+                  ) : (
+                    responsaveis.map((responsavel) => (
+                      <SelectItem key={responsavel.id} value={responsavel.id}>
+                        {responsavel.nome}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
-        {etapa === 'selecao-pessoas' ? (
-          <div className="flex flex-col gap-4 flex-1 min-h-0">
             {/* Filtro por turma */}
             <div className="space-y-2">
               <Label htmlFor="filtro-turma">Filtrar por turma</Label>
@@ -299,7 +297,11 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        </div>
 
+        {etapa === 'selecao-pessoas' ? (
+          <div className="flex flex-col gap-4 flex-1 min-h-0">
             {/* Campo de busca */}
             <div>
               <Input
