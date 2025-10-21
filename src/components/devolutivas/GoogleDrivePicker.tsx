@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -23,6 +23,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [gapiLoaded, setGapiLoaded] = useState(false);
   const [pickerLoaded, setPickerLoaded] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const tokenRef = useRef<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<{ id: string; name: string; thumbnail?: string } | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>('Inicializando...');
@@ -136,6 +137,8 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           if (response.access_token) {
             console.log('✅ Token de acesso obtido');
             setAccessToken(response.access_token);
+            tokenRef.current = response.access_token;
+            console.log('✅ Token armazenado na ref');
             setLoadingStatus('Abrindo seletor de arquivos...');
             showPicker(response.access_token);
           } else {
@@ -198,14 +201,14 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
       setLoadingStatus('Salvando foto...');
 
       // Salvar foto automaticamente
-      if (accessToken) {
-        console.log('💾 Iniciando salvamento da foto...');
+      if (tokenRef.current) {
+        console.log('💾 Iniciando salvamento da foto com token da ref...');
         const success = await salvarFotoDevolutiva(
           file.id,
           file.name,
           pessoaId,
           tipoPessoa,
-          accessToken
+          tokenRef.current
         );
 
         if (success) {
@@ -216,7 +219,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           console.error('❌ Falha ao salvar foto');
         }
       } else {
-        console.error('❌ Token de acesso não disponível');
+        console.error('❌ Token de acesso não disponível na ref');
         setLoadingError('Token de acesso não disponível');
       }
     } else if (data.action === window.google.picker.Action.CANCEL) {
