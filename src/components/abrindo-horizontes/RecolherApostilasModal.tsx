@@ -162,6 +162,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
           professor_id: responsavelSelecionado,
           responsavel_id: responsavelSelecionado,
           created_at: toUtcFromSaoPauloDate(dataRecolhimento),
+          data_recolhida: dataRecolhimento,
         };
       });
 

@@ -38,6 +38,7 @@ export interface AlunoAtivo {
   is_funcionario: boolean | null;
   valor_mensalidade: number | null;
   foto_url: string | null;
+  foto_devolutiva_url: string | null;
   // Campos específicos para identificar origem
   tipo_pessoa: 'aluno' | 'funcionario';
   cargo?: string | null; // Específico para funcionários

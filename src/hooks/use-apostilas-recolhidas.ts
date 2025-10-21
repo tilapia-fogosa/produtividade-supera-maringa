@@ -10,6 +10,8 @@ export interface ApostilaRecolhida {
   data_entrega: string; // Previsão calculada (14 dias)
   pessoa_id: string;
   total_correcoes: number;
+  exercicios_corrigidos?: number;
+  erros?: number;
   data_entrega_real?: string;
   responsavel_entrega_nome?: string;
   foi_entregue: boolean;
@@ -35,11 +37,15 @@ export const useApostilasRecolhidas = () => {
       // Para cada recolhida, buscar informações da pessoa (aluno ou funcionário) e contagem de correções
       const apostilasComDetalhes = await Promise.all(
         recolhidas.map(async (recolhida) => {
-          // Contar correções desta apostila
-          const { count: totalCorrecoes } = await supabase
+          // Buscar correções desta apostila (incluindo exercícios e erros)
+          const { data: correcoes, count: totalCorrecoes } = await supabase
             .from("produtividade_ah")
-            .select("*", { count: 'exact', head: true })
+            .select("exercicios, erros", { count: 'exact' })
             .eq("ah_recolhida_id", recolhida.id);
+          
+          // Somar exercícios e erros de todas as correções
+          const exerciciosTotal = correcoes?.reduce((sum, c) => sum + (c.exercicios || 0), 0) || 0;
+          const errosTotal = correcoes?.reduce((sum, c) => sum + (c.erros || 0), 0) || 0;
           // Tentar buscar como aluno
           const { data: aluno } = await supabase
             .from("alunos")
@@ -61,6 +67,8 @@ export const useApostilasRecolhidas = () => {
               data_entrega: dataEntrega.toISOString(),
               pessoa_id: recolhida.pessoa_id,
               total_correcoes: totalCorrecoes || 0,
+              exercicios_corrigidos: exerciciosTotal,
+              erros: errosTotal,
               data_entrega_real: recolhida.data_entrega_real,
               responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
               foi_entregue: !!recolhida.data_entrega_real,
@@ -93,6 +101,8 @@ export const useApostilasRecolhidas = () => {
               data_entrega: dataEntrega.toISOString(),
               pessoa_id: recolhida.pessoa_id,
               total_correcoes: totalCorrecoes || 0,
+              exercicios_corrigidos: exerciciosTotal,
+              erros: errosTotal,
               data_entrega_real: recolhida.data_entrega_real,
               responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
               foi_entregue: !!recolhida.data_entrega_real,
@@ -118,6 +128,8 @@ export const useApostilasRecolhidas = () => {
             data_entrega: dataEntrega.toISOString(),
             pessoa_id: recolhida.pessoa_id,
             total_correcoes: totalCorrecoes || 0,
+            exercicios_corrigidos: exerciciosTotal,
+            erros: errosTotal,
             data_entrega_real: recolhida.data_entrega_real,
             responsavel_entrega_nome: recolhida.responsavel_entrega_nome,
             foi_entregue: !!recolhida.data_entrega_real,

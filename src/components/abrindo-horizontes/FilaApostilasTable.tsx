@@ -333,7 +333,7 @@ export const FilaApostilasTable = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead>Correções</TableHead>
+                  <TableHead>Ex Corrigidos / Erros</TableHead>
                   <TableHead>Sendo corrigida por</TableHead>
                   <TableHead>
                     <Button
@@ -369,9 +369,13 @@ export const FilaApostilasTable = () => {
                       <Badge variant="outline">{apostila.apostila}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={apostila.total_correcoes > 0 ? "default" : "outline"}>
-                        {apostila.total_correcoes} {apostila.total_correcoes === 1 ? "correção" : "correções"}
-                      </Badge>
+                      {apostila.total_correcoes > 0 ? (
+                        <span className="text-sm font-medium">
+                          {apostila.exercicios_corrigidos || 0} / {apostila.erros || 0}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {apostila.correcao_iniciada && apostila.total_correcoes === 0 ? (

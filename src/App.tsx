@@ -24,6 +24,7 @@ import DiasLancamento from "./pages/DiasLancamento";
 import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
 import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
+import DevolutivaFimAno from "./pages/DevolutivaFimAno";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import AbrindoHorizontesSelecao from "./pages/AbrindoHorizontesSelecao";
 import AbrindoHorizontesAlunos from "./pages/AbrindoHorizontesAlunos";
@@ -120,6 +121,7 @@ function App() {
                             <Route path="/crm" element={<CRM />} />
                             <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
                             <Route path="/camisetas" element={<Camisetas />} />
+                            <Route path="/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
