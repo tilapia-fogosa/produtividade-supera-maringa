@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { Loader2, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GOOGLE_CONFIG } from '@/config/google';
 import { useGoogleDrivePhoto } from '@/hooks/use-google-drive-photo';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface GoogleDrivePickerProps {
   onPhotoSelected: () => void;
@@ -22,89 +23,198 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [pickerLoaded, setPickerLoaded] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<{ id: string; name: string; thumbnail?: string } | null>(null);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState<string>('Inicializando...');
   
   const { salvarFotoDevolutiva, loading: salvandoFoto, error } = useGoogleDrivePhoto();
 
-  // Carregar APIs do Google
-  useEffect(() => {
-    const loadGoogleApis = () => {
-      // Carregar GAPI
-      if (window.gapi) {
-        window.gapi.load('client', async () => {
-          await window.gapi.client.init({
-            apiKey: GOOGLE_CONFIG.apiKey,
-            discoveryDocs: GOOGLE_CONFIG.discoveryDocs,
-          });
-          setGapiLoaded(true);
-        });
-      }
+  console.log('🔍 GoogleDrivePicker - Estado atual:', {
+    gapiLoaded,
+    pickerLoaded,
+    hasAccessToken: !!accessToken,
+    salvandoFoto,
+    error,
+    loadingError,
+    loadingStatus
+  });
 
-      // Carregar Google Picker
-      if (window.google?.picker) {
-        setPickerLoaded(true);
+  // Carregar APIs do Google com timeout e logs detalhados
+  useEffect(() => {
+    console.log('📡 Iniciando carregamento das APIs do Google...');
+    setLoadingStatus('Carregando APIs do Google...');
+    
+    let timeoutId: NodeJS.Timeout;
+    let checkInterval: NodeJS.Timeout;
+
+    const loadGoogleApis = async () => {
+      try {
+        console.log('🔍 Verificando window.gapi:', !!window.gapi);
+        console.log('🔍 Verificando window.google.picker:', !!window.google?.picker);
+        
+        // Carregar GAPI
+        if (window.gapi) {
+          console.log('✅ GAPI encontrado, carregando client...');
+          setLoadingStatus('Inicializando Google API Client...');
+          
+          window.gapi.load('client', async () => {
+            try {
+              console.log('🔑 Inicializando GAPI client com:', {
+                apiKey: GOOGLE_CONFIG.apiKey.substring(0, 10) + '...',
+                discoveryDocs: GOOGLE_CONFIG.discoveryDocs
+              });
+              
+              await window.gapi.client.init({
+                apiKey: GOOGLE_CONFIG.apiKey,
+                discoveryDocs: GOOGLE_CONFIG.discoveryDocs,
+              });
+              
+              console.log('✅ GAPI client inicializado com sucesso');
+              setGapiLoaded(true);
+            } catch (err) {
+              console.error('❌ Erro ao inicializar GAPI client:', err);
+              setLoadingError('Erro ao inicializar Google API: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+            }
+          });
+        } else {
+          console.warn('⚠️ window.gapi não encontrado');
+        }
+
+        // Carregar Google Picker
+        if (window.google?.picker) {
+          console.log('✅ Google Picker encontrado');
+          setPickerLoaded(true);
+        } else {
+          console.warn('⚠️ window.google.picker não encontrado');
+        }
+      } catch (err) {
+        console.error('❌ Erro ao carregar APIs do Google:', err);
+        setLoadingError('Erro ao carregar APIs: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
       }
     };
 
     // Verificar se já estão carregados
     if (window.gapi && window.google?.picker) {
+      console.log('✅ APIs já carregadas, inicializando...');
       loadGoogleApis();
     } else {
-      // Aguardar carregamento
-      const checkInterval = setInterval(() => {
+      console.log('⏳ Aguardando carregamento dos scripts do Google...');
+      setLoadingStatus('Aguardando scripts do Google...');
+      
+      // Aguardar carregamento com verificação periódica
+      let attempts = 0;
+      checkInterval = setInterval(() => {
+        attempts++;
+        console.log(`🔄 Tentativa ${attempts}: gapi=${!!window.gapi}, picker=${!!window.google?.picker}`);
+        
         if (window.gapi && window.google?.picker) {
+          console.log('✅ Scripts carregados após', attempts, 'tentativas');
           loadGoogleApis();
           clearInterval(checkInterval);
         }
       }, 100);
 
-      return () => clearInterval(checkInterval);
+      // Timeout após 15 segundos
+      timeoutId = setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('❌ Timeout: Scripts do Google não carregaram em 15 segundos');
+        console.log('🔍 Estado final: gapi=', !!window.gapi, 'picker=', !!window.google?.picker);
+        setLoadingError('Os scripts do Google não carregaram. Verifique sua conexão e recarregue a página.');
+      }, 15000);
     }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (checkInterval) clearInterval(checkInterval);
+    };
   }, []);
 
   const handleAuthClick = () => {
-    const tokenClient = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CONFIG.clientId,
-      scope: GOOGLE_CONFIG.scopes.join(' '),
-      callback: (response) => {
-        if (response.access_token) {
-          setAccessToken(response.access_token);
-          showPicker(response.access_token);
-        }
-      },
-    });
+    console.log('🔐 Iniciando autenticação OAuth...');
+    setLoadingStatus('Autenticando...');
+    
+    try {
+      if (!window.google?.accounts?.oauth2) {
+        throw new Error('Google OAuth2 não está disponível');
+      }
 
-    tokenClient.requestAccessToken();
+      console.log('🔑 Configuração OAuth:', {
+        clientId: GOOGLE_CONFIG.clientId.substring(0, 20) + '...',
+        scopes: GOOGLE_CONFIG.scopes
+      });
+
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CONFIG.clientId,
+        scope: GOOGLE_CONFIG.scopes.join(' '),
+        callback: (response) => {
+          console.log('📥 Resposta OAuth recebida:', { hasToken: !!response.access_token });
+          
+          if (response.access_token) {
+            console.log('✅ Token de acesso obtido');
+            setAccessToken(response.access_token);
+            setLoadingStatus('Abrindo seletor de arquivos...');
+            showPicker(response.access_token);
+          } else {
+            console.error('❌ Token não recebido na resposta OAuth');
+            setLoadingError('Falha na autenticação. Tente novamente.');
+          }
+        },
+      });
+
+      console.log('📤 Solicitando token de acesso...');
+      tokenClient.requestAccessToken();
+    } catch (err) {
+      console.error('❌ Erro na autenticação:', err);
+      setLoadingError('Erro ao autenticar: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+    }
   };
 
   const showPicker = (token: string) => {
+    console.log('🖼️ Abrindo Google Picker...');
+    
     if (!pickerLoaded || !gapiLoaded) {
-      console.error('Google APIs não carregadas');
+      const error = 'Google APIs não carregadas completamente';
+      console.error('❌', error, { pickerLoaded, gapiLoaded });
+      setLoadingError(error);
       return;
     }
 
-    const picker = new window.google.picker.PickerBuilder()
-      .addView(window.google.picker.ViewId.DOCS_IMAGES)
-      .setOAuthToken(token)
-      .setDeveloperKey(GOOGLE_CONFIG.apiKey)
-      .setCallback(pickerCallback)
-      .setOrigin(window.location.origin)
-      .setTitle('Selecione uma foto')
-      .build();
+    try {
+      console.log('🔨 Construindo picker...');
+      const picker = new window.google.picker.PickerBuilder()
+        .addView(window.google.picker.ViewId.DOCS_IMAGES)
+        .setOAuthToken(token)
+        .setDeveloperKey(GOOGLE_CONFIG.apiKey)
+        .setCallback(pickerCallback)
+        .setOrigin(window.location.origin)
+        .setTitle('Selecione uma foto')
+        .build();
 
-    picker.setVisible(true);
+      console.log('✅ Picker construído, abrindo interface...');
+      picker.setVisible(true);
+      setLoadingStatus('Aguardando seleção...');
+    } catch (err) {
+      console.error('❌ Erro ao criar picker:', err);
+      setLoadingError('Erro ao abrir seletor: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+    }
   };
 
   const pickerCallback = async (data: GooglePickerResponse) => {
+    console.log('📋 Picker callback:', { action: data.action, hasDocs: !!data.docs });
+    
     if (data.action === window.google.picker.Action.PICKED && data.docs) {
       const file = data.docs[0];
+      console.log('✅ Arquivo selecionado:', { id: file.id, name: file.name, mimeType: file.mimeType });
+      
       setSelectedFile({
         id: file.id,
         name: file.name,
         thumbnail: file.thumbnailUrl,
       });
+      setLoadingStatus('Salvando foto...');
 
       // Salvar foto automaticamente
       if (accessToken) {
+        console.log('💾 Iniciando salvamento da foto...');
         const success = await salvarFotoDevolutiva(
           file.id,
           file.name,
@@ -114,9 +224,19 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
         );
 
         if (success) {
+          console.log('✅ Foto salva com sucesso!');
+          setLoadingStatus('Concluído!');
           onPhotoSelected();
+        } else {
+          console.error('❌ Falha ao salvar foto');
         }
+      } else {
+        console.error('❌ Token de acesso não disponível');
+        setLoadingError('Token de acesso não disponível');
       }
+    } else if (data.action === window.google.picker.Action.CANCEL) {
+      console.log('ℹ️ Usuário cancelou a seleção');
+      setLoadingStatus('Cancelado');
     }
   };
 
@@ -124,6 +244,32 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
 
   return (
     <div className="space-y-3">
+      {/* Status de loading detalhado */}
+      {!apisCarregadas && !loadingError && (
+        <Alert>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <AlertDescription>{loadingStatus}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Erros de carregamento */}
+      {loadingError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {loadingError}
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="ml-2 h-auto p-0"
+            >
+              Recarregar página
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Button
         onClick={handleAuthClick}
         disabled={!apisCarregadas || salvandoFoto}
@@ -149,7 +295,10 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
       </Button>
 
       {error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {selectedFile && !salvandoFoto && !error && (
