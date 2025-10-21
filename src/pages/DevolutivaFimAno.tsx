@@ -162,6 +162,15 @@ const DevolutivaFimAno: React.FC = () => {
             alt="2025 no Supera - Devolutiva de Fim de Ano" 
             className="template-image"
           />
+          
+          {/* Foto do aluno/funcionário sobreposta */}
+          {pessoaSelecionada?.foto_url && (
+            <img
+              src={pessoaSelecionada.foto_url}
+              alt={`Foto de ${pessoaSelecionada.nome}`}
+              className="foto-aluno-overlay"
+            />
+          )}
         </div>
       </div>
     </div>

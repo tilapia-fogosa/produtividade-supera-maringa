@@ -31,6 +31,17 @@
   object-fit: cover;
 }
 
+/* Foto do aluno sobreposta no quadrado verde */
+.foto-aluno-overlay {
+  position: absolute;
+  top: 32%;
+  left: 19%;
+  width: 50%;
+  height: 45%;
+  object-fit: cover;
+  transform: rotate(-3deg);
+}
+
 /* Estilos de impressão */
 @media print {
   body {
