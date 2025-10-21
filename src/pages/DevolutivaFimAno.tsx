@@ -145,27 +145,27 @@ const DevolutivaFimAno: React.FC = () => {
 
               {/* Informações da pessoa selecionada */}
               {pessoaSelecionada && (
-                <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <p className="font-semibold">{pessoaSelecionada.nome}</p>
-                  {pessoaSelecionada.turma_nome && (
-                    <p className="text-sm text-muted-foreground">Turma: {pessoaSelecionada.turma_nome}</p>
-                  )}
-                  {pessoaSelecionada.professor_nome && (
-                    <p className="text-sm text-muted-foreground">Professor: {pessoaSelecionada.professor_nome}</p>
-                  )}
-                </div>
-              )}
+                <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+                  <div>
+                    <p className="font-semibold">{pessoaSelecionada.nome}</p>
+                    {pessoaSelecionada.turma_nome && (
+                      <p className="text-sm text-muted-foreground">Turma: {pessoaSelecionada.turma_nome}</p>
+                    )}
+                    {pessoaSelecionada.professor_nome && (
+                      <p className="text-sm text-muted-foreground">Professor: {pessoaSelecionada.professor_nome}</p>
+                    )}
+                  </div>
 
-              {/* Seleção de foto do Google Drive */}
-              {pessoaSelecionada && (
-                <div className="mt-4">
-                  <Label className="mb-2 block">Foto para Devolutiva</Label>
-                  <GoogleDrivePicker
-                    onPhotoSelected={handlePhotoSelected}
-                    currentPhotoUrl={pessoaSelecionada.foto_devolutiva_url}
-                    pessoaId={pessoaSelecionada.id}
-                    tipoPessoa={tipoPessoa}
-                  />
+                  {/* Seleção de foto do Google Drive */}
+                  <div className="pt-3 border-t">
+                    <Label className="mb-2 block">Foto para Devolutiva</Label>
+                    <GoogleDrivePicker
+                      onPhotoSelected={handlePhotoSelected}
+                      currentPhotoUrl={pessoaSelecionada.foto_devolutiva_url}
+                      pessoaId={pessoaSelecionada.id}
+                      tipoPessoa={tipoPessoa}
+                    />
+                  </div>
                 </div>
               )}
             </div>
