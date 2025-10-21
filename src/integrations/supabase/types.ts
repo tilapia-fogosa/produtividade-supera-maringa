@@ -5771,6 +5771,14 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      get_user_productivity_stats: {
+        Args: {
+          p_days_back?: number
+          p_unit_ids?: string[]
+          p_user_ids?: string[]
+        }
+        Returns: Json
+      }
       has_unread_updates: {
         Args: { p_user_id: string }
         Returns: boolean
