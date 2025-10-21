@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { User, Briefcase } from 'lucide-react';
+import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 
 const DevolutivaFimAno: React.FC = () => {
   const [tipoPessoa, setTipoPessoa] = useState<'aluno' | 'funcionario'>('aluno');
@@ -16,9 +17,14 @@ const DevolutivaFimAno: React.FC = () => {
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
 
-  const { alunos, loading: loadingPessoas } = useAlunosAtivos();
+  const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
+
+  const handlePhotoSelected = () => {
+    // Recarregar dados para mostrar nova foto
+    refetchAlunos();
+  };
 
   // Filtrar pessoas baseado no tipo e filtros
   const pessoasFiltradas = useMemo(() => {
@@ -149,6 +155,19 @@ const DevolutivaFimAno: React.FC = () => {
                   )}
                 </div>
               )}
+
+              {/* Seleção de foto do Google Drive */}
+              {pessoaSelecionada && (
+                <div className="mt-4">
+                  <Label className="mb-2 block">Foto para Devolutiva</Label>
+                  <GoogleDrivePicker
+                    onPhotoSelected={handlePhotoSelected}
+                    currentPhotoUrl={pessoaSelecionada.foto_devolutiva_url}
+                    pessoaId={pessoaSelecionada.id}
+                    tipoPessoa={tipoPessoa}
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -164,9 +183,9 @@ const DevolutivaFimAno: React.FC = () => {
           />
           
           {/* Foto do aluno/funcionário sobreposta */}
-          {pessoaSelecionada?.foto_url && (
+          {pessoaSelecionada?.foto_devolutiva_url && (
             <img
-              src={pessoaSelecionada.foto_url}
+              src={pessoaSelecionada.foto_devolutiva_url}
               alt={`Foto de ${pessoaSelecionada.nome}`}
               className="foto-aluno-overlay"
             />
