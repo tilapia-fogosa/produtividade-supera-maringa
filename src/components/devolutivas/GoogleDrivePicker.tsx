@@ -44,87 +44,67 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
     setLoadingStatus('Carregando APIs do Google...');
     
     let timeoutId: NodeJS.Timeout;
-    let checkInterval: NodeJS.Timeout;
 
     const loadGoogleApis = async () => {
       try {
-        console.log('🔍 Verificando window.gapi:', !!window.gapi);
-        console.log('🔍 Verificando window.google.picker:', !!window.google?.picker);
-        
-        // Carregar GAPI
-        if (window.gapi) {
-          console.log('✅ GAPI encontrado, carregando client...');
-          setLoadingStatus('Inicializando Google API Client...');
-          
-          window.gapi.load('client', async () => {
-            try {
-              console.log('🔑 Inicializando GAPI client com:', {
-                apiKey: GOOGLE_CONFIG.apiKey.substring(0, 10) + '...',
-                discoveryDocs: GOOGLE_CONFIG.discoveryDocs
-              });
-              
-              await window.gapi.client.init({
-                apiKey: GOOGLE_CONFIG.apiKey,
-                discoveryDocs: GOOGLE_CONFIG.discoveryDocs,
-              });
-              
-              console.log('✅ GAPI client inicializado com sucesso');
-              setGapiLoaded(true);
-            } catch (err) {
-              console.error('❌ Erro ao inicializar GAPI client:', err);
-              setLoadingError('Erro ao inicializar Google API: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
-            }
-          });
-        } else {
-          console.warn('⚠️ window.gapi não encontrado');
+        if (!window.gapi) {
+          console.error('❌ window.gapi não encontrado');
+          setLoadingError('Google API não está disponível. Verifique sua conexão.');
+          return;
         }
 
-        // Carregar Google Picker
-        if (window.google?.picker) {
-          console.log('✅ Google Picker encontrado');
-          setPickerLoaded(true);
-        } else {
-          console.warn('⚠️ window.google.picker não encontrado');
-        }
+        console.log('✅ GAPI encontrado, carregando client e picker...');
+        setLoadingStatus('Carregando Google Client...');
+        
+        // Carregar client primeiro
+        window.gapi.load('client:picker', async () => {
+          try {
+            console.log('🔑 Inicializando GAPI client...');
+            
+            await window.gapi.client.init({
+              apiKey: GOOGLE_CONFIG.apiKey,
+              discoveryDocs: GOOGLE_CONFIG.discoveryDocs,
+            });
+            
+            console.log('✅ GAPI client inicializado');
+            console.log('✅ Google Picker carregado');
+            
+            setGapiLoaded(true);
+            setPickerLoaded(true);
+            setLoadingStatus('APIs carregadas com sucesso!');
+            clearTimeout(timeoutId);
+          } catch (err) {
+            console.error('❌ Erro ao inicializar GAPI:', err);
+            setLoadingError('Erro ao inicializar: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+          }
+        });
       } catch (err) {
-        console.error('❌ Erro ao carregar APIs do Google:', err);
-        setLoadingError('Erro ao carregar APIs: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+        console.error('❌ Erro ao carregar APIs:', err);
+        setLoadingError('Erro ao carregar: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
       }
     };
 
-    // Verificar se já estão carregados
-    if (window.gapi && window.google?.picker) {
-      console.log('✅ APIs já carregadas, inicializando...');
-      loadGoogleApis();
-    } else {
-      console.log('⏳ Aguardando carregamento dos scripts do Google...');
-      setLoadingStatus('Aguardando scripts do Google...');
-      
-      // Aguardar carregamento com verificação periódica
-      let attempts = 0;
-      checkInterval = setInterval(() => {
-        attempts++;
-        console.log(`🔄 Tentativa ${attempts}: gapi=${!!window.gapi}, picker=${!!window.google?.picker}`);
-        
-        if (window.gapi && window.google?.picker) {
-          console.log('✅ Scripts carregados após', attempts, 'tentativas');
-          loadGoogleApis();
-          clearInterval(checkInterval);
-        }
-      }, 100);
+    // Aguardar que window.gapi esteja disponível
+    const waitForGapi = () => {
+      if (window.gapi) {
+        console.log('✅ GAPI disponível, iniciando carregamento...');
+        loadGoogleApis();
+      } else {
+        console.log('⏳ Aguardando GAPI...');
+        setTimeout(waitForGapi, 100);
+      }
+    };
 
-      // Timeout após 15 segundos
-      timeoutId = setTimeout(() => {
-        clearInterval(checkInterval);
-        console.error('❌ Timeout: Scripts do Google não carregaram em 15 segundos');
-        console.log('🔍 Estado final: gapi=', !!window.gapi, 'picker=', !!window.google?.picker);
-        setLoadingError('Os scripts do Google não carregaram. Verifique sua conexão e recarregue a página.');
-      }, 15000);
-    }
+    // Timeout após 15 segundos
+    timeoutId = setTimeout(() => {
+      console.error('❌ Timeout: APIs do Google não carregaram');
+      setLoadingError('Timeout ao carregar Google APIs. Recarregue a página.');
+    }, 15000);
+
+    waitForGapi();
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      if (checkInterval) clearInterval(checkInterval);
     };
   }, []);
 
