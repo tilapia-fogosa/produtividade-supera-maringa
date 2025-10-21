@@ -1,7 +1,12 @@
+/* Wrapper principal */
+.devolutiva-fim-ano-wrapper {
+  width: 100%;
+  min-height: 100vh;
+}
+
 /* Container principal */
 .devolutiva-fim-ano-container {
   width: 100%;
-  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -31,6 +36,14 @@
   body {
     margin: 0;
     padding: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .devolutiva-fim-ano-wrapper {
+    min-height: 0;
   }
 
   .devolutiva-fim-ano-container {
