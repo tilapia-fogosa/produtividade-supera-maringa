@@ -324,6 +324,7 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_devolutiva_url: string | null
           foto_url: string | null
           id: string
           idade: number | null
@@ -365,6 +366,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -406,6 +408,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -875,6 +878,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           created_by: string
+          data_aula_inaugural: string | null
           enrollment_amount: number | null
           enrollment_installments: number | null
           enrollment_payment_confirmed: boolean | null
@@ -885,6 +889,7 @@ export type Database = {
           first_monthly_fee_date: string | null
           full_name: string | null
           id: string
+          informacoes_onboarding: string | null
           kit_type: Database["public"]["Enums"]["kit_type"] | null
           material_amount: number | null
           material_installments: number | null
@@ -900,6 +905,7 @@ export type Database = {
           photo_thumbnail_url: string | null
           photo_url: string | null
           rg: string | null
+          turma_id: string | null
           updated_at: string
         }
         Insert: {
@@ -919,6 +925,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           created_by: string
+          data_aula_inaugural?: string | null
           enrollment_amount?: number | null
           enrollment_installments?: number | null
           enrollment_payment_confirmed?: boolean | null
@@ -929,6 +936,7 @@ export type Database = {
           first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          informacoes_onboarding?: string | null
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
@@ -944,6 +952,7 @@ export type Database = {
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
+          turma_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -963,6 +972,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           created_by?: string
+          data_aula_inaugural?: string | null
           enrollment_amount?: number | null
           enrollment_installments?: number | null
           enrollment_payment_confirmed?: boolean | null
@@ -973,6 +983,7 @@ export type Database = {
           first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          informacoes_onboarding?: string | null
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
@@ -988,9 +999,24 @@ export type Database = {
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
+          turma_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "atividade_pos_venda_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "atividade_pos_venda_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
             columns: ["client_activity_id"]
@@ -2657,6 +2683,7 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_devolutiva_url: string | null
           foto_url: string | null
           id: string
           idade: number | null
@@ -2692,6 +2719,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -2727,6 +2755,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -5173,6 +5202,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      check_pedagogical_data_complete: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
       consolidate_monthly_commission: {
         Args: { p_calculation_id: string }
         Returns: boolean
@@ -5586,6 +5619,10 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: Json
       }
+      get_pos_venda_pedagogical_data: {
+        Args: { p_activity_id: string }
+        Returns: Json
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -5714,6 +5751,18 @@ export type Database = {
       get_turma_modal_data: {
         Args: { p_data_consulta?: string; p_turma_id: string }
         Returns: Json
+      }
+      get_turmas_with_professor: {
+        Args: { p_unit_id: string }
+        Returns: {
+          professor_id: string
+          professor_nome: string
+          turma_active: boolean
+          turma_dia_semana: Database["public"]["Enums"]["dia_semana"]
+          turma_id: string
+          turma_nome: string
+          turma_sala: string
+        }[]
       }
       get_user_access_info: {
         Args: { user_id: string }
@@ -5861,6 +5910,15 @@ export type Database = {
               p_observations?: string
             }
         Returns: boolean
+      }
+      save_pos_venda_pedagogical_data: {
+        Args: {
+          p_activity_id: string
+          p_data_aula_inaugural?: string
+          p_informacoes_onboarding?: string
+          p_turma_id?: string
+        }
+        Returns: Json
       }
       toggle_pos_venda_activity_status: {
         Args: {
