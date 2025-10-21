@@ -5,6 +5,7 @@ import { Loader2, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-r
 import { GOOGLE_CONFIG } from '@/config/google';
 import { useGoogleDrivePhoto } from '@/hooks/use-google-drive-photo';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 
 interface GoogleDrivePickerProps {
   onPhotoSelected: () => void;
@@ -25,6 +26,10 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [selectedFile, setSelectedFile] = useState<{ id: string; name: string; thumbnail?: string } | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>('Inicializando...');
+  // Modo alternativo: colar link/ID do Drive
+  const [manualOpen, setManualOpen] = useState<boolean>(false);
+  const [manualInput, setManualInput] = useState<string>('');
+  const [manualError, setManualError] = useState<string | null>(null);
   
   const { salvarFotoDevolutiva, loading: salvandoFoto, error } = useGoogleDrivePhoto();
 
@@ -220,6 +225,42 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
     }
   };
 
+  // Extrai o ID do arquivo a partir de diferentes formatos de link do Drive
+  const extractDriveFileId = (input: string): string | null => {
+    if (!input) return null;
+    const trimmed = input.trim();
+    // Caso seja apenas o ID
+    if (/^[a-zA-Z0-9_-]{10,}$/.test(trimmed) && !trimmed.includes('google')) return trimmed;
+    try {
+      const url = new URL(trimmed);
+      // Formato /file/d/{id}/view
+      const dMatch = url.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (dMatch?.[1]) return dMatch[1];
+      // Parâmetro id=...
+      const byParam = url.searchParams.get('id');
+      if (byParam) return byParam;
+    } catch {
+      // não é URL
+    }
+    return null;
+  };
+
+  const handleManualSubmit = async () => {
+    setManualError(null);
+    const fileId = extractDriveFileId(manualInput);
+    if (!fileId) {
+      setManualError('Link/ID inválido. Verifique e tente novamente.');
+      return;
+    }
+    setLoadingStatus('Salvando via link do Drive...');
+    const nome = `drive_${fileId}.jpg`;
+    const ok = await salvarFotoDevolutiva(fileId, nome, pessoaId, tipoPessoa, '');
+    if (ok) {
+      setSelectedFile({ id: fileId, name: nome });
+      onPhotoSelected();
+    }
+  };
+
   const apisCarregadas = gapiLoaded && pickerLoaded;
 
   return (
@@ -273,6 +314,58 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           </>
         )}
       </Button>
+
+      {/* Modo alternativo quando o Google estiver bloqueado */}
+      <Card className="p-3">
+        <div className="space-y-2">
+          <p className="text-sm">Google bloqueado ou pop-up não abriu?</p>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="w-full"
+            onClick={() => setManualOpen((v) => !v)}
+          >
+            {manualOpen ? 'Esconder modo alternativo' : 'Usar link/ID do Drive (modo alternativo)'}
+          </Button>
+
+          {manualOpen && (
+            <div className="space-y-2">
+              <Input
+                value={manualInput}
+                onChange={(e) => setManualInput(e.target.value)}
+                placeholder="Cole aqui o link ou o ID do arquivo do Drive"
+              />
+              <p className="text-xs text-muted-foreground">
+                Dica: compartilhe o arquivo como "Qualquer pessoa com o link" para permitir o download.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={handleManualSubmit}
+                  disabled={salvandoFoto || manualInput.trim().length < 10}
+                  className="flex-1"
+                >
+                  {salvandoFoto ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Usar esta imagem'
+                  )}
+                </Button>
+              </div>
+              {manualError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{manualError}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
 
       {error && (
         <Alert variant="destructive">

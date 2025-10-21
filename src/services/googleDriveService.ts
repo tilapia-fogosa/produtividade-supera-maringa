@@ -18,10 +18,13 @@ export async function downloadAndUploadToSupabase(
   try {
     // 1. Download da imagem do Google Drive
     console.log('📥 Baixando arquivo do Google Drive...');
-    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    console.log('🔗 URL de download:', downloadUrl);
+    const usePublic = !accessToken;
+    const downloadUrl = usePublic
+      ? `https://drive.google.com/uc?export=download&id=${fileId}`
+      : `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    console.log('🔗 URL de download:', downloadUrl, { modo: usePublic ? 'publico' : 'oauth' });
     
-    const response = await fetch(downloadUrl, {
+    const response = await fetch(downloadUrl, usePublic ? undefined : {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
