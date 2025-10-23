@@ -44,6 +44,86 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
   );
   const [carregandoPessoas, setCarregandoPessoas] = useState(false);
 
+  // Buscar TODAS as pessoas ativas do sistema ao inicializar
+  useEffect(() => {
+    const buscarTodasPessoasAtivas = async () => {
+      try {
+        console.log('Buscando TODAS as pessoas ativas do sistema');
+
+        // Buscar TODOS os alunos ativos
+        const { data: alunos, error: alunosError } = await supabase
+          .from('alunos')
+          .select('*')
+          .eq('active', true);
+
+        if (alunosError) {
+          console.error('Erro ao buscar todos os alunos:', alunosError);
+          throw alunosError;
+        }
+
+        // Buscar TODOS os funcionários ativos
+        const { data: funcionarios, error: funcionariosError } = await supabase
+          .from('funcionarios')
+          .select('*')
+          .eq('active', true);
+
+        if (funcionariosError) {
+          console.error('Erro ao buscar todos os funcionários:', funcionariosError);
+          throw funcionariosError;
+        }
+
+        // Combinar alunos e funcionários
+        const todasAsPessoas: PessoaTurma[] = [
+          ...(alunos || []).map(aluno => ({
+            id: aluno.id,
+            nome: aluno.nome,
+            email: aluno.email,
+            telefone: aluno.telefone,
+            turma_id: aluno.turma_id,
+            active: aluno.active,
+            origem: 'aluno' as const,
+            unit_id: aluno.unit_id,
+            codigo: aluno.codigo,
+            ultimo_nivel: aluno.ultimo_nivel,
+            ultima_pagina: aluno.ultima_pagina,
+            niveldesafio: aluno.niveldesafio,
+            ultima_correcao_ah: aluno.ultima_correcao_ah,
+            data_onboarding: aluno.data_onboarding,
+            cargo: null
+          })),
+          ...(funcionarios || []).map(funcionario => ({
+            id: funcionario.id,
+            nome: funcionario.nome,
+            email: funcionario.email,
+            telefone: funcionario.telefone,
+            turma_id: funcionario.turma_id,
+            active: funcionario.active,
+            origem: 'funcionario' as const,
+            unit_id: funcionario.unit_id,
+            codigo: funcionario.codigo,
+            ultimo_nivel: funcionario.ultimo_nivel,
+            ultima_pagina: funcionario.ultima_pagina,
+            niveldesafio: funcionario.niveldesafio,
+            ultima_correcao_ah: funcionario.ultima_correcao_ah,
+            data_onboarding: funcionario.data_onboarding,
+            cargo: funcionario.cargo
+          }))
+        ];
+
+        // Ordenar por nome
+        todasAsPessoas.sort((a, b) => a.nome.localeCompare(b.nome));
+
+        console.log('Total de pessoas ativas encontradas:', todasAsPessoas.length);
+        setTodasPessoas(todasAsPessoas);
+
+      } catch (error) {
+        console.error('Erro ao buscar todas as pessoas ativas:', error);
+      }
+    };
+
+    buscarTodasPessoasAtivas();
+  }, []);
+
   const buscarPessoasPorTurma = useCallback(async (turmaId: string) => {
     try {
       setCarregandoPessoas(true);
@@ -167,9 +247,9 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
         })
       );
 
-      // Atualizar estado
+      // Atualizar estado - apenas as pessoas da turma
       setPessoasTurma(pessoasComRegistros);
-      setTodasPessoas(pessoasComRegistros);
+      // NÃO atualizar todasPessoas aqui - ela contém TODAS as pessoas do sistema
 
       // Atualizar produtividade registrada
       const novoRegistrosProdutividade: Record<string, boolean> = {};
@@ -229,6 +309,7 @@ export const usePessoasTurma = (): UsePessoasTurmaReturn => {
           return pessoa;
         }));
 
+        // Também atualizar na lista de todas as pessoas
         setTodasPessoas(prev => prev.map(pessoa => {
           if (pessoa.id === pessoaId) {
             return {

@@ -20,6 +20,7 @@ export interface ApostilaRecolhida {
   responsavel_correcao_tipo?: string;
   data_inicio_correcao?: string;
   professor_id?: string;
+  professor_nome?: string;
 }
 
 export const useApostilasRecolhidas = () => {
@@ -58,6 +59,20 @@ export const useApostilasRecolhidas = () => {
             const dataEntrega = new Date(dataRecolhida);
             dataEntrega.setDate(dataEntrega.getDate() + 14);
 
+            // Buscar nome do professor se houver professor_id
+            let professorNome = "Sem professor";
+            if (aluno.turmas?.professor_id) {
+              const { data: professor } = await supabase
+                .from("professores")
+                .select("nome")
+                .eq("id", aluno.turmas.professor_id)
+                .single();
+              
+              if (professor) {
+                professorNome = professor.nome;
+              }
+            }
+
             return {
               id: recolhida.id.toString(),
               pessoa_nome: aluno.nome,
@@ -77,6 +92,7 @@ export const useApostilasRecolhidas = () => {
               responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
               data_inicio_correcao: recolhida.data_inicio_correcao,
               professor_id: aluno.turmas?.professor_id,
+              professor_nome: professorNome,
             };
           }
 
@@ -91,6 +107,20 @@ export const useApostilasRecolhidas = () => {
             const dataRecolhida = new Date(recolhida.created_at);
             const dataEntrega = new Date(dataRecolhida);
             dataEntrega.setDate(dataEntrega.getDate() + 14);
+
+            // Buscar nome do professor se houver professor_id
+            let professorNome = "Sem professor";
+            if (funcionario.turmas?.professor_id) {
+              const { data: professor } = await supabase
+                .from("professores")
+                .select("nome")
+                .eq("id", funcionario.turmas.professor_id)
+                .single();
+              
+              if (professor) {
+                professorNome = professor.nome;
+              }
+            }
 
             return {
               id: recolhida.id.toString(),
@@ -111,6 +141,7 @@ export const useApostilasRecolhidas = () => {
               responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
               data_inicio_correcao: recolhida.data_inicio_correcao,
               professor_id: funcionario.turmas?.professor_id,
+              professor_nome: professorNome,
             };
           }
 
@@ -138,6 +169,7 @@ export const useApostilasRecolhidas = () => {
             responsavel_correcao_tipo: recolhida.responsavel_correcao_tipo,
             data_inicio_correcao: recolhida.data_inicio_correcao,
             professor_id: undefined,
+            professor_nome: "Sem professor",
           };
         })
       );
