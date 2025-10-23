@@ -63,7 +63,7 @@ export const useApostilasRecolhidas = () => {
             let professorNome = "Sem professor";
             if (aluno.turmas?.professor_id) {
               const { data: professor } = await supabase
-                .from("funcionarios")
+                .from("professores")
                 .select("nome")
                 .eq("id", aluno.turmas.professor_id)
                 .single();
@@ -112,7 +112,7 @@ export const useApostilasRecolhidas = () => {
             let professorNome = "Sem professor";
             if (funcionario.turmas?.professor_id) {
               const { data: professor } = await supabase
-                .from("funcionarios")
+                .from("professores")
                 .select("nome")
                 .eq("id", funcionario.turmas.professor_id)
                 .single();
