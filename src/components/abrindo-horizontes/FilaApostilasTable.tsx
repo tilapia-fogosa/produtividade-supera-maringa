@@ -32,7 +32,7 @@ import { IniciarCorrecaoAhModal } from "./IniciarCorrecaoAhModal";
 import { FinalizarCorrecaoAhModal } from "./FinalizarCorrecaoAhModal";
 import { EntregaAhModal } from "./EntregaAhModal";
 
-type SortField = "pessoa_nome" | "turma_nome" | "apostila" | "data_recolhida" | "data_entrega";
+type SortField = "pessoa_nome" | "turma_nome" | "apostila" | "data_entrega";
 type SortDirection = "asc" | "desc";
 
 export const FilaApostilasTable = () => {
@@ -80,7 +80,7 @@ export const FilaApostilasTable = () => {
       let aValue: string | number = a[sortField];
       let bValue: string | number = b[sortField];
 
-      if (sortField === "data_recolhida" || sortField === "data_entrega") {
+      if (sortField === "data_entrega") {
         aValue = new Date(aValue).getTime();
         bValue = new Date(bValue).getTime();
       } else {
@@ -322,6 +322,7 @@ export const FilaApostilasTable = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead>Professor</TableHead>
                   <TableHead>
                     <Button
                       variant="ghost"
@@ -335,17 +336,6 @@ export const FilaApostilasTable = () => {
                   </TableHead>
                   <TableHead>Ex Corrigidos / Erros</TableHead>
                   <TableHead>Sendo corrigida por</TableHead>
-                  <TableHead>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSort("data_recolhida")}
-                      className="h-8 px-2"
-                    >
-                      Recolhida
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </TableHead>
                   <TableHead>
                     <Button
                       variant="ghost"
@@ -365,6 +355,7 @@ export const FilaApostilasTable = () => {
                   <TableRow key={apostila.id}>
                     <TableCell className="font-medium">{apostila.pessoa_nome}</TableCell>
                     <TableCell>{apostila.turma_nome}</TableCell>
+                    <TableCell>{apostila.professor_nome || "Sem professor"}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{apostila.apostila}</Badge>
                     </TableCell>
@@ -387,9 +378,6 @@ export const FilaApostilasTable = () => {
                       ) : (
                         <span className="text-muted-foreground text-sm">-</span>
                       )}
-                    </TableCell>
-                    <TableCell className="text-left">
-                      {formatDateSaoPaulo(apostila.data_recolhida, "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell className="text-left">
                       <div className={cn(
