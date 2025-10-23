@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, AlertTriangle, School, Shield } from "lucide-react";
+import { TrendingUp, AlertTriangle, School, Shield } from "lucide-react";
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
 import { RetencaoModal } from '@/components/retencao/RetencaoModal';
 
@@ -13,10 +13,6 @@ const Lancamentos = () => {
 
   const handleProdutividadeClick = () => {
     navigate('/dias-lancamento', { state: { serviceType: 'produtividade' } });
-  };
-
-  const handleAHClick = () => {
-    navigate('/abrindo-horizontes/selecao');
   };
 
   const handleAula0Click = () => {
@@ -39,17 +35,7 @@ const Lancamentos = () => {
           Lançar Produtividade de Sala
         </Button>
 
-        <Button 
-          size="lg" 
-          className="py-8 text-lg border-orange-300 text-roxo-DEFAULT hover:bg-orange-100 dark:border-primary dark:text-foreground dark:hover:bg-primary/20"
-          onClick={handleAHClick}
-          variant="outline"
-        >
-          <BookOpen className="mr-2 h-6 w-6" />
-          Lançar Abrindo Horizontes
-        </Button>
-
-        <Button 
+        <Button
           size="lg" 
           className="py-8 text-lg bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700"
           onClick={handleAula0Click}
