@@ -351,8 +351,8 @@ export const FilaApostilasTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apostilasPaginadas.map((apostila) => (
-                  <TableRow key={apostila.id}>
+                  {apostilasPaginadas.map((apostila, index) => (
+                    <TableRow key={apostila.id} className={index % 2 === 0 ? "bg-muted/30" : "bg-background"}>
                     <TableCell className="font-medium">{apostila.pessoa_nome}</TableCell>
                     <TableCell>{apostila.turma_nome}</TableCell>
                     <TableCell>{apostila.professor_nome || "Sem professor"}</TableCell>
