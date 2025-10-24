@@ -42,14 +42,13 @@ interface AulaZeroData {
   valor_mensalidade: string;
 }
 
-const WEBHOOK_URL = "https://hook.us1.make.com/rhla45qk19cwlcq3jnekoirj1zatazfn";
-
 const AulaZero = () => {
   const navigate = useNavigate();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [webhookSending, setWebhookSending] = useState<boolean>(false);
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
   
   const form = useForm<AulaZeroData>({
     defaultValues: {
@@ -65,7 +64,23 @@ const AulaZero = () => {
 
   useEffect(() => {
     fetchAlunos();
+    fetchWebhookUrl();
   }, []);
+
+  const fetchWebhookUrl = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dados_importantes')
+        .select('data')
+        .eq('key', 'webhook_aula_zero')
+        .single();
+      
+      if (error) throw error;
+      setWebhookUrl(data?.data || null);
+    } catch (error) {
+      console.error('Erro ao buscar webhook:', error);
+    }
+  };
 
   const fetchAlunos = async () => {
     setIsLoading(true);
@@ -95,6 +110,11 @@ const AulaZero = () => {
   );
 
   const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
+    if (!webhookUrl) {
+      console.warn('Webhook não configurado');
+      return;
+    }
+    
     setWebhookSending(true);
     try {
       const dataAtual = new Date().toISOString();
@@ -126,8 +146,8 @@ const AulaZero = () => {
       // Log para depuração dos dados que serão enviados
       console.log('Enviando dados para webhook:', webhookPayload);
       
-      // Enviar dados diretamente ao webhook SEM a opção no-cors
-      const response = await fetch(WEBHOOK_URL, {
+      // Enviar dados diretamente ao webhook
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
