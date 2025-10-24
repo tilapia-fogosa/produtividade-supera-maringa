@@ -76,7 +76,9 @@ const AulaZero = () => {
         .single();
       
       if (error) throw error;
-      setWebhookUrl(data?.data || null);
+      const url = data?.data || null;
+      setWebhookUrl(url);
+      console.log('Webhook URL carregado:', url);
     } catch (error) {
       console.error('Erro ao buscar webhook:', error);
     }
@@ -110,8 +112,15 @@ const AulaZero = () => {
   );
 
   const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
+    console.log('sendToWebhook chamado, webhookUrl:', webhookUrl);
+    
     if (!webhookUrl) {
-      console.warn('Webhook não configurado');
+      console.warn('Webhook não configurado - URL está vazia ou null');
+      toast({
+        title: 'Aviso',
+        description: 'Webhook não configurado. Configure em Admin > Configurações',
+        variant: 'destructive',
+      });
       return;
     }
     
@@ -144,7 +153,7 @@ const AulaZero = () => {
       };
       
       // Log para depuração dos dados que serão enviados
-      console.log('Enviando dados para webhook:', webhookPayload);
+      console.log('Enviando dados para webhook:', webhookUrl, webhookPayload);
       
       // Enviar dados diretamente ao webhook
       const response = await fetch(webhookUrl, {
@@ -155,7 +164,11 @@ const AulaZero = () => {
         body: JSON.stringify(webhookPayload)
       });
       
-      console.log('Resposta do webhook:', response);
+      console.log('Resposta do webhook - Status:', response.status);
+      console.log('Resposta do webhook - OK:', response.ok);
+      
+      const responseText = await response.text();
+      console.log('Resposta do webhook - Body:', responseText);
 
       toast({
         title: 'Webhook Enviado',
