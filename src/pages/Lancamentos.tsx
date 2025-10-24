@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, AlertTriangle, School, Shield } from "lucide-react";
+import { TrendingUp, AlertTriangle, School, Shield, BookOpen } from "lucide-react";
 import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
 import { RetencaoModal } from '@/components/retencao/RetencaoModal';
 
@@ -17,6 +17,10 @@ const Lancamentos = () => {
 
   const handleAula0Click = () => {
     navigate('/aula-zero');
+  };
+
+  const handleAbrindoHorizontesClick = () => {
+    navigate('/abrindo-horizontes/selecao');
   };
 
   return (
@@ -45,6 +49,15 @@ const Lancamentos = () => {
         </Button>
 
         <Button 
+          size="lg" 
+          className="py-8 text-lg bg-orange-500 hover:bg-orange-600 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
+          onClick={handleAbrindoHorizontesClick}
+        >
+          <BookOpen className="mr-2 h-6 w-6" />
+          Lançar Abrindo Horizontes
+        </Button>
+
+        <Button
           size="lg" 
           className="py-8 text-lg bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700"
           onClick={() => setShowAlertaModal(true)}

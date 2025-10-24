@@ -123,8 +123,8 @@ export const FilaApostilasTable = () => {
 
   // Função para determinar a cor de fundo da célula de entrega
   const getEntregaBackgroundColor = (apostila: ApostilaRecolhida) => {
-    // Se já foi entregue ou corrigida, sem destaque
-    if (apostila.foi_entregue || apostila.total_correcoes > 0) {
+    // Se já foi entregue, sem destaque
+    if (apostila.foi_entregue) {
       return "";
     }
     
@@ -142,10 +142,10 @@ export const FilaApostilasTable = () => {
     const entrega = new Date(apostila.data_entrega);
     const diasRestantes = Math.ceil((entrega.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (diasRestantes <= 0 && !apostila.foi_entregue && apostila.total_correcoes === 0) {
+    if (diasRestantes <= 0 && !apostila.foi_entregue) {
       return "text-destructive font-semibold";
     }
-    if (diasRestantes <= 3 && diasRestantes >= 0 && !apostila.foi_entregue && apostila.total_correcoes === 0) {
+    if (diasRestantes <= 3 && diasRestantes >= 0 && !apostila.foi_entregue) {
       return "text-orange-600 dark:text-orange-400 font-semibold";
     }
     return "";
@@ -351,8 +351,8 @@ export const FilaApostilasTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apostilasPaginadas.map((apostila) => (
-                  <TableRow key={apostila.id}>
+                  {apostilasPaginadas.map((apostila, index) => (
+                    <TableRow key={apostila.id} className={index % 2 === 0 ? "bg-muted" : "bg-background"}>
                     <TableCell className="font-medium">{apostila.pessoa_nome}</TableCell>
                     <TableCell>{apostila.turma_nome}</TableCell>
                     <TableCell>{apostila.professor_nome || "Sem professor"}</TableCell>
