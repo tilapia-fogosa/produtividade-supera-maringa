@@ -112,7 +112,6 @@ const items = [
     title: "Projeto São Rafael",
     url: "/projeto-sao-rafael",
     icon: Target,
-    requiresTeacher: true,
   },
   {
     title: "Gestão de Retenções",

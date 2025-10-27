@@ -55,7 +55,7 @@ const ProjetoSaoRafael = () => {
       </Button>
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-azul-500">Projeto São Rafael</h1>
+        <h1 className="text-2xl font-bold text-azul-500">Projeto São Rafael - Devolutiva</h1>
         
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="w-full sm:w-auto">

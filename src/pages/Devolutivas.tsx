@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, User, FileText, GraduationCap } from "lucide-react";
+import { Users, User, FileText } from "lucide-react";
 
 const Devolutivas = () => {
   const navigate = useNavigate();
@@ -20,10 +20,6 @@ const Devolutivas = () => {
 
   const irParaAlunos = () => {
     navigate('/devolutivas/alunos');
-  };
-
-  const irParaProjetoSaoRafael = () => {
-    navigate('/projeto-sao-rafael');
   };
 
   return (
@@ -63,24 +59,6 @@ const Devolutivas = () => {
             >
               <User className="mr-2 h-4 w-4" />
               Ver Alunos
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200 bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-azul-500">Projeto São Rafael</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500 mb-4">
-              Acesse o relatório mensal do Projeto São Rafael com dados de Ábaco e Abrindo Horizontes.
-            </p>
-            <Button 
-              onClick={irParaProjetoSaoRafael}
-              className="w-full bg-azul-500 hover:bg-azul-600 text-white"
-            >
-              <GraduationCap className="mr-2 h-4 w-4" />
-              Projeto São Rafael
             </Button>
           </CardContent>
         </Card>

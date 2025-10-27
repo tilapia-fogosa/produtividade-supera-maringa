@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,7 @@ import { Loader2, Calendar, User } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFaltasFuturas } from "@/hooks/use-faltas-futuras";
 import { useAlunosTurma } from "@/hooks/use-alunos-turma";
-import { useFuncionarios } from "@/hooks/use-funcionarios";
-import { supabase } from "@/integrations/supabase/client";
+import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -33,33 +32,7 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
 
   const { criarFaltaFutura } = useFaltasFuturas();
   const { data: alunosTurma, isLoading: loadingAlunos } = useAlunosTurma(turmaId);
-  const { funcionarios, loading: loadingFuncionarios } = useFuncionarios();
-  
-  const [professores, setProfessores] = useState<any[]>([]);
-  const [loadingProfessores, setLoadingProfessores] = useState(true);
-
-  // Buscar professores do sistema
-  useEffect(() => {
-    const fetchProfessores = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('professores')
-          .select('id, nome')
-          .order('nome');
-        
-        if (error) throw error;
-        setProfessores(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar professores:', error);
-      } finally {
-        setLoadingProfessores(false);
-      }
-    };
-
-    if (isOpen) {
-      fetchProfessores();
-    }
-  }, [isOpen]);
+  const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
 
   // Data da falta é fixada para o dia atual (quando o modal é aberto)
   const dataFalta = dataConsulta || new Date();
@@ -76,20 +49,12 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
   ];
 
   // Todos os funcionários e professores do sistema (para lista de responsáveis)
-  const responsaveisDisponiveis = [
-    ...(funcionarios || []).map(func => ({
-      id: func.id,
-      nome: func.nome,
-      cargo: func.cargo || 'Funcionário',
-      tipo: 'funcionario' as const
-    })),
-    ...(professores || []).map(prof => ({
-      id: prof.id,
-      nome: prof.nome,
-      cargo: 'Professor',
-      tipo: 'professor' as const
-    }))
-  ];
+  const responsaveisDisponiveis = responsaveis.map(r => ({
+    id: r.id,
+    nome: r.nome,
+    cargo: r.tipo === 'professor' ? 'Professor' : 'Funcionário',
+    tipo: r.tipo
+  }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +130,7 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
                 <SelectValue placeholder="Selecione o responsável" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border shadow-lg z-50">
-                {loadingFuncionarios || loadingProfessores ? (
+                {loadingResponsaveis ? (
                   <SelectItem value="loading" disabled>
                     Carregando responsáveis...
                   </SelectItem>
