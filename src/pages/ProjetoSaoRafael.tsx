@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, BookOpen } from "lucide-react";
 import { useProjetoSaoRafaelDados } from '@/hooks/use-projeto-sao-rafael-dados';
 import ObservacoesModal from '@/components/projeto-sao-rafael/ObservacoesModal';
 
@@ -58,6 +58,14 @@ const ProjetoSaoRafael = () => {
         <h1 className="text-2xl font-bold text-azul-500">Projeto São Rafael</h1>
         
         <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={() => navigate('/projeto-sao-rafael/lancamento')}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            <BookOpen className="mr-2 h-4 w-4" />
+            Lançar AH
+          </Button>
+          
           <div className="w-full sm:w-auto">
             <Select value={mesAnoSelecionado} onValueChange={setMesAnoSelecionado}>
               <SelectTrigger className="w-full sm:w-[200px]">

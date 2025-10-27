@@ -39,6 +39,7 @@ import SincronizarTurmas from "./pages/SincronizarTurmas";
 import AlunosAtivos from "./pages/AlunosAtivos";
 import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
+import ProjetoSaoRafaelLancamento from "./pages/ProjetoSaoRafaelLancamento";
 import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
 import CalendarioAulas from "./pages/CalendarioAulas";
 import Eventos from "./pages/Eventos";
@@ -99,6 +100,7 @@ function App() {
                             <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
                             <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
                             <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafael />} />
+                            <Route path="/projeto-sao-rafael/lancamento" element={<ProjetoSaoRafaelLancamento />} />
                             <Route path="/fichas" element={<Fichas />} />
                             <Route path="/lancamentos" element={<Lancamentos />} />
                             <Route path="/abrindo-horizontes-fila" element={<AbrindoHorizontesFila />} />
