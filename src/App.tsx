@@ -99,8 +99,8 @@ function App() {
                             <Route path="/devolutivas/turma/:turmaId" element={<DevolutivaTurma />} />
                             <Route path="/devolutivas/aluno/:alunoId" element={<DevolutivaAluno />} />
                             <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
-                            <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafael />} />
-                            <Route path="/projeto-sao-rafael/lancamento" element={<ProjetoSaoRafaelLancamento />} />
+                            <Route path="/projeto-sao-rafael-devolutiva" element={<ProjetoSaoRafael />} />
+                            <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafaelLancamento />} />
                             <Route path="/fichas" element={<Fichas />} />
                             <Route path="/lancamentos" element={<Lancamentos />} />
                             <Route path="/abrindo-horizontes-fila" element={<AbrindoHorizontesFila />} />

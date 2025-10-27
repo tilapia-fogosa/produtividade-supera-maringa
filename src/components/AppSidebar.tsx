@@ -110,7 +110,7 @@ const items = [
   },
   {
     title: "Projeto São Rafael",
-    url: "/projeto-sao-rafael/lancamento",
+    url: "/projeto-sao-rafael",
     icon: Target,
   },
   {

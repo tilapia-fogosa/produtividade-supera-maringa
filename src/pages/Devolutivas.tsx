@@ -23,7 +23,7 @@ const Devolutivas = () => {
   };
 
   const irParaProjetoSaoRafael = () => {
-    navigate('/projeto-sao-rafael');
+    navigate('/projeto-sao-rafael-devolutiva');
   };
 
   return (

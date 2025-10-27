@@ -18,7 +18,7 @@ const ProjetoSaoRafaelLancamento = () => {
   const [alunoSelecionado, setAlunoSelecionado] = useState<PessoaAH | null>(null);
 
   const handleVoltar = () => {
-    navigate('/projeto-sao-rafael');
+    navigate('/projeto-sao-rafael-devolutiva');
   };
 
   const handleLancarAH = (aluno: any) => {
