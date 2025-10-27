@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Loader2, BookOpen } from "lucide-react";
 import { useProjetoSaoRafaelDados } from '@/hooks/use-projeto-sao-rafael-dados';
 import ObservacoesModal from '@/components/projeto-sao-rafael/ObservacoesModal';
+import { AlunoSelectorModal } from '@/components/projeto-sao-rafael/AlunoSelectorModal';
+import AhLancamentoModal from '@/components/turmas/AhLancamentoModal';
 
 const ProjetoSaoRafael = () => {
   const navigate = useNavigate();
@@ -14,8 +16,22 @@ const ProjetoSaoRafael = () => {
   // Definir mês atual como padrão
   const mesAtual = new Date().toISOString().substring(0, 7);
   const [mesAnoSelecionado, setMesAnoSelecionado] = useState(mesAtual);
+  const [isAlunoSelectorOpen, setIsAlunoSelectorOpen] = useState(false);
+  const [isAhModalOpen, setIsAhModalOpen] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string; turma_nome: string } | null>(null);
   
   const { dadosAbaco, dadosAH, textoGeral, loading, salvarTextoGeral } = useProjetoSaoRafaelDados(mesAnoSelecionado);
+
+  const handleSelectAluno = (aluno: { id: string; nome: string; turma_nome: string }) => {
+    setAlunoSelecionado(aluno);
+    setIsAlunoSelectorOpen(false);
+    setIsAhModalOpen(true);
+  };
+
+  const handleCloseAhModal = () => {
+    setIsAhModalOpen(false);
+    setAlunoSelecionado(null);
+  };
 
   // Gerar opções de meses (últimos 12 meses)
   function gerarOpcoesMeses() {
@@ -59,11 +75,11 @@ const ProjetoSaoRafael = () => {
         
         <div className="flex flex-col sm:flex-row gap-2">
           <Button 
-            onClick={() => navigate('/projeto-sao-rafael/lancamento')}
+            onClick={() => setIsAlunoSelectorOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white"
           >
             <BookOpen className="mr-2 h-4 w-4" />
-            Lançar AH
+            Lançar Abrindo Horizontes
           </Button>
           
           <div className="w-full sm:w-auto">
@@ -201,6 +217,24 @@ const ProjetoSaoRafael = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* Modal de Seleção de Aluno */}
+      <AlunoSelectorModal
+        isOpen={isAlunoSelectorOpen}
+        onClose={() => setIsAlunoSelectorOpen(false)}
+        onSelectAluno={handleSelectAluno}
+      />
+
+      {/* Modal de Lançamento AH */}
+      {alunoSelecionado && (
+        <AhLancamentoModal
+          isOpen={isAhModalOpen}
+          aluno={alunoSelecionado}
+          onClose={handleCloseAhModal}
+          onSuccess={handleCloseAhModal}
+          onError={(error) => console.error('Erro ao lançar AH:', error)}
+        />
       )}
     </div>
   );
