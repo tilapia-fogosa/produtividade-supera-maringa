@@ -1,5 +1,5 @@
 
-import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus } from "lucide-react";
+import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
 import ListaFaltasFuturasModal from "@/components/turmas/ListaFaltasFuturasModal";
+import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -189,6 +191,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 };
 
 export default function CalendarioAulas() {
+  const { activeUnit } = useActiveUnit();
   const [semanaAtual, setSemanaAtual] = useState(new Date());
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   
@@ -219,6 +222,9 @@ export default function CalendarioAulas() {
 
   // Estado para o modal da lista de faltas futuras
   const [isListaFaltasFuturasOpen, setIsListaFaltasFuturasOpen] = useState(false);
+
+  // Estado para o modal de reservar sala
+  const [isReservarSalaOpen, setIsReservarSalaOpen] = useState(false);
 
 
   // Extrair perfis únicos dos dados (excluindo domingo)
@@ -475,6 +481,16 @@ export default function CalendarioAulas() {
             <UserMinus className="w-4 h-4 mr-2" />
             Lista de Faltas Futuras
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReservarSalaOpen(true)}
+            className="min-w-[140px]"
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            Reservar Sala
+          </Button>
         </div>
 
         <div className="space-y-2">
@@ -672,6 +688,13 @@ export default function CalendarioAulas() {
       <ListaFaltasFuturasModal 
         isOpen={isListaFaltasFuturasOpen}
         onClose={() => setIsListaFaltasFuturasOpen(false)}
+      />
+      
+      {/* Modal de Reservar Sala */}
+      <ReservarSalaModal 
+        isOpen={isReservarSalaOpen}
+        onClose={() => setIsReservarSalaOpen(false)}
+        unitId={activeUnit?.id || '00000000-0000-0000-0000-000000000000'}
       />
     </div>
   );
