@@ -8,23 +8,29 @@ export type HorarioDisponivel = {
   salas_livres_ids: string[];
 };
 
-export const useHorariosDisponiveisSalas = (data: Date | null, unitId: string) => {
+export const useHorariosDisponiveisSalas = (data: Date | null, unitId?: string | null) => {
   return useQuery({
-    queryKey: ["horarios-disponiveis-salas", data?.toISOString().split('T')[0], unitId],
+    queryKey: ["horarios-disponiveis-salas", data?.toISOString().split('T')[0], unitId || 'all'],
     queryFn: async () => {
       if (!data) return [];
       
       console.log('Buscando horários para:', {
         data: data.toISOString().split('T')[0],
-        unitId
+        unitId: unitId || 'todas as unidades'
       });
+      
+      const params: any = {
+        p_data: data.toISOString().split('T')[0],
+      };
+      
+      // Só adiciona unitId se estiver definido
+      if (unitId) {
+        params.p_unit_id = unitId;
+      }
       
       const { data: result, error } = await supabase.rpc(
         "get_horarios_disponiveis_salas",
-        {
-          p_data: data.toISOString().split('T')[0],
-          p_unit_id: unitId,
-        }
+        params
       );
 
       console.log('Resultado horários:', { result, error });
@@ -32,6 +38,6 @@ export const useHorariosDisponiveisSalas = (data: Date | null, unitId: string) =
       if (error) throw error;
       return result as HorarioDisponivel[];
     },
-    enabled: !!data && !!unitId,
+    enabled: !!data,
   });
 };

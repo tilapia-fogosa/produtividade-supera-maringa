@@ -17,7 +17,7 @@ type CriarEventoSalaParams = {
   dia_mes?: number;
   data_inicio_recorrencia?: string;
   data_fim_recorrencia?: string;
-  unit_id: string;
+  unit_id?: string;
 };
 
 export const useCriarEventoSala = () => {
@@ -60,7 +60,7 @@ export const useCriarEventoSala = () => {
           dia_mes: params.recorrente && params.tipo_recorrencia === 'mensal' ? params.dia_mes || null : null,
           data_inicio_recorrencia: params.recorrente ? params.data_inicio_recorrencia || null : null,
           data_fim_recorrencia: params.recorrente ? params.data_fim_recorrencia || null : null,
-          unit_id: params.unit_id,
+          unit_id: params.unit_id || null,
         } as any])
         .select()
         .single();

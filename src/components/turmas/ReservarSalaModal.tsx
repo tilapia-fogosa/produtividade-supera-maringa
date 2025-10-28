@@ -22,7 +22,7 @@ import { ptBR } from "date-fns/locale";
 interface ReservarSalaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  unitId: string;
+  unitId?: string | null;
 }
 
 type Etapa = 1 | 2 | 3 | 4;
@@ -87,7 +87,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         dia_mes: recorrente && tipoRecorrencia === 'mensal' ? dataSelecionada.getDate() : undefined,
         data_inicio_recorrencia: recorrente && dataInicio ? dataInicio.toISOString().split('T')[0] : undefined,
         data_fim_recorrencia: recorrente && dataFim ? dataFim.toISOString().split('T')[0] : undefined,
-        unit_id: unitId,
+        unit_id: unitId || undefined,
       });
       
       onClose();

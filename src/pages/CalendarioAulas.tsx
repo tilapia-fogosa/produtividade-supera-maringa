@@ -13,7 +13,6 @@ import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
 import ListaFaltasFuturasModal from "@/components/turmas/ListaFaltasFuturasModal";
 import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
-import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -191,7 +190,6 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 };
 
 export default function CalendarioAulas() {
-  const { activeUnit, loading: loadingUnit } = useActiveUnit();
   const [semanaAtual, setSemanaAtual] = useState(new Date());
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   
@@ -485,15 +483,7 @@ export default function CalendarioAulas() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              if (!activeUnit?.id) {
-                console.error('❌ Unidade não carregada ainda');
-                return;
-              }
-              console.log('✅ Abrindo modal com unitId:', activeUnit.id);
-              setIsReservarSalaOpen(true);
-            }}
-            disabled={loadingUnit || !activeUnit?.id}
+            onClick={() => setIsReservarSalaOpen(true)}
             className="min-w-[140px]"
           >
             <MapPin className="w-4 h-4 mr-2" />
@@ -699,13 +689,10 @@ export default function CalendarioAulas() {
       />
       
       {/* Modal de Reservar Sala */}
-      {activeUnit?.id && (
-        <ReservarSalaModal 
-          isOpen={isReservarSalaOpen}
-          onClose={() => setIsReservarSalaOpen(false)}
-          unitId={activeUnit.id}
-        />
-      )}
+      <ReservarSalaModal 
+        isOpen={isReservarSalaOpen}
+        onClose={() => setIsReservarSalaOpen(false)}
+      />
     </div>
   );
 }
