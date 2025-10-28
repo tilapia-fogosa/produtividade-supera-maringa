@@ -247,6 +247,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "alertas_falta_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+          {
             foreignKeyName: "alertas_falta_turma_id_fkey"
             columns: ["turma_id"]
             isOneToOne: false
@@ -259,6 +266,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
           },
           {
             foreignKeyName: "alertas_falta_unit_id_fkey"
@@ -312,6 +326,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "alertas_lancamento_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+          {
             foreignKeyName: "alertas_lancamento_turma_id_fkey"
             columns: ["turma_id"]
             isOneToOne: false
@@ -324,6 +345,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_lancamento_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
           },
         ]
       }
@@ -474,6 +502,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
           },
           {
             foreignKeyName: "fk_alunos_unit_id"
@@ -1039,6 +1074,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividade_pos_venda_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
           },
           {
             foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
@@ -2400,6 +2442,57 @@ export type Database = {
         }
         Relationships: []
       }
+      disponibilidade_professores: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          dia_semana: string
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          observacoes: string | null
+          professor_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          dia_semana: string
+          horario_fim: string
+          horario_inicio: string
+          id?: string
+          observacoes?: string | null
+          professor_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          dia_semana?: string
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          observacoes?: string | null
+          professor_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disponibilidade_professores_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidade_professores_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+        ]
+      }
       estoque: {
         Row: {
           created_at: string
@@ -2523,6 +2616,130 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      eventos_sala: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          created_by: string
+          data: string
+          data_fim_recorrencia: string | null
+          data_inicio_recorrencia: string | null
+          descricao: string | null
+          dia_mes: number | null
+          dia_semana: string | null
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          recorrente: boolean | null
+          responsavel_id: string
+          responsavel_tipo: string
+          sala_id: string
+          tipo_evento: Database["public"]["Enums"]["tipo_evento_sala"]
+          tipo_recorrencia:
+            | Database["public"]["Enums"]["tipo_recorrencia"]
+            | null
+          titulo: string
+          turma_id: string | null
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          created_by: string
+          data: string
+          data_fim_recorrencia?: string | null
+          data_inicio_recorrencia?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dia_semana?: string | null
+          horario_fim: string
+          horario_inicio: string
+          id?: string
+          recorrente?: boolean | null
+          responsavel_id: string
+          responsavel_tipo: string
+          sala_id: string
+          tipo_evento: Database["public"]["Enums"]["tipo_evento_sala"]
+          tipo_recorrencia?:
+            | Database["public"]["Enums"]["tipo_recorrencia"]
+            | null
+          titulo: string
+          turma_id?: string | null
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          created_by?: string
+          data?: string
+          data_fim_recorrencia?: string | null
+          data_inicio_recorrencia?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dia_semana?: string | null
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          recorrente?: boolean | null
+          responsavel_id?: string
+          responsavel_tipo?: string
+          sala_id?: string
+          tipo_evento?: Database["public"]["Enums"]["tipo_evento_sala"]
+          tipo_recorrencia?:
+            | Database["public"]["Enums"]["tipo_recorrencia"]
+            | null
+          titulo?: string
+          turma_id?: string | null
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_sala_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["sala_id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       faltas_antecipadas: {
         Row: {
@@ -2841,7 +3058,38 @@ export type Database = {
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "funcionarios_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
+          },
         ]
+      }
+      grupos_sup_mga: {
+        Row: {
+          created_at: string
+          grupo_id: string | null
+          grupo_nome: string | null
+          id: number
+          turma_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          grupo_id?: string | null
+          grupo_nome?: string | null
+          id?: number
+          turma_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          grupo_id?: string | null
+          grupo_nome?: string | null
+          id?: number
+          turma_id?: string | null
+        }
+        Relationships: []
       }
       kanban_cards: {
         Row: {
@@ -3895,6 +4143,13 @@ export type Database = {
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reposicoes_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
+          },
         ]
       }
       resultados_alunos: {
@@ -3982,6 +4237,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      salas: {
+        Row: {
+          active: boolean | null
+          capacidade: number | null
+          cor_calendario: string | null
+          created_at: string | null
+          id: string
+          nome: string
+          recursos: string[] | null
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          capacidade?: number | null
+          cor_calendario?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+          recursos?: string[] | null
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          capacidade?: number | null
+          cor_calendario?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+          recursos?: string[] | null
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sale_webhooks: {
         Row: {
@@ -4554,11 +4853,14 @@ export type Database = {
           active: boolean | null
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario_fim: string | null
+          horario_inicio: string | null
           id: string
           nome: string
           professor_id: string
           projeto: boolean | null
           sala: string | null
+          sala_id: string | null
           ultima_sincronizacao: string | null
           unit_id: string
         }
@@ -4566,11 +4868,14 @@ export type Database = {
           active?: boolean | null
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: string
           nome: string
           professor_id: string
           projeto?: boolean | null
           sala?: string | null
+          sala_id?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
         }
@@ -4578,11 +4883,14 @@ export type Database = {
           active?: boolean | null
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: string
           nome?: string
           professor_id?: string
           projeto?: boolean | null
           sala?: string | null
+          sala_id?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
         }
@@ -4593,6 +4901,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "professores"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turmas_professor_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+          {
+            foreignKeyName: "turmas_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turmas_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["sala_id"]
           },
           {
             foreignKeyName: "turmas_unit_id_fkey"
@@ -5115,6 +5444,13 @@ export type Database = {
             referencedRelation: "turmas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
+          },
         ]
       }
       calendario_turmas_view: {
@@ -5139,6 +5475,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "professores"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turmas_professor_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
           },
           {
             foreignKeyName: "turmas_unit_id_fkey"
@@ -5234,6 +5577,93 @@ export type Database = {
           unit_id: string | null
         }
         Relationships: []
+      }
+      vw_eventos_sala_expandidos: {
+        Row: {
+          created_at: string | null
+          data: string | null
+          descricao: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          id: string | null
+          recorrente: boolean | null
+          responsavel_id: string | null
+          responsavel_tipo: string | null
+          sala_id: string | null
+          sala_nome: string | null
+          tipo_evento: Database["public"]["Enums"]["tipo_evento_sala"] | null
+          titulo: string | null
+          turma_id: string | null
+          unit_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_sala_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["sala_id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "eventos_sala_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_ocupacao_salas_turmas: {
+        Row: {
+          dia_semana: Database["public"]["Enums"]["dia_semana"] | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          professor_id: string | null
+          professor_nome: string | null
+          sala_id: string | null
+          sala_nome: string | null
+          total_alunos: number | null
+          turma_id: string | null
+          turma_nome: string | null
+          unit_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -5351,6 +5781,20 @@ export type Database = {
           p_unit_id: string
         }
         Returns: Json
+      }
+      get_agenda_sala: {
+        Args: { p_data_fim: string; p_data_inicio: string; p_sala_id: string }
+        Returns: {
+          data: string
+          dia_semana: string
+          evento_id: string
+          horario_fim: string
+          horario_inicio: string
+          responsavel: string
+          tipo: string
+          titulo: string
+          turma_id: string
+        }[]
       }
       get_ah_tempo_stats: {
         Args: never
@@ -5594,6 +6038,20 @@ export type Database = {
           p_unit_ids: string[]
         }
         Returns: Json
+      }
+      get_disponibilidade_professor: {
+        Args: {
+          p_data_fim: string
+          p_data_inicio: string
+          p_professor_id: string
+        }
+        Returns: {
+          dia_semana: string
+          horario_fim: string
+          horario_inicio: string
+          ocupado: boolean
+          turma_nome: string
+        }[]
       }
       get_funcionario_devolutiva: {
         Args: { p_data_inicial: string; p_funcionario_id: string }
@@ -6032,6 +6490,16 @@ export type Database = {
       update_existing_kanban_cards_history: { Args: never; Returns: undefined }
       user_has_access_to_unit: { Args: { unit_id: string }; Returns: boolean }
       user_has_unit_access: { Args: { p_unit_id: string }; Returns: boolean }
+      verificar_conflito_sala: {
+        Args: {
+          p_data: string
+          p_evento_id?: string
+          p_horario_fim: string
+          p_horario_inicio: string
+          p_sala_id: string
+        }
+        Returns: boolean
+      }
       verificar_criterios_alerta_falta: {
         Args: { p_aluno_id: string }
         Returns: {
@@ -6108,6 +6576,15 @@ export type Database = {
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
+      tipo_evento_sala:
+        | "manutencao"
+        | "reuniao"
+        | "evento_especial"
+        | "reserva_administrativa"
+        | "bloqueio_temporario"
+        | "workshop"
+        | "treinamento"
+        | "outro"
       tipo_funcionalidade:
         | "assistente_whatsapp"
         | "google_agenda"
@@ -6118,6 +6595,7 @@ export type Database = {
         | "gestao_eventos"
         | "automacao_whatsapp"
         | "pos_venda_comercial"
+      tipo_recorrencia: "semanal" | "quinzenal" | "mensal"
       user_role:
         | "consultor"
         | "franqueado"
@@ -6309,6 +6787,16 @@ export const Constants = {
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
       tipo_atendimento: ["bot", "humano"],
+      tipo_evento_sala: [
+        "manutencao",
+        "reuniao",
+        "evento_especial",
+        "reserva_administrativa",
+        "bloqueio_temporario",
+        "workshop",
+        "treinamento",
+        "outro",
+      ],
       tipo_funcionalidade: [
         "assistente_whatsapp",
         "google_agenda",
@@ -6320,6 +6808,7 @@ export const Constants = {
         "automacao_whatsapp",
         "pos_venda_comercial",
       ],
+      tipo_recorrencia: ["semanal", "quinzenal", "mensal"],
       user_role: [
         "consultor",
         "franqueado",
