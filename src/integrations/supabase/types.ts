@@ -6057,6 +6057,15 @@ export type Database = {
         Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
       }
+      get_horarios_disponiveis_salas: {
+        Args: { p_data: string; p_unit_id: string }
+        Returns: {
+          horario_fim: string
+          horario_inicio: string
+          salas_livres_ids: string[]
+          total_salas_livres: number
+        }[]
+      }
       get_leads_by_month_and_source: {
         Args: { p_months_back?: number; p_unit_ids: string[] }
         Returns: {

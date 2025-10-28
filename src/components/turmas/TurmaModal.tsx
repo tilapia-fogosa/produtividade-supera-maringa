@@ -8,13 +8,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calendar, RefreshCw, School, UserMinus, User } from "lucide-react";
+import { Users, Calendar, RefreshCw, School, UserMinus, User, MapPin } from "lucide-react";
 import { useTurmaModal } from "@/hooks/use-turma-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PhotoHoverCard } from "@/components/ui/photo-hover-card";
 import ReposicaoModal from "./ReposicaoModal";
 import AulaExperimentalModal from "./AulaExperimentalModal";
 import FaltaFuturaModal from "./FaltaFuturaModal";
+import { ReservarSalaModal } from "./ReservarSalaModal";
 
 interface TurmaModalProps {
   turmaId: string | null;
@@ -33,6 +34,7 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
   const [reposicaoModalOpen, setReposicaoModalOpen] = useState(false);
   const [aulaExperimentalModalOpen, setAulaExperimentalModalOpen] = useState(false);
   const [faltaFuturaModalOpen, setFaltaFuturaModalOpen] = useState(false);
+  const [reservarSalaModalOpen, setReservarSalaModalOpen] = useState(false);
 
   if (error) {
     return (
@@ -93,6 +95,16 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
               >
                 <UserMinus className="h-4 w-4" />
                 Lançar Falta Futura
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setReservarSalaModalOpen(true)}
+                disabled={isLoading || !data?.turma}
+                className="flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                Reservar Sala
               </Button>
             </div>
           </div>
@@ -486,6 +498,15 @@ export const TurmaModal: React.FC<TurmaModalProps> = ({
           turmaId={data.turma.id}
           unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
           dataConsulta={dataConsulta}
+        />
+      )}
+
+      {/* Modal de Reservar Sala */}
+      {data?.turma && (
+        <ReservarSalaModal
+          isOpen={reservarSalaModalOpen}
+          onClose={() => setReservarSalaModalOpen(false)}
+          unitId={data.turma.unit_id || '00000000-0000-0000-0000-000000000000'}
         />
       )}
     </Dialog>
