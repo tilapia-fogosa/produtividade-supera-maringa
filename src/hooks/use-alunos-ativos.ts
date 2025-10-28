@@ -40,6 +40,7 @@ export interface AlunoAtivo {
   foto_url: string | null;
   foto_devolutiva_url: string | null;
   data_nascimento: string | null;
+  aniversario_mes_dia: string | null; // Formato 'MM-DD' calculado automaticamente
   // Campos específicos para identificar origem
   tipo_pessoa: 'aluno' | 'funcionario';
   cargo?: string | null; // Específico para funcionários

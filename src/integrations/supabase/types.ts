@@ -330,6 +330,7 @@ export type Database = {
       alunos: {
         Row: {
           active: boolean
+          aniversario_mes_dia: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           codigo: string | null
@@ -373,6 +374,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null
@@ -416,6 +418,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null
@@ -2711,6 +2714,7 @@ export type Database = {
       funcionarios: {
         Row: {
           active: boolean
+          aniversario_mes_dia: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           cargo: string | null
@@ -2748,6 +2752,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           cargo?: string | null
@@ -2785,6 +2790,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           cargo?: string | null
