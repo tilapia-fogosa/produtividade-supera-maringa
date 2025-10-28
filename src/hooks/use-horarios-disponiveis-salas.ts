@@ -14,6 +14,11 @@ export const useHorariosDisponiveisSalas = (data: Date | null, unitId: string) =
     queryFn: async () => {
       if (!data) return [];
       
+      console.log('Buscando horários para:', {
+        data: data.toISOString().split('T')[0],
+        unitId
+      });
+      
       const { data: result, error } = await supabase.rpc(
         "get_horarios_disponiveis_salas",
         {
@@ -21,6 +26,8 @@ export const useHorariosDisponiveisSalas = (data: Date | null, unitId: string) =
           p_unit_id: unitId,
         }
       );
+
+      console.log('Resultado horários:', { result, error });
 
       if (error) throw error;
       return result as HorarioDisponivel[];

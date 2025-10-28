@@ -17,6 +17,7 @@ import { useSalas } from "@/hooks/use-salas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useCriarEventoSala } from "@/hooks/use-criar-evento-sala";
 import { ChevronLeft, Clock, MapPin, User, Calendar as CalendarIcon } from "lucide-react";
+import { ptBR } from "date-fns/locale";
 
 interface ReservarSalaModalProps {
   isOpen: boolean;
@@ -109,6 +110,8 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                 setDataSelecionada(date || null);
                 if (date) setEtapa(2);
               }}
+              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+              locale={ptBR}
               className="rounded-md border"
             />
           </div>
@@ -129,6 +132,10 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
               <p>Carregando horários...</p>
             ) : (
               <div className="grid gap-2 max-h-96 overflow-y-auto">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Total de salas ativas: {todasSalas?.length || 0} | 
+                  Horários disponíveis: {horariosDisponiveis?.length || 0}
+                </p>
                 {horariosDisponiveis?.map((horario) => (
                   <Button
                     key={`${horario.horario_inicio}-${horario.horario_fim}`}
@@ -282,12 +289,14 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                     </Select>
                   </div>
                   
-                  <div>
+                   <div>
                     <Label>Data de Início</Label>
                     <Calendar
                       mode="single"
                       selected={dataInicio || undefined}
                       onSelect={(date) => setDataInicio(date || null)}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      locale={ptBR}
                       className="rounded-md border"
                     />
                   </div>
@@ -298,6 +307,8 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                       mode="single"
                       selected={dataFim || undefined}
                       onSelect={(date) => setDataFim(date || null)}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      locale={ptBR}
                       className="rounded-md border"
                     />
                   </div>
