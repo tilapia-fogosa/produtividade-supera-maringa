@@ -4255,7 +4255,7 @@ export type Database = {
           capacidade?: number | null
           cor_calendario?: string | null
           created_at?: string | null
-          id?: string
+          id: string
           nome: string
           recursos?: string[] | null
           unit_id: string
@@ -4863,6 +4863,7 @@ export type Database = {
           sala_id: string | null
           ultima_sincronizacao: string | null
           unit_id: string
+          whatsapp_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -4878,6 +4879,7 @@ export type Database = {
           sala_id?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
+          whatsapp_id?: string | null
         }
         Update: {
           active?: boolean | null
@@ -4893,6 +4895,7 @@ export type Database = {
           sala_id?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
+          whatsapp_id?: string | null
         }
         Relationships: [
           {
