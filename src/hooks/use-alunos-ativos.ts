@@ -39,6 +39,7 @@ export interface AlunoAtivo {
   valor_mensalidade: number | null;
   foto_url: string | null;
   foto_devolutiva_url: string | null;
+  data_nascimento: string | null;
   // Campos específicos para identificar origem
   tipo_pessoa: 'aluno' | 'funcionario';
   cargo?: string | null; // Específico para funcionários
@@ -337,6 +338,42 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarDataNascimento = async (alunoId: string, dataNascimento: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ data_nascimento: dataNascimento } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, data_nascimento: dataNascimento } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Data de nascimento atualizada com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar data de nascimento:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a data de nascimento.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
@@ -344,6 +381,7 @@ export function useAlunosAtivos() {
     refetch: buscarAlunosAtivos,
     atualizarWhatsApp,
     atualizarResponsavel,
-    atualizarFoto
+    atualizarFoto,
+    atualizarDataNascimento,
   };
 }
