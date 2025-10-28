@@ -32,6 +32,8 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   onClose,
   unitId,
 }) => {
+  console.log('🎯 ReservarSalaModal - unitId recebido:', unitId);
+  
   const [etapa, setEtapa] = useState<Etapa>(1);
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const [horarioSelecionado, setHorarioSelecionado] = useState<any>(null);
