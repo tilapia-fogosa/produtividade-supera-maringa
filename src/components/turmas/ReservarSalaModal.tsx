@@ -18,6 +18,13 @@ import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useCriarEventoSala } from "@/hooks/use-criar-evento-sala";
 import { ChevronLeft, Clock, MapPin, User, Calendar as CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
+import { 
+  OPCOES_DURACAO, 
+  TIPOS_EVENTO, 
+  obterHorarioFuncionamento, 
+  calcularHorarioFim,
+  horarioEstaNoFuncionamento 
+} from "@/constants/horariosFuncionamento";
 
 interface ReservarSalaModalProps {
   isOpen: boolean;
@@ -25,7 +32,7 @@ interface ReservarSalaModalProps {
   unitId?: string | null;
 }
 
-type Etapa = 1 | 2 | 3 | 4;
+type Etapa = 1 | 2 | 3 | 4 | 5;
 
 export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   isOpen,
@@ -36,7 +43,8 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   
   const [etapa, setEtapa] = useState<Etapa>(1);
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
-  const [horarioSelecionado, setHorarioSelecionado] = useState<any>(null);
+  const [horarioInicioSelecionado, setHorarioInicioSelecionado] = useState<string | null>(null);
+  const [duracaoSelecionada, setDuracaoSelecionada] = useState<number | null>(null);
   const [salaSelecionada, setSalaSelecionada] = useState<string | null>(null);
   const [tipoEvento, setTipoEvento] = useState<string>("");
   const [titulo, setTitulo] = useState("");
@@ -54,19 +62,70 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   const { responsaveis } = useResponsaveis();
   const criarEventoMutation = useCriarEventoSala();
 
-  const salasDisponiveisNoHorario = todasSalas?.filter(sala => 
-    horarioSelecionado?.salas_livres_ids?.includes(sala.id)
-  );
+  // Filtrar horários disponíveis baseado na duração selecionada
+  const horariosDisponiveisFiltrados = React.useMemo(() => {
+    if (!horariosDisponiveis || !dataSelecionada) return [];
+    
+    const horarioFunc = obterHorarioFuncionamento(dataSelecionada);
+    if (!horarioFunc.aberto) return [];
+
+    return horariosDisponiveis.filter(h => 
+      horarioEstaNoFuncionamento(h.horario_inicio, h.horario_fim, horarioFunc)
+    );
+  }, [horariosDisponiveis, dataSelecionada]);
+
+  // Horários de início únicos (slots de 30min)
+  const horariosInicio = React.useMemo(() => {
+    const unique = new Map<string, any>();
+    horariosDisponiveisFiltrados?.forEach(h => {
+      if (!unique.has(h.horario_inicio)) {
+        unique.set(h.horario_inicio, {
+          horario_inicio: h.horario_inicio,
+          salas_disponiveis: h.total_salas_livres
+        });
+      }
+    });
+    return Array.from(unique.values());
+  }, [horariosDisponiveisFiltrados]);
+
+  // Calcular salas disponíveis para o horário e duração selecionados
+  const salasDisponiveisParaDuracao = React.useMemo(() => {
+    if (!horarioInicioSelecionado || !duracaoSelecionada || !dataSelecionada) return [];
+    
+    const horarioFim = calcularHorarioFim(horarioInicioSelecionado, duracaoSelecionada);
+    const horarioFunc = obterHorarioFuncionamento(dataSelecionada);
+    
+    if (!horarioEstaNoFuncionamento(horarioInicioSelecionado, horarioFim, horarioFunc)) {
+      return [];
+    }
+
+    // Encontrar todas as salas que estão livres em todos os slots necessários
+    const slotsNecessarios = horariosDisponiveisFiltrados.filter(h => 
+      h.horario_inicio >= horarioInicioSelecionado && h.horario_inicio < horarioFim
+    );
+
+    if (slotsNecessarios.length === 0) return [];
+
+    // Interseção de salas livres em todos os slots
+    const salasLivres = slotsNecessarios[0].salas_livres_ids;
+    const salasDisponiveisEmTodosSlots = salasLivres.filter(salaId =>
+      slotsNecessarios.every(slot => slot.salas_livres_ids.includes(salaId))
+    );
+
+    return todasSalas?.filter(sala => salasDisponiveisEmTodosSlots.includes(sala.id)) || [];
+  }, [horarioInicioSelecionado, duracaoSelecionada, horariosDisponiveisFiltrados, todasSalas, dataSelecionada]);
 
   const handleVoltar = () => {
     if (etapa > 1) setEtapa((prev) => (prev - 1) as Etapa);
   };
 
   const handleSubmit = async () => {
-    if (!dataSelecionada || !salaSelecionada || !horarioSelecionado) return;
+    if (!dataSelecionada || !salaSelecionada || !horarioInicioSelecionado || !duracaoSelecionada) return;
 
     const responsavel = responsaveis.find(r => r.id === responsavelId);
     if (!responsavel) return;
+
+    const horarioFim = calcularHorarioFim(horarioInicioSelecionado, duracaoSelecionada);
 
     try {
       await criarEventoMutation.mutateAsync({
@@ -75,8 +134,8 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         titulo,
         descricao,
         data: dataSelecionada.toISOString().split('T')[0],
-        horario_inicio: horarioSelecionado.horario_inicio,
-        horario_fim: horarioSelecionado.horario_fim,
+        horario_inicio: horarioInicioSelecionado,
+        horario_fim: horarioFim,
         responsavel_id: responsavelId,
         responsavel_tipo: responsavel.tipo,
         recorrente,
@@ -120,46 +179,50 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         );
 
       case 2:
+        const horarioFunc = dataSelecionada ? obterHorarioFuncionamento(dataSelecionada) : null;
+        
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Clock className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Horários Disponíveis</h3>
+              <h3 className="text-lg font-medium">Selecione o Horário de Início</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              {dataSelecionada?.toLocaleDateString('pt-BR')}
+              {dataSelecionada?.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </p>
+            
+            {horarioFunc && (
+              <div className="text-sm p-3 bg-muted rounded-md">
+                <p className="font-medium">Horário de funcionamento:</p>
+                <p>{horarioFunc.aberto ? `${horarioFunc.inicio} - ${horarioFunc.fim}` : 'Fechado'}</p>
+              </div>
+            )}
             
             {loadingHorarios ? (
               <p>Carregando horários...</p>
+            ) : !horarioFunc?.aberto ? (
+              <p className="text-center text-muted-foreground py-8">
+                Salas fechadas neste dia
+              </p>
             ) : (
               <div className="grid gap-2 max-h-96 overflow-y-auto">
-                <p className="text-xs text-muted-foreground mb-2">
-                  Total de salas ativas: {todasSalas?.length || 0} | 
-                  Horários disponíveis: {horariosDisponiveis?.length || 0}
-                </p>
-                {horariosDisponiveis?.map((horario) => (
+                {horariosInicio.map((horario) => (
                   <Button
-                    key={`${horario.horario_inicio}-${horario.horario_fim}`}
+                    key={horario.horario_inicio}
                     variant="outline"
                     className="justify-between"
                     onClick={() => {
-                      setHorarioSelecionado(horario);
-                      if (horario.total_salas_livres === 1) {
-                        setSalaSelecionada(horario.salas_livres_ids[0]);
-                        setEtapa(4);
-                      } else {
-                        setEtapa(3);
-                      }
+                      setHorarioInicioSelecionado(horario.horario_inicio);
+                      setEtapa(3);
                     }}
                   >
-                    <span>{horario.horario_inicio} - {horario.horario_fim}</span>
+                    <span>{horario.horario_inicio}</span>
                     <span className="text-sm text-muted-foreground">
-                      {horario.total_salas_livres} sala{horario.total_salas_livres > 1 ? 's' : ''} livre{horario.total_salas_livres > 1 ? 's' : ''}
+                      {horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''} disponíve{horario.salas_disponiveis > 1 ? 'is' : 'l'}
                     </span>
                   </Button>
                 ))}
-                {horariosDisponiveis?.length === 0 && (
+                {horariosInicio.length === 0 && (
                   <p className="text-center text-muted-foreground py-8">
                     Nenhum horário disponível para esta data
                   </p>
@@ -173,38 +236,89 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <MapPin className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Selecione a Sala</h3>
+              <Clock className="h-5 w-5" />
+              <h3 className="text-lg font-medium">Selecione a Duração</h3>
             </div>
-            <div className="grid gap-3">
-              {salasDisponiveisNoHorario?.map((sala) => (
-                <Button
-                  key={sala.id}
-                  variant="outline"
-                  className="h-auto p-4 justify-start"
-                  style={{ borderColor: sala.cor_calendario }}
-                  onClick={() => {
-                    setSalaSelecionada(sala.id);
-                    setEtapa(4);
-                  }}
-                >
-                  <div
-                    className="w-4 h-4 rounded-full mr-3"
-                    style={{ backgroundColor: sala.cor_calendario }}
-                  />
-                  <div className="text-left">
-                    <p className="font-medium">{sala.nome}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Capacidade: {sala.capacidade} pessoas
-                    </p>
-                  </div>
-                </Button>
-              ))}
+            <p className="text-sm text-muted-foreground">
+              Início: {horarioInicioSelecionado}
+            </p>
+            
+            <div className="grid gap-2">
+              {OPCOES_DURACAO.map((opcao) => {
+                const horarioFim = calcularHorarioFim(horarioInicioSelecionado!, opcao.valor);
+                const horarioFunc = dataSelecionada ? obterHorarioFuncionamento(dataSelecionada) : null;
+                const estaNoFuncionamento = horarioFunc ? 
+                  horarioEstaNoFuncionamento(horarioInicioSelecionado!, horarioFim, horarioFunc) : false;
+                
+                return (
+                  <Button
+                    key={opcao.valor}
+                    variant="outline"
+                    className="justify-between"
+                    disabled={!estaNoFuncionamento}
+                    onClick={() => {
+                      setDuracaoSelecionada(opcao.valor);
+                      setEtapa(4);
+                    }}
+                  >
+                    <span>{opcao.label}</span>
+                    <span className="text-sm text-muted-foreground">
+                      até {horarioFim}
+                      {!estaNoFuncionamento && ' (fora do horário)'}
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         );
 
       case 4:
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="h-5 w-5" />
+              <h3 className="text-lg font-medium">Selecione a Sala</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2">
+              {horarioInicioSelecionado} - {duracaoSelecionada && calcularHorarioFim(horarioInicioSelecionado!, duracaoSelecionada)}
+            </p>
+            
+            {salasDisponiveisParaDuracao.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhuma sala disponível para este horário e duração
+              </p>
+            ) : (
+              <div className="grid gap-3">
+                {salasDisponiveisParaDuracao.map((sala) => (
+                  <Button
+                    key={sala.id}
+                    variant="outline"
+                    className="h-auto p-4 justify-start"
+                    style={{ borderColor: sala.cor_calendario }}
+                    onClick={() => {
+                      setSalaSelecionada(sala.id);
+                      setEtapa(5);
+                    }}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full mr-3"
+                      style={{ backgroundColor: sala.cor_calendario }}
+                    />
+                    <div className="text-left">
+                      <p className="font-medium">{sala.nome}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Capacidade: {sala.capacidade} pessoas
+                      </p>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 5:
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -220,14 +334,11 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manutencao">Manutenção</SelectItem>
-                    <SelectItem value="reuniao">Reunião</SelectItem>
-                    <SelectItem value="evento_especial">Evento Especial</SelectItem>
-                    <SelectItem value="reserva_administrativa">Reserva Administrativa</SelectItem>
-                    <SelectItem value="bloqueio_temporario">Bloqueio Temporário</SelectItem>
-                    <SelectItem value="workshop">Workshop</SelectItem>
-                    <SelectItem value="treinamento">Treinamento</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
+                    {TIPOS_EVENTO.map((tipo) => (
+                      <SelectItem key={tipo.valor} value={tipo.valor}>
+                        {tipo.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -347,7 +458,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             )}
-            <DialogTitle>Reservar Sala - Etapa {etapa}/4</DialogTitle>
+            <DialogTitle>Reservar Sala - Etapa {etapa}/5</DialogTitle>
           </div>
         </DialogHeader>
 
