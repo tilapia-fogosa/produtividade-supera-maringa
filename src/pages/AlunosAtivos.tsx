@@ -5,18 +5,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save, Pencil, Check, X, Loader2 } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
-type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera';
+type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
 type SortDirection = 'asc' | 'desc';
 export default function AlunosAtivos() {
-  const {
-    alunos,
-    loading,
-    error,
-    atualizarWhatsApp,
-    atualizarResponsavel
+  const { 
+    alunos, 
+    loading, 
+    error, 
+    atualizarWhatsApp, 
+    atualizarResponsavel,
+    atualizarDataNascimento 
   } = useAlunosAtivos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState<string[]>([]);
@@ -31,6 +32,10 @@ export default function AlunosAtivos() {
   const [editandoResponsavel, setEditandoResponsavel] = useState<string | null>(null);
   const [responsavelTemp, setResponsavelTemp] = useState('');
   const [salvandoResponsavel, setSalvandoResponsavel] = useState<string | null>(null);
+  
+  const [editandoDataNascimento, setEditandoDataNascimento] = useState<string | null>(null);
+  const [dataNascimentoTemp, setDataNascimentoTemp] = useState('');
+  const [salvandoDataNascimento, setSalvandoDataNascimento] = useState<string | null>(null);
 
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
@@ -77,6 +82,10 @@ export default function AlunosAtivos() {
         case 'dias_supera':
           valueA = a.dias_supera || 0;
           valueB = b.dias_supera || 0;
+          break;
+        case 'data_nascimento':
+          valueA = a.data_nascimento || '';
+          valueB = b.data_nascimento || '';
           break;
       }
       if (typeof valueA === 'string' && typeof valueB === 'string') {
@@ -142,6 +151,52 @@ export default function AlunosAtivos() {
   const handleCancelarEdicaoResponsavel = () => {
     setEditandoResponsavel(null);
     setResponsavelTemp('');
+  };
+
+  const handleEditarDataNascimento = (aluno: AlunoAtivo) => {
+    setEditandoDataNascimento(aluno.id);
+    setDataNascimentoTemp(aluno.data_nascimento || '');
+  };
+
+  const handleSalvarDataNascimento = async (alunoId: string) => {
+    setSalvandoDataNascimento(alunoId);
+    const sucesso = await atualizarDataNascimento(alunoId, dataNascimentoTemp);
+    setSalvandoDataNascimento(null);
+    
+    if (sucesso) {
+      setEditandoDataNascimento(null);
+    }
+  };
+
+  const handleCancelarEdicaoDataNascimento = () => {
+    setEditandoDataNascimento(null);
+    setDataNascimentoTemp('');
+  };
+
+  const formatarDataBr = (data: string | null): string => {
+    if (!data) return '-';
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}/${mes}/${ano}`;
+  };
+
+  const calcularIdade = (dataNascimento: string | null): number | null => {
+    if (!dataNascimento) return null;
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const mesAtual = hoje.getMonth();
+    const mesNascimento = nascimento.getMonth();
+    if (mesAtual < mesNascimento || (mesAtual === mesNascimento && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+    return idade;
+  };
+
+  const ehAniversarioHoje = (dataNascimento: string | null): boolean => {
+    if (!dataNascimento) return false;
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    return hoje.getDate() === nascimento.getDate() && hoje.getMonth() === nascimento.getMonth();
   };
   const handleAbrirWhatsApp = (aluno: AlunoAtivo) => {
     const numero = aluno.whatapp_contato;
@@ -323,6 +378,12 @@ export default function AlunosAtivos() {
                       {getSortIcon('dias_supera')}
                     </Button>
                   </th>
+                  <th className="text-left p-4">
+                    <Button variant="ghost" onClick={() => handleSort('data_nascimento')} className="font-semibold hover:bg-gray-100">
+                      Data de Nascimento
+                      {getSortIcon('data_nascimento')}
+                    </Button>
+                  </th>
                    <th className="text-left p-4 w-[180px]">
                      <span className="font-semibold flex items-center gap-2">
                        <MessageCircle className="w-4 h-4" />
@@ -363,6 +424,54 @@ export default function AlunosAtivos() {
                       <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}>
                         {aluno.dias_supera || 0} dias
                       </Badge>
+                    </td>
+                    <td className="p-4">
+                      {editandoDataNascimento === aluno.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="date"
+                            value={dataNascimentoTemp}
+                            onChange={(e) => setDataNascimentoTemp(e.target.value)}
+                            className="h-8 text-sm w-40"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSalvarDataNascimento(aluno.id);
+                              } else if (e.key === 'Escape') {
+                                handleCancelarEdicaoDataNascimento();
+                              }
+                            }}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSalvarDataNascimento(aluno.id)}
+                            disabled={salvandoDataNascimento === aluno.id}
+                          >
+                            {salvandoDataNascimento === aluno.id ? (
+                              <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center gap-2" onClick={() => handleEditarDataNascimento(aluno)}>
+                          <span className="text-sm">
+                            {aluno.data_nascimento ? (
+                              <>
+                                {formatarDataBr(aluno.data_nascimento)}
+                                {calcularIdade(aluno.data_nascimento) && ` (${calcularIdade(aluno.data_nascimento)} anos)`}
+                              </>
+                            ) : (
+                              <span className="text-gray-400">Clique para adicionar</span>
+                            )}
+                          </span>
+                          {ehAniversarioHoje(aluno.data_nascimento) && (
+                            <span className="text-xl" title="Aniversário hoje! 🎉">🎂</span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4">
                       {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-2">

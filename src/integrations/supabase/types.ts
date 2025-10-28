@@ -330,12 +330,14 @@ export type Database = {
       alunos: {
         Row: {
           active: boolean
+          aniversario_mes_dia: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           codigo: string | null
           coordenador_responsavel: string | null
           created_at: string
           curso: string | null
+          data_nascimento: string | null
           data_onboarding: string | null
           dias_apostila: number | null
           dias_supera: number | null
@@ -372,12 +374,14 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_nascimento?: string | null
           data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
@@ -414,12 +418,14 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_nascimento?: string | null
           data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
@@ -1701,6 +1707,8 @@ export type Database = {
           scheduled_date: string | null
           status: string
           tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
+          ultima_msg_enviado_wpp: string | null
+          ultima_msg_recebida_wpp: string | null
           unit_id: string | null
           updated_at: string
           valorization_confirmed: boolean | null
@@ -1733,6 +1741,8 @@ export type Database = {
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
+          ultima_msg_enviado_wpp?: string | null
+          ultima_msg_recebida_wpp?: string | null
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -1765,6 +1775,8 @@ export type Database = {
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
+          ultima_msg_enviado_wpp?: string | null
+          ultima_msg_recebida_wpp?: string | null
           unit_id?: string | null
           updated_at?: string
           valorization_confirmed?: boolean | null
@@ -2702,6 +2714,7 @@ export type Database = {
       funcionarios: {
         Row: {
           active: boolean
+          aniversario_mes_dia: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           cargo: string | null
@@ -2709,6 +2722,7 @@ export type Database = {
           coordenador_responsavel: string | null
           created_at: string
           curso: string | null
+          data_nascimento: string | null
           data_onboarding: string | null
           dias_apostila: number | null
           dias_supera: number | null
@@ -2738,6 +2752,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           cargo?: string | null
@@ -2745,6 +2760,7 @@ export type Database = {
           coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_nascimento?: string | null
           data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
@@ -2774,6 +2790,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           cargo?: string | null
@@ -2781,6 +2798,7 @@ export type Database = {
           coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_nascimento?: string | null
           data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
@@ -5262,6 +5280,22 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: boolean
       }
+      check_schedule_occupation_conflict: {
+        Args: {
+          p_duration_minutes: number
+          p_occupation_id?: string
+          p_start_datetime: string
+          p_unit_id: string
+        }
+        Returns: {
+          conflict_type: string
+          conflicting_end: string
+          conflicting_id: string
+          conflicting_start: string
+          conflicting_title: string
+          has_conflict: boolean
+        }[]
+      }
       consolidate_monthly_commission: {
         Args: { p_calculation_id: string }
         Returns: boolean
@@ -5428,6 +5462,22 @@ export type Database = {
           total_reposicoes: number
           turma_id: string
           unit_id: string
+        }[]
+      }
+      get_categorized_schedule_occupations: {
+        Args: { p_unit_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          created_by: string
+          created_by_name: string
+          description: string
+          duration_minutes: number
+          id: string
+          start_datetime: string
+          title: string
+          unit_id: string
+          updated_at: string
         }[]
       }
       get_commercial_unit_stats: {
