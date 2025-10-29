@@ -39,7 +39,6 @@ interface AulaZeroData {
   avaliacao_abaco: string;
   avaliacao_ah: string;
   pontos_atencao: string;
-  valor_mensalidade: string;
   genero: 'masculino' | 'feminino' | 'outro';
   data_nascimento: string;
   whatsapp_contato: string;
@@ -62,7 +61,6 @@ const AulaZero = () => {
       avaliacao_abaco: '',
       avaliacao_ah: '',
       pontos_atencao: '',
-      valor_mensalidade: '',
       genero: 'masculino',
       data_nascimento: '',
       whatsapp_contato: '',
@@ -150,7 +148,6 @@ const AulaZero = () => {
         avaliacao_abaco: data.avaliacao_abaco,
         avaliacao_ah: data.avaliacao_ah,
         pontos_atencao: data.pontos_atencao,
-        valor_mensalidade: data.valor_mensalidade,
         data_registro: dataAtual
       };
       
@@ -217,9 +214,6 @@ const AulaZero = () => {
         }
       }
 
-      // Converter valor da mensalidade para número
-      const valorMensalidade = data.valor_mensalidade ? parseFloat(data.valor_mensalidade.replace(',', '.')) : null;
-
       // Salvar os dados no Supabase
       const { error } = await supabase
         .from('alunos')
@@ -229,7 +223,6 @@ const AulaZero = () => {
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
           pontos_atencao: data.pontos_atencao,
-          valor_mensalidade: valorMensalidade,
           genero: data.genero,
           data_nascimento: data.data_nascimento || null,
           whatapp_contato: data.whatsapp_contato,
@@ -326,93 +319,73 @@ const AulaZero = () => {
               )}
             />
 
-            {/* Gênero */}
-            <FormField
-              control={form.control}
-              name="genero"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gênero *</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o gênero" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="masculino">Masculino</SelectItem>
-                        <SelectItem value="feminino">Feminino</SelectItem>
-                        <SelectItem value="outro">Outro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Campos em linha: Gênero, Data Nascimento, WhatsApp e Responsável */}
+            <div className="grid grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="genero"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gênero *</FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Gênero" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="masculino">Masculino</SelectItem>
+                          <SelectItem value="feminino">Feminino</SelectItem>
+                          <SelectItem value="outro">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Data de Nascimento */}
-            <FormField
-              control={form.control}
-              name="data_nascimento"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Nascimento</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="data_nascimento"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data Nascimento</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* WhatsApp para Contato */}
-            <FormField
-              control={form.control}
-              name="whatsapp_contato"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>WhatsApp para Contato *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="(00) 00000-0000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="whatsapp_contato"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WhatsApp *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(00) 00000-0000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Responsável */}
-            <FormField
-              control={form.control}
-              name="responsavel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Responsável *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do responsável" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Valor da Mensalidade */}
-            <FormField
-              control={form.control}
-              name="valor_mensalidade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor da Mensalidade (R$)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: 150,00"
-                      {...field}
-                      type="text"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="responsavel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Responsável *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Responsável" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Percepção do coordenador */}
             <FormField
