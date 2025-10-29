@@ -83,16 +83,15 @@ const coresProfessores = [
 // Bloco de evento na agenda
 const BlocoEvento = ({ 
   evento, 
-  corIndex, 
+  cor, 
   duracaoSlots,
   larguraPercent = 100
 }: { 
   evento: AgendaProfessor; 
-  corIndex: number;
+  cor: { bg: string; text: string; border: string };
   duracaoSlots: number;
   larguraPercent?: number;
 }) => {
-  const cor = coresProfessores[corIndex % coresProfessores.length];
   const alturaSlot = 80;
   const alturaTotal = duracaoSlots * alturaSlot - 4;
   
@@ -171,6 +170,15 @@ export default function AgendaProfessores() {
       [professorId]: !prev[professorId]
     }));
   };
+
+  // Criar mapeamento de cores por professor ID
+  const coresPorProfessor = useMemo(() => {
+    const mapa: Record<string, { bg: string; text: string; border: string }> = {};
+    professores.forEach((prof, idx) => {
+      mapa[prof.id] = coresProfessores[idx % coresProfessores.length];
+    });
+    return mapa;
+  }, [professores]);
 
   // Filtrar professores ativos
   const professoresFiltrados = professores.filter(p => professoresAtivos[p.id]);
@@ -251,8 +259,8 @@ export default function AgendaProfessores() {
         <div className="min-w-[1000px]">
           {/* Legenda de Cores */}
           <div className="flex flex-wrap gap-3 mb-4 pb-4 border-b">
-            {professoresFiltrados.map((prof, idx) => {
-              const cor = coresProfessores[idx % coresProfessores.length];
+            {professoresFiltrados.map((prof) => {
+              const cor = coresPorProfessor[prof.id];
               return (
                 <div key={prof.id} className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded ${cor.bg} ${cor.border} border`} />
@@ -319,11 +327,11 @@ export default function AgendaProfessores() {
                     // Coletar eventos que COMEÇAM neste slot
                     const eventosIniciamAqui: Array<{
                       evento: AgendaProfessor;
-                      corIndex: number;
+                      cor: { bg: string; text: string; border: string };
                       duracao: number;
                     }> = [];
                     
-                    professoresFiltrados.forEach((professor, profIdx) => {
+                    professoresFiltrados.forEach((professor) => {
                       const agenda = agendaPorProfessor?.[professor.id];
                       if (!agenda) return;
                       
@@ -338,7 +346,11 @@ export default function AgendaProfessores() {
                           evento.horario_inicio,
                           evento.horario_fim
                         );
-                        eventosIniciamAqui.push({ evento, corIndex: profIdx, duracao });
+                        eventosIniciamAqui.push({ 
+                          evento, 
+                          cor: coresPorProfessor[professor.id], 
+                          duracao 
+                        });
                       });
                     });
 
@@ -347,7 +359,7 @@ export default function AgendaProfessores() {
 
                     return (
                       <div key={`${dia}-${slot}`} className="relative bg-muted/20 h-full">
-                        {eventosIniciamAqui.map(({ evento, corIndex, duracao }, idx) => (
+                        {eventosIniciamAqui.map(({ evento, cor, duracao }, idx) => (
                           <div
                             key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}-${slot}`}
                             className="absolute top-0 h-full"
@@ -358,7 +370,7 @@ export default function AgendaProfessores() {
                           >
                             <BlocoEvento 
                               evento={evento}
-                              corIndex={corIndex}
+                              cor={cor}
                               duracaoSlots={duracao}
                               larguraPercent={100}
                             />
