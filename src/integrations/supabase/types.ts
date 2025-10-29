@@ -2617,6 +2617,94 @@ export type Database = {
         }
         Relationships: []
       }
+      eventos_professor: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          created_by: string
+          data: string | null
+          data_fim_recorrencia: string | null
+          data_inicio_recorrencia: string | null
+          descricao: string | null
+          dia_mes: number | null
+          dia_semana: string | null
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          professor_id: string
+          recorrente: boolean | null
+          tipo_evento: string
+          tipo_recorrencia: string | null
+          titulo: string
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          created_by: string
+          data?: string | null
+          data_fim_recorrencia?: string | null
+          data_inicio_recorrencia?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dia_semana?: string | null
+          horario_fim: string
+          horario_inicio: string
+          id?: string
+          professor_id: string
+          recorrente?: boolean | null
+          tipo_evento: string
+          tipo_recorrencia?: string | null
+          titulo: string
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          created_by?: string
+          data?: string | null
+          data_fim_recorrencia?: string | null
+          data_inicio_recorrencia?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dia_semana?: string | null
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          professor_id?: string
+          recorrente?: boolean | null
+          tipo_evento?: string
+          tipo_recorrencia?: string | null
+          titulo?: string
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_professor_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_professor_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+          {
+            foreignKeyName: "eventos_professor_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos_sala: {
         Row: {
           active: boolean | null
@@ -5784,6 +5872,23 @@ export type Database = {
           p_unit_id: string
         }
         Returns: Json
+      }
+      get_agenda_professores_semana: {
+        Args: { p_data_fim: string; p_data_inicio: string; p_unit_id?: string }
+        Returns: {
+          data: string
+          dia_semana: string
+          evento_id: string
+          horario_fim: string
+          horario_inicio: string
+          professor_id: string
+          professor_nome: string
+          sala: string
+          tipo: string
+          titulo: string
+          turma_id: string
+          turma_nome: string
+        }[]
       }
       get_agenda_sala: {
         Args: { p_data_fim: string; p_data_inicio: string; p_sala_id: string }
