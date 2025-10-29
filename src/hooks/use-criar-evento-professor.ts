@@ -27,8 +27,8 @@ export const useCriarEventoProfessor = () => {
       const totalMinutos = hora * 60 + minuto + params.duracaoMinutos;
       const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
       
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("Usuário não autenticado");
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id ?? null;
       
       const eventData: any = {
         professor_id: params.professorId,
@@ -39,7 +39,7 @@ export const useCriarEventoProfessor = () => {
         horario_fim: horarioFim,
         recorrente: params.recorrente,
         unit_id: params.unitId,
-        created_by: user.user.id
+        created_by: userId
       };
       
       if (params.recorrente) {
