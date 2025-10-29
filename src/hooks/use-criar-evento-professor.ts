@@ -14,7 +14,7 @@ export type CriarEventoProfessorParams = {
   diaSemana?: string;
   dataInicioRecorrencia?: Date;
   dataFimRecorrencia?: Date;
-  unitId: string;
+  unitId: string | null;
 };
 
 export const useCriarEventoProfessor = () => {

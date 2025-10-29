@@ -20,7 +20,6 @@ interface BloquearHorarioProfessorModalProps {
 }
 
 export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHorarioProfessorModalProps) {
-  const { activeUnit } = useActiveUnit();
   const { professores, isLoading: loadingProfessores } = useProfessores();
   const criarEvento = useCriarEventoProfessor();
 
@@ -70,10 +69,16 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   };
 
   const handleSalvar = async () => {
-    if (!activeUnit?.id) return;
+    console.log("Salvando bloqueio para professores:", professoresIds, {
+      tipoEvento,
+      titulo,
+      horarioInicio,
+      duracao,
+      tipoBloqueio
+    });
 
     try {
-      // Criar evento para cada professor selecionado
+      // Criar evento para cada professor selecionado (sem vinculação a unidade)
       const criacaoPromises = professoresIds.map(professorId =>
         criarEvento.mutateAsync({
           professorId,
@@ -88,7 +93,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
           diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
           dataInicioRecorrencia,
           dataFimRecorrencia,
-          unitId: activeUnit.id,
+          unitId: null, // Bloqueios são globais, acessíveis a todas as unidades
         })
       );
 
