@@ -25,7 +25,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   const criarEvento = useCriarEventoProfessor();
 
   const [etapa, setEtapa] = useState(1);
-  const [professorId, setProfessorId] = useState("");
+  const [professoresIds, setProfessoresIds] = useState<string[]>([]);
   const [tipoBloqueio, setTipoBloqueio] = useState<"pontual" | "periodico">("pontual");
   const [dataSelecionada, setDataSelecionada] = useState<Date>();
   const [diaSemana, setDiaSemana] = useState("");
@@ -48,7 +48,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
 
   const resetForm = () => {
     setEtapa(1);
-    setProfessorId("");
+    setProfessoresIds([]);
     setTipoBloqueio("pontual");
     setDataSelecionada(undefined);
     setDiaSemana("");
@@ -72,21 +72,26 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   const handleSalvar = async () => {
     if (!activeUnit?.id) return;
 
-    await criarEvento.mutateAsync({
-      professorId,
-      tipoEvento,
-      titulo,
-      descricao,
-      data: tipoBloqueio === "pontual" ? dataSelecionada : undefined,
-      horarioInicio,
-      duracaoMinutos: duracao,
-      recorrente: tipoBloqueio === "periodico",
-      tipoRecorrencia: tipoBloqueio === "periodico" ? "semanal" : undefined,
-      diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
-      dataInicioRecorrencia,
-      dataFimRecorrencia,
-      unitId: activeUnit.id,
-    });
+    // Criar evento para cada professor selecionado
+    const criacaoPromises = professoresIds.map(professorId =>
+      criarEvento.mutateAsync({
+        professorId,
+        tipoEvento,
+        titulo,
+        descricao,
+        data: tipoBloqueio === "pontual" ? dataSelecionada : undefined,
+        horarioInicio,
+        duracaoMinutos: duracao,
+        recorrente: tipoBloqueio === "periodico",
+        tipoRecorrencia: tipoBloqueio === "periodico" ? "semanal" : undefined,
+        diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
+        dataInicioRecorrencia,
+        dataFimRecorrencia,
+        unitId: activeUnit.id,
+      })
+    );
+
+    await Promise.all(criacaoPromises);
 
     resetForm();
     onOpenChange(false);
@@ -137,7 +142,23 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
     return horarioEstaNoFuncionamento(horarioInicio, horarioFim, horarioFuncionamento);
   });
 
-  const professorSelecionado = professores.find(p => p.id === professorId);
+  const professoresSelecionados = professores.filter(p => professoresIds.includes(p.id));
+
+  const toggleProfessor = (professorId: string) => {
+    setProfessoresIds(prev => 
+      prev.includes(professorId) 
+        ? prev.filter(id => id !== professorId)
+        : [...prev, professorId]
+    );
+  };
+
+  const selecionarTodos = () => {
+    setProfessoresIds(professores.map(p => p.id));
+  };
+
+  const desmarcarTodos = () => {
+    setProfessoresIds([]);
+  };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -150,24 +171,35 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Etapa 1: Selecionar Professor */}
+          {/* Etapa 1: Selecionar Professores */}
           {etapa === 1 && (
             <div className="space-y-4">
-              <Label>Selecione o Professor</Label>
-              <Select value={professorId} onValueChange={setProfessorId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha um professor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {professores.map((prof) => (
-                    <SelectItem key={prof.id} value={prof.id}>
-                      {prof.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label>Selecione os Professores</Label>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={selecionarTodos}>
+                    Todos
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={desmarcarTodos}>
+                    Nenhum
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border rounded-lg p-3">
+                {professores.map((prof) => (
+                  <label key={prof.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded">
+                    <input
+                      type="checkbox"
+                      checked={professoresIds.includes(prof.id)}
+                      onChange={() => toggleProfessor(prof.id)}
+                      className="cursor-pointer"
+                    />
+                    <span className="text-sm">{prof.nome}</span>
+                  </label>
+                ))}
+              </div>
               <div className="flex justify-end">
-                <Button onClick={handleProximo} disabled={!professorId}>
+                <Button onClick={handleProximo} disabled={professoresIds.length === 0}>
                   Próximo <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -375,7 +407,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">Resumo</h4>
                 <div className="text-sm space-y-1 text-muted-foreground">
-                  <p><strong>Professor:</strong> {professorSelecionado?.nome}</p>
+                  <p><strong>Professores:</strong> {professoresSelecionados.map(p => p.nome).join(', ')}</p>
                   <p><strong>Tipo:</strong> {tipoBloqueio === "pontual" ? "Pontual" : "Periódico"}</p>
                   {tipoBloqueio === "pontual" && dataSelecionada && (
                     <p><strong>Data:</strong> {format(dataSelecionada, "dd/MM/yyyy", { locale: pt })}</p>

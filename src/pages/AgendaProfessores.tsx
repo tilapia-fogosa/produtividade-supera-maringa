@@ -3,12 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Calendar, ChevronLeft, ChevronRight, Clock, Plus } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Settings } from "lucide-react";
 import { useAgendaProfessores, AgendaProfessor } from "@/hooks/use-agenda-professores";
 import { useProfessores } from "@/hooks/use-professores";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BloquearHorarioProfessorModal } from "@/components/professores/BloquearHorarioProfessorModal";
+import { GerenciarPrioridadeModal } from "@/components/professores/GerenciarPrioridadeModal";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -123,6 +124,7 @@ export default function AgendaProfessores() {
   const [semanaAtual, setSemanaAtual] = useState(new Date());
   const [professoresAtivos, setProfessoresAtivos] = useState<Record<string, boolean>>({});
   const [modalBloqueio, setModalBloqueio] = useState(false);
+  const [modalPrioridade, setModalPrioridade] = useState(false);
 
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   const dataInicio = datasSemanais[0];
@@ -191,10 +193,16 @@ export default function AgendaProfessores() {
             <Calendar className="w-5 h-5" />
             <h1 className="text-xl font-bold">Agenda de Professores</h1>
           </div>
-          <Button onClick={() => setModalBloqueio(true)} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Bloquear Horário
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setModalPrioridade(true)} size="sm" variant="outline">
+              <Settings className="w-4 h-4 mr-2" />
+              Prioridade
+            </Button>
+            <Button onClick={() => setModalBloqueio(true)} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Bloquear Horário
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -375,6 +383,11 @@ export default function AgendaProfessores() {
       <BloquearHorarioProfessorModal
         open={modalBloqueio}
         onOpenChange={setModalBloqueio}
+      />
+      
+      <GerenciarPrioridadeModal
+        open={modalPrioridade}
+        onOpenChange={setModalPrioridade}
       />
     </div>
   );

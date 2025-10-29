@@ -373,6 +373,7 @@ export type Database = {
           faltas_consecutivas: number
           foto_devolutiva_url: string | null
           foto_url: string | null
+          genero: Database["public"]["Enums"]["gender"]
           id: string
           idade: number | null
           indice: string | null
@@ -396,6 +397,8 @@ export type Database = {
           ultima_sincronizacao: string | null
           ultimo_nivel: string | null
           unit_id: string
+          valor_material: number | null
+          valor_matricula: number | null
           valor_mensalidade: number | null
           vencimento_contrato: string | null
           whatapp_contato: string | null
@@ -417,6 +420,7 @@ export type Database = {
           faltas_consecutivas?: number
           foto_devolutiva_url?: string | null
           foto_url?: string | null
+          genero?: Database["public"]["Enums"]["gender"]
           id?: string
           idade?: number | null
           indice?: string | null
@@ -440,6 +444,8 @@ export type Database = {
           ultima_sincronizacao?: string | null
           ultimo_nivel?: string | null
           unit_id: string
+          valor_material?: number | null
+          valor_matricula?: number | null
           valor_mensalidade?: number | null
           vencimento_contrato?: string | null
           whatapp_contato?: string | null
@@ -461,6 +467,7 @@ export type Database = {
           faltas_consecutivas?: number
           foto_devolutiva_url?: string | null
           foto_url?: string | null
+          genero?: Database["public"]["Enums"]["gender"]
           id?: string
           idade?: number | null
           indice?: string | null
@@ -484,6 +491,8 @@ export type Database = {
           ultima_sincronizacao?: string | null
           ultimo_nivel?: string | null
           unit_id?: string
+          valor_material?: number | null
+          valor_matricula?: number | null
           valor_mensalidade?: number | null
           vencimento_contrato?: string | null
           whatapp_contato?: string | null
@@ -962,9 +971,12 @@ export type Database = {
             | null
           photo_thumbnail_url: string | null
           photo_url: string | null
+          responsavel: string
           rg: string | null
+          status_sincronizacao: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id: string | null
           updated_at: string
+          whatsapp_contato: string | null
         }
         Insert: {
           active?: boolean
@@ -1009,9 +1021,12 @@ export type Database = {
             | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          responsavel?: string
           rg?: string | null
+          status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
           updated_at?: string
+          whatsapp_contato?: string | null
         }
         Update: {
           active?: boolean
@@ -1056,9 +1071,12 @@ export type Database = {
             | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          responsavel?: string
           rg?: string | null
+          status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
           updated_at?: string
+          whatsapp_contato?: string | null
         }
         Relationships: [
           {
@@ -3913,6 +3931,7 @@ export type Database = {
           email: string | null
           id: string
           nome: string
+          prioridade: number | null
           slack_username: string | null
           status: boolean | null
           telefone: string | null
@@ -3924,6 +3943,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome: string
+          prioridade?: number | null
           slack_username?: string | null
           status?: boolean | null
           telefone?: string | null
@@ -3935,6 +3955,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string
+          prioridade?: number | null
           slack_username?: string | null
           status?: boolean | null
           telefone?: string | null
@@ -6658,7 +6679,7 @@ export type Database = {
       due_day: "5" | "10" | "15" | "20" | "25"
       "etapa-do-bot": "apresentador" | "rapport" | "agendador" | "negociador"
       forma_de_pagamento: "Cartão" | "Pix" | "Dinheiro" | "Carimbo" | "Outro"
-      gender: "masculino" | "feminino"
+      gender: "masculino" | "feminino" | "outro"
       kit_type:
         | "kit_1"
         | "kit_2"
@@ -6691,6 +6712,10 @@ export type Database = {
         | "80+"
       sale_type: "matricula" | "outros"
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
+      status_sincronizacao:
+        | "nome_incorreto"
+        | "sincronizado"
+        | "aguardando_dados"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
       tipo_evento_sala:
@@ -6865,7 +6890,7 @@ export const Constants = {
       due_day: ["5", "10", "15", "20", "25"],
       "etapa-do-bot": ["apresentador", "rapport", "agendador", "negociador"],
       forma_de_pagamento: ["Cartão", "Pix", "Dinheiro", "Carimbo", "Outro"],
-      gender: ["masculino", "feminino"],
+      gender: ["masculino", "feminino", "outro"],
       kit_type: [
         "kit_1",
         "kit_2",
@@ -6902,6 +6927,11 @@ export const Constants = {
       ],
       sale_type: ["matricula", "outros"],
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
+      status_sincronizacao: [
+        "nome_incorreto",
+        "sincronizado",
+        "aguardando_dados",
+      ],
       student_status: ["pre_matricula", "matricula_completa"],
       tipo_atendimento: ["bot", "humano"],
       tipo_evento_sala: [
