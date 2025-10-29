@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -98,12 +98,14 @@ export default function AgendaProfessores() {
   const slots = useMemo(() => gerarSlots(), []);
 
   // Inicializar todos os professores como ativos por padrão
-  useMemo(() => {
-    const inicial: Record<string, boolean> = {};
-    professores.forEach(prof => {
-      inicial[prof.id] = true;
-    });
-    setProfessoresAtivos(inicial);
+  useEffect(() => {
+    if (professores.length > 0) {
+      const inicial: Record<string, boolean> = {};
+      professores.forEach(prof => {
+        inicial[prof.id] = true;
+      });
+      setProfessoresAtivos(inicial);
+    }
   }, [professores]);
 
   const proximaSemana = () => {
