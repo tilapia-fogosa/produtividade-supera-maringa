@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -72,29 +72,33 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   const handleSalvar = async () => {
     if (!activeUnit?.id) return;
 
-    // Criar evento para cada professor selecionado
-    const criacaoPromises = professoresIds.map(professorId =>
-      criarEvento.mutateAsync({
-        professorId,
-        tipoEvento,
-        titulo,
-        descricao,
-        data: tipoBloqueio === "pontual" ? dataSelecionada : undefined,
-        horarioInicio,
-        duracaoMinutos: duracao,
-        recorrente: tipoBloqueio === "periodico",
-        tipoRecorrencia: tipoBloqueio === "periodico" ? "semanal" : undefined,
-        diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
-        dataInicioRecorrencia,
-        dataFimRecorrencia,
-        unitId: activeUnit.id,
-      })
-    );
+    try {
+      // Criar evento para cada professor selecionado
+      const criacaoPromises = professoresIds.map(professorId =>
+        criarEvento.mutateAsync({
+          professorId,
+          tipoEvento,
+          titulo,
+          descricao,
+          data: tipoBloqueio === "pontual" ? dataSelecionada : undefined,
+          horarioInicio,
+          duracaoMinutos: duracao,
+          recorrente: tipoBloqueio === "periodico",
+          tipoRecorrencia: tipoBloqueio === "periodico" ? "semanal" : undefined,
+          diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
+          dataInicioRecorrencia,
+          dataFimRecorrencia,
+          unitId: activeUnit.id,
+        })
+      );
 
-    await Promise.all(criacaoPromises);
+      await Promise.all(criacaoPromises);
 
-    resetForm();
-    onOpenChange(false);
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Erro ao criar bloqueio de horário:", error);
+    }
   };
 
   // Gerar horários disponíveis
@@ -168,6 +172,9 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Bloquear Horário - Etapa {etapa}/6</DialogTitle>
+          <DialogDescription>
+            Configure o bloqueio de horário para um ou mais professores
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

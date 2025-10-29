@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useProfessores } from "@/hooks/use-professores";
 import { useAtualizarPrioridadeProfessores } from "@/hooks/use-atualizar-prioridade-professores";
@@ -50,6 +50,9 @@ export function GerenciarPrioridadeModal({ open, onOpenChange }: GerenciarPriori
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gerenciar Ordem de Prioridade</DialogTitle>
+          <DialogDescription>
+            Defina a ordem de prioridade dos professores
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
