@@ -40,10 +40,10 @@ const calcularDatasSemanais = (dataReferencia: Date): Date[] => {
   return datasSemanais;
 };
 
-// Gerar slots de horário (6h às 21h)
+// Gerar slots de horário (8h às 21h)
 const gerarSlots = () => {
   const slots: string[] = [];
-  for (let hora = 6; hora <= 21; hora++) {
+  for (let hora = 8; hora <= 21; hora++) {
     slots.push(`${String(hora).padStart(2, '0')}:00`);
     if (hora < 21) {
       slots.push(`${String(hora).padStart(2, '0')}:30`);
@@ -54,7 +54,7 @@ const gerarSlots = () => {
 
 const horarioParaSlot = (horario: string) => {
   const [hora, minuto] = horario.split(":").map(Number);
-  const horaRelativa = hora - 6;
+  const horaRelativa = hora - 8;
   return (horaRelativa * 2) + (minuto >= 30 ? 1 : 0);
 };
 
