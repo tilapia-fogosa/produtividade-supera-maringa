@@ -58,6 +58,13 @@ const horarioParaSlot = (horario: string) => {
   return (horaRelativa * 2) + (minuto >= 30 ? 1 : 0);
 };
 
+// Calcular quantos slots um evento ocupa
+const calcularDuracaoSlots = (horarioInicio: string, horarioFim: string): number => {
+  const slotInicio = horarioParaSlot(horarioInicio);
+  const slotFim = horarioParaSlot(horarioFim);
+  return slotFim - slotInicio;
+};
+
 // Cores por professor (até 10 professores)
 const coresProfessores = [
   { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-600' },
@@ -73,12 +80,29 @@ const coresProfessores = [
 ];
 
 // Bloco de evento na agenda
-const BlocoEvento = ({ evento, corIndex }: { evento: AgendaProfessor; corIndex: number }) => {
+const BlocoEvento = ({ 
+  evento, 
+  corIndex, 
+  duracaoSlots,
+  larguraPercent = 100
+}: { 
+  evento: AgendaProfessor; 
+  corIndex: number;
+  duracaoSlots: number;
+  larguraPercent?: number;
+}) => {
   const cor = coresProfessores[corIndex % coresProfessores.length];
-  const isAula = evento.tipo === 'aula';
+  const alturaSlot = 80; // min-h-[80px]
+  const altura = duracaoSlots * alturaSlot - 8; // -8 para padding da célula
   
   return (
-    <div className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-1 text-[10px] mb-1`}>
+    <div 
+      className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-1 text-[10px] overflow-hidden`}
+      style={{ 
+        height: `${altura}px`,
+        width: `${larguraPercent}%`
+      }}
+    >
       <div className="font-medium truncate">{evento.professor_nome}</div>
       <div className="truncate opacity-90">{evento.titulo}</div>
       <div className="flex items-center gap-1 opacity-75 text-[9px]">
@@ -253,31 +277,48 @@ export default function AgendaProfessores() {
                 
                 {/* Colunas dos dias */}
                 {diasSemana.map((dia) => {
-                  // Coletar eventos de todos os professores ativos para este slot/dia
-                  const todosEventos: Array<{ evento: AgendaProfessor; corIndex: number }> = [];
+                  // Coletar eventos que COMEÇAM neste slot
+                  const eventosIniciamAqui: Array<{
+                    evento: AgendaProfessor;
+                    corIndex: number;
+                    duracao: number;
+                  }> = [];
                   
                   professoresFiltrados.forEach((professor, profIdx) => {
                     const agenda = agendaPorProfessor?.[professor.id];
-                    const eventosNoDia = agenda?.eventos.filter(e => {
-                      const mesmoDia = e.dia_semana === dia;
+                    if (!agenda) return;
+                    
+                    const eventosNoDia = agenda.eventos.filter(e => {
+                      if (e.dia_semana !== dia) return false;
                       const slotEvento = horarioParaSlot(e.horario_inicio);
-                      return mesmoDia && slotEvento === slotIdx;
-                    }) || [];
+                      return slotIdx === slotEvento;
+                    });
                     
                     eventosNoDia.forEach(evento => {
-                      todosEventos.push({ evento, corIndex: profIdx });
+                      const duracao = calcularDuracaoSlots(
+                        evento.horario_inicio,
+                        evento.horario_fim
+                      );
+                      eventosIniciamAqui.push({ evento, corIndex: profIdx, duracao });
                     });
                   });
 
+                  const numEventos = eventosIniciamAqui.length;
+                  const larguraEvento = numEventos > 0 ? 100 / numEventos : 100;
+
                   return (
-                    <div key={`${dia}-${slot}`} className="p-1 bg-muted/20">
-                      {todosEventos.map(({ evento, corIndex }) => (
-                        <BlocoEvento 
-                          key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}`} 
-                          evento={evento}
-                          corIndex={corIndex}
-                        />
-                      ))}
+                    <div key={`${dia}-${slot}`} className="relative p-1 bg-muted/20">
+                      <div className="flex gap-1 h-full">
+                        {eventosIniciamAqui.map(({ evento, corIndex, duracao }) => (
+                          <BlocoEvento 
+                            key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}-${slot}`}
+                            evento={evento}
+                            corIndex={corIndex}
+                            duracaoSlots={duracao}
+                            larguraPercent={larguraEvento}
+                          />
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
