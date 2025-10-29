@@ -58,21 +58,35 @@ const horarioParaSlot = (horario: string) => {
   return (horaRelativa * 2) + (minuto >= 30 ? 1 : 0);
 };
 
+// Cores por professor (até 10 professores)
+const coresProfessores = [
+  { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-600' },
+  { bg: 'bg-green-500', text: 'text-white', border: 'border-green-600' },
+  { bg: 'bg-purple-500', text: 'text-white', border: 'border-purple-600' },
+  { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600' },
+  { bg: 'bg-pink-500', text: 'text-white', border: 'border-pink-600' },
+  { bg: 'bg-cyan-500', text: 'text-white', border: 'border-cyan-600' },
+  { bg: 'bg-amber-500', text: 'text-white', border: 'border-amber-600' },
+  { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600' },
+  { bg: 'bg-teal-500', text: 'text-white', border: 'border-teal-600' },
+  { bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-600' },
+];
+
 // Bloco de evento na agenda
-const BlocoEvento = ({ evento }: { evento: AgendaProfessor }) => {
+const BlocoEvento = ({ evento, corIndex }: { evento: AgendaProfessor; corIndex: number }) => {
+  const cor = coresProfessores[corIndex % coresProfessores.length];
   const isAula = evento.tipo === 'aula';
-  const bgColor = isAula ? 'bg-blue-100 border-blue-300' : 'bg-orange-100 border-orange-300';
-  const textColor = isAula ? 'text-blue-900' : 'text-orange-900';
   
   return (
-    <div className={`${bgColor} border rounded-md p-2 text-xs ${textColor} min-h-[60px]`}>
-      <div className="font-medium mb-1">{evento.titulo}</div>
-      <div className="flex items-center gap-1 text-[10px] opacity-75">
-        <Clock className="w-3 h-3" />
-        <span>{evento.horario_inicio} - {evento.horario_fim}</span>
+    <div className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-1 text-[10px] mb-1`}>
+      <div className="font-medium truncate">{evento.professor_nome}</div>
+      <div className="truncate opacity-90">{evento.titulo}</div>
+      <div className="flex items-center gap-1 opacity-75 text-[9px]">
+        <Clock className="w-2.5 h-2.5" />
+        <span>{evento.horario_inicio}-{evento.horario_fim}</span>
       </div>
       {evento.sala && (
-        <div className="text-[10px] opacity-75 mt-1">Sala: {evento.sala}</div>
+        <div className="text-[9px] opacity-75 truncate">Sala: {evento.sala}</div>
       )}
     </div>
   );
@@ -199,12 +213,25 @@ export default function AgendaProfessores() {
         </div>
       </Card>
 
-      {/* Grid de Agenda */}
+      {/* Grid de Agenda Unificada */}
       <Card className="p-4 overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className="min-w-[1000px]">
+          {/* Legenda de Cores */}
+          <div className="flex flex-wrap gap-3 mb-4 pb-4 border-b">
+            {professoresFiltrados.map((prof, idx) => {
+              const cor = coresProfessores[idx % coresProfessores.length];
+              return (
+                <div key={prof.id} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded ${cor.bg} ${cor.border} border`} />
+                  <span className="text-sm font-medium">{prof.nome}</span>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Header dos dias */}
           <div className="grid grid-cols-7 gap-2 mb-2">
-            <div className="font-medium text-sm">Horário</div>
+            <div className="font-medium text-sm sticky left-0 bg-background">Horário</div>
             {diasSemana.map((dia, idx) => (
               <div key={dia} className="font-medium text-sm text-center">
                 <div>{diasSemanaNomes[dia]}</div>
@@ -215,46 +242,48 @@ export default function AgendaProfessores() {
             ))}
           </div>
 
-          {/* Grid para cada professor */}
-          {professoresFiltrados.map(professor => {
-            const agenda = agendaPorProfessor?.[professor.id];
-            
-            return (
-              <div key={professor.id} className="mb-6 border-t pt-4">
-                <h3 className="font-semibold text-sm mb-3">{professor.nome}</h3>
-                
-                {/* Grid de horários */}
-                <div className="space-y-1">
-                  {slots.map((slot, slotIdx) => (
-                    <div key={slot} className="grid grid-cols-7 gap-2 min-h-[40px]">
-                      {/* Coluna de horário */}
-                      <div className="text-xs text-muted-foreground flex items-center">
-                        {slot}
-                      </div>
-                      
-                      {/* Colunas dos dias */}
-                      {diasSemana.map((dia) => {
-                        // Encontrar eventos neste slot e dia
-                        const eventosNoDia = agenda?.eventos.filter(e => {
-                          const mesmoDia = e.dia_semana === dia;
-                          const slotEvento = horarioParaSlot(e.horario_inicio);
-                          return mesmoDia && slotEvento === slotIdx;
-                        }) || [];
-
-                        return (
-                          <div key={`${dia}-${slot}`} className="relative">
-                            {eventosNoDia.map(evento => (
-                              <BlocoEvento key={evento.evento_id || evento.turma_id} evento={evento} />
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+          {/* Grade Unificada de Horários */}
+          <div className="space-y-0 border-t">
+            {slots.map((slot, slotIdx) => (
+              <div key={slot} className="grid grid-cols-7 gap-2 border-b min-h-[80px]">
+                {/* Coluna de horário */}
+                <div className="text-xs font-medium text-muted-foreground flex items-start pt-2 sticky left-0 bg-background border-r">
+                  {slot}
                 </div>
+                
+                {/* Colunas dos dias */}
+                {diasSemana.map((dia) => {
+                  // Coletar eventos de todos os professores ativos para este slot/dia
+                  const todosEventos: Array<{ evento: AgendaProfessor; corIndex: number }> = [];
+                  
+                  professoresFiltrados.forEach((professor, profIdx) => {
+                    const agenda = agendaPorProfessor?.[professor.id];
+                    const eventosNoDia = agenda?.eventos.filter(e => {
+                      const mesmoDia = e.dia_semana === dia;
+                      const slotEvento = horarioParaSlot(e.horario_inicio);
+                      return mesmoDia && slotEvento === slotIdx;
+                    }) || [];
+                    
+                    eventosNoDia.forEach(evento => {
+                      todosEventos.push({ evento, corIndex: profIdx });
+                    });
+                  });
+
+                  return (
+                    <div key={`${dia}-${slot}`} className="p-1 bg-muted/20">
+                      {todosEventos.map(({ evento, corIndex }) => (
+                        <BlocoEvento 
+                          key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}`} 
+                          evento={evento}
+                          corIndex={corIndex}
+                        />
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            ))}
+          </div>
 
           {professoresFiltrados.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
