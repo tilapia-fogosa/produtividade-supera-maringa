@@ -39,10 +39,6 @@ interface AulaZeroData {
   avaliacao_abaco: string;
   avaliacao_ah: string;
   pontos_atencao: string;
-  genero: 'masculino' | 'feminino' | 'outro';
-  data_nascimento: string;
-  whatsapp_contato: string;
-  responsavel: string;
 }
 
 const AulaZero = () => {
@@ -60,11 +56,7 @@ const AulaZero = () => {
       motivo_procura: '',
       avaliacao_abaco: '',
       avaliacao_ah: '',
-      pontos_atencao: '',
-      genero: 'masculino',
-      data_nascimento: '',
-      whatsapp_contato: '',
-      responsavel: 'o próprio'
+      pontos_atencao: ''
     }
   });
 
@@ -222,11 +214,7 @@ const AulaZero = () => {
           motivo_procura: data.motivo_procura,
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
-          pontos_atencao: data.pontos_atencao,
-          genero: data.genero,
-          data_nascimento: data.data_nascimento || null,
-          whatapp_contato: data.whatsapp_contato,
-          responsavel: data.responsavel
+          pontos_atencao: data.pontos_atencao
         })
         .eq('id', data.alunoId);
 
@@ -318,74 +306,6 @@ const AulaZero = () => {
                 </FormItem>
               )}
             />
-
-            {/* Campos em linha: Gênero, Data Nascimento, WhatsApp e Responsável */}
-            <div className="grid grid-cols-4 gap-4">
-              <FormField
-                control={form.control}
-                name="genero"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gênero *</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Gênero" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="masculino">Masculino</SelectItem>
-                          <SelectItem value="feminino">Feminino</SelectItem>
-                          <SelectItem value="outro">Outro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="data_nascimento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data Nascimento</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="whatsapp_contato"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>WhatsApp *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(00) 00000-0000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="responsavel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsável *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Responsável" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             {/* Percepção do coordenador */}
             <FormField
