@@ -1,7 +1,7 @@
 @media print {
   @page {
-    size: landscape;
-    margin: 1cm;
+    size: A4 landscape;
+    margin: 0;
   }
   
   body {
@@ -9,6 +9,23 @@
     padding: 0;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Wrapper com dimensões fixas para A4 landscape */
+  .ficha-print-wrapper {
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    padding: 10mm;
+    box-sizing: border-box;
+    transform: scale(1);
+    transform-origin: top left;
+  }
+
+  /* Reset de escala para garantir 100% */
+  html {
+    zoom: 1;
+    -webkit-text-size-adjust: 100%;
   }
   
   .no-print {
@@ -244,8 +261,14 @@
   font-family: Arial, sans-serif;
   max-width: 100%;
   margin: 0 auto;
-  padding: 8px; /* Reduzido de 10px para 8px */
+  padding: 8px;
   font-size: 13pt;
+}
+
+/* Wrapper para controle de dimensões na impressão */
+.ficha-print-wrapper {
+  width: 100%;
+  height: auto;
 }
 
 /* Estilos do cabeçalho */
@@ -284,10 +307,16 @@
 }
 
 .ficha-mes-ano h2 {
-  font-size: 16pt; /* Reduzido de 18pt para 16pt */
+  font-size: 16pt;
   font-weight: bold;
   margin: 0;
   text-transform: capitalize;
+}
+
+@media print {
+  .ficha-mes-ano h2 {
+    font-size: 16pt;
+  }
 }
 
 .ficha-navegacao {
@@ -316,18 +345,25 @@
 .ficha-tabela {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 10px; /* Reduzido de 15px para 10px */
+  margin-bottom: 10px;
   table-layout: fixed;
 }
 
-/* Configuração base para todas as células - bordas finas */
+@media print {
+  .ficha-tabela {
+    width: 277mm; /* Largura total = 297mm - 20mm de margens */
+  }
+}
+
+/* Configuração base para todas as células - bordas finas com altura fixa */
 .ficha-tabela th,
 .ficha-tabela td {
   border: 0.5px solid #999;
-  padding: 2px; /* Reduzido de 3px para 2px */
+  padding: 1mm;
   vertical-align: middle;
   text-align: center;
-  height: 20px; /* Reduzido ligeiramente de 22px para 20px */
+  height: 6mm;
+  line-height: 1.2;
 }
 
 /* As bordas laterais das colunas principais são grossas */
@@ -423,9 +459,9 @@
   border-right: 2px solid #ea384c !important;
 }
 
-/* Dimensionamento das colunas */
+/* Dimensionamento das colunas com valores fixos em mm */
 .ficha-coluna-nome {
-  width: 20%;
+  width: 55mm;
   border-right: 2px solid #000;
 }
 
@@ -435,7 +471,7 @@
 
 /* Subcolunas de falta ajustadas para mostrar apenas o dia */
 .ficha-subcoluna-falta {
-  width: 2.8%; 
+  width: 7mm;
   font-size: 11pt;
   font-weight: bold;
   border-left: 0.5px solid #999;
@@ -447,7 +483,7 @@
 }
 
 .ficha-subcoluna {
-  width: 2.5%;
+  width: 7.2mm;
   font-size: 9pt;
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
@@ -457,7 +493,14 @@
 .semana-header,
 .faltas-header {
   font-weight: bold;
-  font-size: 13pt;
+  font-size: 10pt;
+}
+
+@media print {
+  .semana-header,
+  .faltas-header {
+    font-size: 10pt;
+  }
 }
 
 /* Estilos da célula do nome do aluno */
@@ -484,10 +527,16 @@
 }
 
 .ficha-aluno-nome {
-  font-size: 13pt;
+  font-size: 11pt;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media print {
+  .ficha-aluno-nome {
+    font-size: 11pt;
+  }
 }
 
 /* Estilos da coluna de faltas */
