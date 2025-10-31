@@ -38,10 +38,10 @@ const Fichas = () => {
     }
   }, [error]);
 
-  // Ordenar as turmas por nome
-  const turmasOrdenadas = [...turmasDetalhes].sort((a, b) => 
-    a.turma.nome.localeCompare(b.turma.nome)
-  );
+  // Filtrar turmas com pelo menos 1 aluno e ordenar por nome
+  const turmasOrdenadas = turmasDetalhes
+    .filter(item => item.alunos.length > 0)
+    .sort((a, b) => a.turma.nome.localeCompare(b.turma.nome));
 
   // Array de meses para o seletor
   const meses = [
