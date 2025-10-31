@@ -2654,7 +2654,6 @@ export type Database = {
           tipo_evento: string
           tipo_recorrencia: string | null
           titulo: string
-          unit_id: string
           updated_at: string | null
         }
         Insert: {
@@ -2675,7 +2674,6 @@ export type Database = {
           tipo_evento: string
           tipo_recorrencia?: string | null
           titulo: string
-          unit_id: string
           updated_at?: string | null
         }
         Update: {
@@ -2696,7 +2694,6 @@ export type Database = {
           tipo_evento?: string
           tipo_recorrencia?: string | null
           titulo?: string
-          unit_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -2713,13 +2710,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
-          },
-          {
-            foreignKeyName: "eventos_professor_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
           },
         ]
       }

@@ -14,7 +14,6 @@ export type CriarEventoProfessorParams = {
   diaSemana?: string;
   dataInicioRecorrencia?: Date;
   dataFimRecorrencia?: Date;
-  unitId: string | null;
 };
 
 export const useCriarEventoProfessor = () => {
@@ -38,7 +37,6 @@ export const useCriarEventoProfessor = () => {
         horario_inicio: params.horarioInicio,
         horario_fim: horarioFim,
         recorrente: params.recorrente,
-        unit_id: params.unitId,
         created_by: userId
       };
       

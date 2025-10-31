@@ -93,7 +93,6 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
           diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
           dataInicioRecorrencia,
           dataFimRecorrencia,
-          unitId: null, // Bloqueios são globais, acessíveis a todas as unidades
         })
       );
 
