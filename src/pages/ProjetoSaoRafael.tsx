@@ -57,21 +57,19 @@ const ProjetoSaoRafael = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-azul-500">Projeto São Rafael - Devolutiva</h1>
         
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="w-full sm:w-auto">
-            <Select value={mesAnoSelecionado} onValueChange={setMesAnoSelecionado}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Selecione o mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {gerarOpcoesMeses().map(opcao => (
-                  <SelectItem key={opcao.valor} value={opcao.valor}>
-                    {opcao.texto}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+          <Select value={mesAnoSelecionado} onValueChange={setMesAnoSelecionado}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Selecione o mês" />
+            </SelectTrigger>
+            <SelectContent>
+              {gerarOpcoesMeses().map(opcao => (
+                <SelectItem key={opcao.valor} value={opcao.valor}>
+                  {opcao.texto}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
           <ObservacoesModal
             textoGeral={textoGeral}
