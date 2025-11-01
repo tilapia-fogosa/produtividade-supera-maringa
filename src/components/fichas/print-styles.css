@@ -32,9 +32,13 @@
     box-sizing: border-box !important;
     transform: none !important;
     transform-origin: top left !important;
-    page-break-after: always !important;
     page-break-inside: avoid !important;
     overflow: hidden !important;
+  }
+  
+  /* Quebra de página apenas entre fichas (não na última) */
+  .ficha-print-wrapper:not(:last-of-type) {
+    page-break-after: always !important;
   }
   
   .ficha-container {
