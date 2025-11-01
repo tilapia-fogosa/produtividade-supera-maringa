@@ -4,28 +4,63 @@
     margin: 0;
   }
   
-  body {
+  * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   /* Wrapper com dimensões fixas para A4 landscape */
   .ficha-print-wrapper {
-    width: 297mm;
-    height: 210mm;
-    margin: 0;
-    padding: 10mm;
-    box-sizing: border-box;
-    transform: scale(1);
-    transform-origin: top left;
+    width: 297mm !important;
+    height: 210mm !important;
+    min-width: 297mm !important;
+    min-height: 210mm !important;
+    max-width: 297mm !important;
+    max-height: 210mm !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+    transform-origin: top left !important;
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+    overflow: hidden !important;
+  }
+  
+  .ficha-container {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 277mm !important;
+    max-height: 190mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
   }
 
   /* Reset de escala para garantir 100% */
   html {
-    zoom: 1;
-    -webkit-text-size-adjust: 100%;
+    zoom: 1 !important;
+    -webkit-text-size-adjust: 100% !important;
+    font-size: 12pt !important;
+  }
+  
+  /* Tabela com largura fixa para A4 landscape */
+  .ficha-tabela {
+    width: 277mm !important;
+    max-width: 277mm !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
   }
   
   .no-print {
@@ -42,14 +77,13 @@
     width: 100%;
   }
   
-  /* Garantir que cada ficha comece em uma nova página */
-  .ficha-container {
-    page-break-after: always;
+  /* Configurações de quebra de página */
+  .print\:page-break-after {
+    page-break-after: always !important;
   }
   
-  /* Exceto a última ficha */
-  .ficha-container:last-of-type {
-    page-break-after: auto;
+  .ficha-print-wrapper:last-of-type {
+    page-break-after: auto !important;
   }
 
   /* Garantindo que TODAS as bordas internas sejam finas durante a impressão */
@@ -347,12 +381,6 @@
   border-collapse: collapse;
   margin-bottom: 10px;
   table-layout: fixed;
-}
-
-@media print {
-  .ficha-tabela {
-    width: 277mm; /* Largura total = 297mm - 20mm de margens */
-  }
 }
 
 /* Configuração base para todas as células - bordas finas com altura fixa */
