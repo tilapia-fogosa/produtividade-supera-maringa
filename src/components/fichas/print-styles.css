@@ -310,19 +310,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px; /* Reduzido de 18px para 12px */
+  margin-bottom: 4px;
   border-bottom: 1px solid #000;
-  padding-bottom: 8px; /* Reduzido de 12px para 8px */
+  padding-bottom: 4px;
 }
 
 .ficha-info {
   display: flex;
-  gap: 18px; /* Reduzido de 24px para 18px */
+  gap: 12px;
 }
 
 .ficha-campo {
   display: flex;
-  gap: 6px; /* Reduzido de 8px para 6px */
+  gap: 4px;
 }
 
 .ficha-label {
@@ -337,11 +337,11 @@
 /* Título do mês e ano */
 .ficha-mes-ano {
   text-align: center;
-  margin-bottom: 10px; /* Reduzido de 15px para 10px */
+  margin-bottom: 4px;
 }
 
 .ficha-mes-ano h2 {
-  font-size: 16pt;
+  font-size: 14pt;
   font-weight: bold;
   margin: 0;
   text-transform: capitalize;
@@ -349,7 +349,7 @@
 
 @media print {
   .ficha-mes-ano h2 {
-    font-size: 16pt;
+    font-size: 14pt;
   }
 }
 
@@ -379,7 +379,7 @@
 .ficha-tabela {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   table-layout: fixed;
 }
 
@@ -387,11 +387,20 @@
 .ficha-tabela th,
 .ficha-tabela td {
   border: 0.5px solid #999;
-  padding: 1mm;
+  padding: 0.5mm;
   vertical-align: middle;
   text-align: center;
-  height: 6mm;
-  line-height: 1.2;
+  height: 4.5mm;
+  line-height: 1;
+}
+
+@media print {
+  .ficha-tabela th,
+  .ficha-tabela td {
+    height: 4.5mm !important;
+    padding: 0.5mm !important;
+    line-height: 1 !important;
+  }
 }
 
 /* As bordas laterais das colunas principais são grossas */
@@ -521,13 +530,13 @@
 .semana-header,
 .faltas-header {
   font-weight: bold;
-  font-size: 10pt;
+  font-size: 9pt;
 }
 
 @media print {
   .semana-header,
   .faltas-header {
-    font-size: 10pt;
+    font-size: 9pt;
   }
 }
 
@@ -535,27 +544,27 @@
 .ficha-celula-nome {
   display: flex;
   align-items: center;
-  gap: 6px; /* Reduzido de 8px para 6px */
+  gap: 4px;
   text-align: left !important;
-  padding-left: 4px !important; /* Reduzido de 6px para 4px */
+  padding-left: 2px !important;
 }
 
 .ficha-aluno-numero {
   font-weight: bold;
   text-align: center;
   background-color: #eee;
-  width: 20px; /* Reduzido de 22px para 20px */
-  height: 20px; /* Reduzido de 22px para 20px */
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   flex-shrink: 0;
-  font-size: 9pt;
+  font-size: 8pt;
 }
 
 .ficha-aluno-nome {
-  font-size: 11pt;
+  font-size: 9pt;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -563,7 +572,13 @@
 
 @media print {
   .ficha-aluno-nome {
-    font-size: 11pt;
+    font-size: 9pt;
+  }
+  
+  .ficha-aluno-numero {
+    width: 16px;
+    height: 16px;
+    font-size: 8pt;
   }
 }
 
@@ -573,7 +588,7 @@
 }
 
 .falta-campo {
-  height: 20px; /* Reduzido de 22px para 20px */
+  height: 14px;
   width: 100%;
 }
 
@@ -583,32 +598,58 @@
 }
 
 .semana-campo-valor {
-  height: 20px; /* Reduzido de 22px para 20px */
+  height: 14px;
   width: 100%;
   background-color: #fff;
 }
 
+@media print {
+  .falta-campo,
+  .semana-campo-valor {
+    height: 14px !important;
+  }
+}
+
 /* Título da seção de reposições */
 .ficha-reposicoes-titulo {
-  margin: 18px 0 12px 0; /* Reduzido de 24px 0 16px 0 para 18px 0 12px 0 */
-  padding: 6px 0; /* Reduzido de 8px 0 para 6px 0 */
+  margin: 4px 0 4px 0;
+  padding: 3px 0;
   text-align: center;
-  font-size: 16pt; /* Reduzido de 18pt para 16pt */
+  font-size: 12pt;
   font-weight: bold;
   border-top: 1px dashed #999;
   border-bottom: 1px dashed #999;
 }
 
+@media print {
+  .ficha-reposicoes-titulo {
+    margin: 4px 0 4px 0 !important;
+    padding: 3px 0 !important;
+    font-size: 12pt !important;
+  }
+}
+
 /* Rodapé */
 .ficha-rodape {
   text-align: center;
-  margin-top: 18px; /* Reduzido de 24px para 18px */
-  padding-top: 8px; /* Reduzido de 12px para 8px */
+  margin-top: 4px;
+  padding-top: 4px;
   border-top: 1px solid #ccc;
 }
 
 .ficha-logo {
   font-weight: bold;
   font-style: italic;
-  font-size: 12pt;
+  font-size: 10pt;
+}
+
+@media print {
+  .ficha-rodape {
+    margin-top: 4px !important;
+    padding-top: 4px !important;
+  }
+  
+  .ficha-logo {
+    font-size: 10pt !important;
+  }
 }
