@@ -126,7 +126,7 @@ const BlocoEvento = ({
       
       {/* Botões de ação no rodapé - apenas para eventos (não aulas) */}
       {isEvento && (
-        <div className="flex gap-1 justify-end mt-1 border-t border-white/20 pt-1">
+        <div className="flex flex-col gap-1 items-end mt-1 border-t border-white/20 pt-1">
           <Button
             size="icon"
             variant="ghost"
