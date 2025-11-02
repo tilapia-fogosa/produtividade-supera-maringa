@@ -175,40 +175,65 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
     }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Bloquear Horário - Etapa {etapa}/6</DialogTitle>
+          <DialogTitle>Bloquear Horário - Etapa {etapa}/3</DialogTitle>
           <DialogDescription>
             Configure o bloqueio de horário para um ou mais professores
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Etapa 1: Selecionar Professores */}
+          {/* Etapa 1: Selecionar Professores e Tipo de Bloqueio */}
           {etapa === 1 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Selecione os Professores</Label>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={selecionarTodos}>
-                    Todos
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Selecione os Professores</Label>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={selecionarTodos}>
+                      Todos
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={desmarcarTodos}>
+                      Nenhum
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                  {professores.map((prof) => (
+                    <label key={prof.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={professoresIds.includes(prof.id)}
+                        onChange={() => toggleProfessor(prof.id)}
+                        className="cursor-pointer"
+                      />
+                      <span className="text-sm">{prof.nome}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <Label>Tipo de Bloqueio</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant={tipoBloqueio === "pontual" ? "default" : "outline"}
+                    onClick={() => setTipoBloqueio("pontual")}
+                    className="h-20"
+                  >
+                    Pontual
+                    <span className="text-xs block mt-1">Data específica</span>
                   </Button>
-                  <Button size="sm" variant="outline" onClick={desmarcarTodos}>
-                    Nenhum
+                  <Button
+                    variant={tipoBloqueio === "periodico" ? "default" : "outline"}
+                    onClick={() => setTipoBloqueio("periodico")}
+                    className="h-20"
+                  >
+                    Periódico
+                    <span className="text-xs block mt-1">Recorrência semanal</span>
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border rounded-lg p-3">
-                {professores.map((prof) => (
-                  <label key={prof.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded">
-                    <input
-                      type="checkbox"
-                      checked={professoresIds.includes(prof.id)}
-                      onChange={() => toggleProfessor(prof.id)}
-                      className="cursor-pointer"
-                    />
-                    <span className="text-sm">{prof.nome}</span>
-                  </label>
-                ))}
-              </div>
+              
               <div className="flex justify-end">
                 <Button onClick={handleProximo} disabled={professoresIds.length === 0}>
                   Próximo <ChevronRight className="ml-2 h-4 w-4" />
@@ -217,100 +242,115 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
             </div>
           )}
 
-          {/* Etapa 2: Tipo de Bloqueio */}
+          {/* Etapa 2: Data/Dia, Horário e Duração */}
           {etapa === 2 && (
-            <div className="space-y-4">
-              <Label>Tipo de Bloqueio</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant={tipoBloqueio === "pontual" ? "default" : "outline"}
-                  onClick={() => setTipoBloqueio("pontual")}
-                  className="h-20"
-                >
-                  Pontual
-                  <span className="text-xs block mt-1">Data específica</span>
-                </Button>
-                <Button
-                  variant={tipoBloqueio === "periodico" ? "default" : "outline"}
-                  onClick={() => setTipoBloqueio("periodico")}
-                  className="h-20"
-                >
-                  Periódico
-                  <span className="text-xs block mt-1">Recorrência semanal</span>
-                </Button>
-              </div>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleVoltar}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-                </Button>
-                <Button onClick={handleProximo}>
-                  Próximo <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+            <div className="space-y-6">
+              {/* Data ou Dia da Semana */}
+              <div className="space-y-4">
+                {tipoBloqueio === "pontual" ? (
+                  <>
+                    <Label>Selecione a Data</Label>
+                    <Calendar
+                      mode="single"
+                      selected={dataSelecionada}
+                      onSelect={setDataSelecionada}
+                      locale={pt}
+                      className="rounded-md border w-full"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Label>Selecione o Dia da Semana</Label>
+                    <Select value={diaSemana} onValueChange={setDiaSemana}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolha o dia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {diasSemana.map((dia) => (
+                          <SelectItem key={dia.valor} value={dia.valor}>
+                            {dia.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-          {/* Etapa 3: Selecionar Data ou Dia da Semana */}
-          {etapa === 3 && (
-            <div className="space-y-4">
-              {tipoBloqueio === "pontual" ? (
-                <>
-                  <Label>Selecione a Data</Label>
-                  <Calendar
-                    mode="single"
-                    selected={dataSelecionada}
-                    onSelect={setDataSelecionada}
-                    locale={pt}
-                    className="rounded-md border"
-                  />
-                </>
-              ) : (
-                <>
-                  <Label>Selecione o Dia da Semana</Label>
-                  <Select value={diaSemana} onValueChange={setDiaSemana}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm">Data Início (opcional)</Label>
+                        <Calendar
+                          mode="single"
+                          selected={dataInicioRecorrencia}
+                          onSelect={setDataInicioRecorrencia}
+                          locale={pt}
+                          className="rounded-md border text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Data Fim (opcional)</Label>
+                        <Calendar
+                          mode="single"
+                          selected={dataFimRecorrencia}
+                          onSelect={setDataFimRecorrencia}
+                          locale={pt}
+                          className="rounded-md border text-xs"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Horário e Duração */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Horário de Início</Label>
+                  <Select value={horarioInicio} onValueChange={setHorarioInicio}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Escolha o dia" />
+                      <SelectValue placeholder="Horário" />
                     </SelectTrigger>
                     <SelectContent>
-                      {diasSemana.map((dia) => (
-                        <SelectItem key={dia.valor} value={dia.valor}>
-                          {dia.label}
+                      {horariosDisponiveis.map((horario) => (
+                        <SelectItem key={horario} value={horario}>
+                          {horario}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label>Data Início (opcional)</Label>
-                      <Calendar
-                        mode="single"
-                        selected={dataInicioRecorrencia}
-                        onSelect={setDataInicioRecorrencia}
-                        locale={pt}
-                        className="rounded-md border"
-                      />
-                    </div>
-                    <div>
-                      <Label>Data Fim (opcional)</Label>
-                      <Calendar
-                        mode="single"
-                        selected={dataFimRecorrencia}
-                        onSelect={setDataFimRecorrencia}
-                        locale={pt}
-                        className="rounded-md border"
-                      />
-                    </div>
-                  </div>
-                </>
+                <div>
+                  <Label>Duração</Label>
+                  <Select value={String(duracao)} onValueChange={(v) => setDuracao(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Duração" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {duracoesFiltradas.map((opcao) => (
+                        <SelectItem key={opcao.valor} value={String(opcao.valor)}>
+                          {opcao.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {horarioInicio && (
+                <p className="text-sm text-muted-foreground">
+                  Horário completo: {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}
+                </p>
               )}
+
               <div className="flex justify-between">
                 <Button variant="outline" onClick={handleVoltar}>
                   <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
                 </Button>
                 <Button 
-                  onClick={handleProximo} 
-                  disabled={tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana}
+                  onClick={handleProximo}
+                  disabled={
+                    (tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana) || 
+                    !horarioInicio
+                  }
                 >
                   Próximo <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -318,69 +358,8 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
             </div>
           )}
 
-          {/* Etapa 4: Selecionar Horário */}
-          {etapa === 4 && (
-            <div className="space-y-4">
-              <div>
-                <Label>Horário de Início</Label>
-                <Select value={horarioInicio} onValueChange={setHorarioInicio}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o horário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {horariosDisponiveis.map((horario) => (
-                      <SelectItem key={horario} value={horario}>
-                        {horario}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleVoltar}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-                </Button>
-                <Button onClick={handleProximo} disabled={!horarioInicio}>
-                  Próximo <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Etapa 5: Selecionar Duração */}
-          {etapa === 5 && (
-            <div className="space-y-4">
-              <Label>Duração do Bloqueio</Label>
-              <Select value={String(duracao)} onValueChange={(v) => setDuracao(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a duração" />
-                </SelectTrigger>
-                <SelectContent>
-                  {duracoesFiltradas.map((opcao) => (
-                    <SelectItem key={opcao.valor} value={String(opcao.valor)}>
-                      {opcao.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {horarioInicio && (
-                <p className="text-sm text-muted-foreground">
-                  Horário: {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}
-                </p>
-              )}
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleVoltar}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-                </Button>
-                <Button onClick={handleProximo}>
-                  Próximo <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Etapa 6: Tipo de Evento e Detalhes */}
-          {etapa === 6 && (
+          {/* Etapa 3: Tipo de Evento e Detalhes */}
+          {etapa === 3 && (
             <div className="space-y-4">
               <div>
                 <Label>Tipo de Evento</Label>
