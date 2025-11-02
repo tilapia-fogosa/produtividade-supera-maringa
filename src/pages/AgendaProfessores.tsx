@@ -105,30 +105,32 @@ const BlocoEvento = ({
   
   return (
     <div 
-      className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0 group`}
+      className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0 group flex flex-col`}
       style={{ 
         height: `${alturaTotal}px`,
         width: `${larguraPercent}%`,
         zIndex: 10
       }}
     >
-      <div className="font-semibold truncate">{evento.professor_nome}</div>
-      <div className="truncate opacity-90">{evento.titulo}</div>
-      <div className="flex items-center gap-1 opacity-75 text-xs mt-1">
-        <Clock className="w-3 h-3" />
-        <span>{evento.horario_inicio}-{evento.horario_fim}</span>
+      <div className="flex-1">
+        <div className="font-semibold truncate">{evento.professor_nome}</div>
+        <div className="truncate opacity-90">{evento.titulo}</div>
+        <div className="flex items-center gap-1 opacity-75 text-xs mt-1">
+          <Clock className="w-3 h-3" />
+          <span>{evento.horario_inicio}-{evento.horario_fim}</span>
+        </div>
+        {evento.sala && (
+          <div className="text-xs opacity-75 truncate mt-0.5">Sala: {evento.sala}</div>
+        )}
       </div>
-      {evento.sala && (
-        <div className="text-xs opacity-75 truncate mt-0.5">Sala: {evento.sala}</div>
-      )}
       
-      {/* Botões de ação - apenas para eventos (não aulas) */}
+      {/* Botões de ação no rodapé - apenas para eventos (não aulas) */}
       {isEvento && (
-        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 justify-end mt-1 border-t border-white/20 pt-1">
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700"
+            className="h-6 w-6 bg-white/20 hover:bg-white/30 text-white"
             onClick={(e) => {
               e.stopPropagation();
               onEditar?.();
@@ -139,7 +141,7 @@ const BlocoEvento = ({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 bg-white/90 hover:bg-white text-red-600 hover:text-red-700"
+            className="h-6 w-6 bg-white/20 hover:bg-white/30 text-white"
             onClick={(e) => {
               e.stopPropagation();
               onExcluir?.();
