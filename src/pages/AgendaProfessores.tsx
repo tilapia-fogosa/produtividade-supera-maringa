@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Settings, Pencil, Trash2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Settings, Pencil, Trash2, User, MapPin, FileText } from "lucide-react";
 import { useAgendaProfessores, AgendaProfessor } from "@/hooks/use-agenda-professores";
 import { useProfessores } from "@/hooks/use-professores";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
@@ -13,6 +13,7 @@ import { GerenciarPrioridadeModal } from "@/components/professores/GerenciarPrio
 import { EditarEventoProfessorModal } from "@/components/professores/EditarEventoProfessorModal";
 import { useExcluirEventoProfessor } from "@/hooks/use-excluir-evento-professor";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -90,7 +91,8 @@ const BlocoEvento = ({
   duracaoSlots,
   larguraPercent = 100,
   onEditar,
-  onExcluir
+  onExcluir,
+  datasSemanais
 }: { 
   evento: AgendaProfessor; 
   cor: { bg: string; text: string; border: string };
@@ -98,60 +100,120 @@ const BlocoEvento = ({
   larguraPercent?: number;
   onEditar?: () => void;
   onExcluir?: () => void;
+  datasSemanais: Date[];
 }) => {
   const alturaSlot = 80;
   const alturaTotal = duracaoSlots * alturaSlot - 4;
   const isEvento = evento.tipo === 'evento' && evento.evento_id;
   
+  const diasSemanaMap: Record<string, number> = {
+    segunda: 0,
+    terca: 1,
+    quarta: 2,
+    quinta: 3,
+    sexta: 4,
+    sabado: 5
+  };
+  
+  const dataEvento = evento.data || (evento.dia_semana ? datasSemanais[diasSemanaMap[evento.dia_semana]] : null);
+  
   return (
-    <div 
-      className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0 group flex flex-col`}
-      style={{ 
-        height: `${alturaTotal}px`,
-        width: `${larguraPercent}%`,
-        zIndex: 10
-      }}
-    >
-      <div className="flex-1">
-        <div className="font-semibold truncate">{evento.professor_nome}</div>
-        <div className="truncate opacity-90">{evento.titulo}</div>
-        <div className="flex items-center gap-1 opacity-75 text-xs mt-1">
-          <Clock className="w-3 h-3" />
-          <span>{evento.horario_inicio}-{evento.horario_fim}</span>
+    <HoverCard openDelay={300}>
+      <HoverCardTrigger asChild>
+        <div 
+          className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0 group flex flex-col cursor-pointer`}
+          style={{ 
+            height: `${alturaTotal}px`,
+            width: `${larguraPercent}%`,
+            zIndex: 10
+          }}
+        >
+          <div className="flex-1">
+            <div className="font-semibold truncate">{evento.professor_nome}</div>
+            <div className="truncate opacity-90">{evento.titulo}</div>
+            <div className="flex items-center gap-1 opacity-75 text-xs mt-1">
+              <Clock className="w-3 h-3" />
+              <span>{evento.horario_inicio}-{evento.horario_fim}</span>
+            </div>
+            {evento.sala && (
+              <div className="text-xs opacity-75 truncate mt-0.5">Sala: {evento.sala}</div>
+            )}
+          </div>
+          
+          {/* Botões de ação no rodapé - apenas para eventos (não aulas) */}
+          {isEvento && (
+            <div className="flex flex-col gap-1 items-end mt-1 border-t border-white/20 pt-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 bg-white/20 hover:bg-white/30 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditar?.();
+                }}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 bg-white/20 hover:bg-white/30 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExcluir?.();
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </div>
-        {evento.sala && (
-          <div className="text-xs opacity-75 truncate mt-0.5">Sala: {evento.sala}</div>
-        )}
-      </div>
-      
-      {/* Botões de ação no rodapé - apenas para eventos (não aulas) */}
-      {isEvento && (
-        <div className="flex flex-col gap-1 items-end mt-1 border-t border-white/20 pt-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 bg-white/20 hover:bg-white/30 text-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditar?.();
-            }}
-          >
-            <Pencil className="h-3 w-3" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 bg-white/20 hover:bg-white/30 text-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              onExcluir?.();
-            }}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-80" side="right">
+        <div className="space-y-3">
+          <div>
+            <h4 className="text-lg font-semibold mb-2">{evento.titulo}</h4>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="w-4 h-4" />
+              <span>{evento.professor_nome}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <span>
+                {dataEvento ? format(dataEvento, "dd/MM/yyyy (EEEE)", { locale: pt }) : 
+                 evento.dia_semana ? diasSemanaNomes[evento.dia_semana] : 'N/A'}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span>{evento.horario_inicio} - {evento.horario_fim}</span>
+            </div>
+            
+            {evento.sala && (
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>Sala {evento.sala}</span>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              <span className="capitalize">{evento.tipo === 'aula' ? 'Aula Regular' : 'Evento/Bloqueio'}</span>
+            </div>
+          </div>
+          
+          {evento.turma_nome && (
+            <div className="pt-2 border-t">
+              <p className="text-sm"><strong>Turma:</strong> {evento.turma_nome}</p>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 };
 
@@ -442,6 +504,7 @@ export default function AgendaProfessores() {
                               larguraPercent={100}
                               onEditar={() => handleEditarEvento(evento)}
                               onExcluir={() => setEventoParaExcluir(evento.evento_id!)}
+                              datasSemanais={datasSemanais}
                             />
                           </div>
                         ))}
