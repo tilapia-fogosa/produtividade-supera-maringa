@@ -3,13 +3,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Settings } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Settings, Pencil, Trash2 } from "lucide-react";
 import { useAgendaProfessores, AgendaProfessor } from "@/hooks/use-agenda-professores";
 import { useProfessores } from "@/hooks/use-professores";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BloquearHorarioProfessorModal } from "@/components/professores/BloquearHorarioProfessorModal";
 import { GerenciarPrioridadeModal } from "@/components/professores/GerenciarPrioridadeModal";
+import { EditarEventoProfessorModal } from "@/components/professores/EditarEventoProfessorModal";
+import { useExcluirEventoProfessor } from "@/hooks/use-excluir-evento-professor";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -85,19 +88,24 @@ const BlocoEvento = ({
   evento, 
   cor, 
   duracaoSlots,
-  larguraPercent = 100
+  larguraPercent = 100,
+  onEditar,
+  onExcluir
 }: { 
   evento: AgendaProfessor; 
   cor: { bg: string; text: string; border: string };
   duracaoSlots: number;
   larguraPercent?: number;
+  onEditar?: () => void;
+  onExcluir?: () => void;
 }) => {
   const alturaSlot = 80;
   const alturaTotal = duracaoSlots * alturaSlot - 4;
+  const isEvento = evento.tipo === 'evento' && evento.evento_id;
   
   return (
     <div 
-      className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0`}
+      className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0 group`}
       style={{ 
         height: `${alturaTotal}px`,
         width: `${larguraPercent}%`,
@@ -113,6 +121,34 @@ const BlocoEvento = ({
       {evento.sala && (
         <div className="text-xs opacity-75 truncate mt-0.5">Sala: {evento.sala}</div>
       )}
+      
+      {/* Botões de ação - apenas para eventos (não aulas) */}
+      {isEvento && (
+        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditar?.();
+            }}
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 bg-white/90 hover:bg-white text-red-600 hover:text-red-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onExcluir?.();
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
@@ -124,6 +160,11 @@ export default function AgendaProfessores() {
   const [professoresAtivos, setProfessoresAtivos] = useState<Record<string, boolean>>({});
   const [modalBloqueio, setModalBloqueio] = useState(false);
   const [modalPrioridade, setModalPrioridade] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [eventoParaEditar, setEventoParaEditar] = useState<any>(null);
+  const [eventoParaExcluir, setEventoParaExcluir] = useState<string | null>(null);
+  
+  const excluirEvento = useExcluirEventoProfessor();
 
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   const dataInicio = datasSemanais[0];
@@ -169,6 +210,30 @@ export default function AgendaProfessores() {
       ...prev,
       [professorId]: !prev[professorId]
     }));
+  };
+  
+  const handleEditarEvento = (evento: AgendaProfessor) => {
+    setEventoParaEditar({
+      evento_id: evento.evento_id,
+      tipo_evento: evento.tipo === 'evento' ? 'bloqueio' : evento.tipo,
+      titulo: evento.titulo,
+      horario_inicio: evento.horario_inicio,
+      horario_fim: evento.horario_fim,
+      data: evento.data,
+      dia_semana: evento.dia_semana,
+    });
+    setModalEditar(true);
+  };
+  
+  const handleConfirmarExclusao = async () => {
+    if (!eventoParaExcluir) return;
+    
+    try {
+      await excluirEvento.mutateAsync(eventoParaExcluir);
+      setEventoParaExcluir(null);
+    } catch (error) {
+      console.error("Erro ao excluir evento:", error);
+    }
   };
 
   // Criar mapeamento de cores por professor ID
@@ -373,6 +438,8 @@ export default function AgendaProfessores() {
                               cor={cor}
                               duracaoSlots={duracao}
                               larguraPercent={100}
+                              onEditar={() => handleEditarEvento(evento)}
+                              onExcluir={() => setEventoParaExcluir(evento.evento_id!)}
                             />
                           </div>
                         ))}
@@ -401,6 +468,29 @@ export default function AgendaProfessores() {
         open={modalPrioridade}
         onOpenChange={setModalPrioridade}
       />
+      
+      <EditarEventoProfessorModal
+        open={modalEditar}
+        onOpenChange={setModalEditar}
+        evento={eventoParaEditar}
+      />
+      
+      <AlertDialog open={!!eventoParaExcluir} onOpenChange={(open) => !open && setEventoParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este bloqueio? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmarExclusao} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
