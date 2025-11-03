@@ -61,11 +61,6 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Agenda de Professores",
-    url: "/agenda-professores",
-    icon: Users,
-  },
-  {
     title: "Eventos",
     url: "/eventos",
     icon: Calendar,
