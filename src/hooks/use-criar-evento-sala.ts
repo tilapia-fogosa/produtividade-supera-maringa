@@ -1,6 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Função auxiliar para calcular duração em minutos
+const calcularDuracaoMinutos = (inicio: string, fim: string): number => {
+  const [horaInicio, minutoInicio] = inicio.split(':').map(Number);
+  const [horaFim, minutoFim] = fim.split(':').map(Number);
+  return (horaFim * 60 + minutoFim) - (horaInicio * 60 + minutoInicio);
+};
+
 type CriarEventoSalaParams = {
   sala_id: string;
   tipo_evento: string;
@@ -41,7 +48,7 @@ export const useCriarEventoSala = () => {
         throw new Error("Já existe um evento ou turma agendada neste horário");
       }
 
-      // Criar evento
+      // Criar evento de sala
       const { data, error } = await supabase
         .from("eventos_sala")
         .insert([{
@@ -66,11 +73,42 @@ export const useCriarEventoSala = () => {
         .single();
 
       if (error) throw error;
+
+      // Se o responsável é um professor, criar bloqueio no horário do professor
+      if (params.responsavel_tipo === 'professor' && data) {
+        const { error: errorProfessor } = await supabase
+          .from("eventos_professor")
+          .insert([{
+            professor_id: params.responsavel_id,
+            tipo_evento: 'bloqueio_sala',
+            titulo: params.titulo,
+            descricao: params.descricao || null,
+            data: params.data,
+            horario_inicio: params.horario_inicio,
+            duracao_minutos: calcularDuracaoMinutos(params.horario_inicio, params.horario_fim),
+            recorrente: params.recorrente,
+            tipo_recorrencia: params.recorrente ? params.tipo_recorrencia || null : null,
+            dia_semana: params.recorrente && params.tipo_recorrencia !== 'mensal' ? params.dia_semana || null : null,
+            dia_mes: params.recorrente && params.tipo_recorrencia === 'mensal' ? params.dia_mes || null : null,
+            data_inicio_recorrencia: params.recorrente ? params.data_inicio_recorrencia || null : null,
+            data_fim_recorrencia: params.recorrente ? params.data_fim_recorrencia || null : null,
+            evento_sala_id: data.id,
+          } as any])
+          .select()
+          .single();
+
+        if (errorProfessor) {
+          console.error('Erro ao criar bloqueio do professor:', errorProfessor);
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["horarios-disponiveis-salas"] });
       queryClient.invalidateQueries({ queryKey: ["calendario-turmas"] });
+      queryClient.invalidateQueries({ queryKey: ["bloqueios-professor"] });
+      queryClient.invalidateQueries({ queryKey: ["bloqueios-sala"] });
     },
     onError: (error: Error) => {
       console.error('Erro ao criar reserva:', error);

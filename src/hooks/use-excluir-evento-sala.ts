@@ -8,6 +8,7 @@ export const useExcluirEventoSala = () => {
     mutationFn: async (eventoId: string) => {
       console.log('🗑️ Excluindo evento de sala:', eventoId);
       
+      // Excluir o evento de sala (cascade vai excluir eventos de professor relacionados via FK)
       const { error } = await supabase
         .from("eventos_sala")
         .delete()
@@ -21,8 +22,9 @@ export const useExcluirEventoSala = () => {
       console.log('✅ Evento excluído com sucesso');
     },
     onSuccess: () => {
-      // Invalidar cache de bloqueios
       queryClient.invalidateQueries({ queryKey: ["bloqueios-sala"] });
+      queryClient.invalidateQueries({ queryKey: ["bloqueios-professor"] });
+      queryClient.invalidateQueries({ queryKey: ["calendario-turmas"] });
     },
   });
 };
