@@ -150,7 +150,7 @@ const BlocoBloqueio = ({
     <HoverCard>
       <HoverCardTrigger asChild>
         <div
-          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden flex flex-col gap-1 cursor-pointer hover:shadow-lg"
+          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-lg"
           style={{
             backgroundColor: corClara,
             borderColor: corSala
@@ -159,10 +159,12 @@ const BlocoBloqueio = ({
           <div className="font-semibold text-gray-900 truncate">
             🔒 {bloqueio.sala_nome}
           </div>
-          <div className="text-gray-800 truncate">
+          <div className="text-gray-800 truncate mt-1">
             {bloqueio.titulo}
           </div>
-          <div className="flex gap-1 mt-auto">
+          
+          {/* Botões no canto inferior direito */}
+          <div className="absolute bottom-1 right-1 flex gap-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -270,49 +272,47 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
     return 'text-red-600';
   };
 
-  if (isCompact) {
-    return (
-      <div 
-        className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
-        onClick={onClick}
-      >
-        <div className="space-y-0.5">
-          <div className="font-medium text-blue-900 text-xs leading-tight">
-            {turma.categoria}
+  const conteudoCompact = (
+    <div 
+      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
+      onClick={onClick}
+    >
+      <div className="space-y-0.5">
+        <div className="font-medium text-blue-900 text-xs leading-tight">
+          {turma.categoria}
+        </div>
+        <div className="text-blue-700 text-xs leading-tight">
+          {formatarNomeProfessor(turma.professor_nome)}
+        </div>
+        <div className="flex items-center gap-1 text-blue-600">
+          <Users className="w-2.5 h-2.5 flex-shrink-0" />
+          <span className="text-xs">
+            {turma.total_alunos_ativos}/{capacidadeMaxima}
+          </span>
+        </div>
+        {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && (
+          <div className="text-xs leading-tight">
+            {turma.total_reposicoes > 0 && (
+              <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
+            )}
+            {turma.total_reposicoes > 0 && (turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && ' '}
+            {turma.total_aulas_experimentais > 0 && (
+              <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
+            )}
+            {turma.total_aulas_experimentais > 0 && turma.total_faltas_futuras > 0 && ' '}
+            {turma.total_faltas_futuras > 0 && (
+              <span className="font-medium" style={{ color: '#e17021' }}>Fal: {turma.total_faltas_futuras}</span>
+            )}
           </div>
-          <div className="text-blue-700 text-xs leading-tight">
-            {formatarNomeProfessor(turma.professor_nome)}
-          </div>
-          <div className="flex items-center gap-1 text-blue-600">
-            <Users className="w-2.5 h-2.5 flex-shrink-0" />
-            <span className="text-xs">
-              {turma.total_alunos_ativos}/{capacidadeMaxima}
-            </span>
-          </div>
-          {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && (
-            <div className="text-xs leading-tight">
-              {turma.total_reposicoes > 0 && (
-                <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
-              )}
-              {turma.total_reposicoes > 0 && (turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && ' '}
-              {turma.total_aulas_experimentais > 0 && (
-                <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
-              )}
-              {turma.total_aulas_experimentais > 0 && turma.total_faltas_futuras > 0 && ' '}
-              {turma.total_faltas_futuras > 0 && (
-                <span className="font-medium" style={{ color: '#e17021' }}>Fal: {turma.total_faltas_futuras}</span>
-              )}
-            </div>
-          )}
-          <div className={`text-xs font-medium leading-tight ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
-            {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''}
-          </div>
+        )}
+        <div className={`text-xs font-medium leading-tight ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
+          {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  return (
+  const conteudoNormal = (
     <div 
       className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[90px]"
       onClick={onClick}
@@ -344,6 +344,87 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
         </div>
       </div>
     </div>
+  );
+
+  const hoverContent = (
+    <HoverCardContent className="w-80 z-50 bg-white" align="start">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Detalhes da Turma</h4>
+          <Badge className="bg-blue-500">{turma.categoria}</Badge>
+        </div>
+        
+        <div className="space-y-1 text-sm">
+          <div className="flex items-start gap-2">
+            <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Professor:</span>{' '}
+              <span className="text-muted-foreground">{turma.professor_nome}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Sala:</span>{' '}
+              <span className="text-muted-foreground">{turma.sala}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Horário:</span>{' '}
+              <span className="text-muted-foreground">{turma.horario_inicio}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <Users className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Alunos Ativos:</span>{' '}
+              <span className="text-muted-foreground">{turma.total_alunos_ativos} / {capacidadeMaxima}</span>
+            </div>
+          </div>
+          
+          <div className="pt-2 border-t space-y-1">
+            {turma.total_reposicoes > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-red-500 border-red-500">
+                  {turma.total_reposicoes} Reposição{turma.total_reposicoes !== 1 ? 'ões' : ''}
+                </Badge>
+              </div>
+            )}
+            {turma.total_aulas_experimentais > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-green-500 border-green-500">
+                  {turma.total_aulas_experimentais} Experimental{turma.total_aulas_experimentais !== 1 ? 'is' : ''}
+                </Badge>
+              </div>
+            )}
+            {turma.total_faltas_futuras > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-orange-500" style={{ color: '#e17021' }}>
+                  {turma.total_faltas_futuras} Falta{turma.total_faltas_futuras !== 1 ? 's' : ''} Futura{turma.total_faltas_futuras !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+            )}
+            <div className={`text-sm font-medium ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
+              {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''} disponível{vagasDisponiveis !== 1 ? 'eis' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </HoverCardContent>
+  );
+
+  return (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        {isCompact ? conteudoCompact : conteudoNormal}
+      </HoverCardTrigger>
+      {hoverContent}
+    </HoverCard>
   );
 };
 
