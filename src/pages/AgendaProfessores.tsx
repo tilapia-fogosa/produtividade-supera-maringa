@@ -415,28 +415,6 @@ export default function AgendaProfessores() {
           {/* Grade Unificada de Horários */}
           <div className="space-y-0 border-t">
             {slots.map((slot, slotIdx) => {
-              // Mapear slots ocupados por eventos que começaram antes
-              const slotsOcupadosPorDia: Record<string, boolean> = {};
-              
-              diasSemana.forEach(dia => {
-                professoresFiltrados.forEach(professor => {
-                  const agenda = agendaPorProfessor?.[professor.id];
-                  if (!agenda) return;
-                  
-                  agenda.eventos.forEach(evento => {
-                    if (evento.dia_semana !== dia) return;
-                    
-                    const slotInicio = horarioParaSlot(evento.horario_inicio);
-                    const slotFim = horarioParaSlot(evento.horario_fim);
-                    
-                    // Se este slot está ocupado por um evento que começou antes
-                    if (slotIdx > slotInicio && slotIdx < slotFim) {
-                      slotsOcupadosPorDia[dia] = true;
-                    }
-                  });
-                });
-              });
-
               return (
                 <div key={slot} className="grid grid-cols-7 gap-2 border-b min-h-[80px]">
                   {/* Coluna de horário */}
@@ -446,18 +424,12 @@ export default function AgendaProfessores() {
                   
                   {/* Colunas dos dias */}
                   {diasSemana.map((dia) => {
-                    // Se este slot está ocupado por evento anterior, renderizar vazio
-                    if (slotsOcupadosPorDia[dia]) {
-                      return (
-                        <div key={`${dia}-${slot}`} className="relative bg-muted/20" />
-                      );
-                    }
-
-                    // Coletar eventos que COMEÇAM neste slot
-                    const eventosIniciamAqui: Array<{
+                    // Coletar TODOS os eventos ativos neste slot (que começam aqui ou antes e ainda não terminaram)
+                    const eventosAtivosAqui: Array<{
                       evento: AgendaProfessor;
                       cor: { bg: string; text: string; border: string };
                       duracao: number;
+                      iniciaAqui: boolean;
                     }> = [];
                     
                     professoresFiltrados.forEach((professor) => {
@@ -466,48 +438,76 @@ export default function AgendaProfessores() {
                       
                       const eventosNoDia = agenda.eventos.filter(e => {
                         if (e.dia_semana !== dia) return false;
-                        const slotEvento = horarioParaSlot(e.horario_inicio);
-                        return slotIdx === slotEvento;
+                        const slotInicio = horarioParaSlot(e.horario_inicio);
+                        const slotFim = horarioParaSlot(e.horario_fim);
+                        // Evento está ativo se: começa neste slot OU (começou antes E ainda não terminou)
+                        return slotIdx >= slotInicio && slotIdx < slotFim;
                       });
                       
                       eventosNoDia.forEach(evento => {
+                        const slotInicio = horarioParaSlot(evento.horario_inicio);
                         const duracao = calcularDuracaoSlots(
                           evento.horario_inicio,
                           evento.horario_fim
                         );
-                        eventosIniciamAqui.push({ 
+                        eventosAtivosAqui.push({ 
                           evento, 
                           cor: coresPorProfessor[professor.id], 
-                          duracao 
+                          duracao,
+                          iniciaAqui: slotIdx === slotInicio
                         });
                       });
                     });
 
-                    const numEventos = eventosIniciamAqui.length;
+                    // Ordenar eventos: os que iniciam aqui primeiro, depois os que já estavam em andamento
+                    eventosAtivosAqui.sort((a, b) => {
+                      if (a.iniciaAqui && !b.iniciaAqui) return -1;
+                      if (!a.iniciaAqui && b.iniciaAqui) return 1;
+                      return 0;
+                    });
+
+                    const numEventos = eventosAtivosAqui.length;
                     const larguraEvento = numEventos > 0 ? 100 / numEventos : 100;
 
                     return (
                       <div key={`${dia}-${slot}`} className="relative bg-muted/20 h-full">
-                        {eventosIniciamAqui.map(({ evento, cor, duracao }, idx) => (
-                          <div
-                            key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}-${slot}`}
-                            className="absolute top-0 h-full"
-                            style={{
-                              left: `${idx * larguraEvento}%`,
-                              width: `${larguraEvento}%`,
-                            }}
-                          >
-                            <BlocoEvento 
-                              evento={evento}
-                              cor={cor}
-                              duracaoSlots={duracao}
-                              larguraPercent={100}
-                              onEditar={() => handleEditarEvento(evento)}
-                              onExcluir={() => setEventoParaExcluir(evento.evento_id!)}
-                              datasSemanais={datasSemanais}
-                            />
-                          </div>
-                        ))}
+                        {eventosAtivosAqui.map(({ evento, cor, duracao, iniciaAqui }, idx) => {
+                          // Só renderizar o bloco se o evento INICIA neste slot
+                          // Os eventos que já estavam em andamento ocupam espaço mas não são re-renderizados
+                          if (!iniciaAqui) {
+                            return (
+                              <div
+                                key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}-${slot}-space`}
+                                className="absolute top-0 h-full"
+                                style={{
+                                  left: `${idx * larguraEvento}%`,
+                                  width: `${larguraEvento}%`,
+                                }}
+                              />
+                            );
+                          }
+                          
+                          return (
+                            <div
+                              key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}-${slot}`}
+                              className="absolute top-0 h-full"
+                              style={{
+                                left: `${idx * larguraEvento}%`,
+                                width: `${larguraEvento}%`,
+                              }}
+                            >
+                              <BlocoEvento 
+                                evento={evento}
+                                cor={cor}
+                                duracaoSlots={duracao}
+                                larguraPercent={100}
+                                onEditar={() => handleEditarEvento(evento)}
+                                onExcluir={() => setEventoParaExcluir(evento.evento_id!)}
+                                datasSemanais={datasSemanais}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
