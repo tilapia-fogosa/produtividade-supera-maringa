@@ -7,7 +7,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Switch } from "@/components/ui/switch";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
@@ -242,6 +242,13 @@ export default function CalendarioAulas() {
     });
     return Array.from(perfis).sort();
   }, [turmasPorDia]);
+
+  // Selecionar todos os perfis por padrão quando os perfis disponíveis mudarem
+  useEffect(() => {
+    if (perfisDisponiveis.length > 0 && perfisSelecionados.length === 0) {
+      setPerfisSelecionados(perfisDisponiveis);
+    }
+  }, [perfisDisponiveis]);
 
   // Aplicar filtros (excluindo domingo)
   const turmasFiltradasPorDia = useMemo(() => {
