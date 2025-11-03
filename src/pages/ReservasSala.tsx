@@ -2,15 +2,31 @@ import { useState, useMemo } from "react";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { useCalendarioEventosUnificados, CalendarioEvento } from "@/hooks/use-calendario-eventos-unificados";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Plus, Trash2, Edit, Clock } from "lucide-react";
-import { format, addDays, startOfWeek, isSameDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Calendar, Plus, Trash2, Edit, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { addDays, startOfWeek } from "date-fns";
 import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
 import { EditarEventoSalaModal } from "@/components/turmas/EditarEventoSalaModal";
 import { useExcluirEventoSala } from "@/hooks/use-excluir-evento-sala";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const diasSemana = {
+  segunda: "SEG",
+  terca: "TER",
+  quarta: "QUA",
+  quinta: "QUI",
+  sexta: "SEX",
+  sabado: "SAB"
+};
 
 // Função auxiliar para calcular as datas da semana (segunda a sábado)
 const calcularDatasSemanais = (dataReferencia: Date): Date[] => {
@@ -18,16 +34,23 @@ const calcularDatasSemanais = (dataReferencia: Date): Date[] => {
   return Array.from({ length: 6 }, (_, i) => addDays(inicioSemana, i));
 };
 
-const DIAS_SEMANA = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'] as const;
-const HORARIOS = [
-  '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
-  '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
-];
-
-// Converter horário para slot do grid
+// Converter horário para slot do grid (slots de 30 minutos, 6h às 21h)
 const horarioParaSlot = (horario: string): number => {
-  const [hora] = horario.split(':').map(Number);
-  return hora - 8 + 1; // +1 para o header
+  const [hora, minuto] = horario.split(':').map(Number);
+  const horaInicial = 6;
+  return ((hora - horaInicial) * 2) + (minuto >= 30 ? 1 : 0);
+};
+
+const obterDiaSemanaIndex = (diaSemana: string): number => {
+  const dias: Record<string, number> = {
+    'segunda': 0,
+    'terca': 1,
+    'quarta': 2,
+    'quinta': 3,
+    'sexta': 4,
+    'sabado': 5,
+  };
+  return dias[diaSemana] ?? -1;
 };
 
 // Clarear cor hex
@@ -39,75 +62,82 @@ const clarearCor = (hex: string, percent: number = 30): string => {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 };
 
-// Componente para renderizar um bloco de reserva no calendário
-const BlocoReserva = ({ 
-  evento, 
-  onEdit, 
-  onDelete 
-}: { 
+// Componente para bloco de reserva
+const BlocoEvento = ({
+  evento,
+  onEdit,
+  onDelete
+}: {
   evento: CalendarioEvento;
   onEdit: (evento: CalendarioEvento) => void;
   onDelete: (evento: CalendarioEvento) => void;
 }) => {
   return (
     <div
-      className="relative p-2 rounded border-l-4 h-full group hover:shadow-md transition-shadow"
+      className="h-full p-2 rounded-sm border-l-4 flex flex-col justify-between group relative"
       style={{
         backgroundColor: clarearCor(evento.sala_cor, 80),
         borderLeftColor: evento.sala_cor,
       }}
     >
-      <div className="flex items-start justify-between gap-1">
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate" style={{ color: evento.sala_cor }}>
-            {evento.titulo}
+      <div className="flex-1 min-h-0">
+        <p className="font-semibold text-xs truncate mb-0.5" style={{ color: evento.sala_cor }}>
+          {evento.titulo}
+        </p>
+        <p className="text-[10px] text-muted-foreground truncate">
+          {evento.sala_nome}
+        </p>
+        {evento.descricao && (
+          <p className="text-[10px] text-muted-foreground truncate mt-1">
+            {evento.descricao}
           </p>
-          <p className="text-xs text-muted-foreground truncate">{evento.sala_nome}</p>
-          {evento.descricao && (
-            <p className="text-xs text-muted-foreground truncate mt-1">{evento.descricao}</p>
-          )}
-        </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={() => onEdit(evento)}
-          >
-            <Edit className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-destructive"
-            onClick={() => onDelete(evento)}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
+        )}
+        <p className="text-[10px] text-muted-foreground mt-1">
+          {evento.horario_inicio} - {evento.horario_fim}
+        </p>
+      </div>
+      
+      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(evento);
+          }}
+        >
+          <Edit className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(evento);
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
       </div>
     </div>
   );
 };
 
-// Componente para bloco de aula (bloqueado para reserva)
-const BlocoAulaBloqueada = ({ evento }: { evento: CalendarioEvento }) => {
+// Componente para turma (bloqueada)
+const BlocoTurmaBloqueada = ({ evento }: { evento: CalendarioEvento }) => {
   return (
-    <div
-      className="relative p-2 rounded border h-full opacity-60"
-      style={{
-        backgroundColor: '#f5f5f5',
-        borderColor: '#d0d0d0',
-      }}
-    >
-      <div className="flex items-start gap-1">
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-xs truncate text-muted-foreground">
-            🔒 {evento.titulo}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">{evento.sala_nome}</p>
-        </div>
-      </div>
+    <div className="h-full p-2 rounded-sm bg-gray-100 border border-gray-300 opacity-60">
+      <p className="font-medium text-xs truncate text-muted-foreground">
+        🔒 {evento.titulo}
+      </p>
+      <p className="text-[10px] text-muted-foreground truncate">
+        {evento.sala_nome}
+      </p>
+      <p className="text-[10px] text-muted-foreground mt-1">
+        {evento.horario_inicio} - {evento.horario_fim}
+      </p>
     </div>
   );
 };
@@ -123,7 +153,7 @@ export default function ReservasSala() {
   const dataInicio = datasSemanais[0];
   const dataFim = datasSemanais[datasSemanais.length - 1];
 
-  const { data: eventosUnificados, isLoading } = useCalendarioEventosUnificados(
+  const { data: eventosPorDia, isLoading, error } = useCalendarioEventosUnificados(
     dataInicio,
     dataFim,
     activeUnit?.id
@@ -131,221 +161,312 @@ export default function ReservasSala() {
 
   const { mutate: excluirEvento } = useExcluirEventoSala();
 
-  // Separar reservas de sala e aulas
-  const { reservasSala, aulasBloqueadas } = useMemo(() => {
-    if (!eventosUnificados) return { reservasSala: {}, aulasBloqueadas: {} };
-
-    const reservas: Record<string, CalendarioEvento[]> = {};
-    const aulas: Record<string, CalendarioEvento[]> = {};
-
-    Object.entries(eventosUnificados).forEach(([dia, eventos]) => {
-      reservas[dia] = eventos.filter(e => e.tipo_evento === 'evento_sala');
-      aulas[dia] = eventos.filter(e => e.tipo_evento === 'turma');
+  // Filtrar eventos: mostrar reservas e turmas (turmas como bloqueadas)
+  const eventosFiltradasPorDia = useMemo(() => {
+    if (!eventosPorDia) return {};
+    
+    const resultado: Record<string, CalendarioEvento[]> = {};
+    
+    Object.entries(eventosPorDia).forEach(([dia, eventos]) => {
+      // Excluir domingo
+      if (dia === 'domingo') return;
+      
+      // Mostrar eventos de sala E turmas (turmas aparecem como bloqueadas)
+      const eventosFiltrados = eventos.filter(evento => {
+        return evento.tipo_evento === 'evento_sala' || evento.tipo_evento === 'turma';
+      });
+      
+      resultado[dia] = eventosFiltrados;
     });
+    
+    return resultado;
+  }, [eventosPorDia]);
 
-    return { reservasSala: reservas, aulasBloqueadas: aulas };
-  }, [eventosUnificados]);
-
-  // Organizar eventos em grid
+  // Estrutura do grid - agrupar eventos sobrepostos temporalmente
   const eventosGrid = useMemo(() => {
-    const grid: Record<string, Record<number, CalendarioEvento[]>> = {};
-
-    // Inicializar grid
-    DIAS_SEMANA.forEach(dia => {
-      grid[dia] = {};
-      HORARIOS.forEach(horario => {
-        const slot = horarioParaSlot(horario);
-        grid[dia][slot] = [];
-      });
-    });
-
-    // Adicionar reservas e aulas ao grid
-    [...Object.values(reservasSala).flat(), ...Object.values(aulasBloqueadas).flat()].forEach(evento => {
-      const slot = horarioParaSlot(evento.horario_inicio);
-      if (grid[evento.dia_semana]?.[slot]) {
-        grid[evento.dia_semana][slot].push(evento);
-      }
-    });
-
-    return grid;
-  }, [reservasSala, aulasBloqueadas]);
-
-  // Lista de reservas futuras
-  const reservasFuturas = useMemo(() => {
-    return Object.values(reservasSala)
-      .flat()
-      .sort((a, b) => {
-        if (a.data_especifica && b.data_especifica) {
-          return new Date(a.data_especifica).getTime() - new Date(b.data_especifica).getTime();
+    const grid: Record<string, CalendarioEvento[]> = {};
+    
+    Object.entries(eventosFiltradasPorDia).forEach(([diaSemana, eventos]) => {
+      // Para cada evento, verificar se há outros que se sobrepõem
+      eventos.forEach(evento => {
+        const eventoInicio = horarioParaSlot(evento.horario_inicio);
+        const eventoFim = horarioParaSlot(evento.horario_fim);
+        
+        // Encontrar todos os eventos que se sobrepõem temporalmente com este
+        const eventosSobrepostos = eventos.filter(outro => {
+          const outroInicio = horarioParaSlot(outro.horario_inicio);
+          const outroFim = horarioParaSlot(outro.horario_fim);
+          // Verificar se há sobreposição temporal
+          return eventoInicio < outroFim && eventoFim > outroInicio;
+        });
+        
+        // Usar o menor horário de início dos eventos sobrepostos como chave
+        const menorInicio = Math.min(...eventosSobrepostos.map(e => horarioParaSlot(e.horario_inicio)));
+        const chave = `${menorInicio}-${diaSemana}`;
+        
+        // Adicionar ao grid apenas se não estiver lá ainda
+        if (!grid[chave]) {
+          grid[chave] = eventosSobrepostos;
         }
-        return 0;
       });
-  }, [reservasSala]);
+    });
+    
+    return grid;
+  }, [eventosFiltradasPorDia]);
 
-  const handleSemanaAnterior = () => {
-    setSemanaAtual(prev => addDays(prev, -7));
+  const navegarSemana = (direcao: 'anterior' | 'proxima') => {
+    const novaSemana = new Date(semanaAtual);
+    if (direcao === 'anterior') {
+      novaSemana.setDate(novaSemana.getDate() - 7);
+    } else {
+      novaSemana.setDate(novaSemana.getDate() + 7);
+    }
+    setSemanaAtual(novaSemana);
   };
 
-  const handleProximaSemana = () => {
-    setSemanaAtual(prev => addDays(prev, 7));
+  const voltarParaHoje = () => {
+    setSemanaAtual(new Date());
   };
 
-  const handleExcluirEvento = () => {
-    if (eventoParaExcluir) {
+  const handleEditarEvento = (evento: CalendarioEvento) => {
+    setEventoParaEditar(evento);
+  };
+
+  const handleExcluirEvento = (evento: CalendarioEvento) => {
+    setEventoParaExcluir(evento);
+  };
+
+  const confirmarExclusao = () => {
+    if (eventoParaExcluir && eventoParaExcluir.tipo_evento === 'evento_sala') {
       excluirEvento(eventoParaExcluir.evento_id, {
         onSuccess: () => {
           setEventoParaExcluir(null);
+        },
+        onError: (error) => {
+          console.error('❌ Erro ao excluir evento:', error);
+          alert('Erro ao excluir evento. Tente novamente.');
         }
       });
     }
   };
 
+  // Slots de 30 minutos (6h às 21h = 30 slots)
+  const slots = Array.from({ length: 30 }, (_, i) => {
+    const horaInicial = 6;
+    const hora = Math.floor(i / 2) + horaInicial;
+    const minuto = (i % 2) * 30;
+    return `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
+  });
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Carregando...</p>
+      <div className="container mx-auto p-4 space-y-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Clock className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold">Reservas de Sala</h1>
+        </div>
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex items-center gap-2 mb-6">
+          <Clock className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold">Reservas de Sala</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Erro ao carregar reservas de sala.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hoje = new Date();
+  const mesAno = semanaAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
   return (
     <div className="container mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Reservas de Sala</h1>
-          <p className="text-muted-foreground">Gerencie bloqueios e reservas de salas</p>
+      {/* Header com navegação */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Clock className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold">Reservas de Sala</h1>
         </div>
-        <Button onClick={() => setModalNovaReserva(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Reserva
-        </Button>
+        
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navegarSemana('anterior')}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          <div className="text-lg font-medium capitalize">
+            {mesAno}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navegarSemana('proxima')}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={voltarParaHoje}
+          >
+            Hoje
+          </Button>
+          
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setModalNovaReserva(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Reserva
+          </Button>
+        </div>
       </div>
 
-      {/* Navegação de Semana */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={handleSemanaAnterior}>
-              ← Semana Anterior
-            </Button>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {format(dataInicio, "dd/MM", { locale: ptBR })} - {format(dataFim, "dd/MM/yyyy", { locale: ptBR })}
-            </CardTitle>
-            <Button variant="outline" onClick={handleProximaSemana}>
-              Próxima Semana →
-            </Button>
+      {/* Grid do Calendário */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {/* Header dos dias (segunda a sábado) */}
+        <div 
+          className="bg-gray-50 sticky top-0 z-10"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '45px repeat(6, 1fr)',
+          }}
+        >
+          <div className="p-3 text-center border-r border-gray-200 text-sm font-medium">
           </div>
-        </CardHeader>
-        <CardContent>
-          {/* Grid do Calendário */}
-          <div className="grid grid-cols-[80px_repeat(6,1fr)] gap-2">
-            {/* Header com dias da semana */}
-            <div className="font-semibold text-center">Horário</div>
-            {datasSemanais.map((data, idx) => (
-              <div key={idx} className="font-semibold text-center">
-                <div>{format(data, "EEE", { locale: ptBR })}</div>
-                <div className="text-sm text-muted-foreground">{format(data, "dd/MM")}</div>
+          {datasSemanais.map((data, index) => {
+            const diaSemanaChave = Object.keys(diasSemana)[index];
+            const isHoje = data.toDateString() === hoje.toDateString();
+            
+            return (
+              <div key={index} className="p-3 text-center border-r border-gray-200 last:border-r-0">
+                <div className="text-sm font-medium">{diasSemana[diaSemanaChave as keyof typeof diasSemana]}</div>
+                <div className={`text-lg ${isHoje ? 'bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mt-1' : ''}`}>
+                  {data.getDate()}
+                </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
 
-            {/* Linhas de horários */}
-            {HORARIOS.map((horario, horarioIdx) => (
-              <>
-                <div key={`hora-${horarioIdx}`} className="text-sm text-muted-foreground text-center py-2 border-t">
-                  {horario}
-                </div>
-                {DIAS_SEMANA.map((dia, diaIdx) => {
-                  const slot = horarioParaSlot(horario);
-                  const eventosNaCell = eventosGrid[dia]?.[slot] || [];
-                  const reservas = eventosNaCell.filter(e => e.tipo_evento === 'evento_sala');
-                  const aulas = eventosNaCell.filter(e => e.tipo_evento === 'turma');
-
-                  return (
-                    <div
-                      key={`${dia}-${horarioIdx}`}
-                      className="border rounded p-1 min-h-[60px] bg-background hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="space-y-1">
-                        {/* Mostrar aulas bloqueadas primeiro */}
-                        {aulas.map((evento, idx) => (
-                          <BlocoAulaBloqueada key={`aula-${idx}`} evento={evento} />
-                        ))}
-                        {/* Mostrar reservas */}
-                        {reservas.map((evento, idx) => (
-                          <BlocoReserva
-                            key={`reserva-${idx}`}
-                            evento={evento}
-                            onEdit={setEventoParaEditar}
-                            onDelete={setEventoParaExcluir}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lista de Reservas Futuras */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Próximas Reservas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {reservasFuturas.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Nenhuma reserva futura</p>
-          ) : (
-            <div className="space-y-2">
-              {reservasFuturas.map((reserva) => (
-                <div
-                  key={reserva.evento_id}
-                  className="flex items-center justify-between p-3 border rounded hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded"
-                        style={{ backgroundColor: reserva.sala_cor }}
-                      />
-                      <span className="font-semibold">{reserva.titulo}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {reserva.sala_nome} • {reserva.data_especifica && format(new Date(reserva.data_especifica), "dd/MM/yyyy", { locale: ptBR })} • {reserva.horario_inicio} - {reserva.horario_fim}
-                    </p>
-                    {reserva.descricao && (
-                      <p className="text-sm text-muted-foreground mt-1">{reserva.descricao}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEventoParaEditar(reserva)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEventoParaExcluir(reserva)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+        {/* Container do Grid Principal */}
+        <div 
+          className="relative"
+          style={{
+            display: 'grid',
+            gridTemplateRows: `repeat(${slots.length}, 50px)`,
+            gridTemplateColumns: '45px repeat(6, 1fr)',
+          }}
+        >
+          {/* Renderizar linhas de horário */}
+          {slots.map((slot, slotIndex) => (
+            <div
+              key={`time-${slotIndex}`}
+              className="border-r border-b border-gray-200 bg-gray-50 text-xs text-muted-foreground flex items-center justify-center"
+              style={{
+                gridRow: slotIndex + 1,
+                gridColumn: 1,
+              }}
+            >
+              {slot.endsWith(':00') ? slot : ''}
             </div>
+          ))}
+
+          {/* Renderizar células base do grid */}
+          {slots.map((slot, slotIndex) => 
+            datasSemanais.map((data, diaIndex) => (
+              <div
+                key={`cell-${slotIndex}-${diaIndex}`}
+                className="border-r border-b border-gray-200 last:border-r-0"
+                style={{
+                  gridRow: slotIndex + 1,
+                  gridColumn: diaIndex + 2,
+                }}
+              />
+            ))
           )}
-        </CardContent>
-      </Card>
+
+          {/* Renderizar eventos unificados (reservas + turmas bloqueadas) */}
+          {(() => {
+            return Object.entries(eventosGrid).map(([chave, eventos]) => {
+              const [slotStr, diaSemana] = chave.split('-');
+              const slot = parseInt(slotStr);
+              const diaIndex = obterDiaSemanaIndex(diaSemana);
+              
+              if (diaIndex === -1 || eventos.length === 0) return null;
+              
+              // Calcular duração usando o maior horário de fim entre os eventos sobrepostos
+              const maiorFim = Math.max(...eventos.map(e => horarioParaSlot(e.horario_fim)));
+              const duracaoSlots = maiorFim - slot;
+              
+              const totalEventos = eventos.length;
+              const isCompact = totalEventos > 1;
+              
+              return (
+                <div
+                  key={chave}
+                  className="relative"
+                  style={{
+                    gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
+                    gridColumn: diaIndex + 2,
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${totalEventos}, 1fr)`,
+                    gap: totalEventos > 1 ? '2px' : undefined,
+                    padding: '1px',
+                    zIndex: 5,
+                  }}
+                >
+                  {eventos.map((evento) => {
+                    // Calcular posição vertical individual dentro do container
+                    const eventoInicio = horarioParaSlot(evento.horario_inicio);
+                    const eventoFim = horarioParaSlot(evento.horario_fim);
+                    const offsetInicio = eventoInicio - slot;
+                    const duracaoEvento = eventoFim - eventoInicio;
+                    const alturaSlot = 50; // 50px por slot
+                    
+                    return (
+                      <div 
+                        key={`evento-${evento.evento_id}`} 
+                        className="relative"
+                        style={{
+                          marginTop: `${offsetInicio * alturaSlot}px`,
+                          height: `${duracaoEvento * alturaSlot - 2}px`,
+                        }}
+                      >
+                        <div className="h-full border border-gray-300 bg-white rounded-sm overflow-hidden">
+                          {evento.tipo_evento === 'evento_sala' ? (
+                            <BlocoEvento 
+                              evento={evento} 
+                              onEdit={handleEditarEvento}
+                              onDelete={handleExcluirEvento}
+                            />
+                          ) : (
+                            <BlocoTurmaBloqueada evento={evento} />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
+        </div>
+      </div>
 
       {/* Modal Nova Reserva */}
       <ReservarSalaModal
@@ -363,19 +484,19 @@ export default function ReservasSala() {
         />
       )}
 
-      {/* Dialog Confirmar Exclusão */}
+      {/* Dialog de confirmação para excluir evento */}
       <AlertDialog open={!!eventoParaExcluir} onOpenChange={(open) => !open && setEventoParaExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Reserva</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a reserva "{eventoParaExcluir?.titulo}"?
+              Tem certeza que deseja excluir "{eventoParaExcluir?.titulo}" da sala {eventoParaExcluir?.sala_nome}?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExcluirEvento} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction onClick={confirmarExclusao} className="bg-destructive">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
