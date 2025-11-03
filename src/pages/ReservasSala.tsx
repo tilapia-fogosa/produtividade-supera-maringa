@@ -17,6 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useState, useMemo } from "react";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
@@ -138,35 +144,84 @@ const BlocoEvento = ({
   const corSala = evento.sala_cor || '#9CA3AF';
   const corClara = clarearCor(corSala);
   
+  // Formatar tipo de responsável
+  const formatarTipoResponsavel = (tipo: string | null) => {
+    if (!tipo) return 'Sem responsável';
+    const tipos: Record<string, string> = {
+      'professor': 'Professor',
+      'funcionario': 'Funcionário',
+      'coordenador': 'Coordenador',
+      'estagiario': 'Estagiário'
+    };
+    return tipos[tipo] || tipo;
+  };
+  
   return (
-    <div
-      className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer"
-      style={{
-        backgroundColor: corClara,
-        borderColor: corSala
-      }}
-    >
-      <div className="font-semibold text-gray-900 truncate">
-        🔒 {evento.sala_nome}
-      </div>
-      <div className="text-gray-800 truncate mt-1">
-        {evento.titulo}
-      </div>
-      
-      {/* Botão de excluir no canto inferior direito */}
-      <div className="absolute bottom-1 right-1">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.();
-          }}
-          className="p-1 bg-red-100 rounded border border-red-300 transition-colors"
-          title="Excluir"
-        >
-          <Trash2 className="w-3 h-3 text-red-700" />
-        </button>
-      </div>
-    </div>
+    <TooltipProvider>
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <div
+            className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-md"
+            style={{
+              backgroundColor: corClara,
+              borderColor: corSala
+            }}
+          >
+            <div className="font-semibold text-gray-900 truncate">
+              🔒 {evento.sala_nome}
+            </div>
+            <div className="text-gray-800 truncate mt-1">
+              {evento.titulo}
+            </div>
+            
+            {/* Botão de excluir no canto inferior direito */}
+            <div className="absolute bottom-1 right-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.();
+                }}
+                className="p-1 bg-red-100 rounded border border-red-300 transition-colors hover:bg-red-200"
+                title="Excluir"
+              >
+                <Trash2 className="w-3 h-3 text-red-700" />
+              </button>
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="max-w-xs">
+          <div className="space-y-2">
+            <div>
+              <span className="font-semibold">Sala:</span> {evento.sala_nome}
+            </div>
+            <div>
+              <span className="font-semibold">Título:</span> {evento.titulo}
+            </div>
+            {evento.descricao && (
+              <div>
+                <span className="font-semibold">Descrição:</span> {evento.descricao}
+              </div>
+            )}
+            <div>
+              <span className="font-semibold">Horário:</span> {evento.horario_inicio} - {evento.horario_fim}
+            </div>
+            {evento.data_especifica && (
+              <div>
+                <span className="font-semibold">Data:</span> {new Date(evento.data_especifica + 'T00:00:00').toLocaleDateString('pt-BR')}
+              </div>
+            )}
+            <div>
+              <span className="font-semibold">Responsável:</span> {evento.professor_nome || 'Sem responsável'}
+              {evento.professor_nome && (
+                <span className="text-muted-foreground text-xs ml-1">
+                  ({formatarTipoResponsavel(evento.professor_id ? 'professor' : null)})
+                </span>
+              )}
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
