@@ -1,10 +1,9 @@
 
-import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Calendar, Clock, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Switch } from "@/components/ui/switch";
 import { useCalendarioEventosUnificados, CalendarioEvento } from "@/hooks/use-calendario-eventos-unificados";
 import { useExcluirEventoSala } from "@/hooks/use-excluir-evento-sala";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,11 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState, useMemo, useEffect } from "react";
-import { TurmaModal } from "@/components/turmas/TurmaModal";
-import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
-import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
-import ListaFaltasFuturasModal from "@/components/turmas/ListaFaltasFuturasModal";
+import { useState, useMemo } from "react";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 const diasSemana = {
@@ -133,11 +128,9 @@ const calcularDuracaoAula = (categoria: string): number => {
 // Componente para renderizar um bloqueio/evento de sala no grid
 const BlocoEvento = ({ 
   evento, 
-  onEdit,
   onDelete
 }: { 
   evento: CalendarioEvento; 
-  onEdit?: () => void;
   onDelete?: () => void;
 }) => {
   const corSala = evento.sala_cor || '#9CA3AF';
@@ -158,18 +151,8 @@ const BlocoEvento = ({
         {evento.titulo}
       </div>
       
-      {/* Botões no canto inferior direito */}
-      <div className="absolute bottom-1 right-1 flex gap-1">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.();
-          }}
-          className="p-1 bg-white/80 rounded border border-gray-300 transition-colors"
-          title="Editar"
-        >
-          <Pencil className="w-3 h-3 text-gray-700" />
-        </button>
+      {/* Botão de excluir no canto inferior direito */}
+      <div className="absolute bottom-1 right-1">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -183,102 +166,6 @@ const BlocoEvento = ({
       </div>
     </div>
   );
-};
-
-// Componente para o bloco de turma
-const BlocoTurma = ({ evento, onClick, isCompact = false }: {
-  evento: CalendarioEvento; 
-  onClick?: () => void; 
-  isCompact?: boolean; 
-}) => {
-  // Calcular vagas disponíveis
-  const capacidadeMaxima = evento.categoria === 'infantil' ? 6 : 12;
-  const ocupacao = evento.total_alunos_ativos + evento.total_reposicoes + evento.total_aulas_experimentais - evento.total_faltas_futuras;
-  const vagasDisponiveis = Math.max(0, capacidadeMaxima - ocupacao);
-  
-  // Determinar cor das vagas
-  const getVagasColor = (vagas: number, capacidade: number) => {
-    const percentualVagas = (vagas / capacidade) * 100;
-    if (percentualVagas > 40) return 'text-emerald-600';
-    if (percentualVagas > 20) return 'text-amber-600';
-    return 'text-red-600';
-  };
-
-  const conteudoCompact = (
-    <div 
-      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer transition-colors text-xs flex flex-col justify-between min-h-[70px]"
-      onClick={onClick}
-    >
-      <div className="space-y-0.5">
-        <div className="font-medium text-blue-900 text-xs leading-tight">
-          {evento.categoria}
-        </div>
-        <div className="text-blue-700 text-xs leading-tight">
-          {formatarNomeProfessor(evento.professor_nome || '')}
-        </div>
-        <div className="flex items-center gap-1 text-blue-600">
-          <Users className="w-2.5 h-2.5 flex-shrink-0" />
-          <span className="text-xs">
-            {evento.total_alunos_ativos}/{capacidadeMaxima}
-          </span>
-        </div>
-        {(evento.total_reposicoes > 0 || evento.total_aulas_experimentais > 0 || evento.total_faltas_futuras > 0) && (
-          <div className="text-xs leading-tight">
-            {evento.total_reposicoes > 0 && (
-              <span className="text-red-500 font-medium">Rep: {evento.total_reposicoes}</span>
-            )}
-            {evento.total_reposicoes > 0 && (evento.total_aulas_experimentais > 0 || evento.total_faltas_futuras > 0) && ' '}
-            {evento.total_aulas_experimentais > 0 && (
-              <span className="text-green-500 font-medium">Exp: {evento.total_aulas_experimentais}</span>
-            )}
-            {evento.total_aulas_experimentais > 0 && evento.total_faltas_futuras > 0 && ' '}
-            {evento.total_faltas_futuras > 0 && (
-              <span className="font-medium" style={{ color: '#e17021' }}>Fal: {evento.total_faltas_futuras}</span>
-            )}
-          </div>
-        )}
-        <div className={`text-xs font-medium leading-tight ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
-          {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''}
-        </div>
-      </div>
-    </div>
-  );
-
-  const conteudoNormal = (
-    <div 
-      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer transition-colors text-xs flex flex-col justify-between min-h-[90px]"
-      onClick={onClick}
-    >
-      <div>
-        <div className="font-medium text-blue-900 mb-1 text-sm">
-          {evento.categoria}
-        </div>
-        <div className="text-blue-700 mb-1">
-          {formatarNomeProfessor(evento.professor_nome || '')}
-        </div>
-        <div className="flex items-center gap-1 text-blue-600 mb-1">
-          <Users className="w-3 h-3" />
-          <span>
-            {evento.total_alunos_ativos}/{capacidadeMaxima}
-            {evento.total_reposicoes > 0 && (
-              <span className="text-red-500 font-medium"> Rep: {evento.total_reposicoes}</span>
-            )}
-            {evento.total_aulas_experimentais > 0 && (
-              <span className="text-green-500 font-medium"> Exp: {evento.total_aulas_experimentais}</span>
-            )}
-            {evento.total_faltas_futuras > 0 && (
-              <span className="font-medium" style={{ color: '#e17021' }}> Fal: {evento.total_faltas_futuras}</span>
-            )}
-          </span>
-        </div>
-        <div className={`text-xs font-medium ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
-          {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''} disponível{vagasDisponiveis !== 1 ? 'eis' : ''}
-        </div>
-      </div>
-    </div>
-  );
-
-  return isCompact ? conteudoCompact : conteudoNormal;
 };
 
 export default function ReservasSala() {
@@ -297,58 +184,19 @@ export default function ReservasSala() {
     activeUnit?.id
   );
 
-  // Estados dos filtros
-  const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
+  // Estados dos filtros - apenas dia da semana para eventos de sala
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>([
     'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'
   ]);
-  const [somenteComVagas, setSomenteComVagas] = useState(false);
-  
-  // Estados para o modal da turma
-  const [modalTurmaId, setModalTurmaId] = useState<string | null>(null);
-  const [modalDataConsulta, setModalDataConsulta] = useState<Date | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Estado para o modal da lista de reposições
-  const [isListaReposicoesOpen, setIsListaReposicoesOpen] = useState(false);
-  
-  // Estado para o modal da lista de aulas experimentais
-  const [isListaAulasExperimentaisOpen, setIsListaAulasExperimentaisOpen] = useState(false);
-
-  // Estado para o modal da lista de faltas futuras
-  const [isListaFaltasFuturasOpen, setIsListaFaltasFuturasOpen] = useState(false);
   
   // Estados para excluir evento
   const [eventoParaExcluir, setEventoParaExcluir] = useState<CalendarioEvento | null>(null);
   const excluirEventoSala = useExcluirEventoSala();
 
 
-  // Extrair perfis únicos dos dados (excluindo domingo e eventos de sala)
-  const perfisDisponiveis = useMemo(() => {
-    if (!eventosPorDia) return [];
-    const perfis = new Set<string>();
-    Object.entries(eventosPorDia).forEach(([dia, eventos]) => {
-      // Excluir domingo
-      if (dia === 'domingo') return;
-      
-      eventos.forEach(evento => {
-        // Só considerar turmas (não eventos de sala) com alunos ativos
-        if (evento.tipo_evento === 'turma' && evento.categoria && evento.total_alunos_ativos > 0) {
-          perfis.add(evento.categoria);
-        }
-      });
-    });
-    return Array.from(perfis).sort();
-  }, [eventosPorDia]);
+  // Não precisamos mais de perfis para eventos de sala
 
-  // Selecionar todos os perfis por padrão quando os perfis disponíveis mudarem
-  useEffect(() => {
-    if (perfisDisponiveis.length > 0 && perfisSelecionados.length === 0) {
-      setPerfisSelecionados(perfisDisponiveis);
-    }
-  }, [perfisDisponiveis]);
-
-  // Aplicar filtros (excluindo domingo)
+  // Aplicar filtros (excluindo domingo) - mostrar APENAS eventos de sala
   const eventosFiltradasPorDia = useMemo(() => {
     if (!eventosPorDia) return {};
     
@@ -364,26 +212,15 @@ export default function ReservasSala() {
       }
       
       const eventosFiltrados = eventos.filter(evento => {
-        // Filtrar APENAS turmas (não mostrar eventos de sala)
-        if (evento.tipo_evento !== 'turma') return false;
-        
-        // Para turmas, aplicar filtros
-        if (evento.total_alunos_ativos === 0) return false;
-        
-        // Filtro por perfil
-        if (evento.categoria && !perfisSelecionados.includes(evento.categoria)) return false;
-        
-        // Filtro por vagas (menos de 12 alunos)
-        if (somenteComVagas && evento.total_alunos_ativos >= 12) return false;
-        
-        return true;
+        // Filtrar APENAS eventos de sala (não mostrar turmas)
+        return evento.tipo_evento === 'evento_sala';
       });
       
       resultado[dia] = eventosFiltrados;
     });
     
     return resultado;
-  }, [eventosPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
+  }, [eventosPorDia, diasSelecionados]);
 
   // Estrutura do grid reorganizada - agrupar eventos sobrepostos temporalmente
   const eventosGrid = useMemo(() => {
@@ -417,14 +254,6 @@ export default function ReservasSala() {
     return grid;
   }, [eventosFiltradasPorDia]);
 
-  const togglePerfil = (perfil: string) => {
-    setPerfisSelecionados(prev => 
-      prev.includes(perfil) 
-        ? prev.filter(p => p !== perfil)
-        : [...prev, perfil]
-    );
-  };
-
   const toggleDia = (dia: string) => {
     setDiasSelecionados(prev => 
       prev.includes(dia) 
@@ -434,13 +263,7 @@ export default function ReservasSala() {
   };
 
   const limparFiltros = () => {
-    setPerfisSelecionados([]);
     setDiasSelecionados(['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']);
-    setSomenteComVagas(false);
-  };
-
-  const selecionarTodosPerfis = () => {
-    setPerfisSelecionados([...perfisDisponiveis]);
   };
 
   const navegarSemana = (direcao: 'anterior' | 'proxima') => {
@@ -457,34 +280,7 @@ export default function ReservasSala() {
     setSemanaAtual(new Date());
   };
 
-  // Funções para o modal da turma
-  const handleTurmaClick = (turmaId: string, diaSemana: string) => {
-    // Mapear o dia da semana para o índice da array datasSemanais
-    const diaIndex = obterDiaSemanaIndex(diaSemana);
-    const dataModal = datasSemanais[diaIndex];
-    console.log('🎯 handleTurmaClick - Clicou na turma:', {
-      turmaId,
-      diaSemana,
-      diaIndex,
-      dataModal: dataModal?.toISOString().split('T')[0],
-      semanaAtual: semanaAtual.toISOString().split('T')[0]
-    });
-    setModalTurmaId(turmaId);
-    setModalDataConsulta(dataModal);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setModalTurmaId(null);
-    setModalDataConsulta(null);
-  };
-
-  const handleEditarEvento = (evento: CalendarioEvento) => {
-    console.log('✏️ Editar evento:', evento);
-    // TODO: Implementar edição de evento
-    alert('Funcionalidade de edição em desenvolvimento');
-  };
+  // Funções para excluir evento
 
   const handleExcluirEvento = (evento: CalendarioEvento) => {
     setEventoParaExcluir(evento);
@@ -580,71 +376,12 @@ export default function ReservasSala() {
             Hoje
           </Button>
           
-          <Button
-            variant="outline"
-            size="sm"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            PDF
-          </Button>
-          
         </div>
       </div>
 
 
-      {/* Seção de Filtros */}
+      {/* Seção de Filtros - Simplificada para eventos de sala */}
       <div className="space-y-4 mb-6 p-4 bg-muted/20 rounded-lg">
-        {/* Cabeçalho com botões de ação */}
-        <div className="flex justify-end gap-2 mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsListaReposicoesOpen(true)}
-            className="min-w-[140px]"
-          >
-            <List className="w-4 h-4 mr-2" />
-            Lista de Reposições
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsListaAulasExperimentaisOpen(true)}
-            className="min-w-[140px]"
-          >
-            <Users className="w-4 h-4 mr-2" />
-            Lista de Experimentais
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsListaFaltasFuturasOpen(true)}
-            className="min-w-[140px]"
-          >
-            <UserMinus className="w-4 h-4 mr-2" />
-            Lista de Faltas Futuras
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Perfil:</label>
-          <div className="flex flex-wrap gap-2">
-            {perfisDisponiveis.map((perfil) => (
-              <Toggle
-                key={perfil}
-                pressed={perfisSelecionados.includes(perfil)}
-                onPressedChange={() => togglePerfil(perfil)}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                {perfil}
-              </Toggle>
-            ))}
-          </div>
-        </div>
-
         <div className="space-y-2">
           <label className="text-sm font-medium">Dia da Semana:</label>
           <div className="flex flex-wrap gap-2">
@@ -663,38 +400,15 @@ export default function ReservasSala() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={somenteComVagas}
-                onCheckedChange={setSomenteComVagas}
-                id="somente-vagas"
-              />
-              <label htmlFor="somente-vagas" className="text-sm font-medium cursor-pointer">
-                Somente Vagas Disponíveis (menos de 12 alunos)
-              </label>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={selecionarTodosPerfis}
-              className="text-xs"
-              disabled={perfisSelecionados.length === perfisDisponiveis.length}
-            >
-              ✓ Selecionar Todos Perfis
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={limparFiltros}
-              className="text-xs"
-            >
-              🔄 Limpar Filtros
-            </Button>
-          </div>
+        <div className="flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={limparFiltros}
+            className="text-xs"
+          >
+            🔄 Limpar Filtros
+          </Button>
         </div>
       </div>
 
@@ -811,19 +525,10 @@ export default function ReservasSala() {
                         }}
                       >
                         <div className="h-full border border-gray-300 bg-white rounded-sm overflow-hidden">
-                          {evento.tipo_evento === 'turma' ? (
-                            <BlocoTurma 
-                              evento={evento} 
-                              onClick={() => handleTurmaClick(evento.evento_id, diaSemana)}
-                              isCompact={isCompact}
-                            />
-                          ) : (
-                            <BlocoEvento 
-                              evento={evento}
-                              onEdit={() => handleEditarEvento(evento)}
-                              onDelete={() => handleExcluirEvento(evento)}
-                            />
-                          )}
+                          <BlocoEvento 
+                            evento={evento}
+                            onDelete={() => handleExcluirEvento(evento)}
+                          />
                         </div>
                       </div>
                     );
@@ -835,37 +540,11 @@ export default function ReservasSala() {
         </div>
       </div>
       
-      {/* Modal da Turma */}
-      <TurmaModal 
-        turmaId={modalTurmaId}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        dataConsulta={modalDataConsulta || undefined}
-      />
-      
-      {/* Modal da Lista de Reposições */}
-      <ListaReposicoesModal 
-        open={isListaReposicoesOpen}
-        onOpenChange={setIsListaReposicoesOpen}
-      />
-      
-      {/* Modal da Lista de Aulas Experimentais */}
-      <ListaAulasExperimentaisModal 
-        open={isListaAulasExperimentaisOpen}
-        onOpenChange={setIsListaAulasExperimentaisOpen}
-      />
-      
-      {/* Modal da Lista de Faltas Futuras */}
-      <ListaFaltasFuturasModal 
-        isOpen={isListaFaltasFuturasOpen}
-        onClose={() => setIsListaFaltasFuturasOpen(false)}
-      />
-      
       {/* Dialog de confirmação para excluir evento */}
       <AlertDialog open={!!eventoParaExcluir} onOpenChange={(open) => !open && setEventoParaExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {eventoParaExcluir?.tipo_evento === 'turma' ? 'Aula' : 'Evento'}</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Evento</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir "{eventoParaExcluir?.titulo}" da sala {eventoParaExcluir?.sala_nome}?
               Esta ação não pode ser desfeita.
@@ -876,7 +555,6 @@ export default function ReservasSala() {
             <AlertDialogAction
               onClick={confirmarExclusao}
               className="bg-red-600 hover:bg-red-700"
-              disabled={eventoParaExcluir?.tipo_evento === 'turma'}
             >
               Excluir
             </AlertDialogAction>
