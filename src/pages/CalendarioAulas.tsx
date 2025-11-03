@@ -916,82 +916,110 @@ export default function CalendarioAulas() {
             ))
           )}
 
-          {/* Renderizar turmas e bloqueios juntos para evitar sobreposição */}
-          {slots.map((slot, slotIndex) => 
-            datasSemanais.map((data, diaIndex) => {
-              const diaSemanaChave = Object.keys(diasSemana)[diaIndex] as keyof typeof diasSemana;
+          {/* Renderizar bloqueios de sala primeiro */}
+          {mostrarBloqueios && bloqueiosPorDia && salas && Object.entries(bloqueiosPorDia).map(([dia, bloqueios]) => {
+            const diaIndex = obterDiaSemanaIndex(dia);
+            if (diaIndex === -1) return null;
+            
+            return bloqueios.map((bloqueio) => {
+              const slotInicio = horarioParaSlot(bloqueio.horario_inicio);
+              if (slotInicio === null) return null;
               
-              // Buscar turmas que começam neste slot
-              const turmasNoSlot = turmasGrid[`${slotIndex}-${diaSemanaChave}`] || [];
+              // Calcular duração em slots
+              const [horaIni, minIni] = bloqueio.horario_inicio.split(':').map(Number);
+              const [horaFim, minFim] = bloqueio.horario_fim.split(':').map(Number);
+              const minutosIni = horaIni * 60 + minIni;
+              const minutosFim = horaFim * 60 + minFim;
+              const duracaoMinutos = minutosFim - minutosIni;
+              const duracaoSlots = Math.ceil(duracaoMinutos / 30);
               
-              // Buscar bloqueios ativos neste slot
-              const bloqueiosAtivos = mostrarBloqueios && bloqueiosPorDia && bloqueiosPorDia[diaSemanaChave] 
-                ? bloqueiosPorDia[diaSemanaChave].filter((bloqueio) => {
-                    const slotInicioBloqueio = horarioParaSlot(bloqueio.horario_inicio);
-                    const [horaFim, minFim] = bloqueio.horario_fim.split(':').map(Number);
-                    const slotFimBloqueio = horarioParaSlot(`${horaFim.toString().padStart(2, '0')}:${minFim.toString().padStart(2, '0')}`);
-                    
-                    // Bloqueio está ativo se: começou neste slot OU começou antes e ainda não terminou
-                    return slotInicioBloqueio !== null && slotFimBloqueio !== null &&
-                           slotInicioBloqueio <= slotIndex && slotFimBloqueio > slotIndex;
-                  })
-                : [];
+              // Calcular quantos elementos existem neste horário
+              const diaSemanaChave = dia as keyof typeof diasSemana;
+              const turmasNesseHorario = turmasGrid[`${slotInicio}-${diaSemanaChave}`] || [];
               
-              // Total de elementos (turmas + bloqueios) ativos neste slot
-              const totalElementos = turmasNoSlot.length + bloqueiosAtivos.length;
+              // Contar bloqueios que começam no mesmo horário
+              const bloqueiosNesseHorario = bloqueios.filter(b => 
+                horarioParaSlot(b.horario_inicio) === slotInicio
+              );
               
-              if (totalElementos === 0) return null;
+              const totalElementos = turmasNesseHorario.length + bloqueiosNesseHorario.length;
+              const indexBloqueio = bloqueiosNesseHorario.findIndex(b => b.id === bloqueio.id);
+              const widthPercent = 100 / totalElementos;
+              const leftPercent = (turmasNesseHorario.length + indexBloqueio) * widthPercent;
               
-              // Calcular altura baseada no número de turmas (bloqueios seguem os bloqueios originais)
-              const alturaSlots = turmasNoSlot.length > 2 ? 5 : 4;
-              const isCompact = totalElementos > 1;
+              // Buscar cor da sala
+              const sala = salas.find(s => s.id === bloqueio.sala_id);
+              const corSala = sala?.cor_calendario || '#9CA3AF';
               
               return (
                 <div
-                  key={`combined-${slotIndex}-${diaIndex}`}
-                  className="border border-gray-300 bg-white rounded-sm overflow-hidden"
+                  key={bloqueio.id}
+                  className="border border-gray-300 rounded-sm overflow-hidden absolute"
                   style={{
-                    gridRow: `${slotIndex + 1} / ${slotIndex + 1 + alturaSlots}`,
+                    gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
                     gridColumn: diaIndex + 2,
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${totalElementos}, 1fr)`,
-                    gap: '1px',
+                    width: `${widthPercent}%`,
+                    left: `${leftPercent}%`,
+                    height: '100%',
+                    zIndex: 2,
+                    padding: '1px'
+                  }}
+                >
+                  <BlocoBloqueio 
+                    bloqueio={bloqueio}
+                    corSala={corSala}
+                    onEdit={() => handleEditarBloqueio(bloqueio)}
+                    onDelete={() => handleExcluirBloqueio(bloqueio)}
+                  />
+                </div>
+              );
+            });
+          })}
+
+          {/* Renderizar blocos de turmas */}
+          {Object.entries(turmasGrid).map(([chave, turmas]) => {
+            const [slotStr, diaSemana] = chave.split('-');
+            const slot = parseInt(slotStr);
+            const diaIndex = obterDiaSemanaIndex(diaSemana);
+            
+            // Contar bloqueios que começam no mesmo horário
+            const bloqueiosNesseHorario = mostrarBloqueios && bloqueiosPorDia && bloqueiosPorDia[diaSemana]
+              ? bloqueiosPorDia[diaSemana].filter(b => horarioParaSlot(b.horario_inicio) === slot)
+              : [];
+            
+            const totalElementos = turmas.length + bloqueiosNesseHorario.length;
+            
+            // Determinar altura baseada no número de turmas
+            const alturaSlots = turmas.length > 2 ? 5 : 4;
+            const isCompact = turmas.length > 1;
+            
+            return turmas.map((turma, turmaIndex) => {
+              const widthPercent = 100 / totalElementos;
+              const leftPercent = turmaIndex * widthPercent;
+              
+              return (
+                <div
+                  key={`${turma.turma_id}-${turmaIndex}`}
+                  className="border border-gray-300 bg-white rounded-sm overflow-hidden absolute"
+                  style={{
+                    gridRow: `${slot + 1} / ${slot + 1 + alturaSlots}`,
+                    gridColumn: diaIndex + 2,
+                    width: `${widthPercent}%`,
+                    left: `${leftPercent}%`,
+                    height: '100%',
                     padding: '1px',
                     zIndex: 1,
                   }}
                 >
-                  {/* Renderizar turmas */}
-                  {turmasNoSlot.map((turma, turmaIndex) => (
-                    <BlocoTurma 
-                      key={`turma-${turma.turma_id}-${turmaIndex}`} 
-                      turma={turma} 
-                      onClick={() => handleTurmaClick(turma.turma_id, diaSemanaChave)}
-                      isCompact={isCompact}
-                    />
-                  ))}
-                  
-                  {/* Renderizar bloqueios que começam neste slot */}
-                  {bloqueiosAtivos
-                    .filter(bloqueio => horarioParaSlot(bloqueio.horario_inicio) === slotIndex)
-                    .map((bloqueio) => {
-                      const sala = salas?.find(s => s.id === bloqueio.sala_id);
-                      const corSala = sala?.cor_calendario || '#9CA3AF';
-                      
-                      return (
-                        <div key={`bloqueio-${bloqueio.id}`} className="h-full">
-                          <BlocoBloqueio 
-                            bloqueio={bloqueio}
-                            corSala={corSala}
-                            onEdit={() => handleEditarBloqueio(bloqueio)}
-                            onDelete={() => handleExcluirBloqueio(bloqueio)}
-                          />
-                        </div>
-                      );
-                    })}
+                  <BlocoTurma 
+                    turma={turma} 
+                    onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
+                    isCompact={isCompact}
+                  />
                 </div>
               );
-            })
-          )}
+            });
+          })}
         </div>
       </div>
       
