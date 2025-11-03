@@ -1,10 +1,15 @@
 
-import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus, MapPin } from "lucide-react";
+import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus, MapPin, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Switch } from "@/components/ui/switch";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
 import { useBloqueiosSala, BloqueioSala } from "@/hooks/use-bloqueios-sala";
 import { useSalas } from "@/hooks/use-salas";
@@ -142,43 +147,107 @@ const BlocoBloqueio = ({
   const corClara = clarearCor(corSala);
   
   return (
-    <div
-      className="p-2 rounded-md border-2 transition-shadow text-xs h-full overflow-hidden flex flex-col gap-1"
-      style={{
-        backgroundColor: corClara,
-        borderColor: corSala
-      }}
-    >
-      <div className="font-semibold text-gray-900 truncate">
-        🔒 {bloqueio.sala_nome}
-      </div>
-      <div className="text-gray-800 truncate">
-        {bloqueio.titulo}
-      </div>
-      <div className="text-gray-700 text-[10px] truncate">
-        {bloqueio.tipo_evento.replace('_', ' ')}
-      </div>
-      <div className="flex gap-1 mt-auto pt-1">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.();
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        <div
+          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden flex flex-col gap-1 cursor-pointer hover:shadow-lg"
+          style={{
+            backgroundColor: corClara,
+            borderColor: corSala
           }}
-          className="flex-1 px-2 py-1 text-[10px] bg-white/80 hover:bg-white rounded border border-gray-300 transition-colors"
         >
-          Editar
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.();
-          }}
-          className="flex-1 px-2 py-1 text-[10px] bg-red-100 hover:bg-red-200 text-red-700 rounded border border-red-300 transition-colors"
-        >
-          Excluir
-        </button>
-      </div>
-    </div>
+          <div className="font-semibold text-gray-900 truncate">
+            🔒 {bloqueio.sala_nome}
+          </div>
+          <div className="text-gray-800 truncate">
+            {bloqueio.titulo}
+          </div>
+          <div className="flex gap-1 mt-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="p-1 bg-white/80 hover:bg-white rounded border border-gray-300 transition-colors"
+              title="Editar"
+            >
+              <Pencil className="w-3 h-3 text-gray-700" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              className="p-1 bg-red-100 hover:bg-red-200 rounded border border-red-300 transition-colors"
+              title="Excluir"
+            >
+              <Trash2 className="w-3 h-3 text-red-700" />
+            </button>
+          </div>
+        </div>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-80 z-50 bg-white" align="start">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Detalhes do Bloqueio</h4>
+            <div 
+              className="w-4 h-4 rounded-full border-2"
+              style={{ backgroundColor: corClara, borderColor: corSala }}
+            />
+          </div>
+          
+          <div className="space-y-1 text-sm">
+            <div className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Sala:</span>{' '}
+                <span className="text-muted-foreground">{bloqueio.sala_nome}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Título:</span>{' '}
+                <span className="text-muted-foreground">{bloqueio.titulo}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Data:</span>{' '}
+                <span className="text-muted-foreground">
+                  {new Date(bloqueio.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Horário:</span>{' '}
+                <span className="text-muted-foreground">
+                  {bloqueio.horario_inicio} - {bloqueio.horario_fim}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Badge variant="outline" className="text-xs">
+                {bloqueio.tipo_evento.replace('_', ' ')}
+              </Badge>
+            </div>
+            
+            {bloqueio.descricao && (
+              <div className="pt-2 border-t">
+                <p className="text-xs text-muted-foreground">{bloqueio.descricao}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 };
 
