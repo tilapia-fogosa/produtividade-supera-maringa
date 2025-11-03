@@ -16,7 +16,6 @@ import { useHorariosDisponiveisSalas } from "@/hooks/use-horarios-disponiveis-sa
 import { useSalas } from "@/hooks/use-salas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useCriarEventoSala } from "@/hooks/use-criar-evento-sala";
-import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { ChevronLeft, Clock, MapPin, User, Calendar as CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -35,15 +34,17 @@ interface ReservarSalaModalProps {
 
 type Etapa = 1 | 2 | 3 | 4 | 5;
 
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+
 export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   isOpen,
   onClose,
   unitId,
 }) => {
-  const { activeUnit } = useActiveUnit();
-  const finalUnitId = unitId || activeUnit?.id;
+  // Sempre usar unidade de Maringá
+  const finalUnitId = MARINGA_UNIT_ID;
   
-  console.log('🎯 ReservarSalaModal - unitId recebido:', unitId, 'activeUnit.id:', activeUnit?.id, 'finalUnitId:', finalUnitId);
+  console.log('🎯 ReservarSalaModal - usando unit_id fixo de Maringá:', finalUnitId);
   
   const [etapa, setEtapa] = useState<Etapa>(1);
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
