@@ -16,6 +16,7 @@ import { useHorariosDisponiveisSalas } from "@/hooks/use-horarios-disponiveis-sa
 import { useSalas } from "@/hooks/use-salas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useCriarEventoSala } from "@/hooks/use-criar-evento-sala";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { ChevronLeft, Clock, MapPin, User, Calendar as CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -39,7 +40,10 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   onClose,
   unitId,
 }) => {
-  console.log('🎯 ReservarSalaModal - unitId recebido:', unitId);
+  const { activeUnit } = useActiveUnit();
+  const finalUnitId = unitId || activeUnit?.id;
+  
+  console.log('🎯 ReservarSalaModal - unitId recebido:', unitId, 'activeUnit.id:', activeUnit?.id, 'finalUnitId:', finalUnitId);
   
   const [etapa, setEtapa] = useState<Etapa>(1);
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
@@ -56,9 +60,9 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   const [dataFim, setDataFim] = useState<Date | null>(null);
 
   const { data: horariosDisponiveis, isLoading: loadingHorarios } = 
-    useHorariosDisponiveisSalas(dataSelecionada, unitId);
+    useHorariosDisponiveisSalas(dataSelecionada, finalUnitId);
   
-  const { data: todasSalas } = useSalas(unitId);
+  const { data: todasSalas } = useSalas(finalUnitId);
   const { responsaveis } = useResponsaveis();
   const criarEventoMutation = useCriarEventoSala();
 
@@ -120,12 +124,14 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!dataSelecionada || !salaSelecionada || !horarioInicioSelecionado || !duracaoSelecionada) return;
+    if (!dataSelecionada || !salaSelecionada || !horarioInicioSelecionado || !duracaoSelecionada || !finalUnitId) return;
 
     const responsavel = responsaveis.find(r => r.id === responsavelId);
     if (!responsavel) return;
 
     const horarioFim = calcularHorarioFim(horarioInicioSelecionado, duracaoSelecionada);
+
+    console.log('🔄 Criando reserva com unit_id:', finalUnitId);
 
     try {
       await criarEventoMutation.mutateAsync({
@@ -146,12 +152,13 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         dia_mes: recorrente && tipoRecorrencia === 'mensal' ? dataSelecionada.getDate() : undefined,
         data_inicio_recorrencia: recorrente && dataInicio ? dataInicio.toISOString().split('T')[0] : undefined,
         data_fim_recorrencia: recorrente && dataFim ? dataFim.toISOString().split('T')[0] : undefined,
-        unit_id: unitId || undefined,
+        unit_id: finalUnitId,
       });
       
+      console.log('✅ Reserva criada com sucesso!');
       onClose();
     } catch (error) {
-      console.error('Erro ao criar reserva:', error);
+      console.error('❌ Erro ao criar reserva:', error);
     }
   };
 
