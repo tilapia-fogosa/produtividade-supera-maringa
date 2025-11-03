@@ -237,17 +237,26 @@ export default function ReservasSala() {
   };
 
   const confirmarExclusao = () => {
-    if (eventoParaExcluir && eventoParaExcluir.tipo_evento === 'evento_sala') {
-      excluirEvento(eventoParaExcluir.evento_id, {
-        onSuccess: () => {
-          setEventoParaExcluir(null);
-        },
-        onError: (error) => {
-          console.error('❌ Erro ao excluir evento:', error);
-          alert('Erro ao excluir evento. Tente novamente.');
-        }
-      });
+    if (!eventoParaExcluir) return;
+    
+    // Só permitir excluir eventos de sala, não turmas
+    if (eventoParaExcluir.tipo_evento !== 'evento_sala') {
+      alert('Não é possível excluir aulas. Apenas reservas de sala podem ser excluídas.');
+      setEventoParaExcluir(null);
+      return;
     }
+    
+    excluirEvento(eventoParaExcluir.evento_id, {
+      onSuccess: () => {
+        console.log('✅ Reserva excluída com sucesso');
+        setEventoParaExcluir(null);
+      },
+      onError: (error) => {
+        console.error('❌ Erro ao excluir reserva:', error);
+        alert('Erro ao excluir reserva. Tente novamente.');
+        setEventoParaExcluir(null);
+      }
+    });
   };
 
   // Slots de 30 minutos (6h às 21h = 30 slots)

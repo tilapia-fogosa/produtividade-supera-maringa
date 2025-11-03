@@ -156,6 +156,7 @@ export const useEditarEventoSala = () => {
       queryClient.invalidateQueries({ queryKey: ["bloqueios-sala"] });
       queryClient.invalidateQueries({ queryKey: ["bloqueios-professor"] });
       queryClient.invalidateQueries({ queryKey: ["calendario-turmas"] });
+      queryClient.invalidateQueries({ queryKey: ["calendario-eventos-unificados"] });
       queryClient.invalidateQueries({ queryKey: ["horarios-disponiveis-salas"] });
     },
     onError: (error: Error) => {
