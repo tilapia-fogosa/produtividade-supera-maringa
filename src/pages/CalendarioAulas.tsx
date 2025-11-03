@@ -132,6 +132,24 @@ const clarearCor = (hex: string): string => {
   return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
 };
 
+// Função para calcular duração da aula em minutos baseado na categoria
+const calcularDuracaoAula = (categoria: string): number => {
+  const categoriaLower = categoria.toLowerCase();
+  
+  // Infantil = 60 minutos
+  if (categoriaLower.includes('infantil')) {
+    return 60;
+  }
+  
+  // 60+ = 90 minutos
+  if (categoriaLower.includes('60+')) {
+    return 90;
+  }
+  
+  // Todas as outras categorias = 90 minutos
+  return 90;
+};
+
 // Componente para renderizar um bloqueio de sala no grid
 const BlocoBloqueio = ({ 
   bloqueio, 
@@ -987,7 +1005,9 @@ export default function CalendarioAulas() {
             
             // Se há conflito (múltiplos elementos), renderizar com grid
             if (totalElementos > 1) {
-              const alturaSlots = turmas.length > 2 ? 5 : 4;
+              // Calcular duração baseada na primeira turma (todas deveriam ter a mesma duração se começam no mesmo horário)
+              const duracaoMinutos = turmas.length > 0 ? calcularDuracaoAula(turmas[0].categoria) : 90;
+              const duracaoSlots = Math.ceil(duracaoMinutos / 30);
               const isCompact = true;
               
               return (
@@ -995,7 +1015,7 @@ export default function CalendarioAulas() {
                   key={chave}
                   className="border border-gray-300 bg-white rounded-sm overflow-hidden"
                   style={{
-                    gridRow: `${slot + 1} / ${slot + 1 + alturaSlots}`,
+                    gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
                     gridColumn: diaIndex + 2,
                     display: 'grid',
                     gridTemplateColumns: `repeat(${totalElementos}, 1fr)`,
@@ -1036,7 +1056,9 @@ export default function CalendarioAulas() {
             }
             
             // Se não há conflito, renderizar turmas normalmente
-            const alturaSlots = turmas.length > 2 ? 5 : 4;
+            // Calcular duração baseada na primeira turma
+            const duracaoMinutos = turmas.length > 0 ? calcularDuracaoAula(turmas[0].categoria) : 90;
+            const duracaoSlots = Math.ceil(duracaoMinutos / 30);
             const isCompact = turmas.length > 1;
             
             return (
@@ -1044,7 +1066,7 @@ export default function CalendarioAulas() {
                 key={chave}
                 className="border border-gray-300 bg-white rounded-sm overflow-hidden"
                 style={{
-                  gridRow: `${slot + 1} / ${slot + 1 + alturaSlots}`,
+                  gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
                   gridColumn: diaIndex + 2,
                   display: 'grid',
                   gridTemplateColumns: `repeat(${turmas.length}, 1fr)`,
