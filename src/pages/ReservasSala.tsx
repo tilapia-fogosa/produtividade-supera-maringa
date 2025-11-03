@@ -66,38 +66,42 @@ const clarearCor = (hex: string, percent: number = 30): string => {
 const BlocoEvento = ({
   evento,
   onEdit,
-  onDelete
+  onDelete,
+  isCompact
 }: {
   evento: CalendarioEvento;
   onEdit: (evento: CalendarioEvento) => void;
   onDelete: (evento: CalendarioEvento) => void;
+  isCompact?: boolean;
 }) => {
   return (
     <div
-      className="h-full p-2 rounded-sm border-l-4 flex flex-col justify-between group relative"
+      className="h-full p-1.5 rounded-sm border-l-4 flex flex-col justify-between group relative overflow-hidden"
       style={{
         backgroundColor: clarearCor(evento.sala_cor, 80),
         borderLeftColor: evento.sala_cor,
       }}
     >
-      <div className="flex-1 min-h-0">
-        <p className="font-semibold text-xs truncate mb-0.5" style={{ color: evento.sala_cor }}>
+      <div className="flex-1 min-h-0 space-y-0.5">
+        <p className="font-semibold text-[11px] leading-tight truncate" style={{ color: evento.sala_cor }} title={evento.titulo}>
           {evento.titulo}
         </p>
-        <p className="text-[10px] text-muted-foreground truncate">
+        <p className="text-[9px] leading-tight text-muted-foreground truncate" title={evento.sala_nome}>
           {evento.sala_nome}
         </p>
-        {evento.descricao && (
-          <p className="text-[10px] text-muted-foreground truncate mt-1">
+        {!isCompact && evento.descricao && (
+          <p className="text-[9px] leading-tight text-muted-foreground truncate" title={evento.descricao}>
             {evento.descricao}
           </p>
         )}
-        <p className="text-[10px] text-muted-foreground mt-1">
-          {evento.horario_inicio} - {evento.horario_fim}
-        </p>
+        {!isCompact && (
+          <p className="text-[9px] leading-tight text-muted-foreground mt-0.5">
+            {evento.horario_inicio.substring(0, 5)} - {evento.horario_fim.substring(0, 5)}
+          </p>
+        )}
       </div>
       
-      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
           variant="ghost"
           size="icon"
@@ -126,18 +130,22 @@ const BlocoEvento = ({
 };
 
 // Componente para turma (bloqueada)
-const BlocoTurmaBloqueada = ({ evento }: { evento: CalendarioEvento }) => {
+const BlocoTurmaBloqueada = ({ evento, isCompact }: { evento: CalendarioEvento; isCompact?: boolean }) => {
   return (
-    <div className="h-full p-2 rounded-sm bg-blue-50 border-l-4 border-blue-500">
-      <p className="font-medium text-xs truncate text-blue-900">
-        🔒 {evento.titulo}
-      </p>
-      <p className="text-[10px] text-blue-700 truncate">
-        {evento.sala_nome}
-      </p>
-      <p className="text-[10px] text-blue-600 mt-1">
-        {evento.horario_inicio} - {evento.horario_fim}
-      </p>
+    <div className="h-full p-1.5 rounded-sm bg-blue-50 border-l-4 border-blue-500 flex flex-col justify-between overflow-hidden">
+      <div className="flex-1 min-h-0 space-y-0.5">
+        <p className="font-semibold text-[11px] leading-tight truncate text-blue-900" title={`🔒 ${evento.titulo}`}>
+          🔒 {evento.titulo}
+        </p>
+        <p className="text-[9px] leading-tight truncate text-blue-700" title={evento.sala_nome}>
+          {evento.sala_nome}
+        </p>
+        {!isCompact && (
+          <p className="text-[9px] leading-tight text-blue-600 mt-0.5">
+            {evento.horario_inicio.substring(0, 5)} - {evento.horario_fim.substring(0, 5)}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
@@ -454,6 +462,7 @@ export default function ReservasSala() {
                         style={{
                           marginTop: `${offsetInicio * alturaSlot}px`,
                           height: `${duracaoEvento * alturaSlot - 2}px`,
+                          minWidth: totalEventos > 3 ? '80px' : undefined, // Largura mínima quando há muitos eventos
                         }}
                       >
                         <div className="h-full border border-gray-300 bg-white rounded-sm overflow-hidden">
@@ -462,9 +471,13 @@ export default function ReservasSala() {
                               evento={evento} 
                               onEdit={handleEditarEvento}
                               onDelete={handleExcluirEvento}
+                              isCompact={totalEventos > 3}
                             />
                           ) : (
-                            <BlocoTurmaBloqueada evento={evento} />
+                            <BlocoTurmaBloqueada 
+                              evento={evento}
+                              isCompact={totalEventos > 3}
+                            />
                           )}
                         </div>
                       </div>
