@@ -189,7 +189,7 @@ const BlocoEvento = ({
             </div>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="right" className="max-w-xs">
+        <TooltipContent side="right" className="max-w-xs z-[9999]">
           <div className="space-y-2">
             <div>
               <span className="font-semibold">Sala:</span> {evento.sala_nome}
