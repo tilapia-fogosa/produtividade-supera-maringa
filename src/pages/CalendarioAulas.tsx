@@ -134,20 +134,8 @@ const clarearCor = (hex: string): string => {
 
 // Função para calcular duração da aula em minutos baseado na categoria
 const calcularDuracaoAula = (categoria: string): number => {
-  const categoriaLower = categoria.toLowerCase();
-  
-  // Infantil = 60 minutos
-  if (categoriaLower.includes('infantil')) {
-    return 60;
-  }
-  
-  // 60+ = 90 minutos
-  if (categoriaLower.includes('60+')) {
-    return 90;
-  }
-  
-  // Todas as outras categorias = 90 minutos
-  return 90;
+  // Todas as turmas têm 2 horas de duração
+  return 120;
 };
 
 // Componente para renderizar um bloqueio de sala no grid
@@ -460,6 +448,20 @@ export default function CalendarioAulas() {
   const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(dataInicio, dataFim);
   const { data: bloqueiosPorDia } = useBloqueiosSala(dataInicio, dataFim, activeUnit?.id);
   const { data: salas } = useSalas(activeUnit?.id);
+  
+  // Criar mapeamento de sala_id para índice de coluna (0, 1, 2)
+  const salasOrdenadas = useMemo(() => {
+    if (!salas) return [];
+    return [...salas].sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [salas]);
+  
+  const salaParaIndice = useMemo(() => {
+    const mapa = new Map<string, number>();
+    salasOrdenadas.forEach((sala, index) => {
+      mapa.set(sala.id, index % 3); // Garantir índices 0, 1, 2
+    });
+    return mapa;
+  }, [salasOrdenadas]);
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
@@ -549,24 +551,22 @@ export default function CalendarioAulas() {
     return resultado;
   }, [turmasPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Estrutura do grid reorganizada - mapear turmas por dia da semana diretamente
+  // Estrutura do grid reorganizada - mapear turmas por sala específica
   const turmasGrid = useMemo(() => {
-    const grid: Record<string, CalendarioTurma[]> = {};
+    const grid: Record<string, CalendarioTurma> = {};
     
     Object.entries(turmasFiltradasPorDia).forEach(([diaSemana, turmas]) => {
       turmas.forEach(turma => {
         const slotInicio = horarioParaSlot(turma.horario_inicio);
-        const chave = `${slotInicio}-${diaSemana}`;
+        const indiceSala = salaParaIndice.get(turma.sala) ?? 0;
+        const chave = `${slotInicio}-${diaSemana}-${indiceSala}`;
         
-        if (!grid[chave]) {
-          grid[chave] = [];
-        }
-        grid[chave].push(turma);
+        grid[chave] = turma;
       });
     });
     
     return grid;
-  }, [turmasFiltradasPorDia]);
+  }, [turmasFiltradasPorDia, salaParaIndice]);
 
   const togglePerfil = (perfil: string) => {
     setPerfisSelecionados(prev => 
@@ -872,12 +872,12 @@ export default function CalendarioAulas() {
 
       {/* Grid do Calendário Reestruturado */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
-        {/* Header dos dias (segunda a sábado) */}
+        {/* Header dos dias (segunda a sábado) - 3 colunas por dia */}
         <div 
           className="bg-gray-50 sticky top-0 z-10"
           style={{
             display: 'grid',
-            gridTemplateColumns: '45px repeat(6, 1fr)',
+            gridTemplateColumns: '45px repeat(18, 1fr)', // 6 dias × 3 salas = 18 colunas
           }}
         >
           <div className="p-3 text-center border-r border-gray-200 text-sm font-medium">
@@ -887,7 +887,18 @@ export default function CalendarioAulas() {
             const isHoje = data.toDateString() === hoje.toDateString();
             
             return (
-              <div key={index} className="p-3 text-center border-r border-gray-200 last:border-r-0">
+              <div 
+                key={index} 
+                className="border-r border-gray-200 last:border-r-0"
+                style={{
+                  gridColumn: `span 3`, // Cada dia ocupa 3 colunas
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '12px'
+                }}
+              >
                 <div className="text-sm font-medium">{diasSemana[diaSemanaChave as keyof typeof diasSemana]}</div>
                 <div className={`text-lg ${isHoje ? 'bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mt-1' : ''}`}>
                   {data.getDate()}
@@ -902,8 +913,8 @@ export default function CalendarioAulas() {
           className="relative"
           style={{
             display: 'grid',
-            gridTemplateRows: `repeat(${slots.length}, 50px)`, // Aumentado de 40px para 50px
-            gridTemplateColumns: '45px repeat(6, 1fr)',
+            gridTemplateRows: `repeat(${slots.length}, 50px)`,
+            gridTemplateColumns: '45px repeat(18, 1fr)', // 6 dias × 3 salas = 18 colunas
           }}
         >
           {/* Renderizar linhas de horário */}
@@ -920,21 +931,23 @@ export default function CalendarioAulas() {
             </div>
           ))}
 
-          {/* Renderizar células base do grid */}
+          {/* Renderizar células base do grid - 3 colunas por dia */}
           {slots.map((slot, slotIndex) => 
-            datasSemanais.map((data, diaIndex) => (
-              <div
-                key={`cell-${slotIndex}-${diaIndex}`}
-                className="border-r border-b border-gray-200 last:border-r-0"
-                style={{
-                  gridRow: slotIndex + 1,
-                  gridColumn: diaIndex + 2,
-                }}
-              />
-            ))
+            datasSemanais.map((data, diaIndex) => 
+              [0, 1, 2].map((salaIndex) => (
+                <div
+                  key={`cell-${slotIndex}-${diaIndex}-${salaIndex}`}
+                  className="border-r border-b border-gray-200"
+                  style={{
+                    gridRow: slotIndex + 1,
+                    gridColumn: (diaIndex * 3) + 2 + salaIndex,
+                  }}
+                />
+              ))
+            )
           )}
 
-          {/* Renderizar bloqueios de sala */}
+          {/* Renderizar bloqueios de sala em suas colunas específicas */}
           {mostrarBloqueios && bloqueiosPorDia && salas && Object.entries(bloqueiosPorDia).map(([dia, bloqueios]) => {
             const diaIndex = obterDiaSemanaIndex(dia);
             if (diaIndex === -1) return null;
@@ -951,115 +964,50 @@ export default function CalendarioAulas() {
               const duracaoMinutos = minutosFim - minutosIni;
               const duracaoSlots = Math.ceil(duracaoMinutos / 30);
               
-              // Verificar se há turmas no mesmo horário
-              const diaSemanaChave = dia as keyof typeof diasSemana;
-              const turmasNesseHorario = turmasGrid[`${slotInicio}-${diaSemanaChave}`] || [];
-              const bloqueiosNesseHorario = bloqueios.filter(b => 
-                horarioParaSlot(b.horario_inicio) === slotInicio
-              );
+              // Obter índice da sala
+              const indiceSala = salaParaIndice.get(bloqueio.sala_id) ?? 0;
+              const colunaGrid = (diaIndex * 3) + 2 + indiceSala;
               
-              const totalElementos = turmasNesseHorario.length + bloqueiosNesseHorario.length;
-              
-              // Se não há conflito, renderizar normalmente
-              if (totalElementos === 1) {
-                const sala = salas.find(s => s.id === bloqueio.sala_id);
-                const corSala = sala?.cor_calendario || '#9CA3AF';
-                
-                return (
-                  <div
-                    key={bloqueio.id}
-                    className="border border-gray-300 rounded-sm overflow-hidden relative"
-                    style={{
-                      gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
-                      gridColumn: diaIndex + 2,
-                      zIndex: 10,
-                      padding: '1px'
-                    }}
-                  >
-                    <BlocoBloqueio 
-                      bloqueio={bloqueio}
-                      corSala={corSala}
-                      onEdit={() => handleEditarBloqueio(bloqueio)}
-                      onDelete={() => handleExcluirBloqueio(bloqueio)}
-                    />
-                  </div>
-                );
-              }
-              
-              return null; // Será renderizado no bloco combinado
-            });
-          })}
-
-          {/* Renderizar blocos de turmas */}
-          {Object.entries(turmasGrid).map(([chave, turmas]) => {
-            const [slotStr, diaSemana] = chave.split('-');
-            const slot = parseInt(slotStr);
-            const diaIndex = obterDiaSemanaIndex(diaSemana);
-            
-            // Verificar se há bloqueios que começam no mesmo horário
-            const bloqueiosNesseHorario = mostrarBloqueios && bloqueiosPorDia && bloqueiosPorDia[diaSemana]
-              ? bloqueiosPorDia[diaSemana].filter(b => horarioParaSlot(b.horario_inicio) === slot)
-              : [];
-            
-            const totalElementos = turmas.length + bloqueiosNesseHorario.length;
-            
-            // Se há conflito (múltiplos elementos), renderizar com grid
-            if (totalElementos > 1) {
-              // Calcular duração baseada na primeira turma (todas deveriam ter a mesma duração se começam no mesmo horário)
-              const duracaoMinutos = turmas.length > 0 ? calcularDuracaoAula(turmas[0].categoria) : 90;
-              const duracaoSlots = Math.ceil(duracaoMinutos / 30);
-              const isCompact = true;
+              const sala = salas.find(s => s.id === bloqueio.sala_id);
+              const corSala = sala?.cor_calendario || '#9CA3AF';
               
               return (
                 <div
-                  key={chave}
-                  className="border border-gray-300 bg-white rounded-sm overflow-hidden relative"
+                  key={bloqueio.id}
+                  className="border border-gray-300 rounded-sm overflow-hidden relative"
                   style={{
-                    gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
-                    gridColumn: diaIndex + 2,
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${totalElementos}, 1fr)`,
-                    gap: '2px',
-                    padding: '2px',
-                    zIndex: 5,
+                    gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
+                    gridColumn: colunaGrid,
+                    zIndex: 10,
+                    padding: '1px'
                   }}
                 >
-                  {/* Renderizar turmas */}
-                  {turmas.map((turma, turmaIndex) => (
-                    <div key={`turma-${turma.turma_id}-${turmaIndex}`} className="h-full">
-                      <BlocoTurma 
-                        turma={turma} 
-                        onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
-                        isCompact={isCompact}
-                      />
-                    </div>
-                  ))}
-                  
-                  {/* Renderizar bloqueios */}
-                  {bloqueiosNesseHorario.map((bloqueio) => {
-                    const sala = salas?.find(s => s.id === bloqueio.sala_id);
-                    const corSala = sala?.cor_calendario || '#9CA3AF';
-                    
-                    return (
-                      <div key={`bloqueio-${bloqueio.id}`} className="h-full">
-                        <BlocoBloqueio 
-                          bloqueio={bloqueio}
-                          corSala={corSala}
-                          onEdit={() => handleEditarBloqueio(bloqueio)}
-                          onDelete={() => handleExcluirBloqueio(bloqueio)}
-                        />
-                      </div>
-                    );
-                  })}
+                  <BlocoBloqueio 
+                    bloqueio={bloqueio}
+                    corSala={corSala}
+                    onEdit={() => handleEditarBloqueio(bloqueio)}
+                    onDelete={() => handleExcluirBloqueio(bloqueio)}
+                  />
                 </div>
               );
-            }
+            });
+          })}
+
+          {/* Renderizar turmas em suas colunas específicas de sala */}
+          {Object.entries(turmasGrid).map(([chave, turma]) => {
+            const [slotStr, diaSemana, indiceSalaStr] = chave.split('-');
+            const slot = parseInt(slotStr);
+            const diaIndex = obterDiaSemanaIndex(diaSemana);
+            const indiceSala = parseInt(indiceSalaStr);
             
-            // Se não há conflito, renderizar turmas normalmente
-            // Calcular duração baseada na primeira turma
-            const duracaoMinutos = turmas.length > 0 ? calcularDuracaoAula(turmas[0].categoria) : 90;
+            if (diaIndex === -1) return null;
+            
+            // Calcular coluna do grid: (diaIndex * 3) + 2 + indiceSala
+            const colunaGrid = (diaIndex * 3) + 2 + indiceSala;
+            
+            // Calcular duração em slots (120 minutos = 4 slots de 30 min)
+            const duracaoMinutos = calcularDuracaoAula(turma.categoria);
             const duracaoSlots = Math.ceil(duracaoMinutos / 30);
-            const isCompact = turmas.length > 1;
             
             return (
               <div
@@ -1067,22 +1015,16 @@ export default function CalendarioAulas() {
                 className="border border-gray-300 bg-white rounded-sm overflow-hidden relative"
                 style={{
                   gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
-                  gridColumn: diaIndex + 2,
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${turmas.length}, 1fr)`,
-                  gap: '1px',
-                  padding: '1px',
+                  gridColumn: colunaGrid,
                   zIndex: 5,
+                  padding: '1px'
                 }}
               >
-                {turmas.map((turma, turmaIndex) => (
-                  <BlocoTurma 
-                    key={`${turma.turma_id}-${turmaIndex}`} 
-                    turma={turma} 
-                    onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
-                    isCompact={isCompact}
-                  />
-                ))}
+                <BlocoTurma 
+                  turma={turma} 
+                  onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
+                  isCompact={false}
+                />
               </div>
             );
           })}
