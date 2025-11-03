@@ -2613,6 +2613,8 @@ export type Database = {
           evento_id: string
           forma_pagamento: string
           id: string
+          responsavel_id: string | null
+          valor_pago: number | null
         }
         Insert: {
           aluno_id: string
@@ -2620,6 +2622,8 @@ export type Database = {
           evento_id: string
           forma_pagamento: string
           id?: string
+          responsavel_id?: string | null
+          valor_pago?: number | null
         }
         Update: {
           aluno_id?: string
@@ -2627,6 +2631,8 @@ export type Database = {
           evento_id?: string
           forma_pagamento?: string
           id?: string
+          responsavel_id?: string | null
+          valor_pago?: number | null
         }
         Relationships: [
           {

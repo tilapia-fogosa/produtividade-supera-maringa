@@ -844,7 +844,9 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
         .insert({
           evento_id: id,
           aluno_id: novoAluno.id,
-          forma_pagamento: novoAluno.formaPagamento
+          forma_pagamento: novoAluno.formaPagamento,
+          responsavel_id: novoAluno.responsavelId,
+          valor_pago: novoAluno.valorPago
         });
 
       if (error) throw error;
