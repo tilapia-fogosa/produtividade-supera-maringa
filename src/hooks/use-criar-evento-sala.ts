@@ -109,6 +109,7 @@ export const useCriarEventoSala = () => {
       queryClient.invalidateQueries({ queryKey: ["calendario-turmas"] });
       queryClient.invalidateQueries({ queryKey: ["bloqueios-professor"] });
       queryClient.invalidateQueries({ queryKey: ["bloqueios-sala"] });
+      queryClient.invalidateQueries({ queryKey: ["calendario-eventos-unificados"] });
     },
     onError: (error: Error) => {
       console.error('Erro ao criar reserva:', error);
