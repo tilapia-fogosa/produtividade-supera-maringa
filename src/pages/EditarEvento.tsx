@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useResponsaveis } from "@/hooks/use-responsaveis";
 
 export default function EditarEvento() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { responsaveis, isLoading: isLoadingResponsaveis } = useResponsaveis();
   const [evento, setEvento] = useState<any>(null);
   const [alunosEvento, setAlunosEvento] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,9 +114,10 @@ const formatarData = (dataString: string) => {
   };
 };
 
-const EditarEventoModal = ({ evento, onEventoAtualizado }: { 
+const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: { 
   evento: any;
   onEventoAtualizado: () => void;
+  responsaveis: any[];
 }) => {
   const [open, setOpen] = useState(false);
   
@@ -263,12 +266,21 @@ const EditarEventoModal = ({ evento, onEventoAtualizado }: {
 
           <div className="space-y-2">
             <Label htmlFor="responsavel">Responsável</Label>
-            <Input
-              id="responsavel"
-              value={formData.responsavel}
-              onChange={(e) => setFormData(prev => ({ ...prev, responsavel: e.target.value }))}
-              placeholder="Nome do responsável"
-            />
+            <Select 
+              value={formData.responsavel} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, responsavel: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                {responsaveis.map((resp) => (
+                  <SelectItem key={resp.id} value={resp.nome}>
+                    {resp.nome} ({resp.tipo})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -566,7 +578,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
               <Badge className={getTipoColor(evento.tipo)}>
                 {evento.tipo}
               </Badge>
-              <EditarEventoModal evento={evento} onEventoAtualizado={buscarEvento} />
+              <EditarEventoModal evento={evento} onEventoAtualizado={buscarEvento} responsaveis={responsaveis} />
             </div>
           </div>
         </CardHeader>
