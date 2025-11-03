@@ -341,14 +341,15 @@ const AdicionarNaoAlunoModal = ({
   responsaveis: any[];
 }) => {
   const [open, setOpen] = useState(false);
-  const [alunos, setAlunos] = useState<any[]>([]);
-  const [funcionarios, setFuncionarios] = useState<any[]>([]);
+  const [pessoas, setPessoas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     telefone: '',
     quemConvidouTipo: '',
     quemConvidouId: '',
+    quemConvidouNome: '',
     responsavelId: '',
     valorPago: '',
     formaPagamento: ''
@@ -372,7 +373,6 @@ const AdicionarNaoAlunoModal = ({
         .order('nome');
 
       if (alunosError) throw alunosError;
-      setAlunos(alunosData || []);
 
       // Buscar funcionários
       const { data: funcData, error: funcError } = await supabase
@@ -382,7 +382,25 @@ const AdicionarNaoAlunoModal = ({
         .order('nome');
 
       if (funcError) throw funcError;
-      setFuncionarios(funcData || []);
+
+      // Combinar alunos e funcionários em uma única lista
+      const alunosFormatados = (alunosData || []).map(a => ({
+        id: a.id,
+        nome: a.nome,
+        tipo: 'aluno' as const
+      }));
+
+      const funcionariosFormatados = (funcData || []).map(f => ({
+        id: f.id,
+        nome: f.nome,
+        tipo: 'funcionario' as const
+      }));
+
+      const todasPessoas = [...alunosFormatados, ...funcionariosFormatados].sort((a, b) => 
+        a.nome.localeCompare(b.nome)
+      );
+
+      setPessoas(todasPessoas);
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
       toast({
@@ -398,8 +416,8 @@ const AdicionarNaoAlunoModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nomeCompleto || !formData.telefone || !formData.quemConvidouTipo || 
-        !formData.quemConvidouId || !formData.responsavelId || !formData.formaPagamento) {
+    if (!formData.nomeCompleto || !formData.telefone || !formData.quemConvidouId || 
+        !formData.responsavelId || !formData.formaPagamento) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -408,10 +426,6 @@ const AdicionarNaoAlunoModal = ({
       return;
     }
 
-    const quemConvidouNome = formData.quemConvidouTipo === 'aluno' 
-      ? alunos.find(a => a.id === formData.quemConvidouId)?.nome
-      : funcionarios.find(f => f.id === formData.quemConvidouId)?.nome;
-
     const responsavelNome = responsaveis.find(r => r.id === formData.responsavelId)?.nome;
 
     const novoConvidado = {
@@ -419,7 +433,7 @@ const AdicionarNaoAlunoModal = ({
       telefone: formData.telefone,
       quemConvidouTipo: formData.quemConvidouTipo,
       quemConvidouId: formData.quemConvidouId,
-      quemConvidouNome,
+      quemConvidouNome: formData.quemConvidouNome,
       responsavelId: formData.responsavelId,
       responsavelNome,
       valorPago: formData.valorPago ? parseFloat(formData.valorPago) : null,
@@ -432,14 +446,26 @@ const AdicionarNaoAlunoModal = ({
       telefone: '',
       quemConvidouTipo: '',
       quemConvidouId: '',
+      quemConvidouNome: '',
       responsavelId: '',
       valorPago: '',
       formaPagamento: ''
     });
+    setSearchTerm('');
     setOpen(false);
   };
 
-  const quemConvidouOptions = formData.quemConvidouTipo === 'aluno' ? alunos : funcionarios;
+  const adicionarEuMesmo = () => {
+    // TODO: Implementar com usuário logado real
+    toast({
+      title: "Info",
+      description: "Função 'Adicionar eu mesmo' será implementada em breve",
+    });
+  };
+
+  const pessoasFiltradas = pessoas.filter(p => 
+    p.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -478,45 +504,68 @@ const AdicionarNaoAlunoModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quemConvidouTipo">Quem Convidou (Tipo) *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="quemConvidou">Quem Convidou *</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={adicionarEuMesmo}
+                className="h-7 text-xs"
+              >
+                Adicionar eu mesmo
+              </Button>
+            </div>
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar aluno ou funcionário..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             <Select 
-              value={formData.quemConvidouTipo} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, quemConvidouTipo: value, quemConvidouId: '' }))}
+              value={formData.quemConvidouId} 
+              onValueChange={(value) => {
+                const pessoaSelecionada = pessoas.find(p => p.id === value);
+                if (pessoaSelecionada) {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    quemConvidouId: value,
+                    quemConvidouTipo: pessoaSelecionada.tipo,
+                    quemConvidouNome: pessoaSelecionada.nome
+                  }));
+                }
+              }}
+              disabled={loading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo" />
+                <SelectValue placeholder={loading ? "Carregando..." : "Selecione quem convidou"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="aluno">Aluno</SelectItem>
-                <SelectItem value="funcionario">Funcionário</SelectItem>
+                {pessoasFiltradas.length === 0 && !loading ? (
+                  <div className="p-2 text-center text-muted-foreground text-sm">
+                    Nenhuma pessoa encontrada
+                  </div>
+                ) : (
+                  pessoasFiltradas.map(pessoa => (
+                    <SelectItem key={`${pessoa.tipo}-${pessoa.id}`} value={pessoa.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{pessoa.nome}</span>
+                        <Badge 
+                          variant="secondary" 
+                          className={pessoa.tipo === 'aluno' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'}
+                        >
+                          {pessoa.tipo === 'aluno' ? 'Aluno' : 'Funcionário'}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
-
-          {formData.quemConvidouTipo && (
-            <div className="space-y-2">
-              <Label htmlFor="quemConvidouId">
-                {formData.quemConvidouTipo === 'aluno' ? 'Aluno' : 'Funcionário'} * 
-                {loading && " (Carregando...)"}
-              </Label>
-              <Select 
-                value={formData.quemConvidouId} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, quemConvidouId: value }))}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={`Selecione ${formData.quemConvidouTipo === 'aluno' ? 'o aluno' : 'o funcionário'}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {quemConvidouOptions.map(option => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="responsavel">Responsável *</Label>
