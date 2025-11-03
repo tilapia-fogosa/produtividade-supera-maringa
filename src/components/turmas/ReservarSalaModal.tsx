@@ -207,27 +207,23 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                     <p className="text-center text-muted-foreground py-8">
                       Salas fechadas neste dia
                     </p>
+                  ) : horariosInicio.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhum horário disponível
+                    </p>
                   ) : (
-                    <div className="grid gap-2 max-h-64 overflow-y-auto">
-                      {horariosInicio.map((horario) => (
-                        <Button
-                          key={horario.horario_inicio}
-                          variant={horarioInicioSelecionado === horario.horario_inicio ? "default" : "outline"}
-                          className="justify-between"
-                          onClick={() => setHorarioInicioSelecionado(horario.horario_inicio)}
-                        >
-                          <span>{horario.horario_inicio}</span>
-                          <span className="text-sm">
-                            {horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''}
-                          </span>
-                        </Button>
-                      ))}
-                      {horariosInicio.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">
-                          Nenhum horário disponível
-                        </p>
-                      )}
-                    </div>
+                    <Select value={horarioInicioSelecionado || ""} onValueChange={setHorarioInicioSelecionado}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o horário" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50">
+                        {horariosInicio.map((horario) => (
+                          <SelectItem key={horario.horario_inicio} value={horario.horario_inicio}>
+                            {horario.horario_inicio} ({horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               )}
@@ -243,29 +239,32 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                     Início: {horarioInicioSelecionado}
                   </p>
                   
-                  <div className="grid gap-2">
-                    {OPCOES_DURACAO.map((opcao) => {
-                      const horarioFim = calcularHorarioFim(horarioInicioSelecionado, opcao.valor);
-                      const estaNoFuncionamento = horarioFunc ? 
-                        horarioEstaNoFuncionamento(horarioInicioSelecionado, horarioFim, horarioFunc) : false;
-                      
-                      return (
-                        <Button
-                          key={opcao.valor}
-                          variant={duracaoSelecionada === opcao.valor ? "default" : "outline"}
-                          className="justify-between"
-                          disabled={!estaNoFuncionamento}
-                          onClick={() => setDuracaoSelecionada(opcao.valor)}
-                        >
-                          <span>{opcao.label}</span>
-                          <span className="text-sm">
-                            até {horarioFim}
+                  <Select 
+                    value={duracaoSelecionada?.toString() || ""} 
+                    onValueChange={(value) => setDuracaoSelecionada(Number(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a duração" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50">
+                      {OPCOES_DURACAO.map((opcao) => {
+                        const horarioFim = calcularHorarioFim(horarioInicioSelecionado, opcao.valor);
+                        const estaNoFuncionamento = horarioFunc ? 
+                          horarioEstaNoFuncionamento(horarioInicioSelecionado, horarioFim, horarioFunc) : false;
+                        
+                        return (
+                          <SelectItem 
+                            key={opcao.valor} 
+                            value={opcao.valor.toString()}
+                            disabled={!estaNoFuncionamento}
+                          >
+                            {opcao.label} - até {horarioFim}
                             {!estaNoFuncionamento && ' (fora do horário)'}
-                          </span>
-                        </Button>
-                      );
-                    })}
-                  </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
 
                   {duracaoSelecionada && (
                     <Button 
