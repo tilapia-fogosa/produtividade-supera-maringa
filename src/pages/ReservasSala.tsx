@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState, useMemo } from "react";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
+import { Plus } from "lucide-react";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -192,6 +194,9 @@ export default function ReservasSala() {
   // Estados para excluir evento
   const [eventoParaExcluir, setEventoParaExcluir] = useState<CalendarioEvento | null>(null);
   const excluirEventoSala = useExcluirEventoSala();
+  
+  // Estado para o modal de reservar sala
+  const [isReservarSalaOpen, setIsReservarSalaOpen] = useState(false);
 
 
   // Não precisamos mais de perfis para eventos de sala
@@ -348,6 +353,14 @@ export default function ReservasSala() {
         </div>
         
         <div className="flex items-center gap-4">
+          <Button
+            onClick={() => setIsReservarSalaOpen(true)}
+            size="sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Reserva
+          </Button>
+          
           <Button
             variant="outline"
             size="sm"
@@ -539,6 +552,13 @@ export default function ReservasSala() {
           })()}
         </div>
       </div>
+      
+      {/* Modal de Reservar Sala */}
+      <ReservarSalaModal 
+        isOpen={isReservarSalaOpen}
+        onClose={() => setIsReservarSalaOpen(false)}
+        unitId={activeUnit?.id}
+      />
       
       {/* Dialog de confirmação para excluir evento */}
       <AlertDialog open={!!eventoParaExcluir} onOpenChange={(open) => !open && setEventoParaExcluir(null)}>
