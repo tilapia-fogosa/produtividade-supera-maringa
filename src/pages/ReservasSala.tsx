@@ -128,14 +128,14 @@ const BlocoEvento = ({
 // Componente para turma (bloqueada)
 const BlocoTurmaBloqueada = ({ evento }: { evento: CalendarioEvento }) => {
   return (
-    <div className="h-full p-2 rounded-sm bg-gray-100 border border-gray-300 opacity-60">
-      <p className="font-medium text-xs truncate text-muted-foreground">
+    <div className="h-full p-2 rounded-sm bg-blue-50 border-l-4 border-blue-500">
+      <p className="font-medium text-xs truncate text-blue-900">
         🔒 {evento.titulo}
       </p>
-      <p className="text-[10px] text-muted-foreground truncate">
+      <p className="text-[10px] text-blue-700 truncate">
         {evento.sala_nome}
       </p>
-      <p className="text-[10px] text-muted-foreground mt-1">
+      <p className="text-[10px] text-blue-600 mt-1">
         {evento.horario_inicio} - {evento.horario_fim}
       </p>
     </div>
