@@ -250,13 +250,6 @@ export type Database = {
             foreignKeyName: "alertas_falta_professor_id_fkey"
             columns: ["professor_id"]
             isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["professor_id"]
-          },
-          {
-            foreignKeyName: "alertas_falta_professor_id_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
           },
@@ -331,13 +324,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "professores"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "alertas_lancamento_professor_id_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["professor_id"]
           },
           {
             foreignKeyName: "alertas_lancamento_professor_id_fkey"
@@ -2585,13 +2571,6 @@ export type Database = {
             foreignKeyName: "disponibilidade_professores_professor_id_fkey"
             columns: ["professor_id"]
             isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["professor_id"]
-          },
-          {
-            foreignKeyName: "disponibilidade_professores_professor_id_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
           },
@@ -2800,13 +2779,6 @@ export type Database = {
             foreignKeyName: "eventos_professor_professor_id_fkey"
             columns: ["professor_id"]
             isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["professor_id"]
-          },
-          {
-            foreignKeyName: "eventos_professor_professor_id_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
           },
@@ -2898,13 +2870,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "salas"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "eventos_sala_sala_id_fkey"
-            columns: ["sala_id"]
-            isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["sala_id"]
           },
           {
             foreignKeyName: "eventos_sala_sala_id_fkey"
@@ -5114,13 +5079,6 @@ export type Database = {
             foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["professor_id"]
-          },
-          {
-            foreignKeyName: "turmas_professor_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
           },
@@ -5130,13 +5088,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "salas"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "turmas_sala_id_fkey"
-            columns: ["sala_id"]
-            isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["sala_id"]
           },
           {
             foreignKeyName: "turmas_sala_id_fkey"
@@ -5702,13 +5653,6 @@ export type Database = {
             foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["professor_id"]
-          },
-          {
-            foreignKeyName: "turmas_professor_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
           },
@@ -5827,15 +5771,7 @@ export type Database = {
           titulo: string | null
           unit_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "turmas_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       vw_eventos_sala_expandidos: {
         Row: {
@@ -5862,13 +5798,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "salas"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "eventos_sala_sala_id_fkey"
-            columns: ["sala_id"]
-            isOneToOne: false
-            referencedRelation: "vw_calendario_eventos_unificados"
-            referencedColumns: ["sala_id"]
           },
           {
             foreignKeyName: "eventos_sala_sala_id_fkey"
