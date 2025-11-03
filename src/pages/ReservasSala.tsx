@@ -157,71 +157,73 @@ const BlocoEvento = ({
   };
   
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={200}>
-        <TooltipTrigger asChild>
-          <div
-            className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-md"
-            style={{
-              backgroundColor: corClara,
-              borderColor: corSala
-            }}
-          >
-            <div className="font-semibold text-gray-900 truncate">
-              🔒 {evento.sala_nome}
-            </div>
-            <div className="text-gray-800 truncate mt-1">
-              {evento.titulo}
-            </div>
-            
-            {/* Botão de excluir no canto inferior direito */}
-            <div className="absolute bottom-1 right-1">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.();
-                }}
-                className="p-1 bg-red-100 rounded border border-red-300 transition-colors hover:bg-red-200"
-                title="Excluir"
-              >
-                <Trash2 className="w-3 h-3 text-red-700" />
-              </button>
-            </div>
+    <Tooltip delayDuration={200}>
+      <TooltipTrigger asChild>
+        <div
+          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-md"
+          style={{
+            backgroundColor: corClara,
+            borderColor: corSala
+          }}
+        >
+          <div className="font-semibold text-gray-900 truncate">
+            🔒 {evento.sala_nome}
           </div>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="max-w-xs z-[9999]">
-          <div className="space-y-2">
-            <div>
-              <span className="font-semibold">Sala:</span> {evento.sala_nome}
-            </div>
-            <div>
-              <span className="font-semibold">Título:</span> {evento.titulo}
-            </div>
-            {evento.descricao && (
-              <div>
-                <span className="font-semibold">Descrição:</span> {evento.descricao}
-              </div>
-            )}
-            <div>
-              <span className="font-semibold">Horário:</span> {evento.horario_inicio} - {evento.horario_fim}
-            </div>
-            {evento.data_especifica && (
-              <div>
-                <span className="font-semibold">Data:</span> {new Date(evento.data_especifica + 'T00:00:00').toLocaleDateString('pt-BR')}
-              </div>
-            )}
-            <div>
-              <span className="font-semibold">Responsável:</span> {evento.professor_nome || 'Sem responsável'}
-              {evento.professor_nome && (
-                <span className="text-muted-foreground text-xs ml-1">
-                  ({formatarTipoResponsavel(evento.professor_id ? 'professor' : null)})
-                </span>
-              )}
-            </div>
+          <div className="text-gray-800 truncate mt-1">
+            {evento.titulo}
           </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          
+          {/* Botão de excluir no canto inferior direito */}
+          <div className="absolute bottom-1 right-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              className="p-1 bg-red-100 rounded border border-red-300 transition-colors hover:bg-red-200"
+              title="Excluir"
+            >
+              <Trash2 className="w-3 h-3 text-red-700" />
+            </button>
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent 
+        side="right" 
+        className="max-w-xs bg-popover border shadow-lg z-[99999]"
+        sideOffset={5}
+      >
+        <div className="space-y-2">
+          <div>
+            <span className="font-semibold">Sala:</span> {evento.sala_nome}
+          </div>
+          <div>
+            <span className="font-semibold">Título:</span> {evento.titulo}
+          </div>
+          {evento.descricao && (
+            <div>
+              <span className="font-semibold">Descrição:</span> {evento.descricao}
+            </div>
+          )}
+          <div>
+            <span className="font-semibold">Horário:</span> {evento.horario_inicio} - {evento.horario_fim}
+          </div>
+          {evento.data_especifica && (
+            <div>
+              <span className="font-semibold">Data:</span> {new Date(evento.data_especifica + 'T00:00:00').toLocaleDateString('pt-BR')}
+            </div>
+          )}
+          <div>
+            <span className="font-semibold">Responsável:</span> {evento.professor_nome || 'Sem responsável'}
+            {evento.professor_nome && (
+              <span className="text-muted-foreground text-xs ml-1">
+                ({formatarTipoResponsavel(evento.professor_id ? 'professor' : null)})
+              </span>
+            )}
+          </div>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
@@ -371,13 +373,15 @@ export default function ReservasSala() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Calendar className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">Reservas de Sala</h1>
+      <TooltipProvider>
+        <div className="container mx-auto p-4 space-y-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar className="w-6 h-6 text-primary" />
+            <h1 className="text-2xl font-bold">Reservas de Sala</h1>
+          </div>
+          <Skeleton className="h-96 w-full" />
         </div>
-        <Skeleton className="h-96 w-full" />
-      </div>
+      </TooltipProvider>
     );
   }
 
@@ -399,7 +403,8 @@ export default function ReservasSala() {
   const mesAno = semanaAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <TooltipProvider>
+      <div className="container mx-auto p-4 space-y-6">
       {/* Header com navegação */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
@@ -637,5 +642,6 @@ export default function ReservasSala() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 }
