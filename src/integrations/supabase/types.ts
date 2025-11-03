@@ -2335,6 +2335,71 @@ export type Database = {
           },
         ]
       }
+      convidados_eventos: {
+        Row: {
+          active: boolean
+          created_at: string
+          evento_id: string
+          forma_pagamento: string
+          id: string
+          nome_completo: string
+          quem_convidou_id: string
+          quem_convidou_nome: string
+          quem_convidou_tipo: string
+          responsavel_cadastro_id: string
+          responsavel_cadastro_nome: string
+          responsavel_cadastro_tipo: string
+          responsavel_id: string
+          responsavel_nome: string
+          telefone_contato: string
+          valor_pago: number | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          evento_id: string
+          forma_pagamento: string
+          id?: string
+          nome_completo: string
+          quem_convidou_id: string
+          quem_convidou_nome: string
+          quem_convidou_tipo: string
+          responsavel_cadastro_id: string
+          responsavel_cadastro_nome: string
+          responsavel_cadastro_tipo: string
+          responsavel_id: string
+          responsavel_nome: string
+          telefone_contato: string
+          valor_pago?: number | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          evento_id?: string
+          forma_pagamento?: string
+          id?: string
+          nome_completo?: string
+          quem_convidou_id?: string
+          quem_convidou_nome?: string
+          quem_convidou_tipo?: string
+          responsavel_cadastro_id?: string
+          responsavel_cadastro_nome?: string
+          responsavel_cadastro_tipo?: string
+          responsavel_id?: string
+          responsavel_nome?: string
+          telefone_contato?: string
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convidados_eventos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_enrollments: {
         Row: {
           active: boolean
@@ -2639,7 +2704,7 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string | null
-          created_by: string
+          created_by: string | null
           data: string | null
           data_fim_recorrencia: string | null
           data_inicio_recorrencia: string | null
@@ -2659,7 +2724,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           created_at?: string | null
-          created_by: string
+          created_by?: string | null
           data?: string | null
           data_fim_recorrencia?: string | null
           data_inicio_recorrencia?: string | null
@@ -2679,7 +2744,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           created_at?: string | null
-          created_by?: string
+          created_by?: string | null
           data?: string | null
           data_fim_recorrencia?: string | null
           data_inicio_recorrencia?: string | null

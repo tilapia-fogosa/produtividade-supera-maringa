@@ -21,6 +21,7 @@ export default function EditarEvento() {
   const { responsaveis, isLoading: isLoadingResponsaveis } = useResponsaveis();
   const [evento, setEvento] = useState<any>(null);
   const [alunosEvento, setAlunosEvento] = useState<any[]>([]);
+  const [convidadosNaoAlunos, setConvidadosNaoAlunos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function EditarEvento() {
       if (eventoData) {
         setEvento(eventoData);
         
-        // Buscar participantes do evento
+        // Buscar participantes alunos do evento
         const { data: participantesData, error: participantesError } = await supabase
           .from('evento_participantes')
           .select(`
@@ -68,10 +69,33 @@ export default function EditarEvento() {
           nome: p.alunos.nome,
           turma: p.alunos.turmas?.nome || 'Sem turma',
           professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
-          formaPagamento: p.forma_pagamento
+          formaPagamento: p.forma_pagamento,
+          tipo: 'aluno'
         }));
 
         setAlunosEvento(participantesFormatados);
+
+        // Buscar convidados não alunos
+        const { data: convidadosData, error: convidadosError } = await supabase
+          .from('convidados_eventos')
+          .select('*')
+          .eq('evento_id', id)
+          .eq('active', true);
+
+        if (convidadosError) throw convidadosError;
+
+        const convidadosFormatados = (convidadosData || []).map((c: any) => ({
+          id: c.id,
+          nome: c.nome_completo,
+          telefone: c.telefone_contato,
+          quemConvidou: c.quem_convidou_nome,
+          responsavel: c.responsavel_nome,
+          valorPago: c.valor_pago,
+          formaPagamento: c.forma_pagamento,
+          tipo: 'nao_aluno'
+        }));
+
+        setConvidadosNaoAlunos(convidadosFormatados);
       } else {
         toast({
           title: "Evento não encontrado",
@@ -309,7 +333,257 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
   );
 };
 
-const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: { 
+const AdicionarNaoAlunoModal = ({ 
+  onConvidadoAdicionado, 
+  responsaveis 
+}: { 
+  onConvidadoAdicionado: (convidado: any) => void;
+  responsaveis: any[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const [alunos, setAlunos] = useState<any[]>([]);
+  const [funcionarios, setFuncionarios] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    nomeCompleto: '',
+    telefone: '',
+    quemConvidouTipo: '',
+    quemConvidouId: '',
+    responsavelId: '',
+    valorPago: '',
+    formaPagamento: ''
+  });
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      buscarDados();
+    }
+  }, [open]);
+
+  const buscarDados = async () => {
+    setLoading(true);
+    try {
+      // Buscar alunos
+      const { data: alunosData, error: alunosError } = await supabase
+        .from('alunos')
+        .select('id, nome')
+        .eq('active', true)
+        .order('nome');
+
+      if (alunosError) throw alunosError;
+      setAlunos(alunosData || []);
+
+      // Buscar funcionários
+      const { data: funcData, error: funcError } = await supabase
+        .from('funcionarios')
+        .select('id, nome')
+        .eq('active', true)
+        .order('nome');
+
+      if (funcError) throw funcError;
+      setFuncionarios(funcData || []);
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar dados",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.nomeCompleto || !formData.telefone || !formData.quemConvidouTipo || 
+        !formData.quemConvidouId || !formData.responsavelId || !formData.formaPagamento) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const quemConvidouNome = formData.quemConvidouTipo === 'aluno' 
+      ? alunos.find(a => a.id === formData.quemConvidouId)?.nome
+      : funcionarios.find(f => f.id === formData.quemConvidouId)?.nome;
+
+    const responsavelNome = responsaveis.find(r => r.id === formData.responsavelId)?.nome;
+
+    const novoConvidado = {
+      nomeCompleto: formData.nomeCompleto,
+      telefone: formData.telefone,
+      quemConvidouTipo: formData.quemConvidouTipo,
+      quemConvidouId: formData.quemConvidouId,
+      quemConvidouNome,
+      responsavelId: formData.responsavelId,
+      responsavelNome,
+      valorPago: formData.valorPago ? parseFloat(formData.valorPago) : null,
+      formaPagamento: formData.formaPagamento
+    };
+
+    onConvidadoAdicionado(novoConvidado);
+    setFormData({
+      nomeCompleto: '',
+      telefone: '',
+      quemConvidouTipo: '',
+      quemConvidouId: '',
+      responsavelId: '',
+      valorPago: '',
+      formaPagamento: ''
+    });
+    setOpen(false);
+  };
+
+  const quemConvidouOptions = formData.quemConvidouTipo === 'aluno' ? alunos : funcionarios;
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+          <Plus className="h-4 w-4" />
+          Adicionar Não Aluno
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Adicionar Não Aluno ao Evento</DialogTitle>
+          <DialogDescription>
+            Cadastre um participante que não é aluno.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="nomeCompleto">Nome Completo *</Label>
+            <Input
+              id="nomeCompleto"
+              value={formData.nomeCompleto}
+              onChange={(e) => setFormData(prev => ({ ...prev, nomeCompleto: e.target.value }))}
+              placeholder="Nome completo do participante"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="telefone">Telefone para Contato *</Label>
+            <Input
+              id="telefone"
+              value={formData.telefone}
+              onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
+              placeholder="(00) 00000-0000"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="quemConvidouTipo">Quem Convidou (Tipo) *</Label>
+            <Select 
+              value={formData.quemConvidouTipo} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, quemConvidouTipo: value, quemConvidouId: '' }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aluno">Aluno</SelectItem>
+                <SelectItem value="funcionario">Funcionário</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.quemConvidouTipo && (
+            <div className="space-y-2">
+              <Label htmlFor="quemConvidouId">
+                {formData.quemConvidouTipo === 'aluno' ? 'Aluno' : 'Funcionário'} * 
+                {loading && " (Carregando...)"}
+              </Label>
+              <Select 
+                value={formData.quemConvidouId} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, quemConvidouId: value }))}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={`Selecione ${formData.quemConvidouTipo === 'aluno' ? 'o aluno' : 'o funcionário'}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {quemConvidouOptions.map(option => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="responsavel">Responsável *</Label>
+            <Select 
+              value={formData.responsavelId} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, responsavelId: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                {responsaveis.map(resp => (
+                  <SelectItem key={resp.id} value={resp.id}>
+                    {resp.nome} ({resp.tipo})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="valorPago">Valor Pago (R$)</Label>
+            <Input
+              id="valorPago"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.valorPago}
+              onChange={(e) => setFormData(prev => ({ ...prev, valorPago: e.target.value }))}
+              placeholder="0,00"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="formaPagamento">Forma de Pagamento *</Label>
+            <Select 
+              value={formData.formaPagamento} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, formaPagamento: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a forma de pagamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                <SelectItem value="boleto">Boleto</SelectItem>
+                <SelectItem value="pix">PIX</SelectItem>
+                <SelectItem value="evento_gratuito">Evento Gratuito</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              Adicionar
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
   onAlunoAdicionado: (aluno: any) => void;
   alunosJaCadastrados: any[];
 }) => {
@@ -493,7 +767,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
 
       if (error) throw error;
 
-      setAlunosEvento(prev => [...prev, novoAluno]);
+      setAlunosEvento(prev => [...prev, { ...novoAluno, tipo: 'aluno' }]);
       
       toast({
         title: "Sucesso",
@@ -504,6 +778,58 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
       toast({
         title: "Erro",
         description: "Erro ao adicionar aluno ao evento",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const adicionarConvidadoNaoAluno = async (convidado: any) => {
+    try {
+      // TODO: Pegar o ID do usuário logado para responsavel_cadastro
+      const responsavelCadastroTipo = responsaveis.find(r => r.id === convidado.responsavelId)?.tipo || 'funcionario';
+      
+      const { error } = await supabase
+        .from('convidados_eventos')
+        .insert({
+          evento_id: id,
+          nome_completo: convidado.nomeCompleto,
+          telefone_contato: convidado.telefone,
+          quem_convidou_tipo: convidado.quemConvidouTipo,
+          quem_convidou_id: convidado.quemConvidouId,
+          quem_convidou_nome: convidado.quemConvidouNome,
+          responsavel_cadastro_id: convidado.responsavelId, // TODO: mudar para usuário logado
+          responsavel_cadastro_tipo: responsavelCadastroTipo,
+          responsavel_cadastro_nome: convidado.responsavelNome,
+          responsavel_id: convidado.responsavelId,
+          responsavel_nome: convidado.responsavelNome,
+          valor_pago: convidado.valorPago,
+          forma_pagamento: convidado.formaPagamento
+        });
+
+      if (error) throw error;
+
+      const novoConvidado = {
+        id: crypto.randomUUID(), // temporário
+        nome: convidado.nomeCompleto,
+        telefone: convidado.telefone,
+        quemConvidou: convidado.quemConvidouNome,
+        responsavel: convidado.responsavelNome,
+        valorPago: convidado.valorPago,
+        formaPagamento: convidado.formaPagamento,
+        tipo: 'nao_aluno'
+      };
+
+      setConvidadosNaoAlunos(prev => [...prev, novoConvidado]);
+      
+      toast({
+        title: "Sucesso",
+        description: "Convidado não aluno adicionado ao evento!"
+      });
+    } catch (error) {
+      console.error('Erro ao adicionar convidado:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar convidado ao evento",
         variant: "destructive"
       });
     }
@@ -535,7 +861,33 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
     }
   };
 
-  const vagasDisponiveis = evento ? evento.numero_vagas - alunosEvento.length : 0;
+  const removerConvidadoNaoAluno = async (convidadoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('convidados_eventos')
+        .delete()
+        .eq('id', convidadoId);
+
+      if (error) throw error;
+
+      setConvidadosNaoAlunos(prev => prev.filter(c => c.id !== convidadoId));
+      
+      toast({
+        title: "Convidado removido",
+        description: "Convidado não aluno removido do evento com sucesso."
+      });
+    } catch (error) {
+      console.error('Erro ao remover convidado:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover convidado do evento",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const totalConvidados = alunosEvento.length + convidadosNaoAlunos.length;
+  const vagasDisponiveis = evento ? evento.numero_vagas - totalConvidados : 0;
   const { data, hora } = evento ? formatarData(evento.data_evento) : { data: '', hora: '' };
 
   if (loading) {
@@ -614,42 +966,52 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
         </CardContent>
       </Card>
 
-      {/* Alunos Cadastrados */}
+      {/* Convidados */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Alunos Cadastrados ({alunosEvento.length})</CardTitle>
+              <CardTitle>Convidados ({totalConvidados})</CardTitle>
               <CardDescription>
-                Lista de alunos inscritos no evento
+                Lista de participantes inscritos no evento
               </CardDescription>
             </div>
             {vagasDisponiveis > 0 && (
-              <AdicionarAlunoModal 
-                onAlunoAdicionado={adicionarAluno}
-                alunosJaCadastrados={alunosEvento}
-              />
+              <div className="flex gap-2">
+                <AdicionarAlunoModal 
+                  onAlunoAdicionado={adicionarAluno}
+                  alunosJaCadastrados={alunosEvento}
+                />
+                <AdicionarNaoAlunoModal 
+                  onConvidadoAdicionado={adicionarConvidadoNaoAluno}
+                  responsaveis={responsaveis}
+                />
+              </div>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          {alunosEvento.length > 0 ? (
+          {totalConvidados > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Turma</TableHead>
-                  <TableHead>Professor</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Informações</TableHead>
                   <TableHead>Forma de Pagamento</TableHead>
                   <TableHead className="w-[100px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {alunosEvento.map((aluno) => (
-                  <TableRow key={aluno.id}>
+                  <TableRow key={`aluno-${aluno.id}`}>
                     <TableCell className="font-medium">{aluno.nome}</TableCell>
-                    <TableCell>{aluno.turma}</TableCell>
-                    <TableCell>{aluno.professor}</TableCell>
+                    <TableCell>
+                      <Badge variant="default">Aluno</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {aluno.turma} - {aluno.professor}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">
                         {aluno.formaPagamento}
@@ -667,11 +1029,48 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
                     </TableCell>
                   </TableRow>
                 ))}
+                {convidadosNaoAlunos.map((convidado) => (
+                  <TableRow key={`convidado-${convidado.id}`}>
+                    <TableCell className="font-medium">
+                      {convidado.nome}
+                      <div className="text-xs text-muted-foreground">{convidado.telefone}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                        Não Aluno
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>Convidou: {convidado.quemConvidou}</div>
+                        <div>Responsável: {convidado.responsavel}</div>
+                        {convidado.valorPago && (
+                          <div>Valor: R$ {Number(convidado.valorPago).toFixed(2)}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {convidado.formaPagamento.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removerConvidadoNaoAluno(convidado.id)}
+                        className="gap-1 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhum aluno cadastrado ainda
+              Nenhum convidado cadastrado ainda
             </div>
           )}
         </CardContent>
