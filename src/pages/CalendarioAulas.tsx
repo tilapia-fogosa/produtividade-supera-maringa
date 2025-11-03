@@ -5,11 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Switch } from "@/components/ui/switch";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { useCalendarioEventosUnificados, CalendarioEvento } from "@/hooks/use-calendario-eventos-unificados";
 import { useExcluirEventoSala } from "@/hooks/use-excluir-evento-sala";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,111 +145,44 @@ const BlocoEvento = ({
   const corClara = clarearCor(corSala);
   
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <div
-          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-lg hover:z-50"
-          style={{
-            backgroundColor: corClara,
-            borderColor: corSala
+    <div
+      className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer"
+      style={{
+        backgroundColor: corClara,
+        borderColor: corSala
+      }}
+    >
+      <div className="font-semibold text-gray-900 truncate">
+        🔒 {evento.sala_nome}
+      </div>
+      <div className="text-gray-800 truncate mt-1">
+        {evento.titulo}
+      </div>
+      
+      {/* Botões no canto inferior direito */}
+      <div className="absolute bottom-1 right-1 flex gap-1">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.();
           }}
+          className="p-1 bg-white/80 rounded border border-gray-300 transition-colors"
+          title="Editar"
         >
-          <div className="font-semibold text-gray-900 truncate">
-            🔒 {evento.sala_nome}
-          </div>
-          <div className="text-gray-800 truncate mt-1">
-            {evento.titulo}
-          </div>
-          
-          {/* Botões no canto inferior direito */}
-          <div className="absolute bottom-1 right-1 flex gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.();
-              }}
-              className="p-1 bg-white/80 hover:bg-white rounded border border-gray-300 transition-colors"
-              title="Editar"
-            >
-              <Pencil className="w-3 h-3 text-gray-700" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.();
-              }}
-              className="p-1 bg-red-100 hover:bg-red-200 rounded border border-red-300 transition-colors"
-              title="Excluir"
-            >
-              <Trash2 className="w-3 h-3 text-red-700" />
-            </button>
-          </div>
-        </div>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80 z-[9999] bg-white shadow-xl border-2" align="start" side="right">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold">Detalhes do Bloqueio</h4>
-            <div 
-              className="w-4 h-4 rounded-full border-2"
-              style={{ backgroundColor: corClara, borderColor: corSala }}
-            />
-          </div>
-          
-          <div className="space-y-1 text-sm">
-            <div className="flex items-start gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="font-medium">Sala:</span>{' '}
-                <span className="text-muted-foreground">{evento.sala_nome}</span>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-2">
-              <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="font-medium">Título:</span>{' '}
-                <span className="text-muted-foreground">{evento.titulo}</span>
-              </div>
-            </div>
-            
-            {evento.data_especifica && (
-              <div className="flex items-start gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="font-medium">Data:</span>{' '}
-                  <span className="text-muted-foreground">
-                    {new Date(evento.data_especifica + 'T00:00:00').toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              </div>
-            )}
-            
-            <div className="flex items-start gap-2">
-              <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="font-medium">Horário:</span>{' '}
-                <span className="text-muted-foreground">
-                  {evento.horario_inicio} - {evento.horario_fim}
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-2">
-              <Badge variant="outline" className="text-xs">
-                {evento.tipo_evento === 'turma' ? 'Aula' : 'Reserva de Sala'}
-              </Badge>
-            </div>
-            
-            {evento.descricao && (
-              <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground">{evento.descricao}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+          <Pencil className="w-3 h-3 text-gray-700" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.();
+          }}
+          className="p-1 bg-red-100 rounded border border-red-300 transition-colors"
+          title="Excluir"
+        >
+          <Trash2 className="w-3 h-3 text-red-700" />
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -279,7 +207,7 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
 
   const conteudoCompact = (
     <div 
-      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 hover:z-50 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
+      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer transition-colors text-xs flex flex-col justify-between min-h-[70px]"
       onClick={onClick}
     >
       <div className="space-y-0.5">
@@ -319,7 +247,7 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
 
   const conteudoNormal = (
     <div 
-      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 hover:z-50 transition-colors text-xs flex flex-col justify-between min-h-[90px]"
+      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer transition-colors text-xs flex flex-col justify-between min-h-[90px]"
       onClick={onClick}
     >
       <div>
@@ -351,86 +279,7 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
     </div>
   );
 
-  const hoverContent = (
-    <HoverCardContent className="w-80 z-[9999] bg-white shadow-xl border-2" align="start" side="right">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold">Detalhes da Turma</h4>
-          <Badge className="bg-blue-500">{evento.categoria}</Badge>
-        </div>
-        
-        <div className="space-y-1 text-sm">
-          <div className="flex items-start gap-2">
-            <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <div>
-              <span className="font-medium">Professor:</span>{' '}
-              <span className="text-muted-foreground">{evento.professor_nome}</span>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-2">
-            <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <div>
-              <span className="font-medium">Sala:</span>{' '}
-              <span className="text-muted-foreground">{evento.sala_nome}</span>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <div>
-              <span className="font-medium">Horário:</span>{' '}
-              <span className="text-muted-foreground">{evento.horario_inicio}</span>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-2">
-            <Users className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <div>
-              <span className="font-medium">Alunos Ativos:</span>{' '}
-              <span className="text-muted-foreground">{evento.total_alunos_ativos} / {capacidadeMaxima}</span>
-            </div>
-          </div>
-          
-          <div className="pt-2 border-t space-y-1">
-            {evento.total_reposicoes > 0 && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-red-500 border-red-500">
-                  {evento.total_reposicoes} Reposição{evento.total_reposicoes !== 1 ? 'ões' : ''}
-                </Badge>
-              </div>
-            )}
-            {evento.total_aulas_experimentais > 0 && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-green-500 border-green-500">
-                  {evento.total_aulas_experimentais} Experimental{evento.total_aulas_experimentais !== 1 ? 'is' : ''}
-                </Badge>
-              </div>
-            )}
-            {evento.total_faltas_futuras > 0 && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-orange-500" style={{ color: '#e17021' }}>
-                  {evento.total_faltas_futuras} Falta{evento.total_faltas_futuras !== 1 ? 's' : ''} Futura{evento.total_faltas_futuras !== 1 ? 's' : ''}
-                </Badge>
-              </div>
-            )}
-            <div className={`text-sm font-medium ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
-              {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''} disponível{vagasDisponiveis !== 1 ? 'eis' : ''}
-            </div>
-          </div>
-        </div>
-      </div>
-    </HoverCardContent>
-  );
-
-  return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        {isCompact ? conteudoCompact : conteudoNormal}
-      </HoverCardTrigger>
-      {hoverContent}
-    </HoverCard>
-  );
+  return isCompact ? conteudoCompact : conteudoNormal;
 };
 
 export default function CalendarioAulas() {
