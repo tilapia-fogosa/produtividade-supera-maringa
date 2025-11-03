@@ -150,12 +150,16 @@ const EditarEventoModal = ({ evento, onEventoAtualizado }: {
     }
 
     try {
+      // Converter a data local para UTC para salvar no banco
+      const localDate = new Date(formData.data_evento);
+      const utcDate = localDate.toISOString();
+      
       const { error } = await supabase
         .from('eventos')
         .update({
           titulo: formData.titulo,
           descricao: formData.descricao,
-          data_evento: formData.data_evento,
+          data_evento: utcDate,
           local: formData.local,
           responsavel: formData.responsavel,
           numero_vagas: Number(formData.numero_vagas),
