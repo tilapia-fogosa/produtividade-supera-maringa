@@ -61,6 +61,11 @@ const items = [
     icon: Calendar,
   },
   {
+    title: "Reservas de Sala",
+    url: "/reservas-sala", 
+    icon: Calendar,
+  },
+  {
     title: "Eventos",
     url: "/eventos",
     icon: Calendar,

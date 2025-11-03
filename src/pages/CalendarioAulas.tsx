@@ -519,8 +519,8 @@ export default function CalendarioAulas() {
       }
       
       const eventosFiltrados = eventos.filter(evento => {
-        // Sempre incluir eventos de sala (bloqueios)
-        if (evento.tipo_evento === 'evento_sala') return true;
+        // Filtrar APENAS turmas (não mostrar eventos de sala)
+        if (evento.tipo_evento !== 'turma') return false;
         
         // Para turmas, aplicar filtros
         if (evento.total_alunos_ativos === 0) return false;
