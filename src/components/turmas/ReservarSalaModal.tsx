@@ -32,7 +32,7 @@ interface ReservarSalaModalProps {
   unitId?: string | null;
 }
 
-type Etapa = 1 | 2 | 3 | 4 | 5;
+type Etapa = 1 | 2;
 
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
@@ -120,10 +120,6 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
     return todasSalas?.filter(sala => salasDisponiveisEmTodosSlots.includes(sala.id)) || [];
   }, [horarioInicioSelecionado, duracaoSelecionada, horariosDisponiveisFiltrados, todasSalas, dataSelecionada]);
 
-  const handleVoltar = () => {
-    if (etapa > 1) setEtapa((prev) => (prev - 1) as Etapa);
-  };
-
   const handleSubmit = async () => {
     if (!dataSelecionada || !salaSelecionada || !horarioInicioSelecionado || !duracaoSelecionada || !finalUnitId) return;
 
@@ -166,284 +162,298 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   const renderEtapa = () => {
     switch (etapa) {
       case 1:
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <CalendarIcon className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Selecione a Data</h3>
-            </div>
-            <Calendar
-              mode="single"
-              selected={dataSelecionada || undefined}
-              onSelect={(date) => {
-                setDataSelecionada(date || null);
-                if (date) setEtapa(2);
-              }}
-              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-              locale={ptBR}
-              className="rounded-md border"
-            />
-          </div>
-        );
-
-      case 2:
         const horarioFunc = dataSelecionada ? obterHorarioFuncionamento(dataSelecionada) : null;
         
         return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Selecione o Horário de Início</h3>
+          <div className="space-y-6">
+            {/* Etapa 1: Selecionar Data */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5" />
+                <h3 className="text-lg font-medium">1. Selecione a Data</h3>
+              </div>
+              <Calendar
+                mode="single"
+                selected={dataSelecionada || undefined}
+                onSelect={(date) => setDataSelecionada(date || null)}
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                locale={ptBR}
+                className="rounded-md border"
+              />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {dataSelecionada?.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-            </p>
-            
-            {horarioFunc && (
-              <div className="text-sm p-3 bg-muted rounded-md">
-                <p className="font-medium">Horário de funcionamento:</p>
-                <p>{horarioFunc.aberto ? `${horarioFunc.inicio} - ${horarioFunc.fim}` : 'Fechado'}</p>
+
+            {/* Etapa 2: Selecionar Horário de Início */}
+            {dataSelecionada && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  <h3 className="text-lg font-medium">2. Selecione o Horário de Início</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {dataSelecionada.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                </p>
+                
+                {horarioFunc && (
+                  <div className="text-sm p-3 bg-muted rounded-md">
+                    <p className="font-medium">Horário de funcionamento:</p>
+                    <p>{horarioFunc.aberto ? `${horarioFunc.inicio} - ${horarioFunc.fim}` : 'Fechado'}</p>
+                  </div>
+                )}
+                
+                {loadingHorarios ? (
+                  <p>Carregando horários...</p>
+                ) : !horarioFunc?.aberto ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    Salas fechadas neste dia
+                  </p>
+                ) : (
+                  <div className="grid gap-2 max-h-64 overflow-y-auto">
+                    {horariosInicio.map((horario) => (
+                      <Button
+                        key={horario.horario_inicio}
+                        variant={horarioInicioSelecionado === horario.horario_inicio ? "default" : "outline"}
+                        className="justify-between"
+                        onClick={() => setHorarioInicioSelecionado(horario.horario_inicio)}
+                      >
+                        <span>{horario.horario_inicio}</span>
+                        <span className="text-sm">
+                          {horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''}
+                        </span>
+                      </Button>
+                    ))}
+                    {horariosInicio.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">
+                        Nenhum horário disponível
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
-            
-            {loadingHorarios ? (
-              <p>Carregando horários...</p>
-            ) : !horarioFunc?.aberto ? (
-              <p className="text-center text-muted-foreground py-8">
-                Salas fechadas neste dia
-              </p>
-            ) : (
-              <div className="grid gap-2 max-h-96 overflow-y-auto">
-                {horariosInicio.map((horario) => (
-                  <Button
-                    key={horario.horario_inicio}
-                    variant="outline"
-                    className="justify-between"
-                    onClick={() => {
-                      setHorarioInicioSelecionado(horario.horario_inicio);
-                      setEtapa(3);
-                    }}
+
+            {/* Etapa 3: Selecionar Duração */}
+            {horarioInicioSelecionado && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  <h3 className="text-lg font-medium">3. Selecione a Duração</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Início: {horarioInicioSelecionado}
+                </p>
+                
+                <div className="grid gap-2">
+                  {OPCOES_DURACAO.map((opcao) => {
+                    const horarioFim = calcularHorarioFim(horarioInicioSelecionado, opcao.valor);
+                    const estaNoFuncionamento = horarioFunc ? 
+                      horarioEstaNoFuncionamento(horarioInicioSelecionado, horarioFim, horarioFunc) : false;
+                    
+                    return (
+                      <Button
+                        key={opcao.valor}
+                        variant={duracaoSelecionada === opcao.valor ? "default" : "outline"}
+                        className="justify-between"
+                        disabled={!estaNoFuncionamento}
+                        onClick={() => setDuracaoSelecionada(opcao.valor)}
+                      >
+                        <span>{opcao.label}</span>
+                        <span className="text-sm">
+                          até {horarioFim}
+                          {!estaNoFuncionamento && ' (fora do horário)'}
+                        </span>
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                {duracaoSelecionada && (
+                  <Button 
+                    onClick={() => setEtapa(2)}
+                    className="w-full"
                   >
-                    <span>{horario.horario_inicio}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''} disponíve{horario.salas_disponiveis > 1 ? 'is' : 'l'}
-                    </span>
+                    Próximo: Selecionar Sala
                   </Button>
-                ))}
-                {horariosInicio.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    Nenhum horário disponível para esta data
-                  </p>
                 )}
               </div>
             )}
           </div>
         );
 
-      case 3:
+      case 2:
         return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Selecione a Duração</h3>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Início: {horarioInicioSelecionado}
-            </p>
-            
-            <div className="grid gap-2">
-              {OPCOES_DURACAO.map((opcao) => {
-                const horarioFim = calcularHorarioFim(horarioInicioSelecionado!, opcao.valor);
-                const horarioFunc = dataSelecionada ? obterHorarioFuncionamento(dataSelecionada) : null;
-                const estaNoFuncionamento = horarioFunc ? 
-                  horarioEstaNoFuncionamento(horarioInicioSelecionado!, horarioFim, horarioFunc) : false;
-                
-                return (
-                  <Button
-                    key={opcao.valor}
-                    variant="outline"
-                    className="justify-between"
-                    disabled={!estaNoFuncionamento}
-                    onClick={() => {
-                      setDuracaoSelecionada(opcao.valor);
-                      setEtapa(4);
-                    }}
-                  >
-                    <span>{opcao.label}</span>
-                    <span className="text-sm text-muted-foreground">
-                      até {horarioFim}
-                      {!estaNoFuncionamento && ' (fora do horário)'}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Selecione a Sala</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">
-              {horarioInicioSelecionado} - {duracaoSelecionada && calcularHorarioFim(horarioInicioSelecionado!, duracaoSelecionada)}
-            </p>
-            
-            {salasDisponiveisParaDuracao.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhuma sala disponível para este horário e duração
-              </p>
-            ) : (
-              <div className="grid gap-3">
-                {salasDisponiveisParaDuracao.map((sala) => (
-                  <Button
-                    key={sala.id}
-                    variant="outline"
-                    className="h-auto p-4 justify-start"
-                    style={{ borderColor: sala.cor_calendario }}
-                    onClick={() => {
-                      setSalaSelecionada(sala.id);
-                      setEtapa(5);
-                    }}
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full mr-3"
-                      style={{ backgroundColor: sala.cor_calendario }}
-                    />
-                    <div className="text-left">
-                      <p className="font-medium">{sala.nome}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Capacidade: {sala.capacidade} pessoas
-                      </p>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <User className="h-5 w-5" />
-              <h3 className="text-lg font-medium">Detalhes do Evento</h3>
-            </div>
-            
+          <div className="space-y-6">
+            {/* Etapa 4: Selecionar Sala */}
             <div className="space-y-4">
-              <div>
-                <Label>Tipo de Evento</Label>
-                <Select value={tipoEvento} onValueChange={setTipoEvento}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_EVENTO.map((tipo) => (
-                      <SelectItem key={tipo.valor} value={tipo.valor}>
-                        {tipo.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Título</Label>
-                <Input 
-                  value={titulo} 
-                  onChange={(e) => setTitulo(e.target.value)}
-                  placeholder="Ex: Reunião pedagógica"
-                />
-              </div>
-
-              <div>
-                <Label>Descrição (opcional)</Label>
-                <Textarea 
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  placeholder="Detalhes do evento..."
-                />
-              </div>
-
-              <div>
-                <Label>Responsável</Label>
-                <Select value={responsavelId} onValueChange={setResponsavelId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o responsável" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {responsaveis.map((resp) => (
-                      <SelectItem key={resp.id} value={resp.id}>
-                        {resp.nome} ({resp.tipo})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="recorrente" 
-                  checked={recorrente}
-                  onCheckedChange={(checked) => setRecorrente(checked as boolean)}
-                />
-                <Label htmlFor="recorrente">Evento Recorrente</Label>
+                <MapPin className="h-5 w-5" />
+                <h3 className="text-lg font-medium">4. Selecione a Sala</h3>
               </div>
+              <p className="text-sm text-muted-foreground">
+                {dataSelecionada?.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                {' • '}
+                {horarioInicioSelecionado} - {duracaoSelecionada && calcularHorarioFim(horarioInicioSelecionado!, duracaoSelecionada)}
+              </p>
+              
+              {salasDisponiveisParaDuracao.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhuma sala disponível para este horário e duração
+                </p>
+              ) : (
+                <div className="grid gap-3 max-h-64 overflow-y-auto">
+                  {salasDisponiveisParaDuracao.map((sala) => (
+                    <Button
+                      key={sala.id}
+                      variant={salaSelecionada === sala.id ? "default" : "outline"}
+                      className="h-auto p-4 justify-start"
+                      style={salaSelecionada === sala.id ? {} : { borderColor: sala.cor_calendario }}
+                      onClick={() => setSalaSelecionada(sala.id)}
+                    >
+                      <div
+                        className="w-4 h-4 rounded-full mr-3"
+                        style={{ backgroundColor: sala.cor_calendario }}
+                      />
+                      <div className="text-left">
+                        <p className="font-medium">{sala.nome}</p>
+                        <p className="text-sm opacity-70">
+                          Capacidade: {sala.capacidade} pessoas
+                        </p>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              {recorrente && (
-                <div className="space-y-3 ml-6 p-3 border rounded-md">
+            {/* Etapa 5: Detalhes do Evento */}
+            {salaSelecionada && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  <h3 className="text-lg font-medium">5. Detalhes do Evento</h3>
+                </div>
+                
+                <div className="space-y-4">
                   <div>
-                    <Label>Tipo de Recorrência</Label>
-                    <Select value={tipoRecorrencia} onValueChange={setTipoRecorrencia}>
+                    <Label>Tipo de Evento</Label>
+                    <Select value={tipoEvento} onValueChange={setTipoEvento}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
+                        <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="semanal">Semanal</SelectItem>
-                        <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                        <SelectItem value="mensal">Mensal</SelectItem>
+                        {TIPOS_EVENTO.map((tipo) => (
+                          <SelectItem key={tipo.valor} value={tipo.valor}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                   <div>
-                    <Label>Data de Início</Label>
-                    <Calendar
-                      mode="single"
-                      selected={dataInicio || undefined}
-                      onSelect={(date) => setDataInicio(date || null)}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      locale={ptBR}
-                      className="rounded-md border"
+
+                  <div>
+                    <Label>Título</Label>
+                    <Input 
+                      value={titulo} 
+                      onChange={(e) => setTitulo(e.target.value)}
+                      placeholder="Ex: Reunião pedagógica"
                     />
                   </div>
-                  
+
                   <div>
-                    <Label>Data de Término (opcional)</Label>
-                    <Calendar
-                      mode="single"
-                      selected={dataFim || undefined}
-                      onSelect={(date) => setDataFim(date || null)}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      locale={ptBR}
-                      className="rounded-md border"
+                    <Label>Descrição (opcional)</Label>
+                    <Textarea 
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value)}
+                      placeholder="Detalhes do evento..."
+                      rows={3}
                     />
+                  </div>
+
+                  <div>
+                    <Label>Responsável</Label>
+                    <Select value={responsavelId} onValueChange={setResponsavelId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o responsável" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {responsaveis.map((resp) => (
+                          <SelectItem key={resp.id} value={resp.id}>
+                            {resp.nome} ({resp.tipo})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="recorrente" 
+                      checked={recorrente}
+                      onCheckedChange={(checked) => setRecorrente(checked as boolean)}
+                    />
+                    <Label htmlFor="recorrente">Evento Recorrente</Label>
+                  </div>
+
+                  {recorrente && (
+                    <div className="space-y-3 ml-6 p-3 border rounded-md">
+                      <div>
+                        <Label>Tipo de Recorrência</Label>
+                        <Select value={tipoRecorrencia} onValueChange={setTipoRecorrencia}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="semanal">Semanal</SelectItem>
+                            <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                            <SelectItem value="mensal">Mensal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label>Data de Início</Label>
+                        <Calendar
+                          mode="single"
+                          selected={dataInicio || undefined}
+                          onSelect={(date) => setDataInicio(date || null)}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          locale={ptBR}
+                          className="rounded-md border"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Data de Término (opcional)</Label>
+                        <Calendar
+                          mode="single"
+                          selected={dataFim || undefined}
+                          onSelect={(date) => setDataFim(date || null)}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          locale={ptBR}
+                          className="rounded-md border"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setEtapa(1)}
+                      className="flex-1"
+                    >
+                      Voltar
+                    </Button>
+                    <Button 
+                      onClick={handleSubmit}
+                      disabled={!tipoEvento || !titulo || !responsavelId || criarEventoMutation.isPending}
+                      className="flex-1"
+                    >
+                      {criarEventoMutation.isPending ? 'Criando...' : 'Criar Reserva'}
+                    </Button>
                   </div>
                 </div>
-              )}
-
-              <Button 
-                onClick={handleSubmit}
-                disabled={!tipoEvento || !titulo || !responsavelId || criarEventoMutation.isPending}
-                className="w-full"
-              >
-                {criarEventoMutation.isPending ? 'Criando...' : 'Criar Reserva'}
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
         );
 
@@ -454,20 +464,11 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            {etapa > 1 && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleVoltar}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <DialogTitle>Reservar Sala - Etapa {etapa}/5</DialogTitle>
-          </div>
+          <DialogTitle>
+            {etapa === 1 ? 'Reservar Sala - Selecione Data, Horário e Duração' : 'Reservar Sala - Selecione a Sala e Detalhes'}
+          </DialogTitle>
         </DialogHeader>
 
         {renderEtapa()}
