@@ -20,7 +20,8 @@ import {
   FileSpreadsheet,
   Trophy,
   Shirt,
-  ListChecks
+  ListChecks,
+  MapPin
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,11 @@ const items = [
     title: "Calendário de Aulas",
     url: "/calendario-aulas", 
     icon: Calendar,
+  },
+  {
+    title: "Reservas de Sala",
+    url: "/reservas-sala",
+    icon: MapPin,
   },
   {
     title: "Eventos",
