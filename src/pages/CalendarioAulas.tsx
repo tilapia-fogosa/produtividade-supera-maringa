@@ -916,7 +916,7 @@ export default function CalendarioAulas() {
             ))
           )}
 
-          {/* Renderizar bloqueios de sala primeiro */}
+          {/* Renderizar bloqueios de sala */}
           {mostrarBloqueios && bloqueiosPorDia && salas && Object.entries(bloqueiosPorDia).map(([dia, bloqueios]) => {
             const diaIndex = obterDiaSemanaIndex(dia);
             if (diaIndex === -1) return null;
@@ -933,46 +933,42 @@ export default function CalendarioAulas() {
               const duracaoMinutos = minutosFim - minutosIni;
               const duracaoSlots = Math.ceil(duracaoMinutos / 30);
               
-              // Calcular quantos elementos existem neste horário
+              // Verificar se há turmas no mesmo horário
               const diaSemanaChave = dia as keyof typeof diasSemana;
               const turmasNesseHorario = turmasGrid[`${slotInicio}-${diaSemanaChave}`] || [];
-              
-              // Contar bloqueios que começam no mesmo horário
               const bloqueiosNesseHorario = bloqueios.filter(b => 
                 horarioParaSlot(b.horario_inicio) === slotInicio
               );
               
               const totalElementos = turmasNesseHorario.length + bloqueiosNesseHorario.length;
-              const indexBloqueio = bloqueiosNesseHorario.findIndex(b => b.id === bloqueio.id);
-              const widthPercent = 100 / totalElementos;
-              const leftPercent = (turmasNesseHorario.length + indexBloqueio) * widthPercent;
               
-              // Buscar cor da sala
-              const sala = salas.find(s => s.id === bloqueio.sala_id);
-              const corSala = sala?.cor_calendario || '#9CA3AF';
+              // Se não há conflito, renderizar normalmente
+              if (totalElementos === 1) {
+                const sala = salas.find(s => s.id === bloqueio.sala_id);
+                const corSala = sala?.cor_calendario || '#9CA3AF';
+                
+                return (
+                  <div
+                    key={bloqueio.id}
+                    className="border border-gray-300 rounded-sm overflow-hidden"
+                    style={{
+                      gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
+                      gridColumn: diaIndex + 2,
+                      zIndex: 2,
+                      padding: '1px'
+                    }}
+                  >
+                    <BlocoBloqueio 
+                      bloqueio={bloqueio}
+                      corSala={corSala}
+                      onEdit={() => handleEditarBloqueio(bloqueio)}
+                      onDelete={() => handleExcluirBloqueio(bloqueio)}
+                    />
+                  </div>
+                );
+              }
               
-              return (
-                <div
-                  key={bloqueio.id}
-                  className="border border-gray-300 rounded-sm overflow-hidden absolute"
-                  style={{
-                    gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
-                    gridColumn: diaIndex + 2,
-                    width: `${widthPercent}%`,
-                    left: `${leftPercent}%`,
-                    height: '100%',
-                    zIndex: 2,
-                    padding: '1px'
-                  }}
-                >
-                  <BlocoBloqueio 
-                    bloqueio={bloqueio}
-                    corSala={corSala}
-                    onEdit={() => handleEditarBloqueio(bloqueio)}
-                    onDelete={() => handleExcluirBloqueio(bloqueio)}
-                  />
-                </div>
-              );
+              return null; // Será renderizado no bloco combinado
             });
           })}
 
@@ -982,43 +978,91 @@ export default function CalendarioAulas() {
             const slot = parseInt(slotStr);
             const diaIndex = obterDiaSemanaIndex(diaSemana);
             
-            // Contar bloqueios que começam no mesmo horário
+            // Verificar se há bloqueios que começam no mesmo horário
             const bloqueiosNesseHorario = mostrarBloqueios && bloqueiosPorDia && bloqueiosPorDia[diaSemana]
               ? bloqueiosPorDia[diaSemana].filter(b => horarioParaSlot(b.horario_inicio) === slot)
               : [];
             
             const totalElementos = turmas.length + bloqueiosNesseHorario.length;
             
-            // Determinar altura baseada no número de turmas
-            const alturaSlots = turmas.length > 2 ? 5 : 4;
-            const isCompact = turmas.length > 1;
-            
-            return turmas.map((turma, turmaIndex) => {
-              const widthPercent = 100 / totalElementos;
-              const leftPercent = turmaIndex * widthPercent;
+            // Se há conflito (múltiplos elementos), renderizar com grid
+            if (totalElementos > 1) {
+              const alturaSlots = turmas.length > 2 ? 5 : 4;
+              const isCompact = true;
               
               return (
                 <div
-                  key={`${turma.turma_id}-${turmaIndex}`}
-                  className="border border-gray-300 bg-white rounded-sm overflow-hidden absolute"
+                  key={chave}
+                  className="border border-gray-300 bg-white rounded-sm overflow-hidden"
                   style={{
                     gridRow: `${slot + 1} / ${slot + 1 + alturaSlots}`,
                     gridColumn: diaIndex + 2,
-                    width: `${widthPercent}%`,
-                    left: `${leftPercent}%`,
-                    height: '100%',
-                    padding: '1px',
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${totalElementos}, 1fr)`,
+                    gap: '2px',
+                    padding: '2px',
                     zIndex: 1,
                   }}
                 >
+                  {/* Renderizar turmas */}
+                  {turmas.map((turma, turmaIndex) => (
+                    <div key={`turma-${turma.turma_id}-${turmaIndex}`} className="h-full">
+                      <BlocoTurma 
+                        turma={turma} 
+                        onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
+                        isCompact={isCompact}
+                      />
+                    </div>
+                  ))}
+                  
+                  {/* Renderizar bloqueios */}
+                  {bloqueiosNesseHorario.map((bloqueio) => {
+                    const sala = salas?.find(s => s.id === bloqueio.sala_id);
+                    const corSala = sala?.cor_calendario || '#9CA3AF';
+                    
+                    return (
+                      <div key={`bloqueio-${bloqueio.id}`} className="h-full">
+                        <BlocoBloqueio 
+                          bloqueio={bloqueio}
+                          corSala={corSala}
+                          onEdit={() => handleEditarBloqueio(bloqueio)}
+                          onDelete={() => handleExcluirBloqueio(bloqueio)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+            
+            // Se não há conflito, renderizar turmas normalmente
+            const alturaSlots = turmas.length > 2 ? 5 : 4;
+            const isCompact = turmas.length > 1;
+            
+            return (
+              <div
+                key={chave}
+                className="border border-gray-300 bg-white rounded-sm overflow-hidden"
+                style={{
+                  gridRow: `${slot + 1} / ${slot + 1 + alturaSlots}`,
+                  gridColumn: diaIndex + 2,
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${turmas.length}, 1fr)`,
+                  gap: '1px',
+                  padding: '1px',
+                  zIndex: 1,
+                }}
+              >
+                {turmas.map((turma, turmaIndex) => (
                   <BlocoTurma 
+                    key={`${turma.turma_id}-${turmaIndex}`} 
                     turma={turma} 
                     onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
                     isCompact={isCompact}
                   />
-                </div>
-              );
-            });
+                ))}
+              </div>
+            );
           })}
         </div>
       </div>
