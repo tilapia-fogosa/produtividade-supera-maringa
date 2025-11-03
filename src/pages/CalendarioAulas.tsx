@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Switch } from "@/components/ui/switch";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
+import { useBloqueiosSala, BloqueioSala } from "@/hooks/use-bloqueios-sala";
+import { useSalas } from "@/hooks/use-salas";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useMemo, useEffect } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
@@ -13,6 +15,7 @@ import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
 import ListaFaltasFuturasModal from "@/components/turmas/ListaFaltasFuturasModal";
 import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -93,8 +96,41 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
   return mapping[diaSemana] !== undefined ? mapping[diaSemana] : -1;
 };
 
+// Componente para renderizar um bloqueio de sala no grid
+const BlocoBloqueio = ({ 
+  bloqueio, 
+  corSala, 
+  onClick 
+}: { 
+  bloqueio: BloqueioSala; 
+  corSala: string;
+  onClick?: () => void; 
+}) => {
+  return (
+    <div
+      onClick={onClick}
+      className="p-2 rounded-md border-2 cursor-pointer hover:shadow-md transition-shadow text-xs h-full overflow-hidden"
+      style={{
+        backgroundColor: corSala,
+        borderColor: corSala,
+        filter: 'brightness(0.95)'
+      }}
+    >
+      <div className="font-semibold text-gray-900 truncate">
+        🔒 {bloqueio.sala_nome}
+      </div>
+      <div className="text-gray-800 truncate mt-1">
+        {bloqueio.titulo}
+      </div>
+      <div className="text-gray-700 text-[10px] mt-1 truncate">
+        {bloqueio.tipo_evento.replace('_', ' ')}
+      </div>
+    </div>
+  );
+};
+
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma, onClick, isCompact = false }: { 
+const BlocoTurma = ({ turma, onClick, isCompact = false }: {
   turma: CalendarioTurma; 
   onClick?: () => void; 
   isCompact?: boolean; 
@@ -190,7 +226,9 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 };
 
 export default function CalendarioAulas() {
+  const { activeUnit } = useActiveUnit();
   const [semanaAtual, setSemanaAtual] = useState(new Date());
+  const [mostrarBloqueios, setMostrarBloqueios] = useState(true);
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   
   // Calcular datas da semana para o hook
@@ -199,6 +237,8 @@ export default function CalendarioAulas() {
   
   // Buscar dados das turmas para a semana
   const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(dataInicio, dataFim);
+  const { data: bloqueiosPorDia } = useBloqueiosSala(dataInicio, dataFim, activeUnit?.id);
+  const { data: salas } = useSalas(activeUnit?.id);
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
@@ -535,15 +575,28 @@ export default function CalendarioAulas() {
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={somenteComVagas}
-              onCheckedChange={setSomenteComVagas}
-              id="somente-vagas"
-            />
-            <label htmlFor="somente-vagas" className="text-sm font-medium cursor-pointer">
-              Somente Vagas Disponíveis (menos de 12 alunos)
-            </label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={somenteComVagas}
+                onCheckedChange={setSomenteComVagas}
+                id="somente-vagas"
+              />
+              <label htmlFor="somente-vagas" className="text-sm font-medium cursor-pointer">
+                Somente Vagas Disponíveis (menos de 12 alunos)
+              </label>
+            </div>
+            
+            <div className="flex items-center gap-2 pl-4 border-l">
+              <Switch
+                checked={mostrarBloqueios}
+                onCheckedChange={setMostrarBloqueios}
+                id="mostrar-bloqueios"
+              />
+              <label htmlFor="mostrar-bloqueios" className="text-sm font-medium cursor-pointer">
+                Mostrar Bloqueios de Sala
+              </label>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button 
@@ -630,6 +683,48 @@ export default function CalendarioAulas() {
               />
             ))
           )}
+
+          {/* Renderizar bloqueios de sala */}
+          {mostrarBloqueios && bloqueiosPorDia && salas && Object.entries(bloqueiosPorDia).map(([dia, bloqueios]) => {
+            const diaIndex = obterDiaSemanaIndex(dia);
+            if (diaIndex === -1) return null;
+            
+            return bloqueios.map((bloqueio) => {
+              const slotInicio = horarioParaSlot(bloqueio.horario_inicio);
+              if (slotInicio === null) return null;
+              
+              // Calcular duração em slots
+              const [horaIni, minIni] = bloqueio.horario_inicio.split(':').map(Number);
+              const [horaFim, minFim] = bloqueio.horario_fim.split(':').map(Number);
+              const minutosIni = horaIni * 60 + minIni;
+              const minutosFim = horaFim * 60 + minFim;
+              const duracaoMinutos = minutosFim - minutosIni;
+              const duracaoSlots = Math.ceil(duracaoMinutos / 30);
+              
+              // Buscar cor da sala
+              const sala = salas.find(s => s.id === bloqueio.sala_id);
+              const corSala = sala?.cor_calendario || '#9CA3AF';
+              
+              return (
+                <div
+                  key={bloqueio.id}
+                  className="border border-gray-300 rounded-sm overflow-hidden"
+                  style={{
+                    gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
+                    gridColumn: diaIndex + 2,
+                    zIndex: 2,
+                    padding: '1px'
+                  }}
+                >
+                  <BlocoBloqueio 
+                    bloqueio={bloqueio}
+                    corSala={corSala}
+                    onClick={() => console.log('Bloqueio clicado:', bloqueio)}
+                  />
+                </div>
+              );
+            });
+          })}
 
           {/* Renderizar blocos de turmas com posicionamento absoluto */}
           {Object.entries(turmasGrid).map(([chave, turmas]) => {
