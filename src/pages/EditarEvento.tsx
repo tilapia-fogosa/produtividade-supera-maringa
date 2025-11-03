@@ -630,9 +630,10 @@ const AdicionarNaoAlunoModal = ({
   );
 };
 
-const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
+const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsaveis }: {
   onAlunoAdicionado: (aluno: any) => void;
   alunosJaCadastrados: any[];
+  responsaveis: any[];
 }) => {
   const [open, setOpen] = useState(false);
   const [alunos, setAlunos] = useState<any[]>([]);
@@ -640,6 +641,8 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     alunoId: '',
+    responsavelId: '',
+    valorPago: '',
     formaPagamento: ''
   });
   const { toast } = useToast();
@@ -692,10 +695,10 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.alunoId || !formData.formaPagamento) {
+    if (!formData.alunoId || !formData.formaPagamento || !formData.responsavelId) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos",
+        description: "Preencha todos os campos obrigatórios",
         variant: "destructive"
       });
       return;
@@ -705,11 +708,13 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
     if (alunoSelecionado) {
       const novoAlunoEvento = {
         ...alunoSelecionado,
+        responsavelId: formData.responsavelId,
+        valorPago: formData.valorPago ? parseFloat(formData.valorPago) : null,
         formaPagamento: formData.formaPagamento
       };
 
       onAlunoAdicionado(novoAlunoEvento);
-      setFormData({ alunoId: '', formaPagamento: '' });
+      setFormData({ alunoId: '', responsavelId: '', valorPago: '', formaPagamento: '' });
       setSearchTerm('');
       setOpen(false);
       
@@ -738,15 +743,11 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="search">Buscar Aluno</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Digite o nome do aluno..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            <Input
+              placeholder="Digite o nome do aluno..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -774,18 +775,52 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="responsavel">Responsável *</Label>
+            <Select 
+              value={formData.responsavelId} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, responsavelId: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                {responsaveis.map((resp) => (
+                  <SelectItem key={resp.id} value={resp.id}>
+                    {resp.nome} ({resp.tipo})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="formaPagamento">Forma de Pagamento *</Label>
             <Select value={formData.formaPagamento} onValueChange={(value) => setFormData(prev => ({ ...prev, formaPagamento: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a forma de pagamento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Cartão">Cartão</SelectItem>
-                <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="PIX">PIX</SelectItem>
-                <SelectItem value="Carimbo">Carimbo</SelectItem>
+                <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                <SelectItem value="pix">Pix</SelectItem>
+                <SelectItem value="boleto">Boleto</SelectItem>
+                <SelectItem value="carimbo">Carimbo</SelectItem>
+                <SelectItem value="evento_gratuito">Evento Gratuito</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="valorPago">Valor Pago</Label>
+            <Input
+              id="valorPago"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.valorPago}
+              onChange={(e) => setFormData(prev => ({ ...prev, valorPago: e.target.value }))}
+              placeholder="0.00"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
@@ -1028,6 +1063,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados }: {
                 <AdicionarAlunoModal 
                   onAlunoAdicionado={adicionarAluno}
                   alunosJaCadastrados={alunosEvento}
+                  responsaveis={responsaveis}
                 />
                 <AdicionarNaoAlunoModal 
                   onConvidadoAdicionado={adicionarConvidadoNaoAluno}
