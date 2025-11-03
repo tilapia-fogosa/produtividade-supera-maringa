@@ -1,0 +1,430 @@
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { useProfessores } from "@/hooks/use-professores";
+import { useCriarEventoProfessor } from "@/hooks/use-criar-evento-professor";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+import { TIPOS_EVENTO, OPCOES_DURACAO, obterHorarioFuncionamento, calcularHorarioFim, horarioEstaNoFuncionamento } from "@/constants/horariosFuncionamento";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
+
+interface BloquearHorarioProfessorModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHorarioProfessorModalProps) {
+  const { professores, isLoading: loadingProfessores } = useProfessores();
+  const criarEvento = useCriarEventoProfessor();
+
+  const [etapa, setEtapa] = useState(1);
+  const [professoresIds, setProfessoresIds] = useState<string[]>([]);
+  const [tipoBloqueio, setTipoBloqueio] = useState<"pontual" | "periodico">("pontual");
+  const [dataSelecionada, setDataSelecionada] = useState<Date>();
+  const [diaSemana, setDiaSemana] = useState("");
+  const [horarioInicio, setHorarioInicio] = useState("");
+  const [duracao, setDuracao] = useState(60);
+  const [tipoEvento, setTipoEvento] = useState("");
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState<Date>();
+  const [dataFimRecorrencia, setDataFimRecorrencia] = useState<Date>();
+
+  const diasSemana = [
+    { valor: "segunda", label: "Segunda-feira" },
+    { valor: "terca", label: "Terça-feira" },
+    { valor: "quarta", label: "Quarta-feira" },
+    { valor: "quinta", label: "Quinta-feira" },
+    { valor: "sexta", label: "Sexta-feira" },
+    { valor: "sabado", label: "Sábado" },
+  ];
+
+  const resetForm = () => {
+    setEtapa(1);
+    setProfessoresIds([]);
+    setTipoBloqueio("pontual");
+    setDataSelecionada(undefined);
+    setDiaSemana("");
+    setHorarioInicio("");
+    setDuracao(60);
+    setTipoEvento("");
+    setTitulo("");
+    setDescricao("");
+    setDataInicioRecorrencia(undefined);
+    setDataFimRecorrencia(undefined);
+  };
+
+  const handleProximo = () => {
+    setEtapa(etapa + 1);
+  };
+
+  const handleVoltar = () => {
+    setEtapa(etapa - 1);
+  };
+
+  const handleSalvar = async () => {
+    console.log("Salvando bloqueio para professores:", professoresIds, {
+      tipoEvento,
+      titulo,
+      horarioInicio,
+      duracao,
+      tipoBloqueio
+    });
+
+    try {
+      // Criar evento para cada professor selecionado (sem vinculação a unidade)
+      const criacaoPromises = professoresIds.map(professorId =>
+        criarEvento.mutateAsync({
+          professorId,
+          tipoEvento,
+          titulo,
+          descricao,
+          data: tipoBloqueio === "pontual" ? dataSelecionada : undefined,
+          horarioInicio,
+          duracaoMinutos: duracao,
+          recorrente: tipoBloqueio === "periodico",
+          tipoRecorrencia: tipoBloqueio === "periodico" ? "semanal" : undefined,
+          diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
+          dataInicioRecorrencia,
+          dataFimRecorrencia,
+        })
+      );
+
+      await Promise.all(criacaoPromises);
+
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Erro ao criar bloqueio de horário:", error);
+    }
+  };
+
+  // Gerar horários disponíveis
+  const gerarHorariosDisponiveis = () => {
+    if (tipoBloqueio === "pontual" && !dataSelecionada) return [];
+    if (tipoBloqueio === "periodico" && !diaSemana) return [];
+
+    const dataRef = tipoBloqueio === "pontual" ? dataSelecionada! : new Date();
+    const horarioFuncionamento = tipoBloqueio === "periodico" 
+      ? obterHorarioFuncionamento(new Date(2025, 0, diasSemana.findIndex(d => d.valor === diaSemana) + 5))
+      : obterHorarioFuncionamento(dataRef);
+
+    if (!horarioFuncionamento.aberto) return [];
+
+    const horarios: string[] = [];
+    const [horaInicio, minInicio] = horarioFuncionamento.inicio.split(':').map(Number);
+    const [horaFim, minFim] = horarioFuncionamento.fim.split(':').map(Number);
+    
+    let minutos = horaInicio * 60 + minInicio;
+    const minutosFim = horaFim * 60 + minFim;
+
+    while (minutos < minutosFim) {
+      const h = Math.floor(minutos / 60);
+      const m = minutos % 60;
+      const horario = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      horarios.push(horario);
+      minutos += 30;
+    }
+
+    return horarios;
+  };
+
+  const horariosDisponiveis = gerarHorariosDisponiveis();
+
+  // Filtrar durações válidas
+  const duracoesFiltradas = OPCOES_DURACAO.filter(opcao => {
+    if (!horarioInicio) return true;
+    
+    const dataRef = tipoBloqueio === "pontual" && dataSelecionada ? dataSelecionada : new Date();
+    const horarioFim = calcularHorarioFim(horarioInicio, opcao.valor);
+    const horarioFuncionamento = tipoBloqueio === "periodico" 
+      ? obterHorarioFuncionamento(new Date(2025, 0, diasSemana.findIndex(d => d.valor === diaSemana) + 5))
+      : obterHorarioFuncionamento(dataRef);
+    
+    return horarioEstaNoFuncionamento(horarioInicio, horarioFim, horarioFuncionamento);
+  });
+
+  const professoresSelecionados = professores.filter(p => professoresIds.includes(p.id));
+
+  const toggleProfessor = (professorId: string) => {
+    setProfessoresIds(prev => 
+      prev.includes(professorId) 
+        ? prev.filter(id => id !== professorId)
+        : [...prev, professorId]
+    );
+  };
+
+  const selecionarTodos = () => {
+    setProfessoresIds(professores.map(p => p.id));
+  };
+
+  const desmarcarTodos = () => {
+    setProfessoresIds([]);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) resetForm();
+      onOpenChange(isOpen);
+    }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Bloquear Horário - Etapa {etapa}/3</DialogTitle>
+          <DialogDescription>
+            Configure o bloqueio de horário para um ou mais professores
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Etapa 1: Selecionar Professores e Tipo de Bloqueio */}
+          {etapa === 1 && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Selecione os Professores</Label>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={selecionarTodos}>
+                      Todos
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={desmarcarTodos}>
+                      Nenhum
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                  {professores.map((prof) => (
+                    <label key={prof.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={professoresIds.includes(prof.id)}
+                        onChange={() => toggleProfessor(prof.id)}
+                        className="cursor-pointer"
+                      />
+                      <span className="text-sm">{prof.nome}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <Label>Tipo de Bloqueio</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant={tipoBloqueio === "pontual" ? "default" : "outline"}
+                    onClick={() => setTipoBloqueio("pontual")}
+                    className="h-20"
+                  >
+                    Pontual
+                    <span className="text-xs block mt-1">Data específica</span>
+                  </Button>
+                  <Button
+                    variant={tipoBloqueio === "periodico" ? "default" : "outline"}
+                    onClick={() => setTipoBloqueio("periodico")}
+                    className="h-20"
+                  >
+                    Periódico
+                    <span className="text-xs block mt-1">Recorrência semanal</span>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button onClick={handleProximo} disabled={professoresIds.length === 0}>
+                  Próximo <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Etapa 2: Data/Dia, Horário e Duração */}
+          {etapa === 2 && (
+            <div className="space-y-6">
+              {/* Data ou Dia da Semana */}
+              <div className="space-y-4">
+                {tipoBloqueio === "pontual" ? (
+                  <>
+                    <Label>Selecione a Data</Label>
+                    <Calendar
+                      mode="single"
+                      selected={dataSelecionada}
+                      onSelect={setDataSelecionada}
+                      locale={pt}
+                      className="rounded-md border w-full"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Label>Selecione o Dia da Semana</Label>
+                    <Select value={diaSemana} onValueChange={setDiaSemana}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolha o dia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {diasSemana.map((dia) => (
+                          <SelectItem key={dia.valor} value={dia.valor}>
+                            {dia.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm">Data Início (opcional)</Label>
+                        <Calendar
+                          mode="single"
+                          selected={dataInicioRecorrencia}
+                          onSelect={setDataInicioRecorrencia}
+                          locale={pt}
+                          className="rounded-md border text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Data Fim (opcional)</Label>
+                        <Calendar
+                          mode="single"
+                          selected={dataFimRecorrencia}
+                          onSelect={setDataFimRecorrencia}
+                          locale={pt}
+                          className="rounded-md border text-xs"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Horário e Duração */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Horário de Início</Label>
+                  <Select value={horarioInicio} onValueChange={setHorarioInicio}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Horário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {horariosDisponiveis.map((horario) => (
+                        <SelectItem key={horario} value={horario}>
+                          {horario}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Duração</Label>
+                  <Select value={String(duracao)} onValueChange={(v) => setDuracao(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Duração" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {duracoesFiltradas.map((opcao) => (
+                        <SelectItem key={opcao.valor} value={String(opcao.valor)}>
+                          {opcao.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {horarioInicio && (
+                <p className="text-sm text-muted-foreground">
+                  Horário completo: {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}
+                </p>
+              )}
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={handleVoltar}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
+                </Button>
+                <Button 
+                  onClick={handleProximo}
+                  disabled={
+                    (tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana) || 
+                    !horarioInicio
+                  }
+                >
+                  Próximo <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Etapa 3: Tipo de Evento e Detalhes */}
+          {etapa === 3 && (
+            <div className="space-y-4">
+              <div>
+                <Label>Tipo de Evento</Label>
+                <Select value={tipoEvento} onValueChange={setTipoEvento}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIPOS_EVENTO.map((tipo) => (
+                      <SelectItem key={tipo.valor} value={tipo.valor}>
+                        {tipo.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Título</Label>
+                <Input
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  placeholder="Ex: Reunião pedagógica"
+                />
+              </div>
+              <div>
+                <Label>Descrição (opcional)</Label>
+                <Textarea
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  placeholder="Detalhes adicionais..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Resumo</h4>
+                <div className="text-sm space-y-1 text-muted-foreground">
+                  <p><strong>Professores:</strong> {professoresSelecionados.map(p => p.nome).join(', ')}</p>
+                  <p><strong>Tipo:</strong> {tipoBloqueio === "pontual" ? "Pontual" : "Periódico"}</p>
+                  {tipoBloqueio === "pontual" && dataSelecionada && (
+                    <p><strong>Data:</strong> {format(dataSelecionada, "dd/MM/yyyy", { locale: pt })}</p>
+                  )}
+                  {tipoBloqueio === "periodico" && (
+                    <p><strong>Dia:</strong> {diasSemana.find(d => d.valor === diaSemana)?.label}</p>
+                  )}
+                  <p><strong>Horário:</strong> {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}</p>
+                  <p><strong>Tipo Evento:</strong> {TIPOS_EVENTO.find(t => t.valor === tipoEvento)?.label}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={handleVoltar}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
+                </Button>
+                <Button 
+                  onClick={handleSalvar} 
+                  disabled={!tipoEvento || !titulo || criarEvento.isPending}
+                >
+                  {criarEvento.isPending ? "Salvando..." : "Salvar Bloqueio"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,17 +1,37 @@
 
-import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus } from "lucide-react";
+import { Calendar, Clock, Users, User, ChevronLeft, ChevronRight, FileText, List, UserMinus, MapPin, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Switch } from "@/components/ui/switch";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
+import { useBloqueiosSala, BloqueioSala } from "@/hooks/use-bloqueios-sala";
+import { useSalas } from "@/hooks/use-salas";
+import { useExcluirEventoSala } from "@/hooks/use-excluir-evento-sala";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useMemo } from "react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState, useMemo, useEffect } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
 import ListaAulasExperimentaisModal from "@/components/turmas/ListaAulasExperimentaisModal";
 import ListaFaltasFuturasModal from "@/components/turmas/ListaFaltasFuturasModal";
+import { ReservarSalaModal } from "@/components/turmas/ReservarSalaModal";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 const diasSemana = {
   segunda: "SEG", 
@@ -92,8 +112,149 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
   return mapping[diaSemana] !== undefined ? mapping[diaSemana] : -1;
 };
 
+// Função para clarear cores (converter para tons mais claros)
+const clarearCor = (hex: string): string => {
+  // Remove o # se existir
+  hex = hex.replace('#', '');
+  
+  // Converte hex para RGB
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Clarear (blend com branco em 70%)
+  const newR = Math.round(r + (255 - r) * 0.7);
+  const newG = Math.round(g + (255 - g) * 0.7);
+  const newB = Math.round(b + (255 - b) * 0.7);
+  
+  // Converter de volta para hex
+  const toHex = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
+};
+
+// Componente para renderizar um bloqueio de sala no grid
+const BlocoBloqueio = ({ 
+  bloqueio, 
+  corSala, 
+  onEdit,
+  onDelete
+}: { 
+  bloqueio: BloqueioSala; 
+  corSala: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) => {
+  const corClara = clarearCor(corSala);
+  
+  return (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        <div
+          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-lg"
+          style={{
+            backgroundColor: corClara,
+            borderColor: corSala
+          }}
+        >
+          <div className="font-semibold text-gray-900 truncate">
+            🔒 {bloqueio.sala_nome}
+          </div>
+          <div className="text-gray-800 truncate mt-1">
+            {bloqueio.titulo}
+          </div>
+          
+          {/* Botões no canto inferior direito */}
+          <div className="absolute bottom-1 right-1 flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="p-1 bg-white/80 hover:bg-white rounded border border-gray-300 transition-colors"
+              title="Editar"
+            >
+              <Pencil className="w-3 h-3 text-gray-700" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              className="p-1 bg-red-100 hover:bg-red-200 rounded border border-red-300 transition-colors"
+              title="Excluir"
+            >
+              <Trash2 className="w-3 h-3 text-red-700" />
+            </button>
+          </div>
+        </div>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-80 z-50 bg-white" align="start">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Detalhes do Bloqueio</h4>
+            <div 
+              className="w-4 h-4 rounded-full border-2"
+              style={{ backgroundColor: corClara, borderColor: corSala }}
+            />
+          </div>
+          
+          <div className="space-y-1 text-sm">
+            <div className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Sala:</span>{' '}
+                <span className="text-muted-foreground">{bloqueio.sala_nome}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Título:</span>{' '}
+                <span className="text-muted-foreground">{bloqueio.titulo}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Data:</span>{' '}
+                <span className="text-muted-foreground">
+                  {new Date(bloqueio.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="font-medium">Horário:</span>{' '}
+                <span className="text-muted-foreground">
+                  {bloqueio.horario_inicio} - {bloqueio.horario_fim}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Badge variant="outline" className="text-xs">
+                {bloqueio.tipo_evento.replace('_', ' ')}
+              </Badge>
+            </div>
+            
+            {bloqueio.descricao && (
+              <div className="pt-2 border-t">
+                <p className="text-xs text-muted-foreground">{bloqueio.descricao}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  );
+};
+
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma, onClick, isCompact = false }: { 
+const BlocoTurma = ({ turma, onClick, isCompact = false }: {
   turma: CalendarioTurma; 
   onClick?: () => void; 
   isCompact?: boolean; 
@@ -111,49 +272,47 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
     return 'text-red-600';
   };
 
-  if (isCompact) {
-    return (
-      <div 
-        className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
-        onClick={onClick}
-      >
-        <div className="space-y-0.5">
-          <div className="font-medium text-blue-900 text-xs leading-tight">
-            {turma.categoria}
+  const conteudoCompact = (
+    <div 
+      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
+      onClick={onClick}
+    >
+      <div className="space-y-0.5">
+        <div className="font-medium text-blue-900 text-xs leading-tight">
+          {turma.categoria}
+        </div>
+        <div className="text-blue-700 text-xs leading-tight">
+          {formatarNomeProfessor(turma.professor_nome)}
+        </div>
+        <div className="flex items-center gap-1 text-blue-600">
+          <Users className="w-2.5 h-2.5 flex-shrink-0" />
+          <span className="text-xs">
+            {turma.total_alunos_ativos}/{capacidadeMaxima}
+          </span>
+        </div>
+        {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && (
+          <div className="text-xs leading-tight">
+            {turma.total_reposicoes > 0 && (
+              <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
+            )}
+            {turma.total_reposicoes > 0 && (turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && ' '}
+            {turma.total_aulas_experimentais > 0 && (
+              <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
+            )}
+            {turma.total_aulas_experimentais > 0 && turma.total_faltas_futuras > 0 && ' '}
+            {turma.total_faltas_futuras > 0 && (
+              <span className="font-medium" style={{ color: '#e17021' }}>Fal: {turma.total_faltas_futuras}</span>
+            )}
           </div>
-          <div className="text-blue-700 text-xs leading-tight">
-            {formatarNomeProfessor(turma.professor_nome)}
-          </div>
-          <div className="flex items-center gap-1 text-blue-600">
-            <Users className="w-2.5 h-2.5 flex-shrink-0" />
-            <span className="text-xs">
-              {turma.total_alunos_ativos}/{capacidadeMaxima}
-            </span>
-          </div>
-          {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && (
-            <div className="text-xs leading-tight">
-              {turma.total_reposicoes > 0 && (
-                <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
-              )}
-              {turma.total_reposicoes > 0 && (turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && ' '}
-              {turma.total_aulas_experimentais > 0 && (
-                <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
-              )}
-              {turma.total_aulas_experimentais > 0 && turma.total_faltas_futuras > 0 && ' '}
-              {turma.total_faltas_futuras > 0 && (
-                <span className="font-medium" style={{ color: '#e17021' }}>Fal: {turma.total_faltas_futuras}</span>
-              )}
-            </div>
-          )}
-          <div className={`text-xs font-medium leading-tight ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
-            {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''}
-          </div>
+        )}
+        <div className={`text-xs font-medium leading-tight ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
+          {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  return (
+  const conteudoNormal = (
     <div 
       className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[90px]"
       onClick={onClick}
@@ -186,10 +345,93 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
       </div>
     </div>
   );
+
+  const hoverContent = (
+    <HoverCardContent className="w-80 z-50 bg-white" align="start">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Detalhes da Turma</h4>
+          <Badge className="bg-blue-500">{turma.categoria}</Badge>
+        </div>
+        
+        <div className="space-y-1 text-sm">
+          <div className="flex items-start gap-2">
+            <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Professor:</span>{' '}
+              <span className="text-muted-foreground">{turma.professor_nome}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Sala:</span>{' '}
+              <span className="text-muted-foreground">{turma.sala}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Horário:</span>{' '}
+              <span className="text-muted-foreground">{turma.horario_inicio}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <Users className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="font-medium">Alunos Ativos:</span>{' '}
+              <span className="text-muted-foreground">{turma.total_alunos_ativos} / {capacidadeMaxima}</span>
+            </div>
+          </div>
+          
+          <div className="pt-2 border-t space-y-1">
+            {turma.total_reposicoes > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-red-500 border-red-500">
+                  {turma.total_reposicoes} Reposição{turma.total_reposicoes !== 1 ? 'ões' : ''}
+                </Badge>
+              </div>
+            )}
+            {turma.total_aulas_experimentais > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-green-500 border-green-500">
+                  {turma.total_aulas_experimentais} Experimental{turma.total_aulas_experimentais !== 1 ? 'is' : ''}
+                </Badge>
+              </div>
+            )}
+            {turma.total_faltas_futuras > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-orange-500" style={{ color: '#e17021' }}>
+                  {turma.total_faltas_futuras} Falta{turma.total_faltas_futuras !== 1 ? 's' : ''} Futura{turma.total_faltas_futuras !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+            )}
+            <div className={`text-sm font-medium ${getVagasColor(vagasDisponiveis, capacidadeMaxima)}`}>
+              {vagasDisponiveis} vaga{vagasDisponiveis !== 1 ? 's' : ''} disponível{vagasDisponiveis !== 1 ? 'eis' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </HoverCardContent>
+  );
+
+  return (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        {isCompact ? conteudoCompact : conteudoNormal}
+      </HoverCardTrigger>
+      {hoverContent}
+    </HoverCard>
+  );
 };
 
 export default function CalendarioAulas() {
+  const { activeUnit } = useActiveUnit();
   const [semanaAtual, setSemanaAtual] = useState(new Date());
+  const [mostrarBloqueios, setMostrarBloqueios] = useState(true);
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   
   // Calcular datas da semana para o hook
@@ -198,6 +440,8 @@ export default function CalendarioAulas() {
   
   // Buscar dados das turmas para a semana
   const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(dataInicio, dataFim);
+  const { data: bloqueiosPorDia } = useBloqueiosSala(dataInicio, dataFim, activeUnit?.id);
+  const { data: salas } = useSalas(activeUnit?.id);
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
@@ -220,6 +464,13 @@ export default function CalendarioAulas() {
   // Estado para o modal da lista de faltas futuras
   const [isListaFaltasFuturasOpen, setIsListaFaltasFuturasOpen] = useState(false);
 
+  // Estado para o modal de reservar sala
+  const [isReservarSalaOpen, setIsReservarSalaOpen] = useState(false);
+  
+  // Estados para excluir bloqueio
+  const [bloqueioParaExcluir, setBloqueioParaExcluir] = useState<BloqueioSala | null>(null);
+  const excluirEventoSala = useExcluirEventoSala();
+
 
   // Extrair perfis únicos dos dados (excluindo domingo)
   const perfisDisponiveis = useMemo(() => {
@@ -238,6 +489,13 @@ export default function CalendarioAulas() {
     });
     return Array.from(perfis).sort();
   }, [turmasPorDia]);
+
+  // Selecionar todos os perfis por padrão quando os perfis disponíveis mudarem
+  useEffect(() => {
+    if (perfisDisponiveis.length > 0 && perfisSelecionados.length === 0) {
+      setPerfisSelecionados(perfisDisponiveis);
+    }
+  }, [perfisDisponiveis]);
 
   // Aplicar filtros (excluindo domingo)
   const turmasFiltradasPorDia = useMemo(() => {
@@ -353,6 +611,31 @@ export default function CalendarioAulas() {
     setIsModalOpen(false);
     setModalTurmaId(null);
     setModalDataConsulta(null);
+  };
+
+  const handleEditarBloqueio = (bloqueio: BloqueioSala) => {
+    console.log('✏️ Editar bloqueio:', bloqueio);
+    // TODO: Implementar edição de bloqueio
+    alert('Funcionalidade de edição em desenvolvimento');
+  };
+
+  const handleExcluirBloqueio = (bloqueio: BloqueioSala) => {
+    setBloqueioParaExcluir(bloqueio);
+  };
+
+  const confirmarExclusao = () => {
+    if (bloqueioParaExcluir) {
+      excluirEventoSala.mutate(bloqueioParaExcluir.id, {
+        onSuccess: () => {
+          console.log('✅ Bloqueio excluído com sucesso');
+          setBloqueioParaExcluir(null);
+        },
+        onError: (error) => {
+          console.error('❌ Erro ao excluir bloqueio:', error);
+          alert('Erro ao excluir bloqueio. Tente novamente.');
+        }
+      });
+    }
   };
 
   // Slots de 30 minutos (6h às 21h = 30 slots)
@@ -475,6 +758,16 @@ export default function CalendarioAulas() {
             <UserMinus className="w-4 h-4 mr-2" />
             Lista de Faltas Futuras
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReservarSalaOpen(true)}
+            className="min-w-[140px]"
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            Reservar Sala
+          </Button>
         </div>
 
         <div className="space-y-2">
@@ -514,15 +807,28 @@ export default function CalendarioAulas() {
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={somenteComVagas}
-              onCheckedChange={setSomenteComVagas}
-              id="somente-vagas"
-            />
-            <label htmlFor="somente-vagas" className="text-sm font-medium cursor-pointer">
-              Somente Vagas Disponíveis (menos de 12 alunos)
-            </label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={somenteComVagas}
+                onCheckedChange={setSomenteComVagas}
+                id="somente-vagas"
+              />
+              <label htmlFor="somente-vagas" className="text-sm font-medium cursor-pointer">
+                Somente Vagas Disponíveis (menos de 12 alunos)
+              </label>
+            </div>
+            
+            <div className="flex items-center gap-2 pl-4 border-l">
+              <Switch
+                checked={mostrarBloqueios}
+                onCheckedChange={setMostrarBloqueios}
+                id="mostrar-bloqueios"
+              />
+              <label htmlFor="mostrar-bloqueios" className="text-sm font-medium cursor-pointer">
+                Mostrar Bloqueios de Sala
+              </label>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button 
@@ -610,6 +916,49 @@ export default function CalendarioAulas() {
             ))
           )}
 
+          {/* Renderizar bloqueios de sala */}
+          {mostrarBloqueios && bloqueiosPorDia && salas && Object.entries(bloqueiosPorDia).map(([dia, bloqueios]) => {
+            const diaIndex = obterDiaSemanaIndex(dia);
+            if (diaIndex === -1) return null;
+            
+            return bloqueios.map((bloqueio) => {
+              const slotInicio = horarioParaSlot(bloqueio.horario_inicio);
+              if (slotInicio === null) return null;
+              
+              // Calcular duração em slots
+              const [horaIni, minIni] = bloqueio.horario_inicio.split(':').map(Number);
+              const [horaFim, minFim] = bloqueio.horario_fim.split(':').map(Number);
+              const minutosIni = horaIni * 60 + minIni;
+              const minutosFim = horaFim * 60 + minFim;
+              const duracaoMinutos = minutosFim - minutosIni;
+              const duracaoSlots = Math.ceil(duracaoMinutos / 30);
+              
+              // Buscar cor da sala
+              const sala = salas.find(s => s.id === bloqueio.sala_id);
+              const corSala = sala?.cor_calendario || '#9CA3AF';
+              
+              return (
+                <div
+                  key={bloqueio.id}
+                  className="border border-gray-300 rounded-sm overflow-hidden"
+                  style={{
+                    gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
+                    gridColumn: diaIndex + 2,
+                    zIndex: 2,
+                    padding: '1px'
+                  }}
+                >
+                  <BlocoBloqueio 
+                    bloqueio={bloqueio}
+                    corSala={corSala}
+                    onEdit={() => handleEditarBloqueio(bloqueio)}
+                    onDelete={() => handleExcluirBloqueio(bloqueio)}
+                  />
+                </div>
+              );
+            });
+          })}
+
           {/* Renderizar blocos de turmas com posicionamento absoluto */}
           {Object.entries(turmasGrid).map(([chave, turmas]) => {
             const [slotStr, diaSemana] = chave.split('-');
@@ -673,6 +1022,34 @@ export default function CalendarioAulas() {
         isOpen={isListaFaltasFuturasOpen}
         onClose={() => setIsListaFaltasFuturasOpen(false)}
       />
+      
+      {/* Modal de Reservar Sala */}
+      <ReservarSalaModal 
+        isOpen={isReservarSalaOpen}
+        onClose={() => setIsReservarSalaOpen(false)}
+      />
+      
+      {/* Dialog de confirmação para excluir bloqueio */}
+      <AlertDialog open={!!bloqueioParaExcluir} onOpenChange={(open) => !open && setBloqueioParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Bloqueio</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o bloqueio "{bloqueioParaExcluir?.titulo}" da sala {bloqueioParaExcluir?.sala_nome}?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmarExclusao}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

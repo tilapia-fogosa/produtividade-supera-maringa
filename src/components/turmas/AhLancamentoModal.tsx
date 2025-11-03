@@ -187,7 +187,7 @@ const AhLancamentoModal: React.FC<AhLancamentoModalProps> = ({
                   <label htmlFor="dataFimCorrecao" className="text-sm font-medium">Data do Fim da Correção (opcional)</label>
                   <Input
                     id="dataFimCorrecao"
-                    type="datetime-local"
+                    type="date"
                     value={dataFimCorrecao}
                     onChange={(e) => setDataFimCorrecao(e.target.value)}
                     className={isMobile ? "text-base" : ""}

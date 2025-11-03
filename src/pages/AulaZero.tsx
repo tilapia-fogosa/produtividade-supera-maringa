@@ -39,7 +39,6 @@ interface AulaZeroData {
   avaliacao_abaco: string;
   avaliacao_ah: string;
   pontos_atencao: string;
-  valor_mensalidade: string;
 }
 
 const AulaZero = () => {
@@ -57,8 +56,7 @@ const AulaZero = () => {
       motivo_procura: '',
       avaliacao_abaco: '',
       avaliacao_ah: '',
-      pontos_atencao: '',
-      valor_mensalidade: ''
+      pontos_atencao: ''
     }
   });
 
@@ -142,7 +140,6 @@ const AulaZero = () => {
         avaliacao_abaco: data.avaliacao_abaco,
         avaliacao_ah: data.avaliacao_ah,
         pontos_atencao: data.pontos_atencao,
-        valor_mensalidade: data.valor_mensalidade,
         data_registro: dataAtual
       };
       
@@ -209,9 +206,6 @@ const AulaZero = () => {
         }
       }
 
-      // Converter valor da mensalidade para número
-      const valorMensalidade = data.valor_mensalidade ? parseFloat(data.valor_mensalidade.replace(',', '.')) : null;
-
       // Salvar os dados no Supabase
       const { error } = await supabase
         .from('alunos')
@@ -220,8 +214,7 @@ const AulaZero = () => {
           motivo_procura: data.motivo_procura,
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
-          pontos_atencao: data.pontos_atencao,
-          valor_mensalidade: valorMensalidade,
+          pontos_atencao: data.pontos_atencao
         })
         .eq('id', data.alunoId);
 
@@ -309,25 +302,6 @@ const AulaZero = () => {
                       </Select>
                     </FormControl>
                   </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Valor da Mensalidade */}
-            <FormField
-              control={form.control}
-              name="valor_mensalidade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor da Mensalidade (R$)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: 150,00"
-                      {...field}
-                      type="text"
-                    />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

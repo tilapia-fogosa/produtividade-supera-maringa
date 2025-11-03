@@ -360,9 +360,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   };
 
   return (
-    <div className="ficha-container">
-      {/* Cabeçalho da ficha */}
-      <div className="ficha-cabecalho">
+    <div className="ficha-print-wrapper">
+      <div className="ficha-container">
+        {/* Cabeçalho da ficha */}
+        <div className="ficha-cabecalho">
         <div className="ficha-info">
           <div className="ficha-campo">
             <span className="ficha-label font-bold">Turma:</span>
@@ -405,9 +406,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
       {/* Tabela de reposições (5 linhas) */}
       {renderizarTabela('reposicao')}
 
-      {/* Rodapé da ficha */}
-      <div className="ficha-rodape">
-        <div className="ficha-logo">Supera – Ginástica para o Cérebro</div>
+        {/* Rodapé da ficha */}
+        <div className="ficha-rodape">
+          <div className="ficha-logo">Supera – Ginástica para o Cérebro</div>
+        </div>
       </div>
     </div>
   );

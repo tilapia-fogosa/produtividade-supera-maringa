@@ -38,10 +38,10 @@ const Fichas = () => {
     }
   }, [error]);
 
-  // Ordenar as turmas por nome
-  const turmasOrdenadas = [...turmasDetalhes].sort((a, b) => 
-    a.turma.nome.localeCompare(b.turma.nome)
-  );
+  // Filtrar turmas com pelo menos 1 aluno e ordenar por nome
+  const turmasOrdenadas = turmasDetalhes
+    .filter(item => item.alunos.length > 0)
+    .sort((a, b) => a.turma.nome.localeCompare(b.turma.nome));
 
   // Array de meses para o seletor
   const meses = [
@@ -157,8 +157,8 @@ const Fichas = () => {
                 {iniciarSemanaAnterior && <span className="text-sm font-normal ml-2">(iniciando semana anterior)</span>}
               </h2>
               
-              {turmasOrdenadas.map((item, index) => (
-                <div key={item.turma.id} className={`mb-8 ${index > 0 ? 'print:mt-10' : ''}`}>
+              {turmasOrdenadas.map((item) => (
+                <div key={item.turma.id} className="ficha-print-wrapper mb-8">
                   <FichaTurmaImprimivel 
                     turma={item.turma} 
                     alunos={item.alunos}
@@ -166,9 +166,6 @@ const Fichas = () => {
                     anoSelecionado={anoSelecionado}
                     iniciarSemanaAnterior={iniciarSemanaAnterior}
                   />
-                  {index < turmasOrdenadas.length - 1 && (
-                    <div className="print:page-break-after print:mb-0 mb-12"></div>
-                  )}
                 </div>
               ))}
             </div>

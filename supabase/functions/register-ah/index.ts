@@ -20,9 +20,12 @@ serve(async (req) => {
   try {
     console.log('Processando requisição...');
     
-    const data = await req.json();
+    const requestData = await req.json();
     
-    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
+    console.log('Dados recebidos:', JSON.stringify(requestData, null, 2));
+    
+    // Extrair os dados do objeto correto
+    const data = requestData.data || requestData;
     
     if (!data || !data.aluno_id) {
       console.error('Dados incompletos recebidos');
