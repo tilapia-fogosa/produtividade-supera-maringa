@@ -8,7 +8,18 @@ import { Switch } from "@/components/ui/switch";
 import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
 import { useBloqueiosSala, BloqueioSala } from "@/hooks/use-bloqueios-sala";
 import { useSalas } from "@/hooks/use-salas";
+import { useExcluirEventoSala } from "@/hooks/use-excluir-evento-sala";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useMemo, useEffect } from "react";
 import { TurmaModal } from "@/components/turmas/TurmaModal";
 import { ListaReposicoesModal } from "@/components/turmas/ListaReposicoesModal";
@@ -96,34 +107,76 @@ const obterDiaSemanaIndex = (diaSemana: string) => {
   return mapping[diaSemana] !== undefined ? mapping[diaSemana] : -1;
 };
 
+// Função para clarear cores (converter para tons mais claros)
+const clarearCor = (hex: string): string => {
+  // Remove o # se existir
+  hex = hex.replace('#', '');
+  
+  // Converte hex para RGB
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Clarear (blend com branco em 70%)
+  const newR = Math.round(r + (255 - r) * 0.7);
+  const newG = Math.round(g + (255 - g) * 0.7);
+  const newB = Math.round(b + (255 - b) * 0.7);
+  
+  // Converter de volta para hex
+  const toHex = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
+};
+
 // Componente para renderizar um bloqueio de sala no grid
 const BlocoBloqueio = ({ 
   bloqueio, 
   corSala, 
-  onClick 
+  onEdit,
+  onDelete
 }: { 
   bloqueio: BloqueioSala; 
   corSala: string;
-  onClick?: () => void; 
+  onEdit?: () => void;
+  onDelete?: () => void;
 }) => {
+  const corClara = clarearCor(corSala);
+  
   return (
     <div
-      onClick={onClick}
-      className="p-2 rounded-md border-2 cursor-pointer hover:shadow-md transition-shadow text-xs h-full overflow-hidden"
+      className="p-2 rounded-md border-2 transition-shadow text-xs h-full overflow-hidden flex flex-col gap-1"
       style={{
-        backgroundColor: corSala,
-        borderColor: corSala,
-        filter: 'brightness(0.95)'
+        backgroundColor: corClara,
+        borderColor: corSala
       }}
     >
       <div className="font-semibold text-gray-900 truncate">
         🔒 {bloqueio.sala_nome}
       </div>
-      <div className="text-gray-800 truncate mt-1">
+      <div className="text-gray-800 truncate">
         {bloqueio.titulo}
       </div>
-      <div className="text-gray-700 text-[10px] mt-1 truncate">
+      <div className="text-gray-700 text-[10px] truncate">
         {bloqueio.tipo_evento.replace('_', ' ')}
+      </div>
+      <div className="flex gap-1 mt-auto pt-1">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.();
+          }}
+          className="flex-1 px-2 py-1 text-[10px] bg-white/80 hover:bg-white rounded border border-gray-300 transition-colors"
+        >
+          Editar
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.();
+          }}
+          className="flex-1 px-2 py-1 text-[10px] bg-red-100 hover:bg-red-200 text-red-700 rounded border border-red-300 transition-colors"
+        >
+          Excluir
+        </button>
       </div>
     </div>
   );
@@ -263,6 +316,10 @@ export default function CalendarioAulas() {
 
   // Estado para o modal de reservar sala
   const [isReservarSalaOpen, setIsReservarSalaOpen] = useState(false);
+  
+  // Estados para excluir bloqueio
+  const [bloqueioParaExcluir, setBloqueioParaExcluir] = useState<BloqueioSala | null>(null);
+  const excluirEventoSala = useExcluirEventoSala();
 
 
   // Extrair perfis únicos dos dados (excluindo domingo)
@@ -404,6 +461,31 @@ export default function CalendarioAulas() {
     setIsModalOpen(false);
     setModalTurmaId(null);
     setModalDataConsulta(null);
+  };
+
+  const handleEditarBloqueio = (bloqueio: BloqueioSala) => {
+    console.log('✏️ Editar bloqueio:', bloqueio);
+    // TODO: Implementar edição de bloqueio
+    alert('Funcionalidade de edição em desenvolvimento');
+  };
+
+  const handleExcluirBloqueio = (bloqueio: BloqueioSala) => {
+    setBloqueioParaExcluir(bloqueio);
+  };
+
+  const confirmarExclusao = () => {
+    if (bloqueioParaExcluir) {
+      excluirEventoSala.mutate(bloqueioParaExcluir.id, {
+        onSuccess: () => {
+          console.log('✅ Bloqueio excluído com sucesso');
+          setBloqueioParaExcluir(null);
+        },
+        onError: (error) => {
+          console.error('❌ Erro ao excluir bloqueio:', error);
+          alert('Erro ao excluir bloqueio. Tente novamente.');
+        }
+      });
+    }
   };
 
   // Slots de 30 minutos (6h às 21h = 30 slots)
@@ -719,7 +801,8 @@ export default function CalendarioAulas() {
                   <BlocoBloqueio 
                     bloqueio={bloqueio}
                     corSala={corSala}
-                    onClick={() => console.log('Bloqueio clicado:', bloqueio)}
+                    onEdit={() => handleEditarBloqueio(bloqueio)}
+                    onDelete={() => handleExcluirBloqueio(bloqueio)}
                   />
                 </div>
               );
@@ -795,6 +878,28 @@ export default function CalendarioAulas() {
         isOpen={isReservarSalaOpen}
         onClose={() => setIsReservarSalaOpen(false)}
       />
+      
+      {/* Dialog de confirmação para excluir bloqueio */}
+      <AlertDialog open={!!bloqueioParaExcluir} onOpenChange={(open) => !open && setBloqueioParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Bloqueio</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o bloqueio "{bloqueioParaExcluir?.titulo}" da sala {bloqueioParaExcluir?.sala_nome}?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmarExclusao}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
