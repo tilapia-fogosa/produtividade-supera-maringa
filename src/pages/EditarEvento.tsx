@@ -117,10 +117,19 @@ const EditarEventoModal = ({ evento, onEventoAtualizado }: {
   onEventoAtualizado: () => void;
 }) => {
   const [open, setOpen] = useState(false);
+  
+  // Função para converter data UTC para local no formato datetime-local
+  const getLocalDateTimeString = (dateString: string) => {
+    const date = new Date(dateString);
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().slice(0, 16);
+  };
+  
   const [formData, setFormData] = useState({
     titulo: evento.titulo || '',
     descricao: evento.descricao || '',
-    data_evento: evento.data_evento ? new Date(evento.data_evento).toISOString().slice(0, 16) : '',
+    data_evento: evento.data_evento ? getLocalDateTimeString(evento.data_evento) : '',
     local: evento.local || '',
     responsavel: evento.responsavel || '',
     numero_vagas: evento.numero_vagas || 0,
