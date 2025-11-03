@@ -389,19 +389,47 @@ export default function CalendarioAulas() {
     return resultado;
   }, [eventosPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Estrutura do grid reorganizada - agrupar eventos por horário e dia (slot-dia)
+  // Estrutura do grid reorganizada - agrupar eventos sobrepostos temporalmente
   const eventosGrid = useMemo(() => {
     const grid: Record<string, CalendarioEvento[]> = {};
     
     Object.entries(eventosFiltradasPorDia).forEach(([diaSemana, eventos]) => {
+      // Agrupar eventos que se sobrepõem temporalmente
+      const grupos: CalendarioEvento[][] = [];
+      
       eventos.forEach(evento => {
-        const slotInicio = horarioParaSlot(evento.horario_inicio);
-        const chave = `${slotInicio}-${diaSemana}`;
+        const eventoInicio = horarioParaSlot(evento.horario_inicio);
+        const eventoFim = horarioParaSlot(evento.horario_fim);
         
-        if (!grid[chave]) {
-          grid[chave] = [];
+        // Encontrar um grupo existente que se sobrepõe com este evento
+        let grupoEncontrado = false;
+        for (const grupo of grupos) {
+          const sobrepoeCom = grupo.some(outroEvento => {
+            const outroInicio = horarioParaSlot(outroEvento.horario_inicio);
+            const outroFim = horarioParaSlot(outroEvento.horario_fim);
+            // Verificar se há sobreposição temporal
+            return eventoInicio < outroFim && eventoFim > outroInicio;
+          });
+          
+          if (sobrepoeCom) {
+            grupo.push(evento);
+            grupoEncontrado = true;
+            break;
+          }
         }
-        grid[chave].push(evento);
+        
+        // Se não encontrou grupo, criar novo
+        if (!grupoEncontrado) {
+          grupos.push([evento]);
+        }
+      });
+      
+      // Adicionar grupos ao grid usando o slot inicial do primeiro evento
+      grupos.forEach(grupo => {
+        // Usar o menor horário de início do grupo
+        const menorInicio = Math.min(...grupo.map(e => horarioParaSlot(e.horario_inicio)));
+        const chave = `${menorInicio}-${diaSemana}`;
+        grid[chave] = grupo;
       });
     });
     
