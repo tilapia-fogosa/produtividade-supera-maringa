@@ -5840,6 +5840,19 @@ export type Database = {
       }
     }
     Functions: {
+      bloquear_aula_inaugural: {
+        Args: {
+          p_activity_id: string
+          p_client_name: string
+          p_data: string
+          p_horario_fim: string
+          p_horario_inicio: string
+          p_professor_id: string
+          p_sala_id: string
+          p_unit_id: string
+        }
+        Returns: Json
+      }
       buscar_dados_abaco_projeto_sao_rafael: {
         Args: { p_mes_ano: string; p_professor_id: string }
         Returns: {
@@ -5869,6 +5882,10 @@ export type Database = {
           p_unit_id: string
         }
         Returns: Json
+      }
+      cancelar_aula_inaugural: {
+        Args: { p_activity_id: string }
+        Returns: boolean
       }
       change_initial_password: {
         Args: { new_password: string; user_id: string }
@@ -6246,6 +6263,18 @@ export type Database = {
       get_funcionario_devolutiva: {
         Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
+      }
+      get_horarios_aula_inaugural: {
+        Args: { p_data: string; p_unit_id: string }
+        Returns: {
+          horario_fim: string
+          horario_inicio: string
+          professor_id: string
+          professor_nome: string
+          professor_prioridade: number
+          sala_id: string
+          sala_nome: string
+        }[]
       }
       get_horarios_disponiveis_salas: {
         Args: { p_data: string; p_unit_id?: string }
