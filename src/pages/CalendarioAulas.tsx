@@ -389,53 +389,36 @@ export default function CalendarioAulas() {
     return resultado;
   }, [eventosPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Estrutura do grid reorganizada - detectar sobreposições
-  const eventosComPosicao = useMemo(() => {
-    const resultado: Array<{
-      evento: CalendarioEvento;
-      diaSemana: string;
-      coluna: number;
-      totalColunas: number;
-    }> = [];
+  // Estrutura do grid reorganizada - agrupar eventos sobrepostos temporalmente
+  const eventosGrid = useMemo(() => {
+    const grid: Record<string, CalendarioEvento[]> = {};
     
     Object.entries(eventosFiltradasPorDia).forEach(([diaSemana, eventos]) => {
-      // Para cada evento, calcular quantos outros se sobrepõem com ele
+      // Para cada evento, verificar se há outros que se sobrepõem
       eventos.forEach(evento => {
         const eventoInicio = horarioParaSlot(evento.horario_inicio);
         const eventoFim = horarioParaSlot(evento.horario_fim);
         
-        // Encontrar todos os eventos que se sobrepõem com este
-        const sobrepostos = eventos.filter(outro => {
-          if (outro.evento_id === evento.evento_id) return false;
+        // Encontrar todos os eventos que se sobrepõem temporalmente com este
+        const eventosSobrepostos = eventos.filter(outro => {
           const outroInicio = horarioParaSlot(outro.horario_inicio);
           const outroFim = horarioParaSlot(outro.horario_fim);
+          // Verificar se há sobreposição temporal
           return eventoInicio < outroFim && eventoFim > outroInicio;
         });
         
-        const totalColunas = sobrepostos.length + 1;
+        // Usar o menor horário de início dos eventos sobrepostos como chave
+        const menorInicio = Math.min(...eventosSobrepostos.map(e => horarioParaSlot(e.horario_inicio)));
+        const chave = `${menorInicio}-${diaSemana}`;
         
-        // Determinar qual coluna este evento deve ocupar (baseado na ordem)
-        let coluna = 0;
-        if (totalColunas > 1) {
-          // Ordenar todos os eventos sobrepostos por horário de início
-          const todosEventos = [evento, ...sobrepostos].sort((a, b) => {
-            const aInicio = horarioParaSlot(a.horario_inicio);
-            const bInicio = horarioParaSlot(b.horario_inicio);
-            return aInicio - bInicio;
-          });
-          coluna = todosEventos.findIndex(e => e.evento_id === evento.evento_id);
+        // Adicionar ao grid apenas se não estiver lá ainda
+        if (!grid[chave]) {
+          grid[chave] = eventosSobrepostos;
         }
-        
-        resultado.push({
-          evento,
-          diaSemana,
-          coluna,
-          totalColunas
-        });
       });
     });
     
-    return resultado;
+    return grid;
   }, [eventosFiltradasPorDia]);
 
   const togglePerfil = (perfil: string) => {
@@ -794,49 +777,75 @@ export default function CalendarioAulas() {
           )}
 
           {/* Renderizar eventos unificados (turmas + bloqueios) */}
-          {eventosComPosicao.map((item) => {
-            const { evento, diaSemana, coluna, totalColunas } = item;
-            const diaIndex = obterDiaSemanaIndex(diaSemana);
-            
-            if (diaIndex === -1) return null;
-            
-            const slotInicio = horarioParaSlot(evento.horario_inicio);
-            const slotFim = horarioParaSlot(evento.horario_fim);
-            const duracaoSlots = slotFim - slotInicio;
-            
-            // Calcular o gridColumn com subdivisão
-            // Se totalColunas = 2, dividir em 2 partes: coluna 0 = primeira metade, coluna 1 = segunda metade
-            const larguraColuna = 1 / totalColunas;
-            const inicioColuna = diaIndex + 2 + (coluna * larguraColuna);
-            const fimColuna = inicioColuna + larguraColuna;
-            
-            return (
-              <div
-                key={`evento-${evento.evento_id}`}
-                className="border border-gray-300 bg-white rounded-sm overflow-hidden relative"
-                style={{
-                  gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
-                  gridColumn: `${inicioColuna} / ${fimColuna}`,
-                  zIndex: 5,
-                  padding: '1px',
-                }}
-              >
-                {evento.tipo_evento === 'turma' ? (
-                  <BlocoTurma 
-                    evento={evento} 
-                    onClick={() => handleTurmaClick(evento.evento_id, diaSemana)}
-                    isCompact={totalColunas > 1}
-                  />
-                ) : (
-                  <BlocoEvento 
-                    evento={evento}
-                    onEdit={() => handleEditarEvento(evento)}
-                    onDelete={() => handleExcluirEvento(evento)}
-                  />
-                )}
-              </div>
-            );
-          })}
+          {(() => {
+            // Renderizar cada célula do grid com eventos
+            return Object.entries(eventosGrid).map(([chave, eventos]) => {
+              const [slotStr, diaSemana] = chave.split('-');
+              const slot = parseInt(slotStr);
+              const diaIndex = obterDiaSemanaIndex(diaSemana);
+              
+              if (diaIndex === -1 || eventos.length === 0) return null;
+              
+              // Calcular duração usando o maior horário de fim entre os eventos sobrepostos
+              const maiorFim = Math.max(...eventos.map(e => horarioParaSlot(e.horario_fim)));
+              const duracaoSlots = maiorFim - slot;
+              
+              const totalEventos = eventos.length;
+              const isCompact = totalEventos > 1;
+              
+              return (
+                <div
+                  key={chave}
+                  className="relative"
+                  style={{
+                    gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
+                    gridColumn: diaIndex + 2,
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${totalEventos}, 1fr)`,
+                    gap: totalEventos > 1 ? '2px' : undefined,
+                    padding: '1px',
+                    zIndex: 5,
+                  }}
+                >
+                  {eventos.map((evento) => {
+                    // Calcular posição vertical individual dentro do container
+                    const eventoInicio = horarioParaSlot(evento.horario_inicio);
+                    const eventoFim = horarioParaSlot(evento.horario_fim);
+                    const offsetInicio = eventoInicio - slot;
+                    const duracaoEvento = eventoFim - eventoInicio;
+                    const alturaSlot = 50; // 50px por slot
+                    
+                    return (
+                      <div 
+                        key={`evento-${evento.evento_id}`} 
+                        className="relative"
+                        style={{
+                          marginTop: `${offsetInicio * alturaSlot}px`,
+                          height: `${duracaoEvento * alturaSlot - 2}px`,
+                        }}
+                      >
+                        <div className="h-full border border-gray-300 bg-white rounded-sm overflow-hidden">
+                          {evento.tipo_evento === 'turma' ? (
+                            <BlocoTurma 
+                              evento={evento} 
+                              onClick={() => handleTurmaClick(evento.evento_id, diaSemana)}
+                              isCompact={isCompact}
+                            />
+                          ) : (
+                            <BlocoEvento 
+                              evento={evento}
+                              onEdit={() => handleEditarEvento(evento)}
+                              onDelete={() => handleExcluirEvento(evento)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
         </div>
       </div>
       
