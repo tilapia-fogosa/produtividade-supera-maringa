@@ -5975,6 +5975,10 @@ export type Database = {
         Returns: boolean
       }
       delete_reposicao: { Args: { p_reposicao_id: string }; Returns: boolean }
+      dow_to_dia_semana: {
+        Args: { dow: number }
+        Returns: Database["public"]["Enums"]["dia_semana"]
+      }
       evaluate_formula: {
         Args: {
           p_formula: string
