@@ -206,7 +206,7 @@ const BlocoBloqueio = ({
           </div>
         </div>
       </HoverCardTrigger>
-      <HoverCardContent className="w-80 z-[100] bg-white" align="start">
+      <HoverCardContent className="w-80 z-[9999] bg-white shadow-xl border-2" align="start" side="right">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold">Detalhes do Bloqueio</h4>
@@ -365,7 +365,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
   );
 
   const hoverContent = (
-    <HoverCardContent className="w-80 z-[100] bg-white" align="start">
+    <HoverCardContent className="w-80 z-[9999] bg-white shadow-xl border-2" align="start" side="right">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold">Detalhes da Turma</h4>
@@ -972,7 +972,7 @@ export default function CalendarioAulas() {
                     style={{
                       gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
                       gridColumn: diaIndex + 2,
-                      zIndex: 2,
+                      zIndex: 10,
                       padding: '1px'
                     }}
                   >
@@ -1021,7 +1021,7 @@ export default function CalendarioAulas() {
                     gridTemplateColumns: `repeat(${totalElementos}, 1fr)`,
                     gap: '2px',
                     padding: '2px',
-                    zIndex: 1,
+                    zIndex: 5,
                   }}
                 >
                   {/* Renderizar turmas */}
@@ -1072,7 +1072,7 @@ export default function CalendarioAulas() {
                   gridTemplateColumns: `repeat(${turmas.length}, 1fr)`,
                   gap: '1px',
                   padding: '1px',
-                  zIndex: 1,
+                  zIndex: 5,
                 }}
               >
                 {turmas.map((turma, turmaIndex) => (
