@@ -10,9 +10,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useCalendarioTurmas, CalendarioTurma } from "@/hooks/use-calendario-turmas";
-import { useBloqueiosSala, BloqueioSala } from "@/hooks/use-bloqueios-sala";
-import { useSalas } from "@/hooks/use-salas";
+import { useCalendarioEventosUnificados, CalendarioEvento } from "@/hooks/use-calendario-eventos-unificados";
 import { useExcluirEventoSala } from "@/hooks/use-excluir-evento-sala";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -138,18 +136,17 @@ const calcularDuracaoAula = (categoria: string): number => {
   return 120;
 };
 
-// Componente para renderizar um bloqueio de sala no grid
-const BlocoBloqueio = ({ 
-  bloqueio, 
-  corSala, 
+// Componente para renderizar um bloqueio/evento de sala no grid
+const BlocoEvento = ({ 
+  evento, 
   onEdit,
   onDelete
 }: { 
-  bloqueio: BloqueioSala; 
-  corSala: string;
+  evento: CalendarioEvento; 
   onEdit?: () => void;
   onDelete?: () => void;
 }) => {
+  const corSala = evento.sala_cor || '#9CA3AF';
   const corClara = clarearCor(corSala);
   
   return (
@@ -163,10 +160,10 @@ const BlocoBloqueio = ({
           }}
         >
           <div className="font-semibold text-gray-900 truncate">
-            🔒 {bloqueio.sala_nome}
+            🔒 {evento.sala_nome}
           </div>
           <div className="text-gray-800 truncate mt-1">
-            {bloqueio.titulo}
+            {evento.titulo}
           </div>
           
           {/* Botões no canto inferior direito */}
@@ -209,7 +206,7 @@ const BlocoBloqueio = ({
               <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
                 <span className="font-medium">Sala:</span>{' '}
-                <span className="text-muted-foreground">{bloqueio.sala_nome}</span>
+                <span className="text-muted-foreground">{evento.sala_nome}</span>
               </div>
             </div>
             
@@ -217,39 +214,41 @@ const BlocoBloqueio = ({
               <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
                 <span className="font-medium">Título:</span>{' '}
-                <span className="text-muted-foreground">{bloqueio.titulo}</span>
+                <span className="text-muted-foreground">{evento.titulo}</span>
               </div>
             </div>
             
-            <div className="flex items-start gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="font-medium">Data:</span>{' '}
-                <span className="text-muted-foreground">
-                  {new Date(bloqueio.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-                </span>
+            {evento.data_especifica && (
+              <div className="flex items-start gap-2">
+                <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="font-medium">Data:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {new Date(evento.data_especifica + 'T00:00:00').toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
             
             <div className="flex items-start gap-2">
               <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
                 <span className="font-medium">Horário:</span>{' '}
                 <span className="text-muted-foreground">
-                  {bloqueio.horario_inicio} - {bloqueio.horario_fim}
+                  {evento.horario_inicio} - {evento.horario_fim}
                 </span>
               </div>
             </div>
             
             <div className="flex items-start gap-2">
               <Badge variant="outline" className="text-xs">
-                {bloqueio.tipo_evento.replace('_', ' ')}
+                {evento.tipo_evento === 'turma' ? 'Aula' : 'Reserva de Sala'}
               </Badge>
             </div>
             
-            {bloqueio.descricao && (
+            {evento.descricao && (
               <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground">{bloqueio.descricao}</p>
+                <p className="text-xs text-muted-foreground">{evento.descricao}</p>
               </div>
             )}
           </div>
@@ -260,14 +259,14 @@ const BlocoBloqueio = ({
 };
 
 // Componente para o bloco de turma
-const BlocoTurma = ({ turma, onClick, isCompact = false }: {
-  turma: CalendarioTurma; 
+const BlocoTurma = ({ evento, onClick, isCompact = false }: {
+  evento: CalendarioEvento; 
   onClick?: () => void; 
   isCompact?: boolean; 
 }) => {
   // Calcular vagas disponíveis
-  const capacidadeMaxima = turma.categoria === 'infantil' ? 6 : 12;
-  const ocupacao = turma.total_alunos_ativos + turma.total_reposicoes + turma.total_aulas_experimentais - turma.total_faltas_futuras;
+  const capacidadeMaxima = evento.categoria === 'infantil' ? 6 : 12;
+  const ocupacao = evento.total_alunos_ativos + evento.total_reposicoes + evento.total_aulas_experimentais - evento.total_faltas_futuras;
   const vagasDisponiveis = Math.max(0, capacidadeMaxima - ocupacao);
   
   // Determinar cor das vagas
@@ -285,29 +284,29 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
     >
       <div className="space-y-0.5">
         <div className="font-medium text-blue-900 text-xs leading-tight">
-          {turma.categoria}
+          {evento.categoria}
         </div>
         <div className="text-blue-700 text-xs leading-tight">
-          {formatarNomeProfessor(turma.professor_nome)}
+          {formatarNomeProfessor(evento.professor_nome || '')}
         </div>
         <div className="flex items-center gap-1 text-blue-600">
           <Users className="w-2.5 h-2.5 flex-shrink-0" />
           <span className="text-xs">
-            {turma.total_alunos_ativos}/{capacidadeMaxima}
+            {evento.total_alunos_ativos}/{capacidadeMaxima}
           </span>
         </div>
-        {(turma.total_reposicoes > 0 || turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && (
+        {(evento.total_reposicoes > 0 || evento.total_aulas_experimentais > 0 || evento.total_faltas_futuras > 0) && (
           <div className="text-xs leading-tight">
-            {turma.total_reposicoes > 0 && (
-              <span className="text-red-500 font-medium">Rep: {turma.total_reposicoes}</span>
+            {evento.total_reposicoes > 0 && (
+              <span className="text-red-500 font-medium">Rep: {evento.total_reposicoes}</span>
             )}
-            {turma.total_reposicoes > 0 && (turma.total_aulas_experimentais > 0 || turma.total_faltas_futuras > 0) && ' '}
-            {turma.total_aulas_experimentais > 0 && (
-              <span className="text-green-500 font-medium">Exp: {turma.total_aulas_experimentais}</span>
+            {evento.total_reposicoes > 0 && (evento.total_aulas_experimentais > 0 || evento.total_faltas_futuras > 0) && ' '}
+            {evento.total_aulas_experimentais > 0 && (
+              <span className="text-green-500 font-medium">Exp: {evento.total_aulas_experimentais}</span>
             )}
-            {turma.total_aulas_experimentais > 0 && turma.total_faltas_futuras > 0 && ' '}
-            {turma.total_faltas_futuras > 0 && (
-              <span className="font-medium" style={{ color: '#e17021' }}>Fal: {turma.total_faltas_futuras}</span>
+            {evento.total_aulas_experimentais > 0 && evento.total_faltas_futuras > 0 && ' '}
+            {evento.total_faltas_futuras > 0 && (
+              <span className="font-medium" style={{ color: '#e17021' }}>Fal: {evento.total_faltas_futuras}</span>
             )}
           </div>
         )}
@@ -325,23 +324,23 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
     >
       <div>
         <div className="font-medium text-blue-900 mb-1 text-sm">
-          {turma.categoria}
+          {evento.categoria}
         </div>
         <div className="text-blue-700 mb-1">
-          {formatarNomeProfessor(turma.professor_nome)}
+          {formatarNomeProfessor(evento.professor_nome || '')}
         </div>
         <div className="flex items-center gap-1 text-blue-600 mb-1">
           <Users className="w-3 h-3" />
           <span>
-            {turma.total_alunos_ativos}/{capacidadeMaxima}
-            {turma.total_reposicoes > 0 && (
-              <span className="text-red-500 font-medium"> Rep: {turma.total_reposicoes}</span>
+            {evento.total_alunos_ativos}/{capacidadeMaxima}
+            {evento.total_reposicoes > 0 && (
+              <span className="text-red-500 font-medium"> Rep: {evento.total_reposicoes}</span>
             )}
-            {turma.total_aulas_experimentais > 0 && (
-              <span className="text-green-500 font-medium"> Exp: {turma.total_aulas_experimentais}</span>
+            {evento.total_aulas_experimentais > 0 && (
+              <span className="text-green-500 font-medium"> Exp: {evento.total_aulas_experimentais}</span>
             )}
-            {turma.total_faltas_futuras > 0 && (
-              <span className="font-medium" style={{ color: '#e17021' }}> Fal: {turma.total_faltas_futuras}</span>
+            {evento.total_faltas_futuras > 0 && (
+              <span className="font-medium" style={{ color: '#e17021' }}> Fal: {evento.total_faltas_futuras}</span>
             )}
           </span>
         </div>
@@ -357,7 +356,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold">Detalhes da Turma</h4>
-          <Badge className="bg-blue-500">{turma.categoria}</Badge>
+          <Badge className="bg-blue-500">{evento.categoria}</Badge>
         </div>
         
         <div className="space-y-1 text-sm">
@@ -365,7 +364,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
             <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
               <span className="font-medium">Professor:</span>{' '}
-              <span className="text-muted-foreground">{turma.professor_nome}</span>
+              <span className="text-muted-foreground">{evento.professor_nome}</span>
             </div>
           </div>
           
@@ -373,7 +372,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
             <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
               <span className="font-medium">Sala:</span>{' '}
-              <span className="text-muted-foreground">{turma.sala}</span>
+              <span className="text-muted-foreground">{evento.sala_nome}</span>
             </div>
           </div>
           
@@ -381,7 +380,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
             <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
               <span className="font-medium">Horário:</span>{' '}
-              <span className="text-muted-foreground">{turma.horario_inicio}</span>
+              <span className="text-muted-foreground">{evento.horario_inicio}</span>
             </div>
           </div>
           
@@ -389,29 +388,29 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
             <Users className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
               <span className="font-medium">Alunos Ativos:</span>{' '}
-              <span className="text-muted-foreground">{turma.total_alunos_ativos} / {capacidadeMaxima}</span>
+              <span className="text-muted-foreground">{evento.total_alunos_ativos} / {capacidadeMaxima}</span>
             </div>
           </div>
           
           <div className="pt-2 border-t space-y-1">
-            {turma.total_reposicoes > 0 && (
+            {evento.total_reposicoes > 0 && (
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-red-500 border-red-500">
-                  {turma.total_reposicoes} Reposição{turma.total_reposicoes !== 1 ? 'ões' : ''}
+                  {evento.total_reposicoes} Reposição{evento.total_reposicoes !== 1 ? 'ões' : ''}
                 </Badge>
               </div>
             )}
-            {turma.total_aulas_experimentais > 0 && (
+            {evento.total_aulas_experimentais > 0 && (
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-green-500 border-green-500">
-                  {turma.total_aulas_experimentais} Experimental{turma.total_aulas_experimentais !== 1 ? 'is' : ''}
+                  {evento.total_aulas_experimentais} Experimental{evento.total_aulas_experimentais !== 1 ? 'is' : ''}
                 </Badge>
               </div>
             )}
-            {turma.total_faltas_futuras > 0 && (
+            {evento.total_faltas_futuras > 0 && (
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="border-orange-500" style={{ color: '#e17021' }}>
-                  {turma.total_faltas_futuras} Falta{turma.total_faltas_futuras !== 1 ? 's' : ''} Futura{turma.total_faltas_futuras !== 1 ? 's' : ''}
+                  {evento.total_faltas_futuras} Falta{evento.total_faltas_futuras !== 1 ? 's' : ''} Futura{evento.total_faltas_futuras !== 1 ? 's' : ''}
                 </Badge>
               </div>
             )}
@@ -437,17 +436,18 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 export default function CalendarioAulas() {
   const { activeUnit } = useActiveUnit();
   const [semanaAtual, setSemanaAtual] = useState(new Date());
-  const [mostrarBloqueios, setMostrarBloqueios] = useState(true);
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
   
   // Calcular datas da semana para o hook
   const dataInicio = datasSemanais[0]; // Segunda-feira
   const dataFim = datasSemanais[5]; // Sábado
   
-  // Buscar dados das turmas para a semana
-  const { data: turmasPorDia, isLoading, error } = useCalendarioTurmas(dataInicio, dataFim);
-  const { data: bloqueiosPorDia } = useBloqueiosSala(dataInicio, dataFim, activeUnit?.id);
-  const { data: salas } = useSalas(activeUnit?.id);
+  // Buscar eventos unificados (turmas + bloqueios de sala)
+  const { data: eventosPorDia, isLoading, error } = useCalendarioEventosUnificados(
+    dataInicio, 
+    dataFim, 
+    activeUnit?.id
+  );
 
   // Estados dos filtros
   const [perfisSelecionados, setPerfisSelecionados] = useState<string[]>([]);
@@ -473,28 +473,28 @@ export default function CalendarioAulas() {
   // Estado para o modal de reservar sala
   const [isReservarSalaOpen, setIsReservarSalaOpen] = useState(false);
   
-  // Estados para excluir bloqueio
-  const [bloqueioParaExcluir, setBloqueioParaExcluir] = useState<BloqueioSala | null>(null);
+  // Estados para excluir evento
+  const [eventoParaExcluir, setEventoParaExcluir] = useState<CalendarioEvento | null>(null);
   const excluirEventoSala = useExcluirEventoSala();
 
 
-  // Extrair perfis únicos dos dados (excluindo domingo)
+  // Extrair perfis únicos dos dados (excluindo domingo e eventos de sala)
   const perfisDisponiveis = useMemo(() => {
-    if (!turmasPorDia) return [];
+    if (!eventosPorDia) return [];
     const perfis = new Set<string>();
-    Object.entries(turmasPorDia).forEach(([dia, turmas]) => {
+    Object.entries(eventosPorDia).forEach(([dia, eventos]) => {
       // Excluir domingo
       if (dia === 'domingo') return;
       
-      turmas.forEach(turma => {
-        // Só considerar turmas com alunos ativos
-        if (turma.categoria && turma.total_alunos_ativos > 0) {
-          perfis.add(turma.categoria);
+      eventos.forEach(evento => {
+        // Só considerar turmas (não eventos de sala) com alunos ativos
+        if (evento.tipo_evento === 'turma' && evento.categoria && evento.total_alunos_ativos > 0) {
+          perfis.add(evento.categoria);
         }
       });
     });
     return Array.from(perfis).sort();
-  }, [turmasPorDia]);
+  }, [eventosPorDia]);
 
   // Selecionar todos os perfis por padrão quando os perfis disponíveis mudarem
   useEffect(() => {
@@ -504,12 +504,12 @@ export default function CalendarioAulas() {
   }, [perfisDisponiveis]);
 
   // Aplicar filtros (excluindo domingo)
-  const turmasFiltradasPorDia = useMemo(() => {
-    if (!turmasPorDia) return {};
+  const eventosFiltradasPorDia = useMemo(() => {
+    if (!eventosPorDia) return {};
     
-    const resultado: Record<string, CalendarioTurma[]> = {};
+    const resultado: Record<string, CalendarioEvento[]> = {};
     
-    Object.entries(turmasPorDia).forEach(([dia, turmas]) => {
+    Object.entries(eventosPorDia).forEach(([dia, eventos]) => {
       // Excluir domingo
       if (dia === 'domingo') return;
       
@@ -518,43 +518,46 @@ export default function CalendarioAulas() {
         return;
       }
       
-      const turmasFiltradas = turmas.filter(turma => {
-        // Filtrar turmas com 0 alunos (já aplicado no hook)
-        if (turma.total_alunos_ativos === 0) return false;
+      const eventosFiltrados = eventos.filter(evento => {
+        // Sempre incluir eventos de sala (bloqueios)
+        if (evento.tipo_evento === 'evento_sala') return true;
+        
+        // Para turmas, aplicar filtros
+        if (evento.total_alunos_ativos === 0) return false;
         
         // Filtro por perfil
-        if (!perfisSelecionados.includes(turma.categoria)) return false;
+        if (evento.categoria && !perfisSelecionados.includes(evento.categoria)) return false;
         
         // Filtro por vagas (menos de 12 alunos)
-        if (somenteComVagas && turma.total_alunos_ativos >= 12) return false;
+        if (somenteComVagas && evento.total_alunos_ativos >= 12) return false;
         
         return true;
       });
       
-      resultado[dia] = turmasFiltradas;
+      resultado[dia] = eventosFiltrados;
     });
     
     return resultado;
-  }, [turmasPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
+  }, [eventosPorDia, perfisSelecionados, diasSelecionados, somenteComVagas]);
 
-  // Estrutura do grid reorganizada - agrupar turmas por horário e dia
-  const turmasGrid = useMemo(() => {
-    const grid: Record<string, CalendarioTurma[]> = {};
+  // Estrutura do grid reorganizada - agrupar eventos por horário e dia (slot-dia)
+  const eventosGrid = useMemo(() => {
+    const grid: Record<string, CalendarioEvento[]> = {};
     
-    Object.entries(turmasFiltradasPorDia).forEach(([diaSemana, turmas]) => {
-      turmas.forEach(turma => {
-        const slotInicio = horarioParaSlot(turma.horario_inicio);
+    Object.entries(eventosFiltradasPorDia).forEach(([diaSemana, eventos]) => {
+      eventos.forEach(evento => {
+        const slotInicio = horarioParaSlot(evento.horario_inicio);
         const chave = `${slotInicio}-${diaSemana}`;
         
         if (!grid[chave]) {
           grid[chave] = [];
         }
-        grid[chave].push(turma);
+        grid[chave].push(evento);
       });
     });
     
     return grid;
-  }, [turmasFiltradasPorDia]);
+  }, [eventosFiltradasPorDia]);
 
   const togglePerfil = (perfil: string) => {
     setPerfisSelecionados(prev => 
@@ -619,26 +622,26 @@ export default function CalendarioAulas() {
     setModalDataConsulta(null);
   };
 
-  const handleEditarBloqueio = (bloqueio: BloqueioSala) => {
-    console.log('✏️ Editar bloqueio:', bloqueio);
-    // TODO: Implementar edição de bloqueio
+  const handleEditarEvento = (evento: CalendarioEvento) => {
+    console.log('✏️ Editar evento:', evento);
+    // TODO: Implementar edição de evento
     alert('Funcionalidade de edição em desenvolvimento');
   };
 
-  const handleExcluirBloqueio = (bloqueio: BloqueioSala) => {
-    setBloqueioParaExcluir(bloqueio);
+  const handleExcluirEvento = (evento: CalendarioEvento) => {
+    setEventoParaExcluir(evento);
   };
 
   const confirmarExclusao = () => {
-    if (bloqueioParaExcluir) {
-      excluirEventoSala.mutate(bloqueioParaExcluir.id, {
+    if (eventoParaExcluir && eventoParaExcluir.tipo_evento === 'evento_sala') {
+      excluirEventoSala.mutate(eventoParaExcluir.evento_id, {
         onSuccess: () => {
-          console.log('✅ Bloqueio excluído com sucesso');
-          setBloqueioParaExcluir(null);
+          console.log('✅ Evento excluído com sucesso');
+          setEventoParaExcluir(null);
         },
         onError: (error) => {
-          console.error('❌ Erro ao excluir bloqueio:', error);
-          alert('Erro ao excluir bloqueio. Tente novamente.');
+          console.error('❌ Erro ao excluir evento:', error);
+          alert('Erro ao excluir evento. Tente novamente.');
         }
       });
     }
@@ -824,17 +827,6 @@ export default function CalendarioAulas() {
                 Somente Vagas Disponíveis (menos de 12 alunos)
               </label>
             </div>
-            
-            <div className="flex items-center gap-2 pl-4 border-l">
-              <Switch
-                checked={mostrarBloqueios}
-                onCheckedChange={setMostrarBloqueios}
-                id="mostrar-bloqueios"
-              />
-              <label htmlFor="mostrar-bloqueios" className="text-sm font-medium cursor-pointer">
-                Mostrar Bloqueios de Sala
-              </label>
-            </div>
           </div>
           <div className="flex gap-2">
             <Button 
@@ -922,112 +914,32 @@ export default function CalendarioAulas() {
             ))
           )}
 
-          {/* Renderizar turmas e bloqueios combinados */}
+          {/* Renderizar eventos unificados (turmas + bloqueios) */}
           {(() => {
-            // Criar conjunto de todos os horários/dias que têm eventos
-            const todosHorarios = new Set<string>();
-            
-            // Adicionar horários das turmas
-            Object.keys(turmasGrid).forEach(chave => todosHorarios.add(chave));
-            
-            // Adicionar horários dos bloqueios
-            if (mostrarBloqueios && bloqueiosPorDia) {
-              Object.entries(bloqueiosPorDia).forEach(([dia, bloqueios]) => {
-                bloqueios.forEach(bloqueio => {
-                  const slot = horarioParaSlot(bloqueio.horario_inicio);
-                  if (slot !== null) {
-                    todosHorarios.add(`${slot}-${dia}`);
-                  }
-                });
-              });
-            }
-            
-            // Renderizar cada horário
-            return Array.from(todosHorarios).map(chave => {
+            // Renderizar cada célula do grid com eventos
+            return Object.entries(eventosGrid).map(([chave, eventos]) => {
               const [slotStr, diaSemana] = chave.split('-');
               const slot = parseInt(slotStr);
               const diaIndex = obterDiaSemanaIndex(diaSemana);
               
-              if (diaIndex === -1) return null;
+              if (diaIndex === -1 || eventos.length === 0) return null;
               
-              // Buscar turmas nesse horário
-              const turmas = turmasGrid[chave] || [];
+              // Calcular duração - se tem turma, usar 4 slots (2h), senão usar a duração do evento
+              let duracaoSlots = 4;
+              const temTurma = eventos.some(e => e.tipo_evento === 'turma');
               
-              // Buscar bloqueios nesse horário
-              const bloqueiosNesseHorario = mostrarBloqueios && bloqueiosPorDia && bloqueiosPorDia[diaSemana]
-                ? bloqueiosPorDia[diaSemana].filter(b => horarioParaSlot(b.horario_inicio) === slot)
-                : [];
-              
-              const totalElementos = turmas.length + bloqueiosNesseHorario.length;
-              
-              if (totalElementos === 0) return null;
-              
-              // Calcular duração (120 minutos = 4 slots de 30 min para turmas)
-              // Para bloqueios, usar a duração específica
-              let duracaoSlots = 4; // Padrão para turmas (2 horas)
-              
-              if (turmas.length === 0 && bloqueiosNesseHorario.length > 0) {
-                // Se só tem bloqueio, usar a duração do bloqueio
-                const bloqueio = bloqueiosNesseHorario[0];
-                const [horaIni, minIni] = bloqueio.horario_inicio.split(':').map(Number);
-                const [horaFim, minFim] = bloqueio.horario_fim.split(':').map(Number);
+              if (!temTurma && eventos.length > 0) {
+                const evento = eventos[0];
+                const [horaIni, minIni] = evento.horario_inicio.split(':').map(Number);
+                const [horaFim, minFim] = evento.horario_fim.split(':').map(Number);
                 const minutosIni = horaIni * 60 + minIni;
                 const minutosFim = horaFim * 60 + minFim;
                 const duracaoMinutos = minutosFim - minutosIni;
                 duracaoSlots = Math.ceil(duracaoMinutos / 30);
               }
               
-              // Se há múltiplos elementos, renderizar com subdivisão
-              if (totalElementos > 1) {
-                const isCompact = true;
-                
-                return (
-                  <div
-                    key={chave}
-                    className="border border-gray-300 bg-white rounded-sm overflow-hidden relative"
-                    style={{
-                      gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
-                      gridColumn: diaIndex + 2,
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${totalElementos}, 1fr)`,
-                      gap: '2px',
-                      padding: '2px',
-                      zIndex: 5,
-                    }}
-                  >
-                    {/* Renderizar turmas */}
-                    {turmas.map((turma, turmaIndex) => (
-                      <div key={`turma-${turma.turma_id}-${turmaIndex}`} className="h-full">
-                        <BlocoTurma 
-                          turma={turma} 
-                          onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
-                          isCompact={isCompact}
-                        />
-                      </div>
-                    ))}
-                    
-                    {/* Renderizar bloqueios */}
-                    {bloqueiosNesseHorario.map((bloqueio) => {
-                      const sala = salas?.find(s => s.id === bloqueio.sala_id);
-                      const corSala = sala?.cor_calendario || '#9CA3AF';
-                      
-                      return (
-                        <div key={`bloqueio-${bloqueio.id}`} className="h-full">
-                          <BlocoBloqueio 
-                            bloqueio={bloqueio}
-                            corSala={corSala}
-                            onEdit={() => handleEditarBloqueio(bloqueio)}
-                            onDelete={() => handleExcluirBloqueio(bloqueio)}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              }
-              
-              // Se há apenas 1 elemento, ocupar coluna inteira
-              const isCompact = false;
+              const totalEventos = eventos.length;
+              const isCompact = totalEventos > 1;
               
               return (
                 <div
@@ -1036,34 +948,35 @@ export default function CalendarioAulas() {
                   style={{
                     gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
                     gridColumn: diaIndex + 2,
+                    display: totalEventos > 1 ? 'grid' : 'block',
+                    gridTemplateColumns: totalEventos > 1 ? `repeat(${totalEventos}, 1fr)` : undefined,
+                    gap: totalEventos > 1 ? '2px' : undefined,
+                    padding: totalEventos > 1 ? '2px' : '1px',
                     zIndex: 5,
-                    padding: '1px'
                   }}
                 >
-                  {/* Renderizar turma se existir */}
-                  {turmas.map((turma, turmaIndex) => (
-                    <BlocoTurma 
-                      key={`${turma.turma_id}-${turmaIndex}`} 
-                      turma={turma} 
-                      onClick={() => handleTurmaClick(turma.turma_id, diaSemana)}
-                      isCompact={isCompact}
-                    />
-                  ))}
-                  
-                  {/* Renderizar bloqueio se existir */}
-                  {bloqueiosNesseHorario.map((bloqueio) => {
-                    const sala = salas?.find(s => s.id === bloqueio.sala_id);
-                    const corSala = sala?.cor_calendario || '#9CA3AF';
-                    
-                    return (
-                      <BlocoBloqueio 
-                        key={bloqueio.id}
-                        bloqueio={bloqueio}
-                        corSala={corSala}
-                        onEdit={() => handleEditarBloqueio(bloqueio)}
-                        onDelete={() => handleExcluirBloqueio(bloqueio)}
-                      />
-                    );
+                  {eventos.map((evento) => {
+                    if (evento.tipo_evento === 'turma') {
+                      return (
+                        <div key={`turma-${evento.evento_id}`} className="h-full">
+                          <BlocoTurma 
+                            evento={evento} 
+                            onClick={() => handleTurmaClick(evento.evento_id, diaSemana)}
+                            isCompact={isCompact}
+                          />
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div key={`evento-${evento.evento_id}`} className="h-full">
+                          <BlocoEvento 
+                            evento={evento}
+                            onEdit={() => handleEditarEvento(evento)}
+                            onDelete={() => handleExcluirEvento(evento)}
+                          />
+                        </div>
+                      );
+                    }
                   })}
                 </div>
               );
@@ -1104,13 +1017,13 @@ export default function CalendarioAulas() {
         onClose={() => setIsReservarSalaOpen(false)}
       />
       
-      {/* Dialog de confirmação para excluir bloqueio */}
-      <AlertDialog open={!!bloqueioParaExcluir} onOpenChange={(open) => !open && setBloqueioParaExcluir(null)}>
+      {/* Dialog de confirmação para excluir evento */}
+      <AlertDialog open={!!eventoParaExcluir} onOpenChange={(open) => !open && setEventoParaExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Bloqueio</AlertDialogTitle>
+            <AlertDialogTitle>Excluir {eventoParaExcluir?.tipo_evento === 'turma' ? 'Aula' : 'Evento'}</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o bloqueio "{bloqueioParaExcluir?.titulo}" da sala {bloqueioParaExcluir?.sala_nome}?
+              Tem certeza que deseja excluir "{eventoParaExcluir?.titulo}" da sala {eventoParaExcluir?.sala_nome}?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1119,6 +1032,7 @@ export default function CalendarioAulas() {
             <AlertDialogAction
               onClick={confirmarExclusao}
               className="bg-red-600 hover:bg-red-700"
+              disabled={eventoParaExcluir?.tipo_evento === 'turma'}
             >
               Excluir
             </AlertDialogAction>
