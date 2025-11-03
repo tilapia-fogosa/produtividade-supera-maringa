@@ -55,6 +55,7 @@ import AccessDenied from "./pages/AccessDenied";
 import PlanejadorDesafios from "./pages/PlanejadorDesafios";
 import Camisetas from "./pages/Camisetas";
 import AgendaProfessores from "./pages/AgendaProfessores";
+import ReservasSala from "./pages/ReservasSala";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ function App() {
                             <Route path="/abrindo-horizontes-fila" element={<AbrindoHorizontesFila />} />
                             <Route path="/diario" element={<Diario />} />
                             <Route path="/calendario-aulas" element={<CalendarioAulas />} />
+                            <Route path="/reservas-sala" element={<ReservasSala />} />
                             <Route path="/agenda-professores" element={<AgendaProfessores />} />
                             <Route path="/funcionarios" element={<Funcionarios />} />
                             <Route path="/alunos" element={<Alunos />} />

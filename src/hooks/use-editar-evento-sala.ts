@@ -75,11 +75,13 @@ export const useEditarEventoSala = () => {
       const responsavelIdNovo = params.responsavel_id;
 
       // Buscar evento de professor existente
-      const { data: eventoProfessorExistente } = await supabase
+      const resultadoEventoProfessor = await (supabase as any)
         .from("eventos_professor")
         .select("id")
         .eq("evento_sala_id", params.id)
-        .maybeSingle() as { data: { id: string } | null };
+        .maybeSingle();
+      
+      const eventoProfessorExistente = resultadoEventoProfessor.data as { id: string } | null;
 
       // Caso 1: Responsável era professor e continua sendo professor
       if (responsavelTipoAtual === 'professor' && responsavelTipoNovo === 'professor') {
@@ -154,6 +156,7 @@ export const useEditarEventoSala = () => {
       queryClient.invalidateQueries({ queryKey: ["bloqueios-sala"] });
       queryClient.invalidateQueries({ queryKey: ["bloqueios-professor"] });
       queryClient.invalidateQueries({ queryKey: ["calendario-turmas"] });
+      queryClient.invalidateQueries({ queryKey: ["calendario-eventos-unificados"] });
       queryClient.invalidateQueries({ queryKey: ["horarios-disponiveis-salas"] });
     },
     onError: (error: Error) => {
