@@ -2788,7 +2788,7 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string | null
-          created_by: string
+          created_by: string | null
           data: string
           data_fim_recorrencia: string | null
           data_inicio_recorrencia: string | null
@@ -2814,7 +2814,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           created_at?: string | null
-          created_by: string
+          created_by?: string | null
           data: string
           data_fim_recorrencia?: string | null
           data_inicio_recorrencia?: string | null
@@ -2840,7 +2840,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           created_at?: string | null
-          created_by?: string
+          created_by?: string | null
           data?: string
           data_fim_recorrencia?: string | null
           data_inicio_recorrencia?: string | null
