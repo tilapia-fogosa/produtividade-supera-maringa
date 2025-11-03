@@ -168,7 +168,7 @@ const BlocoBloqueio = ({
     <HoverCard>
       <HoverCardTrigger asChild>
         <div
-          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-lg"
+          className="p-2 rounded-md border-2 transition-all text-xs h-full overflow-hidden relative cursor-pointer hover:shadow-lg hover:z-50"
           style={{
             backgroundColor: corClara,
             borderColor: corSala
@@ -206,7 +206,7 @@ const BlocoBloqueio = ({
           </div>
         </div>
       </HoverCardTrigger>
-      <HoverCardContent className="w-80 z-50 bg-white" align="start">
+      <HoverCardContent className="w-80 z-[100] bg-white" align="start">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold">Detalhes do Bloqueio</h4>
@@ -292,7 +292,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 
   const conteudoCompact = (
     <div 
-      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
+      className="bg-blue-100 border border-blue-200 rounded-sm p-1 h-full cursor-pointer hover:bg-blue-200 hover:z-50 transition-colors text-xs flex flex-col justify-between min-h-[70px]"
       onClick={onClick}
     >
       <div className="space-y-0.5">
@@ -332,7 +332,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
 
   const conteudoNormal = (
     <div 
-      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 transition-colors text-xs flex flex-col justify-between min-h-[90px]"
+      className="bg-blue-100 border border-blue-200 rounded-md p-2 h-full cursor-pointer hover:bg-blue-200 hover:z-50 transition-colors text-xs flex flex-col justify-between min-h-[90px]"
       onClick={onClick}
     >
       <div>
@@ -365,7 +365,7 @@ const BlocoTurma = ({ turma, onClick, isCompact = false }: {
   );
 
   const hoverContent = (
-    <HoverCardContent className="w-80 z-50 bg-white" align="start">
+    <HoverCardContent className="w-80 z-[100] bg-white" align="start">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold">Detalhes da Turma</h4>
@@ -968,7 +968,7 @@ export default function CalendarioAulas() {
                 return (
                   <div
                     key={bloqueio.id}
-                    className="border border-gray-300 rounded-sm overflow-hidden"
+                    className="border border-gray-300 rounded-sm overflow-hidden relative"
                     style={{
                       gridRow: `${slotInicio + 1} / ${slotInicio + 1 + duracaoSlots}`,
                       gridColumn: diaIndex + 2,
@@ -1013,7 +1013,7 @@ export default function CalendarioAulas() {
               return (
                 <div
                   key={chave}
-                  className="border border-gray-300 bg-white rounded-sm overflow-hidden"
+                  className="border border-gray-300 bg-white rounded-sm overflow-hidden relative"
                   style={{
                     gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
                     gridColumn: diaIndex + 2,
@@ -1064,7 +1064,7 @@ export default function CalendarioAulas() {
             return (
               <div
                 key={chave}
-                className="border border-gray-300 bg-white rounded-sm overflow-hidden"
+                className="border border-gray-300 bg-white rounded-sm overflow-hidden relative"
                 style={{
                   gridRow: `${slot + 1} / ${slot + 1 + duracaoSlots}`,
                   gridColumn: diaIndex + 2,
