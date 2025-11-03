@@ -165,7 +165,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         const horarioFunc = dataSelecionada ? obterHorarioFuncionamento(dataSelecionada) : null;
         
         return (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Etapa 1: Selecionar Data */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -182,100 +182,102 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
               />
             </div>
 
-            {/* Etapa 2: Selecionar Horário de Início */}
-            {dataSelecionada && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  <h3 className="text-lg font-medium">2. Selecione o Horário de Início</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {dataSelecionada.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-                </p>
-                
-                {horarioFunc && (
-                  <div className="text-sm p-3 bg-muted rounded-md">
-                    <p className="font-medium">Horário de funcionamento:</p>
-                    <p>{horarioFunc.aberto ? `${horarioFunc.inicio} - ${horarioFunc.fim}` : 'Fechado'}</p>
+            <div className="space-y-6">
+              {/* Etapa 2: Selecionar Horário de Início */}
+              {dataSelecionada && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    <h3 className="text-lg font-medium">2. Selecione o Horário de Início</h3>
                   </div>
-                )}
-                
-                {loadingHorarios ? (
-                  <p>Carregando horários...</p>
-                ) : !horarioFunc?.aberto ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Salas fechadas neste dia
+                  <p className="text-sm text-muted-foreground">
+                    {dataSelecionada.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
                   </p>
-                ) : (
-                  <div className="grid gap-2 max-h-64 overflow-y-auto">
-                    {horariosInicio.map((horario) => (
-                      <Button
-                        key={horario.horario_inicio}
-                        variant={horarioInicioSelecionado === horario.horario_inicio ? "default" : "outline"}
-                        className="justify-between"
-                        onClick={() => setHorarioInicioSelecionado(horario.horario_inicio)}
-                      >
-                        <span>{horario.horario_inicio}</span>
-                        <span className="text-sm">
-                          {horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''}
-                        </span>
-                      </Button>
-                    ))}
-                    {horariosInicio.length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">
-                        Nenhum horário disponível
-                      </p>
-                    )}
+                  
+                  {horarioFunc && (
+                    <div className="text-sm p-3 bg-muted rounded-md">
+                      <p className="font-medium">Horário de funcionamento:</p>
+                      <p>{horarioFunc.aberto ? `${horarioFunc.inicio} - ${horarioFunc.fim}` : 'Fechado'}</p>
+                    </div>
+                  )}
+                  
+                  {loadingHorarios ? (
+                    <p>Carregando horários...</p>
+                  ) : !horarioFunc?.aberto ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Salas fechadas neste dia
+                    </p>
+                  ) : (
+                    <div className="grid gap-2 max-h-64 overflow-y-auto">
+                      {horariosInicio.map((horario) => (
+                        <Button
+                          key={horario.horario_inicio}
+                          variant={horarioInicioSelecionado === horario.horario_inicio ? "default" : "outline"}
+                          className="justify-between"
+                          onClick={() => setHorarioInicioSelecionado(horario.horario_inicio)}
+                        >
+                          <span>{horario.horario_inicio}</span>
+                          <span className="text-sm">
+                            {horario.salas_disponiveis} sala{horario.salas_disponiveis > 1 ? 's' : ''}
+                          </span>
+                        </Button>
+                      ))}
+                      {horariosInicio.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">
+                          Nenhum horário disponível
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Etapa 3: Selecionar Duração */}
+              {horarioInicioSelecionado && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    <h3 className="text-lg font-medium">3. Selecione a Duração</h3>
                   </div>
-                )}
-              </div>
-            )}
+                  <p className="text-sm text-muted-foreground">
+                    Início: {horarioInicioSelecionado}
+                  </p>
+                  
+                  <div className="grid gap-2">
+                    {OPCOES_DURACAO.map((opcao) => {
+                      const horarioFim = calcularHorarioFim(horarioInicioSelecionado, opcao.valor);
+                      const estaNoFuncionamento = horarioFunc ? 
+                        horarioEstaNoFuncionamento(horarioInicioSelecionado, horarioFim, horarioFunc) : false;
+                      
+                      return (
+                        <Button
+                          key={opcao.valor}
+                          variant={duracaoSelecionada === opcao.valor ? "default" : "outline"}
+                          className="justify-between"
+                          disabled={!estaNoFuncionamento}
+                          onClick={() => setDuracaoSelecionada(opcao.valor)}
+                        >
+                          <span>{opcao.label}</span>
+                          <span className="text-sm">
+                            até {horarioFim}
+                            {!estaNoFuncionamento && ' (fora do horário)'}
+                          </span>
+                        </Button>
+                      );
+                    })}
+                  </div>
 
-            {/* Etapa 3: Selecionar Duração */}
-            {horarioInicioSelecionado && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  <h3 className="text-lg font-medium">3. Selecione a Duração</h3>
+                  {duracaoSelecionada && (
+                    <Button 
+                      onClick={() => setEtapa(2)}
+                      className="w-full"
+                    >
+                      Próximo: Selecionar Sala
+                    </Button>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Início: {horarioInicioSelecionado}
-                </p>
-                
-                <div className="grid gap-2">
-                  {OPCOES_DURACAO.map((opcao) => {
-                    const horarioFim = calcularHorarioFim(horarioInicioSelecionado, opcao.valor);
-                    const estaNoFuncionamento = horarioFunc ? 
-                      horarioEstaNoFuncionamento(horarioInicioSelecionado, horarioFim, horarioFunc) : false;
-                    
-                    return (
-                      <Button
-                        key={opcao.valor}
-                        variant={duracaoSelecionada === opcao.valor ? "default" : "outline"}
-                        className="justify-between"
-                        disabled={!estaNoFuncionamento}
-                        onClick={() => setDuracaoSelecionada(opcao.valor)}
-                      >
-                        <span>{opcao.label}</span>
-                        <span className="text-sm">
-                          até {horarioFim}
-                          {!estaNoFuncionamento && ' (fora do horário)'}
-                        </span>
-                      </Button>
-                    );
-                  })}
-                </div>
-
-                {duracaoSelecionada && (
-                  <Button 
-                    onClick={() => setEtapa(2)}
-                    className="w-full"
-                  >
-                    Próximo: Selecionar Sala
-                  </Button>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         );
 
