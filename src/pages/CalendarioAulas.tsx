@@ -191,10 +191,9 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
   onClick?: () => void; 
   isCompact?: boolean; 
 }) => {
-  // Calcular vagas disponíveis
-  const capacidadeMaxima = evento.categoria === 'infantil' ? 6 : 12;
-  const ocupacao = evento.total_alunos_ativos + evento.total_reposicoes + evento.total_aulas_experimentais - evento.total_faltas_futuras;
-  const vagasDisponiveis = Math.max(0, capacidadeMaxima - ocupacao);
+  // Calcular vagas disponíveis: 12 - alunos ativos - funcionários ativos
+  const capacidadeMaxima = 12;
+  const vagasDisponiveis = Math.max(0, capacidadeMaxima - evento.total_alunos_ativos - evento.total_funcionarios_ativos);
   
   // Determinar cor das vagas
   const getVagasColor = (vagas: number, capacidade: number) => {

@@ -19,6 +19,7 @@ export type CalendarioEvento = {
   categoria?: string;
   data_especifica?: string;
   total_alunos_ativos: number;
+  total_funcionarios_ativos: number;
   total_reposicoes: number;
   total_aulas_experimentais: number;
   total_faltas_futuras: number;
