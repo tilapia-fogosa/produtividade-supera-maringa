@@ -6131,6 +6131,7 @@ export type Database = {
           total_alunos_ativos: number
           total_aulas_experimentais: number
           total_faltas_futuras: number
+          total_funcionarios_ativos: number
           total_reposicoes: number
           unit_id: string
         }[]
