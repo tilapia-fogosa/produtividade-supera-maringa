@@ -5641,6 +5641,7 @@ export type Database = {
           professor_slack: string | null
           sala: string | null
           total_alunos_ativos: number | null
+          total_funcionarios_ativos: number | null
           turma_id: string | null
           unit_id: string | null
         }
@@ -5674,6 +5675,21 @@ export type Database = {
           id: string | null
           nome: string | null
           tipo: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
+      horarios_ocupados: {
+        Row: {
+          data_especifica: string | null
+          descricao: string | null
+          dia_semana: string | null
+          evento_id: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          professor_id: string | null
+          sala_id: string | null
+          tipo_ocupacao: string | null
           unit_id: string | null
         }
         Relationships: []
@@ -5865,19 +5881,6 @@ export type Database = {
       }
     }
     Functions: {
-      bloquear_aula_inaugural: {
-        Args: {
-          p_activity_id: string
-          p_client_name: string
-          p_data: string
-          p_horario_fim: string
-          p_horario_inicio: string
-          p_professor_id: string
-          p_sala_id: string
-          p_unit_id: string
-        }
-        Returns: Json
-      }
       buscar_dados_abaco_projeto_sao_rafael: {
         Args: { p_mes_ano: string; p_professor_id: string }
         Returns: {
@@ -6128,6 +6131,7 @@ export type Database = {
           total_alunos_ativos: number
           total_aulas_experimentais: number
           total_faltas_futuras: number
+          total_funcionarios_ativos: number
           total_reposicoes: number
           unit_id: string
         }[]
@@ -6165,6 +6169,7 @@ export type Database = {
           total_alunos_ativos: number
           total_aulas_experimentais: number
           total_faltas_futuras: number
+          total_funcionarios_ativos: number
           total_reposicoes: number
           turma_id: string
           unit_id: string
@@ -6318,17 +6323,6 @@ export type Database = {
       get_funcionario_devolutiva: {
         Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
-      }
-      get_horarios_aula_inaugural: {
-        Args: { p_data: string; p_unit_id: string }
-        Returns: {
-          horario_fim: string
-          horario_inicio: string
-          professor_id: string
-          professor_nome: string
-          sala_id: string
-          sala_nome: string
-        }[]
       }
       get_horarios_disponiveis_salas: {
         Args: { p_data: string; p_unit_id?: string }
@@ -6549,6 +6543,18 @@ export type Database = {
           total_casos: number
           variacao_percentual_ano_anterior: number
           variacao_percentual_anterior: number
+        }[]
+      }
+      get_slots_disponiveis_aula_inaugural: {
+        Args: { p_data: string; p_unit_id: string }
+        Returns: {
+          prioridade: number
+          professor_id: string
+          professor_nome: string
+          sala_id: string
+          sala_nome: string
+          slot_fim: string
+          slot_inicio: string
         }[]
       }
       get_temporal_loss_reasons_report: {
