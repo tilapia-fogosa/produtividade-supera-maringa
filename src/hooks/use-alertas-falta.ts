@@ -42,12 +42,19 @@ interface FiltrosAlertasFalta {
   data_fim?: string;
   tipo_criterio?: string;
   unit_id?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
   return useQuery({
     queryKey: ['alertas-falta', filtros],
     queryFn: async () => {
+      const page = filtros?.page || 1;
+      const pageSize = filtros?.pageSize || 100;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
       let query = supabase
         .from('alertas_falta')
         .select(`
@@ -56,8 +63,9 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
           turma:turmas!alertas_falta_turma_id_fkey(nome),
           professor:professores!alertas_falta_professor_id_fkey(nome, slack_username),
           unit:units!alertas_falta_unit_id_fkey(name)
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
       
       if (filtros?.status) {
         query = query.eq('status', filtros.status);
@@ -79,14 +87,20 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
         query = query.eq('unit_id', filtros.unit_id);
       }
       
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       
       if (error) {
         console.error('Erro ao buscar alertas de falta:', error);
         throw error;
       }
       
-      return data as AlertaFalta[];
+      return {
+        alertas: data as AlertaFalta[],
+        total: count || 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((count || 0) / pageSize)
+      };
     }
   });
 }

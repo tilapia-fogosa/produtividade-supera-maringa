@@ -6,12 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useAlertasFalta, type AlertaFalta } from '@/hooks/use-alertas-falta';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 const AlertasFalta = () => {
+  const [paginaAtual, setPaginaAtual] = useState(1);
   const [filtros, setFiltros] = useState({
     status: 'todos',
     data_inicio: '',
@@ -25,9 +27,20 @@ const AlertasFalta = () => {
     data_inicio: filtros.data_inicio || undefined,
     data_fim: filtros.data_fim || undefined,
     tipo_criterio: filtros.tipo_criterio === 'todos' ? undefined : filtros.tipo_criterio,
+    page: paginaAtual,
+    pageSize: 100
   };
 
-  const { data: alertas, isLoading } = useAlertasFalta(filtrosQuery);
+  const { data, isLoading } = useAlertasFalta(filtrosQuery);
+  const alertas = data?.alertas || [];
+  const totalPages = data?.totalPages || 0;
+  const total = data?.total || 0;
+
+  // Resetar para página 1 quando filtros mudarem
+  const handleFiltroChange = (novosFiltros: typeof filtros) => {
+    setFiltros(novosFiltros);
+    setPaginaAtual(1);
+  };
 
   const formatarData = (data: string) => {
     try {
@@ -91,7 +104,7 @@ const AlertasFalta = () => {
               <label className="text-sm font-medium">Status</label>
               <Select
                 value={filtros.status}
-                onValueChange={(value) => setFiltros({ ...filtros, status: value })}
+                onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
@@ -108,7 +121,7 @@ const AlertasFalta = () => {
               <label className="text-sm font-medium">Tipo de Critério</label>
               <Select
                 value={filtros.tipo_criterio}
-                onValueChange={(value) => setFiltros({ ...filtros, tipo_criterio: value })}
+                onValueChange={(value) => handleFiltroChange({ ...filtros, tipo_criterio: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
@@ -126,7 +139,7 @@ const AlertasFalta = () => {
               <Input
                 type="date"
                 value={filtros.data_inicio}
-                onChange={(e) => setFiltros({ ...filtros, data_inicio: e.target.value })}
+                onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
               />
             </div>
 
@@ -135,18 +148,21 @@ const AlertasFalta = () => {
               <Input
                 type="date"
                 value={filtros.data_fim}
-                onChange={(e) => setFiltros({ ...filtros, data_fim: e.target.value })}
+                onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => setFiltros({ status: 'todos', data_inicio: '', data_fim: '', tipo_criterio: 'todos' })}
+              onClick={() => handleFiltroChange({ status: 'todos', data_inicio: '', data_fim: '', tipo_criterio: 'todos' })}
             >
               Limpar Filtros
             </Button>
+            <span className="text-sm text-muted-foreground">
+              Total: {total} {total === 1 ? 'alerta' : 'alertas'}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -157,7 +173,7 @@ const AlertasFalta = () => {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Total de Alertas</p>
-              <p className="text-3xl font-bold">{alertas?.length || 0}</p>
+              <p className="text-3xl font-bold">{total}</p>
             </div>
           </CardContent>
         </Card>
@@ -199,16 +215,22 @@ const AlertasFalta = () => {
       {/* Tabela de Alertas */}
       <Card>
         <CardHeader>
-          <CardTitle>Alertas</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Alertas</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Página {paginaAtual} de {totalPages} ({alertas.length} alertas nesta página)
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Carregando...</div>
-          ) : !alertas || alertas.length === 0 ? (
+          ) : alertas.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nenhum alerta encontrado
             </div>
           ) : (
+            <>
             <div className="border rounded-lg overflow-auto">
               <Table>
                 <TableHeader>
@@ -357,6 +379,79 @@ const AlertasFalta = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+            </>
+          )}
+
+          {/* Paginação */}
+          {!isLoading && alertas.length > 0 && totalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
+                      className={paginaAtual === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {/* Mostrar primeira página */}
+                  {paginaAtual > 3 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setPaginaAtual(1)} className="cursor-pointer">
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {paginaAtual > 4 && (
+                        <PaginationItem>
+                          <span className="px-2">...</span>
+                        </PaginationItem>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Páginas ao redor da atual */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      return Math.abs(page - paginaAtual) <= 2;
+                    })
+                    .map(page => (
+                      <PaginationItem key={page}>
+                        <PaginationLink 
+                          onClick={() => setPaginaAtual(page)}
+                          isActive={paginaAtual === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                  
+                  {/* Mostrar última página */}
+                  {paginaAtual < totalPages - 2 && (
+                    <>
+                      {paginaAtual < totalPages - 3 && (
+                        <PaginationItem>
+                          <span className="px-2">...</span>
+                        </PaginationItem>
+                      )}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setPaginaAtual(totalPages)} className="cursor-pointer">
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setPaginaAtual(Math.min(totalPages, paginaAtual + 1))}
+                      className={paginaAtual === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
         </CardContent>
