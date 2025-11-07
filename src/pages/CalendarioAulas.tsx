@@ -343,7 +343,10 @@ export default function CalendarioAulas() {
         }
       });
     });
-    return Array.from(perfis).sort();
+    const resultado = Array.from(perfis).sort();
+    console.log('🎯 Perfis disponíveis encontrados:', resultado);
+    console.log('📊 Dados por dia:', eventosPorDia);
+    return resultado;
   }, [eventosPorDia]);
 
   // Selecionar todos os perfis por padrão quando os perfis disponíveis mudarem
