@@ -56,6 +56,7 @@ import PlanejadorDesafios from "./pages/PlanejadorDesafios";
 import Camisetas from "./pages/Camisetas";
 import AgendaProfessores from "./pages/AgendaProfessores";
 import ReservasSala from "./pages/ReservasSala";
+import AlertasFalta from "./pages/AlertasFalta";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +129,7 @@ function App() {
                             <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
                             <Route path="/camisetas" element={<Camisetas />} />
                             <Route path="/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
+                            <Route path="/alertas-falta" element={<AlertasFalta />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>

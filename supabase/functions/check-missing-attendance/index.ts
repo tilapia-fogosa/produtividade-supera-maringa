@@ -359,10 +359,32 @@ serve(async (req) => {
             body: slackPayload
           });
           
+          // Atualizar o registro do alerta com o resultado do envio para o Slack
           if (slackError) {
             console.error('❌ Erro ao enviar para Slack:', slackError);
+            
+            // Salvar erro no banco
+            await supabase
+              .from('alertas_falta')
+              .update({
+                slack_enviado: false,
+                slack_erro: slackError.message || JSON.stringify(slackError),
+                slack_enviado_em: new Date().toISOString()
+              })
+              .eq('id', novoAlerta.id);
           } else {
             console.log('✅ Mensagem enviada para Slack com sucesso:', slackResponse);
+            
+            // Salvar sucesso no banco
+            await supabase
+              .from('alertas_falta')
+              .update({
+                slack_enviado: true,
+                slack_mensagem_id: slackResponse?.slack_message_id || null,
+                slack_enviado_em: new Date().toISOString(),
+                slack_erro: null
+              })
+              .eq('id', novoAlerta.id);
           }
         } catch (slackError) {
           console.error('❌ Erro inesperado ao enviar para Slack:', slackError);
