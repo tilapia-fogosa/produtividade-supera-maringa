@@ -14,13 +14,12 @@ import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, AlertCircle, Eye, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const AlertasFalta = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [reenviandoId, setReenviandoId] = useState<string | null>(null);
-  const { toast } = useToast();
   const [filtros, setFiltros] = useState({
     status: 'todos',
     data_inicio: '',
@@ -110,32 +109,25 @@ const AlertasFalta = () => {
     setReenviandoId(alerta.id);
     
     try {
-      const webhookPayload = {
-        aluno_nome: alerta.aluno?.nome || 'N/A',
-        professor_nome: alerta.professor?.nome || 'N/A',
-        professor_slack: alerta.professor?.slack_username || null,
-        turma_nome: alerta.turma?.nome || 'N/A',
-        dias_supera: alerta.detalhes?.dias_supera || null,
-        data_falta: alerta.data_falta,
-        faltas_consecutivas: alerta.detalhes?.faltas_consecutivas || null,
-        motivo_falta: alerta.detalhes?.motivo_falta || 'Não informado',
-        tipo_criterio: alerta.tipo_criterio,
-        origem: 'reenvio',
-        alerta_id: alerta.id
-      };
-
       const { data, error } = await supabase.functions.invoke('enviar-alerta-falta-webhook', {
-        body: webhookPayload
+        body: {
+          aluno_nome: alerta.aluno?.nome || 'N/A',
+          professor_nome: alerta.professor?.nome || 'N/A',
+          professor_slack: alerta.professor?.slack_username || null,
+          turma_nome: alerta.turma?.nome || 'N/A',
+          dias_supera: alerta.detalhes?.dias_supera || null,
+          data_falta: alerta.data_falta,
+          faltas_consecutivas: alerta.detalhes?.faltas_consecutivas || null,
+          motivo_falta: alerta.detalhes?.motivo_falta || 'Não informado',
+          tipo_criterio: alerta.tipo_criterio,
+          origem: 'reenvio',
+          alerta_id: alerta.id
+        }
       });
 
       if (error) {
         throw error;
       }
-
-      toast({
-        title: "Sucesso!",
-        description: "Alerta reenviado ao webhook com sucesso.",
-      });
 
       // Atualizar o status no banco de dados
       await supabase
@@ -150,11 +142,6 @@ const AlertasFalta = () => {
 
     } catch (error) {
       console.error('Erro ao reenviar alerta:', error);
-      toast({
-        title: "Erro!",
-        description: error.message || "Erro ao reenviar alerta para o webhook.",
-        variant: "destructive"
-      });
 
       // Atualizar o erro no banco
       await supabase
