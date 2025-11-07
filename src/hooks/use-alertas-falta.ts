@@ -62,11 +62,12 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
         .from('alertas_falta')
         .select(`
           *,
-          aluno:alunos!alertas_falta_aluno_id_fkey(nome, foto_url),
-          turma:turmas!alertas_falta_turma_id_fkey(nome),
-          professor:professores!alertas_falta_professor_id_fkey(nome, slack_username),
-          unit:units!alertas_falta_unit_id_fkey(name)
+          aluno:alunos!inner(nome, foto_url, active),
+          turma:turmas(nome),
+          professor:professores(nome, slack_username),
+          unit:units(name)
         `, { count: 'exact' })
+        .eq('aluno.active', true)
         .order('created_at', { ascending: false })
         .range(from, to);
       
@@ -90,10 +91,6 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
         query = query.eq('unit_id', filtros.unit_id);
       }
       
-      if (filtros?.nome_aluno) {
-        query = query.ilike('aluno.nome', `%${filtros.nome_aluno}%`);
-      }
-      
       if (filtros?.turma_id) {
         query = query.eq('turma_id', filtros.turma_id);
       }
@@ -108,11 +105,20 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
         console.error('Erro ao buscar alertas de falta:', error);
         throw error;
       }
+
+      // Aplicar filtro de nome do aluno no lado do cliente
+      let alertasFiltrados = data as AlertaFalta[];
+      if (filtros?.nome_aluno) {
+        alertasFiltrados = alertasFiltrados.filter(alerta => 
+          alerta.aluno?.nome.toLowerCase().includes(filtros.nome_aluno.toLowerCase())
+        );
+      }
       
       // Buscar contagens de cada status com os mesmos filtros
       let countQuery = supabase
         .from('alertas_falta')
-        .select('*', { count: 'exact', head: true });
+        .select('*, alunos!inner(active)', { count: 'exact', head: true })
+        .eq('alunos.active', true);
       
       if (filtros?.status) {
         countQuery = countQuery.eq('status', filtros.status);
@@ -139,7 +145,8 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       // Contagem de enviados (slack_enviado = true e sem erro)
       let enviadosQuery = supabase
         .from('alertas_falta')
-        .select('*', { count: 'exact', head: true })
+        .select('*, alunos!inner(active)', { count: 'exact', head: true })
+        .eq('alunos.active', true)
         .eq('slack_enviado', true)
         .is('slack_erro', null);
       
@@ -165,7 +172,8 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       // Contagem de com erro
       let comErroQuery = supabase
         .from('alertas_falta')
-        .select('*', { count: 'exact', head: true })
+        .select('*, alunos!inner(active)', { count: 'exact', head: true })
+        .eq('alunos.active', true)
         .not('slack_erro', 'is', null);
       
       if (filtros?.data_inicio) {
@@ -190,7 +198,8 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       // Contagem de resolvidos
       let resolvidosQuery = supabase
         .from('alertas_falta')
-        .select('*', { count: 'exact', head: true })
+        .select('*, alunos!inner(active)', { count: 'exact', head: true })
+        .eq('alunos.active', true)
         .eq('status', 'resolvido');
       
       if (filtros?.data_inicio) {
@@ -219,7 +228,7 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       ]);
 
       return {
-        alertas: data as AlertaFalta[],
+        alertas: alertasFiltrados,
         total: count || 0,
         page,
         pageSize,
