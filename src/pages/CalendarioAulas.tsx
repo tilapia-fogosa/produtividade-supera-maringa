@@ -209,6 +209,9 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
       onClick={onClick}
     >
       <div className="space-y-0.5">
+        <div className="font-semibold text-blue-900 text-sm leading-tight mb-0.5">
+          {evento.titulo}
+        </div>
         <div className="font-medium text-blue-900 text-xs leading-tight">
           {evento.categoria}
         </div>
@@ -249,6 +252,9 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
       onClick={onClick}
     >
       <div>
+        <div className="font-semibold text-blue-900 mb-1 text-base">
+          {evento.titulo}
+        </div>
         <div className="font-medium text-blue-900 mb-1 text-sm">
           {evento.categoria}
         </div>
