@@ -13,13 +13,21 @@ import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 const AlertasFalta = () => {
   const [filtros, setFiltros] = useState({
-    status: '',
+    status: 'todos',
     data_inicio: '',
     data_fim: '',
-    tipo_criterio: ''
+    tipo_criterio: 'todos'
   });
 
-  const { data: alertas, isLoading } = useAlertasFalta(filtros);
+  // Preparar filtros para a query (converter "todos" para undefined)
+  const filtrosQuery = {
+    status: filtros.status === 'todos' ? undefined : filtros.status,
+    data_inicio: filtros.data_inicio || undefined,
+    data_fim: filtros.data_fim || undefined,
+    tipo_criterio: filtros.tipo_criterio === 'todos' ? undefined : filtros.tipo_criterio,
+  };
+
+  const { data: alertas, isLoading } = useAlertasFalta(filtrosQuery);
 
   const formatarData = (data: string) => {
     try {
@@ -89,7 +97,7 @@ const AlertasFalta = () => {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="enviado">Enviados</SelectItem>
                   <SelectItem value="resolvido">Resolvidos</SelectItem>
                 </SelectContent>
@@ -106,7 +114,7 @@ const AlertasFalta = () => {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="aluno_recente">Aluno Recente</SelectItem>
                   <SelectItem value="faltas_consecutivas">Faltas Consecutivas</SelectItem>
                 </SelectContent>
@@ -135,7 +143,7 @@ const AlertasFalta = () => {
           <div className="mt-4">
             <Button
               variant="outline"
-              onClick={() => setFiltros({ status: '', data_inicio: '', data_fim: '', tipo_criterio: '' })}
+              onClick={() => setFiltros({ status: 'todos', data_inicio: '', data_fim: '', tipo_criterio: 'todos' })}
             >
               Limpar Filtros
             </Button>
