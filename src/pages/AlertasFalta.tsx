@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useAlertasFalta, type AlertaFalta } from '@/hooks/use-alertas-falta';
+import { useProfessores } from '@/hooks/use-professores';
+import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
@@ -18,8 +20,14 @@ const AlertasFalta = () => {
     status: 'todos',
     data_inicio: '',
     data_fim: '',
-    tipo_criterio: 'todos'
+    tipo_criterio: 'todos',
+    nome_aluno: '',
+    turma_id: 'todos',
+    professor_id: 'todos'
   });
+
+  const { professores } = useProfessores();
+  const { turmas } = useTodasTurmas();
 
   // Preparar filtros para a query (converter "todos" para undefined)
   const filtrosQuery = {
@@ -27,6 +35,9 @@ const AlertasFalta = () => {
     data_inicio: filtros.data_inicio || undefined,
     data_fim: filtros.data_fim || undefined,
     tipo_criterio: filtros.tipo_criterio === 'todos' ? undefined : filtros.tipo_criterio,
+    nome_aluno: filtros.nome_aluno || undefined,
+    turma_id: filtros.turma_id === 'todos' ? undefined : filtros.turma_id,
+    professor_id: filtros.professor_id === 'todos' ? undefined : filtros.professor_id,
     page: paginaAtual,
     pageSize: 100
   };
@@ -102,64 +113,125 @@ const AlertasFalta = () => {
           <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <Select
-                value={filtros.status}
-                onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="enviado">Enviados</SelectItem>
-                  <SelectItem value="resolvido">Resolvidos</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome do Aluno</label>
+                <Input
+                  placeholder="Buscar por nome"
+                  value={filtros.nome_aluno}
+                  onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Turma</label>
+                <Select
+                  value={filtros.turma_id}
+                  onValueChange={(value) => handleFiltroChange({ ...filtros, turma_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas</SelectItem>
+                    {turmas.map((turma) => (
+                      <SelectItem key={turma.id} value={turma.id}>
+                        {turma.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Professor</label>
+                <Select
+                  value={filtros.professor_id}
+                  onValueChange={(value) => handleFiltroChange({ ...filtros, professor_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {professores?.map((professor) => (
+                      <SelectItem key={professor.id} value={professor.id}>
+                        {professor.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tipo de Critério</label>
-              <Select
-                value={filtros.tipo_criterio}
-                onValueChange={(value) => handleFiltroChange({ ...filtros, tipo_criterio: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="aluno_recente">Aluno Recente</SelectItem>
-                  <SelectItem value="faltas_consecutivas">Faltas Consecutivas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <Select
+                  value={filtros.status}
+                  onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="enviado">Enviados</SelectItem>
+                    <SelectItem value="resolvido">Resolvidos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data Início</label>
-              <Input
-                type="date"
-                value={filtros.data_inicio}
-                onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo de Critério</label>
+                <Select
+                  value={filtros.tipo_criterio}
+                  onValueChange={(value) => handleFiltroChange({ ...filtros, tipo_criterio: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="aluno_recente">Aluno Recente</SelectItem>
+                    <SelectItem value="faltas_consecutivas">Faltas Consecutivas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data Fim</label>
-              <Input
-                type="date"
-                value={filtros.data_fim}
-                onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data Início</label>
+                <Input
+                  type="date"
+                  value={filtros.data_inicio}
+                  onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data Fim</label>
+                <Input
+                  type="date"
+                  value={filtros.data_fim}
+                  onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
+                />
+              </div>
             </div>
           </div>
 
           <div className="mt-4 flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => handleFiltroChange({ status: 'todos', data_inicio: '', data_fim: '', tipo_criterio: 'todos' })}
+              onClick={() => handleFiltroChange({ 
+                status: 'todos', 
+                data_inicio: '', 
+                data_fim: '', 
+                tipo_criterio: 'todos',
+                nome_aluno: '',
+                turma_id: 'todos',
+                professor_id: 'todos'
+              })}
             >
               Limpar Filtros
             </Button>

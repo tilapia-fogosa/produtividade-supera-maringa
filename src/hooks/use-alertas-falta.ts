@@ -42,6 +42,9 @@ interface FiltrosAlertasFalta {
   data_fim?: string;
   tipo_criterio?: string;
   unit_id?: string;
+  nome_aluno?: string;
+  turma_id?: string;
+  professor_id?: string;
   page?: number;
   pageSize?: number;
 }
@@ -87,6 +90,18 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
         query = query.eq('unit_id', filtros.unit_id);
       }
       
+      if (filtros?.nome_aluno) {
+        query = query.ilike('aluno.nome', `%${filtros.nome_aluno}%`);
+      }
+      
+      if (filtros?.turma_id) {
+        query = query.eq('turma_id', filtros.turma_id);
+      }
+      
+      if (filtros?.professor_id) {
+        query = query.eq('professor_id', filtros.professor_id);
+      }
+      
       const { data, error, count } = await query;
       
       if (error) {
@@ -114,6 +129,12 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       if (filtros?.unit_id) {
         countQuery = countQuery.eq('unit_id', filtros.unit_id);
       }
+      if (filtros?.turma_id) {
+        countQuery = countQuery.eq('turma_id', filtros.turma_id);
+      }
+      if (filtros?.professor_id) {
+        countQuery = countQuery.eq('professor_id', filtros.professor_id);
+      }
 
       // Contagem de enviados (slack_enviado = true e sem erro)
       let enviadosQuery = supabase
@@ -134,6 +155,12 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       if (filtros?.unit_id) {
         enviadosQuery = enviadosQuery.eq('unit_id', filtros.unit_id);
       }
+      if (filtros?.turma_id) {
+        enviadosQuery = enviadosQuery.eq('turma_id', filtros.turma_id);
+      }
+      if (filtros?.professor_id) {
+        enviadosQuery = enviadosQuery.eq('professor_id', filtros.professor_id);
+      }
 
       // Contagem de com erro
       let comErroQuery = supabase
@@ -153,6 +180,12 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       if (filtros?.unit_id) {
         comErroQuery = comErroQuery.eq('unit_id', filtros.unit_id);
       }
+      if (filtros?.turma_id) {
+        comErroQuery = comErroQuery.eq('turma_id', filtros.turma_id);
+      }
+      if (filtros?.professor_id) {
+        comErroQuery = comErroQuery.eq('professor_id', filtros.professor_id);
+      }
 
       // Contagem de resolvidos
       let resolvidosQuery = supabase
@@ -171,6 +204,12 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
       }
       if (filtros?.unit_id) {
         resolvidosQuery = resolvidosQuery.eq('unit_id', filtros.unit_id);
+      }
+      if (filtros?.turma_id) {
+        resolvidosQuery = resolvidosQuery.eq('turma_id', filtros.turma_id);
+      }
+      if (filtros?.professor_id) {
+        resolvidosQuery = resolvidosQuery.eq('professor_id', filtros.professor_id);
       }
 
       const [enviadosResult, comErroResult, resolvidosResult] = await Promise.all([
