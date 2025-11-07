@@ -338,10 +338,10 @@ serve(async (req) => {
           detalhes: alertaCriterioEncontrado.detalhes
         };
         
-        // Chamar função para enviar mensagem no Slack
-        console.log('🔔 Enviando alerta para o Slack...');
+        // Chamar função para enviar dados ao webhook N8N
+        console.log('🔔 Enviando alerta para o webhook N8N...');
         try {
-          const slackPayload = {
+          const webhookPayload = {
             aluno_nome: pessoa.nome,
             professor_nome: professorInfo?.nome || 'Professor não encontrado',
             professor_slack: professorInfo?.slack_username || null,
@@ -353,41 +353,41 @@ serve(async (req) => {
             tipo_criterio: alertaCriterioEncontrado.tipo_criterio
           };
           
-          console.log('Payload para Slack:', JSON.stringify(slackPayload, null, 2));
+          console.log('Payload para webhook:', JSON.stringify(webhookPayload, null, 2));
           
-          const { data: slackResponse, error: slackError } = await supabase.functions.invoke('enviar-alerta-falta-slack', {
-            body: slackPayload
+          const { data: webhookResponse, error: webhookError } = await supabase.functions.invoke('enviar-alerta-falta-webhook', {
+            body: webhookPayload
           });
           
-          // Atualizar o registro do alerta com o resultado do envio para o Slack
-          if (slackError) {
-            console.error('❌ Erro ao enviar para Slack:', slackError);
+          // Atualizar o registro do alerta com o resultado do envio ao webhook
+          if (webhookError) {
+            console.error('❌ Erro ao enviar para webhook:', webhookError);
             
             // Salvar erro no banco
             await supabase
               .from('alertas_falta')
               .update({
                 slack_enviado: false,
-                slack_erro: slackError.message || JSON.stringify(slackError),
+                slack_erro: webhookError.message || JSON.stringify(webhookError),
                 slack_enviado_em: new Date().toISOString()
               })
               .eq('id', novoAlerta.id);
           } else {
-            console.log('✅ Mensagem enviada para Slack com sucesso:', slackResponse);
+            console.log('✅ Dados enviados para webhook com sucesso:', webhookResponse);
             
             // Salvar sucesso no banco
             await supabase
               .from('alertas_falta')
               .update({
                 slack_enviado: true,
-                slack_mensagem_id: slackResponse?.slack_message_id || null,
+                slack_mensagem_id: webhookResponse?.webhook_response || null,
                 slack_enviado_em: new Date().toISOString(),
                 slack_erro: null
               })
               .eq('id', novoAlerta.id);
           }
-        } catch (slackError) {
-          console.error('❌ Erro inesperado ao enviar para Slack:', slackError);
+        } catch (webhookError) {
+          console.error('❌ Erro inesperado ao enviar para webhook:', webhookError);
         }
       }
     }
