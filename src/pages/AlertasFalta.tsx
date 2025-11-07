@@ -119,7 +119,9 @@ const AlertasFalta = () => {
         data_falta: alerta.data_falta,
         faltas_consecutivas: alerta.detalhes?.faltas_consecutivas || null,
         motivo_falta: alerta.detalhes?.motivo_falta || 'Não informado',
-        tipo_criterio: alerta.tipo_criterio
+        tipo_criterio: alerta.tipo_criterio,
+        origem: 'reenvio',
+        alerta_id: alerta.id
       };
 
       const { data, error } = await supabase.functions.invoke('enviar-alerta-falta-webhook', {

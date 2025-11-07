@@ -350,7 +350,8 @@ serve(async (req) => {
             data_falta: dataFalta,
             faltas_consecutivas: pessoa.faltas_consecutivas || 0,
             motivo_falta: motivoFalta,
-            tipo_criterio: alertaCriterioEncontrado.tipo_criterio
+            tipo_criterio: alertaCriterioEncontrado.tipo_criterio,
+            origem: 'automatico'
           };
           
           console.log('Payload para webhook:', JSON.stringify(webhookPayload, null, 2));

@@ -45,7 +45,7 @@ serve(async (req) => {
     console.log('Dados do alerta recebidos:', alertaData);
     
     // 4. Validar dados obrigatórios
-    const { aluno_nome, professor_nome, turma_nome, data_falta } = alertaData;
+    const { aluno_nome, professor_nome, turma_nome, data_falta, origem } = alertaData;
     if (!aluno_nome || !professor_nome || !turma_nome || !data_falta) {
       console.error('Dados obrigatórios ausentes');
       return new Response(
@@ -68,6 +68,8 @@ serve(async (req) => {
       faltas_consecutivas: alertaData.faltas_consecutivas || null,
       motivo_falta: alertaData.motivo_falta || 'Não informado',
       tipo_criterio: alertaData.tipo_criterio || null,
+      origem: origem || 'automatico', // 'automatico' ou 'reenvio'
+      alerta_id: alertaData.alerta_id || null, // ID do alerta quando for reenvio
       timestamp: new Date().toISOString()
     };
     
