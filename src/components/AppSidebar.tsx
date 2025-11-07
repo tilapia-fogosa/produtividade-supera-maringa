@@ -21,7 +21,8 @@ import {
   Trophy,
   Shirt,
   ListChecks,
-  MapPin
+  MapPin,
+  AlertTriangle
 } from "lucide-react";
 import {
   Sidebar,
@@ -138,6 +139,18 @@ const items = [
 ];
 
 const additionalItems = [
+  {
+    title: "Alertas de Falta",
+    url: "/alertas-falta",
+    icon: AlertTriangle,
+    requiresAdmin: true,
+  },
+  {
+    title: "Alertas de Evasão",
+    url: "/alertas-evasao",
+    icon: Shield,
+    requiresAdmin: true,
+  },
   {
     title: "Configuração",
     url: "/admin/configuracao",

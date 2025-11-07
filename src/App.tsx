@@ -57,6 +57,7 @@ import Camisetas from "./pages/Camisetas";
 import AgendaProfessores from "./pages/AgendaProfessores";
 import ReservasSala from "./pages/ReservasSala";
 import AlertasFalta from "./pages/AlertasFalta";
+import AlertasEvasao from "./pages/AlertasEvasao";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ function App() {
                             <Route path="/camisetas" element={<Camisetas />} />
                             <Route path="/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
                             <Route path="/alertas-falta" element={<AlertasFalta />} />
+                            <Route path="/alertas-evasao" element={<AlertasEvasao />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
