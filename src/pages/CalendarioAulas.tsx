@@ -82,7 +82,8 @@ const formatarNomeProfessor = (nomeCompleto: string) => {
 };
 
 // Função para converter horário em slot de 30 minutos
-const horarioParaSlot = (horario: string) => {
+const horarioParaSlot = (horario: string | null) => {
+  if (!horario) return 0; // Retorna slot 0 se horário for null/undefined
   const [hora, minuto] = horario.split(":").map(num => parseInt(num));
   // Grid começa às 6h, cada slot é de 30 min
   // 6:00 = slot 0, 6:30 = slot 1, 7:00 = slot 2, etc.
