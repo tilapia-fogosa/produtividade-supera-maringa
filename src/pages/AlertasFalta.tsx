@@ -35,6 +35,9 @@ const AlertasFalta = () => {
   const alertas = data?.alertas || [];
   const totalPages = data?.totalPages || 0;
   const total = data?.total || 0;
+  const totalEnviados = data?.totalEnviados || 0;
+  const totalComErro = data?.totalComErro || 0;
+  const totalResolvidos = data?.totalResolvidos || 0;
 
   // Resetar para página 1 quando filtros mudarem
   const handleFiltroChange = (novosFiltros: typeof filtros) => {
@@ -183,7 +186,7 @@ const AlertasFalta = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Enviados</p>
               <p className="text-3xl font-bold text-green-500">
-                {alertas?.filter(a => a.slack_enviado && !a.slack_erro).length || 0}
+                {totalEnviados}
               </p>
             </div>
           </CardContent>
@@ -194,7 +197,7 @@ const AlertasFalta = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Com Erro</p>
               <p className="text-3xl font-bold text-red-500">
-                {alertas?.filter(a => a.slack_erro).length || 0}
+                {totalComErro}
               </p>
             </div>
           </CardContent>
@@ -205,7 +208,7 @@ const AlertasFalta = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Resolvidos</p>
               <p className="text-3xl font-bold text-blue-500">
-                {alertas?.filter(a => a.status === 'resolvido').length || 0}
+                {totalResolvidos}
               </p>
             </div>
           </CardContent>

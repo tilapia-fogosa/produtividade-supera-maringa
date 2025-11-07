@@ -94,12 +94,100 @@ export function useAlertasFalta(filtros?: FiltrosAlertasFalta) {
         throw error;
       }
       
+      // Buscar contagens de cada status com os mesmos filtros
+      let countQuery = supabase
+        .from('alertas_falta')
+        .select('*', { count: 'exact', head: true });
+      
+      if (filtros?.status) {
+        countQuery = countQuery.eq('status', filtros.status);
+      }
+      if (filtros?.data_inicio) {
+        countQuery = countQuery.gte('created_at', filtros.data_inicio);
+      }
+      if (filtros?.data_fim) {
+        countQuery = countQuery.lte('created_at', filtros.data_fim);
+      }
+      if (filtros?.tipo_criterio) {
+        countQuery = countQuery.eq('tipo_criterio', filtros.tipo_criterio);
+      }
+      if (filtros?.unit_id) {
+        countQuery = countQuery.eq('unit_id', filtros.unit_id);
+      }
+
+      // Contagem de enviados (slack_enviado = true e sem erro)
+      let enviadosQuery = supabase
+        .from('alertas_falta')
+        .select('*', { count: 'exact', head: true })
+        .eq('slack_enviado', true)
+        .is('slack_erro', null);
+      
+      if (filtros?.data_inicio) {
+        enviadosQuery = enviadosQuery.gte('created_at', filtros.data_inicio);
+      }
+      if (filtros?.data_fim) {
+        enviadosQuery = enviadosQuery.lte('created_at', filtros.data_fim);
+      }
+      if (filtros?.tipo_criterio) {
+        enviadosQuery = enviadosQuery.eq('tipo_criterio', filtros.tipo_criterio);
+      }
+      if (filtros?.unit_id) {
+        enviadosQuery = enviadosQuery.eq('unit_id', filtros.unit_id);
+      }
+
+      // Contagem de com erro
+      let comErroQuery = supabase
+        .from('alertas_falta')
+        .select('*', { count: 'exact', head: true })
+        .not('slack_erro', 'is', null);
+      
+      if (filtros?.data_inicio) {
+        comErroQuery = comErroQuery.gte('created_at', filtros.data_inicio);
+      }
+      if (filtros?.data_fim) {
+        comErroQuery = comErroQuery.lte('created_at', filtros.data_fim);
+      }
+      if (filtros?.tipo_criterio) {
+        comErroQuery = comErroQuery.eq('tipo_criterio', filtros.tipo_criterio);
+      }
+      if (filtros?.unit_id) {
+        comErroQuery = comErroQuery.eq('unit_id', filtros.unit_id);
+      }
+
+      // Contagem de resolvidos
+      let resolvidosQuery = supabase
+        .from('alertas_falta')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'resolvido');
+      
+      if (filtros?.data_inicio) {
+        resolvidosQuery = resolvidosQuery.gte('created_at', filtros.data_inicio);
+      }
+      if (filtros?.data_fim) {
+        resolvidosQuery = resolvidosQuery.lte('created_at', filtros.data_fim);
+      }
+      if (filtros?.tipo_criterio) {
+        resolvidosQuery = resolvidosQuery.eq('tipo_criterio', filtros.tipo_criterio);
+      }
+      if (filtros?.unit_id) {
+        resolvidosQuery = resolvidosQuery.eq('unit_id', filtros.unit_id);
+      }
+
+      const [enviadosResult, comErroResult, resolvidosResult] = await Promise.all([
+        enviadosQuery,
+        comErroQuery,
+        resolvidosQuery
+      ]);
+
       return {
         alertas: data as AlertaFalta[],
         total: count || 0,
         page,
         pageSize,
-        totalPages: Math.ceil((count || 0) / pageSize)
+        totalPages: Math.ceil((count || 0) / pageSize),
+        totalEnviados: enviadosResult.count || 0,
+        totalComErro: comErroResult.count || 0,
+        totalResolvidos: resolvidosResult.count || 0
       };
     }
   });
