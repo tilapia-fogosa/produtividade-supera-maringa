@@ -183,6 +183,9 @@ export type Database = {
           professor_id: string
           resolvido_em: string | null
           resolvido_por: string | null
+          slack_enviado: boolean | null
+          slack_enviado_em: string | null
+          slack_erro: string | null
           slack_mensagem_id: string | null
           status: string
           tipo_criterio: string
@@ -200,6 +203,9 @@ export type Database = {
           professor_id: string
           resolvido_em?: string | null
           resolvido_por?: string | null
+          slack_enviado?: boolean | null
+          slack_enviado_em?: string | null
+          slack_erro?: string | null
           slack_mensagem_id?: string | null
           status?: string
           tipo_criterio: string
@@ -217,6 +223,9 @@ export type Database = {
           professor_id?: string
           resolvido_em?: string | null
           resolvido_por?: string | null
+          slack_enviado?: boolean | null
+          slack_enviado_em?: string | null
+          slack_erro?: string | null
           slack_mensagem_id?: string | null
           status?: string
           tipo_criterio?: string
