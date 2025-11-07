@@ -5030,6 +5030,7 @@ export type Database = {
           horario_inicio: string | null
           id: string
           nome: string
+          perfil: string | null
           professor_id: string
           projeto: boolean | null
           sala: string | null
@@ -5046,6 +5047,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           nome: string
+          perfil?: string | null
           professor_id: string
           projeto?: boolean | null
           sala?: string | null
@@ -5062,6 +5064,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           nome?: string
+          perfil?: string | null
           professor_id?: string
           projeto?: boolean | null
           sala?: string | null
@@ -5772,7 +5775,6 @@ export type Database = {
       }
       vw_calendario_eventos_unificados: {
         Row: {
-          categoria: string | null
           created_at: string | null
           data_especifica: string | null
           descricao: string | null
@@ -5780,6 +5782,7 @@ export type Database = {
           evento_id: string | null
           horario_fim: string | null
           horario_inicio: string | null
+          perfil: string | null
           professor_id: string | null
           professor_nome: string | null
           professor_slack: string | null
@@ -5788,6 +5791,11 @@ export type Database = {
           sala_nome: string | null
           tipo_evento: string | null
           titulo: string | null
+          total_alunos_ativos: number | null
+          total_aulas_experimentais: number | null
+          total_faltas_futuras: number | null
+          total_funcionarios_ativos: number | null
+          total_reposicoes: number | null
           unit_id: string | null
         }
         Relationships: []
@@ -6112,7 +6120,6 @@ export type Database = {
       get_calendario_eventos_unificados: {
         Args: { p_data_fim: string; p_data_inicio: string; p_unit_id?: string }
         Returns: {
-          categoria: string
           created_at: string
           data_especifica: string
           descricao: string
@@ -6120,6 +6127,7 @@ export type Database = {
           evento_id: string
           horario_fim: string
           horario_inicio: string
+          perfil: string
           professor_id: string
           professor_nome: string
           professor_slack: string

@@ -82,7 +82,8 @@ const formatarNomeProfessor = (nomeCompleto: string) => {
 };
 
 // Função para converter horário em slot de 30 minutos
-const horarioParaSlot = (horario: string) => {
+const horarioParaSlot = (horario: string | null) => {
+  if (!horario) return 0; // Retorna slot 0 se horário for null/undefined
   const [hora, minuto] = horario.split(":").map(num => parseInt(num));
   // Grid começa às 6h, cada slot é de 30 min
   // 6:00 = slot 0, 6:30 = slot 1, 7:00 = slot 2, etc.
@@ -124,8 +125,8 @@ const clarearCor = (hex: string): string => {
   return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
 };
 
-// Função para calcular duração da aula em minutos baseado na categoria
-const calcularDuracaoAula = (categoria: string): number => {
+// Função para calcular duração da aula em minutos baseado no perfil
+const calcularDuracaoAula = (perfil: string): number => {
   // Todas as turmas têm 2 horas de duração
   return 120;
 };
@@ -209,8 +210,11 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
       onClick={onClick}
     >
       <div className="space-y-0.5">
+        <div className="font-semibold text-blue-900 text-sm leading-tight mb-0.5">
+          {evento.titulo}
+        </div>
         <div className="font-medium text-blue-900 text-xs leading-tight">
-          {evento.categoria}
+          {evento.perfil}
         </div>
         <div className="text-blue-700 text-xs leading-tight">
           {formatarNomeProfessor(evento.professor_nome || '')}
@@ -249,8 +253,11 @@ const BlocoTurma = ({ evento, onClick, isCompact = false }: {
       onClick={onClick}
     >
       <div>
+        <div className="font-semibold text-blue-900 mb-1 text-base">
+          {evento.titulo}
+        </div>
         <div className="font-medium text-blue-900 mb-1 text-sm">
-          {evento.categoria}
+          {evento.perfil}
         </div>
         <div className="text-blue-700 mb-1">
           {formatarNomeProfessor(evento.professor_nome || '')}
@@ -331,13 +338,16 @@ export default function CalendarioAulas() {
       if (dia === 'domingo') return;
       
       eventos.forEach(evento => {
-        // Só considerar turmas (não eventos de sala) com alunos ativos
-        if (evento.tipo_evento === 'turma' && evento.categoria && evento.total_alunos_ativos > 0) {
-          perfis.add(evento.categoria);
+        // Só considerar turmas (não eventos de sala)
+        if (evento.tipo_evento === 'turma' && evento.perfil) {
+          perfis.add(evento.perfil);
         }
       });
     });
-    return Array.from(perfis).sort();
+    const resultado = Array.from(perfis).sort();
+    console.log('🎯 Perfis disponíveis encontrados:', resultado);
+    console.log('📊 Dados por dia:', eventosPorDia);
+    return resultado;
   }, [eventosPorDia]);
 
   // Selecionar todos os perfis por padrão quando os perfis disponíveis mudarem
@@ -370,7 +380,7 @@ export default function CalendarioAulas() {
         if (evento.total_alunos_ativos === 0) return false;
         
         // Filtro por perfil
-        if (evento.categoria && !perfisSelecionados.includes(evento.categoria)) return false;
+        if (evento.perfil && !perfisSelecionados.includes(evento.perfil)) return false;
         
         // Filtro por vagas (menos de 12 alunos)
         if (somenteComVagas && evento.total_alunos_ativos >= 12) return false;

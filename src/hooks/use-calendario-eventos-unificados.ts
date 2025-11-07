@@ -16,7 +16,7 @@ export type CalendarioEvento = {
   professor_id?: string;
   professor_nome?: string;
   professor_slack?: string;
-  categoria?: string;
+  perfil?: string;
   data_especifica?: string;
   total_alunos_ativos: number;
   total_funcionarios_ativos: number;
