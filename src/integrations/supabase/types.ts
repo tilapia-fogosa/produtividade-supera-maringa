@@ -5775,7 +5775,6 @@ export type Database = {
       }
       vw_calendario_eventos_unificados: {
         Row: {
-          categoria: string | null
           created_at: string | null
           data_especifica: string | null
           descricao: string | null
@@ -5783,6 +5782,7 @@ export type Database = {
           evento_id: string | null
           horario_fim: string | null
           horario_inicio: string | null
+          perfil: string | null
           professor_id: string | null
           professor_nome: string | null
           professor_slack: string | null
@@ -5791,6 +5791,11 @@ export type Database = {
           sala_nome: string | null
           tipo_evento: string | null
           titulo: string | null
+          total_alunos_ativos: number | null
+          total_aulas_experimentais: number | null
+          total_faltas_futuras: number | null
+          total_funcionarios_ativos: number | null
+          total_reposicoes: number | null
           unit_id: string | null
         }
         Relationships: []
