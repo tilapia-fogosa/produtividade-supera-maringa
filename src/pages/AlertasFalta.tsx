@@ -10,7 +10,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { useAlertasFalta, type AlertaFalta } from '@/hooks/use-alertas-falta';
 import { useProfessores } from '@/hooks/use-professores';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 
@@ -66,7 +66,10 @@ const AlertasFalta = () => {
 
   const formatarDataSimples = (data: string) => {
     try {
-      return format(new Date(data), 'dd/MM/yyyy', { locale: ptBR });
+      // Parse a data como local (sem conversão de timezone)
+      const dataString = data.split('T')[0];
+      const dataLocal = parse(dataString, 'yyyy-MM-dd', new Date());
+      return format(dataLocal, 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return data;
     }
