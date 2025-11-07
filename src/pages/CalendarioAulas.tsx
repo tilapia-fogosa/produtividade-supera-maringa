@@ -337,8 +337,8 @@ export default function CalendarioAulas() {
       if (dia === 'domingo') return;
       
       eventos.forEach(evento => {
-        // Só considerar turmas (não eventos de sala) com alunos ativos
-        if (evento.tipo_evento === 'turma' && evento.categoria && evento.total_alunos_ativos > 0) {
+        // Só considerar turmas (não eventos de sala)
+        if (evento.tipo_evento === 'turma' && evento.categoria) {
           perfis.add(evento.categoria);
         }
       });
