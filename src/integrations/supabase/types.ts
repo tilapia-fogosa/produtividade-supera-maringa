@@ -5030,6 +5030,7 @@ export type Database = {
           horario_inicio: string | null
           id: string
           nome: string
+          perfil: string | null
           professor_id: string
           projeto: boolean | null
           sala: string | null
@@ -5046,6 +5047,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           nome: string
+          perfil?: string | null
           professor_id: string
           projeto?: boolean | null
           sala?: string | null
@@ -5062,6 +5064,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           nome?: string
+          perfil?: string | null
           professor_id?: string
           projeto?: boolean | null
           sala?: string | null
