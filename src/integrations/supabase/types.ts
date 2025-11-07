@@ -6120,7 +6120,6 @@ export type Database = {
       get_calendario_eventos_unificados: {
         Args: { p_data_fim: string; p_data_inicio: string; p_unit_id?: string }
         Returns: {
-          categoria: string
           created_at: string
           data_especifica: string
           descricao: string
@@ -6128,6 +6127,7 @@ export type Database = {
           evento_id: string
           horario_fim: string
           horario_inicio: string
+          perfil: string
           professor_id: string
           professor_nome: string
           professor_slack: string
