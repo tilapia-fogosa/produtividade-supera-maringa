@@ -12,10 +12,14 @@ import { useProfessores } from '@/hooks/use-professores';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertCircle, Eye, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const AlertasFalta = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [reenviandoId, setReenviandoId] = useState<string | null>(null);
   const [filtros, setFiltros] = useState({
     status: 'todos',
     data_inicio: '',
@@ -99,6 +103,58 @@ const AlertasFalta = () => {
     if (tipo === 'aluno_recente') return 'Aluno Recente';
     if (tipo === 'faltas_consecutivas') return 'Faltas Consecutivas';
     return tipo;
+  };
+
+  const handleReenviar = async (alerta: AlertaFalta) => {
+    setReenviandoId(alerta.id);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('enviar-alerta-falta-webhook', {
+        body: {
+          aluno_nome: alerta.aluno?.nome || 'N/A',
+          professor_nome: alerta.professor?.nome || 'N/A',
+          professor_slack: alerta.professor?.slack_username || null,
+          turma_nome: alerta.turma?.nome || 'N/A',
+          dias_supera: alerta.detalhes?.dias_supera || null,
+          data_falta: alerta.data_falta,
+          faltas_consecutivas: alerta.detalhes?.faltas_consecutivas || null,
+          motivo_falta: alerta.detalhes?.motivo_falta || 'Não informado',
+          tipo_criterio: alerta.tipo_criterio,
+          origem: 'reenvio',
+          alerta_id: alerta.id
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Atualizar o status no banco de dados
+      await supabase
+        .from('alertas_falta')
+        .update({
+          slack_enviado: true,
+          slack_mensagem_id: data?.webhook_response || null,
+          slack_enviado_em: new Date().toISOString(),
+          slack_erro: null
+        })
+        .eq('id', alerta.id);
+
+    } catch (error) {
+      console.error('Erro ao reenviar alerta:', error);
+
+      // Atualizar o erro no banco
+      await supabase
+        .from('alertas_falta')
+        .update({
+          slack_enviado: false,
+          slack_erro: error.message || JSON.stringify(error),
+          slack_enviado_em: new Date().toISOString()
+        })
+        .eq('id', alerta.id);
+    } finally {
+      setReenviandoId(null);
+    }
   };
 
   return (
@@ -349,13 +405,22 @@ const AlertasFalta = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Ver Detalhes
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+                        <TooltipProvider>
+                          <div className="flex items-center gap-1">
+                            <Dialog>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Ver detalhes</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
                             <DialogHeader>
                               <DialogTitle>Detalhes do Alerta</DialogTitle>
                             </DialogHeader>
@@ -450,8 +515,26 @@ const AlertasFalta = () => {
                                 </div>
                               )}
                             </div>
-                          </DialogContent>
-                        </Dialog>
+                              </DialogContent>
+                            </Dialog>
+                            
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleReenviar(alerta)}
+                                  disabled={reenviandoId === alerta.id}
+                                >
+                                  <RefreshCw className={`h-4 w-4 ${reenviandoId === alerta.id ? 'animate-spin' : ''}`} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Reenviar ao webhook</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))}

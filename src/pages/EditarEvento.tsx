@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, Clock, MapPin, User, Users, Plus, Trash2, Search, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,8 @@ export default function EditarEvento() {
   const [alunosEvento, setAlunosEvento] = useState<any[]>([]);
   const [convidadosNaoAlunos, setConvidadosNaoAlunos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtroNome, setFiltroNome] = useState('');
+  const [ordenacao, setOrdenacao] = useState<'alfabetica-asc' | 'alfabetica-desc' | 'inscricao-asc' | 'inscricao-desc'>('inscricao-asc');
 
   useEffect(() => {
     if (id) {
@@ -53,6 +55,7 @@ export default function EditarEvento() {
             id,
             forma_pagamento,
             aluno_id,
+            created_at,
             alunos!inner(
               id,
               nome,
@@ -66,10 +69,12 @@ export default function EditarEvento() {
 
         const participantesFormatados = participantesData.map((p: any) => ({
           id: p.alunos.id,
+          participante_id: p.id,
           nome: p.alunos.nome,
           turma: p.alunos.turmas?.nome || 'Sem turma',
           professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
           formaPagamento: p.forma_pagamento,
+          created_at: p.created_at,
           tipo: 'aluno'
         }));
 
@@ -92,6 +97,7 @@ export default function EditarEvento() {
           responsavel: c.responsavel_nome,
           valorPago: c.valor_pago,
           formaPagamento: c.forma_pagamento,
+          created_at: c.created_at,
           tipo: 'nao_aluno'
         }));
 
@@ -851,7 +857,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
 
       if (error) throw error;
 
-      setAlunosEvento(prev => [...prev, { ...novoAluno, tipo: 'aluno' }]);
+      setAlunosEvento(prev => [...prev, { ...novoAluno, created_at: new Date().toISOString(), tipo: 'aluno' }]);
       
       toast({
         title: "Sucesso",
@@ -900,6 +906,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
         responsavel: convidado.responsavelNome,
         valorPago: convidado.valorPago,
         formaPagamento: convidado.formaPagamento,
+        created_at: new Date().toISOString(),
         tipo: 'nao_aluno'
       };
 
@@ -969,6 +976,47 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
       });
     }
   };
+
+  // Filtrar e ordenar convidados
+  const convidadosFiltradosEOrdenados = useMemo(() => {
+    // 1. Combinar alunos e não-alunos em uma única lista
+    const todosConvidados = [
+      ...alunosEvento,
+      ...convidadosNaoAlunos
+    ];
+    
+    // 2. Aplicar filtro de nome (case-insensitive)
+    let filtrados = todosConvidados;
+    if (filtroNome.trim()) {
+      const termoBusca = filtroNome.toLowerCase();
+      filtrados = filtrados.filter(c => 
+        c.nome.toLowerCase().includes(termoBusca)
+      );
+    }
+    
+    // 3. Aplicar ordenação
+    const ordenados = [...filtrados]; // Criar cópia para não mutar o array
+    switch (ordenacao) {
+      case 'alfabetica-asc':
+        ordenados.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+        break;
+      case 'alfabetica-desc':
+        ordenados.sort((a, b) => b.nome.localeCompare(a.nome, 'pt-BR'));
+        break;
+      case 'inscricao-asc':
+        ordenados.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        break;
+      case 'inscricao-desc':
+        ordenados.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+    }
+    
+    return ordenados;
+  }, [alunosEvento, convidadosNaoAlunos, filtroNome, ordenacao]);
 
   const totalConvidados = alunosEvento.length + convidadosNaoAlunos.length;
   const vagasDisponiveis = evento ? evento.numero_vagas - totalConvidados : 0;
@@ -1055,7 +1103,12 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Convidados ({totalConvidados})</CardTitle>
+              <CardTitle>
+                Convidados ({convidadosFiltradosEOrdenados.length}
+                {filtroNome && convidadosFiltradosEOrdenados.length !== totalConvidados && 
+                  ` de ${totalConvidados}`
+                })
+              </CardTitle>
               <CardDescription>
                 Lista de participantes inscritos no evento
               </CardDescription>
@@ -1077,82 +1130,137 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
         </CardHeader>
         <CardContent>
           {totalConvidados > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Informações</TableHead>
-                  <TableHead>Forma de Pagamento</TableHead>
-                  <TableHead className="w-[100px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {alunosEvento.map((aluno) => (
-                  <TableRow key={`aluno-${aluno.id}`}>
-                    <TableCell className="font-medium">{aluno.nome}</TableCell>
-                    <TableCell>
-                      <Badge variant="default">Aluno</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {aluno.turma} - {aluno.professor}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {aluno.formaPagamento}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removerAluno(aluno.id)}
-                        className="gap-1 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </TableCell>
+            <>
+              {/* Filtros */}
+              <div className="space-y-3 mb-6">
+                {/* Input de busca */}
+                <div className="w-full">
+                  <Label htmlFor="filtroNome" className="text-sm mb-2 block">
+                    Buscar por nome
+                  </Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="filtroNome"
+                      placeholder="Digite o nome do convidado..."
+                      value={filtroNome}
+                      onChange={(e) => setFiltroNome(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Select de ordenação */}
+                <div className="w-full">
+                  <Label htmlFor="ordenacao" className="text-sm mb-2 block">
+                    Ordenar por
+                  </Label>
+                  <Select value={ordenacao} onValueChange={(value: any) => setOrdenacao(value)}>
+                    <SelectTrigger id="ordenacao">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inscricao-asc">
+                        Ordem de Inscrição (Mais Antigos Primeiro)
+                      </SelectItem>
+                      <SelectItem value="inscricao-desc">
+                        Ordem de Inscrição (Mais Recentes Primeiro)
+                      </SelectItem>
+                      <SelectItem value="alfabetica-asc">
+                        Alfabética (A → Z)
+                      </SelectItem>
+                      <SelectItem value="alfabetica-desc">
+                        Alfabética (Z → A)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Tabela */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[60px]">#</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Informações</TableHead>
+                    <TableHead>Forma de Pagamento</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
-                ))}
-                {convidadosNaoAlunos.map((convidado) => (
-                  <TableRow key={`convidado-${convidado.id}`}>
-                    <TableCell className="font-medium">
-                      {convidado.nome}
-                      <div className="text-xs text-muted-foreground">{convidado.telefone}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        Não Aluno
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>Convidou: {convidado.quemConvidou}</div>
-                        <div>Responsável: {convidado.responsavel}</div>
-                        {convidado.valorPago && (
-                          <div>Valor: R$ {Number(convidado.valorPago).toFixed(2)}</div>
+                </TableHeader>
+                <TableBody>
+                  {convidadosFiltradosEOrdenados.map((convidado, index) => (
+                    <TableRow key={`convidado-${convidado.id}-${convidado.tipo}`}>
+                      {/* Coluna #: Ordem de inscrição */}
+                      <TableCell className="font-medium text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
+                      
+                      {/* Coluna Nome */}
+                      <TableCell className="font-medium">
+                        {convidado.nome}
+                        {convidado.tipo === 'nao_aluno' && convidado.telefone && (
+                          <div className="text-xs text-muted-foreground">{convidado.telefone}</div>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {convidado.formaPagamento.replace('_', ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removerConvidadoNaoAluno(convidado.id)}
-                        className="gap-1 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                      
+                      {/* Coluna Tipo */}
+                      <TableCell>
+                        {convidado.tipo === 'aluno' ? (
+                          <Badge variant="default">Aluno</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                            Não Aluno
+                          </Badge>
+                        )}
+                      </TableCell>
+                      
+                      {/* Coluna Informações */}
+                      <TableCell>
+                        {convidado.tipo === 'aluno' ? (
+                          <span>{convidado.turma} - {convidado.professor}</span>
+                        ) : (
+                          <div className="text-sm space-y-0.5">
+                            <div>Convidou: {convidado.quemConvidou}</div>
+                            <div>Responsável: {convidado.responsavel}</div>
+                            {convidado.valorPago && (
+                              <div>Valor: R$ {Number(convidado.valorPago).toFixed(2)}</div>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                      
+                      {/* Coluna Forma de Pagamento */}
+                      <TableCell>
+                        <Badge variant="outline">
+                          {convidado.tipo === 'aluno' 
+                            ? convidado.formaPagamento 
+                            : convidado.formaPagamento?.replace('_', ' ')
+                          }
+                        </Badge>
+                      </TableCell>
+                      
+                      {/* Coluna Ações */}
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => 
+                            convidado.tipo === 'aluno' 
+                              ? removerAluno(convidado.id) 
+                              : removerConvidadoNaoAluno(convidado.id)
+                          }
+                          className="gap-1 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               Nenhum convidado cadastrado ainda
