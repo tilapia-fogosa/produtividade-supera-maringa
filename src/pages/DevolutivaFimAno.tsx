@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer } from 'lucide-react';
+import { User, Briefcase, Printer, Eye } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -31,6 +31,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
   const [alturaExercicios] = useState<number>(13.8); // Altura dos exercícios em % (155px / 1122.5 * 100)
+  const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -480,9 +481,142 @@ const DevolutivaFimAno: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal de Pré-visualização */}
+      {mostrarPreview && pessoaSelecionada?.foto_devolutiva_url && (
+        <div 
+          className="no-print fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setMostrarPreview(false)}
+        >
+          <div 
+            className="relative bg-white rounded-lg shadow-2xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 bg-white border-b p-4 flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Pré-visualização de Impressão</h3>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleImprimirComIframe}
+                  variant="default"
+                  size="sm"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Imprimir
+                </Button>
+                <Button
+                  onClick={() => setMostrarPreview(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-8">
+              <div className="a4-page" style={{ boxShadow: '0 0 20px rgba(0,0,0,0.2)' }}>
+                {/* Camada de fundo - FOTO DO ALUNO */}
+                <div 
+                  className="foto-aluno-background"
+                  style={{
+                    backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                    backgroundSize: `${tamanhoFoto}%`,
+                    backgroundPosition: `${posicaoX}% ${posicaoY}%`
+                  }}
+                />
+                
+                {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
+                <img 
+                  src={templateOverlay} 
+                  alt="Template Devolutiva" 
+                  className="template-overlay"
+                />
+                
+                {/* Nome do aluno */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaNome}%`,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: `${tamanhoFonte}px`
+                  }}
+                >
+                  {pessoaSelecionada.nome}
+                </div>
+                
+                {/* Total de desafios 2025 */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaExercicios}%`,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '30px'
+                  }}
+                >
+                  {totalDesafios2025}
+                </div>
+                
+                {/* Total de exercícios ábaco 2025 */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaExercicios}%`,
+                    left: `${posicaoXExerciciosAbaco}%`,
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '30px'
+                  }}
+                >
+                  {totalExerciciosAbaco2025}
+                </div>
+                
+                {/* Total de exercícios AH 2025 */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaExercicios}%`,
+                    left: `${posicaoXExerciciosAH}%`,
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '30px'
+                  }}
+                >
+                  {totalExerciciosAH2025}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
+          {/* Botão de pré-visualização */}
+          <Button
+            onClick={() => setMostrarPreview(true)}
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+            title="Pré-visualizar impressão"
+          >
+            <Eye className="h-5 w-5" />
+          </Button>
+
           {/* Botão de impressão */}
           <Button
             onClick={handleImprimirComIframe}
