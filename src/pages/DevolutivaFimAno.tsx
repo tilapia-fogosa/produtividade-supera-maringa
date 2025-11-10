@@ -199,6 +199,24 @@ const DevolutivaFimAno: React.FC = () => {
             alt="Template Devolutiva" 
             className="template-overlay"
           />
+          
+          {/* Nome do aluno */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-abril-fatface text-4xl"
+              style={{
+                top: '690px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {pessoaSelecionada.nome}
+            </div>
+          )}
         </div>
       </div>
 
