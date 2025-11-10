@@ -44,10 +44,30 @@ const DevolutivaFimAno: React.FC = () => {
     refetchAlunos();
   };
 
-  const handleSalvarPDF = () => {
+  const handleSalvarPDF = async () => {
     const elemento = document.querySelector('.a4-page') as HTMLElement;
     
     if (!elemento || !pessoaSelecionada) return;
+    
+    // Clonar o elemento para não afetar o DOM original
+    const clone = elemento.cloneNode(true) as HTMLElement;
+    
+    // Criar container temporário isolado
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '210mm';
+    tempContainer.style.height = '297mm';
+    tempContainer.appendChild(clone);
+    document.body.appendChild(tempContainer);
+    
+    // Configurar clone para dimensões exatas
+    clone.style.width = '210mm';
+    clone.style.height = '297mm';
+    clone.style.boxShadow = 'none';
+    clone.style.margin = '0';
+    clone.style.padding = '0';
     
     const opcoes = {
       margin: 0,
@@ -71,7 +91,12 @@ const DevolutivaFimAno: React.FC = () => {
       pagebreak: { mode: 'avoid-all' }
     };
     
-    html2pdf().set(opcoes).from(elemento).save();
+    try {
+      await html2pdf().set(opcoes).from(clone).save();
+    } finally {
+      // Remover container temporário
+      document.body.removeChild(tempContainer);
+    }
   };
 
   // Filtrar pessoas baseado no tipo e filtros
