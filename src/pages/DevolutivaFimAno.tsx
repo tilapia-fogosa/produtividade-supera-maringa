@@ -23,6 +23,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(36); // Tamanho da fonte em px
   const [alturaNome, setAlturaNome] = useState<number>(690); // Posição Y do nome em px
+  const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -225,97 +226,111 @@ const DevolutivaFimAno: React.FC = () => {
 
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
-        <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-50">
-          <div className="max-w-6xl mx-auto space-y-4">
-            {/* Controle de tamanho */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">Tamanho da Foto</Label>
-                <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
-              </div>
-              <Slider
-                value={[tamanhoFoto]}
-                onValueChange={(value) => setTamanhoFoto(value[0])}
-                min={50}
-                max={200}
-                step={1}
-                className="w-full"
-              />
-            </div>
+        <>
+          {/* Botão para mostrar/ocultar controles */}
+          <Button
+            onClick={() => setMostrarControles(!mostrarControles)}
+            className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+          >
+            {mostrarControles ? '×' : '☰'}
+          </Button>
 
-            {/* Controles de posição */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Posição X */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Posição X (Horizontal)</Label>
-                  <span className="text-sm text-muted-foreground">{posicaoX}%</span>
-                </div>
-                <Slider
-                  value={[posicaoX]}
-                  onValueChange={(value) => setPosicaoX(value[0])}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Posição Y */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Posição Y (Vertical)</Label>
-                  <span className="text-sm text-muted-foreground">{posicaoY}%</span>
-                </div>
-                <Slider
-                  value={[posicaoY]}
-                  onValueChange={(value) => setPosicaoY(value[0])}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            {/* Controles do nome */}
-            {pessoaSelecionada && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                {/* Tamanho da fonte */}
+          {/* Barra de controles */}
+          {mostrarControles && (
+            <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-40">
+              <div className="max-w-6xl mx-auto space-y-4">
+                {/* Controle de tamanho */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Tamanho da Fonte</Label>
-                    <span className="text-sm text-muted-foreground">{tamanhoFonte}px</span>
+                    <Label className="text-sm font-semibold">Tamanho da Foto</Label>
+                    <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
                   </div>
                   <Slider
-                    value={[tamanhoFonte]}
-                    onValueChange={(value) => setTamanhoFonte(value[0])}
-                    min={20}
-                    max={80}
+                    value={[tamanhoFoto]}
+                    onValueChange={(value) => setTamanhoFoto(value[0])}
+                    min={50}
+                    max={200}
                     step={1}
                     className="w-full"
                   />
                 </div>
 
-                {/* Altura do nome */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Altura do Nome</Label>
-                    <span className="text-sm text-muted-foreground">{alturaNome}px</span>
+                {/* Controles de posição */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Posição X */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">Posição X (Horizontal)</Label>
+                      <span className="text-sm text-muted-foreground">{posicaoX}%</span>
+                    </div>
+                    <Slider
+                      value={[posicaoX]}
+                      onValueChange={(value) => setPosicaoX(value[0])}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
                   </div>
-                  <Slider
-                    value={[alturaNome]}
-                    onValueChange={(value) => setAlturaNome(value[0])}
-                    min={0}
-                    max={2000}
-                    step={10}
-                    className="w-full"
-                  />
+
+                  {/* Posição Y */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">Posição Y (Vertical)</Label>
+                      <span className="text-sm text-muted-foreground">{posicaoY}%</span>
+                    </div>
+                    <Slider
+                      value={[posicaoY]}
+                      onValueChange={(value) => setPosicaoY(value[0])}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
+
+                {/* Controles do nome */}
+                {pessoaSelecionada && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    {/* Tamanho da fonte */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Tamanho da Fonte</Label>
+                        <span className="text-sm text-muted-foreground">{tamanhoFonte}px</span>
+                      </div>
+                      <Slider
+                        value={[tamanhoFonte]}
+                        onValueChange={(value) => setTamanhoFonte(value[0])}
+                        min={20}
+                        max={80}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Altura do nome */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Altura do Nome</Label>
+                        <span className="text-sm text-muted-foreground">{alturaNome}px</span>
+                      </div>
+                      <Slider
+                        value={[alturaNome]}
+                        onValueChange={(value) => setAlturaNome(value[0])}
+                        min={0}
+                        max={2000}
+                        step={10}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
