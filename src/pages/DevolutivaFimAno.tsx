@@ -149,6 +149,111 @@ const DevolutivaFimAno: React.FC = () => {
 
   const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
 
+  const handleImprimirComIframe = () => {
+    const elemento = document.querySelector('.a4-page') as HTMLElement;
+    if (!elemento) return;
+
+    // Criar iframe invisível
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (!iframeDoc) return;
+
+    // Copiar estilos CSS necessários
+    const estilosPagina = `
+      <style>
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        .a4-page {
+          width: 210mm;
+          height: 297mm;
+          position: relative;
+          overflow: hidden;
+          background: white;
+          margin: 0;
+          padding: 0;
+        }
+
+        .foto-aluno-background {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-repeat: no-repeat;
+          z-index: 1;
+        }
+
+        .template-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .font-abril-fatface {
+          font-family: 'Abril Fatface', cursive;
+        }
+
+        .absolute {
+          position: absolute;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap');
+      </style>
+    `;
+
+    // Clonar o elemento
+    const clone = elemento.cloneNode(true) as HTMLElement;
+
+    // Escrever no iframe
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Devolutiva</title>
+          ${estilosPagina}
+        </head>
+        <body>
+          ${clone.outerHTML}
+        </body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    // Aguardar carregamento das imagens
+    iframe.contentWindow?.addEventListener('load', () => {
+      setTimeout(() => {
+        // Imprimir do contexto do iframe
+        iframe.contentWindow?.print();
+        
+        // Remover iframe após impressão
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 100);
+      }, 500);
+    });
+  };
+
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
       {/* Cabeçalho de seleção - não imprime */}
@@ -380,7 +485,7 @@ const DevolutivaFimAno: React.FC = () => {
         <>
           {/* Botão de impressão */}
           <Button
-            onClick={() => window.print()}
+            onClick={handleImprimirComIframe}
             className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir devolutiva"
