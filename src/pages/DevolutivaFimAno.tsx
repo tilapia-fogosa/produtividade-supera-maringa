@@ -9,13 +9,23 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { User, Briefcase } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
+
+// Tamanhos disponíveis em pixels
+const TAMANHOS_FOTO = {
+  1: { altura: 1798, porcentagem: 51.26 },
+  2: { altura: 2455, porcentagem: 70.0 },
+  3: { altura: 1727, porcentagem: 49.24 },
+  4: { altura: 1380, porcentagem: 39.35 }
+};
 
 const DevolutivaFimAno: React.FC = () => {
   const [tipoPessoa, setTipoPessoa] = useState<'aluno' | 'funcionario'>('aluno');
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
+  const [tamanhoFoto, setTamanhoFoto] = useState<1 | 2 | 3 | 4>(1);
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -188,10 +198,42 @@ const DevolutivaFimAno: React.FC = () => {
               src={pessoaSelecionada.foto_devolutiva_url}
               alt={`Foto de ${pessoaSelecionada.nome}`}
               className="foto-aluno-overlay"
+              style={{ height: `${TAMANHOS_FOTO[tamanhoFoto].porcentagem}%` }}
             />
           )}
         </div>
       </div>
+
+      {/* Barra de controle de tamanho - rodapé */}
+      {pessoaSelecionada?.foto_devolutiva_url && (
+        <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-50">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-6">
+              <Label className="text-sm font-semibold whitespace-nowrap">
+                Tamanho da Foto
+              </Label>
+              <div className="flex-1 flex items-center gap-4">
+                <div className="flex gap-2 flex-wrap">
+                  {([1, 2, 3, 4] as const).map((tamanho) => (
+                    <Button
+                      key={tamanho}
+                      variant={tamanhoFoto === tamanho ? 'default' : 'outline'}
+                      onClick={() => setTamanhoFoto(tamanho)}
+                      size="sm"
+                      className="min-w-[80px]"
+                    >
+                      Tamanho {tamanho}
+                    </Button>
+                  ))}
+                </div>
+                <div className="text-sm text-muted-foreground whitespace-nowrap">
+                  {TAMANHOS_FOTO[tamanhoFoto].altura}px
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
