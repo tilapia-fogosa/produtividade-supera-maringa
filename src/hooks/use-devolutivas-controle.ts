@@ -40,15 +40,15 @@ export function useDevolutivasControle() {
           nome,
           foto_devolutiva_url,
           turma_id,
-          turmas!inner (
+          unit_id,
+          turmas (
             nome,
-            unit_id,
             professor_id,
             professores (nome)
           )
         `)
         .eq('active', true)
-        .eq('turmas.unit_id', activeUnit.id);
+        .eq('unit_id', activeUnit.id);
 
       if (alunosError) throw alunosError;
 
@@ -80,21 +80,29 @@ export function useDevolutivasControle() {
 
       if (controlesError) throw controlesError;
 
-      // Buscar nomes dos usuários que imprimiram/entregaram
+      // Buscar nomes dos usuários que imprimiram/entregaram (apenas se houver usuário)
       const userIds = new Set<string>();
       (controlesData || []).forEach(c => {
         if (c.impresso_por) userIds.add(c.impresso_por);
         if (c.entregue_por) userIds.add(c.entregue_por);
       });
 
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', Array.from(userIds));
-
-      const profilesMap = new Map(
-        (profilesData || []).map(p => [p.id, p.full_name])
-      );
+      let profilesMap = new Map<string, string>();
+      
+      if (userIds.size > 0) {
+        try {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', Array.from(userIds));
+          
+          profilesMap = new Map(
+            (profilesData || []).map(p => [p.id, p.full_name])
+          );
+        } catch (error) {
+          console.warn('Não foi possível buscar perfis:', error);
+        }
+      }
 
       // Mapear controles por pessoa_id + tipo_pessoa
       const controlesMap = new Map(
