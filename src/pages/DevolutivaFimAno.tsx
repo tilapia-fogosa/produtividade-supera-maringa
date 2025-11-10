@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer, Eye } from 'lucide-react';
+import { User, Briefcase, Printer, Eye, Download } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -619,6 +619,14 @@ const DevolutivaFimAno: React.FC = () => {
               <h3 className="text-lg font-semibold">Pré-visualização de Impressão</h3>
               <div className="flex gap-2">
                 <Button
+                  onClick={handleSalvarPDF}
+                  variant="default"
+                  size="sm"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar PDF
+                </Button>
+                <Button
                   onClick={handleImprimirComIframe}
                   variant="default"
                   size="sm"
@@ -750,11 +758,21 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de pré-visualização */}
           <Button
             onClick={() => setMostrarPreview(true)}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Pré-visualizar impressão"
           >
             <Eye className="h-5 w-5" />
+          </Button>
+
+          {/* Botão de exportar PDF */}
+          <Button
+            onClick={handleSalvarPDF}
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+            title="Exportar como PDF"
+          >
+            <Download className="h-5 w-5" />
           </Button>
 
           {/* Botão de impressão */}
