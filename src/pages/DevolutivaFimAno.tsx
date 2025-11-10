@@ -8,13 +8,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase } from 'lucide-react';
+import { User, Briefcase, Printer, Download } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
 import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
 import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
-import { Printer } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -42,6 +42,31 @@ const DevolutivaFimAno: React.FC = () => {
   const handlePhotoSelected = () => {
     // Recarregar dados para mostrar nova foto
     refetchAlunos();
+  };
+
+  const handleSalvarPDF = () => {
+    const elemento = document.querySelector('.a4-page') as HTMLElement;
+    
+    if (!elemento || !pessoaSelecionada) return;
+    
+    const opcoes = {
+      margin: 0,
+      filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
+      image: { type: 'jpeg' as const, quality: 1 },
+      html2canvas: { 
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' as const
+      }
+    };
+    
+    html2pdf().set(opcoes).from(elemento).save();
   };
 
   // Filtrar pessoas baseado no tipo e filtros
@@ -294,6 +319,16 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
+          {/* Botão de salvar PDF */}
+          <Button
+            onClick={handleSalvarPDF}
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+            title="Salvar como PDF"
+          >
+            <Download className="h-5 w-5" />
+          </Button>
+
           {/* Botão de impressão */}
           <Button
             onClick={() => window.print()}
