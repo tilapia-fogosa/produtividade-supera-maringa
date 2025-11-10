@@ -132,7 +132,7 @@ function App() {
                             <Route path="/crm" element={<CRM />} />
                             <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
                             <Route path="/camisetas" element={<Camisetas />} />
-                            <Route path="/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
+                            <Route path="/devolutivas/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
                             <Route path="/devolutivas/controle" element={<DevolutivasControle />} />
                             <Route path="/alertas-falta" element={<AlertasFalta />} />
                             <Route path="/alertas-evasao" element={<AlertasEvasao />} />
