@@ -62,7 +62,7 @@ const DevolutivasControle = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/devolutivas/devolutiva-fim-ano')}
           className="text-azul-400 hover:text-azul-500"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
