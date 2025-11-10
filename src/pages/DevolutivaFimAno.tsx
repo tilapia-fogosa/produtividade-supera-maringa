@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { User, Briefcase } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
+import { useDesafios2025 } from '@/hooks/use-desafios-2025';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -28,6 +29,7 @@ const DevolutivaFimAno: React.FC = () => {
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
+  const { data: totalDesafios2025 = 0 } = useDesafios2025(pessoaSelecionadaId);
 
   const handlePhotoSelected = () => {
     // Recarregar dados para mostrar nova foto
@@ -219,6 +221,25 @@ const DevolutivaFimAno: React.FC = () => {
               }}
             >
               {pessoaSelecionada.nome}
+            </div>
+          )}
+          
+          {/* Total de desafios 2025 */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-mencken"
+              style={{
+                top: '150px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: '30px'
+              }}
+            >
+              {totalDesafios2025}
             </div>
           )}
         </div>
