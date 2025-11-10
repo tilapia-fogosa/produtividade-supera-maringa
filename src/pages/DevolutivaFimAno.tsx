@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import templateImage from '@/assets/devolutiva-fim-ano-template-v2.png';
+import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
@@ -12,22 +12,15 @@ import { User, Briefcase } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 
-// Tamanhos disponíveis em pixels
-const TAMANHOS_FOTO = {
-  1: { altura: 1798, porcentagem: 51.26 },
-  2: { altura: 2455, porcentagem: 70.0 },
-  3: { altura: 1727, porcentagem: 49.24 },
-  4: { altura: 1380, porcentagem: 39.35 }
-};
 
 const DevolutivaFimAno: React.FC = () => {
   const [tipoPessoa, setTipoPessoa] = useState<'aluno' | 'funcionario'>('aluno');
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
-  const [tamanhoFoto, setTamanhoFoto] = useState<1 | 2 | 3 | 4>(1);
-  const [posicaoX, setPosicaoX] = useState<number>(5.08); // Posição inicial em %
-  const [posicaoY, setPosicaoY] = useState<number>(27.74); // Posição inicial em %
+  const [tamanhoFoto, setTamanhoFoto] = useState<number>(100); // Tamanho em %
+  const [posicaoX, setPosicaoX] = useState<number>(50); // Posição inicial em %
+  const [posicaoY, setPosicaoY] = useState<number>(50); // Posição inicial em %
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -188,25 +181,24 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Página A4 impressível */}
       <div className="devolutiva-fim-ano-container">
         <div className="a4-page">
-          <img 
-            src={templateImage} 
-            alt="2025 no Supera - Devolutiva de Fim de Ano" 
-            className="template-image"
-          />
-          
-          {/* Foto do aluno/funcionário sobreposta */}
+          {/* Camada de fundo - FOTO DO ALUNO */}
           {pessoaSelecionada?.foto_devolutiva_url && (
-            <img
-              src={pessoaSelecionada.foto_devolutiva_url}
-              alt={`Foto de ${pessoaSelecionada.nome}`}
-              className="foto-aluno-overlay"
-              style={{ 
-                height: `${TAMANHOS_FOTO[tamanhoFoto].porcentagem}%`,
-                left: `${posicaoX}%`,
-                top: `${posicaoY}%`
+            <div 
+              className="foto-aluno-background"
+              style={{
+                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                backgroundSize: `${tamanhoFoto}%`,
+                backgroundPosition: `${posicaoX}% ${posicaoY}%`
               }}
             />
           )}
+          
+          {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
+          <img 
+            src={templateOverlay} 
+            alt="Template Devolutiva" 
+            className="template-overlay"
+          />
         </div>
       </div>
 
@@ -214,29 +206,20 @@ const DevolutivaFimAno: React.FC = () => {
       {pessoaSelecionada?.foto_devolutiva_url && (
         <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-50">
           <div className="max-w-6xl mx-auto space-y-4">
-            {/* Controles de tamanho */}
-            <div className="flex items-center gap-6">
-              <Label className="text-sm font-semibold whitespace-nowrap">
-                Tamanho
-              </Label>
-              <div className="flex-1 flex items-center gap-4">
-                <div className="flex gap-2 flex-wrap">
-                  {([1, 2, 3, 4] as const).map((tamanho) => (
-                    <Button
-                      key={tamanho}
-                      variant={tamanhoFoto === tamanho ? 'default' : 'outline'}
-                      onClick={() => setTamanhoFoto(tamanho)}
-                      size="sm"
-                      className="min-w-[80px]"
-                    >
-                      Tamanho {tamanho}
-                    </Button>
-                  ))}
-                </div>
-                <div className="text-sm text-muted-foreground whitespace-nowrap">
-                  {TAMANHOS_FOTO[tamanhoFoto].altura}px
-                </div>
+            {/* Controle de tamanho */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Tamanho da Foto</Label>
+                <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
               </div>
+              <Slider
+                value={[tamanhoFoto]}
+                onValueChange={(value) => setTamanhoFoto(value[0])}
+                min={50}
+                max={200}
+                step={1}
+                className="w-full"
+              />
             </div>
 
             {/* Controles de posição */}
@@ -245,14 +228,14 @@ const DevolutivaFimAno: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold">Posição X (Horizontal)</Label>
-                  <span className="text-sm text-muted-foreground">{posicaoX.toFixed(2)}%</span>
+                  <span className="text-sm text-muted-foreground">{posicaoX}%</span>
                 </div>
                 <Slider
                   value={[posicaoX]}
                   onValueChange={(value) => setPosicaoX(value[0])}
                   min={0}
-                  max={50}
-                  step={0.1}
+                  max={100}
+                  step={1}
                   className="w-full"
                 />
               </div>
@@ -261,14 +244,14 @@ const DevolutivaFimAno: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold">Posição Y (Vertical)</Label>
-                  <span className="text-sm text-muted-foreground">{posicaoY.toFixed(2)}%</span>
+                  <span className="text-sm text-muted-foreground">{posicaoY}%</span>
                 </div>
                 <Slider
                   value={[posicaoY]}
                   onValueChange={(value) => setPosicaoY(value[0])}
                   min={0}
-                  max={50}
-                  step={0.1}
+                  max={100}
+                  step={1}
                   className="w-full"
                 />
               </div>

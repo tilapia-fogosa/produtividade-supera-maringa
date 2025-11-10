@@ -24,23 +24,27 @@
   overflow: hidden;
 }
 
-/* Imagem do template */
-.template-image {
+/* Camada de fundo com a foto do aluno */
+.foto-aluno-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+/* Camada de overlay com o template */
+.template-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* Foto do aluno sobreposta no quadrado roxo */
-.foto-aluno-overlay {
-  position: absolute;
-  top: 27.74%;
-  left: 5.08%;
-  width: 55.65%;
-  height: 51.26%;
-  object-fit: cover;
-  transform: rotate(0deg);
-  transform-origin: top left;
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* Estilos de impressão */
@@ -72,7 +76,13 @@
     margin: 0;
   }
 
-  .template-image {
+  .foto-aluno-background {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+  }
+
+  .template-overlay {
     width: 100%;
     height: 100%;
     object-fit: cover;
