@@ -54,16 +54,21 @@ const DevolutivaFimAno: React.FC = () => {
       filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
       image: { type: 'jpeg' as const, quality: 1 },
       html2canvas: { 
-        scale: 3,
+        scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 793.7,
+        height: 1122.5,
+        windowWidth: 793.7,
+        windowHeight: 1122.5
       },
       jsPDF: { 
         unit: 'mm', 
         format: 'a4', 
         orientation: 'portrait' as const
-      }
+      },
+      pagebreak: { mode: 'avoid-all' }
     };
     
     html2pdf().set(opcoes).from(elemento).save();

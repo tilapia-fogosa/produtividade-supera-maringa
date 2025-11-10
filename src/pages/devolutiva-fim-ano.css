@@ -17,7 +17,7 @@
 /* Página A4 */
 .a4-page {
   width: 210mm;
-  aspect-ratio: 2480 / 3507;
+  height: 297mm;
   background: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   position: relative;
