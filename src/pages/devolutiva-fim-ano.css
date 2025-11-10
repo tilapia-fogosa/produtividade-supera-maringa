@@ -27,12 +27,12 @@
 /* Camada de fundo com a foto do aluno */
 .foto-aluno-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 /* Camada de overlay com o template */
@@ -114,9 +114,8 @@
   }
 
   .foto-aluno-background {
-    width: 100% !important;
-    height: 100% !important;
-    background-repeat: no-repeat !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .template-overlay {
@@ -137,6 +136,7 @@
 
 /* Configuração de página para impressão */
 @page {
-  size: A4 portrait;
+  size: 210mm 297mm;
   margin: 0;
+  orientation: portrait;
 }

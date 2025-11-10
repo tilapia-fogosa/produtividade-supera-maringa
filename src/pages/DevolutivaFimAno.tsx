@@ -196,12 +196,15 @@ const DevolutivaFimAno: React.FC = () => {
         <div className="a4-page">
           {/* Camada de fundo - FOTO DO ALUNO */}
           {pessoaSelecionada?.foto_devolutiva_url && (
-            <div 
+            <img 
+              src={pessoaSelecionada.foto_devolutiva_url}
+              alt="Foto do aluno"
               className="foto-aluno-background"
               style={{
-                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
-                backgroundSize: `${tamanhoFoto}%`,
-                backgroundPosition: `${posicaoX}% ${posicaoY}%`
+                width: `${tamanhoFoto}%`,
+                height: `${tamanhoFoto}%`,
+                objectFit: 'cover',
+                objectPosition: `${posicaoX}% ${posicaoY}%`
               }}
             />
           )}
