@@ -168,14 +168,34 @@ const DevolutivaFimAno: React.FC = () => {
     // Copiar estilos CSS necessários
     const estilosPagina = `
       <style>
+        @font-face {
+          font-family: 'Mencken';
+          src: url('/src/assets/fonts/Mencken-Std-Text-Extra-Bold.otf') format('opentype');
+          font-weight: 800;
+          font-style: normal;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
         @page {
           size: A4 portrait;
           margin: 0;
         }
 
-        body {
+        html, body {
           margin: 0;
           padding: 0;
+          width: 210mm;
+          height: 297mm;
+          overflow: hidden;
+        }
+
+        body > *:not(.a4-page) {
+          display: none !important;
         }
 
         .a4-page {
@@ -210,14 +230,33 @@ const DevolutivaFimAno: React.FC = () => {
         }
 
         .font-abril-fatface {
-          font-family: 'Abril Fatface', cursive;
+          font-family: 'Mencken', serif;
+          font-weight: 800;
         }
 
         .absolute {
           position: absolute;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap');
+        @media print {
+          html, body {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            padding: 0;
+          }
+
+          body > *:not(.a4-page) {
+            display: none !important;
+          }
+
+          .a4-page {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            page-break-after: avoid;
+          }
+        }
       </style>
     `;
 
