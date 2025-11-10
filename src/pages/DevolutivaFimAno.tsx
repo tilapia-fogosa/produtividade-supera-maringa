@@ -29,7 +29,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
-  const [alturaExercicios, setAlturaExercicios] = useState<number>(150); // Altura dos exercícios em px
+  const [alturaExercicios] = useState<number>(155); // Altura dos exercícios em px
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -359,7 +359,7 @@ const DevolutivaFimAno: React.FC = () => {
 
                 {/* Controles do nome */}
                 {pessoaSelecionada && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                     {/* Tamanho da fonte */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -385,22 +385,6 @@ const DevolutivaFimAno: React.FC = () => {
                       <Slider
                         value={[alturaNome]}
                         onValueChange={(value) => setAlturaNome(value[0])}
-                        min={0}
-                        max={2000}
-                        step={10}
-                        className="w-full"
-                      />
-                    </div>
-
-                    {/* Altura dos exercícios */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Altura dos Exercícios</Label>
-                        <span className="text-sm text-muted-foreground">{alturaExercicios}px</span>
-                      </div>
-                      <Slider
-                        value={[alturaExercicios]}
-                        onValueChange={(value) => setAlturaExercicios(value[0])}
                         min={0}
                         max={2000}
                         step={10}
