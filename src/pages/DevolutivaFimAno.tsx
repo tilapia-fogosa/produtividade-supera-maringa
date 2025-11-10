@@ -30,7 +30,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
-  const [alturaExercicios, setAlturaExercicios] = useState<number>(13.8); // Altura dos exercícios em %
+  const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
@@ -873,24 +873,6 @@ const DevolutivaFimAno: React.FC = () => {
                         className="w-full"
                       />
                     </div>
-                  </div>
-                )}
-
-                {/* Controle da altura dos exercícios */}
-                {pessoaSelecionada && (
-                  <div className="space-y-2 pt-4 border-t">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Altura dos Exercícios</Label>
-                      <span className="text-sm text-muted-foreground">{alturaExercicios.toFixed(1)}%</span>
-                    </div>
-                    <Slider
-                      value={[alturaExercicios]}
-                      onValueChange={(value) => setAlturaExercicios(value[0])}
-                      min={0}
-                      max={100}
-                      step={0.5}
-                      className="w-full"
-                    />
                   </div>
                 )}
               </div>
