@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
@@ -8,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer, Eye, Download } from 'lucide-react';
+import { User, Briefcase, Printer, Eye, Download, ListChecks } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -18,6 +19,7 @@ import html2pdf from 'html2pdf.js';
 
 
 const DevolutivaFimAno: React.FC = () => {
+  const navigate = useNavigate();
   const [tipoPessoa, setTipoPessoa] = useState<'aluno' | 'funcionario'>('aluno');
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
@@ -381,6 +383,22 @@ const DevolutivaFimAno: React.FC = () => {
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
+      {/* Cabeçalho */}
+      <div className="no-print mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-azul-500">Devolutiva de Fim de Ano 2025</h1>
+          <p className="text-sm text-muted-foreground">Geração personalizada de devolutivas</p>
+        </div>
+        <Button
+          onClick={() => navigate('/devolutivas/controle')}
+          variant="outline"
+          className="gap-2"
+        >
+          <ListChecks className="h-4 w-4" />
+          Controle
+        </Button>
+      </div>
+
       {/* Cabeçalho de seleção - não imprime */}
       <div className="no-print mb-6">
         <Card>

@@ -2537,6 +2537,62 @@ export type Database = {
         }
         Relationships: []
       }
+      devolutivas_controle: {
+        Row: {
+          created_at: string | null
+          entregue: boolean | null
+          entregue_em: string | null
+          entregue_por: string | null
+          foto_escolhida: boolean | null
+          id: string
+          impresso: boolean | null
+          impresso_em: string | null
+          impresso_por: string | null
+          pessoa_id: string
+          tipo_pessoa: string
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entregue?: boolean | null
+          entregue_em?: string | null
+          entregue_por?: string | null
+          foto_escolhida?: boolean | null
+          id?: string
+          impresso?: boolean | null
+          impresso_em?: string | null
+          impresso_por?: string | null
+          pessoa_id: string
+          tipo_pessoa: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entregue?: boolean | null
+          entregue_em?: string | null
+          entregue_por?: string | null
+          foto_escolhida?: boolean | null
+          id?: string
+          impresso?: boolean | null
+          impresso_em?: string | null
+          impresso_por?: string | null
+          pessoa_id?: string
+          tipo_pessoa?: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devolutivas_controle_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disponibilidade_professores: {
         Row: {
           active: boolean | null
@@ -6779,6 +6835,7 @@ export type Database = {
         }
         Returns: Json
       }
+      sync_devolutivas_foto_escolhida: { Args: never; Returns: undefined }
       toggle_pos_venda_activity_status: {
         Args: {
           p_atividade_config_id: string
