@@ -26,11 +26,11 @@ const DevolutivaFimAno: React.FC = () => {
   const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
   const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
-  const [alturaNome, setAlturaNome] = useState<number>(240); // Posição Y do nome em px
+  const [alturaNome, setAlturaNome] = useState<number>(21.4); // Posição Y do nome em % (240px / 1122.5 * 100)
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
-  const [alturaExercicios] = useState<number>(155); // Altura dos exercícios em px
+  const [alturaExercicios] = useState<number>(13.8); // Altura dos exercícios em % (155px / 1122.5 * 100)
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -273,7 +273,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaNome}px`,
+                top: `${alturaNome}%`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -292,7 +292,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaExercicios}px`,
+                top: `${alturaExercicios}%`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -311,7 +311,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaExercicios}px`,
+                top: `${alturaExercicios}%`,
                 left: `${posicaoXExerciciosAbaco}%`,
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -330,7 +330,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaExercicios}px`,
+                top: `${alturaExercicios}%`,
                 left: `${posicaoXExerciciosAH}%`,
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -456,14 +456,14 @@ const DevolutivaFimAno: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">Altura do Nome</Label>
-                        <span className="text-sm text-muted-foreground">{alturaNome}px</span>
+                        <span className="text-sm text-muted-foreground">{alturaNome.toFixed(1)}%</span>
                       </div>
                       <Slider
                         value={[alturaNome]}
                         onValueChange={(value) => setAlturaNome(value[0])}
                         min={0}
-                        max={2000}
-                        step={10}
+                        max={100}
+                        step={0.5}
                         className="w-full"
                       />
                     </div>
