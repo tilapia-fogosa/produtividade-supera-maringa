@@ -552,16 +552,32 @@ const DevolutivaFimAno: React.FC = () => {
             </div>
             
             <div className="p-8">
-              <div className="a4-page" style={{ boxShadow: '0 0 20px rgba(0,0,0,0.2)' }}>
+              <div 
+                className="a4-page" 
+                style={{ 
+                  boxShadow: '0 0 20px rgba(0,0,0,0.2)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
                 {/* Camada de fundo - FOTO DO ALUNO */}
-                <div 
-                  className="foto-aluno-background"
-                  style={{
-                    backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
-                    backgroundSize: `${tamanhoFoto}%`,
-                    backgroundPosition: `${posicaoX}% ${posicaoY}%`
-                  }}
-                />
+                {pessoaSelecionada?.foto_devolutiva_url && (
+                  <div 
+                    className="foto-aluno-background"
+                    style={{
+                      backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                      backgroundSize: `${tamanhoFoto}%`,
+                      backgroundPosition: `${posicaoX}% ${posicaoY}%`,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      backgroundRepeat: 'no-repeat',
+                      zIndex: 1
+                    }}
+                  />
+                )}
                 
                 {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
                 <img 
