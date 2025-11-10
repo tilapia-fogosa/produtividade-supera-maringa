@@ -12,6 +12,8 @@ import { User, Briefcase } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
+import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
+import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -25,11 +27,15 @@ const DevolutivaFimAno: React.FC = () => {
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
   const [alturaNome, setAlturaNome] = useState<number>(240); // Posição Y do nome em px
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
+  const [posicaoXExerciciosAbaco, setPosicaoXExerciciosAbaco] = useState<number>(25); // Posição X dos exercícios ábaco
+  const [posicaoXExerciciosAH, setPosicaoXExerciciosAH] = useState<number>(75); // Posição X dos exercícios AH
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
   const { data: totalDesafios2025 = 0 } = useDesafios2025(pessoaSelecionadaId);
+  const { data: totalExerciciosAbaco2025 = 0 } = useExerciciosAbaco2025(pessoaSelecionadaId);
+  const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
   const handlePhotoSelected = () => {
     // Recarregar dados para mostrar nova foto
@@ -242,6 +248,44 @@ const DevolutivaFimAno: React.FC = () => {
               {totalDesafios2025}
             </div>
           )}
+          
+          {/* Total de exercícios ábaco 2025 */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-mencken"
+              style={{
+                top: '150px',
+                left: `${posicaoXExerciciosAbaco}%`,
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: '30px'
+              }}
+            >
+              {totalExerciciosAbaco2025}
+            </div>
+          )}
+          
+          {/* Total de exercícios AH 2025 */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-mencken"
+              style={{
+                top: '150px',
+                left: `${posicaoXExerciciosAH}%`,
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: '30px'
+              }}
+            >
+              {totalExerciciosAH2025}
+            </div>
+          )}
         </div>
       </div>
 
@@ -343,6 +387,43 @@ const DevolutivaFimAno: React.FC = () => {
                         min={0}
                         max={2000}
                         step={10}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Controles de posição das informações adicionais */}
+                {pessoaSelecionada && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    {/* Posição X Exercícios Ábaco */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Posição X Exercícios Ábaco</Label>
+                        <span className="text-sm text-muted-foreground">{posicaoXExerciciosAbaco}%</span>
+                      </div>
+                      <Slider
+                        value={[posicaoXExerciciosAbaco]}
+                        onValueChange={(value) => setPosicaoXExerciciosAbaco(value[0])}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Posição X Exercícios AH */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Posição X Exercícios AH</Label>
+                        <span className="text-sm text-muted-foreground">{posicaoXExerciciosAH}%</span>
+                      </div>
+                      <Slider
+                        value={[posicaoXExerciciosAH]}
+                        onValueChange={(value) => setPosicaoXExerciciosAH(value[0])}
+                        min={0}
+                        max={100}
+                        step={1}
                         className="w-full"
                       />
                     </div>
