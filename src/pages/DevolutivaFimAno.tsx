@@ -84,11 +84,7 @@ const DevolutivaFimAno: React.FC = () => {
         scale: 1,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff',
-        width: 793.7,
-        height: 1122.5,
-        windowWidth: 793.7,
-        windowHeight: 1122.5
+        backgroundColor: '#ffffff'
       },
       jsPDF: { 
         unit: 'mm', 
