@@ -21,8 +21,8 @@ const DevolutivaFimAno: React.FC = () => {
   const [tamanhoFoto, setTamanhoFoto] = useState<number>(57); // Tamanho em %
   const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
   const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
-  const [tamanhoFonte, setTamanhoFonte] = useState<number>(36); // Tamanho da fonte em px
-  const [alturaNome, setAlturaNome] = useState<number>(690); // Posição Y do nome em px
+  const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
+  const [alturaNome, setAlturaNome] = useState<number>(240); // Posição Y do nome em px
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
