@@ -21,6 +21,8 @@ const DevolutivaFimAno: React.FC = () => {
   const [tamanhoFoto, setTamanhoFoto] = useState<number>(57); // Tamanho em %
   const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
   const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
+  const [tamanhoFonte, setTamanhoFonte] = useState<number>(36); // Tamanho da fonte em px
+  const [alturaNome, setAlturaNome] = useState<number>(690); // Posição Y do nome em px
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -203,15 +205,16 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Nome do aluno */}
           {pessoaSelecionada && (
             <div 
-              className="absolute font-abril-fatface text-4xl"
+              className="absolute font-abril-fatface"
               style={{
-                top: '690px',
+                top: `${alturaNome}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 zIndex: 3,
                 color: '#000',
                 textAlign: 'center',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                fontSize: `${tamanhoFonte}px`
               }}
             >
               {pessoaSelecionada.nome}
@@ -274,6 +277,43 @@ const DevolutivaFimAno: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Controles do nome */}
+            {pessoaSelecionada && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                {/* Tamanho da fonte */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Tamanho da Fonte</Label>
+                    <span className="text-sm text-muted-foreground">{tamanhoFonte}px</span>
+                  </div>
+                  <Slider
+                    value={[tamanhoFonte]}
+                    onValueChange={(value) => setTamanhoFonte(value[0])}
+                    min={20}
+                    max={80}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Altura do nome */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Altura do Nome</Label>
+                    <span className="text-sm text-muted-foreground">{alturaNome}px</span>
+                  </div>
+                  <Slider
+                    value={[alturaNome]}
+                    onValueChange={(value) => setAlturaNome(value[0])}
+                    min={0}
+                    max={2000}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
