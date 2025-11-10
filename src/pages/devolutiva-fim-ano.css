@@ -103,6 +103,6 @@
 
 /* Configuração de página para impressão */
 @page {
-  size: 210mm 297mm;
+  size: A4 portrait;
   margin: 0;
 }
