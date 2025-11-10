@@ -26,6 +26,8 @@ const DevolutivaFimAno: React.FC = () => {
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
   const [tamanhoFoto, setTamanhoFoto] = useState<1 | 2 | 3 | 4>(1);
+  const [posicaoX, setPosicaoX] = useState<number>(5.08); // Posição inicial em %
+  const [posicaoY, setPosicaoY] = useState<number>(27.74); // Posição inicial em %
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -58,7 +60,7 @@ const DevolutivaFimAno: React.FC = () => {
   const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
 
   return (
-    <div className="devolutiva-fim-ano-wrapper">
+    <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
       {/* Cabeçalho de seleção - não imprime */}
       <div className="no-print mb-6">
         <Card>
@@ -198,19 +200,24 @@ const DevolutivaFimAno: React.FC = () => {
               src={pessoaSelecionada.foto_devolutiva_url}
               alt={`Foto de ${pessoaSelecionada.nome}`}
               className="foto-aluno-overlay"
-              style={{ height: `${TAMANHOS_FOTO[tamanhoFoto].porcentagem}%` }}
+              style={{ 
+                height: `${TAMANHOS_FOTO[tamanhoFoto].porcentagem}%`,
+                left: `${posicaoX}%`,
+                top: `${posicaoY}%`
+              }}
             />
           )}
         </div>
       </div>
 
-      {/* Barra de controle de tamanho - rodapé */}
+      {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-50">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto space-y-4">
+            {/* Controles de tamanho */}
             <div className="flex items-center gap-6">
               <Label className="text-sm font-semibold whitespace-nowrap">
-                Tamanho da Foto
+                Tamanho
               </Label>
               <div className="flex-1 flex items-center gap-4">
                 <div className="flex gap-2 flex-wrap">
@@ -229,6 +236,41 @@ const DevolutivaFimAno: React.FC = () => {
                 <div className="text-sm text-muted-foreground whitespace-nowrap">
                   {TAMANHOS_FOTO[tamanhoFoto].altura}px
                 </div>
+              </div>
+            </div>
+
+            {/* Controles de posição */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Posição X */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Posição X (Horizontal)</Label>
+                  <span className="text-sm text-muted-foreground">{posicaoX.toFixed(2)}%</span>
+                </div>
+                <Slider
+                  value={[posicaoX]}
+                  onValueChange={(value) => setPosicaoX(value[0])}
+                  min={0}
+                  max={50}
+                  step={0.1}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Posição Y */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Posição Y (Vertical)</Label>
+                  <span className="text-sm text-muted-foreground">{posicaoY.toFixed(2)}%</span>
+                </div>
+                <Slider
+                  value={[posicaoY]}
+                  onValueChange={(value) => setPosicaoY(value[0])}
+                  min={0}
+                  max={50}
+                  step={0.1}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
