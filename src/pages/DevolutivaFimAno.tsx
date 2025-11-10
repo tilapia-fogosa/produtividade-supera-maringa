@@ -81,7 +81,7 @@ const DevolutivaFimAno: React.FC = () => {
       filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
       image: { type: 'jpeg' as const, quality: 1 },
       html2canvas: { 
-        scale: 2,
+        scale: 1,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
