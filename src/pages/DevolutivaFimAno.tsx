@@ -152,7 +152,7 @@ const DevolutivaFimAno: React.FC = () => {
 
   const handleImprimirComIframe = () => {
     const elemento = document.querySelector('.a4-page') as HTMLElement;
-    if (!elemento) return;
+    if (!elemento || !pessoaSelecionada) return;
 
     // Criar iframe invisível
     const iframe = document.createElement('iframe');
@@ -160,6 +160,7 @@ const DevolutivaFimAno: React.FC = () => {
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = 'none';
+    iframe.style.visibility = 'hidden';
     document.body.appendChild(iframe);
 
     const iframeDoc = iframe.contentWindow?.document;
@@ -194,10 +195,6 @@ const DevolutivaFimAno: React.FC = () => {
           overflow: hidden;
         }
 
-        body > *:not(.a4-page) {
-          display: none !important;
-        }
-
         .a4-page {
           width: 210mm;
           height: 297mm;
@@ -206,6 +203,7 @@ const DevolutivaFimAno: React.FC = () => {
           background: white;
           margin: 0;
           padding: 0;
+          page-break-after: avoid;
         }
 
         .foto-aluno-background {
@@ -244,28 +242,33 @@ const DevolutivaFimAno: React.FC = () => {
             height: 297mm;
             margin: 0;
             padding: 0;
-          }
-
-          body > *:not(.a4-page) {
-            display: none !important;
+            overflow: hidden;
           }
 
           .a4-page {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            page-break-after: avoid;
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid !important;
           }
         }
       </style>
     `;
 
-    // Clonar o elemento
-    const clone = elemento.cloneNode(true) as HTMLElement;
+    // Preparar HTML com apenas o conteúdo necessário
+    const fotoHtml = pessoaSelecionada?.foto_devolutiva_url ? `
+      <div 
+        class="foto-aluno-background"
+        style="
+          background-image: url(${pessoaSelecionada.foto_devolutiva_url});
+          background-size: ${tamanhoFoto}%;
+          background-position: ${posicaoX}% ${posicaoY}%;
+        "
+      ></div>
+    ` : '';
 
-    // Escrever no iframe
-    iframeDoc.open();
-    iframeDoc.write(`
+    const conteudoHtml = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -274,16 +277,88 @@ const DevolutivaFimAno: React.FC = () => {
           ${estilosPagina}
         </head>
         <body>
-          ${clone.outerHTML}
+          <div class="a4-page">
+            ${fotoHtml}
+            <img 
+              src="${templateOverlay}" 
+              alt="Template" 
+              class="template-overlay"
+            />
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaNome}%;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: ${tamanhoFonte}px;
+              "
+            >
+              ${pessoaSelecionada.nome}
+            </div>
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaExercicios}%;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: 30px;
+              "
+            >
+              ${totalDesafios2025}
+            </div>
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaExercicios}%;
+                left: ${posicaoXExerciciosAbaco}%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: 30px;
+              "
+            >
+              ${totalExerciciosAbaco2025}
+            </div>
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaExercicios}%;
+                left: ${posicaoXExerciciosAH}%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: 30px;
+              "
+            >
+              ${totalExerciciosAH2025}
+            </div>
+          </div>
         </body>
       </html>
-    `);
+    `;
+
+    // Escrever no iframe
+    iframeDoc.open();
+    iframeDoc.write(conteudoHtml);
     iframeDoc.close();
 
     // Aguardar carregamento das imagens
-    iframe.contentWindow?.addEventListener('load', () => {
+    const imgTemplate = iframeDoc.querySelector('.template-overlay') as HTMLImageElement;
+    
+    const imprimir = () => {
       setTimeout(() => {
-        // Imprimir do contexto do iframe
         iframe.contentWindow?.print();
         
         // Remover iframe após impressão
@@ -291,7 +366,17 @@ const DevolutivaFimAno: React.FC = () => {
           document.body.removeChild(iframe);
         }, 100);
       }, 500);
-    });
+    };
+
+    if (imgTemplate) {
+      if (imgTemplate.complete) {
+        imprimir();
+      } else {
+        imgTemplate.onload = imprimir;
+      }
+    } else {
+      imprimir();
+    }
   };
 
   return (
