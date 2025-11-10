@@ -289,7 +289,7 @@ const DevolutivaFimAno: React.FC = () => {
               style="
                 top: ${alturaNome}%;
                 left: 50%;
-                transform: translateX(-50%);
+                transform: translate(-50%, -50%);
                 z-index: 3;
                 color: #000;
                 text-align: center;
@@ -534,7 +534,7 @@ const DevolutivaFimAno: React.FC = () => {
               style={{
                 top: `${alturaNome}%`,
                 left: '50%',
-                transform: 'translateX(-50%)',
+                transform: 'translate(-50%, -50%)',
                 zIndex: 3,
                 color: '#000',
                 textAlign: 'center',
@@ -685,7 +685,7 @@ const DevolutivaFimAno: React.FC = () => {
                   style={{
                     top: `${alturaNome}%`,
                     left: '50%',
-                    transform: 'translateX(-50%)',
+                    transform: 'translate(-50%, -50%)',
                     zIndex: 3,
                     color: '#000',
                     textAlign: 'center',
