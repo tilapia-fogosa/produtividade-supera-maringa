@@ -755,16 +755,6 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
-          {/* Botão de pré-visualização */}
-          <Button
-            onClick={() => setMostrarPreview(true)}
-            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
-            variant="default"
-            title="Pré-visualizar impressão"
-          >
-            <Eye className="h-5 w-5" />
-          </Button>
-
           {/* Botão de exportar PDF */}
           <Button
             onClick={handleSalvarPDF}
