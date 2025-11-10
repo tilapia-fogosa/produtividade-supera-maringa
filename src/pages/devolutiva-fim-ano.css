@@ -60,20 +60,23 @@
 
   .devolutiva-fim-ano-wrapper {
     min-height: 0;
+    padding-bottom: 0 !important;
   }
 
   .devolutiva-fim-ano-container {
     padding: 0;
     background: white;
     min-height: 0;
+    display: block;
   }
 
   .a4-page {
     width: 210mm;
-    aspect-ratio: 2480 / 3507;
+    height: 297mm;
     box-shadow: none;
     page-break-after: always;
     margin: 0;
+    aspect-ratio: unset;
   }
 
   .foto-aluno-background {
@@ -100,6 +103,6 @@
 
 /* Configuração de página para impressão */
 @page {
-  size: A4 portrait;
+  size: 210mm 297mm;
   margin: 0;
 }
