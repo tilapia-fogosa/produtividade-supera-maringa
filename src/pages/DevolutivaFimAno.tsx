@@ -27,8 +27,8 @@ const DevolutivaFimAno: React.FC = () => {
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
   const [alturaNome, setAlturaNome] = useState<number>(240); // Posição Y do nome em px
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
-  const [posicaoXExerciciosAbaco, setPosicaoXExerciciosAbaco] = useState<number>(25); // Posição X dos exercícios ábaco
-  const [posicaoXExerciciosAH, setPosicaoXExerciciosAH] = useState<number>(75); // Posição X dos exercícios AH
+  const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
+  const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -387,43 +387,6 @@ const DevolutivaFimAno: React.FC = () => {
                         min={0}
                         max={2000}
                         step={10}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Controles de posição das informações adicionais */}
-                {pessoaSelecionada && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                    {/* Posição X Exercícios Ábaco */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Posição X Exercícios Ábaco</Label>
-                        <span className="text-sm text-muted-foreground">{posicaoXExerciciosAbaco}%</span>
-                      </div>
-                      <Slider
-                        value={[posicaoXExerciciosAbaco]}
-                        onValueChange={(value) => setPosicaoXExerciciosAbaco(value[0])}
-                        min={0}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    {/* Posição X Exercícios AH */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Posição X Exercícios AH</Label>
-                        <span className="text-sm text-muted-foreground">{posicaoXExerciciosAH}%</span>
-                      </div>
-                      <Slider
-                        value={[posicaoXExerciciosAH]}
-                        onValueChange={(value) => setPosicaoXExerciciosAH(value[0])}
-                        min={0}
-                        max={100}
-                        step={1}
                         className="w-full"
                       />
                     </div>
