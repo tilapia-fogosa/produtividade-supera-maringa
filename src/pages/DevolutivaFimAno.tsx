@@ -44,6 +44,32 @@ const DevolutivaFimAno: React.FC = () => {
     refetchAlunos();
   };
 
+  const handleAbrirPaginaImpressao = () => {
+    if (!pessoaSelecionada) return;
+    
+    // Salvar dados no sessionStorage
+    const dadosImpressao = {
+      nome: pessoaSelecionada.nome,
+      fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+      tamanhoFoto,
+      posicaoX,
+      posicaoY,
+      tamanhoFonte,
+      alturaNome,
+      alturaExercicios,
+      posicaoXExerciciosAbaco,
+      posicaoXExerciciosAH,
+      totalDesafios: totalDesafios2025,
+      totalExerciciosAbaco: totalExerciciosAbaco2025,
+      totalExerciciosAH: totalExerciciosAH2025
+    };
+    
+    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    
+    // Abrir nova página
+    window.open('/devolutiva-fim-ano-impressao', '_blank');
+  };
+
   const handleSalvarPDF = async () => {
     const elemento = document.querySelector('.a4-page') as HTMLElement;
     
@@ -352,6 +378,16 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
+          {/* Botão de abrir página de impressão */}
+          <Button
+            onClick={handleAbrirPaginaImpressao}
+            className="no-print fixed bottom-4 right-52 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+            title="Abrir página de impressão"
+          >
+            <Printer className="h-5 w-5" />
+          </Button>
+
           {/* Botão de salvar PDF */}
           <Button
             onClick={handleSalvarPDF}

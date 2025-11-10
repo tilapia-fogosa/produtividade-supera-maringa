@@ -25,6 +25,7 @@ import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
 import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
 import DevolutivaFimAno from "./pages/DevolutivaFimAno";
+import DevolutivaFimAnoImpressao from "./pages/DevolutivaFimAnoImpressao";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import AbrindoHorizontesSelecao from "./pages/AbrindoHorizontesSelecao";
 import AbrindoHorizontesAlunos from "./pages/AbrindoHorizontesAlunos";
@@ -73,6 +74,7 @@ function App() {
               <Routes>
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
+                <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <SidebarProvider>
@@ -86,9 +88,9 @@ function App() {
                             <SidebarTrigger />
                             <UnitSelector />
                           </div>
-                          <Routes>
-                            <Route path="/" element={<Navigate to="/lancamentos" />} />
-                            <Route path="/dias-lancamento" element={<DiasLancamento />} />
+              <Routes>
+                <Route path="/" element={<Navigate to="/lancamentos" />} />
+                <Route path="/dias-lancamento" element={<DiasLancamento />} />
                             <Route path="/turmas/dia" element={<Turmas />} />
                             <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
                             <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
