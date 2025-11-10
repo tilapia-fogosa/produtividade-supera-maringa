@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import templateImage from '@/assets/devolutiva-fim-ano-template.png';
+import templateImage from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';

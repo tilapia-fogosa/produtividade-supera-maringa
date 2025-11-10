@@ -31,15 +31,15 @@
   object-fit: cover;
 }
 
-/* Foto do aluno sobreposta no quadrado verde */
+/* Foto do aluno sobreposta no quadrado roxo */
 .foto-aluno-overlay {
   position: absolute;
-  top: 50.1%;
-  left: 54.0%;
+  top: 23.06%;
+  left: 3.73%;
   width: 19.3%;
   height: 34.0%;
   object-fit: cover;
-  transform: rotate(-7.72deg);
+  transform: rotate(0deg);
   transform-origin: top left;
 }
 
