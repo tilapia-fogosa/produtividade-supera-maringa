@@ -22,6 +22,7 @@ export default {
 		fontFamily: {
 			'abril-fatface': ['Abril Fatface', 'serif'],
 			'miftah': ['Miftah', 'serif'],
+			'mencken': ['Mencken', 'serif'],
 		},
 		colors: {
 			border: 'hsl(var(--border))',

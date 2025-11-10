@@ -205,7 +205,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Nome do aluno */}
           {pessoaSelecionada && (
             <div 
-              className="absolute font-abril-fatface"
+              className="absolute font-mencken"
               style={{
                 top: `${alturaNome}px`,
                 left: '50%',
