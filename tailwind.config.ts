@@ -21,6 +21,7 @@ export default {
 	extend: {
 		fontFamily: {
 			'abril-fatface': ['Abril Fatface', 'serif'],
+			'miftah': ['Miftah', 'serif'],
 		},
 		colors: {
 			border: 'hsl(var(--border))',
