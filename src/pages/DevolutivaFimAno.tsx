@@ -68,6 +68,13 @@ const DevolutivaFimAno: React.FC = () => {
     clone.style.boxShadow = 'none';
     clone.style.margin = '0';
     clone.style.padding = '0';
+    clone.style.boxSizing = 'border-box';
+    
+    // Forçar box-sizing em todos os elementos filhos
+    const allElements = clone.querySelectorAll('*');
+    allElements.forEach((el: Element) => {
+      (el as HTMLElement).style.boxSizing = 'border-box';
+    });
     
     const opcoes = {
       margin: 0,
