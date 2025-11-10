@@ -18,9 +18,9 @@ const DevolutivaFimAno: React.FC = () => {
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
-  const [tamanhoFoto, setTamanhoFoto] = useState<number>(100); // Tamanho em %
-  const [posicaoX, setPosicaoX] = useState<number>(50); // Posição inicial em %
-  const [posicaoY, setPosicaoY] = useState<number>(50); // Posição inicial em %
+  const [tamanhoFoto, setTamanhoFoto] = useState<number>(57); // Tamanho em %
+  const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
+  const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
