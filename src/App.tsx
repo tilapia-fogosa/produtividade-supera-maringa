@@ -25,6 +25,8 @@ import DevolutivaTurma from "./pages/DevolutivaTurma";
 import DevolutivaAluno from "./pages/DevolutivaAluno";
 import DevolutivaFuncionario from "./pages/DevolutivaFuncionario";
 import DevolutivaFimAno from "./pages/DevolutivaFimAno";
+import DevolutivaFimAnoImpressao from "./pages/DevolutivaFimAnoImpressao";
+import DevolutivasControle from "./pages/DevolutivasControle";
 import AbrindoHorizontes from "./pages/AbrindoHorizontes";
 import AbrindoHorizontesSelecao from "./pages/AbrindoHorizontesSelecao";
 import AbrindoHorizontesAlunos from "./pages/AbrindoHorizontesAlunos";
@@ -73,6 +75,7 @@ function App() {
               <Routes>
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
+                <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <SidebarProvider>
@@ -86,9 +89,9 @@ function App() {
                             <SidebarTrigger />
                             <UnitSelector />
                           </div>
-                          <Routes>
-                            <Route path="/" element={<Navigate to="/lancamentos" />} />
-                            <Route path="/dias-lancamento" element={<DiasLancamento />} />
+              <Routes>
+                <Route path="/" element={<Navigate to="/lancamentos" />} />
+                <Route path="/dias-lancamento" element={<DiasLancamento />} />
                             <Route path="/turmas/dia" element={<Turmas />} />
                             <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
                             <Route path="/turma/:turmaId/abrindo-horizontes" element={<AbrindoHorizontes />} />
@@ -129,7 +132,8 @@ function App() {
                             <Route path="/crm" element={<CRM />} />
                             <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
                             <Route path="/camisetas" element={<Camisetas />} />
-                            <Route path="/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
+                            <Route path="/devolutivas/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
+                            <Route path="/devolutivas/controle" element={<DevolutivasControle />} />
                             <Route path="/alertas-falta" element={<AlertasFalta />} />
                             <Route path="/alertas-evasao" element={<AlertasEvasao />} />
                             <Route path="*" element={<NotFound />} />

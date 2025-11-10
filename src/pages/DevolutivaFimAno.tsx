@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
@@ -8,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer, Download } from 'lucide-react';
+import { User, Briefcase, Printer, Eye, Download, ListChecks } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -18,6 +19,7 @@ import html2pdf from 'html2pdf.js';
 
 
 const DevolutivaFimAno: React.FC = () => {
+  const navigate = useNavigate();
   const [tipoPessoa, setTipoPessoa] = useState<'aluno' | 'funcionario'>('aluno');
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
@@ -26,11 +28,12 @@ const DevolutivaFimAno: React.FC = () => {
   const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
   const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
-  const [alturaNome, setAlturaNome] = useState<number>(240); // Posição Y do nome em px
+  const [alturaNome, setAlturaNome] = useState<number>(19.5); // Posição Y do nome em %
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
-  const [alturaExercicios] = useState<number>(155); // Altura dos exercícios em px
+  const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
+  const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -42,6 +45,32 @@ const DevolutivaFimAno: React.FC = () => {
   const handlePhotoSelected = () => {
     // Recarregar dados para mostrar nova foto
     refetchAlunos();
+  };
+
+  const handleAbrirPaginaImpressao = () => {
+    if (!pessoaSelecionada) return;
+    
+    // Salvar dados no sessionStorage
+    const dadosImpressao = {
+      nome: pessoaSelecionada.nome,
+      fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+      tamanhoFoto,
+      posicaoX,
+      posicaoY,
+      tamanhoFonte,
+      alturaNome,
+      alturaExercicios,
+      posicaoXExerciciosAbaco,
+      posicaoXExerciciosAH,
+      totalDesafios: totalDesafios2025,
+      totalExerciciosAbaco: totalExerciciosAbaco2025,
+      totalExerciciosAH: totalExerciciosAH2025
+    };
+    
+    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    
+    // Abrir nova página
+    window.open('/devolutiva-fim-ano-impressao', '_blank');
   };
 
   const handleSalvarPDF = async () => {
@@ -68,20 +97,23 @@ const DevolutivaFimAno: React.FC = () => {
     clone.style.boxShadow = 'none';
     clone.style.margin = '0';
     clone.style.padding = '0';
+    clone.style.boxSizing = 'border-box';
+    
+    // Forçar box-sizing em todos os elementos filhos
+    const allElements = clone.querySelectorAll('*');
+    allElements.forEach((el: Element) => {
+      (el as HTMLElement).style.boxSizing = 'border-box';
+    });
     
     const opcoes = {
       margin: 0,
       filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
       image: { type: 'jpeg' as const, quality: 1 },
       html2canvas: { 
-        scale: 2,
+        scale: 1,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff',
-        width: 793.7,
-        height: 1122.5,
-        windowWidth: 793.7,
-        windowHeight: 1122.5
+        backgroundColor: '#ffffff'
       },
       jsPDF: { 
         unit: 'mm', 
@@ -120,8 +152,253 @@ const DevolutivaFimAno: React.FC = () => {
 
   const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
 
+  const handleImprimirComIframe = () => {
+    const elemento = document.querySelector('.a4-page') as HTMLElement;
+    if (!elemento || !pessoaSelecionada) return;
+
+    // Criar iframe invisível
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (!iframeDoc) return;
+
+    // Copiar estilos CSS necessários
+    const estilosPagina = `
+      <style>
+        @font-face {
+          font-family: 'Mencken';
+          src: url('/src/assets/fonts/Mencken-Std-Text-Extra-Bold.otf') format('opentype');
+          font-weight: 800;
+          font-style: normal;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
+
+        html, body {
+          margin: 0;
+          padding: 0;
+          width: 210mm;
+          height: 297mm;
+          overflow: hidden;
+        }
+
+        .a4-page {
+          width: 210mm;
+          height: 297mm;
+          position: relative;
+          overflow: hidden;
+          background: white;
+          margin: 0;
+          padding: 0;
+          page-break-after: avoid;
+        }
+
+        .foto-aluno-background {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-repeat: no-repeat;
+          z-index: 1;
+        }
+
+        .template-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .font-abril-fatface {
+          font-family: 'Mencken', serif;
+          font-weight: 800;
+        }
+
+        .absolute {
+          position: absolute;
+        }
+
+        @media print {
+          html, body {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+          }
+
+          .a4-page {
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid !important;
+          }
+        }
+      </style>
+    `;
+
+    // Preparar HTML com apenas o conteúdo necessário
+    const fotoHtml = pessoaSelecionada?.foto_devolutiva_url ? `
+      <div 
+        class="foto-aluno-background"
+        style="
+          background-image: url(${pessoaSelecionada.foto_devolutiva_url});
+          background-size: ${tamanhoFoto}%;
+          background-position: ${posicaoX}% ${posicaoY}%;
+        "
+      ></div>
+    ` : '';
+
+    const conteudoHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Devolutiva</title>
+          ${estilosPagina}
+        </head>
+        <body>
+          <div class="a4-page">
+            ${fotoHtml}
+            <img 
+              src="${templateOverlay}" 
+              alt="Template" 
+              class="template-overlay"
+            />
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaNome}%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: ${tamanhoFonte}px;
+              "
+            >
+              ${pessoaSelecionada.nome}
+            </div>
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaExercicios}%;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: 30px;
+              "
+            >
+              ${totalDesafios2025}
+            </div>
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaExercicios}%;
+                left: ${posicaoXExerciciosAbaco}%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: 30px;
+              "
+            >
+              ${totalExerciciosAbaco2025}
+            </div>
+            <div 
+              class="absolute font-abril-fatface"
+              style="
+                top: ${alturaExercicios}%;
+                left: ${posicaoXExerciciosAH}%;
+                transform: translateX(-50%);
+                z-index: 3;
+                color: #000;
+                text-align: center;
+                white-space: nowrap;
+                font-size: 30px;
+              "
+            >
+              ${totalExerciciosAH2025}
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Escrever no iframe
+    iframeDoc.open();
+    iframeDoc.write(conteudoHtml);
+    iframeDoc.close();
+
+    // Aguardar carregamento das imagens
+    const imgTemplate = iframeDoc.querySelector('.template-overlay') as HTMLImageElement;
+    
+    const imprimir = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        
+        // Remover iframe após impressão
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 100);
+      }, 500);
+    };
+
+    if (imgTemplate) {
+      if (imgTemplate.complete) {
+        imprimir();
+      } else {
+        imgTemplate.onload = imprimir;
+      }
+    } else {
+      imprimir();
+    }
+  };
+
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
+      {/* Cabeçalho */}
+      <div className="no-print mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-azul-500">Devolutiva de Fim de Ano 2025</h1>
+          <p className="text-sm text-muted-foreground">Geração personalizada de devolutivas</p>
+        </div>
+        <Button
+          onClick={() => navigate('/devolutivas/controle')}
+          variant="outline"
+          className="gap-2"
+        >
+          <ListChecks className="h-4 w-4" />
+          Controle
+        </Button>
+      </div>
+
       {/* Cabeçalho de seleção - não imprime */}
       <div className="no-print mb-6">
         <Card>
@@ -273,9 +550,9 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaNome}px`,
+                top: `${alturaNome}%`,
                 left: '50%',
-                transform: 'translateX(-50%)',
+                transform: 'translate(-50%, -50%)',
                 zIndex: 3,
                 color: '#000',
                 textAlign: 'center',
@@ -292,7 +569,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaExercicios}px`,
+                top: `${alturaExercicios}%`,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -311,7 +588,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaExercicios}px`,
+                top: `${alturaExercicios}%`,
                 left: `${posicaoXExerciciosAbaco}%`,
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -330,7 +607,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="absolute font-abril-fatface"
               style={{
-                top: `${alturaExercicios}px`,
+                top: `${alturaExercicios}%`,
                 left: `${posicaoXExerciciosAH}%`,
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -346,23 +623,170 @@ const DevolutivaFimAno: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal de Pré-visualização */}
+      {mostrarPreview && pessoaSelecionada?.foto_devolutiva_url && (
+        <div 
+          className="no-print fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setMostrarPreview(false)}
+        >
+          <div 
+            className="relative bg-white rounded-lg shadow-2xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 bg-white border-b p-4 flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Pré-visualização de Impressão</h3>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSalvarPDF}
+                  variant="default"
+                  size="sm"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar PDF
+                </Button>
+                <Button
+                  onClick={handleImprimirComIframe}
+                  variant="default"
+                  size="sm"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Imprimir
+                </Button>
+                <Button
+                  onClick={() => setMostrarPreview(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-8">
+              <div 
+                className="a4-page" 
+                style={{ 
+                  boxShadow: '0 0 20px rgba(0,0,0,0.2)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Camada de fundo - FOTO DO ALUNO */}
+                {pessoaSelecionada?.foto_devolutiva_url && (
+                  <div 
+                    className="foto-aluno-background"
+                    style={{
+                      backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                      backgroundSize: `${tamanhoFoto}%`,
+                      backgroundPosition: `${posicaoX}% ${posicaoY}%`,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      backgroundRepeat: 'no-repeat',
+                      zIndex: 1
+                    }}
+                  />
+                )}
+                
+                {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
+                <img 
+                  src={templateOverlay} 
+                  alt="Template Devolutiva" 
+                  className="template-overlay"
+                />
+                
+                {/* Nome do aluno */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaNome}%`,
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: `${tamanhoFonte}px`
+                  }}
+                >
+                  {pessoaSelecionada.nome}
+                </div>
+                
+                {/* Total de desafios 2025 */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaExercicios}%`,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '30px'
+                  }}
+                >
+                  {totalDesafios2025}
+                </div>
+                
+                {/* Total de exercícios ábaco 2025 */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaExercicios}%`,
+                    left: `${posicaoXExerciciosAbaco}%`,
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '30px'
+                  }}
+                >
+                  {totalExerciciosAbaco2025}
+                </div>
+                
+                {/* Total de exercícios AH 2025 */}
+                <div 
+                  className="absolute font-abril-fatface"
+                  style={{
+                    top: `${alturaExercicios}%`,
+                    left: `${posicaoXExerciciosAH}%`,
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    color: '#000',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '30px'
+                  }}
+                >
+                  {totalExerciciosAH2025}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
-          {/* Botão de salvar PDF */}
+          {/* Botão de exportar PDF */}
           <Button
             onClick={handleSalvarPDF}
-            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
-            title="Salvar como PDF"
+            title="Exportar como PDF"
           >
             <Download className="h-5 w-5" />
           </Button>
 
           {/* Botão de impressão */}
           <Button
-            onClick={() => window.print()}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            onClick={handleImprimirComIframe}
+            className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir devolutiva"
           >
@@ -456,14 +880,14 @@ const DevolutivaFimAno: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">Altura do Nome</Label>
-                        <span className="text-sm text-muted-foreground">{alturaNome}px</span>
+                        <span className="text-sm text-muted-foreground">{alturaNome.toFixed(1)}%</span>
                       </div>
                       <Slider
                         value={[alturaNome]}
                         onValueChange={(value) => setAlturaNome(value[0])}
                         min={0}
-                        max={2000}
-                        step={10}
+                        max={100}
+                        step={0.5}
                         className="w-full"
                       />
                     </div>

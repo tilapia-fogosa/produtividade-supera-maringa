@@ -33,13 +33,45 @@ export const ActiveUnitProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Buscar unidades disponíveis para o usuário
   const fetchAvailableUnits = async () => {
-    if (!user || !profile?.unit_ids?.length) {
-      setAvailableUnits([]);
-      setLoading(false);
-      return;
-    }
-
     try {
+      // Se não há usuário, buscar unidade de Maringá como fallback
+      if (!user || !profile?.unit_ids?.length) {
+        const savedUnitId = localStorage.getItem('activeUnitId');
+        
+        if (savedUnitId) {
+          const { data: savedUnit } = await supabase
+            .from('units')
+            .select('id, name, unit_number')
+            .eq('id', savedUnitId)
+            .eq('active', true)
+            .single();
+          
+          if (savedUnit) {
+            setActiveUnitState(savedUnit);
+            setAvailableUnits([savedUnit]);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Buscar Maringá por padrão
+        const { data: maringaUnit } = await supabase
+          .from('units')
+          .select('id, name, unit_number')
+          .eq('name', 'Maringá')
+          .eq('active', true)
+          .single();
+
+        if (maringaUnit) {
+          setActiveUnitState(maringaUnit);
+          setAvailableUnits([maringaUnit]);
+          localStorage.setItem('activeUnitId', maringaUnit.id);
+        }
+        
+        setLoading(false);
+        return;
+      }
+
       const { data: units, error } = await supabase
         .from('units')
         .select('id, name, unit_number')
@@ -75,11 +107,7 @@ export const ActiveUnitProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   useEffect(() => {
-    if (profile) {
-      fetchAvailableUnits();
-    } else {
-      setLoading(false);
-    }
+    fetchAvailableUnits();
   }, [profile, user]);
 
   const value: ActiveUnitContextType = {
