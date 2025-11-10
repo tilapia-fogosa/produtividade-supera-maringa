@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save, Pencil, Check, X, Loader2, FileText } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
@@ -233,6 +233,22 @@ export default function AlunosAtivos() {
           </Badge>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/trofeus-1000-dias')}
+            className="flex items-center gap-2"
+          >
+            <Award className="w-4 h-4" />
+            Troféus
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/camisetas')}
+            className="flex items-center gap-2"
+          >
+            <Shirt className="w-4 h-4" />
+            Camisetas
+          </Button>
           <Button 
             variant="outline" 
             onClick={() => navigate('/devolutivas')}

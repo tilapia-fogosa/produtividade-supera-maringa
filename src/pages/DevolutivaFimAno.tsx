@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import templateImage from '@/assets/devolutiva-fim-ano-template.png';
+import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
@@ -8,22 +8,95 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase } from 'lucide-react';
+import { User, Briefcase, Printer, Download } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
+import { useDesafios2025 } from '@/hooks/use-desafios-2025';
+import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
+import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
+import html2pdf from 'html2pdf.js';
+
 
 const DevolutivaFimAno: React.FC = () => {
   const [tipoPessoa, setTipoPessoa] = useState<'aluno' | 'funcionario'>('aluno');
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
+  const [tamanhoFoto, setTamanhoFoto] = useState<number>(57); // Tamanho em %
+  const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
+  const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
+  const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
+  const [alturaNome, setAlturaNome] = useState<number>(240); // Posição Y do nome em px
+  const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
+  const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
+  const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
+  const [alturaExercicios] = useState<number>(155); // Altura dos exercícios em px
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
+  const { data: totalDesafios2025 = 0 } = useDesafios2025(pessoaSelecionadaId);
+  const { data: totalExerciciosAbaco2025 = 0 } = useExerciciosAbaco2025(pessoaSelecionadaId);
+  const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
   const handlePhotoSelected = () => {
     // Recarregar dados para mostrar nova foto
     refetchAlunos();
+  };
+
+  const handleSalvarPDF = async () => {
+    const elemento = document.querySelector('.a4-page') as HTMLElement;
+    
+    if (!elemento || !pessoaSelecionada) return;
+    
+    // Clonar o elemento para não afetar o DOM original
+    const clone = elemento.cloneNode(true) as HTMLElement;
+    
+    // Criar container temporário isolado
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '210mm';
+    tempContainer.style.height = '297mm';
+    tempContainer.appendChild(clone);
+    document.body.appendChild(tempContainer);
+    
+    // Configurar clone para dimensões exatas
+    clone.style.width = '210mm';
+    clone.style.height = '297mm';
+    clone.style.boxShadow = 'none';
+    clone.style.margin = '0';
+    clone.style.padding = '0';
+    
+    const opcoes = {
+      margin: 0,
+      filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
+      image: { type: 'jpeg' as const, quality: 1 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: 793.7,
+        height: 1122.5,
+        windowWidth: 793.7,
+        windowHeight: 1122.5
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' as const
+      },
+      pagebreak: { mode: 'avoid-all' }
+    };
+    
+    try {
+      await html2pdf().set(opcoes).from(clone).save();
+    } finally {
+      // Remover container temporário
+      document.body.removeChild(tempContainer);
+    }
   };
 
   // Filtrar pessoas baseado no tipo e filtros
@@ -48,7 +121,7 @@ const DevolutivaFimAno: React.FC = () => {
   const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
 
   return (
-    <div className="devolutiva-fim-ano-wrapper">
+    <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
       {/* Cabeçalho de seleção - não imprime */}
       <div className="no-print mb-6">
         <Card>
@@ -176,22 +249,231 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Página A4 impressível */}
       <div className="devolutiva-fim-ano-container">
         <div className="a4-page">
+          {/* Camada de fundo - FOTO DO ALUNO */}
+          {pessoaSelecionada?.foto_devolutiva_url && (
+            <div 
+              className="foto-aluno-background"
+              style={{
+                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                backgroundSize: `${tamanhoFoto}%`,
+                backgroundPosition: `${posicaoX}% ${posicaoY}%`
+              }}
+            />
+          )}
+          
+          {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
           <img 
-            src={templateImage} 
-            alt="2025 no Supera - Devolutiva de Fim de Ano" 
-            className="template-image"
+            src={templateOverlay} 
+            alt="Template Devolutiva" 
+            className="template-overlay"
           />
           
-          {/* Foto do aluno/funcionário sobreposta */}
-          {pessoaSelecionada?.foto_devolutiva_url && (
-            <img
-              src={pessoaSelecionada.foto_devolutiva_url}
-              alt={`Foto de ${pessoaSelecionada.nome}`}
-              className="foto-aluno-overlay"
-            />
+          {/* Nome do aluno */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-abril-fatface"
+              style={{
+                top: `${alturaNome}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: `${tamanhoFonte}px`
+              }}
+            >
+              {pessoaSelecionada.nome}
+            </div>
+          )}
+          
+          {/* Total de desafios 2025 */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-abril-fatface"
+              style={{
+                top: `${alturaExercicios}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: '30px'
+              }}
+            >
+              {totalDesafios2025}
+            </div>
+          )}
+          
+          {/* Total de exercícios ábaco 2025 */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-abril-fatface"
+              style={{
+                top: `${alturaExercicios}px`,
+                left: `${posicaoXExerciciosAbaco}%`,
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: '30px'
+              }}
+            >
+              {totalExerciciosAbaco2025}
+            </div>
+          )}
+          
+          {/* Total de exercícios AH 2025 */}
+          {pessoaSelecionada && (
+            <div 
+              className="absolute font-abril-fatface"
+              style={{
+                top: `${alturaExercicios}px`,
+                left: `${posicaoXExerciciosAH}%`,
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                color: '#000',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontSize: '30px'
+              }}
+            >
+              {totalExerciciosAH2025}
+            </div>
           )}
         </div>
       </div>
+
+      {/* Barra de controle de tamanho e posição - rodapé */}
+      {pessoaSelecionada?.foto_devolutiva_url && (
+        <>
+          {/* Botão de salvar PDF */}
+          <Button
+            onClick={handleSalvarPDF}
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+            title="Salvar como PDF"
+          >
+            <Download className="h-5 w-5" />
+          </Button>
+
+          {/* Botão de impressão */}
+          <Button
+            onClick={() => window.print()}
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+            title="Imprimir devolutiva"
+          >
+            <Printer className="h-5 w-5" />
+          </Button>
+
+          {/* Botão para mostrar/ocultar controles */}
+          <Button
+            onClick={() => setMostrarControles(!mostrarControles)}
+            className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
+            variant="default"
+          >
+            {mostrarControles ? '×' : '☰'}
+          </Button>
+
+          {/* Barra de controles */}
+          {mostrarControles && (
+            <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-40">
+              <div className="max-w-6xl mx-auto space-y-4">
+                {/* Controle de tamanho */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Tamanho da Foto</Label>
+                    <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
+                  </div>
+                  <Slider
+                    value={[tamanhoFoto]}
+                    onValueChange={(value) => setTamanhoFoto(value[0])}
+                    min={50}
+                    max={200}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Controles de posição */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Posição X */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">Posição X (Horizontal)</Label>
+                      <span className="text-sm text-muted-foreground">{posicaoX}%</span>
+                    </div>
+                    <Slider
+                      value={[posicaoX]}
+                      onValueChange={(value) => setPosicaoX(value[0])}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Posição Y */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">Posição Y (Vertical)</Label>
+                      <span className="text-sm text-muted-foreground">{posicaoY}%</span>
+                    </div>
+                    <Slider
+                      value={[posicaoY]}
+                      onValueChange={(value) => setPosicaoY(value[0])}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Controles do nome */}
+                {pessoaSelecionada && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    {/* Tamanho da fonte */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Tamanho da Fonte</Label>
+                        <span className="text-sm text-muted-foreground">{tamanhoFonte}px</span>
+                      </div>
+                      <Slider
+                        value={[tamanhoFonte]}
+                        onValueChange={(value) => setTamanhoFonte(value[0])}
+                        min={20}
+                        max={80}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Altura do nome */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Altura do Nome</Label>
+                        <span className="text-sm text-muted-foreground">{alturaNome}px</span>
+                      </div>
+                      <Slider
+                        value={[alturaNome]}
+                        onValueChange={(value) => setAlturaNome(value[0])}
+                        min={0}
+                        max={2000}
+                        step={10}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
