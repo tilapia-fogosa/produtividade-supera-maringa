@@ -982,6 +982,7 @@ export type Database = {
           photo_url: string | null
           responsavel: string
           rg: string | null
+          sincronizar_agenda_google: boolean
           status_sincronizacao: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id: string | null
           updated_at: string
@@ -1032,6 +1033,7 @@ export type Database = {
           photo_url?: string | null
           responsavel?: string
           rg?: string | null
+          sincronizar_agenda_google?: boolean
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
           updated_at?: string
@@ -1082,6 +1084,7 @@ export type Database = {
           photo_url?: string | null
           responsavel?: string
           rg?: string | null
+          sincronizar_agenda_google?: boolean
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
           updated_at?: string

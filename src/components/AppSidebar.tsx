@@ -3,11 +3,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Package, 
-  MessageCircle, 
   CalendarDays, 
   ClipboardList, 
   User, 
-  FileText, 
   Users, 
   Calendar, 
   LogOut,
@@ -18,8 +16,6 @@ import {
   Building,
   Shield,
   FileSpreadsheet,
-  Trophy,
-  Shirt,
   ListChecks,
   MapPin,
   AlertTriangle
@@ -53,11 +49,6 @@ const items = [
     icon: ListChecks,
   },
   {
-    title: "Diário de Turma", 
-    url: "/diario",
-    icon: CalendarDays,
-  },
-  {
     title: "Calendário de Aulas",
     url: "/calendario-aulas", 
     icon: Calendar,
@@ -76,16 +67,6 @@ const items = [
     title: "Estoque",
     url: "/estoque",
     icon: Package,
-  },
-  {
-    title: "Devolutivas",
-    url: "/devolutivas",
-    icon: MessageCircle,
-  },
-  {
-    title: "Fichas",
-    url: "/fichas",
-    icon: FileText,
   },
   {
     title: "Funcionários",
@@ -125,16 +106,6 @@ const items = [
     url: "/retencoes",
     icon: Shield,
     requiresAdmin: true,
-  },
-  {
-    title: "Troféus 1000 Dias",
-    url: "/trofeus-1000-dias",
-    icon: Trophy,
-  },
-  {
-    title: "Camisetas",
-    url: "/camisetas",
-    icon: Shirt,
   },
 ];
 

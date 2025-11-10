@@ -1,16 +1,18 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save, Pencil, Check, X, Loader2, FileText } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
 type SortDirection = 'asc' | 'desc';
 export default function AlunosAtivos() {
+  const navigate = useNavigate();
   const { 
     alunos, 
     loading, 
@@ -223,11 +225,31 @@ export default function AlunosAtivos() {
       </div>;
   }
   return <div className="p-4 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Alunos Ativos</h1>
-        <Badge variant="secondary" className="text-sm bg-purple-400">
-          {alunosFiltrados.length} de {alunos.length} pessoas
-        </Badge>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Alunos Ativos</h1>
+          <Badge variant="secondary" className="text-sm bg-purple-400 mt-2">
+            {alunosFiltrados.length} de {alunos.length} pessoas
+          </Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/devolutivas')}
+            className="flex items-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Devolutivas
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/fichas')}
+            className="flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Fichas
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
