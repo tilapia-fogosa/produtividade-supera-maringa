@@ -214,7 +214,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Nome do aluno */}
           {pessoaSelecionada && (
             <div 
-              className="absolute font-mencken"
+              className="absolute font-abril-fatface"
               style={{
                 top: `${alturaNome}px`,
                 left: '50%',
@@ -233,7 +233,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Total de desafios 2025 */}
           {pessoaSelecionada && (
             <div 
-              className="absolute font-mencken"
+              className="absolute font-abril-fatface"
               style={{
                 top: '150px',
                 left: '50%',
@@ -252,7 +252,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Total de exercícios ábaco 2025 */}
           {pessoaSelecionada && (
             <div 
-              className="absolute font-mencken"
+              className="absolute font-abril-fatface"
               style={{
                 top: '150px',
                 left: `${posicaoXExerciciosAbaco}%`,
@@ -271,7 +271,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Total de exercícios AH 2025 */}
           {pessoaSelecionada && (
             <div 
-              className="absolute font-mencken"
+              className="absolute font-abril-fatface"
               style={{
                 top: '150px',
                 left: `${posicaoXExerciciosAH}%`,
