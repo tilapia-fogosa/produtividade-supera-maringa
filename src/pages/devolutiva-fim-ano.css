@@ -100,6 +100,6 @@
 
 /* Configuração de página para impressão */
 @page {
-  size: A4;
+  size: A4 portrait;
   margin: 0;
 }
