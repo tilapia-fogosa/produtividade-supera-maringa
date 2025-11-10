@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer, Download } from 'lucide-react';
+import { User, Briefcase, Printer } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -378,30 +378,10 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
-          {/* Botão de abrir página de impressão */}
-          <Button
-            onClick={handleAbrirPaginaImpressao}
-            className="no-print fixed bottom-4 right-52 z-50 rounded-full w-12 h-12 p-0"
-            variant="default"
-            title="Abrir página de impressão"
-          >
-            <Printer className="h-5 w-5" />
-          </Button>
-
-          {/* Botão de salvar PDF */}
-          <Button
-            onClick={handleSalvarPDF}
-            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
-            variant="default"
-            title="Salvar como PDF"
-          >
-            <Download className="h-5 w-5" />
-          </Button>
-
           {/* Botão de impressão */}
           <Button
             onClick={() => window.print()}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir devolutiva"
           >
