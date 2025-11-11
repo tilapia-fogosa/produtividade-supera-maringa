@@ -686,8 +686,8 @@ const DevolutivaFimAno: React.FC = () => {
                     className="foto-aluno-background"
                     style={{
                       backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
-                      backgroundSize: `${tamanhoFoto}%`,
-                      backgroundPosition: `${posicaoX}% ${posicaoY}%`,
+                      backgroundSize: versaoTemplate === 1 ? '76%' : `${tamanhoFoto}%`,
+                      backgroundPosition: versaoTemplate === 1 ? '48% 46%' : `${posicaoX}% ${posicaoY}%`,
                       position: 'absolute',
                       top: 0,
                       left: 0,
