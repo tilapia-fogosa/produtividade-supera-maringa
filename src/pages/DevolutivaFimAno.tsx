@@ -36,6 +36,7 @@ const DevolutivaFimAno: React.FC = () => {
   const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
+  const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
   
   // Selecionar template baseado na versão
   const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
@@ -48,8 +49,10 @@ const DevolutivaFimAno: React.FC = () => {
   const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
   const handlePhotoSelected = () => {
+    // Atualizar cache buster para forçar recarregamento da foto
+    setCacheBuster(Date.now());
     // Recarregar dados para mostrar nova foto
-    refetchAlunos();
+    setTimeout(() => refetchAlunos(), 500);
   };
 
   const handleAbrirPaginaImpressao = () => {
@@ -682,7 +685,7 @@ const DevolutivaFimAno: React.FC = () => {
                   <div 
                     className="foto-aluno-background"
                     style={{
-                      backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                      backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
                       backgroundSize: `${tamanhoFoto}%`,
                       backgroundPosition: `${posicaoX}% ${posicaoY}%`,
                       position: 'absolute',
