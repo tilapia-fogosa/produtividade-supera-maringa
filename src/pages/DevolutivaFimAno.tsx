@@ -28,7 +28,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
   const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
-  const [alturaNome, setAlturaNome] = useState<number>(19.5); // Posição Y do nome em %
+  const alturaNome = 22; // Posição Y do nome em % (fixo)
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
@@ -859,7 +859,7 @@ const DevolutivaFimAno: React.FC = () => {
 
                 {/* Controles do nome */}
                 {pessoaSelecionada && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                  <div className="pt-4 border-t">
                     {/* Tamanho da fonte */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -872,22 +872,6 @@ const DevolutivaFimAno: React.FC = () => {
                         min={20}
                         max={80}
                         step={1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    {/* Altura do nome */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Altura do Nome</Label>
-                        <span className="text-sm text-muted-foreground">{alturaNome.toFixed(1)}%</span>
-                      </div>
-                      <Slider
-                        value={[alturaNome]}
-                        onValueChange={(value) => setAlturaNome(value[0])}
-                        min={0}
-                        max={100}
-                        step={0.5}
                         className="w-full"
                       />
                     </div>
