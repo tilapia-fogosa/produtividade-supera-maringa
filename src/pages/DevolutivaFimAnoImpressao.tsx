@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import templateV1 from '@/assets/devolutiva-fim-ano-template.png';
+import templateV1 from '@/assets/devolutiva-fim-ano-template-v3.png';
 import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 
