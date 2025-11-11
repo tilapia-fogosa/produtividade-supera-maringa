@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
+import templateV1 from '@/assets/devolutiva-fim-ano-template.png';
+import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
@@ -34,6 +35,10 @@ const DevolutivaFimAno: React.FC = () => {
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
   const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
+  const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
+  
+  // Selecionar template baseado na versão
+  const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -64,7 +69,8 @@ const DevolutivaFimAno: React.FC = () => {
       posicaoXExerciciosAH,
       totalDesafios: totalDesafios2025,
       totalExerciciosAbaco: totalExerciciosAbaco2025,
-      totalExerciciosAH: totalExerciciosAH2025
+      totalExerciciosAH: totalExerciciosAH2025,
+      versaoTemplate // Incluir versão do template
     };
     
     sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
@@ -773,10 +779,30 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
+          {/* Botões de seleção de versão */}
+          <div className="no-print fixed bottom-4 left-4 z-50 flex gap-2">
+            <Button
+              onClick={() => setVersaoTemplate(1)}
+              className={`rounded-full w-12 h-12 p-0 ${versaoTemplate === 1 ? 'ring-2 ring-primary' : ''}`}
+              variant={versaoTemplate === 1 ? "default" : "outline"}
+              title="Versão 1"
+            >
+              V1
+            </Button>
+            <Button
+              onClick={() => setVersaoTemplate(2)}
+              className={`rounded-full w-12 h-12 p-0 ${versaoTemplate === 2 ? 'ring-2 ring-primary' : ''}`}
+              variant={versaoTemplate === 2 ? "default" : "outline"}
+              title="Versão 2"
+            >
+              V2
+            </Button>
+          </div>
+        
           {/* Botão de exportar PDF */}
           <Button
             onClick={handleSalvarPDF}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Exportar como PDF"
           >
@@ -786,7 +812,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de impressão */}
           <Button
             onClick={handleImprimirComIframe}
-            className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir devolutiva"
           >

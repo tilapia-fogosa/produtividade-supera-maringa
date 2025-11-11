@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
+import templateV1 from '@/assets/devolutiva-fim-ano-template.png';
+import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 
 const DevolutivaFimAnoImpressao: React.FC = () => {
@@ -22,6 +23,9 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
       </div>
     );
   }
+
+  // Selecionar template baseado na versão
+  const templateOverlay = dadosPessoa.versaoTemplate === 1 ? templateV1 : templateV2;
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ padding: 0, minHeight: '100vh' }}>
