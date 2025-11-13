@@ -99,7 +99,7 @@ const items = [
   },
   {
     title: "Devolutivas Fim de Ano",
-    url: "/devolutiva-fim-ano",
+    url: "/devolutivas/devolutiva-fim-ano",
     icon: Award,
   },
   {
