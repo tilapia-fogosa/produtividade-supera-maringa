@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { compressImageIfNeeded } from './imageCompressionService';
 
 export interface DownloadAndUploadResult {
   success: boolean;
@@ -21,17 +22,20 @@ export async function uploadLocalFileToSupabase(
 
     console.log('✅ Arquivo válido:', { size: file.size, type: file.type });
 
-    // 2. Upload para Supabase Storage
+    // 2. Comprimir imagem se necessário
+    const processedFile = await compressImageIfNeeded(file);
+
+    // 3. Upload para Supabase Storage
     console.log('☁️ Iniciando upload para Supabase...');
     const timestamp = Date.now();
-    const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const sanitizedFileName = processedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const storagePath = `devolutivas/${tipoPessoa}/${pessoaId}/${timestamp}-${sanitizedFileName}`;
     console.log('📁 Caminho no storage:', storagePath);
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('fotos-pessoas')
-      .upload(storagePath, file, {
-        contentType: file.type,
+      .upload(storagePath, processedFile, {
+        contentType: processedFile.type,
         upsert: false,
       });
 
@@ -42,7 +46,7 @@ export async function uploadLocalFileToSupabase(
     
     console.log('✅ Upload concluído:', uploadData);
 
-    // 3. Obter URL pública
+    // 4. Obter URL pública
     console.log('🔗 Obtendo URL pública...');
     const { data: urlData } = supabase.storage
       .from('fotos-pessoas')
@@ -51,7 +55,7 @@ export async function uploadLocalFileToSupabase(
     const publicUrl = urlData.publicUrl;
     console.log('✅ URL pública gerada:', publicUrl);
 
-    // 4. Atualizar banco de dados
+    // 5. Atualizar banco de dados
     const tabela = tipoPessoa === 'aluno' ? 'alunos' : 'funcionarios';
     console.log(`💾 Atualizando tabela ${tabela}...`);
     

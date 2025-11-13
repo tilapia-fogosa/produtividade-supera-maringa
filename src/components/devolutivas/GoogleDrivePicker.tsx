@@ -35,6 +35,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
   const [manualError, setManualError] = useState<string | null>(null);
   // Upload de arquivo local
   const [uploadingLocal, setUploadingLocal] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [localFileError, setLocalFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -276,7 +277,17 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
 
     setLocalFileError(null);
     setUploadingLocal(true);
-    setLoadingStatus('Fazendo upload do arquivo...');
+    setCompressing(false);
+
+    // Verificar se precisa comprimir
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 5) {
+      setCompressing(true);
+      setLoadingStatus('Comprimindo imagem grande...');
+      console.log('🗜️ Imagem grande detectada, comprimindo...');
+    } else {
+      setLoadingStatus('Fazendo upload do arquivo...');
+    }
 
     console.log('📁 Arquivo selecionado:', { name: file.name, size: file.size, type: file.type });
 
@@ -300,6 +311,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
       setLocalFileError(errorMsg);
     } finally {
       setUploadingLocal(false);
+      setCompressing(false);
       // Limpar input para permitir selecionar o mesmo arquivo novamente
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -342,7 +354,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
             {uploadingLocal ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Fazendo upload...
+                {compressing ? 'Comprimindo imagem grande...' : 'Fazendo upload...'}
               </>
             ) : (
               <>
