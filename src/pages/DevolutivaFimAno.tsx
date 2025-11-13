@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
+import templateV1 from '@/assets/devolutiva-fim-ano-template-v3.png';
+import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
@@ -24,16 +25,29 @@ const DevolutivaFimAno: React.FC = () => {
   const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState<string>('');
   const [turmaFiltro, setTurmaFiltro] = useState<string>('todas');
   const [professorFiltro, setProfessorFiltro] = useState<string>('todos');
-  const [tamanhoFoto, setTamanhoFoto] = useState<number>(57); // Tamanho em %
-  const [posicaoX, setPosicaoX] = useState<number>(10); // Posição inicial em %
-  const [posicaoY, setPosicaoY] = useState<number>(55); // Posição inicial em %
+  
+  // Estados separados para V1
+  const [tamanhoFotoV1, setTamanhoFotoV1] = useState<number>(76);
+  const [posicaoXV1, setPosicaoXV1] = useState<number>(48);
+  const [posicaoYV1, setPosicaoYV1] = useState<number>(46);
+  
+  // Estados separados para V2
+  const [tamanhoFotoV2, setTamanhoFotoV2] = useState<number>(56);
+  const [posicaoXV2, setPosicaoXV2] = useState<number>(10);
+  const [posicaoYV2, setPosicaoYV2] = useState<number>(58);
+  
   const [tamanhoFonte, setTamanhoFonte] = useState<number>(40); // Tamanho da fonte em px
-  const [alturaNome, setAlturaNome] = useState<number>(19.5); // Posição Y do nome em %
+  const alturaNome = 22; // Posição Y do nome em % (fixo)
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
   const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
+  const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
+  const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
+  
+  // Selecionar template baseado na versão
+  const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
 
   const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
@@ -43,9 +57,16 @@ const DevolutivaFimAno: React.FC = () => {
   const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
   const handlePhotoSelected = () => {
+    // Atualizar cache buster para forçar recarregamento da foto
+    setCacheBuster(Date.now());
     // Recarregar dados para mostrar nova foto
-    refetchAlunos();
+    setTimeout(() => refetchAlunos(), 500);
   };
+
+  // Valores computados baseados na versão selecionada
+  const tamanhoFoto = versaoTemplate === 1 ? tamanhoFotoV1 : tamanhoFotoV2;
+  const posicaoX = versaoTemplate === 1 ? posicaoXV1 : posicaoXV2;
+  const posicaoY = versaoTemplate === 1 ? posicaoYV1 : posicaoYV2;
 
   const handleAbrirPaginaImpressao = () => {
     if (!pessoaSelecionada) return;
@@ -64,7 +85,8 @@ const DevolutivaFimAno: React.FC = () => {
       posicaoXExerciciosAH,
       totalDesafios: totalDesafios2025,
       totalExerciciosAbaco: totalExerciciosAbaco2025,
-      totalExerciciosAH: totalExerciciosAH2025
+      totalExerciciosAH: totalExerciciosAH2025,
+      versaoTemplate // Incluir versão do template
     };
     
     sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
@@ -676,7 +698,7 @@ const DevolutivaFimAno: React.FC = () => {
                   <div 
                     className="foto-aluno-background"
                     style={{
-                      backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                      backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
                       backgroundSize: `${tamanhoFoto}%`,
                       backgroundPosition: `${posicaoX}% ${posicaoY}%`,
                       position: 'absolute',
@@ -773,10 +795,30 @@ const DevolutivaFimAno: React.FC = () => {
       {/* Barra de controle de tamanho e posição - rodapé */}
       {pessoaSelecionada?.foto_devolutiva_url && (
         <>
+          {/* Botões de seleção de versão */}
+          <div className="no-print fixed bottom-4 left-4 z-50 flex gap-2">
+            <Button
+              onClick={() => setVersaoTemplate(1)}
+              className={`rounded-full w-12 h-12 p-0 ${versaoTemplate === 1 ? 'ring-2 ring-primary' : ''}`}
+              variant={versaoTemplate === 1 ? "default" : "outline"}
+              title="Versão 1"
+            >
+              V1
+            </Button>
+            <Button
+              onClick={() => setVersaoTemplate(2)}
+              className={`rounded-full w-12 h-12 p-0 ${versaoTemplate === 2 ? 'ring-2 ring-primary' : ''}`}
+              variant={versaoTemplate === 2 ? "default" : "outline"}
+              title="Versão 2"
+            >
+              V2
+            </Button>
+          </div>
+        
           {/* Botão de exportar PDF */}
           <Button
             onClick={handleSalvarPDF}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Exportar como PDF"
           >
@@ -786,7 +828,7 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de impressão */}
           <Button
             onClick={handleImprimirComIframe}
-            className="no-print fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir devolutiva"
           >
@@ -809,12 +851,18 @@ const DevolutivaFimAno: React.FC = () => {
                 {/* Controle de tamanho */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Tamanho da Foto</Label>
+                    <Label className="text-sm font-semibold">Tamanho da Foto (V{versaoTemplate})</Label>
                     <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
                   </div>
                   <Slider
                     value={[tamanhoFoto]}
-                    onValueChange={(value) => setTamanhoFoto(value[0])}
+                    onValueChange={(value) => {
+                      if (versaoTemplate === 1) {
+                        setTamanhoFotoV1(value[0]);
+                      } else {
+                        setTamanhoFotoV2(value[0]);
+                      }
+                    }}
                     min={50}
                     max={200}
                     step={1}
@@ -827,12 +875,18 @@ const DevolutivaFimAno: React.FC = () => {
                   {/* Posição X */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Posição X (Horizontal)</Label>
+                      <Label className="text-sm font-semibold">Posição X (Horizontal) - V{versaoTemplate}</Label>
                       <span className="text-sm text-muted-foreground">{posicaoX}%</span>
                     </div>
                     <Slider
                       value={[posicaoX]}
-                      onValueChange={(value) => setPosicaoX(value[0])}
+                      onValueChange={(value) => {
+                        if (versaoTemplate === 1) {
+                          setPosicaoXV1(value[0]);
+                        } else {
+                          setPosicaoXV2(value[0]);
+                        }
+                      }}
                       min={0}
                       max={100}
                       step={1}
@@ -843,12 +897,18 @@ const DevolutivaFimAno: React.FC = () => {
                   {/* Posição Y */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Posição Y (Vertical)</Label>
+                      <Label className="text-sm font-semibold">Posição Y (Vertical) - V{versaoTemplate}</Label>
                       <span className="text-sm text-muted-foreground">{posicaoY}%</span>
                     </div>
                     <Slider
                       value={[posicaoY]}
-                      onValueChange={(value) => setPosicaoY(value[0])}
+                      onValueChange={(value) => {
+                        if (versaoTemplate === 1) {
+                          setPosicaoYV1(value[0]);
+                        } else {
+                          setPosicaoYV2(value[0]);
+                        }
+                      }}
                       min={0}
                       max={100}
                       step={1}
@@ -859,7 +919,7 @@ const DevolutivaFimAno: React.FC = () => {
 
                 {/* Controles do nome */}
                 {pessoaSelecionada && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                  <div className="pt-4 border-t">
                     {/* Tamanho da fonte */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -872,22 +932,6 @@ const DevolutivaFimAno: React.FC = () => {
                         min={20}
                         max={80}
                         step={1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    {/* Altura do nome */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Altura do Nome</Label>
-                        <span className="text-sm text-muted-foreground">{alturaNome.toFixed(1)}%</span>
-                      </div>
-                      <Slider
-                        value={[alturaNome]}
-                        onValueChange={(value) => setAlturaNome(value[0])}
-                        min={0}
-                        max={100}
-                        step={0.5}
                         className="w-full"
                       />
                     </div>

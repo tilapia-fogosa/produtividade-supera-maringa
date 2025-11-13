@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import templateOverlay from '@/assets/devolutiva-fim-ano-template-v2.png';
+import templateV1 from '@/assets/devolutiva-fim-ano-template-v3.png';
+import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 
 const DevolutivaFimAnoImpressao: React.FC = () => {
@@ -23,6 +24,9 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
     );
   }
 
+  // Selecionar template baseado na versão
+  const templateOverlay = dadosPessoa.versaoTemplate === 1 ? templateV1 : templateV2;
+
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ padding: 0, minHeight: '100vh' }}>
       <div className="devolutiva-fim-ano-container" style={{ padding: 0 }}>
@@ -33,8 +37,8 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
               className="foto-aluno-background"
               style={{
                 backgroundImage: `url(${dadosPessoa.fotoUrl})`,
-                backgroundSize: `${dadosPessoa.tamanhoFoto}%`,
-                backgroundPosition: `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
+                backgroundSize: dadosPessoa.versaoTemplate === 1 ? '76%' : `${dadosPessoa.tamanhoFoto}%`,
+                backgroundPosition: dadosPessoa.versaoTemplate === 1 ? '48% 46%' : `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
               }}
             />
           )}
