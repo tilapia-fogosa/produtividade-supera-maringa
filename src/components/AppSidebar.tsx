@@ -18,7 +18,8 @@ import {
   FileSpreadsheet,
   ListChecks,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  Award
 } from "lucide-react";
 import {
   Sidebar,
@@ -95,6 +96,11 @@ const items = [
     title: "Projeto São Rafael",
     url: "/projeto-sao-rafael",
     icon: Target,
+  },
+  {
+    title: "Devolutivas Fim de Ano",
+    url: "/devolutiva-fim-ano",
+    icon: Award,
   },
   {
     title: "Gestão de Retenções",
