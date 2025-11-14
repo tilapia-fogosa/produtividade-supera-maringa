@@ -1,7 +1,9 @@
 import imageCompression from 'browser-image-compression';
 
-const MAX_SIZE_MB = 5; // 5MB - limiar para compressão
-const TARGET_SIZE_MB = 4; // 4MB - tamanho alvo após compressão
+// DESABILITADO: Compressão automática removida para manter qualidade máxima
+// O bucket agora não tem limite de tamanho, permitindo imagens em alta qualidade
+const MAX_SIZE_MB = 50; // 50MB - apenas para arquivos extremamente grandes
+const TARGET_SIZE_MB = 20; // 20MB - tamanho alvo após compressão (apenas backup)
 
 export async function compressImageIfNeeded(file: File): Promise<File> {
   const fileSizeMB = file.size / (1024 * 1024);
@@ -12,9 +14,9 @@ export async function compressImageIfNeeded(file: File): Promise<File> {
     tipo: file.type
   });
   
-  // Se <= 5MB, não comprimir
+  // Agora aceita imagens até 50MB sem compressão (qualidade máxima)
   if (fileSizeMB <= MAX_SIZE_MB) {
-    console.log('✅ Imagem OK, sem necessidade de compressão');
+    console.log('✅ Imagem aceita sem compressão - qualidade máxima mantida');
     return file;
   }
   
