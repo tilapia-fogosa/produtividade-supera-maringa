@@ -609,40 +609,34 @@ const DevolutivaFimAno: React.FC = () => {
             {mostrarControles ? '×' : '☰'}
           </Button>
 
-          {/* Barra de controles */}
+          {/* Barra de controles - Design Minimalista */}
           {mostrarControles && (
-            <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-40">
-              <div className="max-w-6xl mx-auto space-y-4">
-                {/* Controle de tamanho */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Tamanho da Foto (V{versaoTemplate})</Label>
-                    <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
+            <div className="no-print fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg py-2 px-3 z-40">
+              <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                  {/* Tamanho da Foto */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Tamanho</span>
+                    <Slider
+                      value={[tamanhoFoto]}
+                      onValueChange={(value) => {
+                        if (versaoTemplate === 1) {
+                          setTamanhoFotoV1(value[0]);
+                        } else {
+                          setTamanhoFotoV2(value[0]);
+                        }
+                      }}
+                      min={50}
+                      max={200}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{tamanhoFoto}%</span>
                   </div>
-                  <Slider
-                    value={[tamanhoFoto]}
-                    onValueChange={(value) => {
-                      if (versaoTemplate === 1) {
-                        setTamanhoFotoV1(value[0]);
-                      } else {
-                        setTamanhoFotoV2(value[0]);
-                      }
-                    }}
-                    min={50}
-                    max={200}
-                    step={1}
-                    className="w-full"
-                  />
-                </div>
 
-                {/* Controles de posição */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Posição X */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Posição X (Horizontal) - V{versaoTemplate}</Label>
-                      <span className="text-sm text-muted-foreground">{posicaoX}%</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Pos. X</span>
                     <Slider
                       value={[posicaoX]}
                       onValueChange={(value) => {
@@ -655,16 +649,14 @@ const DevolutivaFimAno: React.FC = () => {
                       min={0}
                       max={100}
                       step={1}
-                      className="w-full"
+                      className="flex-1"
                     />
+                    <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{posicaoX}%</span>
                   </div>
 
                   {/* Posição Y */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Posição Y (Vertical) - V{versaoTemplate}</Label>
-                      <span className="text-sm text-muted-foreground">{posicaoY}%</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Pos. Y</span>
                     <Slider
                       value={[posicaoY]}
                       onValueChange={(value) => {
@@ -677,31 +669,27 @@ const DevolutivaFimAno: React.FC = () => {
                       min={0}
                       max={100}
                       step={1}
-                      className="w-full"
+                      className="flex-1"
                     />
+                    <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{posicaoY}%</span>
                   </div>
-                </div>
 
-                {/* Controles do nome */}
-                {pessoaSelecionada && (
-                  <div className="pt-4 border-t">
-                    {/* Tamanho da fonte */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Tamanho da Fonte</Label>
-                        <span className="text-sm text-muted-foreground">{tamanhoFonte}px</span>
-                      </div>
+                  {/* Tamanho da Fonte */}
+                  {pessoaSelecionada && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Fonte</span>
                       <Slider
                         value={[tamanhoFonte]}
                         onValueChange={(value) => setTamanhoFonte(value[0])}
                         min={20}
                         max={80}
                         step={1}
-                        className="w-full"
+                        className="flex-1"
                       />
+                      <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{tamanhoFonte}px</span>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           )}
