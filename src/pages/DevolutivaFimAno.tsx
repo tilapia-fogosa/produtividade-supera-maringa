@@ -130,17 +130,23 @@ const DevolutivaFimAno: React.FC = () => {
     const opcoes = {
       margin: 0,
       filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'jpeg' as const, quality: 1 },
+      image: { type: 'png' as const, quality: 1 },
       html2canvas: { 
-        scale: 1,
+        scale: 4, // Aumentado de 1 para 4 para máxima qualidade
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        allowTaint: true,
+        imageTimeout: 0,
+        removeContainer: true,
+        letterRendering: true,
+        foreignObjectRendering: false
       },
       jsPDF: { 
         unit: 'mm', 
         format: 'a4', 
-        orientation: 'portrait' as const
+        orientation: 'portrait' as const,
+        compress: false // Desabilitar compressão para manter qualidade
       },
       pagebreak: { mode: 'avoid-all' }
     };

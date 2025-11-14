@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { compressImageIfNeeded } from './imageCompressionService';
 
 export interface DownloadAndUploadResult {
   success: boolean;
@@ -22,8 +21,8 @@ export async function uploadLocalFileToSupabase(
 
     console.log('✅ Arquivo válido:', { size: file.size, type: file.type });
 
-    // 2. Comprimir imagem se necessário
-    const processedFile = await compressImageIfNeeded(file);
+    // Upload direto sem compressão para manter qualidade máxima
+    const processedFile = file;
 
     // 3. Upload para Supabase Storage
     console.log('☁️ Iniciando upload para Supabase...');
