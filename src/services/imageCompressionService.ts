@@ -25,10 +25,10 @@ export async function compressImageIfNeeded(file: File): Promise<File> {
   try {
     const options = {
       maxSizeMB: TARGET_SIZE_MB,
-      maxWidthOrHeight: 2048, // Limitar dimensão máxima
+      maxWidthOrHeight: 4096, // Aumentado para 4096px para máxima qualidade
       useWebWorker: true, // Usar Web Worker para não travar UI
       fileType: file.type, // Manter formato original
-      initialQuality: 0.8, // Qualidade inicial (80%)
+      initialQuality: 0.95, // Qualidade aumentada para 95%
     };
     
     const compressedFile = await imageCompression(file, options);
