@@ -178,235 +178,6 @@ const DevolutivaFimAno: React.FC = () => {
 
   const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
 
-  const handleImprimirComIframe = () => {
-    const elemento = document.querySelector('.a4-page') as HTMLElement;
-    if (!elemento || !pessoaSelecionada) return;
-
-    // Criar iframe invisível
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = 'none';
-    iframe.style.visibility = 'hidden';
-    document.body.appendChild(iframe);
-
-    const iframeDoc = iframe.contentWindow?.document;
-    if (!iframeDoc) return;
-
-    // Copiar estilos CSS necessários
-    const estilosPagina = `
-      <style>
-        @font-face {
-          font-family: 'Mencken';
-          src: url('/src/assets/fonts/Mencken-Std-Text-Extra-Bold.otf') format('opentype');
-          font-weight: 800;
-          font-style: normal;
-        }
-
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        @page {
-          size: A4 portrait;
-          margin: 0;
-        }
-
-        html, body {
-          margin: 0;
-          padding: 0;
-          width: 210mm;
-          height: 297mm;
-          overflow: hidden;
-        }
-
-        .a4-page {
-          width: 210mm;
-          height: 297mm;
-          position: relative;
-          overflow: hidden;
-          background: white;
-          margin: 0;
-          padding: 0;
-          page-break-after: avoid;
-        }
-
-        .foto-aluno-background {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-repeat: no-repeat;
-          z-index: 1;
-        }
-
-        .template-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .font-abril-fatface {
-          font-family: 'Mencken', serif;
-          font-weight: 800;
-        }
-
-        .absolute {
-          position: absolute;
-        }
-
-        @media print {
-          html, body {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-          }
-
-          .a4-page {
-            width: 210mm !important;
-            height: 297mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            page-break-after: avoid !important;
-          }
-        }
-      </style>
-    `;
-
-    // Preparar HTML com apenas o conteúdo necessário
-    const fotoHtml = pessoaSelecionada?.foto_devolutiva_url ? `
-      <div 
-        class="foto-aluno-background"
-        style="
-          background-image: url(${pessoaSelecionada.foto_devolutiva_url});
-          background-size: ${tamanhoFoto}%;
-          background-position: ${posicaoX}% ${posicaoY}%;
-        "
-      ></div>
-    ` : '';
-
-    const conteudoHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Devolutiva</title>
-          ${estilosPagina}
-        </head>
-        <body>
-          <div class="a4-page">
-            ${fotoHtml}
-            <img 
-              src="${templateOverlay}" 
-              alt="Template" 
-              class="template-overlay"
-            />
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaNome}%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: ${tamanhoFonte}px;
-              "
-            >
-              ${pessoaSelecionada.nome}
-            </div>
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaExercicios}%;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: 30px;
-              "
-            >
-              ${totalDesafios2025}
-            </div>
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaExercicios}%;
-                left: ${posicaoXExerciciosAbaco}%;
-                transform: translateX(-50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: 30px;
-              "
-            >
-              ${totalExerciciosAbaco2025}
-            </div>
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaExercicios}%;
-                left: ${posicaoXExerciciosAH}%;
-                transform: translateX(-50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: 30px;
-              "
-            >
-              ${totalExerciciosAH2025}
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    // Escrever no iframe
-    iframeDoc.open();
-    iframeDoc.write(conteudoHtml);
-    iframeDoc.close();
-
-    // Aguardar carregamento das imagens
-    const imgTemplate = iframeDoc.querySelector('.template-overlay') as HTMLImageElement;
-    
-    const imprimir = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.print();
-        
-        // Remover iframe após impressão
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 100);
-      }, 500);
-    };
-
-    if (imgTemplate) {
-      if (imgTemplate.complete) {
-        imprimir();
-      } else {
-        imgTemplate.onload = imprimir;
-      }
-    } else {
-      imprimir();
-    }
-  };
-
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
       {/* Cabeçalho */}
@@ -668,15 +439,15 @@ const DevolutivaFimAno: React.FC = () => {
                   size="sm"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Exportar PDF
+                  Exportar PDF (Recomendado)
                 </Button>
                 <Button
-                  onClick={handleImprimirComIframe}
-                  variant="default"
+                  onClick={() => window.print()}
+                  variant="outline"
                   size="sm"
                 >
                   <Printer className="mr-2 h-4 w-4" />
-                  Imprimir
+                  Impressão Rápida (Ctrl+P)
                 </Button>
                 <Button
                   onClick={() => setMostrarPreview(false)}
@@ -822,21 +593,11 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de exportar PDF */}
           <Button
             onClick={handleSalvarPDF}
-            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
-            variant="default"
-            title="Exportar como PDF"
-          >
-            <Download className="h-5 w-5" />
-          </Button>
-
-          {/* Botão de impressão */}
-          <Button
-            onClick={handleImprimirComIframe}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
-            title="Imprimir devolutiva"
+            title="Exportar PDF em alta qualidade (300 DPI) - Recomendado para impressão profissional"
           >
-            <Printer className="h-5 w-5" />
+            <Download className="h-5 w-5" />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}

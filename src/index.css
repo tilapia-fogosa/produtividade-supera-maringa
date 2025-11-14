@@ -132,7 +132,7 @@
 @media print {
   /* Configurações da página para impressão */
   @page {
-    margin: 0.3in 0.5in; /* Margens reduzidas */
+    margin: 0; /* Sem margens - páginas específicas podem sobrescrever */
     /* Tenta remover cabeçalhos e rodapés do navegador */
     @top-left { content: ""; }
     @top-center { content: ""; }
