@@ -12,41 +12,42 @@ export const useCorretores = (unitId?: string) => {
     const fetchCorretores = async () => {
       try {
         setIsLoading(true);
+        console.log('Buscando corretores usando view unificada...');
         
-        // Buscar professores
-        const { data: professores, error: profError } = await supabase
-          .from('professores')
+        // Usar a view unificada corretores_view que já filtra por active = true
+        let query = supabase
+          .from('corretores_view')
           .select('*');
           
-        if (profError) throw profError;
+        // Se unitId estiver definido, filtrar por unidade
+        if (unitId) {
+          query = query.eq('unit_id', unitId);
+        }
         
-        // Buscar estagiários
-        const { data: estagiarios, error: estError } = await supabase
-          .from('estagiarios')
-          .select('*')
-          .eq('active', true);
-          
-        if (estError) throw estError;
+        const { data, error } = await query;
         
-        // Mapear professores para o formato de Corretor
-        const professoresFormatados = professores?.map(prof => ({
-          id: prof.id,
-          nome: prof.nome,
-          tipo: 'corretor' as const
+        if (error) throw error;
+        
+        // Mapear os dados para o formato esperado
+        const corretoresFormatados: Corretor[] = data?.map(corretor => ({
+          id: corretor.id,
+          nome: corretor.nome,
+          tipo: 'corretor' as const  // Always 'corretor' per interface definition
         })) || [];
         
-        // Mapear estagiários para o formato de Corretor
-        const estagiariosFormatados = estagiarios?.map(est => ({
-          id: est.id,
-          nome: est.nome,
-          tipo: 'corretor' as const
-        })) || [];
+        console.log('Corretores carregados da view:', {
+          total: corretoresFormatados.length,
+          porTipo: corretoresFormatados.reduce((acc, c) => {
+            acc[c.tipo] = (acc[c.tipo] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        });
         
-        // Combinar as listas e ordenar por nome
-        const todosCorretores = [...professoresFormatados, ...estagiariosFormatados]
+        // Ordenar por nome
+        const corretoresOrdenados = corretoresFormatados
           .sort((a, b) => a.nome.localeCompare(b.nome));
-          
-        setCorretores(todosCorretores);
+        
+        setCorretores(corretoresOrdenados);
       } catch (err: any) {
         console.error('Erro ao buscar corretores:', err);
         setError(err.message || 'Erro ao carregar corretores');

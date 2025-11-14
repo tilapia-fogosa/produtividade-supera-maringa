@@ -67,7 +67,7 @@ const DiarioPage = () => {
                 ) : (
                   turmas.map((turma) => (
                     <SelectItem key={turma.id} value={turma.id}>
-                      {turma.nome} - {turma.horario.substring(0, 5)} ({turma.dia_semana})
+                      {turma.nome} ({turma.dia_semana})
                     </SelectItem>
                   ))
                 )}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -99,11 +100,11 @@ export function useAlunos() {
       console.log(`Encontrados ${alunosData.length} alunos para turma ${turmaId} da unidade ${turmaData.unit_id}`);
       setAlunos(alunosData as Aluno[]);
       
-      // Verificar registros de produtividade para o dia atual (usando a tabela correta)
+      // Verificar registros de produtividade para o dia atual (usando os novos campos)
       const hoje = new Date().toISOString().split('T')[0];
       const { data: registrosData, error: registrosError } = await supabase
         .from('produtividade_abaco')
-        .select('aluno_id')
+        .select('pessoa_id')
         .eq('data_aula', hoje);
         
       if (registrosError) throw registrosError;
@@ -112,7 +113,7 @@ export function useAlunos() {
       const novoEstado: Record<string, boolean> = {};
       if (registrosData && registrosData.length > 0) {
         registrosData.forEach(registro => {
-          novoEstado[registro.aluno_id] = true;
+          novoEstado[registro.pessoa_id] = true;
         });
       }
       

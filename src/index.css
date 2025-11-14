@@ -3,6 +3,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Miftah';
+  src: url('/src/assets/fonts/Miftah_Personal_Use_Only.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mencken';
+  src: url('/src/assets/fonts/Mencken-Std-Text-Extra-Bold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -43,6 +59,12 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 215 25% 27%;
     --sidebar-ring: 32 100% 50%;
+    
+    /* Cores para troféus */
+    --trophy-orange: 25 100% 55%;
+    --trophy-red: 0 84% 60%;
+    --trophy-purple: 280 87% 65%;
+    --trophy-blue: 217 91% 60%;
     
     /* Adicionando variáveis para controlar o tamanho da sidebar */
     --sidebar-width: 240px;
@@ -87,6 +109,12 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 255 50% 30%;
     --sidebar-ring: 32 100% 50%;
+    
+    /* Cores para troféus - tema escuro */
+    --trophy-orange: 25 100% 60%;
+    --trophy-red: 0 84% 65%;
+    --trophy-purple: 280 87% 70%;
+    --trophy-blue: 217 91% 65%;
   }
 }
 
@@ -97,5 +125,50 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Estilos específicos para impressão */
+@media print {
+  /* Configurações da página para impressão */
+  @page {
+    margin: 0.3in 0.5in; /* Margens reduzidas */
+    /* Tenta remover cabeçalhos e rodapés do navegador */
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
+  }
+  
+  /* Remove elementos desnecessários */
+  body::before,
+  body::after {
+    display: none !important;
+  }
+  
+  /* Esconde elementos de navegação mas permite footers específicos */
+  nav, header, .no-print {
+    display: none !important;
+  }
+  
+  /* Permite footers com classe específica aparecerem na impressão */
+  footer {
+    display: block !important;
+  }
+  
+  /* Garante que imagens sejam exibidas na impressão */
+  img {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Otimiza cores para impressão */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

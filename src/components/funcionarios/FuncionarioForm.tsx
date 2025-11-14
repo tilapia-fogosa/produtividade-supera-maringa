@@ -45,20 +45,26 @@ export const FuncionarioForm = ({
     email: '',
     telefone: '',
     cargo: '',
-    turma_id: null as string | null, // Definindo explicitamente como string | null
+    turma_id: null as string | null,
   });
   const [validationErrors, setValidationErrors] = useState({
     nome: false
   });
 
   useEffect(() => {
+    console.log("Funcionário recebido no form:", funcionario);
+    console.log("Turmas disponíveis:", turmas);
+    
     if (funcionario) {
+      const turmaId = funcionario.turma_id || null;
+      console.log("Turma ID do funcionário:", turmaId);
+      
       setFormData({
         nome: funcionario.nome || '',
         email: funcionario.email || '',
         telefone: funcionario.telefone || '',
         cargo: funcionario.cargo || '',
-        turma_id: funcionario.turma_id || null, // Usando null explicitamente para ausência de valor
+        turma_id: turmaId,
       });
     } else if (tipoSelecionado) {
       // Se não tiver funcionário, mas tiver tipo selecionado, inicializa o cargo
@@ -67,7 +73,7 @@ export const FuncionarioForm = ({
         cargo: tipoSelecionado
       }));
     }
-  }, [funcionario, tipoSelecionado]);
+  }, [funcionario, tipoSelecionado, turmas]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -84,9 +90,9 @@ export const FuncionarioForm = ({
   };
 
   const handleTurmaChange = (value: string) => {
-    // Tratamento correto: se for "sem-turma", definimos como null explicitamente (não como string vazia)
+    // Tratamento correto: se for "sem-turma", definimos como null explicitamente
     const turmaId = value === "sem-turma" ? null : value;
-    console.log("Valor selecionado para turma_id:", turmaId, "Tipo:", typeof turmaId);
+    console.log("Mudança de turma - Valor selecionado:", value, "Turma ID final:", turmaId);
     setFormData(prev => ({ ...prev, turma_id: turmaId }));
   };
 
@@ -104,6 +110,14 @@ export const FuncionarioForm = ({
     
     onSubmit(formData);
   };
+
+  // Buscar turma selecionada para exibir corretamente
+  const turmaAtual = formData.turma_id ? 
+    turmas.find(t => t.id === formData.turma_id) : 
+    null;
+  
+  console.log("Turma atual encontrada:", turmaAtual);
+  console.log("FormData turma_id:", formData.turma_id);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -181,11 +195,16 @@ export const FuncionarioForm = ({
             <SelectItem value="sem-turma">Sem turma</SelectItem>
             {turmas.map((turma) => (
               <SelectItem key={turma.id} value={turma.id}>
-                {turma.nome} - {turma.horario}
+                {turma.nome}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {/* Debug info - remover depois */}
+        <div className="text-xs text-gray-500 mt-1">
+          Debug: turma_id = {formData.turma_id || 'null'} | 
+          Turma encontrada: {turmaAtual?.nome || 'Nenhuma'}
+        </div>
       </div>
       
       <div className="flex justify-end gap-2 mt-6">

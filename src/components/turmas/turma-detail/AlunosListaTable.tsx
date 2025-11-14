@@ -1,13 +1,6 @@
 
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PessoaTurma } from '@/hooks/use-pessoas-turma';
 import { Badge } from "@/components/ui/badge";
@@ -37,13 +30,10 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
 
   const formatarData = (dataString?: string) => {
     if (!dataString) return '-';
-    
     try {
       // Verifica o formato da data (ISO ou apenas data)
-      const data = dataString.includes('T') 
-        ? new Date(dataString) 
-        : new Date(`${dataString}T00:00:00`);
-      
+      const data = dataString.includes('T') ? new Date(dataString) : new Date(`${dataString}T00:00:00`);
+
       // Se a data for válida, formata para DD/MM/YYYY
       if (!isNaN(data.getTime())) {
         return format(data, 'dd/MM/yyyy');
@@ -53,6 +43,27 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
       console.error('Erro ao formatar data:', error);
       return dataString; // Retorna a string original em caso de erro
     }
+  };
+
+  const handleExcluirClick = (aluno: PessoaTurma) => {
+    console.log('🔍 AlunosListaTable: Clique no botão excluir para aluno:', {
+      id: aluno.id,
+      nome: aluno.nome,
+      ultimo_registro_id: aluno.ultimo_registro_id,
+      produtividade_registrada: produtividadeRegistrada[aluno.id]
+    });
+    
+    if (!onExcluirRegistro) {
+      console.warn('⚠️ AlunosListaTable: onExcluirRegistro não fornecido');
+      return;
+    }
+    
+    if (!aluno.ultimo_registro_id) {
+      console.error('❌ AlunosListaTable: ultimo_registro_id não disponível para aluno:', aluno.nome);
+      return;
+    }
+    
+    onExcluirRegistro(aluno);
   };
 
   return (
@@ -74,7 +85,10 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
                 {aluno.nome}
               </TableCell>
               <TableCell>
-                <Badge variant={aluno.origem === 'funcionario' ? "secondary" : "default"}>
+                <Badge 
+                  variant={aluno.origem === 'funcionario' ? "secondary" : "default"} 
+                  className="bg-purple-400"
+                >
                   {aluno.origem === 'funcionario' ? 'Funcionário' : 'Aluno'}
                 </Badge>
               </TableCell>
@@ -99,7 +113,7 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
                 {produtividadeRegistrada[aluno.id] ? (
                   <Button 
                     variant="ghost" 
-                    className="text-green-600 hover:text-green-700 cursor-default"
+                    className="text-green-600 hover:text-green-700 cursor-default" 
                     disabled
                   >
                     <Check className="h-4 w-4 mr-1" />
@@ -107,7 +121,7 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
                   </Button>
                 ) : (
                   <Button 
-                    onClick={() => onRegistrarPresenca(aluno)}
+                    onClick={() => onRegistrarPresenca(aluno)} 
                     variant="outline" 
                     className="hover:bg-orange-100"
                   >
@@ -117,9 +131,10 @@ const AlunosListaTable: React.FC<AlunosListaTableProps> = ({
                 
                 {aluno.ultimo_registro_id && onExcluirRegistro && (
                   <Button 
-                    onClick={() => onExcluirRegistro(aluno)}
+                    onClick={() => handleExcluirClick(aluno)} 
                     variant="ghost" 
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    title={`Excluir registro do dia ${formatarData(aluno.data_ultimo_registro)}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

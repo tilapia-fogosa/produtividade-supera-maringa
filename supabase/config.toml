@@ -10,6 +10,9 @@ schedule = "0 1 * * *"  # Executar todos os dias à 01:00
 [functions.check-missing-attendance]
 verify_jwt = false
 
+[functions.enviar-alerta-falta-webhook]
+verify_jwt = false
+
 [functions.test-slack-message]
 verify_jwt = false
 

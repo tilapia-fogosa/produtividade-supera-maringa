@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,14 +41,13 @@ interface AulaZeroData {
   pontos_atencao: string;
 }
 
-const WEBHOOK_URL = "https://hook.us1.make.com/rhla45qk19cwlcq3jnekoirj1zatazfn";
-
 const AulaZero = () => {
   const navigate = useNavigate();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [webhookSending, setWebhookSending] = useState<boolean>(false);
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
   
   const form = useForm<AulaZeroData>({
     defaultValues: {
@@ -62,7 +62,25 @@ const AulaZero = () => {
 
   useEffect(() => {
     fetchAlunos();
+    fetchWebhookUrl();
   }, []);
+
+  const fetchWebhookUrl = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dados_importantes')
+        .select('data')
+        .eq('key', 'webhook_aula_zero')
+        .single();
+      
+      if (error) throw error;
+      const url = data?.data || null;
+      setWebhookUrl(url);
+      console.log('Webhook URL carregado:', url);
+    } catch (error) {
+      console.error('Erro ao buscar webhook:', error);
+    }
+  };
 
   const fetchAlunos = async () => {
     setIsLoading(true);
@@ -92,6 +110,18 @@ const AulaZero = () => {
   );
 
   const sendToWebhook = async (data: AulaZeroData, alunoSelecionado: Aluno) => {
+    console.log('sendToWebhook chamado, webhookUrl:', webhookUrl);
+    
+    if (!webhookUrl) {
+      console.warn('Webhook não configurado - URL está vazia ou null');
+      toast({
+        title: 'Aviso',
+        description: 'Webhook não configurado. Configure em Admin > Configurações',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setWebhookSending(true);
     try {
       const dataAtual = new Date().toISOString();
@@ -120,10 +150,10 @@ const AulaZero = () => {
       };
       
       // Log para depuração dos dados que serão enviados
-      console.log('Enviando dados para webhook:', webhookPayload);
+      console.log('Enviando dados para webhook:', webhookUrl, webhookPayload);
       
-      // Enviar dados diretamente ao webhook SEM a opção no-cors
-      const response = await fetch(WEBHOOK_URL, {
+      // Enviar dados diretamente ao webhook
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +161,11 @@ const AulaZero = () => {
         body: JSON.stringify(webhookPayload)
       });
       
-      console.log('Resposta do webhook:', response);
+      console.log('Resposta do webhook - Status:', response.status);
+      console.log('Resposta do webhook - OK:', response.ok);
+      
+      const responseText = await response.text();
+      console.log('Resposta do webhook - Body:', responseText);
 
       toast({
         title: 'Webhook Enviado',
@@ -180,7 +214,7 @@ const AulaZero = () => {
           motivo_procura: data.motivo_procura,
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
-          pontos_atencao: data.pontos_atencao,
+          pontos_atencao: data.pontos_atencao
         })
         .eq('id', data.alunoId);
 

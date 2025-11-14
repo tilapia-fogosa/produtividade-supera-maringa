@@ -2,8 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Valores hardcoded para Slack
-const SLACK_BOT_TOKEN = "xoxb-your-hardcoded-slack-token-here";
+// Token real do Slack Bot
+const SLACK_BOT_TOKEN = "xoxb-5990179335553-7417193096371-xICG9oDp0nFrscu3lyaxQxSF";
 const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal padrão para mensagens
 
 serve(async (req) => {
@@ -16,7 +16,7 @@ serve(async (req) => {
     // Obter dados da requisição
     const { 
       aluno = "Aluno de Teste", 
-      dataAlerta = new Date().toLocaleDateString('pt-BR'), 
+      dataAlerta = new Date().toISOString().split('T')[0], // Recebe no formato YYYY-MM-DD
       responsavel = "Sistema de Teste", 
       descritivo = "Este é um alerta de teste", 
       origem = "outro",
@@ -47,7 +47,7 @@ serve(async (req) => {
       console.log(`Buscando dados completos do aluno ID: ${alunoId}`);
       
       try {
-        // Primeira abordagem: buscar aluno e fazer JOIN com turma e professor
+        // Buscar dados do aluno
         const { data: alunoData, error: alunoError } = await supabase
           .from('alunos')
           .select('nome, turma_id')
@@ -63,10 +63,10 @@ serve(async (req) => {
           alunoNome = alunoData.nome || aluno;
           
           if (alunoData.turma_id) {
-            // Agora buscar os dados da turma
+            // Buscar os dados da turma
             const { data: turmaData, error: turmaError } = await supabase
               .from('turmas')
-              .select('nome, dia_semana, horario, professor_id')
+              .select('nome, professor_id')
               .eq('id', alunoData.turma_id)
               .single();
               
@@ -75,22 +75,8 @@ serve(async (req) => {
             } else if (turmaData) {
               console.log('Dados da turma obtidos:', JSON.stringify(turmaData));
               
-              // Formatar dia da semana
-              let diaSemanaFormatado = '';
-              switch (turmaData.dia_semana) {
-                case "segunda": diaSemanaFormatado = '2ª'; break;
-                case "terca": diaSemanaFormatado = '3ª'; break;
-                case "quarta": diaSemanaFormatado = '4ª'; break;
-                case "quinta": diaSemanaFormatado = '5ª'; break;
-                case "sexta": diaSemanaFormatado = '6ª'; break;
-                case "sabado": diaSemanaFormatado = 'Sábado'; break;
-                case "domingo": diaSemanaFormatado = 'Domingo'; break;
-                default: diaSemanaFormatado = turmaData.dia_semana;
-              }
-              
-              // Formatar horário
-              const horario = turmaData.horario ? turmaData.horario.substring(0, 5) : '00:00';
-              turmaNome = `${diaSemanaFormatado} (${horario} - 60+)`;
+              // Usar diretamente o nome da turma do banco
+              turmaNome = turmaData.nome || turma;
               
               // Se tivermos o professor_id, buscamos os dados do professor
               if (turmaData.professor_id) {
@@ -116,6 +102,20 @@ serve(async (req) => {
       }
     }
     
+    // Formatar a data do alerta para o padrão brasileiro
+    const formatarDataBrasileira = (dataString: string) => {
+      try {
+        // Se a data está no formato YYYY-MM-DD
+        const [ano, mes, dia] = dataString.split('-');
+        return `${dia}/${mes}/${ano}`;
+      } catch (error) {
+        console.error('Erro ao formatar data:', error);
+        return dataString; // Retorna a data original se não conseguir formatar
+      }
+    };
+    
+    const dataAlertaFormatada = formatarDataBrasileira(dataAlerta);
+    
     // ID do Slack da coordenadora hardcoded
     const coordenadoraSlack = "chriskulza"; // ID da Chris Kulza
     
@@ -128,7 +128,7 @@ serve(async (req) => {
 *Aluno:* ${alunoNome}
 *Turma:* ${turmaNome}
 *Educador:* ${professorSlackUsername ? `<@${professorSlackUsername}>` : professorNome}
-*Data do Aviso:* ${dataAlerta}
+*Data do Aviso:* ${dataAlertaFormatada}
 *Responsável Alerta:* ${responsavel}
 *Informações:* ${descritivo}
 *Origem do Alerta:* ${origem}
@@ -142,7 +142,7 @@ serve(async (req) => {
 
     console.log('Enviando mensagem para o Slack:', mensagem);
 
-    // Enviando para a API do Slack usando o token hardcoded
+    // Enviando para a API do Slack usando o token real
     const response = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: {

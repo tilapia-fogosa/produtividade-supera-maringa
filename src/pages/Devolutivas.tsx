@@ -18,6 +18,10 @@ const Devolutivas = () => {
     navigate('/fichas');
   };
 
+  const irParaAlunos = () => {
+    navigate('/devolutivas/alunos');
+  };
+
   return (
     <div className="container mx-auto py-4 px-2">
       <h1 className="text-2xl font-bold mb-6 text-azul-500">Devolutivas</h1>
@@ -37,6 +41,24 @@ const Devolutivas = () => {
             >
               <Users className="mr-2 h-4 w-4" />
               Ver Turmas
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-orange-200 bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-azul-500">Por Aluno</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              Acesse diretamente as devolutivas de qualquer aluno através de uma lista geral.
+            </p>
+            <Button 
+              onClick={irParaAlunos}
+              className="w-full bg-azul-500 hover:bg-azul-600 text-white"
+            >
+              <User className="mr-2 h-4 w-4" />
+              Ver Alunos
             </Button>
           </CardContent>
         </Card>

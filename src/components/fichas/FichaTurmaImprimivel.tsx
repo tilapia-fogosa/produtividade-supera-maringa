@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './print-styles.css';
 
@@ -13,8 +12,11 @@ interface FichaTurmaImprimivelProps {
     id: string;
     nome: string;
     created_at: string;
-    dias_supera: number | null; // Adicionado campo dias_supera para verificar tempo de matrícula
+    dias_supera: number | null;
   }[];
+  mesSelecionado: number;
+  anoSelecionado: number;
+  iniciarSemanaAnterior: boolean;
 }
 
 // Definir cores constantes para garantir consistência
@@ -22,16 +24,19 @@ const CORES = {
   vermelho: '#ea384c',
   preto: '#000000',
   cinza: '#999999',
-  amareloClaro: '#FEF7CD' // Cor para destacar alunos recentes (menos de 90 dias)
+  amareloClaro: '#FEF7CD'
 };
 
 const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   turma,
-  alunos
+  alunos,
+  mesSelecionado,
+  anoSelecionado,
+  iniciarSemanaAnterior
 }) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const alunosPorPagina = 14; // 14 alunos na tabela principal
-  const alunosReposicaoPorPagina = 5; // 5 linhas para reposições
+  const alunosPorPagina = 14;
+  const alunosReposicaoPorPagina = 5;
 
   // Função para verificar se um aluno tem menos de 90 dias na Supera
   const isAlunoRecente = (diasSupera: number | null) => {
@@ -63,24 +68,51 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   // Obter o nome do professor da turma
   const professorNome = turma.professorNome || 'Professor não especificado';
 
-  // Função para gerar as datas das aulas para o mês atual
+  // Função para gerar as datas das aulas para o mês/ano selecionados
   const gerarDatasAulas = () => {
-    // Obter o mês atual
-    const dataAtual = new Date();
-    const mesAtual = dataAtual.getMonth();
-    const anoAtual = dataAtual.getFullYear();
-    
     const diaSemana = obterDiaSemana(turma.dia_semana);
     
-    // Encontrar todas as datas do mês atual para o dia da semana da turma
-    const datasDoMes: Date[] = [];
-    const primeiroDiaDoMes = new Date(anoAtual, mesAtual, 1);
-    const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0);
+    let dataInicio: Date;
+    let dataFim: Date;
     
-    for (let dia = 1; dia <= ultimoDiaDoMes.getDate(); dia++) {
-      const data = new Date(anoAtual, mesAtual, dia);
-      if (data.getDay() === diaSemana) {
-        datasDoMes.push(data);
+    if (iniciarSemanaAnterior) {
+      // Encontrar a primeira ocorrência do dia da semana começando uma semana antes do mês
+      const primeiroDiaDoMes = new Date(anoSelecionado, mesSelecionado, 1);
+      const ultimoDiaDoMesAnterior = new Date(anoSelecionado, mesSelecionado, 0);
+      
+      // Procurar a primeira ocorrência do dia da semana na semana anterior ao mês
+      dataInicio = new Date(ultimoDiaDoMesAnterior);
+      dataInicio.setDate(dataInicio.getDate() - 6); // Uma semana antes
+      
+      // Encontrar a primeira ocorrência do dia da semana a partir desta data
+      while (dataInicio.getDay() !== diaSemana) {
+        dataInicio.setDate(dataInicio.getDate() + 1);
+      }
+      
+      // Data fim será o último dia do mês selecionado + alguns dias para cobrir 5 semanas
+      dataFim = new Date(anoSelecionado, mesSelecionado + 1, 0);
+      dataFim.setDate(dataFim.getDate() + 7); // Uma semana a mais para garantir 5 semanas
+    } else {
+      // Lógica original - começar do primeiro dia do mês
+      dataInicio = new Date(anoSelecionado, mesSelecionado, 1);
+      dataFim = new Date(anoSelecionado, mesSelecionado + 1, 0);
+      
+      // Encontrar a primeira ocorrência do dia da semana no mês
+      while (dataInicio.getDay() !== diaSemana && dataInicio.getMonth() === mesSelecionado) {
+        dataInicio.setDate(dataInicio.getDate() + 1);
+      }
+    }
+    
+    // Coletar todas as datas do dia da semana dentro do período
+    const datasDoMes: Date[] = [];
+    const dataAtual = new Date(dataInicio);
+    
+    while (datasDoMes.length < 5 && dataAtual <= dataFim) {
+      if (dataAtual.getDay() === diaSemana) {
+        datasDoMes.push(new Date(dataAtual));
+        dataAtual.setDate(dataAtual.getDate() + 7); // Próxima semana
+      } else {
+        dataAtual.setDate(dataAtual.getDate() + 1);
       }
     }
     
@@ -98,23 +130,14 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
       'sexta': 5,
       'sabado': 6
     };
-    return mapeamento[diaSemana] || 1; // Padrão para segunda-feira
+    return mapeamento[diaSemana] || 1;
   };
   
   // Obter datas das aulas
   const datasAulas = gerarDatasAulas();
 
-  // Formatar data para exibição (DD/MM) - Modificado para mostrar apenas o dia (DD)
+  // Formatar data para exibição (apenas o dia)
   const formatarData = (data: Date) => format(data, 'dd', { locale: ptBR });
-
-  // Cores específicas para as semanas para garantir a consistência
-  const coresSemanas = {
-    1: CORES.vermelho,
-    2: CORES.preto,
-    3: CORES.vermelho,
-    4: CORES.preto,
-    5: CORES.vermelho
-  };
 
   // Estilos inline para garantir que as cores sejam impressas corretamente
   const getSemanaBorderStyle = (semana: number) => {
@@ -218,7 +241,6 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
         </TableHeader>
         <TableBody>
           {alunosAtivos.map((aluno, index) => {
-            // Verificar se o aluno tem menos de 90 dias na Supera
             const alunoRecente = isAlunoRecente(aluno.dias_supera);
             
             return (
@@ -338,9 +360,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   };
 
   return (
-    <div className="ficha-container">
-      {/* Cabeçalho da ficha */}
-      <div className="ficha-cabecalho">
+    <div className="ficha-print-wrapper">
+      <div className="ficha-container">
+        {/* Cabeçalho da ficha */}
+        <div className="ficha-cabecalho">
         <div className="ficha-info">
           <div className="ficha-campo">
             <span className="ficha-label font-bold">Turma:</span>
@@ -364,9 +387,12 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
         </div>
       </div>
 
-      {/* Mês e ano atual */}
+      {/* Mês e ano selecionados */}
       <div className="ficha-mes-ano">
-        <h2>{format(new Date(), 'MMMM yyyy', { locale: ptBR })}</h2>
+        <h2>
+          {format(new Date(anoSelecionado, mesSelecionado), 'MMMM yyyy', { locale: ptBR })}
+          {iniciarSemanaAnterior && <span className="text-sm"> (iniciando semana anterior)</span>}
+        </h2>
       </div>
 
       {/* Tabela principal da ficha (14 alunos) */}
@@ -380,9 +406,10 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
       {/* Tabela de reposições (5 linhas) */}
       {renderizarTabela('reposicao')}
 
-      {/* Rodapé da ficha */}
-      <div className="ficha-rodape">
-        <div className="ficha-logo">Supera – Ginástica para o Cérebro</div>
+        {/* Rodapé da ficha */}
+        <div className="ficha-rodape">
+          <div className="ficha-logo">Supera – Ginástica para o Cérebro</div>
+        </div>
       </div>
     </div>
   );

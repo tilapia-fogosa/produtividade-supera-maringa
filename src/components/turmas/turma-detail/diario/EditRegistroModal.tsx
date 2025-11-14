@@ -51,7 +51,8 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
   
   const [formData, setFormData] = useState({
     id: '',
-    aluno_id: '',
+    pessoa_id: '',
+    tipo_pessoa: 'aluno',
     data_aula: new Date(),
     presente: true,
     apostila: '',
@@ -67,7 +68,8 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
       // Edição - preencher formulário com dados existentes
       setFormData({
         id: registroSelecionado.id,
-        aluno_id: registroSelecionado.aluno_id,
+        pessoa_id: registroSelecionado.pessoa_id,
+        tipo_pessoa: registroSelecionado.tipo_pessoa || 'aluno',
         data_aula: dataSelecionada,
         presente: registroSelecionado.presente || false,
         apostila: registroSelecionado.apostila || '',
@@ -81,7 +83,8 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
       // Criação - limpar formulário
       setFormData({
         id: '',
-        aluno_id: '',
+        pessoa_id: '',
+        tipo_pessoa: 'aluno',
         data_aula: dataSelecionada,
         presente: true,
         apostila: '',
@@ -99,13 +102,25 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
       ...formData,
       [field]: value
     });
+    
+    // Quando selecionar uma pessoa, determinar automaticamente o tipo
+    if (field === 'pessoa_id') {
+      const pessoaSelecionada = pessoasTurma.find(p => p.id === value);
+      if (pessoaSelecionada) {
+        setFormData(prev => ({
+          ...prev,
+          [field]: value,
+          tipo_pessoa: pessoaSelecionada.origem
+        }));
+      }
+    }
   };
 
   const handleSubmit = async () => {
     try {
       setEnviando(true);
       
-      if (!formData.aluno_id) {
+      if (!formData.pessoa_id) {
         toast({
           title: "Erro",
           description: "Por favor, selecione um aluno/funcionário.",
@@ -119,7 +134,8 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
       const dataFormatada = formData.data_aula.toISOString().split('T')[0];
       
       const registroData = {
-        aluno_id: formData.aluno_id,
+        pessoa_id: formData.pessoa_id,
+        tipo_pessoa: formData.tipo_pessoa,
         data_aula: dataFormatada,
         presente: formData.presente,
         apostila: formData.apostila,
@@ -175,10 +191,10 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 gap-2">
-            <Label htmlFor="aluno_id">Aluno/Funcionário</Label>
+            <Label htmlFor="pessoa_id">Aluno/Funcionário</Label>
             <Select
-              value={formData.aluno_id}
-              onValueChange={(value) => handleChange('aluno_id', value)}
+              value={formData.pessoa_id}
+              onValueChange={(value) => handleChange('pessoa_id', value)}
               disabled={modo === 'editar'}
             >
               <SelectTrigger>

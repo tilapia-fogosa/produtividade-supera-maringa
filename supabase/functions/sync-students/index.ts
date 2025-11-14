@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
@@ -247,12 +246,12 @@ async function syncProfessors(rawData) {
     // Obter o ID da unidade de Maringá
     const maringaUnitId = await getMaringaUnitId();
     
-    // Atualizar para usar o nome correto da coluna (unit_id)
+    // Corrigir a sintaxe do insert
     const { data: insertedProfessors, error: insertError } = await supabase
       .from('professores')
       .insert(professorsToAdd.map(nome => ({ 
         nome, 
-        unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
+        unit_id: maringaUnitId
       })))
       .select();
     
@@ -304,10 +303,10 @@ async function syncTurmas(rawData, professors) {
     return [];
   }
   
-  // Get existing turmas from database
+  // Get existing turmas from database - removido 'horario' do select
   const { data: existingTurmas, error: fetchError } = await supabase
     .from('turmas')
-    .select('id, nome, professor_id, dia_semana, horario');
+    .select('id, nome, professor_id, dia_semana');
   
   if (fetchError) {
     throw new Error(`Erro ao buscar turmas existentes: ${fetchError.message}`);
@@ -332,12 +331,11 @@ async function syncTurmas(rawData, professors) {
       professorMap.get(turma.professor_nome.toLowerCase().trim()) : null;
     
     if (!existingTurma) {
-      // New turma to add
+      // New turma to add - removido 'horario' do insert
       turmasToAdd.push({
         nome: turma.nome,
         professor_id: professorId,
         dia_semana: turma.dia_semana, // Using the detected weekday
-        horario: '14:00:00',    // Default value, can be updated later
         unit_id: maringaUnitId  // Usando o ID da unidade de Maringá
       });
     } else if (
@@ -399,9 +397,9 @@ async function syncTurmas(rawData, professors) {
   return allTurmas;
 }
 
-// STEP 3: Sync students and link them to turmas
+// STEP 3: Sync students with NOME as primary criterion - UPDATED LOGIC
 async function syncStudents(rawData, turmas) {
-  console.log("Sincronizando alunos...");
+  console.log("Sincronizando alunos com prioridade para NOME...");
   
   // Create a map of turma names to IDs for quick lookup
   const turmaMap = new Map(
@@ -424,7 +422,7 @@ async function syncStudents(rawData, turmas) {
     return {
       nome: row.nome,
       turma_id: turmaId,
-      unit_id: maringaUnitId,  // Usando o ID da unidade de Maringá para todos os alunos
+      unit_id: maringaUnitId,
       codigo: row.codigo || null,
       telefone: row.telefone || null,
       email: row.email || null,
@@ -460,42 +458,108 @@ async function syncStudents(rawData, turmas) {
     
     console.log("Todos os alunos marcados como inativos temporariamente");
     
-    // Agora, para cada aluno na planilha
+    let alunosNovos = 0;
+    let alunosAtualizados = 0;
+    let alunosTrocasTurma = 0;
+    
+    // Agora, para cada aluno na planilha - PRIORIDADE PARA NOME
     for (const studentData of studentsData) {
-      // Verificar se o aluno já existe (por nome e turma)
-      const { data: existingStudent, error: fetchError } = await supabase
+      let existingStudent = null;
+      
+      console.log(`\n=== Processando aluno: ${studentData.nome} ===`);
+      
+      // NOVO: Buscar aluno existente PRIMEIRO por NOME (critério principal)
+      console.log(`Buscando por nome: "${studentData.nome}"`);
+      const { data: studentByName, error: fetchByNameError } = await supabase
         .from('alunos')
-        .select('id')
+        .select('id, nome, turma_id, codigo')
         .eq('nome', studentData.nome)
-        .eq('turma_id', studentData.turma_id)
         .maybeSingle();
         
-      if (fetchError) {
-        console.error(`Erro ao buscar aluno ${studentData.nome}:`, fetchError);
-        continue;
+      if (fetchByNameError) {
+        console.error(`Erro ao buscar aluno por nome ${studentData.nome}:`, fetchByNameError);
+      } else if (studentByName) {
+        console.log(`✓ Aluno encontrado por NOME - ID: ${studentByName.id}`);
+        existingStudent = studentByName;
+      }
+      
+      // FALLBACK: Se não encontrou por nome E temos código, buscar por código
+      if (!existingStudent && studentData.codigo && studentData.codigo.trim() !== '') {
+        console.log(`Não encontrado por nome. Tentando buscar por código: "${studentData.codigo}"`);
+        const { data: studentByCode, error: fetchByCodeError } = await supabase
+          .from('alunos')
+          .select('id, nome, turma_id, codigo')
+          .eq('codigo', studentData.codigo.trim())
+          .maybeSingle();
+          
+        if (fetchByCodeError) {
+          console.error(`Erro ao buscar aluno por código ${studentData.codigo}:`, fetchByCodeError);
+        } else if (studentByCode) {
+          console.log(`✓ Aluno encontrado por CÓDIGO - ID: ${studentByCode.id}`);
+          existingStudent = studentByCode;
+          
+          // IMPORTANTE: Se encontrou por código mas o nome é diferente, avisar!
+          if (studentByCode.nome !== studentData.nome) {
+            console.warn(`⚠️ ATENÇÃO: Aluno encontrado por código tem nome diferente!`);
+            console.warn(`   Nome no banco: "${studentByCode.nome}"`);
+            console.warn(`   Nome na planilha: "${studentData.nome}"`);
+            console.warn(`   Mantendo nome da planilha como principal`);
+          }
+        }
       }
       
       if (existingStudent) {
-        // Atualizar aluno existente
+        // Verificar se houve mudança de turma
+        const trocouTurma = existingStudent.turma_id !== studentData.turma_id;
+        
+        if (trocouTurma) {
+          console.log(`🔄 MUDANÇA DE TURMA detectada para ${studentData.nome}:`);
+          console.log(`   Turma anterior ID: ${existingStudent.turma_id}`);
+          console.log(`   Nova turma ID: ${studentData.turma_id}`);
+          alunosTrocasTurma++;
+        }
+        
+        // Atualizar aluno existente (incluindo nova turma se houve troca)
+        // Remove ultima_correcao_ah do update para preservar o valor existente
+        const { ultima_correcao_ah, ...dadosAtualizacao } = studentData;
         const { error: updateError } = await supabase
           .from('alunos')
-          .update({ ...studentData })
+          .update(dadosAtualizacao)
           .eq('id', existingStudent.id);
           
         if (updateError) {
-          console.error(`Erro ao atualizar aluno ${studentData.nome}:`, updateError);
+          console.error(`❌ Erro ao atualizar aluno ${studentData.nome}:`, updateError);
+        } else {
+          alunosAtualizados++;
+          console.log(`✅ Aluno ${studentData.nome} atualizado com sucesso`);
+          if (trocouTurma) {
+            console.log(`   ✓ Nova turma aplicada`);
+          }
         }
       } else {
-        // Inserir novo aluno
+        // Inserir novo aluno com ultima_correcao_ah definida
+        console.log(`➕ Novo aluno detectado: ${studentData.nome}`);
         const { error: insertError } = await supabase
           .from('alunos')
-          .insert([studentData]);
+          .insert([{
+            ...studentData,
+            ultima_correcao_ah: new Date().toISOString() // Define data de entrada para novos alunos
+          }]);
           
         if (insertError) {
-          console.error(`Erro ao inserir aluno ${studentData.nome}:`, insertError);
+          console.error(`❌ Erro ao inserir aluno ${studentData.nome}:`, insertError);
+        } else {
+          alunosNovos++;
+          console.log(`✅ Novo aluno ${studentData.nome} inserido com sucesso`);
         }
       }
     }
+    
+    console.log(`\n=== ESTATÍSTICAS DA SINCRONIZAÇÃO ===`);
+    console.log(`✅ Alunos novos: ${alunosNovos}`);
+    console.log(`🔄 Alunos atualizados: ${alunosAtualizados}`);
+    console.log(`🏫 Alunos que trocaram de turma: ${alunosTrocasTurma}`);
+    console.log(`📊 Total processado: ${studentsData.length}`);
     
     // Retornar os alunos ativos após a sincronização
     const { data: activeStudents, error: fetchActiveError } = await supabase
@@ -507,9 +571,11 @@ async function syncStudents(rawData, turmas) {
       throw fetchActiveError;
     }
     
+    console.log(`✅ Sincronização concluída. ${activeStudents?.length || 0} alunos ativos no sistema.`);
+    
     return activeStudents || [];
   } catch (error) {
-    console.error('Erro durante a sincronização de alunos:', error);
+    console.error('❌ Erro durante a sincronização de alunos:', error);
     throw error;
   }
 }
@@ -579,6 +645,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('Tentativa de uso da sincronização Google Sheets - FUNCIONALIDADE TEMPORARIAMENTE DESABILITADA');
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Sincronização Google Sheets temporariamente desabilitada. Use a importação via Excel disponível na tela de Turmas.'
+    }), {
+      status: 400,
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json' 
+      }
+    });
+    
+    /* CÓDIGO ORIGINAL COMENTADO TEMPORARIAMENTE
     // Get API keys from request body
     const { googleApiKey, spreadsheetId } = await req.json();
     console.log('Chaves recebidas:', { 
@@ -599,20 +679,20 @@ Deno.serve(async (req) => {
         status: result.success ? 200 : 500,
       }
     );
+    */
   } catch (error) {
-    console.error('Erro não tratado:', error.message, error.stack);
+    console.error('Erro:', error.message);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        details: error.stack
+        error: 'Sincronização Google Sheets temporariamente desabilitada. Use a importação via Excel disponível na tela de Turmas.'
       }),
       {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
         },
-        status: 500,
+        status: 400,
       }
     );
   }

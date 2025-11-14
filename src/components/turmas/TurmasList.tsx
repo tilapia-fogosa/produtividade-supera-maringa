@@ -28,8 +28,7 @@ const TurmasList: React.FC<{
   turmas: { 
     id: string; 
     nome: string; 
-    dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo'; 
-    horario: string 
+    dia_semana: 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo';
   }[], 
   onTurmaSelecionada: (turmaId: string) => void
 }> = ({ turmas, onTurmaSelecionada }) => {

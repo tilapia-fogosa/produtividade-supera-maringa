@@ -44,7 +44,8 @@ const ProfessorTurmas = () => {
   const convertToPessoaTurma = (alunos: any[]): PessoaTurma[] => {
     return alunos.map(aluno => ({
       ...aluno,
-      origem: 'aluno'
+      origem: 'aluno' as const,
+      ultima_pagina: aluno.ultima_pagina // Mantém como number | null
     })) as PessoaTurma[];
   };
 
@@ -69,7 +70,7 @@ const ProfessorTurmas = () => {
           turmaSelecionada={turmaSelecionada}
           alunos={convertToPessoaTurma(alunos)}
           todosAlunos={convertToPessoaTurma(todosAlunos)}
-          alunoDetalhes={alunoDetalhes ? {...alunoDetalhes, origem: 'aluno' as const} : null}
+          alunoDetalhes={alunoDetalhes ? {...alunoDetalhes, origem: 'aluno' as const, ultima_pagina: alunoDetalhes.ultima_pagina} : null}
           produtividadeRegistrada={produtividadeRegistrada}
           onTurmaSelecionada={handleTurmaSelecionada}
           onRegistrarPresenca={handleRegistrarPresenca}

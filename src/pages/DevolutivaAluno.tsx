@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
 import { 
   Table,
   TableBody,
@@ -29,7 +30,8 @@ import {
 } from "@/components/ui/collapsible";
 
 const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
-  { value: 'mes', label: 'Último mês' },
+  { value: 'mes_atual', label: 'Mês atual' },
+  { value: 'mes_passado', label: 'Mês passado' },
   { value: 'trimestre', label: 'Último trimestre' },
   { value: 'quadrimestre', label: 'Último quadrimestre' },
   { value: 'semestre', label: 'Último semestre' },
@@ -39,19 +41,18 @@ const PERIODO_OPTIONS: { value: PeriodoFiltro; label: string }[] = [
 const DevolutivaAluno = () => {
   const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
-  const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes');
+  const [selectedPeriodo, setSelectedPeriodo] = useState<PeriodoFiltro>('mes_atual');
   const { data: aluno, loading, error } = useAlunoDevolutiva(alunoId || '', selectedPeriodo);
-  const [textoDevolutiva, setTextoDevolutiva] = useState(aluno?.texto_devolutiva || '');
+  const [textoDevolutiva, setTextoDevolutiva] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  
 
-  const getPrimeiroNome = (nomeCompleto: string) => {
-    const nomeSplit = nomeCompleto.trim().split(' ');
-    return nomeSplit[0];
-  };
-
-  const handleVoltar = () => {
-    navigate(-1);
-  };
+  // Atualizar texto da devolutiva quando os dados carregarem
+  React.useEffect(() => {
+    if (aluno?.texto_devolutiva) {
+      setTextoDevolutiva(aluno.texto_devolutiva);
+    }
+  }, [aluno?.texto_devolutiva]);
 
   const handleSalvarDevolutiva = async () => {
     if (!alunoId) return;
@@ -78,6 +79,16 @@ const DevolutivaAluno = () => {
     }
   };
 
+  const getPrimeiroNome = (nomeCompleto: string) => {
+    const nomeSplit = nomeCompleto.trim().split(' ');
+    return nomeSplit[0];
+  };
+
+  const handleVoltar = () => {
+    navigate(-1);
+  };
+
+
   const formatarTextoInformativo = (texto: string | null, nomeAluno: string) => {
     const primeiroNome = getPrimeiroNome(nomeAluno);
     return texto 
@@ -99,13 +110,18 @@ const DevolutivaAluno = () => {
         <p className="text-center text-red-500">
           {error || 'Erro ao carregar dados do aluno'}
         </p>
+        <div className="mt-4 text-center">
+          <Button onClick={handleVoltar} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 space-y-6 bg-background dark:bg-background min-h-screen">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto py-2 px-2 space-y-3 bg-background dark:bg-background min-h-screen print:py-0 print:pt-2">
+      <div className="flex items-center justify-between print:hidden">
         <Button 
           onClick={handleVoltar} 
           variant="outline" 
@@ -128,106 +144,17 @@ const DevolutivaAluno = () => {
         </Select>
       </div>
 
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-azul-500">
+      <div className="text-center mb-2 print:mb-1 print:mt-0">
+        <h1 className="text-xl font-bold text-azul-500 print:text-lg print:mb-1">
           Desempenho do Aluno: {aluno.nome}
         </h1>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border border-orange-200 text-center">
-        <div className="flex items-center justify-center gap-2">
-          <Brain className="h-6 w-6 text-orange-500" />
-          <span className="text-xl font-semibold text-azul-500">
-            {aluno.desafios_feitos} Desafios Realizados
-          </span>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-left">Mês</TableHead>
-                <TableHead>Livro</TableHead>
-                <TableHead>Exercícios</TableHead>
-                <TableHead>Erros</TableHead>
-                <TableHead>% Acerto</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {aluno.desempenho_abaco.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.mes}</TableCell>
-                  <TableCell>{item.livro}</TableCell>
-                  <TableCell>{item.exercicios}</TableCell>
-                  <TableCell>{item.erros}</TableCell>
-                  <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="font-bold bg-gray-50">
-                <TableCell colSpan={2}>Total</TableCell>
-                <TableCell>{aluno.abaco_total_exercicios}</TableCell>
-                <TableCell>{aluno.abaco_total_erros}</TableCell>
-                <TableCell>{aluno.abaco_percentual_total.toFixed(1)}%</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-left">Mês</TableHead>
-                <TableHead>Livro</TableHead>
-                <TableHead>Exercícios</TableHead>
-                <TableHead>Erros</TableHead>
-                <TableHead>% Acerto</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {aluno.desempenho_ah.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.mes}</TableCell>
-                  <TableCell>{item.livro}</TableCell>
-                  <TableCell>{item.exercicios}</TableCell>
-                  <TableCell>{item.erros}</TableCell>
-                  <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="font-bold bg-gray-50">
-                <TableCell colSpan={2}>Total</TableCell>
-                <TableCell>{aluno.ah_total_exercicios}</TableCell>
-                <TableCell>{aluno.ah_total_erros}</TableCell>
-                <TableCell>{aluno.ah_percentual_total.toFixed(1)}%</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-azul-500">
-          Informativo Oficial - {new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
-        </h2>
-        <div className="bg-gray-50 p-4 rounded-lg border border-orange-200">
-          {textoDevolutiva ? (
-            <p className="whitespace-pre-wrap">
-              {formatarTextoInformativo(textoDevolutiva, aluno.nome)}
-            </p>
-          ) : (
-            <p className="whitespace-pre-wrap">
-              {formatarTextoInformativo(aluno?.texto_geral, aluno.nome)}
-            </p>
-          )}
-        </div>
-      </div>
-
+      {/* Informativo Personalizado - escondido na impressão */}
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
-        className="w-full space-y-2"
+        className="w-full space-y-2 print:hidden"
       >
         <CollapsibleTrigger asChild>
           <Button
@@ -261,6 +188,141 @@ const DevolutivaAluno = () => {
           )}
         </CollapsibleContent>
       </Collapsible>
+
+
+      <div className="bg-white p-2 rounded-lg border border-orange-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <Brain className="h-4 w-4 text-orange-500" />
+          <span className="text-lg font-semibold text-azul-500">
+            {aluno.desafios_feitos} Desafios Realizados
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {/* Tabela Ábaco */}
+        <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2">
+            <h3 className="font-semibold text-azul-500">Desempenho no Ábaco</h3>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">Mês</TableHead>
+                <TableHead>Livro</TableHead>
+                <TableHead>Exercícios</TableHead>
+                <TableHead>Erros</TableHead>
+                <TableHead>% Acerto</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {aluno.desempenho_abaco.length > 0 ? (
+                <>
+                  {aluno.desempenho_abaco.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.mes}</TableCell>
+                      <TableCell>{item.livro}</TableCell>
+                      <TableCell>{item.exercicios}</TableCell>
+                      <TableCell>{item.erros}</TableCell>
+                      <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold bg-gray-50">
+                    <TableCell colSpan={2}>Total</TableCell>
+                    <TableCell>{aluno.abaco_total_exercicios}</TableCell>
+                    <TableCell>{aluno.abaco_total_erros}</TableCell>
+                    <TableCell>{aluno.abaco_percentual_total.toFixed(1)}%</TableCell>
+                  </TableRow>
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    Nenhum registro encontrado no período selecionado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Tabela AH */}
+        <div className="bg-white rounded-lg border border-orange-200 overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2">
+            <h3 className="font-semibold text-azul-500">Desempenho no Abrindo Horizontes</h3>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">Mês</TableHead>
+                <TableHead>Livro</TableHead>
+                <TableHead>Exercícios</TableHead>
+                <TableHead>Erros</TableHead>
+                <TableHead>% Acerto</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {aluno.desempenho_ah.length > 0 ? (
+                <>
+                  {aluno.desempenho_ah.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.mes}</TableCell>
+                      <TableCell>{item.livro}</TableCell>
+                      <TableCell>{item.exercicios}</TableCell>
+                      <TableCell>{item.erros}</TableCell>
+                      <TableCell>{item.percentual_acerto.toFixed(1)}%</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold bg-gray-50">
+                    <TableCell colSpan={2}>Total</TableCell>
+                    <TableCell>{aluno.ah_total_exercicios}</TableCell>
+                    <TableCell>{aluno.ah_total_erros}</TableCell>
+                    <TableCell>{aluno.ah_percentual_total.toFixed(1)}%</TableCell>
+                  </TableRow>
+                </>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    Nenhum registro encontrado no período selecionado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-xl font-semibold text-azul-500">
+          Informativo Oficial - {new Date().toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
+        </h2>
+        <div className="bg-gray-50 p-4 rounded-lg border border-orange-200">
+          {textoDevolutiva ? (
+            <p className="whitespace-pre-wrap">
+              {formatarTextoInformativo(textoDevolutiva, aluno.nome)}
+            </p>
+          ) : (
+            <p className="whitespace-pre-wrap">
+              {formatarTextoInformativo(aluno?.texto_geral, aluno.nome)}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Rodapé com logo da São Rafael - tamanho pequeno na impressão */}
+      <footer className="mt-8 pt-6 border-t border-orange-200 print:mt-2 print:pt-2">
+        <div className="flex justify-center items-center">
+          <img 
+            src="/lovable-uploads/5407bd2f-e771-477d-ad1c-dd4ec2e14a8d.png" 
+            alt="Projeto São Rafael"
+            className="opacity-80 print:opacity-100"
+            style={{ 
+              width: '80px', 
+              height: 'auto',
+              maxWidth: '80px'
+            }}
+          />
+        </div>
+      </footer>
     </div>
   );
 };

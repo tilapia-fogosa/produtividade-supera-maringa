@@ -3,14 +3,16 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Turma } from '@/hooks/use-professor-turmas';
+import { PessoaTurmaDetalhes } from '@/hooks/use-turma-detalhes';
 import { useIsMobile } from "@/hooks/use-mobile";
 import AlunosAHTable from './AlunosAHTable';
 import AhLancamentoModal from '../AhLancamentoModal';
+import { PessoaAH, pessoaTurmaDetalhesToPessoaAH } from '@/types/pessoa-ah';
 
 interface AbindoHorizontesScreenProps {
   turma: Turma;
   onBack: () => void;
-  alunos?: any[];
+  alunos?: PessoaTurmaDetalhes[];
   onBackToMenu?: () => void;
 }
 
@@ -22,25 +24,29 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [modalAberto, setModalAberto] = React.useState(false);
-  const [alunoSelecionado, setAlunoSelecionado] = React.useState<any | null>(null);
+  const [pessoaSelecionada, setPessoaSelecionada] = React.useState<PessoaAH | null>(null);
   const [ahRegistrado, setAhRegistrado] = React.useState<Record<string, boolean>>({});
   
-  const handleSelecionarAluno = (aluno: any) => {
-    console.log("Aluno selecionado para correção AH:", aluno.nome);
-    setAlunoSelecionado(aluno);
+  const handleSelecionarPessoa = (pessoa: PessoaTurmaDetalhes) => {
+    console.log("AbindoHorizontesScreen: Pessoa selecionada para correção AH:", pessoa.nome, "- Tipo:", pessoa.origem);
+    const pessoaAH = pessoaTurmaDetalhesToPessoaAH(pessoa);
+    console.log("AbindoHorizontesScreen: PessoaAH convertida:", pessoaAH);
+    setPessoaSelecionada(pessoaAH);
     setModalAberto(true);
   };
   
   const handleFecharModal = () => {
     setModalAberto(false);
-    setAlunoSelecionado(null);
+    setPessoaSelecionada(null);
   };
   
-  const handleModalSuccess = (alunoId: string) => {
+  const handleModalSuccess = (pessoaId: string) => {
+    console.log("AbindoHorizontesScreen: Lançamento AH bem-sucedido para pessoa:", pessoaId);
     setAhRegistrado(prev => ({
       ...prev,
-      [alunoId]: true
+      [pessoaId]: true
     }));
+    handleFecharModal();
   };
 
   return (
@@ -70,14 +76,14 @@ const AbindoHorizontesScreen: React.FC<AbindoHorizontesScreenProps> = ({
       
       <AlunosAHTable 
         alunos={alunos} 
-        onSelecionarAluno={handleSelecionarAluno} 
+        onSelecionarAluno={handleSelecionarPessoa} 
         ahRegistrado={ahRegistrado}
       />
       
-      {alunoSelecionado && (
+      {pessoaSelecionada && (
         <AhLancamentoModal
           isOpen={modalAberto}
-          aluno={alunoSelecionado}
+          aluno={pessoaSelecionada}
           onClose={handleFecharModal}
           onSuccess={handleModalSuccess}
         />

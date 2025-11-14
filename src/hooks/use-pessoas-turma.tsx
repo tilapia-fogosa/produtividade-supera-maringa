@@ -48,117 +48,72 @@ export function usePessoasTurma() {
   const buscarPessoasPorTurma = useCallback(async (turmaId: string) => {
     try {
       setCarregandoPessoas(true);
+      console.log('Buscando pessoas para a turma:', turmaId, 'usando função SQL...');
       
-      // Primeiro, obter o unit_id da turma
-      const { data: turmaData, error: turmaError } = await supabase
-        .from('turmas')
-        .select('unit_id')
-        .eq('id', turmaId)
-        .single();
-      
-      if (turmaError) throw turmaError;
-      
-      // Buscar alunos para esta turma
-      const { data: alunosData, error: alunosError } = await supabase
-        .from('alunos')
-        .select('*')
-        .eq('turma_id', turmaId)
-        .eq('unit_id', turmaData.unit_id)
-        .eq('active', true)
-        .order('nome');
+      // Usar a função SQL get_pessoas_turma que já traz o último registro
+      const { data: pessoasData, error } = await supabase
+        .rpc('get_pessoas_turma', { p_turma_id: turmaId });
 
-      if (alunosError) throw alunosError;
-      
-      // Buscar funcionários para esta turma
-      const { data: funcionariosData, error: funcionariosError } = await supabase
-        .from('funcionarios')
-        .select('*')
-        .eq('turma_id', turmaId)
-        .eq('active', true)
-        .order('nome');
-      
-      if (funcionariosError) throw funcionariosError;
-      
-      // Converter alunos para o formato comum
-      const alunosConvertidos: PessoaTurma[] = alunosData.map(aluno => ({
-        ...aluno,
-        origem: 'aluno' as const
-      })) as PessoaTurma[];
-      
-      // Converter funcionários para o formato comum
-      const funcionariosConvertidos: PessoaTurma[] = funcionariosData.map(funcionario => ({
-        ...funcionario,
-        unit_id: turmaData.unit_id, // Adicionamos o unit_id da turma para manter compatibilidade
-        origem: 'funcionario' as const
-      })) as PessoaTurma[];
-      
-      // Combinar ambas as listas
-      const todasPessoas = [...alunosConvertidos, ...funcionariosConvertidos].sort((a, b) => 
-        a.nome.localeCompare(b.nome)
-      );
-      
-      console.log(`Encontrados ${alunosData.length} alunos e ${funcionariosData.length} funcionários para turma ${turmaId}`);
-      
-      // Buscar os últimos registros de produtividade de cada pessoa
-      const pessoasIds = todasPessoas.map(pessoa => pessoa.id);
-      
-      // Buscar último registro de produtividade para cada pessoa
-      const { data: ultimosRegistros, error: ultimosRegistrosError } = await supabase
-        .from('produtividade_abaco')
-        .select('id, aluno_id, created_at, data_aula')
-        .in('aluno_id', pessoasIds)
-        .order('created_at', { ascending: false });
-        
-      if (ultimosRegistrosError) throw ultimosRegistrosError;
-      
-      // Associar os últimos registros às pessoas
-      if (ultimosRegistros && ultimosRegistros.length > 0) {
-        // Criar um objeto com o último registro de cada aluno
-        const ultimosPorAluno: Record<string, { id: string, created_at: string, data_aula: string }> = {};
-        ultimosRegistros.forEach(registro => {
-          if (!ultimosPorAluno[registro.aluno_id]) {
-            ultimosPorAluno[registro.aluno_id] = {
-              id: registro.id,
-              created_at: registro.created_at,
-              data_aula: registro.data_aula
-            };
-          }
-        });
-        
-        // Adicionar informações do último registro a cada pessoa
-        todasPessoas.forEach(pessoa => {
-          const ultimoRegistro = ultimosPorAluno[pessoa.id];
-          if (ultimoRegistro) {
-            pessoa.data_ultimo_registro = ultimoRegistro.data_aula;
-            pessoa.ultimo_registro_id = ultimoRegistro.id;
-          }
-        });
+      if (error) {
+        console.error('Erro ao buscar pessoas da turma:', error);
+        throw error;
       }
-      
-      setPessoasTurma(todasPessoas);
-      
-      // Verificar registros de produtividade para o dia atual
+
+      // Converter os dados para PessoaTurma
+      const pessoasFormatadas: PessoaTurma[] = pessoasData?.map(pessoa => ({
+        id: pessoa.id,
+        nome: pessoa.nome,
+        email: pessoa.email || '',
+        telefone: pessoa.telefone,
+        turma_id: turmaId,
+        active: true, // A view já filtra por active = true
+        origem: pessoa.origem as 'aluno' | 'funcionario',
+        cargo: pessoa.cargo,
+        ultima_correcao_ah: null, // Não disponível na função atual
+        data_ultimo_registro: pessoa.ultimo_registro_data,
+        ultimo_registro_id: pessoa.ultimo_registro_id,
+        codigo: null, // Não disponível na função atual
+        ultimo_nivel: null, // Não disponível na função atual
+        ultima_pagina: null, // Não disponível na função atual
+        niveldesafio: null, // Não disponível na função atual
+        data_onboarding: null, // Não disponível na função atual
+        dias_supera: pessoa.dias_supera,
+        idade: pessoa.idade
+      })) || [];
+
+      console.log('Pessoas carregadas da função SQL:', {
+        total: pessoasFormatadas.length,
+        porOrigem: pessoasFormatadas.reduce((acc, p) => {
+          acc[p.origem] = (acc[p.origem] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      });
+
+      setPessoasTurma(pessoasFormatadas);
+
+      // Buscar registros de produtividade para o dia atual
       const hoje = new Date().toISOString().split('T')[0];
-      const { data: registrosData, error: registrosError } = await supabase
-        .from('produtividade_abaco')
-        .select('aluno_id')
-        .eq('data_aula', hoje);
-        
-      if (registrosError) throw registrosError;
+      const pessoaIds = pessoasFormatadas.map(p => p.id);
       
-      // Resetar o estado da produtividade registrada
-      const novoEstado: Record<string, boolean> = {};
-      if (registrosData && registrosData.length > 0) {
-        registrosData.forEach(registro => {
-          novoEstado[registro.aluno_id] = true;
+      if (pessoaIds.length > 0) {
+        const { data: registrosHoje } = await supabase
+          .from('produtividade_abaco')
+          .select('pessoa_id')
+          .in('pessoa_id', pessoaIds)
+          .eq('data_aula', hoje);
+
+        const produtividadeMap: Record<string, boolean> = {};
+        registrosHoje?.forEach(registro => {
+          produtividadeMap[registro.pessoa_id] = true;
         });
+
+        setProdutividadeRegistrada(produtividadeMap);
       }
-      
-      setProdutividadeRegistrada(novoEstado);
+
       setDataRegistroProdutividade(hoje);
-      
+
     } catch (error) {
-      console.error('Erro ao buscar pessoas por turma:', error);
+      console.error('Erro ao buscar pessoas da turma:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar a lista de pessoas desta turma.",

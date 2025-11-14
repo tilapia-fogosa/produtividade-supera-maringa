@@ -1,0 +1,108 @@
+/* Wrapper principal */
+.devolutiva-fim-ano-wrapper {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Container principal */
+.devolutiva-fim-ano-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: hsl(var(--muted));
+  padding: 20px;
+}
+
+/* Página A4 */
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Camada de fundo com a foto do aluno */
+.foto-aluno-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+/* Camada de overlay com o template */
+.template-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Estilos de impressão */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .devolutiva-fim-ano-wrapper {
+    min-height: 0;
+    padding-bottom: 0 !important;
+  }
+
+  .devolutiva-fim-ano-container {
+    padding: 0;
+    background: white;
+    min-height: 0;
+    display: block;
+  }
+
+  .a4-page {
+    width: 210mm;
+    height: 297mm;
+    box-shadow: none;
+    page-break-after: always;
+    margin: 0;
+    aspect-ratio: unset;
+  }
+
+  .foto-aluno-background {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+  }
+
+  .template-overlay {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Ocultar elementos da interface */
+  .app-sidebar,
+  .sidebar,
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+}
+
+/* Configuração de página para impressão */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}

@@ -20,10 +20,12 @@ export const useEstagiarios = (unitId?: string) => {
       try {
         setIsLoading(true);
         
+        // Buscar funcionários com cargo "Estagiário" ao invés da tabela estagiarios
         let query = supabase
-          .from('estagiarios')
+          .from('funcionarios')
           .select('*')
-          .eq('active', true);
+          .eq('active', true)
+          .eq('cargo', 'Estagiário');
           
         // Se unitId estiver definido, filtrar por unidade
         if (unitId) {
@@ -34,7 +36,16 @@ export const useEstagiarios = (unitId?: string) => {
         
         if (error) throw error;
         
-        setEstagiarios(data as Estagiario[]);
+        // Mapear os dados para o formato esperado
+        const estagiariosFormatados = data?.map(func => ({
+          id: func.id,
+          nome: func.nome,
+          active: func.active,
+          unit_id: func.unit_id,
+          created_at: func.created_at
+        })) || [];
+        
+        setEstagiarios(estagiariosFormatados);
       } catch (err: any) {
         console.error('Erro ao buscar estagiários:', err);
         setError(err.message || 'Erro ao carregar estagiários');

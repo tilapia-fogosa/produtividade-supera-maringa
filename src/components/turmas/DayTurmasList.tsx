@@ -20,7 +20,7 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
   const dia = location.state?.dia;
 
   const handleTurmaClick = (turmaId: string) => {
-    if (serviceType === 'devolutiva') {
+    if (serviceType === 'devolutiva' || serviceType === 'projeto_sao_rafael') {
       navigate(`/devolutivas/turma/${turmaId}`);
     } else if (serviceType === 'abrindo_horizontes') {
       navigate(`/turma/${turmaId}/abrindo-horizontes`, { 
@@ -51,7 +51,12 @@ const DayTurmasList: React.FC<DayTurmasListProps> = ({
   return (
     <div className="grid grid-cols-1 gap-3">
       {turmasOrdenadas.length === 0 ? (
-        <p className="text-center text-muted-foreground">Nenhuma turma encontrada para este dia.</p>
+        <p className="text-center text-muted-foreground">
+          {serviceType === 'projeto_sao_rafael' 
+            ? 'Nenhuma turma encontrada para o Projeto São Rafael.'
+            : 'Nenhuma turma encontrada para este dia.'
+          }
+        </p>
       ) : (
         turmasOrdenadas.map((turma) => (
           <Button

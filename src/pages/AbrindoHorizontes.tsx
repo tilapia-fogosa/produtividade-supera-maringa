@@ -8,7 +8,7 @@ const AbrindoHorizontes = () => {
   const { turmaId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { turma, alunos, loading } = useTurmaDetalhes(turmaId);
+  const { turma, pessoas, loading } = useTurmaDetalhes(turmaId);
   
   const dia = location.state?.dia;
   const serviceType = location.state?.serviceType || 'abrindo_horizontes';
@@ -48,7 +48,7 @@ const AbrindoHorizontes = () => {
         <AbindoHorizontesScreen 
           turma={turma}
           onBack={handleVoltar}
-          alunos={alunos}
+          alunos={pessoas}
         />
       </div>
     </div>

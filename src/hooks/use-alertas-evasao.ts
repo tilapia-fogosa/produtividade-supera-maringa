@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAlunos } from "@/hooks/use-alunos";
 import { supabase } from '@/integrations/supabase/client';
@@ -168,37 +167,6 @@ export function useAlertasEvasao() {
     try {
       setIsSubmitting(true);
       
-      // Determinar a coluna inicial com base na presença de data de retenção
-      const initialColumn = dataRetencao ? 'scheduled' : 'todo';
-      
-      // Construir o histórico completo com dados da aula zero se disponíveis
-      const historicoCompleto = construirHistoricoCompleto();
-      
-      // Formatar a data do alerta para ser apenas a data, sem hora
-      const dataAlertaFormatada = dataAlerta ? new Date(dataAlerta).toISOString().split('T')[0] : null;
-      
-      // Formatar a data de retenção, se existir
-      const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
-      
-      // Primeiro salvar no banco de dados
-      const { data: alertaData, error } = await supabase
-        .from('alerta_evasao')
-        .insert({
-          aluno_id: alunoSelecionado,
-          data_alerta: dataAlertaFormatada,
-          origem_alerta: origemAlerta,
-          descritivo,
-          responsavel: responsavelNome,
-          data_retencao: dataRetencaoFormatada,
-          kanban_status: initialColumn, // Define a coluna inicial
-        })
-        .select();
-
-      if (error) {
-        console.error("Erro ao salvar alerta:", error);
-        throw error;
-      }
-
       // Encontrar os dados do aluno selecionado
       const aluno = todosAlunos.find(a => a.id === alunoSelecionado);
 
@@ -223,54 +191,6 @@ export function useAlertasEvasao() {
         }
       }
 
-      // Se temos uma data de retenção, enviar para o webhook de agendamento
-      if (dataRetencao && alertaData && alertaData.length > 0) {
-        const alertaId = alertaData[0].id;
-        
-        // Buscar o card criado pelo trigger
-        const { data: cardData, error: cardError } = await supabase
-          .from('kanban_cards')
-          .select('*')
-          .eq('alerta_evasao_id', alertaId)
-          .single();
-        
-        if (cardError) {
-          console.error('Erro ao buscar card criado:', cardError);
-        } else if (cardData) {
-          // Atualizamos o histórico do card para incluir dados da aula zero
-          const { error: updateError } = await supabase
-            .from('kanban_cards')
-            .update({ 
-              historico: historicoCompleto
-            })
-            .eq('id', cardData.id);
-            
-          if (updateError) {
-            console.error('Erro ao atualizar histórico do card:', updateError);
-          }
-          
-          // Enviar para o webhook de retenção agendada
-          try {
-            const webhookUrl = 'https://hook.us1.make.com/0t4vimtrmnqu3wtpfskf7ooydbjsh300';
-            await fetch(webhookUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                cardId: cardData.id,
-                aluno: aluno?.nome,
-                descricao: descritivo,
-                dataRetencao: dataRetencao ? new Date(dataRetencao).toISOString() : null,
-                responsavel: responsavelNome
-              })
-            });
-          } catch (webhookError) {
-            console.error('Erro ao enviar para webhook de retenção:', webhookError);
-          }
-        }
-      }
-
       // Enviar mensagem para o Slack
       try {
         console.log('Enviando alerta para o Slack...');
@@ -280,11 +200,11 @@ export function useAlertasEvasao() {
             body: { 
               aluno: aluno?.nome || 'Aluno de Teste',
               alunoId: alunoSelecionado, // Enviamos o ID do aluno
-              dataAlerta: new Date(dataAlerta).toLocaleDateString('pt-BR'),
+              dataAlerta: dataAlerta, // Envia a data bruta (YYYY-MM-DD)
               responsavel: responsavelNome,
               descritivo: descritivo,
               origem: origemAlerta,
-              dataRetencao: dataRetencao ? new Date(dataRetencao).toLocaleDateString('pt-BR') : '',
+              dataRetencao: dataRetencao ? new Date(dataRetencao).toLocaleString('pt-BR') : '',
               turma: turmaNome,
               professor: professorNome,
               professorSlack: professorSlack,
@@ -300,6 +220,40 @@ export function useAlertasEvasao() {
         }
       } catch (slackError) {
         console.error('Erro ao invocar function de Slack:', slackError);
+      }
+
+      // Construir o histórico completo com dados da aula zero se disponíveis
+      const historicoCompleto = construirHistoricoCompleto();
+      
+      // Formatar a data do alerta para ser apenas a data, sem hora
+      const dataAlertaFormatada = dataAlerta ? new Date(dataAlerta).toISOString().split('T')[0] : null;
+      
+      // Formatar a data de retenção, se existir (mantém data e hora)
+      const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
+
+      // Inserir dados na tabela alerta_evasao após o envio para Slack
+      try {
+        console.log('Salvando alerta no banco de dados...');
+        const { data: alertaData, error: alertaError } = await supabase
+          .from('alerta_evasao')
+          .insert({
+            aluno_id: alunoSelecionado,
+            data_alerta: dataAlertaFormatada,
+            origem_alerta: origemAlerta,
+            descritivo: descritivo,
+            responsavel: responsavelNome,
+            data_retencao: dataRetencaoFormatada,
+            status: 'pendente',
+            kanban_status: 'todo'
+          });
+
+        if (alertaError) {
+          console.error('Erro ao salvar alerta no banco:', alertaError);
+        } else {
+          console.log('Alerta salvo no banco com sucesso:', alertaData);
+        }
+      } catch (dbError) {
+        console.error('Erro ao inserir no banco de dados:', dbError);
       }
 
       // Sempre envia para o webhook geral de alertas
@@ -339,16 +293,16 @@ export function useAlertasEvasao() {
 
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão registrado com sucesso!",
+        description: "Alerta de evasão processado com sucesso! Dados enviados para Slack, webhook e salvos no banco.",
       });
       
       resetForm();
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar alerta:', error);
+      console.error('Erro ao processar alerta:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar o alerta de evasão.",
+        description: "Não foi possível processar o alerta de evasão.",
         variant: "destructive",
       });
     } finally {

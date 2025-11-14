@@ -1,0 +1,126 @@
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import templateV1 from '@/assets/devolutiva-fim-ano-template-v3.png';
+import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
+import './devolutiva-fim-ano.css';
+
+const DevolutivaFimAnoImpressao: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const [dadosPessoa, setDadosPessoa] = useState<any>(null);
+
+  useEffect(() => {
+    // Recuperar dados do sessionStorage
+    const dados = sessionStorage.getItem('devolutiva-impressao');
+    if (dados) {
+      setDadosPessoa(JSON.parse(dados));
+    }
+  }, []);
+
+  if (!dadosPessoa) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
+  // Selecionar template baseado na versão
+  const templateOverlay = dadosPessoa.versaoTemplate === 1 ? templateV1 : templateV2;
+
+  return (
+    <div className="devolutiva-fim-ano-wrapper" style={{ padding: 0, minHeight: '100vh' }}>
+      <div className="devolutiva-fim-ano-container" style={{ padding: 0 }}>
+        <div className="a4-page">
+          {/* Camada de fundo - FOTO DO ALUNO */}
+          {dadosPessoa.fotoUrl && (
+            <div 
+              className="foto-aluno-background"
+              style={{
+                backgroundImage: `url(${dadosPessoa.fotoUrl})`,
+                backgroundSize: dadosPessoa.versaoTemplate === 1 ? '76%' : `${dadosPessoa.tamanhoFoto}%`,
+                backgroundPosition: dadosPessoa.versaoTemplate === 1 ? '48% 46%' : `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
+              }}
+            />
+          )}
+          
+          {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
+          <img 
+            src={templateOverlay} 
+            alt="Template Devolutiva" 
+            className="template-overlay"
+          />
+          
+          {/* Nome do aluno */}
+          <div 
+            className="absolute font-abril-fatface"
+            style={{
+              top: `${dadosPessoa.alturaNome}%`,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 3,
+              color: '#000',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              fontSize: `${dadosPessoa.tamanhoFonte}px`
+            }}
+          >
+            {dadosPessoa.nome}
+          </div>
+          
+          {/* Total de desafios 2025 */}
+          <div 
+            className="absolute font-abril-fatface"
+            style={{
+              top: `${dadosPessoa.alturaExercicios}%`,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 3,
+              color: '#000',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              fontSize: '30px'
+            }}
+          >
+            {dadosPessoa.totalDesafios}
+          </div>
+          
+          {/* Total de exercícios ábaco 2025 */}
+          <div 
+            className="absolute font-abril-fatface"
+            style={{
+              top: `${dadosPessoa.alturaExercicios}%`,
+              left: `${dadosPessoa.posicaoXExerciciosAbaco}%`,
+              transform: 'translateX(-50%)',
+              zIndex: 3,
+              color: '#000',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              fontSize: '30px'
+            }}
+          >
+            {dadosPessoa.totalExerciciosAbaco}
+          </div>
+          
+          {/* Total de exercícios AH 2025 */}
+          <div 
+            className="absolute font-abril-fatface"
+            style={{
+              top: `${dadosPessoa.alturaExercicios}%`,
+              left: `${dadosPessoa.posicaoXExerciciosAH}%`,
+              transform: 'translateX(-50%)',
+              zIndex: 3,
+              color: '#000',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              fontSize: '30px'
+            }}
+          >
+            {dadosPessoa.totalExerciciosAH}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DevolutivaFimAnoImpressao;

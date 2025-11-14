@@ -10,9 +10,10 @@ interface ProdutividadeAH {
   erros: number;
   professor_correcao: string;
   comentario?: string;
+  data_fim_correcao?: string;
 }
 
-export const useAhLancamento = (alunoId?: string) => {
+export const useAhLancamento = (pessoaId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const registrarLancamentoAH = async (dados: ProdutividadeAH) => {
@@ -22,7 +23,7 @@ export const useAhLancamento = (alunoId?: string) => {
       // Garantir que aluno_id existe se foi passado na inicialização do hook
       const dadosCompletos = {
         ...dados,
-        aluno_id: alunoId || dados.aluno_id
+        aluno_id: pessoaId || dados.aluno_id
       };
       
       console.log('Enviando dados para edge function:', dadosCompletos);
@@ -37,25 +38,21 @@ export const useAhLancamento = (alunoId?: string) => {
         throw new Error(error.message);
       }
       
-      if (data && data.webhookError) {
-        toast({
-          title: "Parcialmente concluído",
-          description: data.message || "Dados salvos, mas não sincronizados com webhook externo.",
-          variant: "default"
-        });
+      console.log('Resposta da edge function:', data);
+      
+      if (data && data.success) {
+        return true;
+      } else if (data && data.error) {
+        throw new Error(data.error);
       } else {
-        toast({
-          title: "Sucesso",
-          description: "Lançamento de Abrindo Horizontes registrado com sucesso!",
-        });
+        throw new Error('Resposta inválida da edge function');
       }
       
-      return true;
     } catch (error) {
       console.error('Erro ao registrar lançamento AH:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível registrar o lançamento de Abrindo Horizontes",
+        description: error.message || "Não foi possível registrar o lançamento de Abrindo Horizontes",
         variant: "destructive"
       });
       return false;
@@ -64,20 +61,24 @@ export const useAhLancamento = (alunoId?: string) => {
     }
   };
 
-  const getUltimosLancamentosAH = async (alunoId: string, limit = 5) => {
+  const getUltimosLancamentosAH = async (pessoaId: string, limit = 5) => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      // Buscar lançamentos na tabela produtividade_ah usando a nova estrutura
+      const { data: lancamentos, error } = await supabase
         .from('produtividade_ah')
         .select('*')
-        .eq('aluno_id', alunoId)
+        .eq('pessoa_id', pessoaId)
         .order('created_at', { ascending: false })
         .limit(limit);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar lançamentos AH:', error);
+        return [];
+      }
       
-      return data || [];
+      return lancamentos || [];
     } catch (error) {
       console.error('Erro ao buscar lançamentos AH:', error);
       return [];

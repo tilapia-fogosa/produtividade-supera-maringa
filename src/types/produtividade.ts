@@ -11,6 +11,7 @@ export interface ProdutividadeAbaco {
   erros: number | null;
   fez_desafio: boolean;
   comentario: string | null;
+  motivo_falta: string | null; // Novo campo
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +32,7 @@ export interface ProdutividadeAH {
   erros: number | null;
   professor_correcao: string | null;
   comentario: string | null;
+  data_fim_correcao: string | null;
   created_at: string;
   updated_at: string;
 }
