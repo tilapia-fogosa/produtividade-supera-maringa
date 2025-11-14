@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts_payable: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid: boolean | null
+          paid_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid?: boolean | null
+          paid_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid?: boolean | null
+          paid_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      accounts_receivable: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          received: boolean | null
+          received_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          received?: boolean | null
+          received_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          received?: boolean | null
+          received_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ah_ignorar_coleta: {
         Row: {
           active: boolean
@@ -1403,6 +1487,39 @@ export type Database = {
           responsavel_entrega_tipo?: string | null
           tamanho_camiseta?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cash_accounts: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -5058,6 +5175,53 @@ export type Database = {
           presente?: boolean | null
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          cash_account_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          transaction_date: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          cash_account_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          transaction_date?: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          cash_account_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          transaction_date?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_cash_account_id_fkey"
+            columns: ["cash_account_id"]
+            isOneToOne: false
+            referencedRelation: "cash_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trofeus_1000_dias: {
         Row: {
