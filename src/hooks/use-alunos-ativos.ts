@@ -375,6 +375,321 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarEmail = async (alunoId: string, email: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ email } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, email } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Email atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar email:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o email.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarTelefone = async (alunoId: string, telefone: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ telefone } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, telefone } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Telefone atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar telefone:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o telefone.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarCoordenadorResponsavel = async (alunoId: string, coordenador: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ coordenador_responsavel: coordenador } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, coordenador_responsavel: coordenador } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Coordenador responsável atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar coordenador:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o coordenador responsável.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarValorMensalidade = async (alunoId: string, valor: number): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ valor_mensalidade: valor } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, valor_mensalidade: valor } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Valor da mensalidade atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar valor da mensalidade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o valor da mensalidade.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarVencimentoContrato = async (alunoId: string, vencimento: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ vencimento_contrato: vencimento } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, vencimento_contrato: vencimento } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Vencimento do contrato atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar vencimento do contrato:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o vencimento do contrato.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarMotivoProcura = async (alunoId: string, motivo: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ motivo_procura: motivo } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, motivo_procura: motivo } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Motivo da procura atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar motivo da procura:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o motivo da procura.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarPercepcaoCoordenador = async (alunoId: string, percepcao: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ percepcao_coordenador: percepcao } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, percepcao_coordenador: percepcao } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Percepção do coordenador atualizada com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar percepção do coordenador:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a percepção do coordenador.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarPontosAtencao = async (alunoId: string, pontos: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ pontos_atencao: pontos } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, pontos_atencao: pontos } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Pontos de atenção atualizados com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar pontos de atenção:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar os pontos de atenção.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarDataOnboarding = async (alunoId: string, dataOnboarding: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ data_onboarding: dataOnboarding } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, data_onboarding: dataOnboarding } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Data de onboarding atualizada com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar data de onboarding:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a data de onboarding.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
@@ -384,5 +699,14 @@ export function useAlunosAtivos() {
     atualizarResponsavel,
     atualizarFoto,
     atualizarDataNascimento,
+    atualizarEmail,
+    atualizarTelefone,
+    atualizarCoordenadorResponsavel,
+    atualizarValorMensalidade,
+    atualizarVencimentoContrato,
+    atualizarMotivoProcura,
+    atualizarPercepcaoCoordenador,
+    atualizarPontosAtencao,
+    atualizarDataOnboarding,
   };
 }

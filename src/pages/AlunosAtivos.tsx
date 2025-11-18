@@ -6,9 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
-import { DetalhesAlunoAtivoModal } from '@/components/alunos/DetalhesAlunoAtivoModal';
+import { ExpandableAlunoCard } from '@/components/alunos/ExpandableAlunoCard';
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
 type SortDirection = 'asc' | 'desc';
 export default function AlunosAtivos() {
@@ -27,7 +27,7 @@ export default function AlunosAtivos() {
   const [filterApostila, setFilterApostila] = useState<string[]>([]);
   const [sortField, setSortField] = useState<SortField>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoAtivo | null>(null);
+  const [alunoExpandido, setAlunoExpandido] = useState<AlunoAtivo | null>(null);
   const [editandoWhatsApp, setEditandoWhatsApp] = useState<string | null>(null);
   const [whatsappTemp, setWhatsappTemp] = useState('');
   const [salvandoWhatsApp, setSalvandoWhatsApp] = useState<string | null>(null);
@@ -115,12 +115,6 @@ export default function AlunosAtivos() {
     setFilterTurma([]);
     setFilterProfessor([]);
     setFilterApostila([]);
-  };
-  const handleVerDetalhes = (aluno: AlunoAtivo) => {
-    setAlunoSelecionado(aluno);
-  };
-  const handleFecharModal = () => {
-    setAlunoSelecionado(null);
   };
   const handleEditarWhatsApp = (aluno: AlunoAtivo) => {
     setEditandoWhatsApp(aluno.id);
@@ -431,13 +425,22 @@ export default function AlunosAtivos() {
                    <th className="text-left p-4 w-[150px]">
                      <span className="font-semibold">Responsável</span>
                    </th>
-                   <th className="text-left p-4 w-[100px]">
+                   <th className="text-left p-4 w-[60px]">
                      <span className="font-semibold">Ações</span>
                    </th>
                 </tr>
               </thead>
               <tbody>
-                {alunosFiltrados.map(aluno => <tr key={aluno.id} className="border-b hover:bg-gray-50">
+                {alunosFiltrados.map(aluno => <tr 
+                  key={aluno.id} 
+                  className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={(e) => {
+                    // Não expandir se clicar em campo editável
+                    const target = e.target as HTMLElement;
+                    if (target.closest('.editable-field') || target.closest('button')) return;
+                    setAlunoExpandido(aluno);
+                  }}
+                >
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{aluno.nome}</span>
@@ -465,7 +468,7 @@ export default function AlunosAtivos() {
                     </td>
                     <td className="p-4">
                       {editandoDataNascimento === aluno.id ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 editable-field">
                           <Input
                             type="date"
                             value={dataNascimentoTemp}
@@ -494,7 +497,7 @@ export default function AlunosAtivos() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center gap-2" onClick={() => handleEditarDataNascimento(aluno)}>
+                        <div className="editable-field hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center gap-2" onClick={() => handleEditarDataNascimento(aluno)}>
                           <span className="text-sm">
                             {aluno.data_nascimento ? (
                               <>
@@ -512,7 +515,7 @@ export default function AlunosAtivos() {
                       )}
                     </td>
                     <td className="p-4">
-                      {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-2">
+                      {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-2 editable-field">
                           <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-8 text-sm" onKeyDown={e => {
                       if (e.key === 'Enter') {
                         handleSalvarWhatsApp(aluno.id);
@@ -523,12 +526,12 @@ export default function AlunosAtivos() {
                           <Button variant="ghost" size="sm" onClick={() => handleSalvarWhatsApp(aluno.id)} disabled={salvandoWhatsApp === aluno.id}>
                             {salvandoWhatsApp === aluno.id ? <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-4 h-4" />}
                           </Button>
-                        </div> : <div className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarWhatsApp(aluno)}>
+                        </div> : <div className="editable-field hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarWhatsApp(aluno)}>
                           {aluno.whatapp_contato ? <span className="text-sm">{aluno.whatapp_contato}</span> : <span className="text-gray-400 text-sm">Clique para adicionar</span>}
                         </div>}
                      </td>
                      <td className="p-4">
-                       {editandoResponsavel === aluno.id ? <div className="flex items-center gap-2">
+                       {editandoResponsavel === aluno.id ? <div className="flex items-center gap-2 editable-field">
                            <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-8 text-sm" onKeyDown={e => {
                       if (e.key === 'Enter') {
                         handleSalvarResponsavel(aluno.id);
@@ -539,19 +542,23 @@ export default function AlunosAtivos() {
                            <Button variant="ghost" size="sm" onClick={() => handleSalvarResponsavel(aluno.id)} disabled={salvandoResponsavel === aluno.id}>
                              {salvandoResponsavel === aluno.id ? <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-4 h-4" />}
                            </Button>
-                         </div> : <div className="cursor-pointer hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarResponsavel(aluno)}>
+                         </div> : <div className="editable-field hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarResponsavel(aluno)}>
                            {aluno.responsavel ? <span className="text-sm">{aluno.responsavel}</span> : <span className="text-gray-400 text-sm">Clique para adicionar</span>}
                          </div>}
                      </td>
                        <td className="p-4">
-                         <div className="flex gap-1">
-                           <Button variant="ghost" size="icon" onClick={() => handleVerDetalhes(aluno)} className="h-8 w-8" title="Ver Detalhes">
-                             <Eye className="w-4 h-4" />
-                           </Button>
-                           <Button variant="ghost" size="icon" onClick={() => handleAbrirWhatsApp(aluno)} className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" title="Abrir WhatsApp">
-                             <MessageCircle className="w-4 h-4" />
-                           </Button>
-                         </div>
+                         <Button 
+                           variant="ghost" 
+                           size="icon" 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handleAbrirWhatsApp(aluno);
+                           }} 
+                           className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" 
+                           title="Abrir WhatsApp"
+                         >
+                           <MessageCircle className="w-4 h-4" />
+                         </Button>
                        </td>
                   </tr>)}
               </tbody>
@@ -564,7 +571,10 @@ export default function AlunosAtivos() {
         </CardContent>
       </Card>
 
-      {/* Modal de detalhes do aluno */}
-      {alunoSelecionado && <DetalhesAlunoAtivoModal aluno={alunoSelecionado} onClose={handleFecharModal} />}
+      {/* Card expandido do aluno */}
+      <ExpandableAlunoCard 
+        aluno={alunoExpandido} 
+        onClose={() => setAlunoExpandido(null)} 
+      />
     </div>;
 }

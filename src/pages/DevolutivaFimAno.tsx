@@ -130,23 +130,21 @@ const DevolutivaFimAno: React.FC = () => {
     const opcoes = {
       margin: 0,
       filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'png' as const, quality: 1 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { 
-        scale: 4, // Aumentado de 1 para 4 para máxima qualidade
+        scale: 4, // Qualidade máxima profissional (~300 DPI)
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        allowTaint: true,
-        imageTimeout: 0,
-        removeContainer: true,
-        letterRendering: true,
-        foreignObjectRendering: false
+        allowTaint: false,
+        windowWidth: 794,   // Largura A4 em pixels (210mm)
+        windowHeight: 1123  // Altura A4 em pixels (297mm)
       },
       jsPDF: { 
         unit: 'mm', 
         format: 'a4', 
         orientation: 'portrait' as const,
-        compress: false // Desabilitar compressão para manter qualidade
+        compress: false  // Sem compressão para máxima qualidade
       },
       pagebreak: { mode: 'avoid-all' }
     };
@@ -179,235 +177,6 @@ const DevolutivaFimAno: React.FC = () => {
   }, [alunos, tipoPessoa, turmaFiltro, professorFiltro, turmas]);
 
   const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
-
-  const handleImprimirComIframe = () => {
-    const elemento = document.querySelector('.a4-page') as HTMLElement;
-    if (!elemento || !pessoaSelecionada) return;
-
-    // Criar iframe invisível
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = 'none';
-    iframe.style.visibility = 'hidden';
-    document.body.appendChild(iframe);
-
-    const iframeDoc = iframe.contentWindow?.document;
-    if (!iframeDoc) return;
-
-    // Copiar estilos CSS necessários
-    const estilosPagina = `
-      <style>
-        @font-face {
-          font-family: 'Mencken';
-          src: url('/src/assets/fonts/Mencken-Std-Text-Extra-Bold.otf') format('opentype');
-          font-weight: 800;
-          font-style: normal;
-        }
-
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        @page {
-          size: A4 portrait;
-          margin: 0;
-        }
-
-        html, body {
-          margin: 0;
-          padding: 0;
-          width: 210mm;
-          height: 297mm;
-          overflow: hidden;
-        }
-
-        .a4-page {
-          width: 210mm;
-          height: 297mm;
-          position: relative;
-          overflow: hidden;
-          background: white;
-          margin: 0;
-          padding: 0;
-          page-break-after: avoid;
-        }
-
-        .foto-aluno-background {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-repeat: no-repeat;
-          z-index: 1;
-        }
-
-        .template-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .font-abril-fatface {
-          font-family: 'Mencken', serif;
-          font-weight: 800;
-        }
-
-        .absolute {
-          position: absolute;
-        }
-
-        @media print {
-          html, body {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-          }
-
-          .a4-page {
-            width: 210mm !important;
-            height: 297mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            page-break-after: avoid !important;
-          }
-        }
-      </style>
-    `;
-
-    // Preparar HTML com apenas o conteúdo necessário
-    const fotoHtml = pessoaSelecionada?.foto_devolutiva_url ? `
-      <div 
-        class="foto-aluno-background"
-        style="
-          background-image: url(${pessoaSelecionada.foto_devolutiva_url});
-          background-size: ${tamanhoFoto}%;
-          background-position: ${posicaoX}% ${posicaoY}%;
-        "
-      ></div>
-    ` : '';
-
-    const conteudoHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Devolutiva</title>
-          ${estilosPagina}
-        </head>
-        <body>
-          <div class="a4-page">
-            ${fotoHtml}
-            <img 
-              src="${templateOverlay}" 
-              alt="Template" 
-              class="template-overlay"
-            />
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaNome}%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: ${tamanhoFonte}px;
-              "
-            >
-              ${pessoaSelecionada.nome}
-            </div>
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaExercicios}%;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: 30px;
-              "
-            >
-              ${totalDesafios2025}
-            </div>
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaExercicios}%;
-                left: ${posicaoXExerciciosAbaco}%;
-                transform: translateX(-50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: 30px;
-              "
-            >
-              ${totalExerciciosAbaco2025}
-            </div>
-            <div 
-              class="absolute font-abril-fatface"
-              style="
-                top: ${alturaExercicios}%;
-                left: ${posicaoXExerciciosAH}%;
-                transform: translateX(-50%);
-                z-index: 3;
-                color: #000;
-                text-align: center;
-                white-space: nowrap;
-                font-size: 30px;
-              "
-            >
-              ${totalExerciciosAH2025}
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    // Escrever no iframe
-    iframeDoc.open();
-    iframeDoc.write(conteudoHtml);
-    iframeDoc.close();
-
-    // Aguardar carregamento das imagens
-    const imgTemplate = iframeDoc.querySelector('.template-overlay') as HTMLImageElement;
-    
-    const imprimir = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.print();
-        
-        // Remover iframe após impressão
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 100);
-      }, 500);
-    };
-
-    if (imgTemplate) {
-      if (imgTemplate.complete) {
-        imprimir();
-      } else {
-        imgTemplate.onload = imprimir;
-      }
-    } else {
-      imprimir();
-    }
-  };
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
@@ -670,15 +439,15 @@ const DevolutivaFimAno: React.FC = () => {
                   size="sm"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Exportar PDF
+                  Exportar PDF (Recomendado)
                 </Button>
                 <Button
-                  onClick={handleImprimirComIframe}
-                  variant="default"
+                  onClick={() => window.print()}
+                  variant="outline"
                   size="sm"
                 >
                   <Printer className="mr-2 h-4 w-4" />
-                  Imprimir
+                  Impressão Rápida (Ctrl+P)
                 </Button>
                 <Button
                   onClick={() => setMostrarPreview(false)}
@@ -824,21 +593,11 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de exportar PDF */}
           <Button
             onClick={handleSalvarPDF}
-            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
-            variant="default"
-            title="Exportar como PDF"
-          >
-            <Download className="h-5 w-5" />
-          </Button>
-
-          {/* Botão de impressão */}
-          <Button
-            onClick={handleImprimirComIframe}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
-            title="Imprimir devolutiva"
+            title="Exportar PDF em alta qualidade (300 DPI) - Recomendado para impressão profissional"
           >
-            <Printer className="h-5 w-5" />
+            <Download className="h-5 w-5" />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}
@@ -850,40 +609,34 @@ const DevolutivaFimAno: React.FC = () => {
             {mostrarControles ? '×' : '☰'}
           </Button>
 
-          {/* Barra de controles */}
+          {/* Barra de controles - Design Minimalista */}
           {mostrarControles && (
-            <div className="no-print fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 z-40">
-              <div className="max-w-6xl mx-auto space-y-4">
-                {/* Controle de tamanho */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Tamanho da Foto (V{versaoTemplate})</Label>
-                    <span className="text-sm text-muted-foreground">{tamanhoFoto}%</span>
+            <div className="no-print fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg py-2 px-3 z-40">
+              <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                  {/* Tamanho da Foto */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Tamanho</span>
+                    <Slider
+                      value={[tamanhoFoto]}
+                      onValueChange={(value) => {
+                        if (versaoTemplate === 1) {
+                          setTamanhoFotoV1(value[0]);
+                        } else {
+                          setTamanhoFotoV2(value[0]);
+                        }
+                      }}
+                      min={50}
+                      max={200}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{tamanhoFoto}%</span>
                   </div>
-                  <Slider
-                    value={[tamanhoFoto]}
-                    onValueChange={(value) => {
-                      if (versaoTemplate === 1) {
-                        setTamanhoFotoV1(value[0]);
-                      } else {
-                        setTamanhoFotoV2(value[0]);
-                      }
-                    }}
-                    min={50}
-                    max={200}
-                    step={1}
-                    className="w-full"
-                  />
-                </div>
 
-                {/* Controles de posição */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Posição X */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Posição X (Horizontal) - V{versaoTemplate}</Label>
-                      <span className="text-sm text-muted-foreground">{posicaoX}%</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Pos. X</span>
                     <Slider
                       value={[posicaoX]}
                       onValueChange={(value) => {
@@ -896,16 +649,14 @@ const DevolutivaFimAno: React.FC = () => {
                       min={0}
                       max={100}
                       step={1}
-                      className="w-full"
+                      className="flex-1"
                     />
+                    <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{posicaoX}%</span>
                   </div>
 
                   {/* Posição Y */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Posição Y (Vertical) - V{versaoTemplate}</Label>
-                      <span className="text-sm text-muted-foreground">{posicaoY}%</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Pos. Y</span>
                     <Slider
                       value={[posicaoY]}
                       onValueChange={(value) => {
@@ -918,31 +669,27 @@ const DevolutivaFimAno: React.FC = () => {
                       min={0}
                       max={100}
                       step={1}
-                      className="w-full"
+                      className="flex-1"
                     />
+                    <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{posicaoY}%</span>
                   </div>
-                </div>
 
-                {/* Controles do nome */}
-                {pessoaSelecionada && (
-                  <div className="pt-4 border-t">
-                    {/* Tamanho da fonte */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Tamanho da Fonte</Label>
-                        <span className="text-sm text-muted-foreground">{tamanhoFonte}px</span>
-                      </div>
+                  {/* Tamanho da Fonte */}
+                  {pessoaSelecionada && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Fonte</span>
                       <Slider
                         value={[tamanhoFonte]}
                         onValueChange={(value) => setTamanhoFonte(value[0])}
                         min={20}
                         max={80}
                         step={1}
-                        className="w-full"
+                        className="flex-1"
                       />
+                      <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{tamanhoFonte}px</span>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           )}
