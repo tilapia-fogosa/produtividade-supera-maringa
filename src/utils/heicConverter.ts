@@ -13,7 +13,7 @@ export async function convertHeicToJpeg(file: File): Promise<File> {
     const convertedBlob = await heic2any({
       blob: file,
       toType: 'image/jpeg',
-      quality: 0.9, // Alta qualidade
+      quality: 1.0, // Qualidade máxima
     });
 
     // heic2any pode retornar um array de Blobs ou um único Blob
