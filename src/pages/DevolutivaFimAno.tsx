@@ -328,7 +328,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="foto-aluno-background"
               style={{
-                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
                 backgroundSize: `${tamanhoFoto}%`,
                 backgroundPosition: `${posicaoX}% ${posicaoY}%`
               }}

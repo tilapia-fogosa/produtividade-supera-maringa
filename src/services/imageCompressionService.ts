@@ -1,50 +1,101 @@
 import imageCompression from 'browser-image-compression';
+import heic2any from 'heic2any';
 
-// DESABILITADO: Compressão automática removida para manter qualidade máxima
-// O bucket agora não tem limite de tamanho, permitindo imagens em alta qualidade
-const MAX_SIZE_MB = 50; // 50MB - apenas para arquivos extremamente grandes
-const TARGET_SIZE_MB = 20; // 20MB - tamanho alvo após compressão (apenas backup)
+// Configurações otimizadas para qualidade e performance
+const TARGET_SIZE_MB = 8; // 8MB - tamanho alvo (qualidade alta)
+const MAX_DIMENSION = 4096; // 4096px - dimensão máxima (excelente para impressão)
 
+/**
+ * Detecta e converte imagens HEIC/HEIF para JPG
+ * Necessário porque navegadores não suportam renderização de HEIC
+ */
+async function convertHeicIfNeeded(file: File): Promise<File> {
+  // Verificar se é HEIC/HEIF
+  const isHeic = file.type === 'image/heic' || 
+                 file.type === 'image/heif' ||
+                 file.name.toLowerCase().endsWith('.heic') ||
+                 file.name.toLowerCase().endsWith('.heif');
+  
+  if (!isHeic) {
+    return file;
+  }
+  
+  console.log('🔄 Detectado formato HEIC/HEIF, convertendo para JPG...');
+  
+  try {
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.95
+    });
+    
+    // heic2any pode retornar array de Blobs se houver múltiplas imagens
+    const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+    
+    // Converter Blob para File
+    const convertedFile = new File(
+      [blob],
+      file.name.replace(/\.(heic|heif)$/i, '.jpg'),
+      { type: 'image/jpeg' }
+    );
+    
+    console.log('✅ HEIC convertido para JPG:', {
+      tamanhoOriginal: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+      tamanhoConvertido: `${(convertedFile.size / (1024 * 1024)).toFixed(2)}MB`
+    });
+    
+    return convertedFile;
+  } catch (error) {
+    console.error('❌ Erro ao converter HEIC:', error);
+    throw new Error('Não foi possível converter a imagem HEIC. Tente exportar como JPG do seu dispositivo.');
+  }
+}
+
+/**
+ * Processa e otimiza imagens para uso na aplicação
+ * SEMPRE processa para garantir dimensões adequadas e boa performance
+ * Mantém alta qualidade (95%) e suporta dimensões grandes (4096px)
+ */
 export async function compressImageIfNeeded(file: File): Promise<File> {
   const fileSizeMB = file.size / (1024 * 1024);
   
-  console.log('📊 Verificando imagem:', {
+  console.log('📊 Processando imagem:', {
     nome: file.name,
     tamanho: `${fileSizeMB.toFixed(2)}MB`,
     tipo: file.type
   });
   
-  // Agora aceita imagens até 50MB sem compressão (qualidade máxima)
-  if (fileSizeMB <= MAX_SIZE_MB) {
-    console.log('✅ Imagem aceita sem compressão - qualidade máxima mantida');
-    return file;
-  }
-  
-  console.log('🗜️ Imagem grande, iniciando compressão...');
-  
   try {
+    // 1. Converter HEIC para JPG se necessário
+    const convertedFile = await convertHeicIfNeeded(file);
+    
+    // 2. SEMPRE comprimir/otimizar a imagem
+    // Isso garante dimensões adequadas e melhor performance
+    console.log('🗜️ Otimizando imagem para web...');
+    
     const options = {
-      maxSizeMB: TARGET_SIZE_MB,
-      maxWidthOrHeight: 4096, // Aumentado para 4096px para máxima qualidade
-      useWebWorker: true, // Usar Web Worker para não travar UI
-      fileType: file.type, // Manter formato original
-      initialQuality: 0.95, // Qualidade aumentada para 95%
+      maxSizeMB: TARGET_SIZE_MB,        // Máximo 8MB (alta qualidade)
+      maxWidthOrHeight: MAX_DIMENSION,  // 4096px (excelente para impressão)
+      useWebWorker: true,               // Não travar a interface
+      fileType: convertedFile.type,     // Manter formato (exceto se era HEIC)
+      initialQuality: 0.95,             // 95% de qualidade inicial
     };
     
-    const compressedFile = await imageCompression(file, options);
+    const processedFile = await imageCompression(convertedFile, options);
     
-    const compressedSizeMB = compressedFile.size / (1024 * 1024);
-    const reducao = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
+    const processedSizeMB = processedFile.size / (1024 * 1024);
+    const reducao = ((1 - processedFile.size / convertedFile.size) * 100).toFixed(1);
     
-    console.log('✅ Compressão concluída:', {
-      tamanhoOriginal: `${fileSizeMB.toFixed(2)}MB`,
-      tamanhoComprimido: `${compressedSizeMB.toFixed(2)}MB`,
-      reducao: `${reducao}%`
+    console.log('✅ Imagem processada:', {
+      tamanhoOriginal: `${(convertedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+      tamanhoFinal: `${processedSizeMB.toFixed(2)}MB`,
+      reducao: `${reducao}%`,
+      formato: processedFile.type
     });
     
-    return compressedFile;
+    return processedFile;
   } catch (error) {
-    console.error('❌ Erro ao comprimir imagem:', error);
-    throw new Error('Não foi possível comprimir a imagem. Tente uma imagem menor.');
+    console.error('❌ Erro ao processar imagem:', error);
+    throw new Error('Não foi possível processar a imagem. ' + (error instanceof Error ? error.message : ''));
   }
 }
