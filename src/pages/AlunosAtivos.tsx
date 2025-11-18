@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt, BookOpen } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { ExpandableAlunoCard } from '@/components/alunos/ExpandableAlunoCard';
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
@@ -258,6 +258,14 @@ export default function AlunosAtivos() {
           >
             <FileText className="w-4 h-4" />
             Fichas
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/diario')}
+            className="flex items-center gap-2"
+          >
+            <BookOpen className="w-4 h-4" />
+            Diários
           </Button>
         </div>
       </div>
