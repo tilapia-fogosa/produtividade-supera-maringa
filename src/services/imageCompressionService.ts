@@ -1,8 +1,9 @@
 import imageCompression from 'browser-image-compression';
 import heic2any from 'heic2any';
 
-const TARGET_SIZE_MB = 4; // 4MB - tamanho alvo
-const MAX_DIMENSION = 2048; // Dimensão máxima (suficiente para impressão de qualidade)
+// Configurações otimizadas para qualidade e performance
+const TARGET_SIZE_MB = 8; // 8MB - tamanho alvo (qualidade alta)
+const MAX_DIMENSION = 4096; // 4096px - dimensão máxima (excelente para impressão)
 
 /**
  * Detecta e converte imagens HEIC/HEIF para JPG
@@ -25,7 +26,7 @@ async function convertHeicIfNeeded(file: File): Promise<File> {
     const convertedBlob = await heic2any({
       blob: file,
       toType: 'image/jpeg',
-      quality: 0.9
+      quality: 0.95
     });
     
     // heic2any pode retornar array de Blobs se houver múltiplas imagens
@@ -53,6 +54,7 @@ async function convertHeicIfNeeded(file: File): Promise<File> {
 /**
  * Processa e otimiza imagens para uso na aplicação
  * SEMPRE processa para garantir dimensões adequadas e boa performance
+ * Mantém alta qualidade (95%) e suporta dimensões grandes (4096px)
  */
 export async function compressImageIfNeeded(file: File): Promise<File> {
   const fileSizeMB = file.size / (1024 * 1024);
@@ -72,11 +74,11 @@ export async function compressImageIfNeeded(file: File): Promise<File> {
     console.log('🗜️ Otimizando imagem para web...');
     
     const options = {
-      maxSizeMB: TARGET_SIZE_MB,        // Máximo 4MB (bom equilíbrio qualidade/tamanho)
-      maxWidthOrHeight: MAX_DIMENSION,  // 2048px (ótimo para impressão e web)
+      maxSizeMB: TARGET_SIZE_MB,        // Máximo 8MB (alta qualidade)
+      maxWidthOrHeight: MAX_DIMENSION,  // 4096px (excelente para impressão)
       useWebWorker: true,               // Não travar a interface
       fileType: convertedFile.type,     // Manter formato (exceto se era HEIC)
-      initialQuality: 0.9,              // 90% de qualidade inicial
+      initialQuality: 0.95,             // 95% de qualidade inicial
     };
     
     const processedFile = await imageCompression(convertedFile, options);
