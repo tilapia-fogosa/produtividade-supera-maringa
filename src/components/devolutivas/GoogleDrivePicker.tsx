@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { uploadLocalFileToSupabase } from '@/services/googleDriveService';
+import { convertHeicToJpeg, isHeicFile } from '@/utils/heicConverter';
 
 interface GoogleDrivePickerProps {
   onPhotoSelected: () => void;
@@ -279,20 +280,29 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
     setUploadingLocal(true);
     setCompressing(false);
 
-    // Verificar se precisa comprimir
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > 5) {
-      setCompressing(true);
-      setLoadingStatus('Comprimindo imagem grande...');
-      console.log('🗜️ Imagem grande detectada, comprimindo...');
-    } else {
-      setLoadingStatus('Fazendo upload do arquivo...');
-    }
-
     console.log('📁 Arquivo selecionado:', { name: file.name, size: file.size, type: file.type });
 
     try {
-      const result = await uploadLocalFileToSupabase(file, pessoaId, tipoPessoa);
+      let processedFile = file;
+
+      // Converter HEIC para JPEG se necessário
+      if (isHeicFile(file)) {
+        setLoadingStatus('Convertendo HEIC para JPEG...');
+        console.log('🔄 Arquivo HEIC detectado, iniciando conversão...');
+        processedFile = await convertHeicToJpeg(file);
+      }
+
+      // Verificar se precisa comprimir
+      const fileSizeMB = processedFile.size / (1024 * 1024);
+      if (fileSizeMB > 5) {
+        setCompressing(true);
+        setLoadingStatus('Comprimindo imagem grande...');
+        console.log('🗜️ Imagem grande detectada, comprimindo...');
+      } else {
+        setLoadingStatus('Fazendo upload do arquivo...');
+      }
+
+      const result = await uploadLocalFileToSupabase(processedFile, pessoaId, tipoPessoa);
       
       if (result.success) {
         console.log('✅ Upload local concluído com sucesso!');
@@ -339,7 +349,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             onChange={handleLocalFileSelect}
             className="hidden"
             id="file-upload"
