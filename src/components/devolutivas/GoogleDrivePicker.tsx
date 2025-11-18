@@ -339,7 +339,7 @@ export const GoogleDrivePicker: React.FC<GoogleDrivePickerProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             onChange={handleLocalFileSelect}
             className="hidden"
             id="file-upload"
