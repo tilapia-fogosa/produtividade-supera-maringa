@@ -1221,6 +1221,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                     <TableHead>Nome</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Informações</TableHead>
+                    <TableHead>Responsável</TableHead>
                     <TableHead>Forma de Pagamento</TableHead>
                     <TableHead className="w-[80px]">Pago</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
@@ -1258,16 +1259,27 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                         {convidado.tipo === 'aluno' ? (
                           <div className="text-sm space-y-0.5">
                             <div>{convidado.turma} - {convidado.professor}</div>
-                            <div className="text-muted-foreground">Responsável: {convidado.responsavelNome || 'N/A'}</div>
                           </div>
                         ) : (
                           <div className="text-sm space-y-0.5">
-                            <div>Responsável: {convidado.responsavel}</div>
+                            {convidado.quemConvidou && (
+                              <div>Convidado por: {convidado.quemConvidou}</div>
+                            )}
                             {convidado.valorPago && (
                               <div className="text-muted-foreground">Valor: R$ {Number(convidado.valorPago).toFixed(2)}</div>
                             )}
                           </div>
                         )}
+                      </TableCell>
+                      
+                      {/* Coluna Responsável */}
+                      <TableCell>
+                        <div className="text-sm">
+                          {convidado.tipo === 'aluno' 
+                            ? (convidado.responsavelNome || 'N/A')
+                            : (convidado.responsavel || 'N/A')
+                          }
+                        </div>
                       </TableCell>
                       
                       {/* Coluna Forma de Pagamento */}
