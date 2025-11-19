@@ -6,6 +6,7 @@ import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import { useProfessores } from '@/hooks/use-professores';
+import { useFuncionarios } from '@/hooks/use-funcionarios';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -51,9 +52,12 @@ const DevolutivaFimAno: React.FC = () => {
   // Selecionar template baseado na versão
   const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
 
-  const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
+  const { alunos, loading: loadingAlunos, refetch: refetchAlunos } = useAlunosAtivos();
+  const { funcionarios, loading: loadingFuncionarios, recarregarFuncionarios } = useFuncionarios();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
+  
+  const loadingPessoas = tipoPessoa === 'aluno' ? loadingAlunos : loadingFuncionarios;
   const { data: totalDesafios2025 = 0 } = useDesafios2025(pessoaSelecionadaId);
   const { data: totalExerciciosAbaco2025 = 0 } = useExerciciosAbaco2025(pessoaSelecionadaId);
   const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
@@ -62,7 +66,13 @@ const DevolutivaFimAno: React.FC = () => {
     // Atualizar cache buster para forçar recarregamento da foto
     setCacheBuster(Date.now());
     // Recarregar dados para mostrar nova foto
-    setTimeout(() => refetchAlunos(), 500);
+    setTimeout(() => {
+      if (tipoPessoa === 'aluno') {
+        refetchAlunos();
+      } else {
+        recarregarFuncionarios();
+      }
+    }, 500);
   };
 
   // Valores computados baseados na versão selecionada
@@ -211,9 +221,9 @@ const DevolutivaFimAno: React.FC = () => {
 
   // Filtrar pessoas baseado no tipo e filtros
   const pessoasFiltradas = useMemo(() => {
-    let pessoas = alunos.filter(p => p.tipo_pessoa === tipoPessoa);
-
     if (tipoPessoa === 'aluno') {
+      let pessoas = alunos;
+
       if (turmaFiltro !== 'todas') {
         pessoas = pessoas.filter(p => p.turma_id === turmaFiltro);
       }
@@ -223,12 +233,21 @@ const DevolutivaFimAno: React.FC = () => {
           return turma?.professor_id === professorFiltro;
         });
       }
+
+      return pessoas.sort((a, b) => a.nome.localeCompare(b.nome));
+    } else {
+      // Funcionários
+      return funcionarios.sort((a, b) => a.nome.localeCompare(b.nome));
     }
+  }, [alunos, funcionarios, tipoPessoa, turmaFiltro, professorFiltro, turmas]);
 
-    return pessoas.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [alunos, tipoPessoa, turmaFiltro, professorFiltro, turmas]);
-
-  const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
+  const pessoaSelecionada = useMemo(() => {
+    if (tipoPessoa === 'aluno') {
+      return alunos.find(p => p.id === pessoaSelecionadaId);
+    } else {
+      return funcionarios.find(p => p.id === pessoaSelecionadaId);
+    }
+  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
@@ -347,10 +366,10 @@ const DevolutivaFimAno: React.FC = () => {
                 <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
                   <div>
                     <p className="font-semibold">{pessoaSelecionada.nome}</p>
-                    {pessoaSelecionada.turma_nome && (
+                    {'turma_nome' in pessoaSelecionada && pessoaSelecionada.turma_nome && (
                       <p className="text-sm text-muted-foreground">Turma: {pessoaSelecionada.turma_nome}</p>
                     )}
-                    {pessoaSelecionada.professor_nome && (
+                    {'professor_nome' in pessoaSelecionada && pessoaSelecionada.professor_nome && (
                       <p className="text-sm text-muted-foreground">Professor: {pessoaSelecionada.professor_nome}</p>
                     )}
                   </div>
