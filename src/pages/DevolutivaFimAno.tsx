@@ -55,6 +55,15 @@ const DevolutivaFimAno: React.FC = () => {
 
   const { alunos, loading: loadingAlunos, refetch: refetchAlunos } = useAlunosAtivos();
   const { funcionarios, loading: loadingFuncionarios, recarregarFuncionarios } = useFuncionarios();
+  
+  console.log('📊 Estado dos dados:', {
+    totalAlunos: alunos.length,
+    totalFuncionarios: funcionarios.length,
+    loadingAlunos,
+    loadingFuncionarios,
+    tipoPessoa,
+    pessoaSelecionadaId
+  });
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
   
@@ -302,12 +311,22 @@ const DevolutivaFimAno: React.FC = () => {
   }, [alunos, funcionarios, tipoPessoa, turmaFiltro, professorFiltro, turmas]);
 
   const pessoaSelecionada = useMemo(() => {
-    if (tipoPessoa === 'aluno') {
-      return alunos.find(p => p.id === pessoaSelecionadaId);
-    } else {
-      return funcionarios.find(p => p.id === pessoaSelecionadaId);
-    }
-  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
+    const pessoa = tipoPessoa === 'aluno' 
+      ? alunos.find(p => p.id === pessoaSelecionadaId)
+      : funcionarios.find(p => p.id === pessoaSelecionadaId);
+    
+    console.log('🔍 pessoaSelecionada recalculado:', {
+      tipoPessoa,
+      pessoaSelecionadaId,
+      pessoaEncontrada: pessoa?.nome,
+      fotoUrl: pessoa?.foto_devolutiva_url,
+      cacheBuster,
+      totalFuncionarios: funcionarios.length,
+      totalAlunos: alunos.length
+    });
+    
+    return pessoa;
+  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios, cacheBuster]);
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
