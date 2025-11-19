@@ -2472,6 +2472,7 @@ export type Database = {
           forma_pagamento: string
           id: string
           nome_completo: string
+          pago: boolean | null
           quem_convidou_id: string
           quem_convidou_nome: string
           quem_convidou_tipo: string
@@ -2490,6 +2491,7 @@ export type Database = {
           forma_pagamento: string
           id?: string
           nome_completo: string
+          pago?: boolean | null
           quem_convidou_id: string
           quem_convidou_nome: string
           quem_convidou_tipo: string
@@ -2508,6 +2510,7 @@ export type Database = {
           forma_pagamento?: string
           id?: string
           nome_completo?: string
+          pago?: boolean | null
           quem_convidou_id?: string
           quem_convidou_nome?: string
           quem_convidou_tipo?: string
@@ -2798,6 +2801,7 @@ export type Database = {
           evento_id: string
           forma_pagamento: string
           id: string
+          pago: boolean | null
           responsavel_id: string | null
           valor_pago: number | null
         }
@@ -2807,6 +2811,7 @@ export type Database = {
           evento_id: string
           forma_pagamento: string
           id?: string
+          pago?: boolean | null
           responsavel_id?: string | null
           valor_pago?: number | null
         }
@@ -2816,6 +2821,7 @@ export type Database = {
           evento_id?: string
           forma_pagamento?: string
           id?: string
+          pago?: boolean | null
           responsavel_id?: string | null
           valor_pago?: number | null
         }
