@@ -24,3 +24,6 @@ verify_jwt = false
 
 [calendar.check-hibernating-cards]
 schedule = "0 3 * * *"  # Executar todos os dias às 03:00
+
+[functions.generate-devolutiva-pdf]
+verify_jwt = false
