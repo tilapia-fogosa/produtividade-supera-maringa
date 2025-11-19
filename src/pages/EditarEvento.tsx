@@ -63,6 +63,9 @@ export default function EditarEvento() {
               nome,
               turma_id,
               turmas(id, nome, professor_id, professores!turmas_professor_fkey(id, nome))
+            ),
+            responsaveis_view!evento_participantes_responsavel_id_fkey(
+              nome
             )
           `)
           .eq('evento_id', id);
@@ -77,7 +80,7 @@ export default function EditarEvento() {
           professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
           formaPagamento: p.forma_pagamento,
           pago: p.pago || false,
-          responsavelNome: responsaveis.find(r => r.id === p.responsavel_id)?.nome || 'N/A',
+          responsavelNome: p.responsaveis_view?.nome || 'N/A',
           responsavelId: p.responsavel_id,
           created_at: p.created_at,
           tipo: 'aluno'
@@ -88,7 +91,14 @@ export default function EditarEvento() {
         // Buscar convidados não alunos
         const { data: convidadosData, error: convidadosError } = await supabase
           .from('convidados_eventos')
-          .select('*, responsavel_id, pago')
+          .select(`
+            *,
+            responsavel_id,
+            pago,
+            responsaveis_view!convidados_eventos_responsavel_id_fkey(
+              nome
+            )
+          `)
           .eq('evento_id', id)
           .eq('active', true);
 
@@ -99,7 +109,7 @@ export default function EditarEvento() {
           nome: c.nome_completo,
           telefone: c.telefone_contato,
           quemConvidou: c.quem_convidou_nome,
-          responsavel: c.responsavel_nome,
+          responsavel: c.responsaveis_view?.nome || 'N/A',
           responsavelId: c.responsavel_id,
           valorPago: c.valor_pago,
           formaPagamento: c.forma_pagamento,
