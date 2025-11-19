@@ -45,6 +45,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
+  const [gerandoPDF, setGerandoPDF] = useState<boolean>(false); // Estado de loading para geração de PDF
   
   // Selecionar template baseado na versão
   const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
@@ -96,64 +97,77 @@ const DevolutivaFimAno: React.FC = () => {
   };
 
   const handleSalvarPDF = async () => {
-    const elemento = document.querySelector('.a4-page') as HTMLElement;
+    if (!pessoaSelecionada) return;
     
-    if (!elemento || !pessoaSelecionada) return;
-    
-    // Clonar o elemento para não afetar o DOM original
-    const clone = elemento.cloneNode(true) as HTMLElement;
-    
-    // Criar container temporário isolado
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '210mm';
-    tempContainer.style.height = '297mm';
-    tempContainer.appendChild(clone);
-    document.body.appendChild(tempContainer);
-    
-    // Configurar clone para dimensões exatas
-    clone.style.width = '210mm';
-    clone.style.height = '297mm';
-    clone.style.boxShadow = 'none';
-    clone.style.margin = '0';
-    clone.style.padding = '0';
-    clone.style.boxSizing = 'border-box';
-    
-    // Forçar box-sizing em todos os elementos filhos
-    const allElements = clone.querySelectorAll('*');
-    allElements.forEach((el: Element) => {
-      (el as HTMLElement).style.boxSizing = 'border-box';
-    });
-    
-    const opcoes = {
-      margin: 0,
-      filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { 
-        scale: 4, // Qualidade máxima profissional (~300 DPI)
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: false,
-        windowWidth: 794,   // Largura A4 em pixels (210mm)
-        windowHeight: 1123  // Altura A4 em pixels (297mm)
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait' as const,
-        compress: false  // Sem compressão para máxima qualidade
-      },
-      pagebreak: { mode: 'avoid-all' }
-    };
+    setGerandoPDF(true);
     
     try {
-      await html2pdf().set(opcoes).from(clone).save();
+      console.log('🚀 Iniciando geração de PDF com Puppeteer...');
+      
+      // Salvar dados no sessionStorage antes de gerar o PDF
+      const dadosImpressao = {
+        nome: pessoaSelecionada.nome,
+        fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+        tamanhoFoto,
+        posicaoX,
+        posicaoY,
+        tamanhoFonte,
+        alturaNome,
+        alturaExercicios,
+        posicaoXExerciciosAbaco,
+        posicaoXExerciciosAH,
+        totalDesafios: totalDesafios2025,
+        totalExerciciosAbaco: totalExerciciosAbaco2025,
+        totalExerciciosAH: totalExerciciosAH2025,
+        versaoTemplate
+      };
+      
+      sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+      
+      // URL da página que será convertida em PDF
+      const url = `${window.location.origin}/devolutiva-fim-ano-impressao`;
+      const filename = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
+      
+      console.log('📄 Chamando API de geração de PDF...');
+      
+      // Chamar a API do Vercel
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          filename,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao gerar PDF');
+      }
+      
+      console.log('✅ PDF gerado com sucesso!');
+      
+      // Baixar o PDF
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+      
+      console.log('✅ PDF baixado com sucesso!');
+      
+    } catch (error) {
+      console.error('❌ Erro ao salvar PDF:', error);
+      alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
-      // Remover container temporário
-      document.body.removeChild(tempContainer);
+      setGerandoPDF(false);
     }
   };
 
@@ -437,9 +451,10 @@ const DevolutivaFimAno: React.FC = () => {
                   onClick={handleSalvarPDF}
                   variant="default"
                   size="sm"
+                  disabled={gerandoPDF}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Exportar PDF (Recomendado)
+                  {gerandoPDF ? 'Gerando PDF...' : 'Exportar PDF (Recomendado)'}
                 </Button>
                 <Button
                   onClick={() => window.print()}
@@ -595,9 +610,10 @@ const DevolutivaFimAno: React.FC = () => {
             onClick={handleSalvarPDF}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
-            title="Exportar PDF em alta qualidade (300 DPI) - Recomendado para impressão profissional"
+            title={gerandoPDF ? "Gerando PDF com Puppeteer..." : "Exportar PDF em alta qualidade com Puppeteer - Recomendado para impressão profissional"}
+            disabled={gerandoPDF}
           >
-            <Download className="h-5 w-5" />
+            <Download className={`h-5 w-5 ${gerandoPDF ? 'animate-pulse' : ''}`} />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}

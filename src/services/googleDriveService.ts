@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { compressImageIfNeeded } from './imageCompressionService';
 
 export interface DownloadAndUploadResult {
   success: boolean;
@@ -17,7 +18,7 @@ export async function uploadLocalFileToSupabase(
     // 1. Validar tipo de arquivo (aceitar HEIC mesmo sem MIME type)
     const isHeic = file.name.toLowerCase().endsWith('.heic') || 
                    file.name.toLowerCase().endsWith('.heif');
-    const hasImageType = file.type.startsWith('image/');
+    const hasImageType = file.type?.startsWith('image/') || false;
     
     if (!hasImageType && !isHeic) {
       throw new Error('Por favor, selecione um arquivo de imagem');
