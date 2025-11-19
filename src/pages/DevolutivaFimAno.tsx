@@ -45,6 +45,8 @@ const DevolutivaFimAno: React.FC = () => {
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
+  const [gerandoPDFNavegador, setGerandoPDFNavegador] = useState<boolean>(false); // Estado para window.print()
+  const [gerandoPDFShift, setGerandoPDFShift] = useState<boolean>(false); // Estado para PDFShift
   
   // Selecionar template baseado na versão
   const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
@@ -95,32 +97,115 @@ const DevolutivaFimAno: React.FC = () => {
     window.open('/devolutiva-fim-ano-impressao', '_blank');
   };
 
-  const handleSalvarPDF = async () => {
+  const handleSalvarPDFNavegador = () => {
     if (!pessoaSelecionada) return;
     
-    setMostrarPreview(false);
+    setGerandoPDFNavegador(true);
+    
+    // Salvar dados no sessionStorage
+    const dadosImpressao = {
+      nome: pessoaSelecionada.nome,
+      fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+      tamanhoFoto,
+      posicaoX,
+      posicaoY,
+      tamanhoFonte,
+      alturaNome,
+      alturaExercicios,
+      posicaoXExerciciosAbaco,
+      posicaoXExerciciosAH,
+      totalDesafios: totalDesafios2025,
+      totalExerciciosAbaco: totalExerciciosAbaco2025,
+      totalExerciciosAH: totalExerciciosAH2025,
+      versaoTemplate
+    };
+    
+    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    
+    // Abrir página de impressão
+    const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
+    
+    if (printWindow) {
+      printWindow.addEventListener('load', () => {
+        setTimeout(() => {
+          printWindow.print();
+          setGerandoPDFNavegador(false);
+        }, 1500); // Aguardar carregamento completo
+      });
+    } else {
+      setGerandoPDFNavegador(false);
+      alert('Por favor, permita pop-ups para este site para usar a função de impressão.');
+    }
+  };
+
+  const handleSalvarPDFShift = async () => {
+    if (!pessoaSelecionada) return;
+    
+    setGerandoPDFShift(true);
     
     try {
-      const elemento = document.querySelector('.a4-page') as HTMLElement;
-      
-      if (!elemento) {
-        alert('Erro: elemento não encontrado');
-        return;
-      }
-
-      const options = {
-        margin: 0,
-        filename: `devolutiva-${pessoaSelecionada.nome}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      // Salvar dados no sessionStorage
+      const dadosImpressao = {
+        nome: pessoaSelecionada.nome,
+        fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+        tamanhoFoto,
+        posicaoX,
+        posicaoY,
+        tamanhoFonte,
+        alturaNome,
+        alturaExercicios,
+        posicaoXExerciciosAbaco,
+        posicaoXExerciciosAH,
+        totalDesafios: totalDesafios2025,
+        totalExerciciosAbaco: totalExerciciosAbaco2025,
+        totalExerciciosAH: totalExerciciosAH2025,
+        versaoTemplate
       };
-
-      await html2pdf().set(options).from(elemento).save();
+      
+      sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+      
+      const url = `${window.location.origin}/devolutiva-fim-ano-impressao`;
+      const filename = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
+      
+      const PDFSHIFT_API_KEY = 'sk_8e9c14434837486741a54ab8d1a066e6dd547572';
+      
+      const response = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`api:${PDFSHIFT_API_KEY}`),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: url,
+          format: 'A4',
+          margin: { top: 0, right: 0, bottom: 0, left: 0 },
+          landscape: false,
+          use_print: true,
+          wait_for_network_idle: true,
+          javascript: true
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao gerar PDF com PDFShift');
+      }
+      
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
       
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF. Tente novamente.');
+      alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Nota: PDFShift requer API key configurada.`);
+    } finally {
+      setGerandoPDFShift(false);
     }
   };
 
@@ -295,7 +380,7 @@ const DevolutivaFimAno: React.FC = () => {
             <div 
               className="foto-aluno-background"
               style={{
-                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url})`,
+                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
                 backgroundSize: `${tamanhoFoto}%`,
                 backgroundPosition: `${posicaoX}% ${posicaoY}%`
               }}
@@ -401,20 +486,22 @@ const DevolutivaFimAno: React.FC = () => {
               <h3 className="text-lg font-semibold">Pré-visualização de Impressão</h3>
               <div className="flex gap-2">
                 <Button
-                  onClick={handleSalvarPDF}
+                  onClick={handleSalvarPDFNavegador}
                   variant="default"
                   size="sm"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar PDF (Recomendado)
-                </Button>
-                <Button
-                  onClick={() => window.print()}
-                  variant="outline"
-                  size="sm"
+                  disabled={gerandoPDFNavegador}
                 >
                   <Printer className="mr-2 h-4 w-4" />
-                  Impressão Rápida (Ctrl+P)
+                  {gerandoPDFNavegador ? 'Abrindo...' : 'Imprimir (Grátis)'}
+                </Button>
+                <Button
+                  onClick={handleSalvarPDFShift}
+                  variant="outline"
+                  size="sm"
+                  disabled={gerandoPDFShift}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {gerandoPDFShift ? 'Gerando...' : 'Download PDF (Premium)'}
                 </Button>
                 <Button
                   onClick={() => setMostrarPreview(false)}
@@ -557,14 +644,15 @@ const DevolutivaFimAno: React.FC = () => {
             </Button>
           </div>
         
-          {/* Botão de exportar PDF */}
+          {/* Botão de imprimir PDF */}
           <Button
-            onClick={handleSalvarPDF}
+            onClick={handleSalvarPDFNavegador}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
-            title="Exportar PDF em alta qualidade (300 DPI) - Recomendado para impressão profissional"
+            title="Imprimir PDF (Grátis)"
+            disabled={gerandoPDFNavegador}
           >
-            <Download className="h-5 w-5" />
+            <Printer className={`h-5 w-5 ${gerandoPDFNavegador ? 'animate-pulse' : ''}`} />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}

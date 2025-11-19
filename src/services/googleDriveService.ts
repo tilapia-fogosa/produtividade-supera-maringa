@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { compressImageIfNeeded } from './imageCompressionService';
 
 export interface DownloadAndUploadResult {
   success: boolean;
@@ -14,15 +15,19 @@ export async function uploadLocalFileToSupabase(
   console.log('🚀 Iniciando uploadLocalFileToSupabase:', { fileName: file.name, pessoaId, tipoPessoa });
   
   try {
-    // 1. Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
+    // 1. Validar tipo de arquivo (aceitar HEIC mesmo sem MIME type)
+    const isHeic = file.name.toLowerCase().endsWith('.heic') || 
+                   file.name.toLowerCase().endsWith('.heif');
+    const hasImageType = file.type?.startsWith('image/') || false;
+    
+    if (!hasImageType && !isHeic) {
       throw new Error('Por favor, selecione um arquivo de imagem');
     }
 
-    console.log('✅ Arquivo válido:', { size: file.size, type: file.type });
+    console.log('✅ Arquivo válido:', { size: file.size, type: file.type, name: file.name });
 
-    // Upload direto sem compressão para manter qualidade máxima
-    const processedFile = file;
+    // 2. Comprimir e converter imagem (incluindo HEIC → JPG se necessário)
+    const processedFile = await compressImageIfNeeded(file);
 
     // 3. Upload para Supabase Storage
     console.log('☁️ Iniciando upload para Supabase...');
