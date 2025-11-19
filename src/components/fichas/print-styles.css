@@ -1,6 +1,7 @@
 @media print {
-  @page {
-    size: A4 landscape;
+  /* Escopo específico para fichas - LANDSCAPE */
+  body.printing-ficha @page {
+    size: A4 landscape !important;
     margin: 0;
   }
   

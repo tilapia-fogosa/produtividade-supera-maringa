@@ -34,6 +34,14 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
   anoSelecionado,
   iniciarSemanaAnterior
 }) => {
+  // Adicionar classe específica para impressão de fichas
+  useEffect(() => {
+    document.body.classList.add('printing-ficha');
+    
+    return () => {
+      document.body.classList.remove('printing-ficha');
+    };
+  }, []);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const alunosPorPagina = 14;
   const alunosReposicaoPorPagina = 5;

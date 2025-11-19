@@ -16,6 +16,26 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // Forçar portrait via meta tag
+    const metaViewport = document.createElement('meta');
+    metaViewport.name = 'viewport';
+    metaViewport.content = 'width=210mm, height=297mm';
+    metaViewport.setAttribute('data-devolutiva-meta', 'true');
+    document.head.appendChild(metaViewport);
+    
+    // Adicionar classe específica para devolutivas
+    document.body.classList.add('printing-devolutiva');
+    
+    return () => {
+      const meta = document.head.querySelector('meta[data-devolutiva-meta]');
+      if (meta) {
+        document.head.removeChild(meta);
+      }
+      document.body.classList.remove('printing-devolutiva');
+    };
+  }, []);
+
   if (!dadosPessoa) {
     return (
       <div className="flex items-center justify-center h-screen">

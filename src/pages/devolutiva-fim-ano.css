@@ -49,9 +49,23 @@
 
 /* Estilos de impressão */
 @media print {
+  /* Configuração de página para impressão - PORTRAIT */
+  @page {
+    size: A4 portrait !important;
+    margin: 0 !important;
+  }
+  
+  /* Escopo específico para devolutivas - PORTRAIT */
+  body.printing-devolutiva @page {
+    size: A4 portrait !important;
+    margin: 0 !important;
+  }
+
   body {
     margin: 0;
     padding: 0;
+    width: 210mm !important;
+    height: 297mm !important;
   }
 
   .no-print {
@@ -113,10 +127,4 @@
   footer {
     display: none !important;
   }
-}
-
-/* Configuração de página para impressão */
-@page {
-  size: A4 portrait;
-  margin: 0 !important;
 }
