@@ -131,16 +131,16 @@
 /* Estilos específicos para impressão */
 @media print {
   /* Configurações da página para impressão */
-  @page {
-    margin: 0; /* Sem margens - páginas específicas podem sobrescrever */
-    /* Tenta remover cabeçalhos e rodapés do navegador */
+  /* REMOVIDO: @page global sem size - cada página define seu próprio @page */
+  /* @page {
+    margin: 0;
     @top-left { content: ""; }
     @top-center { content: ""; }
     @top-right { content: ""; }
     @bottom-left { content: ""; }
     @bottom-center { content: ""; }
     @bottom-right { content: ""; }
-  }
+  } */
   
   /* Remove elementos desnecessários */
   body::before,

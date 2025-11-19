@@ -85,7 +85,7 @@ const EventCard = ({ evento, onEventoRemovido }: { evento: any; onEventoRemovido
               className="gap-1"
             >
               <Edit className="h-3 w-3" />
-              Editar
+              Ver Detalhes
             </Button>
             <Button
               variant="outline"

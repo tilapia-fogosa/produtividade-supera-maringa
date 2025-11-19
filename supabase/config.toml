@@ -24,3 +24,4 @@ verify_jwt = false
 
 [calendar.check-hibernating-cards]
 schedule = "0 3 * * *"  # Executar todos os dias às 03:00
+

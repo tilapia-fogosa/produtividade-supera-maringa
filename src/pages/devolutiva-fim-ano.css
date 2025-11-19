@@ -49,9 +49,31 @@
 
 /* Estilos de impressão */
 @media print {
-  body {
+  /* Configuração de página para impressão - PORTRAIT */
+  @page {
+    size: A4 portrait !important;
+    margin: 0 !important;
+  }
+  
+  /* Escopo específico para devolutivas - PORTRAIT */
+  body.printing-devolutiva @page {
+    size: A4 portrait !important;
+    margin: 0 !important;
+  }
+
+  html {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
   }
 
   .no-print {
@@ -60,23 +82,31 @@
 
   .devolutiva-fim-ano-wrapper {
     min-height: 0;
-    padding-bottom: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
   }
 
   .devolutiva-fim-ano-container {
-    padding: 0;
+    padding: 0 !important;
+    margin: 0 !important;
     background: white;
     min-height: 0;
     display: block;
+    width: 210mm !important;
+    height: 297mm !important;
   }
 
   .a4-page {
-    width: 210mm;
-    height: 297mm;
+    width: 210mm !important;
+    height: 297mm !important;
     box-shadow: none;
     page-break-after: always;
-    margin: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     aspect-ratio: unset;
+    position: relative;
   }
 
   .foto-aluno-background {
@@ -113,10 +143,4 @@
   footer {
     display: none !important;
   }
-}
-
-/* Configuração de página para impressão */
-@page {
-  size: A4 portrait;
-  margin: 0 !important;
 }
