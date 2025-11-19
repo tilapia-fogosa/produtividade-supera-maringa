@@ -16,9 +16,7 @@ import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
 import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
 import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import { toast } from 'sonner';
+import html2pdf from 'html2pdf.js';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -102,98 +100,60 @@ const DevolutivaFimAno: React.FC = () => {
     
     if (!elemento || !pessoaSelecionada) return;
     
-    // Loading toast
-    const loadingToast = toast.loading('Preparando documento...', {
-      description: 'Etapa 1 de 3: Preparando elementos'
+    // Clonar o elemento para não afetar o DOM original
+    const clone = elemento.cloneNode(true) as HTMLElement;
+    
+    // Criar container temporário isolado
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '210mm';
+    tempContainer.style.height = '297mm';
+    tempContainer.appendChild(clone);
+    document.body.appendChild(tempContainer);
+    
+    // Configurar clone para dimensões exatas
+    clone.style.width = '210mm';
+    clone.style.height = '297mm';
+    clone.style.boxShadow = 'none';
+    clone.style.margin = '0';
+    clone.style.padding = '0';
+    clone.style.boxSizing = 'border-box';
+    
+    // Forçar box-sizing em todos os elementos filhos
+    const allElements = clone.querySelectorAll('*');
+    allElements.forEach((el: Element) => {
+      (el as HTMLElement).style.boxSizing = 'border-box';
     });
     
-    try {
-      // Clonar o elemento para não afetar o DOM original
-      const clone = elemento.cloneNode(true) as HTMLElement;
-      
-      // Criar container temporário isolado
-      const tempContainer = document.createElement('div');
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.top = '0';
-      tempContainer.style.width = '210mm';
-      tempContainer.style.height = '297mm';
-      tempContainer.appendChild(clone);
-      document.body.appendChild(tempContainer);
-      
-      // Configurar clone para dimensões exatas
-      clone.style.width = '210mm';
-      clone.style.height = '297mm';
-      clone.style.boxShadow = 'none';
-      clone.style.margin = '0';
-      clone.style.padding = '0';
-      clone.style.boxSizing = 'border-box';
-      
-      // Forçar box-sizing em todos os elementos filhos
-      const allElements = clone.querySelectorAll('*');
-      allElements.forEach((el: Element) => {
-        (el as HTMLElement).style.boxSizing = 'border-box';
-      });
-      
-      // Aguardar um frame para garantir que o DOM foi atualizado
-      await new Promise(resolve => requestAnimationFrame(resolve));
-      
-      // Atualizar toast - Etapa 2: Renderização
-      toast.loading('Renderizando em alta qualidade...', {
-        id: loadingToast,
-        description: 'Etapa 2 de 3: Criando imagem em alta resolução (450 DPI)'
-      });
-      
-      // Renderizar em canvas de alta resolução
-      const canvas = await html2canvas(clone, {
-        scale: 6, // ~450 DPI para qualidade superior
+    const opcoes = {
+      margin: 0,
+      filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { 
+        scale: 4, // Qualidade máxima profissional (~300 DPI)
         useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
         logging: false,
-        width: 794,  // Largura A4 em pixels (210mm @ 96 DPI)
-        height: 1123 // Altura A4 em pixels (297mm @ 96 DPI)
-      });
-      
-      // Atualizar toast - Etapa 3: Gerando PDF
-      toast.loading('Gerando PDF...', {
-        id: loadingToast,
-        description: 'Etapa 3 de 3: Criando arquivo PDF'
-      });
-      
-      // Converter canvas para imagem PNG de alta qualidade
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      
-      // Criar PDF com jsPDF
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: false // Sem compressão para máxima qualidade
-      });
-      
-      // Adicionar imagem ocupando toda a página A4
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
-      
-      // Salvar PDF
-      const fileName = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
-      pdf.save(fileName);
-      
+        backgroundColor: '#ffffff',
+        allowTaint: false,
+        windowWidth: 794,   // Largura A4 em pixels (210mm)
+        windowHeight: 1123  // Altura A4 em pixels (297mm)
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' as const,
+        compress: false  // Sem compressão para máxima qualidade
+      },
+      pagebreak: { mode: 'avoid-all' }
+    };
+    
+    try {
+      await html2pdf().set(opcoes).from(clone).save();
+    } finally {
       // Remover container temporário
       document.body.removeChild(tempContainer);
-      
-      // Sucesso
-      toast.success('PDF gerado com sucesso!', {
-        id: loadingToast,
-        description: 'Qualidade máxima: 450 DPI'
-      });
-      
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar PDF', {
-        id: loadingToast,
-        description: 'Tente novamente ou use a impressão rápida'
-      });
     }
   };
 
