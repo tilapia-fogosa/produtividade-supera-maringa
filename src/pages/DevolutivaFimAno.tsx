@@ -16,7 +16,7 @@ import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
 import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
 import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
-import html2pdf from 'html2pdf.js';
+import { supabase } from '@/integrations/supabase/client';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -96,64 +96,71 @@ const DevolutivaFimAno: React.FC = () => {
   };
 
   const handleSalvarPDF = async () => {
-    const elemento = document.querySelector('.a4-page') as HTMLElement;
+    if (!pessoaSelecionada) return;
     
-    if (!elemento || !pessoaSelecionada) return;
-    
-    // Clonar o elemento para não afetar o DOM original
-    const clone = elemento.cloneNode(true) as HTMLElement;
-    
-    // Criar container temporário isolado
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '210mm';
-    tempContainer.style.height = '297mm';
-    tempContainer.appendChild(clone);
-    document.body.appendChild(tempContainer);
-    
-    // Configurar clone para dimensões exatas
-    clone.style.width = '210mm';
-    clone.style.height = '297mm';
-    clone.style.boxShadow = 'none';
-    clone.style.margin = '0';
-    clone.style.padding = '0';
-    clone.style.boxSizing = 'border-box';
-    
-    // Forçar box-sizing em todos os elementos filhos
-    const allElements = clone.querySelectorAll('*');
-    allElements.forEach((el: Element) => {
-      (el as HTMLElement).style.boxSizing = 'border-box';
-    });
-    
-    const opcoes = {
-      margin: 0,
-      filename: `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { 
-        scale: 4, // Qualidade máxima profissional (~300 DPI)
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: false,
-        windowWidth: 794,   // Largura A4 em pixels (210mm)
-        windowHeight: 1123  // Altura A4 em pixels (297mm)
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait' as const,
-        compress: false  // Sem compressão para máxima qualidade
-      },
-      pagebreak: { mode: 'avoid-all' }
-    };
+    setMostrarPreview(false);
     
     try {
-      await html2pdf().set(opcoes).from(clone).save();
-    } finally {
-      // Remover container temporário
-      document.body.removeChild(tempContainer);
+      console.log('🚀 Iniciando geração de PDF de alta qualidade...');
+      
+      // Construir URLs completas
+      const fotoUrl = pessoaSelecionada.foto_devolutiva_url;
+      const templateUrl = window.location.origin + (versaoTemplate === 1 ? templateV1 : templateV2);
+      
+      // Preparar dados para a edge function
+      const payload = {
+        nome: pessoaSelecionada.nome,
+        fotoUrl,
+        templateUrl,
+        tamanhoFoto,
+        posicaoX,
+        posicaoY,
+        tamanhoFonte,
+        totalDesafios: totalDesafios2025,
+        totalExerciciosAbaco: totalExerciciosAbaco2025,
+        totalExerciciosAH: totalExerciciosAH2025,
+        versaoTemplate,
+        posicaoXExerciciosAbaco,
+        posicaoXExerciciosAH,
+        alturaExercicios,
+        alturaNome
+      };
+      
+      console.log('📤 Enviando dados para edge function...');
+      
+      // Chamar edge function
+      const { data, error } = await supabase.functions.invoke(
+        'generate-devolutiva-pdf',
+        {
+          body: payload,
+        }
+      );
+      
+      if (error) {
+        console.error('❌ Erro da edge function:', error);
+        throw error;
+      }
+      
+      console.log('📥 PDF recebido, iniciando download...');
+      
+      // Criar blob do PDF
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Criar link e fazer download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ PDF baixado com sucesso!');
+      
+    } catch (error) {
+      console.error('❌ Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Por favor, tente novamente ou use a opção de impressão rápida.');
     }
   };
 
