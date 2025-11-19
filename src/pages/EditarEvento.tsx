@@ -63,14 +63,20 @@ export default function EditarEvento() {
               nome,
               turma_id,
               turmas(id, nome, professor_id, professores!turmas_professor_fkey(id, nome))
-            ),
-            responsaveis_view!evento_participantes_responsavel_id_fkey(
-              nome
             )
           `)
           .eq('evento_id', id);
 
         if (participantesError) throw participantesError;
+
+        // Buscar responsáveis específicos
+        const responsavelIds = [...new Set(participantesData.map((p: any) => p.responsavel_id).filter(Boolean))];
+        const { data: responsaveisData } = await supabase
+          .from('responsaveis_view')
+          .select('id, nome')
+          .in('id', responsavelIds);
+
+        const responsaveisMap = new Map(responsaveisData?.map(r => [r.id, r.nome]) || []);
 
         const participantesFormatados = participantesData.map((p: any) => ({
           id: p.alunos.id,
@@ -80,7 +86,7 @@ export default function EditarEvento() {
           professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
           formaPagamento: p.forma_pagamento,
           pago: p.pago || false,
-          responsavelNome: p.responsaveis_view?.nome || 'N/A',
+          responsavelNome: responsaveisMap.get(p.responsavel_id) || 'N/A',
           responsavelId: p.responsavel_id,
           created_at: p.created_at,
           tipo: 'aluno'
@@ -91,25 +97,27 @@ export default function EditarEvento() {
         // Buscar convidados não alunos
         const { data: convidadosData, error: convidadosError } = await supabase
           .from('convidados_eventos')
-          .select(`
-            *,
-            responsavel_id,
-            pago,
-            responsaveis_view!convidados_eventos_responsavel_id_fkey(
-              nome
-            )
-          `)
+          .select('*')
           .eq('evento_id', id)
           .eq('active', true);
 
         if (convidadosError) throw convidadosError;
+
+        // Buscar responsáveis dos convidados
+        const convidadosResponsavelIds = [...new Set(convidadosData?.map((c: any) => c.responsavel_id).filter(Boolean) || [])];
+        const { data: convidadosResponsaveisData } = await supabase
+          .from('responsaveis_view')
+          .select('id, nome')
+          .in('id', convidadosResponsavelIds);
+
+        const convidadosResponsaveisMap = new Map(convidadosResponsaveisData?.map(r => [r.id, r.nome]) || []);
 
         const convidadosFormatados = (convidadosData || []).map((c: any) => ({
           id: c.id,
           nome: c.nome_completo,
           telefone: c.telefone_contato,
           quemConvidou: c.quem_convidou_nome,
-          responsavel: c.responsaveis_view?.nome || 'N/A',
+          responsavel: convidadosResponsaveisMap.get(c.responsavel_id) || 'N/A',
           responsavelId: c.responsavel_id,
           valorPago: c.valor_pago,
           formaPagamento: c.forma_pagamento,
