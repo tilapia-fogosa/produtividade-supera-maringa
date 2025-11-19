@@ -16,7 +16,8 @@ import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
 import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
 import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
-import { supabase } from '@/integrations/supabase/client';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -101,66 +102,45 @@ const DevolutivaFimAno: React.FC = () => {
     setMostrarPreview(false);
     
     try {
-      console.log('🚀 Iniciando geração de PDF de alta qualidade...');
-      
-      // Construir URLs completas
-      const fotoUrl = pessoaSelecionada.foto_devolutiva_url;
-      const templateUrl = window.location.origin + (versaoTemplate === 1 ? templateV1 : templateV2);
-      
-      // Preparar dados para a edge function
-      const payload = {
-        nome: pessoaSelecionada.nome,
-        fotoUrl,
-        templateUrl,
-        tamanhoFoto,
-        posicaoX,
-        posicaoY,
-        tamanhoFonte,
-        totalDesafios: totalDesafios2025,
-        totalExerciciosAbaco: totalExerciciosAbaco2025,
-        totalExerciciosAH: totalExerciciosAH2025,
-        versaoTemplate,
-        posicaoXExerciciosAbaco,
-        posicaoXExerciciosAH,
-        alturaExercicios,
-        alturaNome
-      };
-      
-      console.log('📤 Enviando dados para edge function...');
-      
-      // Chamar edge function
-      const { data, error } = await supabase.functions.invoke(
-        'generate-devolutiva-pdf',
-        {
-          body: payload,
-        }
-      );
-      
-      if (error) {
-        console.error('❌ Erro da edge function:', error);
-        throw error;
+      const elemento = document.querySelector('.a4-page') as HTMLElement;
+      if (!elemento) {
+        alert('Erro: elemento não encontrado');
+        return;
       }
-      
-      console.log('📥 PDF recebido, iniciando download...');
-      
-      // Criar blob do PDF
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      
-      // Criar link e fazer download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      console.log('✅ PDF baixado com sucesso!');
+
+      // Capturar em alta resolução (3x = ~300 DPI)
+      const canvas = await html2canvas(elemento, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: elemento.offsetWidth,
+        height: elemento.offsetHeight,
+        logging: false
+      });
+
+      // Dimensões A4 em mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+
+      // Criar PDF com qualidade máxima
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: false // Sem compressão para máxima qualidade
+      });
+
+      // Converter canvas para imagem e adicionar ao PDF
+      const imgData = canvas.toDataURL('image/jpeg', 1.0); // Qualidade máxima
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
+
+      // Download do PDF
+      pdf.save(`devolutiva-${pessoaSelecionada.nome}.pdf`);
       
     } catch (error) {
-      console.error('❌ Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF. Por favor, tente novamente ou use a opção de impressão rápida.');
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
     }
   };
 
