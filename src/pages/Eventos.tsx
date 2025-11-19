@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, MapPin, User, Plus, Edit, Users, Trash2 } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, Edit, Users, Trash2, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -314,6 +314,8 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
 export default function Eventos() {
   const [eventosData, setEventosData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [mostrarEventosAnteriores, setMostrarEventosAnteriores] = useState(false);
   const agora = new Date();
 
   useEffect(() => {
@@ -396,11 +398,23 @@ export default function Eventos() {
     setEventosData(prev => prev.filter(evento => evento.id !== eventoId));
   };
   
-  const eventosFuturos = eventosData.filter(evento => 
+  // Filtrar eventos com base na pesquisa
+  const eventosFiltrados = eventosData.filter(evento => {
+    const termoBusca = searchTerm.toLowerCase();
+    return (
+      evento.titulo?.toLowerCase().includes(termoBusca) ||
+      evento.descricao?.toLowerCase().includes(termoBusca) ||
+      evento.local?.toLowerCase().includes(termoBusca) ||
+      evento.responsavel?.toLowerCase().includes(termoBusca) ||
+      evento.tipo?.toLowerCase().includes(termoBusca)
+    );
+  });
+  
+  const eventosFuturos = eventosFiltrados.filter(evento => 
     new Date(evento.data_evento) >= agora
   ).sort((a, b) => new Date(a.data_evento).getTime() - new Date(b.data_evento).getTime());
   
-  const eventosAnteriores = eventosData.filter(evento => 
+  const eventosAnteriores = eventosFiltrados.filter(evento => 
     new Date(evento.data_evento) < agora
   ).sort((a, b) => new Date(b.data_evento).getTime() - new Date(a.data_evento).getTime());
 
@@ -420,6 +434,18 @@ export default function Eventos() {
         <NovoEventoModal onEventoCriado={adicionarEvento} />
       </div>
 
+      {/* Campo de Pesquisa */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Pesquisar eventos por título, descrição, local, responsável ou tipo..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {/* Eventos Futuros */}
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-primary">
@@ -435,7 +461,7 @@ export default function Eventos() {
           <Card>
             <CardContent className="flex items-center justify-center py-8">
               <p className="text-muted-foreground">
-                Nenhum evento futuro agendado
+                {searchTerm ? 'Nenhum evento futuro encontrado com esses critérios' : 'Nenhum evento futuro agendado'}
               </p>
             </CardContent>
           </Card>
@@ -443,26 +469,29 @@ export default function Eventos() {
       </section>
 
       {/* Eventos Anteriores */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4 text-muted-foreground">
-          Eventos Anteriores ({eventosAnteriores.length})
-        </h2>
-        {eventosAnteriores.length > 0 ? (
-          <div className="space-y-4">
-            {eventosAnteriores.map(evento => (
-              <EventCard key={evento.id} evento={evento} onEventoRemovido={removerEvento} />
-            ))}
+      {eventosAnteriores.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold text-muted-foreground">
+              Eventos Anteriores ({eventosAnteriores.length})
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMostrarEventosAnteriores(!mostrarEventosAnteriores)}
+            >
+              {mostrarEventosAnteriores ? 'Ocultar' : 'Mostrar'} Eventos Anteriores
+            </Button>
           </div>
-        ) : (
-          <Card>
-            <CardContent className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">
-                Nenhum evento anterior encontrado
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+          {mostrarEventosAnteriores && (
+            <div className="space-y-4">
+              {eventosAnteriores.map(evento => (
+                <EventCard key={evento.id} evento={evento} onEventoRemovido={removerEvento} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

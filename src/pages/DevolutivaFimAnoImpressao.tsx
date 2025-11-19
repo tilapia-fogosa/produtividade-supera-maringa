@@ -57,8 +57,8 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
               className="foto-aluno-background"
               style={{
                 backgroundImage: `url(${dadosPessoa.fotoUrl})`,
-                backgroundSize: dadosPessoa.versaoTemplate === 1 ? '76%' : `${dadosPessoa.tamanhoFoto}%`,
-                backgroundPosition: dadosPessoa.versaoTemplate === 1 ? '48% 46%' : `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
+                backgroundSize: `${dadosPessoa.tamanhoFoto}%`,
+                backgroundPosition: `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
               }}
             />
           )}

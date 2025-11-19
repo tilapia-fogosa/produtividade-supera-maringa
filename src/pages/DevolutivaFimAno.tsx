@@ -75,16 +75,11 @@ const DevolutivaFimAno: React.FC = () => {
   const handlePhotoSelected = async () => {
     console.log('📸 handlePhotoSelected chamado para:', { pessoaSelecionadaId, tipoPessoa });
     
-    // Atualizar cache buster para forçar recarregamento da foto
-    const novoCacheBuster = Date.now();
-    setCacheBuster(novoCacheBuster);
-    console.log('🔄 Cache buster atualizado para:', novoCacheBuster);
-    
     // Aguardar 2 segundos para garantir que o Supabase processou
     console.log('⏳ Aguardando 2 segundos para o banco atualizar...');
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // SEMPRE recarregar ambos os arrays para garantir sincronização
+    // PRIMEIRO: Recarregar os dados
     console.log('🔄 Recarregando TODOS os dados (alunos e funcionários)...');
     
     try {
@@ -95,6 +90,11 @@ const DevolutivaFimAno: React.FC = () => {
       ]);
       
       console.log('✅ Dados recarregados com sucesso');
+      
+      // DEPOIS: Atualizar cache buster para forçar recarregamento da foto no DOM
+      const novoCacheBuster = Date.now();
+      setCacheBuster(novoCacheBuster);
+      console.log('🔄 Cache buster atualizado para:', novoCacheBuster);
       
       // Buscar dados específicos para debug
       if (pessoaSelecionadaId) {
@@ -108,11 +108,6 @@ const DevolutivaFimAno: React.FC = () => {
           console.log('🔍 Dados do funcionário no banco:', data);
         }
       }
-      
-      // Atualizar cache buster novamente após o refetch
-      const ultimoCacheBuster = Date.now();
-      setCacheBuster(ultimoCacheBuster);
-      console.log('✅ Cache buster final:', ultimoCacheBuster);
       
     } catch (error) {
       console.error('❌ Erro ao recarregar dados:', error);
@@ -301,7 +296,7 @@ const DevolutivaFimAno: React.FC = () => {
     });
     
     return pessoa;
-  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios, cacheBuster]);
+  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
