@@ -55,6 +55,8 @@ export default function EditarEvento() {
             id,
             forma_pagamento,
             aluno_id,
+            responsavel_id,
+            pago,
             created_at,
             alunos!inner(
               id,
@@ -74,6 +76,9 @@ export default function EditarEvento() {
           turma: p.alunos.turmas?.nome || 'Sem turma',
           professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
           formaPagamento: p.forma_pagamento,
+          pago: p.pago || false,
+          responsavelNome: responsaveis.find(r => r.id === p.responsavel_id)?.nome || 'N/A',
+          responsavelId: p.responsavel_id,
           created_at: p.created_at,
           tipo: 'aluno'
         }));
@@ -83,7 +88,7 @@ export default function EditarEvento() {
         // Buscar convidados não alunos
         const { data: convidadosData, error: convidadosError } = await supabase
           .from('convidados_eventos')
-          .select('*')
+          .select('*, responsavel_id, pago')
           .eq('evento_id', id)
           .eq('active', true);
 
@@ -95,8 +100,10 @@ export default function EditarEvento() {
           telefone: c.telefone_contato,
           quemConvidou: c.quem_convidou_nome,
           responsavel: c.responsavel_nome,
+          responsavelId: c.responsavel_id,
           valorPago: c.valor_pago,
           formaPagamento: c.forma_pagamento,
+          pago: c.pago || false,
           created_at: c.created_at,
           tipo: 'nao_aluno'
         }));
@@ -358,7 +365,8 @@ const AdicionarNaoAlunoModal = ({
     quemConvidouNome: '',
     responsavelId: '',
     valorPago: '',
-    formaPagamento: ''
+    formaPagamento: '',
+    pago: false
   });
   const { toast } = useToast();
 
@@ -443,7 +451,8 @@ const AdicionarNaoAlunoModal = ({
       responsavelId: formData.responsavelId,
       responsavelNome,
       valorPago: formData.valorPago ? parseFloat(formData.valorPago) : null,
-      formaPagamento: formData.formaPagamento
+      formaPagamento: formData.formaPagamento,
+      pago: formData.pago
     };
 
     onConvidadoAdicionado(novoConvidado);
@@ -455,7 +464,8 @@ const AdicionarNaoAlunoModal = ({
       quemConvidouNome: '',
       responsavelId: '',
       valorPago: '',
-      formaPagamento: ''
+      formaPagamento: '',
+      pago: false
     });
     setSearchTerm('');
     setOpen(false);
@@ -622,6 +632,17 @@ const AdicionarNaoAlunoModal = ({
             </Select>
           </div>
 
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="pago-nao-aluno"
+              checked={formData.pago}
+              onChange={(e) => setFormData(prev => ({ ...prev, pago: e.target.checked }))}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="pago-nao-aluno" className="cursor-pointer">Pagamento confirmado</Label>
+          </div>
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
@@ -649,7 +670,8 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
     alunoId: '',
     responsavelId: '',
     valorPago: '',
-    formaPagamento: ''
+    formaPagamento: '',
+    pago: false
   });
   const { toast } = useToast();
 
@@ -716,11 +738,12 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
         ...alunoSelecionado,
         responsavelId: formData.responsavelId,
         valorPago: formData.valorPago ? parseFloat(formData.valorPago) : null,
-        formaPagamento: formData.formaPagamento
+        formaPagamento: formData.formaPagamento,
+        pago: formData.pago
       };
 
       onAlunoAdicionado(novoAlunoEvento);
-      setFormData({ alunoId: '', responsavelId: '', valorPago: '', formaPagamento: '' });
+      setFormData({ alunoId: '', responsavelId: '', valorPago: '', formaPagamento: '', pago: false });
       setSearchTerm('');
       setOpen(false);
       
@@ -829,6 +852,17 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
             />
           </div>
 
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="pago"
+              checked={formData.pago}
+              onChange={(e) => setFormData(prev => ({ ...prev, pago: e.target.checked }))}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="pago" className="cursor-pointer">Pagamento confirmado</Label>
+          </div>
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
@@ -852,7 +886,8 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
           aluno_id: novoAluno.id,
           forma_pagamento: novoAluno.formaPagamento,
           responsavel_id: novoAluno.responsavelId,
-          valor_pago: novoAluno.valorPago
+          valor_pago: novoAluno.valorPago,
+          pago: novoAluno.pago || false
         });
 
       if (error) throw error;
@@ -893,7 +928,8 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
           responsavel_id: convidado.responsavelId,
           responsavel_nome: convidado.responsavelNome,
           valor_pago: convidado.valorPago,
-          forma_pagamento: convidado.formaPagamento
+          forma_pagamento: convidado.formaPagamento,
+          pago: convidado.pago || false
         });
 
       if (error) throw error;
@@ -1186,6 +1222,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                     <TableHead>Tipo</TableHead>
                     <TableHead>Informações</TableHead>
                     <TableHead>Forma de Pagamento</TableHead>
+                    <TableHead className="w-[80px]">Pago</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1219,13 +1256,15 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                       {/* Coluna Informações */}
                       <TableCell>
                         {convidado.tipo === 'aluno' ? (
-                          <span>{convidado.turma} - {convidado.professor}</span>
+                          <div className="text-sm space-y-0.5">
+                            <div>{convidado.turma} - {convidado.professor}</div>
+                            <div className="text-muted-foreground">Responsável: {convidado.responsavelNome || 'N/A'}</div>
+                          </div>
                         ) : (
                           <div className="text-sm space-y-0.5">
-                            <div>Convidou: {convidado.quemConvidou}</div>
                             <div>Responsável: {convidado.responsavel}</div>
                             {convidado.valorPago && (
-                              <div>Valor: R$ {Number(convidado.valorPago).toFixed(2)}</div>
+                              <div className="text-muted-foreground">Valor: R$ {Number(convidado.valorPago).toFixed(2)}</div>
                             )}
                           </div>
                         )}
@@ -1239,6 +1278,41 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                             : convidado.formaPagamento?.replace('_', ' ')
                           }
                         </Badge>
+                      </TableCell>
+                      
+                      {/* Coluna Pago (Checkbox) */}
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={convidado.pago}
+                          onChange={async (e) => {
+                            const novoPago = e.target.checked;
+                            try {
+                              if (convidado.tipo === 'aluno') {
+                                await supabase
+                                  .from('evento_participantes')
+                                  .update({ pago: novoPago })
+                                  .eq('id', convidado.participante_id);
+                                  
+                                setAlunosEvento(prev => 
+                                  prev.map(a => a.id === convidado.id ? { ...a, pago: novoPago } : a)
+                                );
+                              } else {
+                                await supabase
+                                  .from('convidados_eventos')
+                                  .update({ pago: novoPago })
+                                  .eq('id', convidado.id);
+                                  
+                                setConvidadosNaoAlunos(prev => 
+                                  prev.map(c => c.id === convidado.id ? { ...c, pago: novoPago } : c)
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Erro ao atualizar status de pagamento:', error);
+                            }
+                          }}
+                          className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                        />
                       </TableCell>
                       
                       {/* Coluna Ações */}
