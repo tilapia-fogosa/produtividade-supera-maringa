@@ -64,16 +64,22 @@ const DevolutivaFimAno: React.FC = () => {
   const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
   const handlePhotoSelected = async () => {
+    console.log('📸 handlePhotoSelected chamado para:', { pessoaSelecionadaId, tipoPessoa });
+    
     // Atualizar cache buster para forçar recarregamento da foto
-    setCacheBuster(Date.now());
+    const novoCacheBuster = Date.now();
+    setCacheBuster(novoCacheBuster);
+    console.log('🔄 Cache buster atualizado para:', novoCacheBuster);
     
-    // Aguardar um pouco para garantir que o Supabase processou
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Aguardar 2 segundos para garantir que o Supabase processou
+    console.log('⏳ Aguardando 2 segundos para o banco atualizar...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Buscar dados atualizados diretamente do Supabase com cache desabilitado
+    // Buscar dados atualizados diretamente do Supabase
     if (pessoaSelecionadaId) {
       try {
         if (tipoPessoa === 'aluno') {
+          console.log('🔍 Buscando URL atualizada da foto do aluno...');
           const { data } = await supabase
             .from('alunos')
             .select('foto_devolutiva_url')
@@ -85,27 +91,47 @@ const DevolutivaFimAno: React.FC = () => {
           }
           
           // Recarregar todos os alunos
+          console.log('🔄 Recarregando todos os alunos...');
           await refetchAlunos();
         } else {
-          const { data } = await supabase
+          console.log('🔍 Buscando URL atualizada da foto do funcionário...');
+          const { data, error } = await supabase
             .from('funcionarios')
             .select('foto_devolutiva_url')
             .eq('id', pessoaSelecionadaId)
             .single();
           
+          if (error) {
+            console.error('❌ Erro ao buscar foto do funcionário:', error);
+          }
+          
           if (data) {
             console.log('✅ Nova URL da foto do funcionário:', data.foto_devolutiva_url);
+          } else {
+            console.warn('⚠️ Nenhum dado retornado para funcionário:', pessoaSelecionadaId);
           }
           
           // Recarregar todos os funcionários
+          console.log('🔄 Recarregando todos os funcionários...');
           await recarregarFuncionarios();
         }
         
         // Atualizar cache buster novamente após o refetch
-        setCacheBuster(Date.now());
+        const ultimoCacheBuster = Date.now();
+        setCacheBuster(ultimoCacheBuster);
+        console.log('✅ Cache buster final:', ultimoCacheBuster);
+        
+        // Forçar re-render verificando o estado
+        console.log('📊 Estado após atualização:', { 
+          pessoaSelecionadaId, 
+          tipoPessoa,
+          cacheBuster: ultimoCacheBuster
+        });
       } catch (error) {
-        console.error('Erro ao buscar foto atualizada:', error);
+        console.error('❌ Erro ao buscar foto atualizada:', error);
       }
+    } else {
+      console.warn('⚠️ Nenhuma pessoa selecionada');
     }
   };
 
