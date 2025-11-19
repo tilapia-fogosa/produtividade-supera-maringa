@@ -16,8 +16,7 @@ import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
 import { useExerciciosAbaco2025 } from '@/hooks/use-exercicios-abaco-2025';
 import { useExerciciosAH2025 } from '@/hooks/use-exercicios-ah-2025';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
 
 
 const DevolutivaFimAno: React.FC = () => {
@@ -103,40 +102,21 @@ const DevolutivaFimAno: React.FC = () => {
     
     try {
       const elemento = document.querySelector('.a4-page') as HTMLElement;
+      
       if (!elemento) {
         alert('Erro: elemento não encontrado');
         return;
       }
 
-      // Capturar em alta resolução (3x = ~300 DPI)
-      const canvas = await html2canvas(elemento, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: elemento.offsetWidth,
-        height: elemento.offsetHeight,
-        logging: false
-      });
+      const options = {
+        margin: 0,
+        filename: `devolutiva-${pessoaSelecionada.nome}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
 
-      // Dimensões A4 em mm
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-
-      // Criar PDF com qualidade máxima
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: false // Sem compressão para máxima qualidade
-      });
-
-      // Converter canvas para imagem e adicionar ao PDF
-      const imgData = canvas.toDataURL('image/jpeg', 1.0); // Qualidade máxima
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
-
-      // Download do PDF
-      pdf.save(`devolutiva-${pessoaSelecionada.nome}.pdf`);
+      await html2pdf().set(options).from(elemento).save();
       
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
