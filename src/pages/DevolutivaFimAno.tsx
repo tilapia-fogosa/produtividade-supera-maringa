@@ -7,6 +7,7 @@ import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import { useProfessores } from '@/hooks/use-professores';
 import { useFuncionarios } from '@/hooks/use-funcionarios';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,17 +63,50 @@ const DevolutivaFimAno: React.FC = () => {
   const { data: totalExerciciosAbaco2025 = 0 } = useExerciciosAbaco2025(pessoaSelecionadaId);
   const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
-  const handlePhotoSelected = () => {
+  const handlePhotoSelected = async () => {
     // Atualizar cache buster para forçar recarregamento da foto
     setCacheBuster(Date.now());
-    // Recarregar dados para mostrar nova foto
-    setTimeout(() => {
-      if (tipoPessoa === 'aluno') {
-        refetchAlunos();
-      } else {
-        recarregarFuncionarios();
+    
+    // Aguardar um pouco para garantir que o Supabase processou
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Buscar dados atualizados diretamente do Supabase com cache desabilitado
+    if (pessoaSelecionadaId) {
+      try {
+        if (tipoPessoa === 'aluno') {
+          const { data } = await supabase
+            .from('alunos')
+            .select('foto_devolutiva_url')
+            .eq('id', pessoaSelecionadaId)
+            .single();
+          
+          if (data) {
+            console.log('✅ Nova URL da foto do aluno:', data.foto_devolutiva_url);
+          }
+          
+          // Recarregar todos os alunos
+          await refetchAlunos();
+        } else {
+          const { data } = await supabase
+            .from('funcionarios')
+            .select('foto_devolutiva_url')
+            .eq('id', pessoaSelecionadaId)
+            .single();
+          
+          if (data) {
+            console.log('✅ Nova URL da foto do funcionário:', data.foto_devolutiva_url);
+          }
+          
+          // Recarregar todos os funcionários
+          await recarregarFuncionarios();
+        }
+        
+        // Atualizar cache buster novamente após o refetch
+        setCacheBuster(Date.now());
+      } catch (error) {
+        console.error('Erro ao buscar foto atualizada:', error);
       }
-    }, 500);
+    }
   };
 
   // Valores computados baseados na versão selecionada
