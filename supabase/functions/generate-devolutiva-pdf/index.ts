@@ -196,8 +196,7 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        delay: 5000, // Aguardar 5 segundos para garantir carregamento das imagens
-        wait_for: 'load', // Aguardar evento 'load' do documento
+        delay: 180000, // 180 segundos = 3 minutos para garantir carregamento completo
       }),
     });
     
