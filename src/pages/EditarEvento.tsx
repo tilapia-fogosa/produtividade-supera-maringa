@@ -57,6 +57,8 @@ export default function EditarEvento() {
             aluno_id,
             responsavel_id,
             pago,
+            valorizado,
+            compareceu,
             created_at,
             alunos!inner(
               id,
@@ -86,6 +88,8 @@ export default function EditarEvento() {
           professor: p.alunos.turmas?.professores?.nome || 'Sem professor',
           formaPagamento: p.forma_pagamento,
           pago: p.pago || false,
+          valorizado: p.valorizado || false,
+          compareceu: p.compareceu || false,
           responsavelNome: responsaveisMap.get(p.responsavel_id) || 'N/A',
           responsavelId: p.responsavel_id,
           created_at: p.created_at,
@@ -122,6 +126,8 @@ export default function EditarEvento() {
           valorPago: c.valor_pago,
           formaPagamento: c.forma_pagamento,
           pago: c.pago || false,
+          valorizado: c.valorizado || false,
+          compareceu: c.compareceu || false,
           created_at: c.created_at,
           tipo: 'nao_aluno'
         }));
@@ -1245,6 +1251,8 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                     <TableHead>Responsável</TableHead>
                     <TableHead>Forma de Pagamento</TableHead>
                     <TableHead className="w-[80px]">Pago</TableHead>
+                    <TableHead className="w-[100px]">Valorizado</TableHead>
+                    <TableHead className="w-[100px]">Compareceu</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1342,6 +1350,76 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                               }
                             } catch (error) {
                               console.error('Erro ao atualizar status de pagamento:', error);
+                            }
+                          }}
+                          className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                        />
+                      </TableCell>
+                      
+                      {/* Coluna Valorizado (Checkbox) */}
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={convidado.valorizado}
+                          onChange={async (e) => {
+                            const novoValorizado = e.target.checked;
+                            try {
+                              if (convidado.tipo === 'aluno') {
+                                await supabase
+                                  .from('evento_participantes')
+                                  .update({ valorizado: novoValorizado })
+                                  .eq('id', convidado.participante_id);
+                                  
+                                setAlunosEvento(prev => 
+                                  prev.map(a => a.id === convidado.id ? { ...a, valorizado: novoValorizado } : a)
+                                );
+                              } else {
+                                await supabase
+                                  .from('convidados_eventos')
+                                  .update({ valorizado: novoValorizado })
+                                  .eq('id', convidado.id);
+                                  
+                                setConvidadosNaoAlunos(prev => 
+                                  prev.map(c => c.id === convidado.id ? { ...c, valorizado: novoValorizado } : c)
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Erro ao atualizar status valorizado:', error);
+                            }
+                          }}
+                          className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                        />
+                      </TableCell>
+
+                      {/* Coluna Compareceu (Checkbox) */}
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={convidado.compareceu}
+                          onChange={async (e) => {
+                            const novoCompareceu = e.target.checked;
+                            try {
+                              if (convidado.tipo === 'aluno') {
+                                await supabase
+                                  .from('evento_participantes')
+                                  .update({ compareceu: novoCompareceu })
+                                  .eq('id', convidado.participante_id);
+                                  
+                                setAlunosEvento(prev => 
+                                  prev.map(a => a.id === convidado.id ? { ...a, compareceu: novoCompareceu } : a)
+                                );
+                              } else {
+                                await supabase
+                                  .from('convidados_eventos')
+                                  .update({ compareceu: novoCompareceu })
+                                  .eq('id', convidado.id);
+                                  
+                                setConvidadosNaoAlunos(prev => 
+                                  prev.map(c => c.id === convidado.id ? { ...c, compareceu: novoCompareceu } : c)
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Erro ao atualizar status de comparecimento:', error);
                             }
                           }}
                           className="h-5 w-5 rounded border-gray-300 cursor-pointer"
