@@ -207,7 +207,7 @@ const DevolutivaFimAno: React.FC = () => {
       
       const dadosDevolutiva = {
         nome: pessoaSelecionada.nome,
-        fotoUrl: pessoaSelecionada.foto_devolutiva_url || ('foto_url' in pessoaSelecionada ? pessoaSelecionada.foto_url : ''),
+        fotoUrl: pessoaSelecionada.foto_devolutiva_url,
         tamanhoFoto,
         posicaoX,
         posicaoY,
