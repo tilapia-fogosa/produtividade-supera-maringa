@@ -92,6 +92,13 @@ function generateHTML(data: DevolutivaData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Devolutiva Fim de Ano - ${data.nome}</title>
   <style>${CSS_INLINE}</style>
+  <script>
+    function imagesLoaded() {
+      const images = Array.from(document.images);
+      if (images.length === 0) return true;
+      return images.every(img => img.complete && img.naturalHeight !== 0);
+    }
+  </script>
 </head>
 <body>
   <div class="devolutiva-fim-ano-wrapper">
@@ -200,13 +207,7 @@ Deno.serve(async (req) => {
         use_print: true,
         sandbox: false,
         delay: 3000,
-        wait_for: `
-          () => {
-            const images = Array.from(document.images);
-            if (images.length === 0) return true;
-            return images.every(img => img.complete && img.naturalHeight !== 0);
-          }
-        `,
+        wait_for: 'imagesLoaded',
       }),
     });
     
