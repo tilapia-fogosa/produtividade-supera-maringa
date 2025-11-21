@@ -81,8 +81,8 @@ const CSS_INLINE = `
 
 function generateHTML(data: DevolutivaData): string {
   const templateUrl = data.templateUrl || (data.versaoTemplate === 2
-    ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v2.png'
-    : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v3.png');
+    ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v2.png'
+    : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v1.png');
 
   return `
 <!DOCTYPE html>
