@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        delay: 180000, // 180 segundos = 3 minutos para garantir carregamento completo
+        delay: 10000, // Máximo permitido: 10 segundos
       }),
     });
     
