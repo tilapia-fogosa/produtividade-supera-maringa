@@ -202,10 +202,9 @@ const DevolutivaFimAno: React.FC = () => {
     setGerandoPDFShift(true);
     
     try {
-      // Obter URL pública do template
-      const templateUrl = versaoTemplate === 1 ? templateV1 : templateV2;
-      
       const dadosDevolutiva = {
+        pessoa_id: pessoaSelecionada.id,
+        pessoa_tipo: tipoRealPessoa,
         nome: pessoaSelecionada.nome,
         fotoUrl: pessoaSelecionada.foto_devolutiva_url,
         tamanhoFoto,
@@ -222,7 +221,7 @@ const DevolutivaFimAno: React.FC = () => {
         versaoTemplate
       };
       
-      console.log('Gerando PDF via edge function...');
+      console.log('Enviando dados para gerar PDF via n8n...');
       
       const { data, error } = await supabase.functions.invoke('generate-devolutiva-pdf', {
         body: dadosDevolutiva,
@@ -232,34 +231,16 @@ const DevolutivaFimAno: React.FC = () => {
         throw new Error(error.message || 'Erro ao gerar PDF');
       }
       
-      if (!data) {
-        throw new Error('Nenhum dado retornado da edge function');
+      if (!data || !data.url) {
+        throw new Error('URL do PDF não retornada');
       }
       
-      console.log('PDF gerado com sucesso, decodificando base64...');
+      console.log('PDF gerado e salvo no bucket! URL:', data.url);
       
-      // Decodificar base64 para criar o blob
-      const base64 = data.pdf;
-      const binaryString = atob(base64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
+      // Abrir URL do bucket em nova aba para download
+      window.open(data.url, '_blank');
       
-      console.log('Base64 decodificado, criando blob...');
-      
-      // Converter response para blob
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      console.log('PDF gerado com sucesso!');
+      alert('PDF gerado com sucesso e salvo no bucket!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -599,7 +580,7 @@ const DevolutivaFimAno: React.FC = () => {
                   disabled={gerandoPDFShift}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  {gerandoPDFShift ? 'Gerando...' : 'Download PDF (Premium)'}
+                  {gerandoPDFShift ? 'Gerando...' : 'Baixar do Bucket'}
                 </Button>
                 <Button
                   onClick={() => setMostrarPreview(false)}
@@ -753,12 +734,12 @@ const DevolutivaFimAno: React.FC = () => {
             <Printer className={`h-5 w-5 ${gerandoPDFNavegador ? 'animate-pulse' : ''}`} />
           </Button>
 
-          {/* Botão de download PDF com PDFShift */}
+          {/* Botão de download PDF do Bucket */}
           <Button
             onClick={handleSalvarPDFShift}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="outline"
-            title="Download PDF com PDFShift (Premium)"
+            title="Gerar e baixar PDF do bucket"
             disabled={gerandoPDFShift}
           >
             <Download className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />

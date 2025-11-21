@@ -1,6 +1,8 @@
 import { corsHeaders } from '../_shared/cors.ts';
 
 interface DevolutivaData {
+  pessoa_id: string;
+  pessoa_tipo: 'aluno' | 'funcionario';
   nome: string;
   fotoUrl: string;
   tamanhoFoto: number;
@@ -195,6 +197,8 @@ Deno.serve(async (req) => {
       : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v1.png';
 
     const webhookData = {
+      pessoa_id: data.pessoa_id,
+      pessoa_tipo: data.pessoa_tipo,
       nome: data.nome,
       fotoUrl: data.fotoUrl,
       tamanhoFoto: data.tamanhoFoto,
@@ -237,21 +241,19 @@ Deno.serve(async (req) => {
     console.log('Content-Type da resposta:', contentType);
     
     if (!contentType?.includes('application/json')) {
-      throw new Error('n8n deve retornar application/json com o PDF em base64');
+      throw new Error('n8n deve retornar application/json com a URL do PDF');
     }
     
     const responseData = await webhookResponse.json();
     console.log('Resposta JSON recebida do n8n');
     
-    if (!responseData.pdf) {
-      throw new Error('Resposta do n8n não contém o campo "pdf" com o base64');
+    if (!responseData.url) {
+      throw new Error('Resposta do n8n não contém o campo "url" com a URL do PDF no bucket');
     }
     
-    // Remover prefixo data:application/pdf;base64, se existir
-    const base64Pdf = responseData.pdf.replace(/^data:application\/pdf;base64,/, '');
-    console.log('Base64 recebido do n8n, tamanho:', base64Pdf.length, 'caracteres');
+    console.log('URL do PDF recebida:', responseData.url);
     
-    return new Response(JSON.stringify({ pdf: base64Pdf }), {
+    return new Response(JSON.stringify({ url: responseData.url }), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
