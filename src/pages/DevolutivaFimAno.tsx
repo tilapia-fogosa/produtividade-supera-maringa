@@ -234,16 +234,13 @@ const DevolutivaFimAno: React.FC = () => {
         throw new Error(error.message || 'Erro ao gerar PDF');
       }
       
-      if (!data || !data.url) {
-        throw new Error('URL do PDF não retornada');
+      if (!data || !data.success) {
+        throw new Error('Erro ao processar solicitação');
       }
       
-      console.log('PDF gerado e salvo no bucket! URL:', data.url);
+      console.log('✅ PDF sendo gerado pelo n8n:', data.message);
       
-      // Abrir URL do bucket em nova aba para download
-      window.open(data.url, '_blank');
-      
-      alert('PDF gerado com sucesso e salvo no bucket!');
+      alert('PDF sendo gerado! O arquivo será salvo automaticamente no bucket.');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);

@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
     console.log('pessoa_tipo:', webhookData.pessoa_tipo);
     console.log('Payload completo que será enviado ao n8n:', JSON.stringify(webhookData, null, 2));
     
-    // Chamar webhook do n8n
+    // Chamar webhook do n8n (fire and forget - n8n salva no bucket e na tabela)
     const webhookResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/pdf', {
       method: 'POST',
       headers: {
@@ -237,26 +237,12 @@ Deno.serve(async (req) => {
       throw new Error(`Webhook n8n error: ${webhookResponse.status} - ${errorText}`);
     }
     
-    console.log('Resposta recebida do webhook n8n');
+    console.log('✅ Webhook n8n chamado com sucesso. O n8n irá processar e salvar o PDF no bucket.');
     
-    // Espera-se que o n8n retorne JSON com o PDF em base64
-    const contentType = webhookResponse.headers.get('content-type');
-    console.log('Content-Type da resposta:', contentType);
-    
-    if (!contentType?.includes('application/json')) {
-      throw new Error('n8n deve retornar application/json com a URL do PDF');
-    }
-    
-    const responseData = await webhookResponse.json();
-    console.log('Resposta JSON recebida do n8n');
-    
-    if (!responseData.url) {
-      throw new Error('Resposta do n8n não contém o campo "url" com a URL do PDF no bucket');
-    }
-    
-    console.log('URL do PDF recebida:', responseData.url);
-    
-    return new Response(JSON.stringify({ url: responseData.url }), {
+    return new Response(JSON.stringify({ 
+      success: true,
+      message: 'PDF está sendo gerado e será salvo automaticamente no bucket' 
+    }), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
