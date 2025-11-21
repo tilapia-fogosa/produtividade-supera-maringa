@@ -199,8 +199,14 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        delay: 10000,
-        wait_for_images: true,
+        delay: 3000,
+        wait_for: `
+          () => {
+            const images = Array.from(document.images);
+            if (images.length === 0) return true;
+            return images.every(img => img.complete && img.naturalHeight !== 0);
+          }
+        `,
       }),
     });
     
