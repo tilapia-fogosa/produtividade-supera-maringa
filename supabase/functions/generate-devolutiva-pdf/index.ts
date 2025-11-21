@@ -170,9 +170,22 @@ Deno.serve(async (req) => {
     const data: DevolutivaData = await req.json();
     
     console.log('Gerando PDF para:', data.nome);
+    console.log('Dados recebidos:', {
+      nome: data.nome,
+      fotoUrl: data.fotoUrl,
+      tamanhoFoto: data.tamanhoFoto,
+      posicaoX: data.posicaoX,
+      posicaoY: data.posicaoY,
+      versaoTemplate: data.versaoTemplate,
+      totalDesafios: data.totalDesafios,
+      totalExerciciosAbaco: data.totalExerciciosAbaco,
+      totalExerciciosAH: data.totalExerciciosAH
+    });
     
     // Gerar HTML completo
     const htmlContent = generateHTML(data);
+    console.log('HTML gerado (primeiros 500 caracteres):', htmlContent.substring(0, 500));
+    console.log('Tamanho total do HTML:', htmlContent.length, 'caracteres');
     
     // Chamar PDFShift API
     const pdfShiftApiKey = Deno.env.get('PDFSHIFT_API_KEY');
