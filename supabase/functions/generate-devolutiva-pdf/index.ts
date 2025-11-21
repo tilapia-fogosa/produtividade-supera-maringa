@@ -205,6 +205,8 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
+        wait_for_network_idle: true,
+        delay: 2000,
       }),
     });
     
