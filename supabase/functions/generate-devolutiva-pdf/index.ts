@@ -78,10 +78,14 @@ const CSS_INLINE = `
 }
 `;
 
-function generateHTML(data: DevolutivaData): string {
-  const templateUrl = data.versaoTemplate === 2
+interface DevolutivaDataWithBase64 extends DevolutivaData {
+  templateUrl?: string;
+}
+
+function generateHTML(data: DevolutivaDataWithBase64): string {
+  const templateUrl = data.templateUrl || (data.versaoTemplate === 2
     ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v2.png'
-    : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v3.png';
+    : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v3.png');
 
   return `
 <!DOCTYPE html>
@@ -160,6 +164,23 @@ function generateHTML(data: DevolutivaData): string {
   `.trim();
 }
 
+async function imageToBase64(url: string): Promise<string> {
+  try {
+    console.log('Baixando imagem:', url);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Erro ao baixar imagem: ${response.status}`);
+    }
+    const blob = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(blob)));
+    console.log('Imagem convertida para base64, tamanho:', base64.length);
+    return `data:image/jpeg;base64,${base64}`;
+  } catch (error) {
+    console.error('Erro ao converter imagem para base64:', error);
+    throw error;
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -182,9 +203,27 @@ Deno.serve(async (req) => {
       totalExerciciosAH: data.totalExerciciosAH
     });
     
-    // Gerar HTML completo
-    const htmlContent = generateHTML(data);
-    console.log('HTML gerado (primeiros 500 caracteres):', htmlContent.substring(0, 500));
+    // Converter imagens para base64
+    console.log('Convertendo foto do aluno para base64...');
+    const fotoBase64 = await imageToBase64(data.fotoUrl);
+    
+    const templateUrl = data.versaoTemplate === 2
+      ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v2.png'
+      : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v3.png';
+    
+    console.log('Convertendo template para base64...');
+    const templateBase64 = await imageToBase64(templateUrl);
+    
+    // Criar objeto com URLs base64
+    const dataWithBase64 = {
+      ...data,
+      fotoUrl: fotoBase64,
+      templateUrl: templateBase64
+    };
+    
+    // Gerar HTML completo com imagens base64
+    const htmlContent = generateHTML(dataWithBase64);
+    console.log('HTML gerado com imagens base64 (primeiros 500 caracteres):', htmlContent.substring(0, 500));
     console.log('Tamanho total do HTML:', htmlContent.length, 'caracteres');
     
     // Chamar PDFShift API
@@ -193,6 +232,7 @@ Deno.serve(async (req) => {
       throw new Error('PDFSHIFT_API_KEY não configurada');
     }
     
+    console.log('Chamando PDFShift API...');
     const pdfShiftResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
       method: 'POST',
       headers: {
@@ -205,8 +245,6 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        wait_for_network_idle: true,
-        delay: 2000,
       }),
     });
     
