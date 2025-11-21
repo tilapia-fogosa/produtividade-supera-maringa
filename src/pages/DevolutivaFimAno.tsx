@@ -236,8 +236,20 @@ const DevolutivaFimAno: React.FC = () => {
         throw new Error('Nenhum dado retornado da edge function');
       }
       
+      console.log('PDF gerado com sucesso, decodificando base64...');
+      
+      // Decodificar base64 para criar o blob
+      const base64 = data.pdf;
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      console.log('Base64 decodificado, criando blob...');
+      
       // Converter response para blob
-      const blob = new Blob([data], { type: 'application/pdf' });
+      const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

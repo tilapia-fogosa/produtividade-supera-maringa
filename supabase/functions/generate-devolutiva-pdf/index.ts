@@ -266,13 +266,22 @@ Deno.serve(async (req) => {
       pdfBlob = await webhookResponse.arrayBuffer();
     }
     
-    console.log('PDF gerado com sucesso');
+    console.log('PDF gerado com sucesso, tamanho:', pdfBlob.byteLength, 'bytes');
     
-    return new Response(pdfBlob, {
+    // Converter para base64 para retornar ao frontend
+    const base64Pdf = btoa(
+      new Uint8Array(pdfBlob).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        ''
+      )
+    );
+    
+    console.log('PDF convertido para base64, retornando ao frontend');
+    
+    return new Response(JSON.stringify({ pdf: base64Pdf }), {
       headers: {
         ...corsHeaders,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="devolutiva-${data.nome.replace(/\s+/g, '-')}.pdf"`,
+        'Content-Type': 'application/json',
       },
     });
     
