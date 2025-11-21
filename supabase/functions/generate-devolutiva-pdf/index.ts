@@ -189,7 +189,6 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         source: htmlContent,
         format: 'A4',
-        orientation: 'portrait',
         margin: 0,
         use_print: true,
         sandbox: false,
