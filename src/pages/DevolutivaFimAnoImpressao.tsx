@@ -10,9 +10,15 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
 
   useEffect(() => {
     // Recuperar dados do sessionStorage
+    console.log('[DevolutivaFimAnoImpressao] Tentando recuperar dados do sessionStorage');
     const dados = sessionStorage.getItem('devolutiva-impressao');
+    console.log('[DevolutivaFimAnoImpressao] Dados recuperados:', dados);
     if (dados) {
-      setDadosPessoa(JSON.parse(dados));
+      const dadosParsed = JSON.parse(dados);
+      console.log('[DevolutivaFimAnoImpressao] Dados parseados:', dadosParsed);
+      setDadosPessoa(dadosParsed);
+    } else {
+      console.error('[DevolutivaFimAnoImpressao] Nenhum dado encontrado no sessionStorage');
     }
   }, []);
 
