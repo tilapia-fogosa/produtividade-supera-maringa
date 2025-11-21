@@ -146,42 +146,54 @@ const DevolutivaFimAno: React.FC = () => {
     window.open('/devolutiva-fim-ano-impressao', '_blank');
   };
 
-  const handleSalvarPDFNavegador = () => {
+  const handleSalvarPDFNavegador = async () => {
     if (!pessoaSelecionada) return;
     
     setGerandoPDFNavegador(true);
     
-    // Salvar dados no localStorage para a página de impressão
-    const dadosImpressao = {
-      nome: pessoaSelecionada.nome,
-      fotoUrl: pessoaSelecionada.foto_devolutiva_url,
-      tamanhoFoto,
-      posicaoX,
-      posicaoY,
-      tamanhoFonte,
-      alturaNome,
-      alturaExercicios,
-      posicaoXExerciciosAbaco,
-      posicaoXExerciciosAH,
-      totalDesafios: totalDesafios2025,
-      totalExerciciosAbaco: totalExerciciosAbaco2025,
-      totalExerciciosAH: totalExerciciosAH2025,
-      versaoTemplate
-    };
-    
-    console.log('[DevolutivaFimAno] Salvando dados no localStorage:', dadosImpressao);
-    localStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
-    
-    // Abrir página de impressão - ela mesma dispara o window.print()
-    const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
-    
-    if (printWindow) {
-      console.log('[DevolutivaFimAno] Janela de impressão aberta com sucesso');
-    } else {
-      alert('Por favor, permita pop-ups para este site para usar a função de impressão.');
+    try {
+      // Salvar dados no localStorage para a página de impressão
+      const dadosImpressao = {
+        nome: pessoaSelecionada.nome,
+        fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+        tamanhoFoto,
+        posicaoX,
+        posicaoY,
+        tamanhoFonte,
+        alturaNome,
+        alturaExercicios,
+        posicaoXExerciciosAbaco,
+        posicaoXExerciciosAH,
+        totalDesafios: totalDesafios2025,
+        totalExerciciosAbaco: totalExerciciosAbaco2025,
+        totalExerciciosAH: totalExerciciosAH2025,
+        versaoTemplate
+      };
+      
+      console.log('[DevolutivaFimAno] Salvando dados no localStorage:', dadosImpressao);
+      localStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+      
+      // Verificar se foi salvo
+      const verificacao = localStorage.getItem('devolutiva-impressao');
+      console.log('[DevolutivaFimAno] Verificação após salvar:', verificacao ? 'Dados salvos com sucesso' : 'ERRO: Dados não foram salvos');
+      
+      // Pequeno delay para garantir que o localStorage seja persistido
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Abrir página de impressão - ela mesma dispara o window.print()
+      const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
+      
+      if (printWindow) {
+        console.log('[DevolutivaFimAno] Janela de impressão aberta com sucesso');
+      } else {
+        alert('Por favor, permita pop-ups para este site para usar a função de impressão.');
+      }
+    } catch (error) {
+      console.error('[DevolutivaFimAno] Erro ao salvar no localStorage:', error);
+      alert('Erro ao preparar impressão. Verifique o console para mais detalhes.');
+    } finally {
+      setGerandoPDFNavegador(false);
     }
-    
-    setGerandoPDFNavegador(false);
   };
 
   const handleSalvarPDFShift = async () => {
