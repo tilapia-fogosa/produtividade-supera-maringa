@@ -171,8 +171,18 @@ async function imageToBase64(url: string): Promise<string> {
     if (!response.ok) {
       throw new Error(`Erro ao baixar imagem: ${response.status}`);
     }
-    const blob = await response.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(blob)));
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    
+    // Converter para base64 em chunks para evitar stack overflow
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    
+    const base64 = btoa(binary);
     console.log('Imagem convertida para base64, tamanho:', base64.length);
     return `data:image/jpeg;base64,${base64}`;
   } catch (error) {
