@@ -169,10 +169,13 @@ const DevolutivaFimAno: React.FC = () => {
       versaoTemplate
     };
     
+    console.log('[DevolutivaFimAno] Salvando dados no sessionStorage:', dadosImpressao);
     sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    console.log('[DevolutivaFimAno] Dados salvos com sucesso');
     
     // Abrir página de impressão
     const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
+    console.log('[DevolutivaFimAno] Janela aberta:', !!printWindow);
     
     if (printWindow) {
       printWindow.addEventListener('load', () => {
