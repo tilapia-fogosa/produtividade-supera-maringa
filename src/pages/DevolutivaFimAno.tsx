@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { User, Briefcase, Printer, Eye, Download, ListChecks, CloudUpload } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
@@ -48,6 +49,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
   const [gerandoPDFNavegador, setGerandoPDFNavegador] = useState<boolean>(false); // Estado para window.print()
+  const [mostrarDialogPDF, setMostrarDialogPDF] = useState<boolean>(false); // Dialog para PDF sendo gerado
   const [gerandoPDFShift, setGerandoPDFShift] = useState<boolean>(false); // Estado para PDFShift
   
   // Selecionar template baseado na versão
@@ -240,7 +242,7 @@ const DevolutivaFimAno: React.FC = () => {
       
       console.log('✅ PDF sendo gerado pelo n8n:', data.message);
       
-      alert('Pdf sendo gerado');
+      setMostrarDialogPDF(true);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -870,6 +872,15 @@ const DevolutivaFimAno: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Dialog de PDF sendo gerado */}
+      <Dialog open={mostrarDialogPDF} onOpenChange={setMostrarDialogPDF}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pdf sendo gerado</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
