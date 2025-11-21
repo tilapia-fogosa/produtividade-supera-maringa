@@ -43,7 +43,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
-  const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
+  const [alturaExercicios, setAlturaExercicios] = useState<number>(13); // Altura dos exercícios em %
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
@@ -715,12 +715,23 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de imprimir PDF */}
           <Button
             onClick={handleSalvarPDFNavegador}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir PDF (Grátis)"
             disabled={gerandoPDFNavegador}
           >
             <Printer className={`h-5 w-5 ${gerandoPDFNavegador ? 'animate-pulse' : ''}`} />
+          </Button>
+
+          {/* Botão de download PDF com PDFShift */}
+          <Button
+            onClick={handleSalvarPDFShift}
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            variant="outline"
+            title="Download PDF com PDFShift (Premium)"
+            disabled={gerandoPDFShift}
+          >
+            <Download className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}
@@ -736,7 +747,7 @@ const DevolutivaFimAno: React.FC = () => {
           {mostrarControles && (
             <div className="no-print fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg py-2 px-3 z-40">
               <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
                   {/* Tamanho da Foto */}
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Tamanho</span>
@@ -810,6 +821,22 @@ const DevolutivaFimAno: React.FC = () => {
                         className="flex-1"
                       />
                       <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{tamanhoFonte}px</span>
+                    </div>
+                  )}
+
+                  {/* Altura dos Resultados */}
+                  {pessoaSelecionada && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Alt.Res.</span>
+                      <Slider
+                        value={[alturaExercicios]}
+                        onValueChange={(value) => setAlturaExercicios(value[0])}
+                        min={0}
+                        max={30}
+                        step={0.5}
+                        className="flex-1"
+                      />
+                      <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{alturaExercicios}%</span>
                     </div>
                   )}
                 </div>

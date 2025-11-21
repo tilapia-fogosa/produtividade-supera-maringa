@@ -645,6 +645,8 @@ const AdicionarNaoAlunoModal = ({
                 <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
                 <SelectItem value="boleto">Boleto</SelectItem>
                 <SelectItem value="pix">PIX</SelectItem>
+                <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                <SelectItem value="carimbo">Carimbo</SelectItem>
                 <SelectItem value="evento_gratuito">Evento Gratuito</SelectItem>
               </SelectContent>
             </Select>
@@ -851,6 +853,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
                 <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
                 <SelectItem value="pix">Pix</SelectItem>
                 <SelectItem value="boleto">Boleto</SelectItem>
+                <SelectItem value="dinheiro">Dinheiro</SelectItem>
                 <SelectItem value="carimbo">Carimbo</SelectItem>
                 <SelectItem value="evento_gratuito">Evento Gratuito</SelectItem>
               </SelectContent>
