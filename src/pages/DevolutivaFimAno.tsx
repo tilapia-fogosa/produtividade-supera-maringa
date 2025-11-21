@@ -219,8 +219,7 @@ const DevolutivaFimAno: React.FC = () => {
         totalDesafios: totalDesafios2025,
         totalExerciciosAbaco: totalExerciciosAbaco2025,
         totalExerciciosAH: totalExerciciosAH2025,
-        versaoTemplate,
-        templateUrl: window.location.origin + templateUrl // Adicionar URL pública do template
+        versaoTemplate
       };
       
       console.log('Gerando PDF via edge function...');
