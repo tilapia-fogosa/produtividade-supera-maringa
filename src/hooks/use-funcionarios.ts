@@ -24,6 +24,7 @@ export interface Funcionario {
   niveldesafio?: string; // Alterado para string
   ultima_correcao_ah?: string;
   data_onboarding?: string | null;
+  foto_devolutiva_url?: string | null;
 }
 
 export function useFuncionarios(filtrarPorCargo?: string) {

@@ -4,17 +4,78 @@ import templateV1 from '@/assets/devolutiva-fim-ano-template-v3.png';
 import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 
+console.log('[DevolutivaFimAnoImpressao] Componente carregado');
+
 const DevolutivaFimAnoImpressao: React.FC = () => {
+  console.log('[DevolutivaFimAnoImpressao] Componente renderizando');
+  
   const [searchParams] = useSearchParams();
   const [dadosPessoa, setDadosPessoa] = useState<any>(null);
+  const [fotoCarregada, setFotoCarregada] = useState(false);
+  const [templateCarregado, setTemplateCarregado] = useState(false);
 
   useEffect(() => {
-    // Recuperar dados do sessionStorage
-    const dados = sessionStorage.getItem('devolutiva-impressao');
+    // Recuperar dados do localStorage
+    console.log('[DevolutivaFimAnoImpressao] Tentando recuperar dados do localStorage');
+    const dados = localStorage.getItem('devolutiva-impressao');
+    console.log('[DevolutivaFimAnoImpressao] Dados recuperados:', dados);
     if (dados) {
-      setDadosPessoa(JSON.parse(dados));
+      try {
+        const dadosParsed = JSON.parse(dados);
+        console.log('[DevolutivaFimAnoImpressao] Dados parseados:', dadosParsed);
+        setDadosPessoa(dadosParsed);
+        // Limpar após recuperar para evitar lixo no localStorage
+        localStorage.removeItem('devolutiva-impressao');
+        console.log('[DevolutivaFimAnoImpressao] Dados removidos do localStorage');
+      } catch (error) {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao parsear dados:', error);
+      }
+    } else {
+      console.error('[DevolutivaFimAnoImpressao] Nenhum dado encontrado no localStorage');
     }
   }, []);
+
+  // Carregar foto de fundo
+  useEffect(() => {
+    if (dadosPessoa?.fotoUrl) {
+      console.log('[DevolutivaFimAnoImpressao] Carregando foto:', dadosPessoa.fotoUrl);
+      const img = new Image();
+      img.onload = () => {
+        console.log('[DevolutivaFimAnoImpressao] Foto carregada com sucesso');
+        setFotoCarregada(true);
+      };
+      img.onerror = (error) => {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao carregar foto:', error);
+        setFotoCarregada(true); // Continuar mesmo com erro
+      };
+      img.src = dadosPessoa.fotoUrl;
+    } else {
+      console.log('[DevolutivaFimAnoImpressao] Sem foto, marcando como carregado');
+      setFotoCarregada(true);
+    }
+  }, [dadosPessoa]);
+
+  // Disparar impressão quando tudo estiver pronto
+  useEffect(() => {
+    console.log('[DevolutivaFimAnoImpressao] Status:', {
+      dadosPessoa: !!dadosPessoa,
+      fotoCarregada,
+      templateCarregado
+    });
+    
+    if (dadosPessoa && fotoCarregada && templateCarregado) {
+      console.log('[DevolutivaFimAnoImpressao] Tudo carregado, aguardando fontes...');
+      document.fonts.ready.then(() => {
+        console.log('[DevolutivaFimAnoImpressao] Fontes carregadas, disparando impressão em 500ms');
+        setTimeout(() => {
+          console.log('[DevolutivaFimAnoImpressao] Chamando window.print()');
+          window.print();
+        }, 500);
+      }).catch((error) => {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao aguardar fontes:', error);
+      });
+    }
+  }, [dadosPessoa, fotoCarregada, templateCarregado]);
 
   useEffect(() => {
     // Forçar portrait via meta tag
@@ -37,12 +98,20 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
   }, []);
 
   if (!dadosPessoa) {
+    console.log('[DevolutivaFimAnoImpressao] Renderizando tela de carregamento');
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Carregando...</p>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-2">Carregando devolutiva...</p>
+          <p className="text-sm text-gray-600">
+            Status: foto={fotoCarregada ? '✓' : '...'} template={templateCarregado ? '✓' : '...'}
+          </p>
+        </div>
       </div>
     );
   }
+
+  console.log('[DevolutivaFimAnoImpressao] Renderizando devolutiva');
 
   // Selecionar template baseado na versão
   const templateOverlay = dadosPessoa.versaoTemplate === 1 ? templateV1 : templateV2;
@@ -57,8 +126,8 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
               className="foto-aluno-background"
               style={{
                 backgroundImage: `url(${dadosPessoa.fotoUrl})`,
-                backgroundSize: dadosPessoa.versaoTemplate === 1 ? '76%' : `${dadosPessoa.tamanhoFoto}%`,
-                backgroundPosition: dadosPessoa.versaoTemplate === 1 ? '48% 46%' : `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
+                backgroundSize: `${dadosPessoa.tamanhoFoto}%`,
+                backgroundPosition: `${dadosPessoa.posicaoX}% ${dadosPessoa.posicaoY}%`
               }}
             />
           )}
@@ -68,6 +137,10 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
             src={templateOverlay} 
             alt="Template Devolutiva" 
             className="template-overlay"
+            onLoad={() => {
+              console.log('[DevolutivaFimAnoImpressao] Template carregado');
+              setTemplateCarregado(true);
+            }}
           />
           
           {/* Nome do aluno */}

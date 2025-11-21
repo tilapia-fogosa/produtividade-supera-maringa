@@ -6,6 +6,8 @@ import './devolutiva-fim-ano.css';
 import { useAlunosAtivos } from '@/hooks/use-alunos-ativos';
 import { useTodasTurmas } from '@/hooks/use-todas-turmas';
 import { useProfessores } from '@/hooks/use-professores';
+import { useFuncionarios } from '@/hooks/use-funcionarios';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,7 +43,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [mostrarControles, setMostrarControles] = useState<boolean>(true); // Mostrar/ocultar controles
   const [posicaoXExerciciosAbaco] = useState<number>(86); // Posição X dos exercícios ábaco
   const [posicaoXExerciciosAH] = useState<number>(17); // Posição X dos exercícios AH
-  const alturaExercicios = 13; // Altura dos exercícios em % (fixo)
+  const [alturaExercicios, setAlturaExercicios] = useState<number>(13); // Altura dos exercícios em %
   const [mostrarPreview, setMostrarPreview] = useState<boolean>(false); // Modal de pré-visualização
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
@@ -51,18 +53,65 @@ const DevolutivaFimAno: React.FC = () => {
   // Selecionar template baseado na versão
   const templateOverlay = versaoTemplate === 1 ? templateV1 : templateV2;
 
-  const { alunos, loading: loadingPessoas, refetch: refetchAlunos } = useAlunosAtivos();
+  const { alunos, loading: loadingAlunos, refetch: refetchAlunos } = useAlunosAtivos();
+  const { funcionarios, loading: loadingFuncionarios, recarregarFuncionarios } = useFuncionarios();
+  
+  console.log('📊 Estado dos dados:', {
+    totalAlunos: alunos.length,
+    totalFuncionarios: funcionarios.length,
+    loadingAlunos,
+    loadingFuncionarios,
+    tipoPessoa,
+    pessoaSelecionadaId
+  });
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { professores, isLoading: loadingProfessores } = useProfessores();
+  
+  const loadingPessoas = tipoPessoa === 'aluno' ? loadingAlunos : loadingFuncionarios;
   const { data: totalDesafios2025 = 0 } = useDesafios2025(pessoaSelecionadaId);
   const { data: totalExerciciosAbaco2025 = 0 } = useExerciciosAbaco2025(pessoaSelecionadaId);
   const { data: totalExerciciosAH2025 = 0 } = useExerciciosAH2025(pessoaSelecionadaId);
 
-  const handlePhotoSelected = () => {
-    // Atualizar cache buster para forçar recarregamento da foto
-    setCacheBuster(Date.now());
-    // Recarregar dados para mostrar nova foto
-    setTimeout(() => refetchAlunos(), 500);
+  const handlePhotoSelected = async () => {
+    console.log('📸 handlePhotoSelected chamado para:', { pessoaSelecionadaId, tipoPessoa });
+    
+    // Aguardar 2 segundos para garantir que o Supabase processou
+    console.log('⏳ Aguardando 2 segundos para o banco atualizar...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // PRIMEIRO: Recarregar os dados
+    console.log('🔄 Recarregando TODOS os dados (alunos e funcionários)...');
+    
+    try {
+      // Recarregar em paralelo
+      await Promise.all([
+        refetchAlunos(),      // Recarrega useAlunosAtivos (que inclui alunos + funcionários)
+        recarregarFuncionarios() // Recarrega useFuncionarios (apenas funcionários)
+      ]);
+      
+      console.log('✅ Dados recarregados com sucesso');
+      
+      // DEPOIS: Atualizar cache buster para forçar recarregamento da foto no DOM
+      const novoCacheBuster = Date.now();
+      setCacheBuster(novoCacheBuster);
+      console.log('🔄 Cache buster atualizado para:', novoCacheBuster);
+      
+      // Buscar dados específicos para debug
+      if (pessoaSelecionadaId) {
+        if (tipoPessoa === 'funcionario') {
+          const { data } = await supabase
+            .from('funcionarios')
+            .select('foto_devolutiva_url, nome')
+            .eq('id', pessoaSelecionadaId)
+            .single();
+          
+          console.log('🔍 Dados do funcionário no banco:', data);
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Erro ao recarregar dados:', error);
+    }
   };
 
   // Valores computados baseados na versão selecionada
@@ -73,7 +122,7 @@ const DevolutivaFimAno: React.FC = () => {
   const handleAbrirPaginaImpressao = () => {
     if (!pessoaSelecionada) return;
     
-    // Salvar dados no sessionStorage
+    // Salvar dados no localStorage para a página de impressão
     const dadosImpressao = {
       nome: pessoaSelecionada.nome,
       fotoUrl: pessoaSelecionada.foto_devolutiva_url,
@@ -91,60 +140,19 @@ const DevolutivaFimAno: React.FC = () => {
       versaoTemplate // Incluir versão do template
     };
     
-    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    localStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
     
     // Abrir nova página
     window.open('/devolutiva-fim-ano-impressao', '_blank');
   };
 
-  const handleSalvarPDFNavegador = () => {
+  const handleSalvarPDFNavegador = async () => {
     if (!pessoaSelecionada) return;
     
     setGerandoPDFNavegador(true);
     
-    // Salvar dados no sessionStorage
-    const dadosImpressao = {
-      nome: pessoaSelecionada.nome,
-      fotoUrl: pessoaSelecionada.foto_devolutiva_url,
-      tamanhoFoto,
-      posicaoX,
-      posicaoY,
-      tamanhoFonte,
-      alturaNome,
-      alturaExercicios,
-      posicaoXExerciciosAbaco,
-      posicaoXExerciciosAH,
-      totalDesafios: totalDesafios2025,
-      totalExerciciosAbaco: totalExerciciosAbaco2025,
-      totalExerciciosAH: totalExerciciosAH2025,
-      versaoTemplate
-    };
-    
-    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
-    
-    // Abrir página de impressão
-    const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
-    
-    if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        setTimeout(() => {
-          printWindow.print();
-          setGerandoPDFNavegador(false);
-        }, 1500); // Aguardar carregamento completo
-      });
-    } else {
-      setGerandoPDFNavegador(false);
-      alert('Por favor, permita pop-ups para este site para usar a função de impressão.');
-    }
-  };
-
-  const handleSalvarPDFShift = async () => {
-    if (!pessoaSelecionada) return;
-    
-    setGerandoPDFShift(true);
-    
     try {
-      // Salvar dados no sessionStorage
+      // Salvar dados no localStorage para a página de impressão
       const dadosImpressao = {
         nome: pessoaSelecionada.nome,
         fotoUrl: pessoaSelecionada.foto_devolutiva_url,
@@ -162,48 +170,88 @@ const DevolutivaFimAno: React.FC = () => {
         versaoTemplate
       };
       
-      sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+      console.log('[DevolutivaFimAno] Salvando dados no localStorage:', dadosImpressao);
+      localStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
       
-      const url = `${window.location.origin}/devolutiva-fim-ano-impressao`;
-      const filename = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
+      // Verificar se foi salvo
+      const verificacao = localStorage.getItem('devolutiva-impressao');
+      console.log('[DevolutivaFimAno] Verificação após salvar:', verificacao ? 'Dados salvos com sucesso' : 'ERRO: Dados não foram salvos');
       
-      const PDFSHIFT_API_KEY = 'sk_8e9c14434837486741a54ab8d1a066e6dd547572';
+      // Pequeno delay para garantir que o localStorage seja persistido
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      const response = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + btoa(`api:${PDFSHIFT_API_KEY}`),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source: url,
-          format: 'A4',
-          margin: { top: 0, right: 0, bottom: 0, left: 0 },
-          landscape: false,
-          use_print: true,
-          wait_for_network_idle: true,
-          javascript: true
-        })
+      // Abrir página de impressão - ela mesma dispara o window.print()
+      const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
+      
+      if (printWindow) {
+        console.log('[DevolutivaFimAno] Janela de impressão aberta com sucesso');
+      } else {
+        alert('Por favor, permita pop-ups para este site para usar a função de impressão.');
+      }
+    } catch (error) {
+      console.error('[DevolutivaFimAno] Erro ao salvar no localStorage:', error);
+      alert('Erro ao preparar impressão. Verifique o console para mais detalhes.');
+    } finally {
+      setGerandoPDFNavegador(false);
+    }
+  };
+
+  const handleSalvarPDFShift = async () => {
+    if (!pessoaSelecionada) return;
+    
+    setGerandoPDFShift(true);
+    
+    try {
+      // Obter URL pública do template
+      const templateUrl = versaoTemplate === 1 ? templateV1 : templateV2;
+      
+      const dadosDevolutiva = {
+        nome: pessoaSelecionada.nome,
+        fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+        tamanhoFoto,
+        posicaoX,
+        posicaoY,
+        tamanhoFonte,
+        alturaNome,
+        alturaExercicios,
+        posicaoXExerciciosAbaco,
+        posicaoXExerciciosAH,
+        totalDesafios: totalDesafios2025,
+        totalExerciciosAbaco: totalExerciciosAbaco2025,
+        totalExerciciosAH: totalExerciciosAH2025,
+        versaoTemplate,
+        templateUrl: window.location.origin + templateUrl // Adicionar URL pública do template
+      };
+      
+      console.log('Gerando PDF via edge function...');
+      
+      const { data, error } = await supabase.functions.invoke('generate-devolutiva-pdf', {
+        body: dadosDevolutiva,
       });
       
-      if (!response.ok) {
-        throw new Error('Erro ao gerar PDF com PDFShift');
+      if (error) {
+        throw new Error(error.message || 'Erro ao gerar PDF');
       }
       
-      const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
+      if (!data) {
+        throw new Error('Nenhum dado retornado da edge function');
+      }
       
+      // Converter response para blob
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = filename;
+      a.href = url;
+      a.download = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
       document.body.appendChild(a);
       a.click();
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      URL.revokeObjectURL(downloadUrl);
       
+      console.log('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Nota: PDFShift requer API key configurada.`);
+      alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setGerandoPDFShift(false);
     }
@@ -211,9 +259,9 @@ const DevolutivaFimAno: React.FC = () => {
 
   // Filtrar pessoas baseado no tipo e filtros
   const pessoasFiltradas = useMemo(() => {
-    let pessoas = alunos.filter(p => p.tipo_pessoa === tipoPessoa);
-
     if (tipoPessoa === 'aluno') {
+      let pessoas = alunos;
+
       if (turmaFiltro !== 'todas') {
         pessoas = pessoas.filter(p => p.turma_id === turmaFiltro);
       }
@@ -223,12 +271,46 @@ const DevolutivaFimAno: React.FC = () => {
           return turma?.professor_id === professorFiltro;
         });
       }
+
+      return pessoas.sort((a, b) => a.nome.localeCompare(b.nome));
+    } else {
+      // Funcionários
+      return funcionarios.sort((a, b) => a.nome.localeCompare(b.nome));
     }
+  }, [alunos, funcionarios, tipoPessoa, turmaFiltro, professorFiltro, turmas]);
 
-    return pessoas.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [alunos, tipoPessoa, turmaFiltro, professorFiltro, turmas]);
+  const pessoaSelecionada = useMemo(() => {
+    const pessoa = tipoPessoa === 'aluno' 
+      ? alunos.find(p => p.id === pessoaSelecionadaId)
+      : funcionarios.find(p => p.id === pessoaSelecionadaId);
+    
+    console.log('🔍 pessoaSelecionada recalculado:', {
+      tipoPessoa,
+      pessoaSelecionadaId,
+      pessoaEncontrada: pessoa?.nome,
+      fotoUrl: pessoa?.foto_devolutiva_url,
+      cacheBuster,
+      totalFuncionarios: funcionarios.length,
+      totalAlunos: alunos.length
+    });
+    
+    return pessoa;
+  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
 
-  const pessoaSelecionada = alunos.find(p => p.id === pessoaSelecionadaId);
+  // Detectar automaticamente o tipo real da pessoa para uploads
+  const tipoRealPessoa = useMemo((): 'aluno' | 'funcionario' => {
+    if (!pessoaSelecionada) return tipoPessoa;
+    
+    // Se foi buscado da lista de funcionários, é funcionário
+    if (tipoPessoa === 'funcionario') return 'funcionario';
+    
+    // Se foi buscado da lista de alunos, verificar se é funcionário
+    if ('is_funcionario' in pessoaSelecionada && pessoaSelecionada.is_funcionario) {
+      return 'funcionario';
+    }
+    
+    return 'aluno';
+  }, [pessoaSelecionada, tipoPessoa]);
 
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
@@ -347,10 +429,10 @@ const DevolutivaFimAno: React.FC = () => {
                 <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
                   <div>
                     <p className="font-semibold">{pessoaSelecionada.nome}</p>
-                    {pessoaSelecionada.turma_nome && (
+                    {'turma_nome' in pessoaSelecionada && pessoaSelecionada.turma_nome && (
                       <p className="text-sm text-muted-foreground">Turma: {pessoaSelecionada.turma_nome}</p>
                     )}
-                    {pessoaSelecionada.professor_nome && (
+                    {'professor_nome' in pessoaSelecionada && pessoaSelecionada.professor_nome && (
                       <p className="text-sm text-muted-foreground">Professor: {pessoaSelecionada.professor_nome}</p>
                     )}
                   </div>
@@ -362,8 +444,13 @@ const DevolutivaFimAno: React.FC = () => {
                       onPhotoSelected={handlePhotoSelected}
                       currentPhotoUrl={pessoaSelecionada.foto_devolutiva_url}
                       pessoaId={pessoaSelecionada.id}
-                      tipoPessoa={tipoPessoa}
+                      tipoPessoa={tipoRealPessoa}
                     />
+                    {tipoRealPessoa === 'funcionario' && tipoPessoa === 'aluno' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        ℹ️ Esta pessoa é um funcionário, a foto será salva como funcionário automaticamente.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -647,12 +734,23 @@ const DevolutivaFimAno: React.FC = () => {
           {/* Botão de imprimir PDF */}
           <Button
             onClick={handleSalvarPDFNavegador}
-            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            className="no-print fixed bottom-4 right-36 z-50 rounded-full w-12 h-12 p-0"
             variant="default"
             title="Imprimir PDF (Grátis)"
             disabled={gerandoPDFNavegador}
           >
             <Printer className={`h-5 w-5 ${gerandoPDFNavegador ? 'animate-pulse' : ''}`} />
+          </Button>
+
+          {/* Botão de download PDF com PDFShift */}
+          <Button
+            onClick={handleSalvarPDFShift}
+            className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
+            variant="outline"
+            title="Download PDF com PDFShift (Premium)"
+            disabled={gerandoPDFShift}
+          >
+            <Download className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}
@@ -668,7 +766,7 @@ const DevolutivaFimAno: React.FC = () => {
           {mostrarControles && (
             <div className="no-print fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg py-2 px-3 z-40">
               <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
                   {/* Tamanho da Foto */}
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Tamanho</span>
@@ -742,6 +840,22 @@ const DevolutivaFimAno: React.FC = () => {
                         className="flex-1"
                       />
                       <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{tamanhoFonte}px</span>
+                    </div>
+                  )}
+
+                  {/* Altura dos Resultados */}
+                  {pessoaSelecionada && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground w-12 shrink-0">Alt.Res.</span>
+                      <Slider
+                        value={[alturaExercicios]}
+                        onValueChange={(value) => setAlturaExercicios(value[0])}
+                        min={0}
+                        max={30}
+                        step={0.5}
+                        className="flex-1"
+                      />
+                      <span className="text-xs font-mono text-muted-foreground w-10 text-right shrink-0">{alturaExercicios}%</span>
                     </div>
                   )}
                 </div>
