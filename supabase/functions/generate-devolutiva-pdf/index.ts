@@ -184,6 +184,9 @@ Deno.serve(async (req) => {
     }
     
     console.log('Chamando PDFShift API...');
+    console.log('Template URL:', data.versaoTemplate === 2 ? 'v2.png' : 'v1.png');
+    console.log('Foto URL:', data.fotoUrl);
+    
     const pdfShiftResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
       method: 'POST',
       headers: {
@@ -196,7 +199,8 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        delay: 10000, // Máximo permitido: 10 segundos
+        delay: 10000,
+        wait_for_images: true,
       }),
     });
     
