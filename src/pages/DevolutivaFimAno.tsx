@@ -193,10 +193,9 @@ const DevolutivaFimAno: React.FC = () => {
     setGerandoPDFShift(true);
     
     try {
-      // Salvar dados no sessionStorage
-      const dadosImpressao = {
+      const dadosDevolutiva = {
         nome: pessoaSelecionada.nome,
-        fotoUrl: pessoaSelecionada.foto_devolutiva_url,
+        fotoUrl: pessoaSelecionada.foto_devolutiva_url || ('foto_url' in pessoaSelecionada ? pessoaSelecionada.foto_url : ''),
         tamanhoFoto,
         posicaoX,
         posicaoY,
@@ -211,48 +210,35 @@ const DevolutivaFimAno: React.FC = () => {
         versaoTemplate
       };
       
-      sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+      console.log('Gerando PDF via edge function...');
       
-      const url = `${window.location.origin}/devolutiva-fim-ano-impressao`;
-      const filename = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
-      
-      const PDFSHIFT_API_KEY = 'sk_8e9c14434837486741a54ab8d1a066e6dd547572';
-      
-      const response = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + btoa(`api:${PDFSHIFT_API_KEY}`),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source: url,
-          format: 'A4',
-          margin: { top: 0, right: 0, bottom: 0, left: 0 },
-          landscape: false,
-          use_print: true,
-          wait_for_network_idle: true,
-          javascript: true
-        })
+      const { data, error } = await supabase.functions.invoke('generate-devolutiva-pdf', {
+        body: dadosDevolutiva,
       });
       
-      if (!response.ok) {
-        throw new Error('Erro ao gerar PDF com PDFShift');
+      if (error) {
+        throw new Error(error.message || 'Erro ao gerar PDF');
       }
       
-      const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
+      if (!data) {
+        throw new Error('Nenhum dado retornado da edge function');
+      }
       
+      // Converter response para blob
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = filename;
+      a.href = url;
+      a.download = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
       document.body.appendChild(a);
       a.click();
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      URL.revokeObjectURL(downloadUrl);
       
+      console.log('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Nota: PDFShift requer API key configurada.`);
+      alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setGerandoPDFShift(false);
     }
