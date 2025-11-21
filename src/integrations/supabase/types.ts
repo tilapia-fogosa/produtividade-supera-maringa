@@ -3331,6 +3331,7 @@ export type Database = {
           motivo_procura: string | null
           niveldesafio: string | null
           nome: string
+          pdf_devolutiva_url: string | null
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           telefone: string | null
@@ -3369,6 +3370,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome: string
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           telefone?: string | null
@@ -3407,6 +3409,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome?: string
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           telefone?: string | null
