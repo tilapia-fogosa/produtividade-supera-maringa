@@ -171,23 +171,17 @@ const DevolutivaFimAno: React.FC = () => {
     
     console.log('[DevolutivaFimAno] Salvando dados no sessionStorage:', dadosImpressao);
     sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
-    console.log('[DevolutivaFimAno] Dados salvos com sucesso');
     
-    // Abrir página de impressão
+    // Abrir página de impressão - ela mesma dispara o window.print()
     const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
-    console.log('[DevolutivaFimAno] Janela aberta:', !!printWindow);
     
     if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        setTimeout(() => {
-          printWindow.print();
-          setGerandoPDFNavegador(false);
-        }, 1500); // Aguardar carregamento completo
-      });
+      console.log('[DevolutivaFimAno] Janela de impressão aberta com sucesso');
     } else {
-      setGerandoPDFNavegador(false);
       alert('Por favor, permita pop-ups para este site para usar a função de impressão.');
     }
+    
+    setGerandoPDFNavegador(false);
   };
 
   const handleSalvarPDFShift = async () => {
