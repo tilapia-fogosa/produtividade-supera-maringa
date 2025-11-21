@@ -15,6 +15,7 @@ interface DevolutivaData {
   totalExerciciosAbaco: number;
   totalExerciciosAH: number;
   versaoTemplate: number;
+  templateUrl?: string;
 }
 
 const CSS_INLINE = `
@@ -78,11 +79,7 @@ const CSS_INLINE = `
 }
 `;
 
-interface DevolutivaDataWithBase64 extends DevolutivaData {
-  templateUrl?: string;
-}
-
-function generateHTML(data: DevolutivaDataWithBase64): string {
+function generateHTML(data: DevolutivaData): string {
   const templateUrl = data.templateUrl || (data.versaoTemplate === 2
     ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v2.png'
     : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v3.png');
@@ -164,33 +161,6 @@ function generateHTML(data: DevolutivaDataWithBase64): string {
   `.trim();
 }
 
-async function imageToBase64(url: string): Promise<string> {
-  try {
-    console.log('Baixando imagem:', url);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Erro ao baixar imagem: ${response.status}`);
-    }
-    const arrayBuffer = await response.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    
-    // Converter para base64 em chunks para evitar stack overflow
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    
-    const base64 = btoa(binary);
-    console.log('Imagem convertida para base64, tamanho:', base64.length);
-    return `data:image/jpeg;base64,${base64}`;
-  } catch (error) {
-    console.error('Erro ao converter imagem para base64:', error);
-    throw error;
-  }
-}
-
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -201,40 +171,11 @@ Deno.serve(async (req) => {
     const data: DevolutivaData = await req.json();
     
     console.log('Gerando PDF para:', data.nome);
-    console.log('Dados recebidos:', {
-      nome: data.nome,
-      fotoUrl: data.fotoUrl,
-      tamanhoFoto: data.tamanhoFoto,
-      posicaoX: data.posicaoX,
-      posicaoY: data.posicaoY,
-      versaoTemplate: data.versaoTemplate,
-      totalDesafios: data.totalDesafios,
-      totalExerciciosAbaco: data.totalExerciciosAbaco,
-      totalExerciciosAH: data.totalExerciciosAH
-    });
+    console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     
-    // Converter imagens para base64
-    console.log('Convertendo foto do aluno para base64...');
-    const fotoBase64 = await imageToBase64(data.fotoUrl);
-    
-    const templateUrl = data.versaoTemplate === 2
-      ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v2.png'
-      : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/devolutiva-fim-ano-template-v3.png';
-    
-    console.log('Convertendo template para base64...');
-    const templateBase64 = await imageToBase64(templateUrl);
-    
-    // Criar objeto com URLs base64
-    const dataWithBase64 = {
-      ...data,
-      fotoUrl: fotoBase64,
-      templateUrl: templateBase64
-    };
-    
-    // Gerar HTML completo com imagens base64
-    const htmlContent = generateHTML(dataWithBase64);
-    console.log('HTML gerado com imagens base64 (primeiros 500 caracteres):', htmlContent.substring(0, 500));
-    console.log('Tamanho total do HTML:', htmlContent.length, 'caracteres');
+    // Gerar HTML completo
+    const htmlContent = generateHTML(data);
+    console.log('HTML gerado, tamanho:', htmlContent.length, 'caracteres');
     
     // Chamar PDFShift API
     const pdfShiftApiKey = Deno.env.get('PDFSHIFT_API_KEY');
@@ -255,6 +196,7 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
+        delay: 3000,
       }),
     });
     

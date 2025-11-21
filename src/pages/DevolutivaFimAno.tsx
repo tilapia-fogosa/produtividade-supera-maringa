@@ -196,6 +196,9 @@ const DevolutivaFimAno: React.FC = () => {
     setGerandoPDFShift(true);
     
     try {
+      // Obter URL pública do template
+      const templateUrl = versaoTemplate === 1 ? templateV1 : templateV2;
+      
       const dadosDevolutiva = {
         nome: pessoaSelecionada.nome,
         fotoUrl: pessoaSelecionada.foto_devolutiva_url || ('foto_url' in pessoaSelecionada ? pessoaSelecionada.foto_url : ''),
@@ -210,7 +213,8 @@ const DevolutivaFimAno: React.FC = () => {
         totalDesafios: totalDesafios2025,
         totalExerciciosAbaco: totalExerciciosAbaco2025,
         totalExerciciosAH: totalExerciciosAH2025,
-        versaoTemplate
+        versaoTemplate,
+        templateUrl: window.location.origin + templateUrl // Adicionar URL pública do template
       };
       
       console.log('Gerando PDF via edge function...');
