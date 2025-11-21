@@ -240,7 +240,7 @@ const DevolutivaFimAno: React.FC = () => {
       
       console.log('✅ PDF sendo gerado pelo n8n:', data.message);
       
-      alert('PDF sendo gerado! O arquivo será salvo automaticamente no bucket.');
+      alert('Pdf sendo gerado');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
