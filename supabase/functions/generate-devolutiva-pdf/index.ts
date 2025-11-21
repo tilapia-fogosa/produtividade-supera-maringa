@@ -216,8 +216,11 @@ Deno.serve(async (req) => {
       templateUrl: templateUrl,
     };
     
-    console.log('Enviando dados para o webhook n8n...');
+    console.log('📤 [Edge Function] Enviando dados para o webhook n8n...');
     console.log('Webhook URL: https://webhookn8n.agenciakadin.com.br/webhook/pdf');
+    console.log('pessoa_id:', webhookData.pessoa_id);
+    console.log('pessoa_tipo:', webhookData.pessoa_tipo);
+    console.log('Payload completo que será enviado ao n8n:', JSON.stringify(webhookData, null, 2));
     
     // Chamar webhook do n8n
     const webhookResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/pdf', {
