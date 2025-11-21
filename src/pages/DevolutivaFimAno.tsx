@@ -122,7 +122,7 @@ const DevolutivaFimAno: React.FC = () => {
   const handleAbrirPaginaImpressao = () => {
     if (!pessoaSelecionada) return;
     
-    // Salvar dados no sessionStorage
+    // Salvar dados no localStorage para a página de impressão
     const dadosImpressao = {
       nome: pessoaSelecionada.nome,
       fotoUrl: pessoaSelecionada.foto_devolutiva_url,
@@ -140,7 +140,7 @@ const DevolutivaFimAno: React.FC = () => {
       versaoTemplate // Incluir versão do template
     };
     
-    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    localStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
     
     // Abrir nova página
     window.open('/devolutiva-fim-ano-impressao', '_blank');
@@ -151,7 +151,7 @@ const DevolutivaFimAno: React.FC = () => {
     
     setGerandoPDFNavegador(true);
     
-    // Salvar dados no sessionStorage
+    // Salvar dados no localStorage para a página de impressão
     const dadosImpressao = {
       nome: pessoaSelecionada.nome,
       fotoUrl: pessoaSelecionada.foto_devolutiva_url,
@@ -169,8 +169,8 @@ const DevolutivaFimAno: React.FC = () => {
       versaoTemplate
     };
     
-    console.log('[DevolutivaFimAno] Salvando dados no sessionStorage:', dadosImpressao);
-    sessionStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
+    console.log('[DevolutivaFimAno] Salvando dados no localStorage:', dadosImpressao);
+    localStorage.setItem('devolutiva-impressao', JSON.stringify(dadosImpressao));
     
     // Abrir página de impressão - ela mesma dispara o window.print()
     const printWindow = window.open('/devolutiva-fim-ano-impressao', '_blank');
