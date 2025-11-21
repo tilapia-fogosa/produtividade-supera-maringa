@@ -189,44 +189,82 @@ Deno.serve(async (req) => {
     console.log('Gerando PDF para:', data.nome);
     console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     
-    // Gerar HTML completo
-    const htmlContent = generateHTML(data);
-    console.log('HTML gerado, tamanho:', htmlContent.length, 'caracteres');
+    // Preparar dados para enviar ao webhook do n8n
+    const templateUrl = data.versaoTemplate === 2
+      ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v2.png'
+      : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v1.png';
+
+    const webhookData = {
+      nome: data.nome,
+      fotoUrl: data.fotoUrl,
+      tamanhoFoto: data.tamanhoFoto,
+      posicaoX: data.posicaoX,
+      posicaoY: data.posicaoY,
+      tamanhoFonte: data.tamanhoFonte,
+      alturaNome: data.alturaNome,
+      alturaExercicios: data.alturaExercicios,
+      posicaoXExerciciosAbaco: data.posicaoXExerciciosAbaco,
+      posicaoXExerciciosAH: data.posicaoXExerciciosAH,
+      totalDesafios: data.totalDesafios,
+      totalExerciciosAbaco: data.totalExerciciosAbaco,
+      totalExerciciosAH: data.totalExerciciosAH,
+      versaoTemplate: data.versaoTemplate,
+      templateUrl: templateUrl,
+    };
     
-    // Chamar PDFShift API
-    const pdfShiftApiKey = Deno.env.get('PDFSHIFT_API_KEY');
-    if (!pdfShiftApiKey) {
-      throw new Error('PDFSHIFT_API_KEY não configurada');
-    }
+    console.log('Enviando dados para o webhook n8n...');
+    console.log('Webhook URL: https://webhookn8n.agenciakadin.com.br/webhook/pdf');
     
-    console.log('Chamando PDFShift API...');
-    console.log('Template URL:', data.versaoTemplate === 2 ? 'v2.png' : 'v1.png');
-    console.log('Foto URL:', data.fotoUrl);
-    
-    const pdfShiftResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+    // Chamar webhook do n8n
+    const webhookResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/pdf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(`api:${pdfShiftApiKey}`)}`,
       },
-      body: JSON.stringify({
-        source: htmlContent,
-        format: 'A4',
-        margin: 0,
-        use_print: true,
-        sandbox: false,
-        delay: 8000,
-        wait_for: 'imagesLoaded',
-      }),
+      body: JSON.stringify(webhookData),
     });
     
-    if (!pdfShiftResponse.ok) {
-      const errorText = await pdfShiftResponse.text();
-      console.error('Erro PDFShift:', errorText);
-      throw new Error(`PDFShift API error: ${pdfShiftResponse.status} - ${errorText}`);
+    if (!webhookResponse.ok) {
+      const errorText = await webhookResponse.text();
+      console.error('Erro no webhook n8n:', errorText);
+      throw new Error(`Webhook n8n error: ${webhookResponse.status} - ${errorText}`);
     }
     
-    const pdfBlob = await pdfShiftResponse.arrayBuffer();
+    console.log('Resposta recebida do webhook n8n');
+    
+    // Espera-se que o n8n retorne o PDF em base64 ou como buffer
+    const contentType = webhookResponse.headers.get('content-type');
+    console.log('Content-Type da resposta:', contentType);
+    
+    let pdfBlob: ArrayBuffer;
+    
+    if (contentType?.includes('application/json')) {
+      // Se o n8n retornar JSON com base64
+      const responseData = await webhookResponse.json();
+      console.log('Resposta JSON recebida');
+      
+      if (responseData.pdf) {
+        // Decodificar base64 para ArrayBuffer
+        const base64 = responseData.pdf.replace(/^data:application\/pdf;base64,/, '');
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        pdfBlob = bytes.buffer;
+      } else if (responseData.url) {
+        // Se o n8n retornar uma URL para o PDF
+        console.log('Baixando PDF da URL:', responseData.url);
+        const pdfResponse = await fetch(responseData.url);
+        pdfBlob = await pdfResponse.arrayBuffer();
+      } else {
+        throw new Error('Formato de resposta do webhook não reconhecido');
+      }
+    } else {
+      // Se o n8n retornar o buffer diretamente
+      console.log('Recebendo PDF como buffer direto');
+      pdfBlob = await webhookResponse.arrayBuffer();
+    }
     
     console.log('PDF gerado com sucesso');
     
