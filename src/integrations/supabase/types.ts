@@ -478,6 +478,7 @@ export type Database = {
           niveldesafio: string | null
           nome: string
           oculto_retencoes: boolean
+          pdf_devolutiva_url: string | null
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
@@ -525,6 +526,7 @@ export type Database = {
           niveldesafio?: string | null
           nome: string
           oculto_retencoes?: boolean
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
@@ -572,6 +574,7 @@ export type Database = {
           niveldesafio?: string | null
           nome?: string
           oculto_retencoes?: boolean
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
