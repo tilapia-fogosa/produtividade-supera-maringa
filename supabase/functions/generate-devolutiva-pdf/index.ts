@@ -1,6 +1,8 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 interface DevolutivaData {
+  alunoId: string;
   nome: string;
   fotoUrl: string;
   tamanhoFoto: number;
@@ -251,7 +253,63 @@ Deno.serve(async (req) => {
     const base64Pdf = responseData.pdf.replace(/^data:application\/pdf;base64,/, '');
     console.log('Base64 recebido do n8n, tamanho:', base64Pdf.length, 'caracteres');
     
-    return new Response(JSON.stringify({ pdf: base64Pdf }), {
+    // Converter base64 para ArrayBuffer para fazer upload no Storage
+    const binaryString = atob(base64Pdf);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    console.log('PDF convertido para bytes, fazendo upload no Storage...');
+    
+    // Inicializar cliente Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Nome do arquivo
+    const fileName = `${data.alunoId}/${Date.now()}-devolutiva-${data.nome.replace(/\s+/g, '-')}.pdf`;
+    
+    // Fazer upload do PDF no bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('devolutivas-pdf')
+      .upload(fileName, bytes.buffer, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+    
+    if (uploadError) {
+      console.error('Erro ao fazer upload do PDF:', uploadError);
+      throw new Error(`Erro ao fazer upload do PDF: ${uploadError.message}`);
+    }
+    
+    console.log('PDF uploaded com sucesso:', uploadData.path);
+    
+    // Obter URL pública do PDF
+    const { data: urlData } = supabase.storage
+      .from('devolutivas-pdf')
+      .getPublicUrl(fileName);
+    
+    const pdfUrl = urlData.publicUrl;
+    console.log('URL pública do PDF:', pdfUrl);
+    
+    // Atualizar tabela alunos com a URL do PDF
+    const { error: updateError } = await supabase
+      .from('alunos')
+      .update({ pdf_devolutiva_url: pdfUrl })
+      .eq('id', data.alunoId);
+    
+    if (updateError) {
+      console.error('Erro ao atualizar aluno com URL do PDF:', updateError);
+      throw new Error(`Erro ao atualizar aluno: ${updateError.message}`);
+    }
+    
+    console.log('Aluno atualizado com URL do PDF');
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      pdfUrl: pdfUrl 
+    }), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
