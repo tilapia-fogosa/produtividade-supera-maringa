@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer, Eye, Download, ListChecks } from 'lucide-react';
+import { User, Briefcase, Printer, Eye, Download, ListChecks, CloudUpload } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -281,6 +281,8 @@ const DevolutivaFimAno: React.FC = () => {
       pessoaSelecionadaId,
       pessoaEncontrada: pessoa?.nome,
       fotoUrl: pessoa?.foto_devolutiva_url,
+      pdfUrl: (pessoa as any)?.pdf_devolutiva_url,
+      temPdfUrl: !!(pessoa as any)?.pdf_devolutiva_url,
       cacheBuster,
       totalFuncionarios: funcionarios.length,
       totalAlunos: alunos.length
@@ -751,10 +753,10 @@ const DevolutivaFimAno: React.FC = () => {
             onClick={handleSalvarPDFShift}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="outline"
-            title="Gerar e baixar PDF do bucket"
+            title="Gerar PDF e salvar no bucket"
             disabled={gerandoPDFShift}
           >
-            <Download className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />
+            <CloudUpload className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}
