@@ -297,6 +297,21 @@ const DevolutivaFimAno: React.FC = () => {
     return pessoa;
   }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
 
+  // Detectar automaticamente o tipo real da pessoa para uploads
+  const tipoRealPessoa = useMemo((): 'aluno' | 'funcionario' => {
+    if (!pessoaSelecionada) return tipoPessoa;
+    
+    // Se foi buscado da lista de funcionários, é funcionário
+    if (tipoPessoa === 'funcionario') return 'funcionario';
+    
+    // Se foi buscado da lista de alunos, verificar se é funcionário
+    if ('is_funcionario' in pessoaSelecionada && pessoaSelecionada.is_funcionario) {
+      return 'funcionario';
+    }
+    
+    return 'aluno';
+  }, [pessoaSelecionada, tipoPessoa]);
+
   return (
     <div className="devolutiva-fim-ano-wrapper" style={{ paddingBottom: pessoaSelecionada?.foto_devolutiva_url ? '120px' : '0' }}>
       {/* Cabeçalho */}
@@ -429,8 +444,13 @@ const DevolutivaFimAno: React.FC = () => {
                       onPhotoSelected={handlePhotoSelected}
                       currentPhotoUrl={pessoaSelecionada.foto_devolutiva_url}
                       pessoaId={pessoaSelecionada.id}
-                      tipoPessoa={tipoPessoa}
+                      tipoPessoa={tipoRealPessoa}
                     />
+                    {tipoRealPessoa === 'funcionario' && tipoPessoa === 'aluno' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        ℹ️ Esta pessoa é um funcionário, a foto será salva como funcionário automaticamente.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
