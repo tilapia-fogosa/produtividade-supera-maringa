@@ -738,9 +738,9 @@ const DevolutivaFimAno: React.FC = () => {
           </Button>
 
           {/* Botão de download PDF existente do Bucket - só aparece se já tem PDF */}
-          {pessoaSelecionada?.pdf_devolutiva_url && (
+          {(pessoaSelecionada && 'pdf_devolutiva_url' in pessoaSelecionada && pessoaSelecionada.pdf_devolutiva_url) && (
             <Button
-              onClick={() => window.open(pessoaSelecionada.pdf_devolutiva_url!, '_blank')}
+              onClick={() => window.open((pessoaSelecionada as any).pdf_devolutiva_url, '_blank')}
               className="no-print fixed bottom-4 right-52 z-50 rounded-full w-12 h-12 p-0"
               variant="default"
               title="Baixar PDF já gerado"
