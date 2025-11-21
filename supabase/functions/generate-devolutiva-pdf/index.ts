@@ -95,8 +95,17 @@ function generateHTML(data: DevolutivaData): string {
   <script>
     function imagesLoaded() {
       const images = Array.from(document.images);
-      if (images.length === 0) return true;
-      return images.every(img => img.complete && img.naturalHeight !== 0);
+      console.log('Checking images:', images.length);
+      if (images.length === 0) {
+        console.log('No images found');
+        return false;
+      }
+      const allLoaded = images.every(img => {
+        console.log('Image:', img.src, 'complete:', img.complete, 'height:', img.naturalHeight);
+        return img.complete && img.naturalHeight !== 0;
+      });
+      console.log('All images loaded:', allLoaded);
+      return allLoaded;
     }
   </script>
 </head>
@@ -206,8 +215,9 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        delay: 3000,
+        delay: 5000,
         wait_for: 'imagesLoaded',
+        wait_for_timeout: 30000,
       }),
     });
     
