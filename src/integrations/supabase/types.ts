@@ -2467,6 +2467,7 @@ export type Database = {
       convidados_eventos: {
         Row: {
           active: boolean
+          compareceu: boolean | null
           created_at: string
           evento_id: string
           forma_pagamento: string
@@ -2483,9 +2484,11 @@ export type Database = {
           responsavel_nome: string
           telefone_contato: string
           valor_pago: number | null
+          valorizado: boolean | null
         }
         Insert: {
           active?: boolean
+          compareceu?: boolean | null
           created_at?: string
           evento_id: string
           forma_pagamento: string
@@ -2502,9 +2505,11 @@ export type Database = {
           responsavel_nome: string
           telefone_contato: string
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Update: {
           active?: boolean
+          compareceu?: boolean | null
           created_at?: string
           evento_id?: string
           forma_pagamento?: string
@@ -2521,6 +2526,7 @@ export type Database = {
           responsavel_nome?: string
           telefone_contato?: string
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Relationships: [
           {
@@ -2797,6 +2803,7 @@ export type Database = {
       evento_participantes: {
         Row: {
           aluno_id: string
+          compareceu: boolean | null
           created_at: string
           evento_id: string
           forma_pagamento: string
@@ -2804,9 +2811,11 @@ export type Database = {
           pago: boolean | null
           responsavel_id: string | null
           valor_pago: number | null
+          valorizado: boolean | null
         }
         Insert: {
           aluno_id: string
+          compareceu?: boolean | null
           created_at?: string
           evento_id: string
           forma_pagamento: string
@@ -2814,9 +2823,11 @@ export type Database = {
           pago?: boolean | null
           responsavel_id?: string | null
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Update: {
           aluno_id?: string
+          compareceu?: boolean | null
           created_at?: string
           evento_id?: string
           forma_pagamento?: string
@@ -2824,6 +2835,7 @@ export type Database = {
           pago?: boolean | null
           responsavel_id?: string | null
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Relationships: [
           {
