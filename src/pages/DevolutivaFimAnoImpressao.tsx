@@ -15,20 +15,23 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
   const [templateCarregado, setTemplateCarregado] = useState(false);
 
   useEffect(() => {
-    // Recuperar dados do sessionStorage
-    console.log('[DevolutivaFimAnoImpressao] Tentando recuperar dados do sessionStorage');
-    const dados = sessionStorage.getItem('devolutiva-impressao');
+    // Recuperar dados do localStorage
+    console.log('[DevolutivaFimAnoImpressao] Tentando recuperar dados do localStorage');
+    const dados = localStorage.getItem('devolutiva-impressao');
     console.log('[DevolutivaFimAnoImpressao] Dados recuperados:', dados);
     if (dados) {
       try {
         const dadosParsed = JSON.parse(dados);
         console.log('[DevolutivaFimAnoImpressao] Dados parseados:', dadosParsed);
         setDadosPessoa(dadosParsed);
+        // Limpar após recuperar para evitar lixo no localStorage
+        localStorage.removeItem('devolutiva-impressao');
+        console.log('[DevolutivaFimAnoImpressao] Dados removidos do localStorage');
       } catch (error) {
         console.error('[DevolutivaFimAnoImpressao] Erro ao parsear dados:', error);
       }
     } else {
-      console.error('[DevolutivaFimAnoImpressao] Nenhum dado encontrado no sessionStorage');
+      console.error('[DevolutivaFimAnoImpressao] Nenhum dado encontrado no localStorage');
     }
   }, []);
 
