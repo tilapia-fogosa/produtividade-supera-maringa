@@ -4,7 +4,11 @@ import templateV1 from '@/assets/devolutiva-fim-ano-template-v3.png';
 import templateV2 from '@/assets/devolutiva-fim-ano-template-v2.png';
 import './devolutiva-fim-ano.css';
 
+console.log('[DevolutivaFimAnoImpressao] Componente carregado');
+
 const DevolutivaFimAnoImpressao: React.FC = () => {
+  console.log('[DevolutivaFimAnoImpressao] Componente renderizando');
+  
   const [searchParams] = useSearchParams();
   const [dadosPessoa, setDadosPessoa] = useState<any>(null);
   const [fotoCarregada, setFotoCarregada] = useState(false);
@@ -16,9 +20,13 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
     const dados = sessionStorage.getItem('devolutiva-impressao');
     console.log('[DevolutivaFimAnoImpressao] Dados recuperados:', dados);
     if (dados) {
-      const dadosParsed = JSON.parse(dados);
-      console.log('[DevolutivaFimAnoImpressao] Dados parseados:', dadosParsed);
-      setDadosPessoa(dadosParsed);
+      try {
+        const dadosParsed = JSON.parse(dados);
+        console.log('[DevolutivaFimAnoImpressao] Dados parseados:', dadosParsed);
+        setDadosPessoa(dadosParsed);
+      } catch (error) {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao parsear dados:', error);
+      }
     } else {
       console.error('[DevolutivaFimAnoImpressao] Nenhum dado encontrado no sessionStorage');
     }
@@ -33,8 +41,8 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
         console.log('[DevolutivaFimAnoImpressao] Foto carregada com sucesso');
         setFotoCarregada(true);
       };
-      img.onerror = () => {
-        console.error('[DevolutivaFimAnoImpressao] Erro ao carregar foto');
+      img.onerror = (error) => {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao carregar foto:', error);
         setFotoCarregada(true); // Continuar mesmo com erro
       };
       img.src = dadosPessoa.fotoUrl;
@@ -46,6 +54,12 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
 
   // Disparar impressão quando tudo estiver pronto
   useEffect(() => {
+    console.log('[DevolutivaFimAnoImpressao] Status:', {
+      dadosPessoa: !!dadosPessoa,
+      fotoCarregada,
+      templateCarregado
+    });
+    
     if (dadosPessoa && fotoCarregada && templateCarregado) {
       console.log('[DevolutivaFimAnoImpressao] Tudo carregado, aguardando fontes...');
       document.fonts.ready.then(() => {
@@ -54,6 +68,8 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
           console.log('[DevolutivaFimAnoImpressao] Chamando window.print()');
           window.print();
         }, 500);
+      }).catch((error) => {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao aguardar fontes:', error);
       });
     }
   }, [dadosPessoa, fotoCarregada, templateCarregado]);
@@ -79,12 +95,20 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
   }, []);
 
   if (!dadosPessoa) {
+    console.log('[DevolutivaFimAnoImpressao] Renderizando tela de carregamento');
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Carregando...</p>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-2">Carregando devolutiva...</p>
+          <p className="text-sm text-gray-600">
+            Status: foto={fotoCarregada ? '✓' : '...'} template={templateCarregado ? '✓' : '...'}
+          </p>
+        </div>
       </div>
     );
   }
+
+  console.log('[DevolutivaFimAnoImpressao] Renderizando devolutiva');
 
   // Selecionar template baseado na versão
   const templateOverlay = dadosPessoa.versaoTemplate === 1 ? templateV1 : templateV2;
