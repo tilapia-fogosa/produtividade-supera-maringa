@@ -223,21 +223,17 @@ Deno.serve(async (req) => {
     console.log('Payload completo que será enviado ao n8n:', JSON.stringify(webhookData, null, 2));
     
     // Chamar webhook do n8n (fire and forget - n8n salva no bucket e na tabela)
-    const webhookResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/pdf', {
+    fetch('https://webhookn8n.agenciakadin.com.br/webhook/pdf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(webhookData),
+    }).catch(error => {
+      console.error('Erro ao enviar para webhook (ignorado):', error);
     });
     
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error('Erro no webhook n8n:', errorText);
-      throw new Error(`Webhook n8n error: ${webhookResponse.status} - ${errorText}`);
-    }
-    
-    console.log('✅ Webhook n8n chamado com sucesso. O n8n irá processar e salvar o PDF no bucket.');
+    console.log('✅ Requisição enviada ao webhook n8n. O PDF será gerado e salvo automaticamente.');
     
     return new Response(JSON.stringify({ 
       success: true,
