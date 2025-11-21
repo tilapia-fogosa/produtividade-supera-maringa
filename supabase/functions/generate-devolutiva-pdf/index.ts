@@ -215,9 +215,8 @@ Deno.serve(async (req) => {
         margin: 0,
         use_print: true,
         sandbox: false,
-        delay: 5000,
+        delay: 8000,
         wait_for: 'imagesLoaded',
-        wait_for_timeout: 30000,
       }),
     });
     
