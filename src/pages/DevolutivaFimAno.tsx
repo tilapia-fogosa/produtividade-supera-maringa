@@ -221,7 +221,10 @@ const DevolutivaFimAno: React.FC = () => {
         versaoTemplate
       };
       
-      console.log('Enviando dados para gerar PDF via n8n...');
+      console.log('🚀 [Frontend] Dados que serão enviados para a edge function:');
+      console.log('pessoa_id:', dadosDevolutiva.pessoa_id);
+      console.log('pessoa_tipo:', dadosDevolutiva.pessoa_tipo);
+      console.log('Dados completos:', JSON.stringify(dadosDevolutiva, null, 2));
       
       const { data, error } = await supabase.functions.invoke('generate-devolutiva-pdf', {
         body: dadosDevolutiva,
