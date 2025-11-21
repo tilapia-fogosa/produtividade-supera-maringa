@@ -1,6 +1,9 @@
 
 project_id = "hkvjdxxndapxpslovrlc"
 
+[functions.generate-devolutiva-pdf]
+verify_jwt = false
+
 [functions.check-missing-launches]
 verify_jwt = false
 
