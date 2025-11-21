@@ -232,51 +232,24 @@ Deno.serve(async (req) => {
     
     console.log('Resposta recebida do webhook n8n');
     
-    // Espera-se que o n8n retorne o PDF em base64 ou como buffer
+    // Espera-se que o n8n retorne JSON com o PDF em base64
     const contentType = webhookResponse.headers.get('content-type');
     console.log('Content-Type da resposta:', contentType);
     
-    let pdfBlob: ArrayBuffer;
-    
-    if (contentType?.includes('application/json')) {
-      // Se o n8n retornar JSON com base64
-      const responseData = await webhookResponse.json();
-      console.log('Resposta JSON recebida');
-      
-      if (responseData.pdf) {
-        // Decodificar base64 para ArrayBuffer
-        const base64 = responseData.pdf.replace(/^data:application\/pdf;base64,/, '');
-        const binaryString = atob(base64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        pdfBlob = bytes.buffer;
-      } else if (responseData.url) {
-        // Se o n8n retornar uma URL para o PDF
-        console.log('Baixando PDF da URL:', responseData.url);
-        const pdfResponse = await fetch(responseData.url);
-        pdfBlob = await pdfResponse.arrayBuffer();
-      } else {
-        throw new Error('Formato de resposta do webhook não reconhecido');
-      }
-    } else {
-      // Se o n8n retornar o buffer diretamente
-      console.log('Recebendo PDF como buffer direto');
-      pdfBlob = await webhookResponse.arrayBuffer();
+    if (!contentType?.includes('application/json')) {
+      throw new Error('n8n deve retornar application/json com o PDF em base64');
     }
     
-    console.log('PDF gerado com sucesso, tamanho:', pdfBlob.byteLength, 'bytes');
+    const responseData = await webhookResponse.json();
+    console.log('Resposta JSON recebida do n8n');
     
-    // Converter para base64 para retornar ao frontend
-    const base64Pdf = btoa(
-      new Uint8Array(pdfBlob).reduce(
-        (data, byte) => data + String.fromCharCode(byte),
-        ''
-      )
-    );
+    if (!responseData.pdf) {
+      throw new Error('Resposta do n8n não contém o campo "pdf" com o base64');
+    }
     
-    console.log('PDF convertido para base64, retornando ao frontend');
+    // Remover prefixo data:application/pdf;base64, se existir
+    const base64Pdf = responseData.pdf.replace(/^data:application\/pdf;base64,/, '');
+    console.log('Base64 recebido do n8n, tamanho:', base64Pdf.length, 'caracteres');
     
     return new Response(JSON.stringify({ pdf: base64Pdf }), {
       headers: {
