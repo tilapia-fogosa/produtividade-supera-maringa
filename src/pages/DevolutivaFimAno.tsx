@@ -737,7 +737,19 @@ const DevolutivaFimAno: React.FC = () => {
             <Printer className={`h-5 w-5 ${gerandoPDFNavegador ? 'animate-pulse' : ''}`} />
           </Button>
 
-          {/* Botão de download PDF do Bucket */}
+          {/* Botão de download PDF existente do Bucket - só aparece se já tem PDF */}
+          {pessoaSelecionada?.pdf_devolutiva_url && (
+            <Button
+              onClick={() => window.open(pessoaSelecionada.pdf_devolutiva_url!, '_blank')}
+              className="no-print fixed bottom-4 right-52 z-50 rounded-full w-12 h-12 p-0"
+              variant="default"
+              title="Baixar PDF já gerado"
+            >
+              <Download className="h-5 w-5" />
+            </Button>
+          )}
+
+          {/* Botão de gerar novo PDF no Bucket */}
           <Button
             onClick={handleSalvarPDFShift}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
