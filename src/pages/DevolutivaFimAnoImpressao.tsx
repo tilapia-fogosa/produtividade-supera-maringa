@@ -7,6 +7,8 @@ import './devolutiva-fim-ano.css';
 const DevolutivaFimAnoImpressao: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [dadosPessoa, setDadosPessoa] = useState<any>(null);
+  const [fotoCarregada, setFotoCarregada] = useState(false);
+  const [templateCarregado, setTemplateCarregado] = useState(false);
 
   useEffect(() => {
     // Recuperar dados do sessionStorage
@@ -21,6 +23,40 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
       console.error('[DevolutivaFimAnoImpressao] Nenhum dado encontrado no sessionStorage');
     }
   }, []);
+
+  // Carregar foto de fundo
+  useEffect(() => {
+    if (dadosPessoa?.fotoUrl) {
+      console.log('[DevolutivaFimAnoImpressao] Carregando foto:', dadosPessoa.fotoUrl);
+      const img = new Image();
+      img.onload = () => {
+        console.log('[DevolutivaFimAnoImpressao] Foto carregada com sucesso');
+        setFotoCarregada(true);
+      };
+      img.onerror = () => {
+        console.error('[DevolutivaFimAnoImpressao] Erro ao carregar foto');
+        setFotoCarregada(true); // Continuar mesmo com erro
+      };
+      img.src = dadosPessoa.fotoUrl;
+    } else {
+      console.log('[DevolutivaFimAnoImpressao] Sem foto, marcando como carregado');
+      setFotoCarregada(true);
+    }
+  }, [dadosPessoa]);
+
+  // Disparar impressão quando tudo estiver pronto
+  useEffect(() => {
+    if (dadosPessoa && fotoCarregada && templateCarregado) {
+      console.log('[DevolutivaFimAnoImpressao] Tudo carregado, aguardando fontes...');
+      document.fonts.ready.then(() => {
+        console.log('[DevolutivaFimAnoImpressao] Fontes carregadas, disparando impressão em 500ms');
+        setTimeout(() => {
+          console.log('[DevolutivaFimAnoImpressao] Chamando window.print()');
+          window.print();
+        }, 500);
+      });
+    }
+  }, [dadosPessoa, fotoCarregada, templateCarregado]);
 
   useEffect(() => {
     // Forçar portrait via meta tag
@@ -74,6 +110,10 @@ const DevolutivaFimAnoImpressao: React.FC = () => {
             src={templateOverlay} 
             alt="Template Devolutiva" 
             className="template-overlay"
+            onLoad={() => {
+              console.log('[DevolutivaFimAnoImpressao] Template carregado');
+              setTemplateCarregado(true);
+            }}
           />
           
           {/* Nome do aluno */}
