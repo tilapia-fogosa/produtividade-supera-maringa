@@ -17,6 +17,8 @@ export interface Funcionario {
     nome: string;
   } | null;
   unit_id: string;
+  foto_devolutiva_url: string | null;
+  pdf_devolutiva_url: string | null;
   // Campos adicionados após migração
   codigo?: string;
   ultimo_nivel?: string;
