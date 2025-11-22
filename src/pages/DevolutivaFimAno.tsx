@@ -466,15 +466,36 @@ const DevolutivaFimAno: React.FC = () => {
                 cacheBuster,
                 tamanhoFoto,
                 posicaoX,
-                posicaoY
+                posicaoY,
+                versaoTemplate
               })}
               <div 
                 className="foto-aluno-background"
                 style={{
-                  backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
+                  backgroundImage: `url("${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster}")`,
                   backgroundSize: `${tamanhoFoto}%`,
-                  backgroundPosition: `${posicaoX}% ${posicaoY}%`
+                  backgroundPosition: `${posicaoX}% ${posicaoY}%`,
                 }}
+                onError={(e) => {
+                  console.error('❌ Erro ao carregar imagem de fundo:', e);
+                }}
+              />
+              {/* Imagem de teste para debug - remover depois */}
+              <img 
+                src={`${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster}`}
+                alt="Teste"
+                style={{
+                  position: 'absolute',
+                  bottom: '10px',
+                  right: '10px',
+                  width: '50px',
+                  height: '50px',
+                  objectFit: 'cover',
+                  border: '2px solid red',
+                  zIndex: 999
+                }}
+                onLoad={() => console.log('✅ Imagem de teste carregou com sucesso')}
+                onError={(e) => console.error('❌ Imagem de teste falhou:', e)}
               />
             </>
           ) : (
