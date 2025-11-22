@@ -459,15 +459,39 @@ const DevolutivaFimAno: React.FC = () => {
       <div className="devolutiva-fim-ano-container">
         <div className="a4-page">
           {/* Camada de fundo - FOTO DO ALUNO */}
-          {pessoaSelecionada?.foto_devolutiva_url && (
-            <div 
-              className="foto-aluno-background"
-              style={{
-                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
-                backgroundSize: `${tamanhoFoto}%`,
-                backgroundPosition: `${posicaoX}% ${posicaoY}%`
-              }}
-            />
+          {pessoaSelecionada?.foto_devolutiva_url ? (
+            <>
+              {console.log('🖼️ Renderizando foto:', {
+                url: pessoaSelecionada.foto_devolutiva_url,
+                cacheBuster,
+                tamanhoFoto,
+                posicaoX,
+                posicaoY
+              })}
+              <div 
+                className="foto-aluno-background"
+                style={{
+                  backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
+                  backgroundSize: `${tamanhoFoto}%`,
+                  backgroundPosition: `${posicaoX}% ${posicaoY}%`
+                }}
+              />
+            </>
+          ) : (
+            <>
+              {console.log('⚠️ Nenhuma foto disponível para:', pessoaSelecionada?.nome)}
+              <div 
+                className="foto-aluno-background"
+                style={{
+                  backgroundColor: '#f0f0f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <p className="text-muted-foreground text-sm">Nenhuma foto selecionada</p>
+              </div>
+            </>
           )}
           
           {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
