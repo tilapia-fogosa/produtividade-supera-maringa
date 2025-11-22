@@ -16,11 +16,7 @@ export interface DevolutivaControleItem {
   entregue_em: string | null;
   impresso_por_nome: string | null;
   entregue_por_nome: string | null;
-  pdf_devolutiva_url: string | null;
 }
-
-type OrdenacaoCampo = 'nome' | 'turma_nome' | 'professor_nome' | 'foto_escolhida' | 'impresso' | 'entregue' | 'pdf_devolutiva_url';
-type OrdenacaoDirecao = 'asc' | 'desc';
 
 export function useDevolutivasControle() {
   const { activeUnit } = useActiveUnit();
@@ -29,8 +25,6 @@ export function useDevolutivasControle() {
   const [filtroNome, setFiltroNome] = useState('');
   const [filtroProfessor, setFiltroProfessor] = useState<string | null>(null);
   const [filtroTurma, setFiltroTurma] = useState<string | null>(null);
-  const [ordenacaoCampo, setOrdenacaoCampo] = useState<OrdenacaoCampo>('nome');
-  const [ordenacaoDirecao, setOrdenacaoDirecao] = useState<OrdenacaoDirecao>('asc');
 
   const fetchDevolutivas = async () => {
     if (!activeUnit) return;
@@ -45,7 +39,6 @@ export function useDevolutivasControle() {
           id,
           nome,
           foto_devolutiva_url,
-          pdf_devolutiva_url,
           turma_id,
           unit_id,
           turmas (
@@ -66,7 +59,6 @@ export function useDevolutivasControle() {
           id,
           nome,
           foto_devolutiva_url,
-          pdf_devolutiva_url,
           turma_id,
           unit_id,
           turmas (
@@ -137,7 +129,6 @@ export function useDevolutivasControle() {
           entregue_em: controle?.entregue_em || null,
           impresso_por_nome: controle?.impresso_por ? profilesMap.get(controle.impresso_por) || null : null,
           entregue_por_nome: controle?.entregue_por ? profilesMap.get(controle.entregue_por) || null : null,
-          pdf_devolutiva_url: aluno.pdf_devolutiva_url || null,
         };
       });
 
@@ -161,7 +152,6 @@ export function useDevolutivasControle() {
           entregue_em: controle?.entregue_em || null,
           impresso_por_nome: controle?.impresso_por ? profilesMap.get(controle.impresso_por) || null : null,
           entregue_por_nome: controle?.entregue_por ? profilesMap.get(controle.entregue_por) || null : null,
-          pdf_devolutiva_url: funcionario.pdf_devolutiva_url || null,
         };
       });
 
@@ -241,34 +231,6 @@ export function useDevolutivasControle() {
     return true;
   });
 
-  // Aplicar ordenação
-  const devolutivasOrdenadas = [...devolutivasFiltradas].sort((a, b) => {
-    let comparacao = 0;
-
-    if (ordenacaoCampo === 'foto_escolhida' || ordenacaoCampo === 'impresso' || ordenacaoCampo === 'entregue') {
-      comparacao = Number(a[ordenacaoCampo]) - Number(b[ordenacaoCampo]);
-    } else if (ordenacaoCampo === 'pdf_devolutiva_url') {
-      const aTemPdf = !!a.pdf_devolutiva_url;
-      const bTemPdf = !!b.pdf_devolutiva_url;
-      comparacao = Number(aTemPdf) - Number(bTemPdf);
-    } else {
-      const valorA = a[ordenacaoCampo] || '';
-      const valorB = b[ordenacaoCampo] || '';
-      comparacao = String(valorA).localeCompare(String(valorB));
-    }
-
-    return ordenacaoDirecao === 'asc' ? comparacao : -comparacao;
-  });
-
-  const toggleOrdenacao = (campo: OrdenacaoCampo) => {
-    if (ordenacaoCampo === campo) {
-      setOrdenacaoDirecao(ordenacaoDirecao === 'asc' ? 'desc' : 'asc');
-    } else {
-      setOrdenacaoCampo(campo);
-      setOrdenacaoDirecao('asc');
-    }
-  };
-
   // Estatísticas
   const stats = {
     total: devolutivasFiltradas.length,
@@ -287,7 +249,7 @@ export function useDevolutivasControle() {
   ).sort();
 
   return {
-    devolutivas: devolutivasOrdenadas,
+    devolutivas: devolutivasFiltradas,
     loading,
     stats,
     professoresUnicos,
@@ -300,8 +262,5 @@ export function useDevolutivasControle() {
     setFiltroTurma,
     atualizarStatus,
     refetch: fetchDevolutivas,
-    ordenacaoCampo,
-    ordenacaoDirecao,
-    toggleOrdenacao,
   };
 }

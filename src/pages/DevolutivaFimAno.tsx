@@ -77,9 +77,9 @@ const DevolutivaFimAno: React.FC = () => {
   const handlePhotoSelected = async () => {
     console.log('📸 handlePhotoSelected chamado para:', { pessoaSelecionadaId, tipoPessoa });
     
-    // Aguardar 1 segundo para garantir que o Supabase processou
-    console.log('⏳ Aguardando 1 segundo para o banco atualizar...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Aguardar 2 segundos para garantir que o Supabase processou
+    console.log('⏳ Aguardando 2 segundos para o banco atualizar...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // PRIMEIRO: Recarregar os dados
     console.log('🔄 Recarregando TODOS os dados (alunos e funcionários)...');
@@ -100,17 +100,14 @@ const DevolutivaFimAno: React.FC = () => {
       
       // Buscar dados específicos para debug
       if (pessoaSelecionadaId) {
-        const tabela = tipoPessoa === 'funcionario' ? 'funcionarios' : 'alunos';
-        const { data, error } = await supabase
-          .from(tabela)
-          .select('foto_devolutiva_url, nome, id')
-          .eq('id', pessoaSelecionadaId)
-          .single();
-        
-        if (error) {
-          console.error('❌ Erro ao buscar dados atualizados:', error);
-        } else {
-          console.log(`🔍 Dados do ${tipoPessoa} no banco após atualização:`, data);
+        if (tipoPessoa === 'funcionario') {
+          const { data } = await supabase
+            .from('funcionarios')
+            .select('foto_devolutiva_url, nome')
+            .eq('id', pessoaSelecionadaId)
+            .single();
+          
+          console.log('🔍 Dados do funcionário no banco:', data);
         }
       }
       
@@ -294,7 +291,7 @@ const DevolutivaFimAno: React.FC = () => {
     });
     
     return pessoa;
-  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios, cacheBuster]);
+  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
 
   // Detectar automaticamente o tipo real da pessoa para uploads
   const tipoRealPessoa = useMemo((): 'aluno' | 'funcionario' => {
@@ -462,51 +459,15 @@ const DevolutivaFimAno: React.FC = () => {
       <div className="devolutiva-fim-ano-container">
         <div className="a4-page">
           {/* Camada de fundo - FOTO DO ALUNO */}
-          {pessoaSelecionada?.foto_devolutiva_url ? (
-            <>
-              {console.log('🖼️ Renderizando foto:', {
-                url: pessoaSelecionada.foto_devolutiva_url,
-                cacheBuster,
-                tamanhoFoto,
-                posicaoX,
-                posicaoY,
-                versaoTemplate
-              })}
-              <img 
-                src={`${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster}`}
-                alt="Foto do aluno"
-                className="foto-aluno-background"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: `${posicaoX}% ${posicaoY}%`,
-                  transform: `scale(${tamanhoFoto / 100})`,
-                  transformOrigin: `${posicaoX}% ${posicaoY}%`,
-                  zIndex: 1
-                }}
-                onLoad={() => console.log('✅ Foto carregada com sucesso')}
-                onError={(e) => console.error('❌ Erro ao carregar foto:', e)}
-              />
-            </>
-          ) : (
-            <>
-              {console.log('⚠️ Nenhuma foto disponível para:', pessoaSelecionada?.nome)}
-              <div 
-                className="foto-aluno-background"
-                style={{
-                  backgroundColor: '#f0f0f0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <p className="text-muted-foreground text-sm">Nenhuma foto selecionada</p>
-              </div>
-            </>
+          {pessoaSelecionada?.foto_devolutiva_url && (
+            <div 
+              className="foto-aluno-background"
+              style={{
+                backgroundImage: `url(${pessoaSelecionada.foto_devolutiva_url}?t=${cacheBuster})`,
+                backgroundSize: `${tamanhoFoto}%`,
+                backgroundPosition: `${posicaoX}% ${posicaoY}%`
+              }}
+            />
           )}
           
           {/* Camada de overlay - TEMPLATE COM TRANSPARÊNCIA */}
