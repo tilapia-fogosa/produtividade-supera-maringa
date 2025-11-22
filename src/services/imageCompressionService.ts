@@ -76,26 +76,51 @@ export async function compressImageIfNeeded(file: File): Promise<File> {
     const options = {
       maxSizeMB: TARGET_SIZE_MB,        // Máximo 8MB (alta qualidade)
       maxWidthOrHeight: MAX_DIMENSION,  // 4096px (excelente para impressão)
-      useWebWorker: true,               // Não travar a interface
+      useWebWorker: false,              // Desabilitar Web Worker para evitar problemas
       fileType: convertedFile.type,     // Manter formato (exceto se era HEIC)
       initialQuality: 0.95,             // 95% de qualidade inicial
     };
     
-    const processedFile = await imageCompression(convertedFile, options);
+    let processedFile: File;
     
-    const processedSizeMB = processedFile.size / (1024 * 1024);
-    const reducao = ((1 - processedFile.size / convertedFile.size) * 100).toFixed(1);
-    
-    console.log('✅ Imagem processada:', {
-      tamanhoOriginal: `${(convertedFile.size / (1024 * 1024)).toFixed(2)}MB`,
-      tamanhoFinal: `${processedSizeMB.toFixed(2)}MB`,
-      reducao: `${reducao}%`,
-      formato: processedFile.type
-    });
+    try {
+      processedFile = await imageCompression(convertedFile, options);
+      
+      const processedSizeMB = processedFile.size / (1024 * 1024);
+      const reducao = ((1 - processedFile.size / convertedFile.size) * 100).toFixed(1);
+      
+      console.log('✅ Imagem processada:', {
+        tamanhoOriginal: `${(convertedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+        tamanhoFinal: `${processedSizeMB.toFixed(2)}MB`,
+        reducao: `${reducao}%`,
+        formato: processedFile.type
+      });
+    } catch (compressionError) {
+      console.warn('⚠️ Erro ao comprimir, usando arquivo original:', compressionError);
+      
+      // Fallback: se a compressão falhar, verifica o tamanho e retorna o arquivo original ou redimensionado
+      const fileSizeMB = convertedFile.size / (1024 * 1024);
+      
+      if (fileSizeMB > TARGET_SIZE_MB) {
+        // Arquivo muito grande, tenta redimensionar apenas
+        console.log('🔄 Tentando apenas redimensionar...');
+        processedFile = await imageCompression(convertedFile, {
+          maxWidthOrHeight: MAX_DIMENSION,
+          useWebWorker: false,
+        });
+      } else {
+        // Arquivo já está em tamanho aceitável
+        console.log('✅ Usando arquivo original (tamanho aceitável)');
+        processedFile = convertedFile;
+      }
+    }
     
     return processedFile;
   } catch (error) {
     console.error('❌ Erro ao processar imagem:', error);
-    throw new Error('Não foi possível processar a imagem. ' + (error instanceof Error ? error.message : ''));
+    
+    // Mensagem de erro mais amigável
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    throw new Error(`Não foi possível processar a imagem: ${errorMessage}. Tente usar outro formato ou reduzir o tamanho do arquivo.`);
   }
 }
