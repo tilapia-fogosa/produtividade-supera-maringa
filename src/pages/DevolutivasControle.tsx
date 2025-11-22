@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, Download, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,9 @@ const DevolutivasControle = () => {
     filtroTurma,
     setFiltroTurma,
     atualizarStatus,
+    ordenacaoCampo,
+    ordenacaoDirecao,
+    toggleOrdenacao,
   } = useDevolutivasControle();
 
   const handleCheckboxChange = async (
@@ -42,6 +45,10 @@ const DevolutivasControle = () => {
     valorAtual: boolean
   ) => {
     await atualizarStatus(pessoaId, tipoPessoa, campo, !valorAtual);
+  };
+
+  const handleDownloadPdf = (pdfUrl: string) => {
+    window.open(pdfUrl, '_blank');
   };
 
   if (loading) {
@@ -260,6 +267,17 @@ const DevolutivasControle = () => {
                         </Label>
                       </div>
                     </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!dev.pdf_devolutiva_url}
+                      onClick={() => dev.pdf_devolutiva_url && handleDownloadPdf(dev.pdf_devolutiva_url)}
+                      className="w-full mt-2"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      {dev.pdf_devolutiva_url ? 'Baixar PDF' : 'PDF não disponível'}
+                    </Button>
                   </div>
                 </Card>
               ))}
@@ -270,13 +288,98 @@ const DevolutivasControle = () => {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left p-3 text-sm font-semibold">Nome</th>
-                    <th className="text-left p-3 text-sm font-semibold">Turma</th>
-                    <th className="text-left p-3 text-sm font-semibold">Professor</th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('nome')}
+                        className="hover:bg-transparent"
+                      >
+                        Nome
+                        {ordenacaoCampo === 'nome' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('turma_nome')}
+                        className="hover:bg-transparent"
+                      >
+                        Turma
+                        {ordenacaoCampo === 'turma_nome' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('professor_nome')}
+                        className="hover:bg-transparent"
+                      >
+                        Professor
+                        {ordenacaoCampo === 'professor_nome' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
                     <th className="text-center p-3 text-sm font-semibold">Tipo</th>
-                    <th className="text-center p-3 text-sm font-semibold">Foto Escolhida</th>
-                    <th className="text-center p-3 text-sm font-semibold">Impresso</th>
-                    <th className="text-center p-3 text-sm font-semibold">Entregue</th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('foto_escolhida')}
+                        className="hover:bg-transparent"
+                      >
+                        Foto Escolhida
+                        {ordenacaoCampo === 'foto_escolhida' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('impresso')}
+                        className="hover:bg-transparent"
+                      >
+                        Impresso
+                        {ordenacaoCampo === 'impresso' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('entregue')}
+                        className="hover:bg-transparent"
+                      >
+                        Entregue
+                        {ordenacaoCampo === 'entregue' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleOrdenacao('pdf_devolutiva_url')}
+                        className="hover:bg-transparent"
+                      >
+                        PDF
+                        {ordenacaoCampo === 'pdf_devolutiva_url' && (
+                          <ArrowUpDown className={`ml-1 h-3 w-3 ${ordenacaoDirecao === 'desc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </Button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,6 +424,16 @@ const DevolutivasControle = () => {
                             }
                           />
                         </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={!dev.pdf_devolutiva_url}
+                          onClick={() => dev.pdf_devolutiva_url && handleDownloadPdf(dev.pdf_devolutiva_url)}
+                        >
+                          <Download className={`h-4 w-4 ${dev.pdf_devolutiva_url ? 'text-primary' : 'text-muted-foreground'}`} />
+                        </Button>
                       </td>
                     </tr>
                   ))}
