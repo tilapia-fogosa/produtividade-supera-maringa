@@ -77,9 +77,9 @@ const DevolutivaFimAno: React.FC = () => {
   const handlePhotoSelected = async () => {
     console.log('📸 handlePhotoSelected chamado para:', { pessoaSelecionadaId, tipoPessoa });
     
-    // Aguardar 2 segundos para garantir que o Supabase processou
-    console.log('⏳ Aguardando 2 segundos para o banco atualizar...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Aguardar 1 segundo para garantir que o Supabase processou
+    console.log('⏳ Aguardando 1 segundo para o banco atualizar...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // PRIMEIRO: Recarregar os dados
     console.log('🔄 Recarregando TODOS os dados (alunos e funcionários)...');
@@ -100,14 +100,17 @@ const DevolutivaFimAno: React.FC = () => {
       
       // Buscar dados específicos para debug
       if (pessoaSelecionadaId) {
-        if (tipoPessoa === 'funcionario') {
-          const { data } = await supabase
-            .from('funcionarios')
-            .select('foto_devolutiva_url, nome')
-            .eq('id', pessoaSelecionadaId)
-            .single();
-          
-          console.log('🔍 Dados do funcionário no banco:', data);
+        const tabela = tipoPessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+        const { data, error } = await supabase
+          .from(tabela)
+          .select('foto_devolutiva_url, nome, id')
+          .eq('id', pessoaSelecionadaId)
+          .single();
+        
+        if (error) {
+          console.error('❌ Erro ao buscar dados atualizados:', error);
+        } else {
+          console.log(`🔍 Dados do ${tipoPessoa} no banco após atualização:`, data);
         }
       }
       
@@ -291,7 +294,7 @@ const DevolutivaFimAno: React.FC = () => {
     });
     
     return pessoa;
-  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios]);
+  }, [tipoPessoa, pessoaSelecionadaId, alunos, funcionarios, cacheBuster]);
 
   // Detectar automaticamente o tipo real da pessoa para uploads
   const tipoRealPessoa = useMemo((): 'aluno' | 'funcionario' => {
