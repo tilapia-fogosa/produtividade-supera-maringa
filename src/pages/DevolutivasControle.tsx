@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -259,6 +259,17 @@ const DevolutivasControle = () => {
                           Entregue
                         </Label>
                       </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={!dev.pdf_devolutiva_url}
+                        onClick={() => {
+                          if (dev.pdf_devolutiva_url) window.open(dev.pdf_devolutiva_url, '_blank');
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -277,6 +288,7 @@ const DevolutivasControle = () => {
                     <th className="text-center p-3 text-sm font-semibold">Foto Escolhida</th>
                     <th className="text-center p-3 text-sm font-semibold">Impresso</th>
                     <th className="text-center p-3 text-sm font-semibold">Entregue</th>
+                    <th className="text-center p-3 text-sm font-semibold">PDF</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,6 +333,19 @@ const DevolutivasControle = () => {
                             }
                           />
                         </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!(dev as any).pdf_devolutiva_url}
+                          onClick={() => {
+                            const url = (dev as any).pdf_devolutiva_url;
+                            if (url) window.open(url, '_blank');
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
