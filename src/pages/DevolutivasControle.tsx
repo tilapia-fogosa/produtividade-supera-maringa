@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Circle, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, Download, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,39 @@ const DevolutivasControle = () => {
     setFiltroTurma,
     atualizarStatus,
   } = useDevolutivasControle();
+
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedDevolutivas = React.useMemo(() => {
+    if (!sortColumn) return devolutivas;
+
+    return [...devolutivas].sort((a, b) => {
+      let aValue: any = (a as any)[sortColumn];
+      let bValue: any = (b as any)[sortColumn];
+
+      if (sortColumn === 'pdf_devolutiva_url') {
+        aValue = !!aValue;
+        bValue = !!bValue;
+      }
+
+      if (aValue === bValue) return 0;
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      const comparison = aValue < bValue ? -1 : 1;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [devolutivas, sortColumn, sortDirection]);
 
   const handleCheckboxChange = async (
     pessoaId: string,
@@ -189,18 +222,18 @@ const DevolutivasControle = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            Devolutivas ({devolutivas.length})
+            Devolutivas ({sortedDevolutivas.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {devolutivas.length === 0 ? (
+          {sortedDevolutivas.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <p>Nenhuma devolutiva encontrada com os filtros aplicados.</p>
             </div>
           ) : isMobile ? (
             // Layout Mobile - Cards
             <div className="space-y-2 p-2">
-              {devolutivas.map((dev) => (
+              {sortedDevolutivas.map((dev) => (
                 <Card key={`${dev.pessoa_id}_${dev.tipo_pessoa}`} className="p-3">
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
@@ -264,6 +297,7 @@ const DevolutivasControle = () => {
                         variant="ghost"
                         size="sm"
                         disabled={!dev.pdf_devolutiva_url}
+                        className={dev.pdf_devolutiva_url ? 'text-orange-500 hover:text-orange-600' : 'text-gray-400'}
                         onClick={() => {
                           if (dev.pdf_devolutiva_url) window.open(dev.pdf_devolutiva_url, '_blank');
                         }}
@@ -281,18 +315,98 @@ const DevolutivasControle = () => {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left p-3 text-sm font-semibold">Nome</th>
-                    <th className="text-left p-3 text-sm font-semibold">Turma</th>
-                    <th className="text-left p-3 text-sm font-semibold">Professor</th>
-                    <th className="text-center p-3 text-sm font-semibold">Tipo</th>
-                    <th className="text-center p-3 text-sm font-semibold">Foto Escolhida</th>
-                    <th className="text-center p-3 text-sm font-semibold">Impresso</th>
-                    <th className="text-center p-3 text-sm font-semibold">Entregue</th>
-                    <th className="text-center p-3 text-sm font-semibold">PDF</th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('nome')}
+                        className="h-8"
+                      >
+                        Nome
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('turma_nome')}
+                        className="h-8"
+                      >
+                        Turma
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('professor_nome')}
+                        className="h-8"
+                      >
+                        Professor
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('tipo_pessoa')}
+                        className="h-8"
+                      >
+                        Tipo
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('foto_escolhida')}
+                        className="h-8"
+                      >
+                        Foto Escolhida
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('impresso')}
+                        className="h-8"
+                      >
+                        Impresso
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('entregue')}
+                        className="h-8"
+                      >
+                        Entregue
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
+                    <th className="text-center p-3 text-sm font-semibold">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('pdf_devolutiva_url')}
+                        className="h-8"
+                      >
+                        PDF
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {devolutivas.map((dev) => (
+                  {sortedDevolutivas.map((dev) => (
                     <tr
                       key={`${dev.pessoa_id}_${dev.tipo_pessoa}`}
                       className="border-b hover:bg-muted/30 transition-colors"
@@ -338,10 +452,10 @@ const DevolutivasControle = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          disabled={!(dev as any).pdf_devolutiva_url}
+                          disabled={!dev.pdf_devolutiva_url}
+                          className={dev.pdf_devolutiva_url ? 'text-orange-500 hover:text-orange-600' : 'text-gray-400'}
                           onClick={() => {
-                            const url = (dev as any).pdf_devolutiva_url;
-                            if (url) window.open(url, '_blank');
+                            if (dev.pdf_devolutiva_url) window.open(dev.pdf_devolutiva_url, '_blank');
                           }}
                         >
                           <Download className="h-4 w-4" />
