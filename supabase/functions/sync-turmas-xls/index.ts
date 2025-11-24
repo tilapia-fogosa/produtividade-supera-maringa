@@ -561,15 +561,9 @@ serve(async (req) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(webhookPayload),
-          }).then(response => {
-            if (response.ok) {
-              console.log('✅ Webhook enviado com sucesso!');
-            } else {
-              console.error('❌ Webhook retornou erro:', response.status);
-            }
-          }).catch(error => {
-            console.error('❌ Erro ao enviar webhook:', error.message);
           });
+
+          console.log('📨 Webhook disparado em background (não aguardando resposta)');
 
         } catch (webhookError) {
           console.error('❌ Erro ao processar webhook:', webhookError);
