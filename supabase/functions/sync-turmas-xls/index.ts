@@ -493,6 +493,94 @@ serve(async (req) => {
 
     console.log('Sincronização completa finalizada:', result);
 
+    // ETAPA 5: Enviar alunos ativos para webhook (fire-and-forget)
+    const webhookUrl = Deno.env.get('WEBHOOK_ALUNOS_ATIVOS_URL');
+    
+    if (webhookUrl) {
+      console.log('Etapa 5: Enviando alunos ativos para webhook...');
+      
+      // Enviar webhook em background sem aguardar resposta
+      (async () => {
+        try {
+          // Buscar todos os alunos ativos da unidade
+          const { data: alunosAtivos, error: alunosError } = await supabase
+            .from('alunos')
+            .select(`
+              id,
+              nome,
+              telefone,
+              email,
+              turma_id,
+              turmas (
+                nome,
+                professores (
+                  nome
+                )
+              )
+            `)
+            .eq('unit_id', MARINGA_UNIT_ID)
+            .eq('active', true)
+            .order('nome');
+
+          if (alunosError) {
+            console.error('❌ Erro ao buscar alunos ativos para webhook:', alunosError);
+            return;
+          }
+
+          // Preparar payload para webhook
+          const webhookPayload = {
+            tipo_evento: 'sincronizacao_concluida',
+            data_evento: new Date().toISOString(),
+            unidade_id: MARINGA_UNIT_ID,
+            arquivo: fileName,
+            estatisticas: {
+              total_alunos_ativos: alunosAtivos?.length || 0,
+              professores_criados: result.professores_criados,
+              professores_reativados: result.professores_reativados,
+              turmas_criadas: result.turmas_criadas,
+              turmas_reativadas: result.turmas_reativadas,
+              alunos_criados: result.alunos_criados,
+              alunos_reativados: result.alunos_reativados
+            },
+            alunos: (alunosAtivos || []).map((aluno: any) => ({
+              id: aluno.id,
+              nome: aluno.nome,
+              telefone: aluno.telefone || null,
+              email: aluno.email || null,
+              turma: aluno.turmas?.nome || null,
+              professor: aluno.turmas?.professores?.nome || null
+            }))
+          };
+
+          console.log(`📤 Enviando ${alunosAtivos?.length || 0} alunos ativos para webhook...`);
+
+          // Enviar para webhook sem aguardar resposta (fire-and-forget)
+          fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookPayload),
+          }).then(response => {
+            if (response.ok) {
+              console.log('✅ Webhook enviado com sucesso!');
+            } else {
+              console.error('❌ Webhook retornou erro:', response.status);
+            }
+          }).catch(error => {
+            console.error('❌ Erro ao enviar webhook:', error.message);
+          });
+
+        } catch (webhookError) {
+          console.error('❌ Erro ao processar webhook:', webhookError);
+        }
+      })();
+      
+      console.log('📨 Webhook disparado em background (não aguardando resposta)');
+    } else {
+      console.log('⚠️ URL do webhook não configurada (WEBHOOK_ALUNOS_ATIVOS_URL)');
+    }
+
     // Finalizar registro de importação como sucesso
     await supabase
       .from('data_imports')
