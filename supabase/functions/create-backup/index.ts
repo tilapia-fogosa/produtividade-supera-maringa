@@ -73,9 +73,10 @@ serve(async (req) => {
 
     // Copiar professores
     console.log('Copiando professores...');
+    // Seleciona apenas colunas que existem em professores_backup1/2
     const { data: professores, error: profError } = await supabase
       .from('professores')
-      .select('*');
+      .select('id, nome, slack_username, email, telefone, created_at, unit_id, status, ultima_sincronizacao');
 
     if (profError) {
       console.error('Erro ao buscar professores:', profError);
@@ -84,9 +85,10 @@ serve(async (req) => {
 
     if (professores && professores.length > 0) {
       const professoresBackup = professores.map(prof => {
-        const { id, ...rest } = prof; // Remove o ID original
+        const { id, status, ...rest } = prof;
         return {
           ...rest,
+          status: status ? 'ativo' : 'inativo', // Converte boolean para text
           original_id: id,
           backup_created_at: new Date().toISOString(),
           backup_created_by: null
@@ -107,9 +109,10 @@ serve(async (req) => {
 
     // Copiar turmas
     console.log('Copiando turmas...');
+    // Seleciona apenas colunas que existem em turmas_backup1/2
     const { data: turmas, error: turmasError } = await supabase
       .from('turmas')
-      .select('*');
+      .select('id, nome, horario_inicio, horario_fim, dia_semana, sala, categoria, professor_id, unit_id, created_at, total_alunos, ultima_sincronizacao');
 
     if (turmasError) {
       console.error('Erro ao buscar turmas:', turmasError);
@@ -118,7 +121,7 @@ serve(async (req) => {
 
     if (turmas && turmas.length > 0) {
       const turmasBackup = turmas.map(turma => {
-        const { id, ...rest } = turma; // Remove o ID original
+        const { id, ...rest } = turma;
         return {
           ...rest,
           original_id: id,
@@ -141,9 +144,17 @@ serve(async (req) => {
 
     // Copiar alunos
     console.log('Copiando alunos...');
+    // Seleciona apenas colunas que existem em alunos_backup1/2
     const { data: alunos, error: alunosError } = await supabase
       .from('alunos')
-      .select('*');
+      .select(`
+        id, nome, telefone, email, matricula, turma_id, idade, ultimo_nivel, dias_apostila, dias_supera,
+        vencimento_contrato, active, created_at, data_onboarding, unit_id, ultima_pagina, ultima_falta,
+        ultima_correcao_ah, is_funcionario, codigo, indice, curso, niveldesafio, texto_devolutiva,
+        percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao,
+        coordenador_responsavel, responsavel, whatapp_contato, kit_sugerido, foto_url, 
+        ultima_sincronizacao, oculto_retencoes, faltas_consecutivas, valor_mensalidade, material_entregue
+      `);
 
     if (alunosError) {
       console.error('Erro ao buscar alunos:', alunosError);
@@ -152,9 +163,10 @@ serve(async (req) => {
 
     if (alunos && alunos.length > 0) {
       const alunosBackup = alunos.map(aluno => {
-        const { id, ...rest } = aluno; // Remove o ID original
+        const { id, ...rest } = aluno;
         return {
           ...rest,
+          status: aluno.active ? 'ativo' : 'inativo', // Adiciona campo status como text
           original_id: id,
           backup_created_at: new Date().toISOString(),
           backup_created_by: null
