@@ -39,6 +39,7 @@ export interface AlunoAtivo {
   valor_mensalidade: number | null;
   foto_url: string | null;
   foto_devolutiva_url: string | null;
+  pdf_devolutiva_url: string | null;
   data_nascimento: string | null;
   aniversario_mes_dia: string | null; // Formato 'DD/MM' calculado automaticamente
   // Campos específicos para identificar origem

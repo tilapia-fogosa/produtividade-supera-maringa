@@ -1,6 +1,8 @@
 import { corsHeaders } from '../_shared/cors.ts';
 
 interface DevolutivaData {
+  pessoa_id: string;
+  pessoa_tipo: 'aluno' | 'funcionario';
   nome: string;
   fotoUrl: string;
   tamanhoFoto: number;
@@ -92,6 +94,22 @@ function generateHTML(data: DevolutivaData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Devolutiva Fim de Ano - ${data.nome}</title>
   <style>${CSS_INLINE}</style>
+  <script>
+    function imagesLoaded() {
+      const images = Array.from(document.images);
+      console.log('Checking images:', images.length);
+      if (images.length === 0) {
+        console.log('No images found');
+        return false;
+      }
+      const allLoaded = images.every(img => {
+        console.log('Image:', img.src, 'complete:', img.complete, 'height:', img.naturalHeight);
+        return img.complete && img.naturalHeight !== 0;
+      });
+      console.log('All images loaded:', allLoaded);
+      return allLoaded;
+    }
+  </script>
 </head>
 <body>
   <div class="devolutiva-fim-ano-wrapper">
@@ -173,52 +191,57 @@ Deno.serve(async (req) => {
     console.log('Gerando PDF para:', data.nome);
     console.log('Dados recebidos:', JSON.stringify(data, null, 2));
     
-    // Gerar HTML completo
-    const htmlContent = generateHTML(data);
-    console.log('HTML gerado, tamanho:', htmlContent.length, 'caracteres');
+    // Preparar dados para enviar ao webhook do n8n
+    const templateUrl = data.versaoTemplate === 2
+      ? 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v2.png'
+      : 'https://hkvjdxxndapxpslovrlc.supabase.co/storage/v1/object/public/devolutivas/v1.png';
+
+    const webhookData = {
+      pessoa_id: data.pessoa_id,
+      pessoa_tipo: data.pessoa_tipo,
+      nome: data.nome,
+      fotoUrl: data.fotoUrl,
+      tamanhoFoto: data.tamanhoFoto,
+      posicaoX: data.posicaoX,
+      posicaoY: data.posicaoY,
+      tamanhoFonte: data.tamanhoFonte,
+      alturaNome: data.alturaNome,
+      alturaExercicios: data.alturaExercicios,
+      posicaoXExerciciosAbaco: data.posicaoXExerciciosAbaco,
+      posicaoXExerciciosAH: data.posicaoXExerciciosAH,
+      totalDesafios: data.totalDesafios,
+      totalExerciciosAbaco: data.totalExerciciosAbaco,
+      totalExerciciosAH: data.totalExerciciosAH,
+      versaoTemplate: data.versaoTemplate,
+      templateUrl: templateUrl,
+    };
     
-    // Chamar PDFShift API
-    const pdfShiftApiKey = Deno.env.get('PDFSHIFT_API_KEY');
-    if (!pdfShiftApiKey) {
-      throw new Error('PDFSHIFT_API_KEY não configurada');
-    }
+    console.log('📤 [Edge Function] Enviando dados para o webhook n8n...');
+    console.log('Webhook URL: https://webhookn8n.agenciakadin.com.br/webhook/pdf');
+    console.log('pessoa_id:', webhookData.pessoa_id);
+    console.log('pessoa_tipo:', webhookData.pessoa_tipo);
+    console.log('Payload completo que será enviado ao n8n:', JSON.stringify(webhookData, null, 2));
     
-    console.log('Chamando PDFShift API...');
-    console.log('Template URL:', data.versaoTemplate === 2 ? 'v2.png' : 'v1.png');
-    console.log('Foto URL:', data.fotoUrl);
-    
-    const pdfShiftResponse = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+    // Chamar webhook do n8n (fire and forget - n8n salva no bucket e na tabela)
+    fetch('https://webhookn8n.agenciakadin.com.br/webhook/pdf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(`api:${pdfShiftApiKey}`)}`,
       },
-      body: JSON.stringify({
-        source: htmlContent,
-        format: 'A4',
-        margin: 0,
-        use_print: true,
-        sandbox: false,
-        delay: 10000,
-        wait_for_images: true,
-      }),
+      body: JSON.stringify(webhookData),
+    }).catch(error => {
+      console.error('Erro ao enviar para webhook (ignorado):', error);
     });
     
-    if (!pdfShiftResponse.ok) {
-      const errorText = await pdfShiftResponse.text();
-      console.error('Erro PDFShift:', errorText);
-      throw new Error(`PDFShift API error: ${pdfShiftResponse.status} - ${errorText}`);
-    }
+    console.log('✅ Requisição enviada ao webhook n8n. O PDF será gerado e salvo automaticamente.');
     
-    const pdfBlob = await pdfShiftResponse.arrayBuffer();
-    
-    console.log('PDF gerado com sucesso');
-    
-    return new Response(pdfBlob, {
+    return new Response(JSON.stringify({ 
+      success: true,
+      message: 'PDF está sendo gerado e será salvo automaticamente no bucket' 
+    }), {
       headers: {
         ...corsHeaders,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="devolutiva-${data.nome.replace(/\s+/g, '-')}.pdf"`,
+        'Content-Type': 'application/json',
       },
     });
     

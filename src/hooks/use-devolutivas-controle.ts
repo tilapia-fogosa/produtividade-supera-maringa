@@ -16,6 +16,7 @@ export interface DevolutivaControleItem {
   entregue_em: string | null;
   impresso_por_nome: string | null;
   entregue_por_nome: string | null;
+  pdf_devolutiva_url: string | null;
 }
 
 export function useDevolutivasControle() {
@@ -39,6 +40,7 @@ export function useDevolutivasControle() {
           id,
           nome,
           foto_devolutiva_url,
+          pdf_devolutiva_url,
           turma_id,
           unit_id,
           turmas (
@@ -59,6 +61,7 @@ export function useDevolutivasControle() {
           id,
           nome,
           foto_devolutiva_url,
+          pdf_devolutiva_url,
           turma_id,
           unit_id,
           turmas (
@@ -129,6 +132,7 @@ export function useDevolutivasControle() {
           entregue_em: controle?.entregue_em || null,
           impresso_por_nome: controle?.impresso_por ? profilesMap.get(controle.impresso_por) || null : null,
           entregue_por_nome: controle?.entregue_por ? profilesMap.get(controle.entregue_por) || null : null,
+          pdf_devolutiva_url: aluno.pdf_devolutiva_url || null,
         };
       });
 
@@ -152,6 +156,7 @@ export function useDevolutivasControle() {
           entregue_em: controle?.entregue_em || null,
           impresso_por_nome: controle?.impresso_por ? profilesMap.get(controle.impresso_por) || null : null,
           entregue_por_nome: controle?.entregue_por ? profilesMap.get(controle.entregue_por) || null : null,
+          pdf_devolutiva_url: funcionario.pdf_devolutiva_url || null,
         };
       });
 

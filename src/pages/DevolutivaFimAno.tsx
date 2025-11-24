@@ -12,7 +12,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, Briefcase, Printer, Eye, Download, ListChecks } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { User, Briefcase, Printer, Eye, Download, ListChecks, CloudUpload } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { GoogleDrivePicker } from '@/components/devolutivas/GoogleDrivePicker';
 import { useDesafios2025 } from '@/hooks/use-desafios-2025';
@@ -48,6 +49,7 @@ const DevolutivaFimAno: React.FC = () => {
   const [versaoTemplate, setVersaoTemplate] = useState<1 | 2>(2); // Versão do template (1 ou 2)
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now()); // Para forçar recarregamento da foto
   const [gerandoPDFNavegador, setGerandoPDFNavegador] = useState<boolean>(false); // Estado para window.print()
+  const [mostrarDialogPDF, setMostrarDialogPDF] = useState<boolean>(false); // Dialog para PDF sendo gerado
   const [gerandoPDFShift, setGerandoPDFShift] = useState<boolean>(false); // Estado para PDFShift
   
   // Selecionar template baseado na versão
@@ -202,10 +204,9 @@ const DevolutivaFimAno: React.FC = () => {
     setGerandoPDFShift(true);
     
     try {
-      // Obter URL pública do template
-      const templateUrl = versaoTemplate === 1 ? templateV1 : templateV2;
-      
       const dadosDevolutiva = {
+        pessoa_id: pessoaSelecionada.id,
+        pessoa_tipo: tipoRealPessoa,
         nome: pessoaSelecionada.nome,
         fotoUrl: pessoaSelecionada.foto_devolutiva_url,
         tamanhoFoto,
@@ -219,11 +220,13 @@ const DevolutivaFimAno: React.FC = () => {
         totalDesafios: totalDesafios2025,
         totalExerciciosAbaco: totalExerciciosAbaco2025,
         totalExerciciosAH: totalExerciciosAH2025,
-        versaoTemplate,
-        templateUrl: window.location.origin + templateUrl // Adicionar URL pública do template
+        versaoTemplate
       };
       
-      console.log('Gerando PDF via edge function...');
+      console.log('🚀 [Frontend] Dados que serão enviados para a edge function:');
+      console.log('pessoa_id:', dadosDevolutiva.pessoa_id);
+      console.log('pessoa_tipo:', dadosDevolutiva.pessoa_tipo);
+      console.log('Dados completos:', JSON.stringify(dadosDevolutiva, null, 2));
       
       const { data, error } = await supabase.functions.invoke('generate-devolutiva-pdf', {
         body: dadosDevolutiva,
@@ -233,22 +236,13 @@ const DevolutivaFimAno: React.FC = () => {
         throw new Error(error.message || 'Erro ao gerar PDF');
       }
       
-      if (!data) {
-        throw new Error('Nenhum dado retornado da edge function');
+      if (!data || !data.success) {
+        throw new Error('Erro ao processar solicitação');
       }
       
-      // Converter response para blob
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `devolutiva-${pessoaSelecionada.nome.replace(/\s+/g, '-')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      console.log('✅ PDF sendo gerado pelo n8n:', data.message);
       
-      console.log('PDF gerado com sucesso!');
+      setMostrarDialogPDF(true);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       alert(`Erro ao gerar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -289,6 +283,8 @@ const DevolutivaFimAno: React.FC = () => {
       pessoaSelecionadaId,
       pessoaEncontrada: pessoa?.nome,
       fotoUrl: pessoa?.foto_devolutiva_url,
+      pdfUrl: (pessoa as any)?.pdf_devolutiva_url,
+      temPdfUrl: !!(pessoa as any)?.pdf_devolutiva_url,
       cacheBuster,
       totalFuncionarios: funcionarios.length,
       totalAlunos: alunos.length
@@ -588,7 +584,7 @@ const DevolutivaFimAno: React.FC = () => {
                   disabled={gerandoPDFShift}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  {gerandoPDFShift ? 'Gerando...' : 'Download PDF (Premium)'}
+                  {gerandoPDFShift ? 'Gerando...' : 'Baixar do Bucket'}
                 </Button>
                 <Button
                   onClick={() => setMostrarPreview(false)}
@@ -742,15 +738,27 @@ const DevolutivaFimAno: React.FC = () => {
             <Printer className={`h-5 w-5 ${gerandoPDFNavegador ? 'animate-pulse' : ''}`} />
           </Button>
 
-          {/* Botão de download PDF com PDFShift */}
+          {/* Botão de download PDF existente do Bucket - só aparece se já tem PDF */}
+          {(pessoaSelecionada && (pessoaSelecionada as any).pdf_devolutiva_url) && (
+            <Button
+              onClick={() => window.open((pessoaSelecionada as any).pdf_devolutiva_url, '_blank')}
+              className="no-print fixed bottom-4 right-52 z-50 rounded-full w-12 h-12 p-0"
+              variant="default"
+              title="Baixar PDF já gerado"
+            >
+              <Download className="h-5 w-5" />
+            </Button>
+          )}
+
+          {/* Botão de gerar novo PDF no Bucket */}
           <Button
             onClick={handleSalvarPDFShift}
             className="no-print fixed bottom-4 right-20 z-50 rounded-full w-12 h-12 p-0"
             variant="outline"
-            title="Download PDF com PDFShift (Premium)"
+            title="Gerar PDF e salvar no bucket"
             disabled={gerandoPDFShift}
           >
-            <Download className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />
+            <CloudUpload className={`h-5 w-5 ${gerandoPDFShift ? 'animate-pulse' : ''}`} />
           </Button>
 
           {/* Botão para mostrar/ocultar controles */}
@@ -864,6 +872,15 @@ const DevolutivaFimAno: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Dialog de PDF sendo gerado */}
+      <Dialog open={mostrarDialogPDF} onOpenChange={setMostrarDialogPDF}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pdf sendo gerado</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
