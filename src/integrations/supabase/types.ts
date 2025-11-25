@@ -3470,6 +3470,39 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_comercial: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: number
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_comercial_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_comercial_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanban_cards: {
         Row: {
           acao_retencao: string | null
