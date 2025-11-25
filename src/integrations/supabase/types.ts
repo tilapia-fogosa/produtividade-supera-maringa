@@ -3470,6 +3470,21 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_comercial: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
       kanban_cards: {
         Row: {
           acao_retencao: string | null
