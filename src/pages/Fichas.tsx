@@ -70,7 +70,7 @@ const Fichas = () => {
 
   return (
     <div className="w-full min-h-screen bg-background">
-      <div className="container mx-auto py-4 px-2 print:p-0">
+      <div className="container mx-auto py-4 px-2 print:p-0 print:m-0 print:max-w-none">
         <div className="no-print mb-4 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <Button 
@@ -145,29 +145,30 @@ const Fichas = () => {
           </div>
         </div>
         
-        <Card className="p-4 print:p-0 print:border-none print:shadow-none">
+        <Card className="p-4 print:p-0 print:border-0 print:shadow-none print:bg-transparent">
           {loading ? (
             <div className="flex justify-center items-center p-8">
               <p className="text-azul-500">Carregando fichas de todas as turmas...</p>
             </div>
           ) : turmasOrdenadas.length > 0 ? (
-            <div>
+            <div className="print:p-0 print:m-0">
               <h2 className="text-xl font-bold mb-4 text-azul-500 print:hidden">
                 Fichas de Acompanhamento - {mesNome} {anoSelecionado} - {turmasOrdenadas.length} Turmas
                 {iniciarSemanaAnterior && <span className="text-sm font-normal ml-2">(iniciando semana anterior)</span>}
               </h2>
               
-              {turmasOrdenadas.map((item) => (
-                <div key={item.turma.id} className="ficha-print-wrapper mb-8">
+              <div className="space-y-8 print:space-y-0">
+                {turmasOrdenadas.map((item) => (
                   <FichaTurmaImprimivel 
+                    key={item.turma.id}
                     turma={item.turma} 
                     alunos={item.alunos}
                     mesSelecionado={mesSelecionado}
                     anoSelecionado={anoSelecionado}
                     iniciarSemanaAnterior={iniciarSemanaAnterior}
                   />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">
