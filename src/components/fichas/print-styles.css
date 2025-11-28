@@ -19,8 +19,27 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  
+  /* Remover margens e padding de todos os containers */
+  .container,
+  [class*="container"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  /* Remover estilos de Card e outros componentes UI */
+  [class*="card"],
+  [class*="Card"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
 
-  /* Wrapper com dimensões fixas para A4 landscape */
+  /* Wrapper com dimensões fixas para A4 landscape - 1 turma por folha */
   .ficha-print-wrapper {
     width: 297mm !important;
     height: 210mm !important;
@@ -34,12 +53,14 @@
     transform: none !important;
     transform-origin: top left !important;
     page-break-inside: avoid !important;
+    page-break-after: always !important;
     overflow: hidden !important;
+    position: relative !important;
   }
   
-  /* Quebra de página apenas entre fichas (não na última) */
-  .ficha-print-wrapper:not(:last-of-type) {
-    page-break-after: always !important;
+  /* Remover quebra de página da última ficha */
+  .ficha-print-wrapper:last-of-type {
+    page-break-after: auto !important;
   }
   
   .ficha-container {
@@ -86,10 +107,7 @@
   .print\:page-break-after {
     page-break-after: always !important;
   }
-  
-  .ficha-print-wrapper:last-of-type {
-    page-break-after: auto !important;
-  }
+
 
   /* Garantindo que TODAS as bordas internas sejam finas durante a impressão */
   .ficha-tabela th,
