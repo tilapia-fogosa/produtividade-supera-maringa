@@ -650,6 +650,8 @@
 /* Estilos da coluna de faltas */
 .ficha-celula-falta {
   padding: 0 !important;
+  position: relative;
+  top: -2px;
 }
 
 .falta-campo {
@@ -660,6 +662,8 @@
 /* Estilos das células de semana */
 .ficha-celula-semana {
   padding: 0 !important;
+  position: relative;
+  top: -2px;
 }
 
 .semana-campo-valor {
