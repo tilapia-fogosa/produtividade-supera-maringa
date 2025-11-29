@@ -322,7 +322,7 @@
   /* Permitir que nomes sobreporem outras colunas */
   .ficha-aluno-nome {
     position: relative !important;
-    top: -3px !important;
+    top: -4px !important;
     z-index: 100 !important;
     background-color: rgba(255, 255, 255, 0.95) !important;
     padding-right: 4px !important;
@@ -334,7 +334,7 @@
   .ficha-celula-falta,
   .ficha-celula-semana {
     position: relative !important;
-    top: -2px !important;
+    top: -3px !important;
   }
 
   /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
@@ -635,7 +635,7 @@
 .ficha-aluno-nome {
   font-size: 9pt;
   position: relative;
-  top: -3px;
+  top: -4px;
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.95);
   padding-right: 4px;
@@ -659,7 +659,7 @@
 .ficha-celula-falta {
   padding: 0 !important;
   position: relative;
-  top: -2px;
+  top: -3px;
 }
 
 .falta-campo {
@@ -671,7 +671,7 @@
 .ficha-celula-semana {
   padding: 0 !important;
   position: relative;
-  top: -2px;
+  top: -3px;
 }
 
 .semana-campo-valor {
