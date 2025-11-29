@@ -555,7 +555,7 @@
 
 /* Dimensionamento das colunas com valores fixos em mm */
 .ficha-coluna-nome {
-  width: 60mm;
+  width: 70mm;
   border-right: 2px solid #000;
 }
 
@@ -627,7 +627,7 @@
 .ficha-aluno-nome {
   font-size: 9pt;
   position: relative;
-  top: -1px;
+  top: -3px;
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.95);
   padding-right: 4px;
