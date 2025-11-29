@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Printer, Download } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import FichaTurmaImprimivel from '@/components/fichas/FichaTurmaImprimivel';
 import { toast } from '@/hooks/use-toast';
 import { useTurmasFichas } from '@/hooks/use-turmas-fichas';
@@ -26,9 +26,7 @@ const Fichas = () => {
     navigate('/devolutivas');
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+
 
   const handleSalvarPDF = async () => {
     setGerandoPDF(true);
@@ -138,23 +136,15 @@ const Fichas = () => {
             </Button>
 
             {turmasOrdenadas.length > 0 && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={handlePrint}
-                  variant="outline"
-                  className="text-azul-500 border-azul-200"
-                >
-                  <Printer className="mr-2 h-4 w-4" /> Imprimir
-                </Button>
-                <Button
-                  onClick={handleSalvarPDF}
-                  className="bg-azul-500 hover:bg-azul-600 text-white"
-                  disabled={gerandoPDF}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  {gerandoPDF ? 'Gerando PDF...' : 'Salvar PDF'}
-                </Button>
-              </div>
+              <Button
+                onClick={handleSalvarPDF}
+                style={{ backgroundColor: '#4112ce' }}
+                className="hover:opacity-90 text-white"
+                disabled={gerandoPDF}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {gerandoPDF ? 'Gerando PDF...' : 'Salvar PDF'}
+              </Button>
             )}
           </div>
 
