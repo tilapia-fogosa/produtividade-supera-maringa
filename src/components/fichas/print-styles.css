@@ -314,6 +314,19 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    position: relative !important;
+    overflow: visible !important;
+    z-index: 10 !important;
+  }
+
+  /* Permitir que nomes sobreporem outras colunas */
+  .ficha-aluno-nome {
+    position: relative !important;
+    z-index: 100 !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    padding-right: 4px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
   }
 
   /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
@@ -592,6 +605,9 @@
   gap: 4px;
   text-align: left !important;
   padding-left: 2px !important;
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 10;
 }
 
 .ficha-aluno-numero {
@@ -610,9 +626,12 @@
 
 .ficha-aluno-nome {
   font-size: 9pt;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding-right: 4px;
   white-space: nowrap;
+  overflow: visible !important;
 }
 
 @media print {
