@@ -424,20 +424,21 @@
 .ficha-tabela th,
 .ficha-tabela td {
   border: 0.5px solid #999;
-  padding: 1mm;
+  padding: 0.5mm;
   vertical-align: middle;
   text-align: center;
-  height: 7mm;
-  line-height: 1.2;
+  height: 6mm;
+  line-height: 1.1;
 }
 
 @media print {
 
   .ficha-tabela th,
   .ficha-tabela td {
-    height: 7mm !important;
-    padding: 1mm !important;
-    line-height: 1.2 !important;
+    height: 6mm !important;
+    padding: 0.5mm !important;
+    line-height: 1.1 !important;
+    font-size: 11pt !important;
   }
 }
 
@@ -535,6 +536,44 @@
 }
 
 .borda-semana-5 {
+  border-left: 2px solid #ea384c !important;
+  border-right: 2px solid #ea384c !important;
+}
+
+/* Dimensionamento das colunas com valores fixos em mm */
+.ficha-coluna-nome {
+  width: 130mm;
+  border-right: 2px solid #000;
+}
+
+.ficha-coluna-faltas {
+  text-align: center;
+}
+
+/* Subcolunas de falta ajustadas para mostrar apenas o dia */
+.ficha-subcoluna-falta {
+  width: 5mm;
+  font-size: 11pt;
+  font-weight: bold;
+  border-left: 0.5px solid #999;
+  border-right: 0.5px solid #999;
+}
+
+.ficha-coluna-semana {
+  text-align: center;
+}
+
+.ficha-subcoluna {
+  width: 5mm;
+  font-size: 9pt;
+  border-left: 0.5px solid #999;
+  border-right: 0.5px solid #999;
+}
+
+/* Headers de semana e faltas */
+.semana-header,
+.faltas-header {
+  font-weight: bold;
   font-size: 9pt;
 }
 
