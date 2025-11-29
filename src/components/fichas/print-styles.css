@@ -535,44 +535,6 @@
 }
 
 .borda-semana-5 {
-  border-left: 2px solid #ea384c !important;
-  border-right: 2px solid #ea384c !important;
-}
-
-/* Dimensionamento das colunas com valores fixos em mm */
-.ficha-coluna-nome {
-  width: 55mm;
-  border-right: 2px solid #000;
-}
-
-.ficha-coluna-faltas {
-  text-align: center;
-}
-
-/* Subcolunas de falta ajustadas para mostrar apenas o dia */
-.ficha-subcoluna-falta {
-  width: 7mm;
-  font-size: 11pt;
-  font-weight: bold;
-  border-left: 0.5px solid #999;
-  border-right: 0.5px solid #999;
-}
-
-.ficha-coluna-semana {
-  text-align: center;
-}
-
-.ficha-subcoluna {
-  width: 7.2mm;
-  font-size: 9pt;
-  border-left: 0.5px solid #999;
-  border-right: 0.5px solid #999;
-}
-
-/* Headers de semana e faltas */
-.semana-header,
-.faltas-header {
-  font-weight: bold;
   font-size: 9pt;
 }
 

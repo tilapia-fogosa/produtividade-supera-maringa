@@ -26,14 +26,12 @@ const Fichas = () => {
     navigate('/devolutivas');
   };
 
-
-
   const handleSalvarPDF = async () => {
     setGerandoPDF(true);
 
     try {
       // Selecionar o elemento que contém todas as fichas
-      const elemento = document.querySelector('.fichas-pdf-container');
+      const elemento = document.querySelector('.fichas-pdf-container') as HTMLElement;
 
       if (!elemento) {
         toast({
@@ -44,6 +42,19 @@ const Fichas = () => {
         return;
       }
 
+      // Salvar estilos originais
+      const originalWidth = elemento.style.width;
+      const originalHeight = elemento.style.height;
+      const originalMargin = elemento.style.margin;
+      const originalPadding = elemento.style.padding;
+
+      // Forçar estilos para garantir renderização correta (A4 Landscape)
+      // 297mm é a largura do A4 em paisagem
+      elemento.style.width = '297mm';
+      elemento.style.height = 'auto';
+      elemento.style.margin = '0';
+      elemento.style.padding = '0';
+
       // Configurações do PDF
       const opt = {
         margin: 0,
@@ -52,10 +63,8 @@ const Fichas = () => {
         html2canvas: {
           scale: 2,
           useCORS: true,
-          logging: true,
-          backgroundColor: '#ffffff',
-          windowWidth: 1400,
-          windowHeight: 900
+          logging: false,
+          backgroundColor: '#ffffff'
         },
         jsPDF: {
           unit: 'mm',
@@ -63,11 +72,17 @@ const Fichas = () => {
           orientation: 'landscape',
           compress: true
         },
-        pagebreak: { mode: 'css', before: '.ficha-print-wrapper' }
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       // Gerar PDF
       await html2pdf().set(opt).from(elemento).save();
+
+      // Restaurar estilos originais
+      elemento.style.width = originalWidth;
+      elemento.style.height = originalHeight;
+      elemento.style.margin = originalMargin;
+      elemento.style.padding = originalPadding;
 
       toast({
         title: "PDF gerado com sucesso!",
@@ -80,6 +95,15 @@ const Fichas = () => {
         description: "Ocorreu um erro ao tentar gerar o PDF. Tente novamente.",
         variant: "destructive"
       });
+
+      // Tentar restaurar estilos em caso de erro também
+      const elemento = document.querySelector('.fichas-pdf-container') as HTMLElement;
+      if (elemento) {
+        elemento.style.width = '';
+        elemento.style.height = '';
+        elemento.style.margin = '';
+        elemento.style.padding = '';
+      }
     } finally {
       setGerandoPDF(false);
     }
