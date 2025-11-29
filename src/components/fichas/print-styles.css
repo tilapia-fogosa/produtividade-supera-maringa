@@ -322,11 +322,19 @@
   /* Permitir que nomes sobreporem outras colunas */
   .ficha-aluno-nome {
     position: relative !important;
+    top: -3px !important;
     z-index: 100 !important;
     background-color: rgba(255, 255, 255, 0.95) !important;
     padding-right: 4px !important;
     white-space: nowrap !important;
     overflow: visible !important;
+  }
+
+  /* Ajustar posição vertical das células de falta e semana */
+  .ficha-celula-falta,
+  .ficha-celula-semana {
+    position: relative !important;
+    top: -2px !important;
   }
 
   /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
