@@ -376,7 +376,7 @@ const FichaTurmaImprimivel: React.FC<FichaTurmaImprimivelProps> = ({
                     <span className="ficha-valor">{professorNome}</span>
                   </div>
                 </div>
-                <div className="ficha-navegacao">
+                <div className="ficha-navegacao no-print">
                   <span className="ficha-pagina">Página: {paginaAtual} de {totalPaginas}</span>
                 </div>
               </div>
