@@ -343,7 +343,7 @@
   .ficha-subcoluna,
   .ficha-subcoluna-falta {
     padding-top: 0 !important;
-    padding-bottom: 3px !important;
+    padding-bottom: 1px !important;
     vertical-align: top !important;
   }
 
@@ -589,7 +589,7 @@
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
   padding-top: 0;
-  padding-bottom: 3px;
+  padding-bottom: 1px;
   vertical-align: top;
 }
 
@@ -603,7 +603,7 @@
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
   padding-top: 0;
-  padding-bottom: 3px;
+  padding-bottom: 1px;
   vertical-align: top;
 }
 
@@ -683,7 +683,7 @@
   height: 14px;
   width: 100%;
   margin-top: 0;
-  margin-bottom: 3px;
+  margin-bottom: 1px;
 }
 
 /* Estilos das células de semana */
@@ -697,7 +697,7 @@
   width: 100%;
   background-color: #fff;
   margin-top: 0;
-  margin-bottom: 3px;
+  margin-bottom: 1px;
 }
 
 @media print {
