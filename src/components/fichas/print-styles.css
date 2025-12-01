@@ -1,16 +1,18 @@
 @media print {
-  /* Escopo específico para fichas - LANDSCAPE */
-  body.printing-ficha @page {
+
+  /* Configuração de página LANDSCAPE para impressão de fichas */
+  @page {
     size: A4 landscape !important;
-    margin: 0;
+    margin: 0 !important;
   }
-  
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
-  
+
+  html,
   body {
     margin: 0 !important;
     padding: 0 !important;
@@ -20,7 +22,26 @@
     print-color-adjust: exact !important;
   }
 
-  /* Wrapper com dimensões fixas para A4 landscape */
+  /* Remover margens e padding de todos os containers */
+  .container,
+  [class*="container"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Remover estilos de Card e outros componentes UI */
+  [class*="card"],
+  [class*="Card"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Wrapper com dimensões fixas para A4 landscape - 1 turma por folha */
   .ficha-print-wrapper {
     width: 297mm !important;
     height: 210mm !important;
@@ -34,14 +55,26 @@
     transform: none !important;
     transform-origin: top left !important;
     page-break-inside: avoid !important;
-    overflow: hidden !important;
-  }
-  
-  /* Quebra de página apenas entre fichas (não na última) */
-  .ficha-print-wrapper:not(:last-of-type) {
     page-break-after: always !important;
+    overflow: hidden !important;
+    position: relative !important;
   }
-  
+
+  /* Remover quebra de página da última ficha */
+  .ficha-print-wrapper:last-of-type {
+    page-break-after: auto !important;
+  }
+
+  /* Regras específicas para geração de PDF via html2pdf */
+  .ficha-print-wrapper {
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+  }
+
+  .ficha-print-wrapper:last-child {
+    page-break-after: auto !important;
+  }
+
   .ficha-container {
     width: 100% !important;
     height: 100% !important;
@@ -59,7 +92,7 @@
     -webkit-text-size-adjust: 100% !important;
     font-size: 12pt !important;
   }
-  
+
   /* Tabela com largura fixa para A4 landscape */
   .ficha-tabela {
     width: 277mm !important;
@@ -67,36 +100,33 @@
     table-layout: fixed !important;
     border-collapse: collapse !important;
   }
-  
+
   .no-print {
     display: none !important;
   }
-  
+
   .print-only {
     display: block !important;
   }
-  
+
   .ficha-container table {
     page-break-inside: avoid;
     border-collapse: collapse;
     width: 100%;
   }
-  
+
   /* Configurações de quebra de página */
   .print\:page-break-after {
     page-break-after: always !important;
   }
-  
-  .ficha-print-wrapper:last-of-type {
-    page-break-after: auto !important;
-  }
+
 
   /* Garantindo que TODAS as bordas internas sejam finas durante a impressão */
   .ficha-tabela th,
   .ficha-tabela td {
     border: 0.5px solid #999 !important;
   }
-  
+
   /* Bordas grossas para as colunas principais com cores específicas */
   .borda-faltas,
   .ficha-tabela .borda-faltas,
@@ -107,7 +137,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   .borda-semana-1,
   .ficha-tabela .borda-semana-1,
   th.borda-semana-1,
@@ -117,7 +147,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   .borda-semana-2,
   .ficha-tabela .borda-semana-2,
   th.borda-semana-2,
@@ -127,7 +157,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   .borda-semana-3,
   .ficha-tabela .borda-semana-3,
   th.borda-semana-3,
@@ -137,7 +167,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   .borda-semana-4,
   .ficha-tabela .borda-semana-4,
   th.borda-semana-4,
@@ -147,7 +177,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   .borda-semana-5,
   .ficha-tabela .borda-semana-5,
   th.borda-semana-5,
@@ -164,20 +194,20 @@
     border-left: 0.5px solid #999 !important;
     border-right: 0.5px solid #999 !important;
   }
-  
+
   /* Garantir que apenas as subcolunas nas extremidades tenham bordas grossas */
   .ficha-subcoluna-falta:first-of-type {
     border-left: 2px solid !important;
     border-left-color: inherit !important;
     border-right: 0.5px solid #999 !important;
   }
-  
+
   .ficha-subcoluna-falta:last-of-type {
     border-right: 2px solid !important;
     border-right-color: inherit !important;
     border-left: 0.5px solid #999 !important;
   }
-  
+
   .ficha-subcoluna.borda-semana-1:first-of-type,
   .ficha-subcoluna.borda-semana-2:first-of-type,
   .ficha-subcoluna.borda-semana-3:first-of-type,
@@ -187,7 +217,7 @@
     border-left-color: inherit !important;
     border-right: 0.5px solid #999 !important;
   }
-  
+
   .ficha-subcoluna.borda-semana-1:last-of-type,
   .ficha-subcoluna.borda-semana-2:last-of-type,
   .ficha-subcoluna.borda-semana-3:last-of-type,
@@ -197,95 +227,126 @@
     border-right-color: inherit !important;
     border-left: 0.5px solid #999 !important;
   }
-  
+
   /* Remover qualquer estilo que possa estar interferindo nas bordas entre subcolunas */
-  .ficha-subcoluna + .ficha-subcoluna,
-  .ficha-subcoluna-falta + .ficha-subcoluna-falta {
+  .ficha-subcoluna+.ficha-subcoluna,
+  .ficha-subcoluna-falta+.ficha-subcoluna-falta {
     border-left: 0.5px solid #999 !important;
   }
-  
+
   /* Forçar o background e cores a serem impressos - Regra mais específica */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
-  
+
   /* Estilos específicos para cabeçalhos coloridos - adicionados seletores mais específicos */
-  .borda-semana-1, 
+  .borda-semana-1,
   [class*="borda-semana-1"] * {
     border-color: #ea384c !important;
     color: #ea384c !important;
   }
-  
-  .borda-semana-2, 
+
+  .borda-semana-2,
   [class*="borda-semana-2"] * {
     border-color: #000000 !important;
     color: #000000 !important;
   }
-  
-  .borda-semana-3, 
+
+  .borda-semana-3,
   [class*="borda-semana-3"] * {
     border-color: #ea384c !important;
     color: #ea384c !important;
   }
-  
-  .borda-semana-4, 
+
+  .borda-semana-4,
   [class*="borda-semana-4"] * {
     border-color: #000000 !important;
     color: #000000 !important;
   }
-  
-  .borda-semana-5, 
+
+  .borda-semana-5,
   [class*="borda-semana-5"] * {
     border-color: #ea384c !important;
     color: #ea384c !important;
   }
-  
+
   /* Adicionar força extra às bordas e cores */
   .ficha-tabela th.borda-faltas,
   .ficha-tabela td.borda-faltas {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
   }
-  
+
   .ficha-tabela th.borda-semana-1,
   .ficha-tabela td.borda-semana-1 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
   }
-  
+
   .ficha-tabela th.borda-semana-2,
   .ficha-tabela td.borda-semana-2 {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
   }
-  
+
   .ficha-tabela th.borda-semana-3,
   .ficha-tabela td.borda-semana-3 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
   }
-  
+
   .ficha-tabela th.borda-semana-4,
   .ficha-tabela td.borda-semana-4 {
     border-left: 2px solid #000000 !important;
     border-right: 2px solid #000000 !important;
   }
-  
+
   .ficha-tabela th.borda-semana-5,
   .ficha-tabela td.borda-semana-5 {
     border-left: 2px solid #ea384c !important;
     border-right: 2px solid #ea384c !important;
   }
-  
+
   /* Garantir que as células com fundo amarelo para alunos recentes sejam impressas corretamente */
   .ficha-celula-nome {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    position: relative !important;
+    overflow: visible !important;
+    z-index: 10 !important;
   }
-  
+
+  /* Permitir que nomes sobreporem outras colunas */
+  .ficha-aluno-nome {
+    padding-top: 0 !important;
+    padding-bottom: 4px !important;
+    display: inline-block !important;
+    vertical-align: top !important;
+    z-index: 100 !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    padding-right: 4px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  /* Ajustar posição vertical das células de falta e semana */
+  .ficha-celula-falta,
+  .ficha-celula-semana {
+    padding: 0 !important;
+    vertical-align: top !important;
+  }
+
+  /* Subcolunas dos headers */
+  .ficha-subcoluna,
+  .ficha-subcoluna-falta {
+    padding-top: 0 !important;
+    padding-bottom: 1px !important;
+    vertical-align: top !important;
+  }
+
   /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
   .ficha-celula-nome[style*="background-color: rgb(254, 247, 205)"] {
     background-color: #FEF7CD !important;
@@ -361,12 +422,14 @@
 .ficha-navegacao {
   display: flex;
   align-items: center;
-  gap: 8px; /* Reduzido de 10px para 8px */
+  gap: 8px;
+  /* Reduzido de 10px para 8px */
 }
 
 .ficha-setas {
   display: flex;
-  gap: 3px; /* Reduzido de 5px para 3px */
+  gap: 3px;
+  /* Reduzido de 5px para 3px */
 }
 
 .seta-pagina {
@@ -395,16 +458,18 @@
   padding: 0.5mm;
   vertical-align: middle;
   text-align: center;
-  height: 4.5mm;
-  line-height: 1;
+  height: 6mm;
+  line-height: 1.1;
 }
 
 @media print {
+
   .ficha-tabela th,
   .ficha-tabela td {
-    height: 4.5mm !important;
+    height: 6mm !important;
     padding: 0.5mm !important;
-    line-height: 1 !important;
+    line-height: 1.1 !important;
+    font-size: 11pt !important;
   }
 }
 
@@ -438,6 +503,7 @@
 .ficha-subcoluna.borda-semana-1:first-of-type {
   border-left: 2px solid #ea384c !important;
 }
+
 .ficha-subcoluna.borda-semana-1:last-of-type {
   border-right: 2px solid #ea384c !important;
 }
@@ -445,6 +511,7 @@
 .ficha-subcoluna.borda-semana-2:first-of-type {
   border-left: 2px solid #000000 !important;
 }
+
 .ficha-subcoluna.borda-semana-2:last-of-type {
   border-right: 2px solid #000000 !important;
 }
@@ -452,6 +519,7 @@
 .ficha-subcoluna.borda-semana-3:first-of-type {
   border-left: 2px solid #ea384c !important;
 }
+
 .ficha-subcoluna.borda-semana-3:last-of-type {
   border-right: 2px solid #ea384c !important;
 }
@@ -459,6 +527,7 @@
 .ficha-subcoluna.borda-semana-4:first-of-type {
   border-left: 2px solid #000000 !important;
 }
+
 .ficha-subcoluna.borda-semana-4:last-of-type {
   border-right: 2px solid #000000 !important;
 }
@@ -466,6 +535,7 @@
 .ficha-subcoluna.borda-semana-5:first-of-type {
   border-left: 2px solid #ea384c !important;
 }
+
 .ficha-subcoluna.borda-semana-5:last-of-type {
   border-right: 2px solid #ea384c !important;
 }
@@ -503,7 +573,7 @@
 
 /* Dimensionamento das colunas com valores fixos em mm */
 .ficha-coluna-nome {
-  width: 55mm;
+  width: 70mm;
   border-right: 2px solid #000;
 }
 
@@ -513,11 +583,14 @@
 
 /* Subcolunas de falta ajustadas para mostrar apenas o dia */
 .ficha-subcoluna-falta {
-  width: 7mm;
+  width: 9mm;
   font-size: 11pt;
   font-weight: bold;
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
+  padding-top: 0;
+  padding-bottom: 1px;
+  vertical-align: top;
 }
 
 .ficha-coluna-semana {
@@ -525,10 +598,13 @@
 }
 
 .ficha-subcoluna {
-  width: 7.2mm;
+  width: 9mm;
   font-size: 9pt;
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
+  padding-top: 0;
+  padding-bottom: 1px;
+  vertical-align: top;
 }
 
 /* Headers de semana e faltas */
@@ -539,6 +615,7 @@
 }
 
 @media print {
+
   .semana-header,
   .faltas-header {
     font-size: 9pt;
@@ -552,6 +629,9 @@
   gap: 4px;
   text-align: left !important;
   padding-left: 2px !important;
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 10;
 }
 
 .ficha-aluno-numero {
@@ -570,16 +650,22 @@
 
 .ficha-aluno-nome {
   font-size: 9pt;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding-top: 0;
+  padding-bottom: 4px;
+  display: inline-block;
+  vertical-align: top;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding-right: 4px;
   white-space: nowrap;
+  overflow: visible !important;
 }
 
 @media print {
   .ficha-aluno-nome {
     font-size: 9pt;
   }
-  
+
   .ficha-aluno-numero {
     width: 16px;
     height: 16px;
@@ -590,25 +676,32 @@
 /* Estilos da coluna de faltas */
 .ficha-celula-falta {
   padding: 0 !important;
+  vertical-align: top;
 }
 
 .falta-campo {
   height: 14px;
   width: 100%;
+  margin-top: 0;
+  margin-bottom: 1px;
 }
 
 /* Estilos das células de semana */
 .ficha-celula-semana {
   padding: 0 !important;
+  vertical-align: top;
 }
 
 .semana-campo-valor {
   height: 14px;
   width: 100%;
   background-color: #fff;
+  margin-top: 0;
+  margin-bottom: 1px;
 }
 
 @media print {
+
   .falta-campo,
   .semana-campo-valor {
     height: 14px !important;
@@ -653,7 +746,7 @@
     margin-top: 4px !important;
     padding-top: 4px !important;
   }
-  
+
   .ficha-logo {
     font-size: 10pt !important;
   }

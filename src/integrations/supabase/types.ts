@@ -3474,17 +3474,41 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string
+          created_by: string | null
+          from_me: boolean | null
           id: number
+          lida: boolean | null
+          lida_em: string | null
+          mensagem: string | null
+          telefone: string | null
+          tipo_mensagem: string | null
+          unit_id: string
         }
         Insert: {
           client_id?: string | null
           created_at?: string
+          created_by?: string | null
+          from_me?: boolean | null
           id?: number
+          lida?: boolean | null
+          lida_em?: string | null
+          mensagem?: string | null
+          telefone?: string | null
+          tipo_mensagem?: string | null
+          unit_id?: string
         }
         Update: {
           client_id?: string | null
           created_at?: string
+          created_by?: string | null
+          from_me?: boolean | null
           id?: number
+          lida?: boolean | null
+          lida_em?: string | null
+          mensagem?: string | null
+          telefone?: string | null
+          tipo_mensagem?: string | null
+          unit_id?: string
         }
         Relationships: [
           {
@@ -3499,6 +3523,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_comercial_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5882,6 +5913,82 @@ export type Database = {
             columns: ["webhook_id"]
             isOneToOne: false
             referencedRelation: "sale_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_auto_messages: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          id: string
+          mensagem: string
+          nome: string
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          mensagem: string
+          nome: string
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          mensagem?: string
+          nome?: string
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_auto_messages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_mensagens_automaticas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          mensagem: string
+          tipo: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          mensagem: string
+          tipo: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          mensagem?: string
+          tipo?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_mensagens_automaticas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
