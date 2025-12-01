@@ -321,7 +321,10 @@
 
   /* Permitir que nomes sobreporem outras colunas */
   .ficha-aluno-nome {
-    transform: translateY(-4px) !important;
+    padding-top: 0 !important;
+    padding-bottom: 4px !important;
+    display: inline-block !important;
+    vertical-align: top !important;
     z-index: 100 !important;
     background-color: rgba(255, 255, 255, 0.95) !important;
     padding-right: 4px !important;
@@ -332,7 +335,16 @@
   /* Ajustar posição vertical das células de falta e semana */
   .ficha-celula-falta,
   .ficha-celula-semana {
-    transform: translateY(-3px) !important;
+    padding: 0 !important;
+    vertical-align: top !important;
+  }
+
+  /* Subcolunas dos headers */
+  .ficha-subcoluna,
+  .ficha-subcoluna-falta {
+    padding-top: 0 !important;
+    padding-bottom: 3px !important;
+    vertical-align: top !important;
   }
 
   /* Regra específica para alunos recentes com fundo amarelo - corrigida para aplicar apenas quando tiver style inline */
@@ -576,6 +588,9 @@
   font-weight: bold;
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
+  padding-top: 0;
+  padding-bottom: 3px;
+  vertical-align: top;
 }
 
 .ficha-coluna-semana {
@@ -587,6 +602,9 @@
   font-size: 9pt;
   border-left: 0.5px solid #999;
   border-right: 0.5px solid #999;
+  padding-top: 0;
+  padding-bottom: 3px;
+  vertical-align: top;
 }
 
 /* Headers de semana e faltas */
@@ -632,7 +650,10 @@
 
 .ficha-aluno-nome {
   font-size: 9pt;
-  transform: translateY(-4px);
+  padding-top: 0;
+  padding-bottom: 4px;
+  display: inline-block;
+  vertical-align: top;
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.95);
   padding-right: 4px;
@@ -655,24 +676,28 @@
 /* Estilos da coluna de faltas */
 .ficha-celula-falta {
   padding: 0 !important;
-  transform: translateY(-3px);
+  vertical-align: top;
 }
 
 .falta-campo {
   height: 14px;
   width: 100%;
+  margin-top: 0;
+  margin-bottom: 3px;
 }
 
 /* Estilos das células de semana */
 .ficha-celula-semana {
   padding: 0 !important;
-  transform: translateY(-3px);
+  vertical-align: top;
 }
 
 .semana-campo-valor {
   height: 14px;
   width: 100%;
   background-color: #fff;
+  margin-top: 0;
+  margin-bottom: 3px;
 }
 
 @media print {
