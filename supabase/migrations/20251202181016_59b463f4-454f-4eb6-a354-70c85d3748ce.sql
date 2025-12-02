@@ -1,0 +1,20 @@
+-- Inserir apostilas AH antigas na tabela apostilas_ah
+INSERT INTO apostilas_ah (nome, total_paginas) VALUES
+('AH 1', 100),
+('AH 2', 100),
+('AH 3', 100),
+('AH 4', 100),
+('AH 4A', 100),
+('AH 5', 100),
+('AH 5A', 100),
+('AH 6', 100),
+('AH 7', 100),
+('AH 8', 100),
+('AH 9', 100),
+('AH 10', 100),
+('AH 11', 100),
+('AH I Iniciar', 100),
+('AH II Focar', 100),
+('AH III Persistir', 100),
+('AH IV Avançar', 100),
+('AH Alta Performance', 100);
