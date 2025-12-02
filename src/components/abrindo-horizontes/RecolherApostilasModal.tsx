@@ -51,9 +51,8 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
       try {
         setLoadingApostilas(true);
         const { data, error } = await supabase
-          .from('apostilas')
+          .from('apostilas_ah')
           .select('nome')
-          .ilike('nome', '%(AH)%')
           .order('nome');
 
         if (error) {
