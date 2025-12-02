@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,28 +29,6 @@ interface ApostilaRecolhida {
   apostilaNome: string;
 }
 
-// Lista de apostilas Abrindo Horizontes disponíveis
-const APOSTILAS_AH = [
-  'AH 1',
-  'AH 2',
-  'AH 3',
-  'AH 4',
-  'AH 4A',
-  'AH 5',
-  'AH 5A',
-  'AH 6',
-  'AH 7',
-  'AH 8',
-  'AH 9',
-  'AH 10',
-  'AH 11',
-  'AH I Iniciar',
-  'AH II Focar',
-  'AH III Persistir',
-  'AH IV Avançar',
-  'AH Alta Performance'
-];
-
 export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilasModalProps) => {
   const [etapa, setEtapa] = useState<Etapa>('selecao-pessoas');
   const [pessoasSelecionadas, setPessoasSelecionadas] = useState<TodosAlunosItem[]>([]);
@@ -62,8 +40,40 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [dataRecolhimento, setDataRecolhimento] = useState<string>(
     formatDateSaoPaulo(new Date(), 'yyyy-MM-dd')
   );
+  const [apostilasAH, setApostilasAH] = useState<string[]>([]);
+  const [loadingApostilas, setLoadingApostilas] = useState(true);
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
+
+  // Carregar apostilas de AH do banco de dados
+  useEffect(() => {
+    const carregarApostilasAH = async () => {
+      try {
+        setLoadingApostilas(true);
+        const { data, error } = await supabase
+          .from('apostilas_ah')
+          .select('nome')
+          .order('nome');
+
+        if (error) {
+          console.error('Erro ao carregar apostilas AH:', error);
+          return;
+        }
+
+        if (data) {
+          setApostilasAH(data.map(a => a.nome));
+        }
+      } catch (err) {
+        console.error('Erro ao carregar apostilas AH:', err);
+      } finally {
+        setLoadingApostilas(false);
+      }
+    };
+
+    if (open) {
+      carregarApostilasAH();
+    }
+  }, [open]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { professores, isLoading: loadingProfessores } = useProfessores();
@@ -397,8 +407,8 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                           value={apostilaAtual?.apostilaNome || ''}
                           onChange={(e) => handleApostilaChange(pessoa.id, e.target.value)}
                         >
-                          <option value="">Selecione uma apostila AH</option>
-                          {APOSTILAS_AH.map((apostila) => (
+                          <option value="">{loadingApostilas ? 'Carregando...' : 'Selecione uma apostila AH'}</option>
+                          {apostilasAH.map((apostila) => (
                             <option key={apostila} value={apostila}>
                               {apostila}
                             </option>

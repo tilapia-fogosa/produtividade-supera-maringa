@@ -1023,6 +1023,30 @@ export type Database = {
         }
         Relationships: []
       }
+      apostilas_ah: {
+        Row: {
+          created_at: string
+          exercicios_por_pagina: number | null
+          id: string
+          nome: string
+          total_paginas: number
+        }
+        Insert: {
+          created_at?: string
+          exercicios_por_pagina?: number | null
+          id?: string
+          nome: string
+          total_paginas: number
+        }
+        Update: {
+          created_at?: string
+          exercicios_por_pagina?: number | null
+          id?: string
+          nome?: string
+          total_paginas?: number
+        }
+        Relationships: []
+      }
       atividade_pos_venda: {
         Row: {
           active: boolean
@@ -1881,6 +1905,7 @@ export type Database = {
           deleted_at: string | null
           email: string | null
           etapa_bot: Database["public"]["Enums"]["etapa-do-bot"] | null
+          historico_cadastros: string | null
           id: string
           lead_quality_score: number | null
           lead_source: string
@@ -1893,6 +1918,7 @@ export type Database = {
           original_adset: string | null
           phone_number: string
           primeiro_nome: string | null
+          quantidade_cadastros: number | null
           registration_cpf: string | null
           registration_name: string | null
           resumo_atendimento: string | null
@@ -1915,6 +1941,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string | null
           etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
+          historico_cadastros?: string | null
           id?: string
           lead_quality_score?: number | null
           lead_source: string
@@ -1927,6 +1954,7 @@ export type Database = {
           original_adset?: string | null
           phone_number: string
           primeiro_nome?: string | null
+          quantidade_cadastros?: number | null
           registration_cpf?: string | null
           registration_name?: string | null
           resumo_atendimento?: string | null
@@ -1949,6 +1977,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string | null
           etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
+          historico_cadastros?: string | null
           id?: string
           lead_quality_score?: number | null
           lead_source?: string
@@ -1961,6 +1990,7 @@ export type Database = {
           original_adset?: string | null
           phone_number?: string
           primeiro_nome?: string | null
+          quantidade_cadastros?: number | null
           registration_cpf?: string | null
           registration_name?: string | null
           resumo_atendimento?: string | null
