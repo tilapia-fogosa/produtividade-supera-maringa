@@ -6,6 +6,7 @@
 - [ ] Fase 3: Configuração de Emails (Resend)
 - [ ] Fase 4: RLS em todas as tabelas
 - [ ] Fase 5: Melhorias UX
+- [ ] Fase 6: Registro de Ponto
 
 ---
 
@@ -171,6 +172,38 @@
 - [ ] Melhorar loading states
 - [ ] Mensagens de erro mais claras
 - [ ] Fluxo de primeiro acesso (definir senha)
+
+---
+
+### FASE 6: Registro de Ponto (PRIORIDADE MÉDIA)
+
+#### 6.1 Lógica de Botões de Entrada/Saída
+- [ ] Botão "Entrada" só disponível se:
+  - Não há registro hoje, OU
+  - Último registro do usuário foi "saída"
+- [ ] Botão "Saída" só disponível se:
+  - Último registro do usuário foi "entrada"
+
+#### 6.2 Página de Histórico de Registros
+- [ ] Criar página `/registro-ponto/historico`
+- [ ] Tabela com colunas: Data, Hora, Tipo (Entrada/Saída)
+- [ ] Filtros:
+  - Data início (date picker)
+  - Data fim (date picker)
+  - Tipo de registro (entrada/saída/todos)
+- [ ] Ordenação por data/hora (mais recente primeiro)
+- [ ] Paginação se necessário
+
+#### 6.3 RLS para tabela registro_ponto
+- [ ] Habilitar RLS na tabela `registro_ponto`
+- [ ] Política SELECT: usuário vê apenas seus próprios registros
+- [ ] Política INSERT: usuário só insere com seu próprio id_usuario
+
+#### 6.4 Arquivos a Criar/Modificar
+- [ ] `src/pages/RegistroPontoHistorico.tsx` - Nova página de histórico
+- [ ] `src/hooks/use-registro-ponto.ts` - Atualizar lógica de botões
+- [ ] `src/pages/RegistroPonto.tsx` - Adicionar link para histórico
+- [ ] `App.tsx` - Adicionar rota `/registro-ponto/historico`
 
 ---
 
