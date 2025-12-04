@@ -60,6 +60,7 @@ import AgendaProfessores from "./pages/AgendaProfessores";
 import ReservasSala from "./pages/ReservasSala";
 import AlertasFalta from "./pages/AlertasFalta";
 import AlertasEvasao from "./pages/AlertasEvasao";
+import RegistroPonto from "./pages/RegistroPonto";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,7 @@ function App() {
                             <Route path="/devolutivas/controle" element={<DevolutivasControle />} />
                             <Route path="/alertas-falta" element={<AlertasFalta />} />
                             <Route path="/alertas-evasao" element={<AlertasEvasao />} />
+                            <Route path="/registro-ponto" element={<RegistroPonto />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
