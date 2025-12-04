@@ -15,42 +15,53 @@ serve(async (req) => {
   }
 
   try {
-    const ipinfoToken = Deno.env.get('IPINFO_API_KEY');
+    // Pegar IP do cliente dos headers (Supabase passa o IP real)
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const cfConnectingIp = req.headers.get('cf-connecting-ip');
     
-    if (!ipinfoToken) {
-      console.error('IPINFO_API_KEY não configurada');
+    // Usar o primeiro IP disponível
+    let clientIp = cfConnectingIp || realIp || (forwardedFor ? forwardedFor.split(',')[0].trim() : null);
+    
+    console.log('Headers de IP:', {
+      'x-forwarded-for': forwardedFor,
+      'x-real-ip': realIp,
+      'cf-connecting-ip': cfConnectingIp,
+    });
+    
+    // Se não conseguiu pelo header, usar ipinfo como fallback
+    if (!clientIp) {
+      const ipinfoToken = Deno.env.get('IPINFO_API_KEY');
+      if (ipinfoToken) {
+        const ipinfoResponse = await fetch(`https://ipinfo.io/json?token=${ipinfoToken}`);
+        if (ipinfoResponse.ok) {
+          const ipData = await ipinfoResponse.json();
+          clientIp = ipData.ip;
+          console.log('IP obtido via ipinfo (fallback):', clientIp);
+        }
+      }
+    }
+    
+    if (!clientIp) {
+      console.error('Não foi possível determinar o IP do cliente');
       return new Response(
-        JSON.stringify({ error: 'Configuração de API não encontrada' }),
+        JSON.stringify({ error: 'Não foi possível verificar seu IP' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Buscar IP do usuário via ipinfo.io
-    const ipinfoResponse = await fetch(`https://ipinfo.io/json?token=${ipinfoToken}`);
-    
-    if (!ipinfoResponse.ok) {
-      console.error('Erro ao consultar ipinfo.io:', ipinfoResponse.status);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao verificar IP' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const ipData = await ipinfoResponse.json();
-    const userIp = ipData.ip;
-    
-    console.log('IP do usuário:', userIp);
+    console.log('IP do cliente:', clientIp);
     console.log('IPs permitidos:', ALLOWED_IPS);
 
-    const isAllowed = ALLOWED_IPS.includes(userIp);
+    const isAllowed = ALLOWED_IPS.includes(clientIp);
 
     return new Response(
       JSON.stringify({
         allowed: isAllowed,
-        ip: userIp,
+        ip: clientIp,
         message: isAllowed 
           ? 'IP válido para registro de ponto' 
-          : 'Você precisa estar conectado ao WiFi da empresa para registrar ponto'
+          : `Você precisa estar conectado ao WiFi da empresa para registrar ponto (seu IP: ${clientIp})`
       }),
       { 
         status: 200, 
