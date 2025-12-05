@@ -9,6 +9,7 @@
 - [ ] Fase 6: Registro de Ponto
 - [ ] Fase 7: Rastreamento de Lançamentos
 - [ ] Fase 8: Calendário de Aulas, Reserva de Salas e Agenda de Professores
+- [ ] Fase 9: Eventos, Alunos Ativos, Sincronizar Turmas e Projeto São Rafael
 
 ---
 
@@ -479,6 +480,149 @@ ALTER TABLE eventos_professor ADD COLUMN IF NOT EXISTS created_by_funcionario_id
 - Requer **Fase 7.0** (vinculação `profiles` ↔ `funcionarios`)
 - Requer hook `useCurrentFuncionario()` funcionando
 - Requer hook `useUserPermissions()` para verificar profile
+
+---
+
+### FASE 9: Eventos, Alunos Ativos, Sincronizar Turmas e Projeto São Rafael
+
+#### 9.1 Eventos
+
+##### 9.1.1 Criar Novo Evento
+**Arquivos:**
+- `src/pages/Eventos.tsx`
+- Hook de criação de eventos (verificar existência)
+- Tabela `eventos`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável" do formulário de criação de evento
+- [ ] Ao criar evento:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela
+- [ ] Atualizar hook correspondente para usar `id_funcionario`
+
+---
+
+##### 9.1.2 Adicionar Aluno a Evento Existente
+**Arquivos:**
+- `src/pages/Eventos.tsx` (ou componente de adição de participante)
+- Tabela `evento_participantes`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável" do formulário de adição de aluno
+- [ ] Ao adicionar aluno ao evento:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` (quem adicionou)
+- [ ] Atualizar hook correspondente para usar `id_funcionario`
+
+---
+
+##### 9.1.3 Adicionar Não-Aluno a Evento Existente
+**Arquivos:**
+- `src/pages/Eventos.tsx` (ou componente de adição de convidado)
+- Tabela `convidados_eventos`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável" do formulário de adição de não-aluno
+- [ ] Ao adicionar não-aluno ao evento:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` (quem adicionou)
+- [ ] Atualizar hook correspondente para usar `id_funcionario`
+
+---
+
+#### 9.2 Alunos Ativos - Camisetas
+
+**Arquivos:**
+- `src/components/camisetas/CamisetaEntregueModal.tsx`
+- `src/hooks/use-camisetas.ts`
+- Tabela `camisetas`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável pela Entrega" do formulário
+- [ ] Ao registrar entrega de camiseta:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela
+  - Remover estados `responsavelId`, `responsavelNome`, `responsavelTipo` e lógica relacionada
+- [ ] Atualizar hook `use-camisetas.ts` para usar `id_funcionario`
+
+---
+
+#### 9.3 Sincronizar Turmas
+
+**Arquivos:**
+- `src/components/sync/XlsUploadComponent.tsx`
+- `supabase/functions/sync-turmas-xls/index.ts`
+- Tabela `sync_history` (ou criar se não existir)
+
+**Alterações:**
+- [ ] Ao sincronizar turmas:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Passar `id_funcionario` para a edge function
+  - Salvar registro de sincronização com `id_funcionario` (quem executou)
+- [ ] Atualizar edge function para receber e registrar `id_funcionario`
+
+---
+
+#### 9.4 Projeto São Rafael - Lançar Abrindo Horizontes
+
+**Arquivos:**
+- `src/components/turmas/AhSection.tsx`
+- `src/hooks/use-ah-lancamento.ts`
+- Tabela `ah_lancamentos` (ou tabela correspondente)
+
+**Alterações:**
+- [ ] Remover o campo "Quem corrigiu" (Select de corretor) do formulário
+- [ ] Ao lançar AH no Projeto São Rafael:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela (substitui corretor)
+- [ ] Atualizar hook `use-ah-lancamento.ts` para usar `id_funcionario`
+
+---
+
+#### 9.5 Alterações no Banco de Dados
+
+```sql
+-- Adicionar id_funcionario nas tabelas de eventos
+ALTER TABLE eventos ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+ALTER TABLE evento_participantes ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+ALTER TABLE convidados_eventos ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+
+-- Camisetas - substituir campos de responsável por id_funcionario
+ALTER TABLE camisetas ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+
+-- Sincronização - criar tabela de histórico se não existir
+CREATE TABLE IF NOT EXISTS sync_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tipo_sync TEXT NOT NULL,
+  id_funcionario UUID REFERENCES funcionarios(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  detalhes JSONB
+);
+
+-- Projeto São Rafael - AH
+-- Verificar nome correto da tabela e adicionar coluna
+ALTER TABLE ah_lancamentos ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+```
+
+---
+
+#### 9.6 Arquivos a Criar/Modificar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/pages/Eventos.tsx` | Modificar | Remover campo responsável em criação e adição de participantes |
+| `src/components/camisetas/CamisetaEntregueModal.tsx` | Modificar | Remover campo responsável pela entrega |
+| `src/hooks/use-camisetas.ts` | Modificar | Usar id_funcionario |
+| `src/components/sync/XlsUploadComponent.tsx` | Modificar | Passar id_funcionario para edge function |
+| `supabase/functions/sync-turmas-xls/index.ts` | Modificar | Receber e registrar id_funcionario |
+| `src/components/turmas/AhSection.tsx` | Modificar | Remover campo corretor |
+| `src/hooks/use-ah-lancamento.ts` | Modificar | Usar id_funcionario |
+
+---
+
+#### 9.7 Dependências
+- Requer **Fase 7.0** (vinculação `profiles` ↔ `funcionarios`)
+- Requer hook `useCurrentFuncionario()` funcionando
 
 ---
 
