@@ -164,13 +164,16 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border bg-sidebar-accent/50">
-        <div className="flex h-16 items-center px-4">
+        <button 
+          onClick={() => navigate('/home')}
+          className="flex h-16 items-center px-4 hover:bg-sidebar-accent/50 transition-colors w-full"
+        >
           <Building className="h-8 w-8 text-primary mr-3" />
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <span className="text-lg font-bold text-primary">Supera</span>
             <span className="text-xs text-sidebar-foreground/70">Sistema de Gestão</span>
           </div>
-        </div>
+        </button>
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">

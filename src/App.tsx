@@ -62,6 +62,7 @@ import AlertasFalta from "./pages/AlertasFalta";
 import AlertasEvasao from "./pages/AlertasEvasao";
 import RegistroPonto from "./pages/RegistroPonto";
 import MeuPerfil from "./pages/MeuPerfil";
+import Home from "./pages/Home";
 
 const queryClient = new QueryClient();
 
@@ -92,7 +93,8 @@ function App() {
                             <UnitSelector />
                           </div>
               <Routes>
-                <Route path="/" element={<Navigate to="/lancamentos" />} />
+                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/dias-lancamento" element={<DiasLancamento />} />
                             <Route path="/turmas/dia" element={<Turmas />} />
                             <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
