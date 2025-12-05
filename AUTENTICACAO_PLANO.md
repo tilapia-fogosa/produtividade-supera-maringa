@@ -8,6 +8,7 @@
 - [ ] Fase 5: Melhorias UX
 - [ ] Fase 6: Registro de Ponto
 - [ ] Fase 7: Rastreamento de Lançamentos
+- [ ] Fase 8: Calendário de Aulas, Reserva de Salas e Agenda de Professores
 
 ---
 
@@ -323,6 +324,161 @@ ALTER TABLE produtividade ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCE
 | `src/hooks/use-ah-entrega.ts` | Modificar | Usar funcionario_id automático |
 | `src/hooks/use-produtividade.ts` | Modificar | Salvar funcionario_id |
 | `src/pages/Turmas.tsx` ou similar | Modificar | Adicionar filtro "Minhas Turmas" |
+
+---
+
+### FASE 8: Calendário de Aulas, Reserva de Salas e Agenda de Professores (PRIORIDADE ALTA)
+
+#### 8.1 Calendário de Aulas
+
+##### 8.1.1 Reposição (ReposicaoModal.tsx)
+**Arquivos:**
+- `src/components/turmas/ReposicaoModal.tsx`
+- `src/hooks/use-reposicoes.ts`
+- Tabela `reposicoes`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável" (Select) do formulário
+- [ ] Ao registrar reposição:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela
+  - Remover estados `responsavelSelecionado` e lógica relacionada
+- [ ] Atualizar hook `use-reposicoes.ts` para receber `id_funcionario` ao invés de `responsavel_id`
+
+---
+
+##### 8.1.2 Aula Experimental (AulaExperimentalModal.tsx)
+**Arquivos:**
+- `src/components/turmas/AulaExperimentalModal.tsx`
+- `src/hooks/use-aulas-experimentais.ts`
+- Tabela `aulas_experimentais`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável" (Select) do formulário
+- [ ] Ao registrar aula experimental:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela
+  - Remover estados `responsavelId`, `responsavelTipo` e lógica relacionada
+- [ ] Atualizar hook `use-aulas-experimentais.ts` para usar `id_funcionario`
+
+---
+
+##### 8.1.3 Falta Futura (FaltaFuturaModal.tsx)
+**Arquivos:**
+- `src/components/turmas/FaltaFuturaModal.tsx`
+- `src/hooks/use-faltas-futuras.ts`
+- Tabela `faltas_futuras`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável pelo Aviso" (Select) do formulário
+- [ ] Ao registrar falta futura:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela
+  - Remover estados `responsavelId` e lógica relacionada
+- [ ] Atualizar hook `use-faltas-futuras.ts` para usar `id_funcionario`
+
+---
+
+#### 8.2 Reserva de Sala
+
+**Arquivos:**
+- `src/components/turmas/ReservarSalaModal.tsx`
+- `src/hooks/use-criar-evento-sala.ts`
+- Tabela `eventos_sala`
+
+**Alterações:**
+- [ ] Remover o campo "Responsável" (Select) do formulário
+- [ ] Ao registrar reserva de sala:
+  - Obter `id_funcionario` do usuário logado via `useCurrentFuncionario()`
+  - Salvar automaticamente `id_funcionario` na tabela
+  - Remover estados `responsavelId` e lógica relacionada
+- [ ] Atualizar hook `use-criar-evento-sala.ts` para usar `id_funcionario`
+
+---
+
+#### 8.3 Agenda de Professores (Mudança Robusta)
+
+**Conceito:**
+- Cada funcionário tem sua própria agenda pessoal
+- Funcionário comum só pode ver/editar SUA agenda
+- Franqueado pode ver TODAS as agendas e fazer reservas em nome de outros
+
+**Arquivos:**
+- `src/pages/AgendaProfessores.tsx`
+- `src/components/professores/BloquearHorarioProfessorModal.tsx`
+- `src/hooks/use-agenda-professores.ts`
+- `src/hooks/use-criar-evento-professor.ts`
+- Tabela `eventos_professor`
+
+**Alterações na Visualização:**
+- [ ] Se profile = `funcionario` ou `professor`:
+  - Mostrar apenas a agenda do próprio funcionário
+  - Filtro de professores fica oculto ou mostra só o próprio
+- [ ] Se profile = `franqueado`:
+  - Mantém visualização atual (todas as agendas)
+  - Mantém filtro de professores
+  - Pode alternar entre "Minha Agenda" e "Todas as Agendas"
+
+**Alterações no Bloqueio de Horário (BloquearHorarioProfessorModal.tsx):**
+- [ ] Se profile = `funcionario` ou `professor`:
+  - Remover seleção de múltiplos professores
+  - Criar bloqueio automaticamente para o próprio funcionário
+  - Salvar `id_funcionario` do usuário logado
+- [ ] Se profile = `franqueado`:
+  - Manter opção de selecionar professores
+  - Adicionar opção "Criar em nome de" para escolher funcionário
+  - Salvar `id_funcionario` de quem criou + `funcionario_destino_id` (quem receberá o bloqueio)
+
+---
+
+#### 8.4 Alterações no Banco de Dados
+
+```sql
+-- Adicionar id_funcionario nas tabelas de lançamento
+ALTER TABLE reposicoes ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+ALTER TABLE aulas_experimentais ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+ALTER TABLE faltas_futuras ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+ALTER TABLE eventos_sala ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+
+-- Para agenda de professores - quem criou o evento
+ALTER TABLE eventos_professor ADD COLUMN IF NOT EXISTS created_by_funcionario_id UUID REFERENCES funcionarios(id);
+```
+
+---
+
+#### 8.5 Lógica de Permissão para Agenda
+
+| Profile | Ver Agenda | Bloquear Horário | Selecionar Professor |
+|---------|------------|------------------|---------------------|
+| `funcionario` | Só a própria | Só própria | Não |
+| `professor` | Só a própria | Só própria | Não |
+| `franqueado` | Todas | Qualquer uma | Sim |
+
+---
+
+#### 8.6 Arquivos a Criar/Modificar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/components/turmas/ReposicaoModal.tsx` | Modificar | Remover campo responsável |
+| `src/components/turmas/AulaExperimentalModal.tsx` | Modificar | Remover campo responsável |
+| `src/components/turmas/FaltaFuturaModal.tsx` | Modificar | Remover campo responsável |
+| `src/components/turmas/ReservarSalaModal.tsx` | Modificar | Remover campo responsável |
+| `src/pages/AgendaProfessores.tsx` | Modificar | Filtro por profile, agenda pessoal |
+| `src/components/professores/BloquearHorarioProfessorModal.tsx` | Modificar | Bloqueio automático para próprio funcionário |
+| `src/hooks/use-reposicoes.ts` | Modificar | Usar id_funcionario |
+| `src/hooks/use-aulas-experimentais.ts` | Modificar | Usar id_funcionario |
+| `src/hooks/use-faltas-futuras.ts` | Modificar | Usar id_funcionario |
+| `src/hooks/use-criar-evento-sala.ts` | Modificar | Usar id_funcionario |
+| `src/hooks/use-criar-evento-professor.ts` | Modificar | Usar id_funcionario |
+| `src/hooks/use-agenda-professores.ts` | Modificar | Filtrar por funcionário logado |
+
+---
+
+#### 8.7 Dependências
+- Requer **Fase 7.0** (vinculação `profiles` ↔ `funcionarios`)
+- Requer hook `useCurrentFuncionario()` funcionando
+- Requer hook `useUserPermissions()` para verificar profile
 
 ---
 
