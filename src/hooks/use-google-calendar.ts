@@ -77,7 +77,10 @@ export const useCreateGoogleCalendarEvent = () => {
       return data.event;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['google-calendar-events'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['google-calendar-events'],
+        refetchType: 'all'
+      });
     }
   });
 };
@@ -105,7 +108,10 @@ export const useUpdateGoogleCalendarEvent = () => {
       return data.event;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['google-calendar-events'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['google-calendar-events'],
+        refetchType: 'all'
+      });
     }
   });
 };
@@ -125,7 +131,10 @@ export const useDeleteGoogleCalendarEvent = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['google-calendar-events'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['google-calendar-events'],
+        refetchType: 'all'
+      });
     }
   });
 };
