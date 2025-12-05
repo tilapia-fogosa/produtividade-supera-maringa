@@ -61,6 +61,7 @@ import ReservasSala from "./pages/ReservasSala";
 import AlertasFalta from "./pages/AlertasFalta";
 import AlertasEvasao from "./pages/AlertasEvasao";
 import RegistroPonto from "./pages/RegistroPonto";
+import MeuPerfil from "./pages/MeuPerfil";
 
 const queryClient = new QueryClient();
 
@@ -138,6 +139,7 @@ function App() {
                             <Route path="/alertas-falta" element={<AlertasFalta />} />
                             <Route path="/alertas-evasao" element={<AlertasEvasao />} />
                             <Route path="/registro-ponto" element={<RegistroPonto />} />
+                            <Route path="/meu-perfil" element={<MeuPerfil />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
