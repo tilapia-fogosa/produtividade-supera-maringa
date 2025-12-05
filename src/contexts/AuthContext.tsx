@@ -6,7 +6,7 @@ interface UserProfile {
   id: string;
   full_name: string | null;
   email: string | null;
-  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | null;
+  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | 'financeiro' | 'administrativo' | 'estagiario' | null;
   unit_ids: string[];
 }
 
