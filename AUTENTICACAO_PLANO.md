@@ -7,6 +7,7 @@
 - [ ] Fase 4: RLS em todas as tabelas
 - [ ] Fase 5: Melhorias UX
 - [ ] Fase 6: Registro de Ponto
+- [ ] Fase 7: Rastreamento de Lançamentos
 
 ---
 
@@ -204,6 +205,124 @@
 - [ ] `src/hooks/use-registro-ponto.ts` - Atualizar lógica de botões
 - [ ] `src/pages/RegistroPonto.tsx` - Adicionar link para histórico
 - [ ] `App.tsx` - Adicionar rota `/registro-ponto/historico`
+
+---
+
+### FASE 7: Rastreamento de Lançamentos (PRIORIDADE ALTA)
+
+#### 7.0 Pré-requisito: Vincular profiles a funcionarios
+- [ ] Adicionar coluna `funcionario_id` na tabela `profiles` (FK para `funcionarios.id`)
+- [ ] Criar hook `use-current-funcionario.ts` para obter o `funcionario_id` do usuário logado
+- [ ] Popular `funcionario_id` nos profiles existentes (relacionar por nome/email)
+
+---
+
+#### 7.1 Produtividade
+**Arquivos:** `src/pages/Turmas.tsx`, `src/components/turmas/TurmasList.tsx`, hooks de produtividade
+
+- [ ] Adicionar filtro "Minhas Turmas" (padrão ativo quando profile = professor)
+  - Usa `professor_id` do `profiles` para filtrar turmas
+- [ ] Ao registrar produtividade de ábaco:
+  - Salvar `id_funcionario` do usuário logado
+  - Modificar tabela `produtividade` (verificar se já tem coluna)
+  - Atualizar hook `use-produtividade.ts`
+
+---
+
+#### 7.2 Aula Zero
+**Arquivos:** `src/pages/AulaZero.tsx`, hooks relacionados
+
+- [ ] Ao registrar aula zero:
+  - Salvar `id_funcionario` do usuário logado
+  - Verificar/adicionar coluna na tabela correspondente
+  - Atualizar hook de registro
+
+---
+
+#### 7.3 Alerta de Evasão
+**Arquivos:** 
+- `src/components/alerta-evasao/AlertaEvasaoForm.tsx`
+- `src/hooks/use-alertas-evasao.ts`
+
+- [ ] Remover campo "Responsável" do formulário
+- [ ] Ao registrar alerta de evasão:
+  - Salvar `id_funcionario` do usuário logado automaticamente
+  - Adicionar coluna `id_funcionario` na tabela `alerta_evasao` (se não existir)
+  - Atualizar hook de criação de alerta
+
+---
+
+#### 7.4 Retenção por hora
+- [ ] Nenhuma alteração necessária (por enquanto)
+
+---
+
+#### 7.5 Abrindo Horizontes
+
+##### 7.5.1 Recolher Apostilas
+**Arquivos:**
+- `src/components/abrindo-horizontes/RecolherApostilasModal.tsx`
+- `src/hooks/use-apostilas-recolhidas.ts` ou similar
+
+- [ ] Remover campo "Responsável" do modal
+- [ ] Ao registrar coleta de apostila:
+  - Salvar `id_funcionario` do usuário logado automaticamente
+  - Usar/adicionar coluna na tabela `ah_recolhidas`
+  - Atualizar hook
+
+##### 7.5.2 Iniciar Correção
+**Arquivos:**
+- `src/components/abrindo-horizontes/IniciarCorrecaoAhModal.tsx`
+- `src/hooks/use-ah-iniciar-correcao.ts`
+
+- [ ] Remover campo "Responsável pela correção" do modal
+- [ ] Ao iniciar correção:
+  - Salvar `id_funcionario` do usuário logado automaticamente
+  - Usar coluna `responsavel_correcao_id` da tabela `ah_recolhidas`
+  - Atualizar hook
+
+##### 7.5.3 Entrega de Apostila
+**Arquivos:**
+- `src/components/abrindo-horizontes/EntregaAhModal.tsx`
+- `src/hooks/use-ah-entrega.ts`
+
+- [ ] Remover campo "Responsável pela Entrega" do modal
+- [ ] Ao entregar apostila:
+  - Salvar `id_funcionario` do usuário logado automaticamente
+  - Usar coluna `responsavel_entrega_id` da tabela `ah_recolhidas`
+  - Atualizar hook
+
+---
+
+#### 7.6 Alterações no Banco de Dados
+
+```sql
+-- Adicionar funcionario_id ao profiles
+ALTER TABLE profiles ADD COLUMN funcionario_id UUID REFERENCES funcionarios(id);
+
+-- Verificar/adicionar coluna em alerta_evasao
+ALTER TABLE alerta_evasao ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+
+-- Verificar/adicionar coluna em produtividade
+ALTER TABLE produtividade ADD COLUMN IF NOT EXISTS id_funcionario UUID REFERENCES funcionarios(id);
+```
+
+---
+
+#### 7.7 Arquivos a Criar/Modificar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/hooks/use-current-funcionario.ts` | Criar | Hook para obter funcionario_id do usuário logado |
+| `src/components/alerta-evasao/AlertaEvasaoForm.tsx` | Modificar | Remover campo responsável |
+| `src/components/abrindo-horizontes/RecolherApostilasModal.tsx` | Modificar | Remover campo responsável |
+| `src/components/abrindo-horizontes/IniciarCorrecaoAhModal.tsx` | Modificar | Remover campo responsável |
+| `src/components/abrindo-horizontes/EntregaAhModal.tsx` | Modificar | Remover campo responsável |
+| `src/hooks/use-alertas-evasao.ts` | Modificar | Usar funcionario_id automático |
+| `src/hooks/use-ah-iniciar-correcao.ts` | Modificar | Usar funcionario_id automático |
+| `src/hooks/use-ah-entrega.ts` | Modificar | Usar funcionario_id automático |
+| `src/hooks/use-produtividade.ts` | Modificar | Salvar funcionario_id |
+| `src/pages/Turmas.tsx` ou similar | Modificar | Adicionar filtro "Minhas Turmas" |
 
 ---
 
