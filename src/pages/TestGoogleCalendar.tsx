@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format, addDays } from "date-fns";
+import { useMemo } from "react";
 import { ptBR } from "date-fns/locale";
 import { Calendar, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,8 +47,13 @@ const TestGoogleCalendar = () => {
   // ID do calendário hardcoded para testes
   const calendarId = '4443dba6908f1de63ed98aca1d9878ffff08b0a55c4189b230c86f88a81a8065@group.calendar.google.com';
 
-  const timeMin = new Date().toISOString();
-  const timeMax = addDays(new Date(), 30).toISOString();
+  const { timeMin, timeMax } = useMemo(() => {
+    const now = new Date();
+    return {
+      timeMin: now.toISOString(),
+      timeMax: addDays(now, 30).toISOString()
+    };
+  }, []);
 
   const { data: events, isLoading, error, refetch } = useGoogleCalendarEvents(
     calendarId,
