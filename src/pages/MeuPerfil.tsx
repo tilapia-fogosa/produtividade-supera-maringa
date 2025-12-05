@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Camera, Save, Lock, Calendar, Loader2, Check, Eye, EyeOff } from 'lucide-react';
+import { Camera, Save, Lock, Calendar, Loader2, Check, Eye, EyeOff, ExternalLink, Copy, CheckCircle2, XCircle } from 'lucide-react';
+import { useTestGoogleCalendarConnection } from '@/hooks/use-google-calendar';
+
+const SERVICE_ACCOUNT_EMAIL = 'supera-calendar-bot@projeto-pedagogico-comercial.iam.gserviceaccount.com';
 
 export default function MeuPerfil() {
   const { user, profile, refreshProfile } = useAuth();
@@ -30,6 +33,22 @@ export default function MeuPerfil() {
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
+  // Estado para Google Calendar
+  const [gcalendarId, setGcalendarId] = useState(profile?.gcalendar_id || '');
+  const [isSavingCalendar, setIsSavingCalendar] = useState(false);
+  const [calendarSalvo, setCalendarSalvo] = useState(false);
+  const [emailCopiado, setEmailCopiado] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [connectionMessage, setConnectionMessage] = useState('');
+
+  const testConnection = useTestGoogleCalendarConnection();
+
+  useEffect(() => {
+    if (profile?.gcalendar_id) {
+      setGcalendarId(profile.gcalendar_id);
+    }
+  }, [profile?.gcalendar_id]);
+
   const getIniciais = (nome: string | null | undefined) => {
     if (!nome) return user?.email?.charAt(0).toUpperCase() || 'U';
     const partes = nome.split(' ');
@@ -47,13 +66,11 @@ export default function MeuPerfil() {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
 
-    // Validar tipo de arquivo
     const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
     if (!tiposPermitidos.includes(file.type)) {
       return;
     }
 
-    // Validar tamanho (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return;
     }
@@ -63,14 +80,12 @@ export default function MeuPerfil() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/avatar.${fileExt}`;
       
-      // Upload para o storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Obter URL pública
       const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
@@ -78,7 +93,6 @@ export default function MeuPerfil() {
       const novaUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       setFotoUrl(novaUrl);
 
-      // Atualizar no perfil
       await supabase
         .from('profiles')
         .update({ avatar_url: novaUrl })
@@ -146,6 +160,51 @@ export default function MeuPerfil() {
       setErroSenha(error.message || 'Erro ao alterar senha');
     } finally {
       setIsSavingSenha(false);
+    }
+  };
+
+  const handleCopiarEmail = async () => {
+    await navigator.clipboard.writeText(SERVICE_ACCOUNT_EMAIL);
+    setEmailCopiado(true);
+    setTimeout(() => setEmailCopiado(false), 2000);
+  };
+
+  const handleTestarConexao = async () => {
+    if (!gcalendarId.trim()) return;
+
+    setConnectionStatus('idle');
+    setConnectionMessage('');
+
+    try {
+      const result = await testConnection.mutateAsync(gcalendarId.trim());
+      setConnectionStatus('success');
+      setConnectionMessage(result.message);
+    } catch (error: any) {
+      setConnectionStatus('error');
+      setConnectionMessage(error.message);
+    }
+  };
+
+  const handleSalvarCalendar = async () => {
+    if (!user?.id) return;
+
+    setIsSavingCalendar(true);
+    setCalendarSalvo(false);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ gcalendar_id: gcalendarId.trim() || null })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+      setCalendarSalvo(true);
+      setTimeout(() => setCalendarSalvo(false), 3000);
+    } catch (error) {
+      console.error('Erro ao salvar calendário:', error);
+    } finally {
+      setIsSavingCalendar(false);
     }
   };
 
@@ -313,24 +372,105 @@ export default function MeuPerfil() {
         </CardContent>
       </Card>
 
-      {/* Google Calendar - Placeholder */}
-      <Card className="opacity-60">
+      {/* Google Calendar */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             Google Calendar
           </CardTitle>
-          <CardDescription>Conecte sua agenda do Google</CardDescription>
+          <CardDescription>Sincronize sua agenda com o sistema</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Sincronize seus eventos com o Google Calendar
-              </p>
+        <CardContent className="space-y-4">
+          {/* Instruções */}
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-medium">Como configurar:</p>
+            <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+              <li>Abra o Google Calendar no computador</li>
+              <li>Clique em Configurações (engrenagem) → Configurações</li>
+              <li>Na lista à esquerda, clique no calendário que deseja compartilhar</li>
+              <li>Em "Compartilhar com pessoas específicas", adicione:</li>
+            </ol>
+            <div className="flex items-center gap-2 bg-background rounded-md p-2 border">
+              <code className="text-xs flex-1 break-all">{SERVICE_ACCOUNT_EMAIL}</code>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleCopiarEmail}
+                className="shrink-0"
+              >
+                {emailCopiado ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
             </div>
-            <Button variant="outline" disabled>
-              Em breve
+            <p className="text-xs text-muted-foreground">
+              Dê permissão de "Fazer alterações nos eventos"
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* ID do Calendário */}
+          <div className="space-y-2">
+            <Label htmlFor="gcalendar">ID do Calendário</Label>
+            <Input
+              id="gcalendar"
+              value={gcalendarId}
+              onChange={(e) => setGcalendarId(e.target.value)}
+              placeholder="seuemail@gmail.com ou ID do calendário"
+            />
+            <p className="text-xs text-muted-foreground">
+              Geralmente é seu e-mail do Gmail ou um ID específico do calendário
+            </p>
+          </div>
+
+          {/* Status da conexão */}
+          {connectionStatus !== 'idle' && (
+            <div className={`flex items-center gap-2 p-3 rounded-lg ${
+              connectionStatus === 'success' 
+                ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
+                : 'bg-destructive/10 text-destructive'
+            }`}>
+              {connectionStatus === 'success' ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <XCircle className="h-4 w-4" />
+              )}
+              <span className="text-sm">{connectionMessage}</span>
+            </div>
+          )}
+
+          {/* Botões */}
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={handleTestarConexao}
+              disabled={testConnection.isPending || !gcalendarId.trim()}
+              className="flex-1"
+            >
+              {testConnection.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <ExternalLink className="h-4 w-4 mr-2" />
+              )}
+              Testar Conexão
+            </Button>
+            <Button 
+              onClick={handleSalvarCalendar}
+              disabled={isSavingCalendar}
+              className="flex-1"
+            >
+              {isSavingCalendar ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : calendarSalvo ? (
+                <Check className="h-4 w-4 mr-2" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {calendarSalvo ? 'Salvo!' : 'Salvar'}
             </Button>
           </div>
         </CardContent>
