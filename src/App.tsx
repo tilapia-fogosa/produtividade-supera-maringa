@@ -63,6 +63,7 @@ import AlertasEvasao from "./pages/AlertasEvasao";
 import RegistroPonto from "./pages/RegistroPonto";
 import MeuPerfil from "./pages/MeuPerfil";
 import Home from "./pages/Home";
+import TestGoogleCalendar from "./pages/TestGoogleCalendar";
 
 const queryClient = new QueryClient();
 
@@ -142,6 +143,7 @@ function App() {
                             <Route path="/alertas-evasao" element={<AlertasEvasao />} />
                             <Route path="/registro-ponto" element={<RegistroPonto />} />
                             <Route path="/meu-perfil" element={<MeuPerfil />} />
+                            <Route path="/teste-google-calendar" element={<TestGoogleCalendar />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
