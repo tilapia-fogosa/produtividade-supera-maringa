@@ -131,41 +131,42 @@ export default function Home() {
   const getPrioridadeBadge = (prioridade: string) => {
     switch (prioridade) {
       case 'alta':
-        return <Badge variant="destructive" className="text-xs">Alta</Badge>;
+        return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Alta</Badge>;
       case 'baixa':
-        return <Badge variant="secondary" className="text-xs">Baixa</Badge>;
+        return <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Baixa</Badge>;
       default:
-        return <Badge variant="outline" className="text-xs">Normal</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0">Normal</Badge>;
     }
   };
 
   const renderTarefa = (tarefa: TarefaPessoal) => (
     <div
       key={tarefa.id}
-      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+      className={`flex items-center gap-2 p-2 rounded-md border transition-colors ${
         tarefa.concluida ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-muted/30'
       }`}
     >
       <Checkbox
         checked={tarefa.concluida}
         onCheckedChange={(checked) => toggleConcluida.mutate({ id: tarefa.id, concluida: !!checked })}
+        className="h-3.5 w-3.5"
       />
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${tarefa.concluida ? 'line-through text-muted-foreground' : ''}`}>
+        <p className={`text-xs font-medium ${tarefa.concluida ? 'line-through text-muted-foreground' : ''}`}>
           {tarefa.titulo}
         </p>
         {tarefa.descricao && (
-          <p className="text-xs text-muted-foreground truncate">{tarefa.descricao}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{tarefa.descricao}</p>
         )}
       </div>
       {getPrioridadeBadge(tarefa.prioridade)}
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        className="h-6 w-6 text-muted-foreground hover:text-destructive"
         onClick={() => deletarTarefa.mutate(tarefa.id)}
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-3 w-3" />
       </Button>
     </div>
   );
@@ -173,21 +174,21 @@ export default function Home() {
   const renderEvento = (evento: { tipo: string; titulo: string; data: string }, index: number) => (
     <div
       key={`${evento.tipo}-${index}`}
-      className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+      className="flex items-center gap-2 p-2 rounded-md border bg-card"
     >
       {evento.tipo === 'aula_experimental' ? (
-        <Users className="h-4 w-4 text-blue-500 flex-shrink-0" />
+        <Users className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
       ) : (
-        <RefreshCw className="h-4 w-4 text-orange-500 flex-shrink-0" />
+        <RefreshCw className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">{evento.titulo}</p>
-        <p className="text-xs text-muted-foreground">
-          {format(parseISO(evento.data), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+        <p className="text-xs font-medium">{evento.titulo}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR })}
         </p>
       </div>
-      <Badge variant={evento.tipo === 'aula_experimental' ? 'default' : 'secondary'} className="text-xs">
-        {evento.tipo === 'aula_experimental' ? 'Aula Exp.' : 'Reposição'}
+      <Badge variant={evento.tipo === 'aula_experimental' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+        {evento.tipo === 'aula_experimental' ? 'Aula' : 'Repos.'}
       </Badge>
     </div>
   );
@@ -199,29 +200,29 @@ export default function Home() {
     eventos: { tipo: string; titulo: string; data: string }[]
   ) => (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="py-2 px-3">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg">{titulo}</CardTitle>
-            <CardDescription>{periodo}</CardDescription>
+            <CardTitle className="text-sm font-semibold">{titulo}</CardTitle>
+            <CardDescription className="text-[10px]">{periodo}</CardDescription>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <ClipboardList className="h-4 w-4" />
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <ClipboardList className="h-3 w-3" />
             <span>{tarefas.length}</span>
-            <Calendar className="h-4 w-4 ml-2" />
+            <Calendar className="h-3 w-3 ml-1" />
             <span>{eventos.length}</span>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="px-3 pb-3 pt-0 space-y-1.5">
         {tarefas.length === 0 && eventos.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-[10px] text-muted-foreground text-center py-2">
             Nenhuma atividade para este período
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {tarefas.map(renderTarefa)}
-            {tarefas.length > 0 && eventos.length > 0 && <Separator className="my-3" />}
+            {tarefas.length > 0 && eventos.length > 0 && <Separator className="my-1.5" />}
             {eventos.map(renderEvento)}
           </div>
         )}
@@ -230,66 +231,69 @@ export default function Home() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-md mx-auto space-y-3 px-2">
       {/* Header com saudação */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-lg font-bold text-foreground">
             Bem-vindo, {profile?.full_name?.split(' ')[0] || 'Usuário'}
           </h1>
-          <p className="text-muted-foreground">
-            {format(hoje, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          <p className="text-[10px] text-muted-foreground">
+            {format(hoje, "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </p>
         </div>
 
         {/* Botão Nova Tarefa */}
         <Dialog open={novaTarefaOpen} onOpenChange={setNovaTarefaOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Tarefa
+            <Button size="sm" className="h-7 text-xs gap-1 px-2">
+              <Plus className="h-3.5 w-3.5" />
+              Nova
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[90vw] rounded-lg">
             <DialogHeader>
-              <DialogTitle>Nova Tarefa</DialogTitle>
+              <DialogTitle className="text-base">Nova Tarefa</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="titulo">Título</Label>
+            <div className="space-y-3 pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="titulo" className="text-xs">Título</Label>
                 <Input
                   id="titulo"
                   value={novaTarefa.titulo}
                   onChange={(e) => setNovaTarefa(prev => ({ ...prev, titulo: e.target.value }))}
                   placeholder="O que precisa fazer?"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição (opcional)</Label>
+              <div className="space-y-1">
+                <Label htmlFor="descricao" className="text-xs">Descrição (opcional)</Label>
                 <Input
                   id="descricao"
                   value={novaTarefa.descricao}
                   onChange={(e) => setNovaTarefa(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder="Detalhes da tarefa"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="data">Data</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="data" className="text-xs">Data</Label>
                   <Input
                     id="data"
                     type="date"
                     value={novaTarefa.data_vencimento}
                     onChange={(e) => setNovaTarefa(prev => ({ ...prev, data_vencimento: e.target.value }))}
+                    className="h-8 text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prioridade">Prioridade</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="prioridade" className="text-xs">Prioridade</Label>
                   <Select
                     value={novaTarefa.prioridade}
                     onValueChange={(v) => setNovaTarefa(prev => ({ ...prev, prioridade: v as any }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -303,12 +307,12 @@ export default function Home() {
               <Button
                 onClick={handleCriarTarefa}
                 disabled={!novaTarefa.titulo.trim() || criarTarefa.isPending}
-                className="w-full"
+                className="w-full h-8 text-sm"
               >
                 {criarTarefa.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                 ) : (
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                 )}
                 Criar Tarefa
               </Button>
@@ -319,8 +323,8 @@ export default function Home() {
 
       {/* Seções de Atividades */}
       {loadingTarefas ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <>
