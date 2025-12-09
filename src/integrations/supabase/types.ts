@@ -7196,25 +7196,6 @@ export type Database = {
         | {
             Args: {
               p_activity_id: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type_id?: string
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_observations?: string
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              p_activity_id: string
               p_commercial_observations?: string
               p_enrollment_amount?: number
               p_enrollment_installments?: number
@@ -7250,6 +7231,25 @@ export type Database = {
               p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
             }
             Returns: Json
+          }
+        | {
+            Args: {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type_id?: string
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_observations?: string
+            }
+            Returns: boolean
           }
       save_pos_venda_pedagogical_data: {
         Args: {

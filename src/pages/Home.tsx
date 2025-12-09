@@ -231,7 +231,7 @@ export default function Home() {
   );
 
   return (
-    <div className="max-w-md mx-auto space-y-3 px-2">
+    <div className="max-w-2xl mx-auto space-y-3 px-2">
       {/* Header com saudação */}
       <div className="flex items-center justify-between">
         <div>
@@ -328,19 +328,22 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {renderSecaoAtividades(
-            'Atividades do Dia',
-            format(hoje, "dd 'de' MMMM", { locale: ptBR }),
-            tarefasHoje,
-            eventosHoje
-          )}
+          {/* Cards lado a lado */}
+          <div className="grid grid-cols-2 gap-2">
+            {renderSecaoAtividades(
+              'Atividades do Dia',
+              format(hoje, "dd 'de' MMMM", { locale: ptBR }),
+              tarefasHoje,
+              eventosHoje
+            )}
 
-          {renderSecaoAtividades(
-            'Atividades da Semana',
-            `${format(inicioSemana, "dd/MM")} - ${format(fimSemana, "dd/MM")}`,
-            tarefasSemana,
-            eventosSemana
-          )}
+            {renderSecaoAtividades(
+              'Atividades da Semana',
+              `${format(inicioSemana, "dd/MM")} - ${format(fimSemana, "dd/MM")}`,
+              tarefasSemana,
+              eventosSemana
+            )}
+          </div>
 
           {renderSecaoAtividades(
             'Atividades da Próxima Semana',
