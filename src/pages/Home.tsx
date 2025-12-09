@@ -187,7 +187,7 @@ export default function Home() {
           {format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR })}
         </p>
       </div>
-      <Badge variant={evento.tipo === 'aula_experimental' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+      <Badge variant={evento.tipo === 'aula_experimental' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 text-primary-foreground">
         {evento.tipo === 'aula_experimental' ? 'Aula' : 'Repos.'}
       </Badge>
     </div>
