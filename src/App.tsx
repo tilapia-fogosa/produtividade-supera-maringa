@@ -53,6 +53,8 @@ import GerenciarFotosAlunos from "./pages/GerenciarFotosAlunos";
 import CadastroNovoAluno from "./pages/CadastroNovoAluno";
 import CRM from "./pages/CRM";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AccessDenied from "./pages/AccessDenied";
 import PlanejadorDesafios from "./pages/PlanejadorDesafios";
 import Camisetas from "./pages/Camisetas";
@@ -78,6 +80,8 @@ function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="/auth/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
                 <Route path="/*" element={
