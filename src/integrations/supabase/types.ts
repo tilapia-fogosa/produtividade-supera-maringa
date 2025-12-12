@@ -145,6 +145,7 @@ export type Database = {
           data_entrega_real: string | null
           data_inicio_correcao: string | null
           data_recolhida: string
+          funcionario_registro_id: string | null
           id: number
           pessoa_id: string
           professor_id: string | null
@@ -162,6 +163,7 @@ export type Database = {
           data_entrega_real?: string | null
           data_inicio_correcao?: string | null
           data_recolhida: string
+          funcionario_registro_id?: string | null
           id?: number
           pessoa_id: string
           professor_id?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           data_entrega_real?: string | null
           data_inicio_correcao?: string | null
           data_recolhida?: string
+          funcionario_registro_id?: string | null
           id?: number
           pessoa_id?: string
           professor_id?: string | null
@@ -4218,6 +4221,7 @@ export type Database = {
           data_fim_correcao: string | null
           erros: number | null
           exercicios: number | null
+          funcionario_registro_id: string | null
           id: string
           pessoa_id: string
           professor_correcao: string | null
@@ -4233,6 +4237,7 @@ export type Database = {
           data_fim_correcao?: string | null
           erros?: number | null
           exercicios?: number | null
+          funcionario_registro_id?: string | null
           id?: string
           pessoa_id: string
           professor_correcao?: string | null
@@ -4248,6 +4253,7 @@ export type Database = {
           data_fim_correcao?: string | null
           erros?: number | null
           exercicios?: number | null
+          funcionario_registro_id?: string | null
           id?: string
           pessoa_id?: string
           professor_correcao?: string | null

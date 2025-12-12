@@ -5,17 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTodosAlunos, TodosAlunosItem } from "@/hooks/use-todos-alunos";
-import { ChevronRight, ChevronLeft, BookOpen, Users } from "lucide-react";
+import { ChevronRight, ChevronLeft, BookOpen, Users, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useProfessores } from "@/hooks/use-professores";
-import { useEstagiarios } from "@/hooks/use-estagiarios";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateSaoPaulo, toUtcFromSaoPauloDate } from "@/lib/utils";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -35,7 +34,6 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [apostilasRecolhidas, setApostilasRecolhidas] = useState<ApostilaRecolhida[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responsavelSelecionado, setResponsavelSelecionado] = useState<string>('');
   const [turmaSelecionada, setTurmaSelecionada] = useState<string>('all');
   const [dataRecolhimento, setDataRecolhimento] = useState<string>(
     formatDateSaoPaulo(new Date(), 'yyyy-MM-dd')
@@ -44,6 +42,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [loadingApostilas, setLoadingApostilas] = useState(true);
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
+  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
 
   // Carregar apostilas de AH do banco de dados
   useEffect(() => {
@@ -76,30 +75,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   }, [open]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { professores, isLoading: loadingProfessores } = useProfessores();
-  const { estagiarios, isLoading: loadingEstagiarios } = useEstagiarios();
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
-
-  // Combinar professores e estagiários em uma lista de responsáveis
-  const responsaveis = useMemo(() => {
-    const todosProfessores = professores.map(p => ({
-      id: p.id,
-      nome: `${p.nome} (Professor)`,
-      tipo: 'professor' as const
-    }));
-    
-    const todosEstagiarios = estagiarios.map(e => ({
-      id: e.id,
-      nome: `${e.nome} (Estagiário)`,
-      tipo: 'estagiario' as const
-    }));
-    
-    return [...todosProfessores, ...todosEstagiarios].sort((a, b) => 
-      a.nome.localeCompare(b.nome)
-    );
-  }, [professores, estagiarios]);
-
-  const loadingResponsaveis = loadingProfessores || loadingEstagiarios;
 
   // Filtrar pessoas pelo termo de busca e turma
   const pessoasFiltradas = alunos.filter(pessoa => {
@@ -143,10 +119,10 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   };
 
   const handleConfirmar = async () => {
-    if (!responsavelSelecionado) {
+    if (!funcionarioId) {
       toast({
         title: "Erro",
-        description: "Selecione o responsável pelo recolhimento",
+        description: "Você precisa estar vinculado a um funcionário para realizar esta ação",
         variant: "destructive",
       });
       return;
@@ -169,8 +145,8 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
         return {
           pessoa_id: item.pessoaId,
           apostila: item.apostilaNome,
-          professor_id: responsavelSelecionado,
-          responsavel_id: responsavelSelecionado,
+          responsavel_id: funcionarioId,
+          funcionario_registro_id: funcionarioId,
           created_at: toUtcFromSaoPauloDate(dataRecolhimento),
           data_recolhida: dataRecolhimento,
         };
@@ -197,7 +173,6 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
       setApostilasRecolhidas([]);
       setEtapa('selecao-pessoas');
       setSearchTerm('');
-      setResponsavelSelecionado('');
       setDataRecolhimento(formatDateSaoPaulo(new Date(), 'yyyy-MM-dd'));
       onOpenChange(false);
     } catch (error) {
@@ -217,7 +192,6 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
     setApostilasRecolhidas([]);
     setEtapa('selecao-pessoas');
     setSearchTerm('');
-    setResponsavelSelecionado('');
     setTurmaSelecionada('all');
     setDataRecolhimento(formatDateSaoPaulo(new Date(), 'yyyy-MM-dd'));
     onOpenChange(false);
@@ -255,30 +229,15 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               />
             </div>
 
-            {/* Seletor de Responsável */}
+            {/* Responsável - Exibição automática */}
             <div className="space-y-2">
-              <Label htmlFor="responsavel">Responsável *</Label>
-              <Select
-                value={responsavelSelecionado}
-                onValueChange={setResponsavelSelecionado}
-              >
-                <SelectTrigger id="responsavel">
-                  <SelectValue placeholder="Selecione um responsável" />
-                </SelectTrigger>
-                <SelectContent>
-                  {loadingResponsaveis ? (
-                    <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                  ) : responsaveis.length === 0 ? (
-                    <SelectItem value="empty" disabled>Nenhum responsável encontrado</SelectItem>
-                  ) : (
-                    responsaveis.map((responsavel) => (
-                      <SelectItem key={responsavel.id} value={responsavel.id}>
-                        {responsavel.nome}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <Label>Responsável</Label>
+              <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+                </span>
+              </div>
             </div>
 
             {/* Filtro por turma */}
@@ -372,7 +331,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               </Button>
               <Button 
                 onClick={handleAvancar}
-                disabled={pessoasSelecionadas.length === 0 || !responsavelSelecionado || !dataRecolhimento}
+                disabled={pessoasSelecionadas.length === 0 || !funcionarioId || !dataRecolhimento}
               >
                 Avançar
                 <ChevronRight className="h-4 w-4 ml-2" />
@@ -433,7 +392,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                 </Button>
                 <Button 
                   onClick={handleConfirmar}
-                  disabled={!todasApostilasPreenchidas || isSubmitting || !responsavelSelecionado || !dataRecolhimento}
+                  disabled={!todasApostilasPreenchidas || isSubmitting || !funcionarioId || !dataRecolhimento}
                 >
                   {isSubmitting ? "Salvando..." : "Confirmar Recolhimento"}
                 </Button>
