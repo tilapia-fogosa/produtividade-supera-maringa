@@ -14,14 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useEstoque } from "@/hooks/use-estoque.tsx";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 
 const formSchema = z.object({
   tamanho_camiseta: z.string().min(1, "Selecione um tamanho"),
-  responsavel_id: z.string().min(1, "Selecione um responsável"),
-  responsavel_tipo: z.string().min(1, "Tipo do responsável é obrigatório"),
-  responsavel_nome: z.string().min(1, "Nome do responsável é obrigatório"),
   data_entrega: z.date({
     required_error: "Selecione a data da entrega",
   }).refine(
@@ -38,7 +35,7 @@ interface CamisetaEntregueModalProps {
   onOpenChange: (open: boolean) => void;
   alunoId: string;
   alunoNome: string;
-  onSave: (data: FormData & { alunoId: string }) => Promise<void>;
+  onSave: (data: { alunoId: string; tamanho_camiseta: string; data_entrega: Date; observacoes?: string; funcionario_registro_id?: string; responsavel_nome?: string }) => Promise<void>;
 }
 
 export function CamisetaEntregueModal({ 
@@ -49,7 +46,7 @@ export function CamisetaEntregueModal({
   onSave 
 }: CamisetaEntregueModalProps) {
   const [loading, setLoading] = useState(false);
-  const { responsaveis, isLoading: responsaveisLoading } = useResponsaveis();
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
   const { estoqueItems, loading: estoqueLoading } = useEstoque();
 
   // Filtrar apenas camisetas do estoque
@@ -66,22 +63,20 @@ export function CamisetaEntregueModal({
   const handleSubmit = async (data: FormData) => {
     try {
       setLoading(true);
-      await onSave({ ...data, alunoId });
+      await onSave({ 
+        alunoId,
+        tamanho_camiseta: data.tamanho_camiseta,
+        data_entrega: data.data_entrega,
+        observacoes: data.observacoes,
+        funcionario_registro_id: funcionarioId,
+        responsavel_nome: funcionarioNome
+      });
       form.reset();
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao salvar:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResponsavelChange = (value: string) => {
-    const responsavel = responsaveis.find(r => r.id === value);
-    if (responsavel) {
-      form.setValue("responsavel_id", responsavel.id);
-      form.setValue("responsavel_tipo", responsavel.tipo);
-      form.setValue("responsavel_nome", responsavel.nome);
     }
   };
 
@@ -134,41 +129,16 @@ export function CamisetaEntregueModal({
               )}
             />
 
-            {/* Responsável pela Entrega */}
-            <FormField
-              control={form.control}
-              name="responsavel_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Responsável pela Entrega
-                  </FormLabel>
-                  <Select 
-                    onValueChange={handleResponsavelChange} 
-                    defaultValue={field.value}
-                    disabled={responsaveisLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={responsaveisLoading ? "Carregando..." : "Selecione o responsável"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {responsaveis.map((responsavel) => (
-                        <SelectItem key={responsavel.id} value={responsavel.id}>
-                          {responsavel.nome} ({responsavel.tipo === 'professor' ? 'Professor' : 'Funcionário'})
-                        </SelectItem>
-                      ))}
-                      {responsaveis.length === 0 && !responsaveisLoading && (
-                        <SelectItem value="" disabled>Nenhum responsável encontrado</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Responsável pela Entrega - automático */}
+            <div className="space-y-2">
+              <FormLabel className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Responsável pela Entrega
+              </FormLabel>
+              <p className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
+                {funcionarioNome || 'Carregando...'}
+              </p>
+            </div>
 
             {/* Data da Entrega */}
             <FormField

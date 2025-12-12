@@ -225,11 +225,10 @@ export function useCamisetas() {
   const marcarComoEntregueComDetalhes = async (dados: {
     alunoId: string;
     tamanho_camiseta: string;
-    responsavel_id: string;
-    responsavel_tipo: string;
-    responsavel_nome: string;
     data_entrega: Date;
     observacoes?: string;
+    funcionario_registro_id?: string;
+    responsavel_nome?: string;
   }) => {
     try {
       // Criar ou atualizar registro de camiseta com todos os detalhes
@@ -240,8 +239,6 @@ export function useCamisetas() {
           camiseta_entregue: true,
           nao_tem_tamanho: false,
           tamanho_camiseta: dados.tamanho_camiseta,
-          responsavel_entrega_id: dados.responsavel_id,
-          responsavel_entrega_tipo: dados.responsavel_tipo,
           responsavel_entrega_nome: dados.responsavel_nome,
           data_entrega: dados.data_entrega.toISOString(),
           observacoes: dados.observacoes || null,

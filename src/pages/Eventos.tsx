@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 
 
 const getTipoColor = (tipo: string) => {
@@ -129,13 +130,13 @@ const EventCard = ({ evento, onEventoRemovido }: { evento: any; onEventoRemovido
 
 const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => void }) => {
   const [open, setOpen] = useState(false);
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
   const [formData, setFormData] = useState({
     titulo: '',
     descricao: '',
     data: '',
     hora: '',
     local: '',
-    responsavel: '',
     tipo: '',
     numeroVagas: ''
   });
@@ -159,9 +160,10 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
       data: formData.data,
       hora: formData.hora,
       local: formData.local,
-      responsavel: formData.responsavel,
+      responsavel: funcionarioNome || 'Sistema',
       tipo: formData.tipo,
-      numeroVagas: formData.numeroVagas
+      numeroVagas: formData.numeroVagas,
+      funcionario_registro_id: funcionarioId
     };
 
     try {
@@ -172,7 +174,6 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
         data: '',
         hora: '',
         local: '',
-        responsavel: '',
         tipo: '',
         numeroVagas: ''
       });
@@ -259,14 +260,12 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
             />
           </div>
 
+          {/* Responsável - automático */}
           <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável</Label>
-            <Input
-              id="responsavel"
-              value={formData.responsavel}
-              onChange={(e) => setFormData(prev => ({ ...prev, responsavel: e.target.value }))}
-              placeholder="Nome do responsável"
-            />
+            <Label>Responsável</Label>
+            <p className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
+              {funcionarioNome || 'Carregando...'}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -369,7 +368,8 @@ export default function Eventos() {
         responsavel: novoEvento.responsavel,
         tipo: novoEvento.tipo,
         numero_vagas: parseInt(novoEvento.numeroVagas),
-        unit_id: unitId
+        unit_id: unitId,
+        funcionario_registro_id: novoEvento.funcionario_registro_id
       };
 
       console.log('Dados do evento a ser inserido:', eventoData);
