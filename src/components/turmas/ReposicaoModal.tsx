@@ -10,9 +10,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { usePessoasReposicao } from "@/hooks/use-alunos-reposicao";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 import { cn } from "@/lib/utils";
 interface Turma {
   id: string;
@@ -31,15 +31,12 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
   turma
 }) => {
   const isMobile = useIsMobile();
-  const {
-    responsaveis
-  } = useResponsaveis();
-  const { data: pessoas = [], isLoading: loadingPessoas } = usePessoasReposicao(null); // null para buscar todas as pessoas ativas
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
+  const { data: pessoas = [], isLoading: loadingPessoas } = usePessoasReposicao(null);
   const {
     criarReposicao
   } = useReposicoes();
   const [alunoSelecionado, setAlunoSelecionado] = useState<string>("");
-  const [responsavelSelecionado, setResponsavelSelecionado] = useState<string>("");
   const [dataFalta, setDataFalta] = useState<Date | undefined>();
   const [dataSelecionada, setDataSelecionada] = useState<Date | undefined>();
   const [observacoes, setObservacoes] = useState<string>("");
@@ -47,36 +44,27 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
   // Calcular datas válidas baseadas no dia da semana da turma
   const datasValidas = calcularDatasValidas(turma.dia_semana);
 
-  // Função para determinar o tipo do responsável
-  const determinarTipoResponsavel = (responsavelId: string): 'professor' | 'funcionario' => {
-    const responsavel = responsaveis.find(r => r.id === responsavelId);
-    return responsavel?.tipo || 'professor';
-  };
   const handleSubmit = async () => {
-    if (!alunoSelecionado || !responsavelSelecionado || !dataSelecionada) {
+    if (!alunoSelecionado || !funcionarioId || !dataSelecionada) {
       return;
     }
 
-    // Encontrar o nome do responsável selecionado
-    const responsavelSelecionadoObj = responsaveis.find(r => r.id === responsavelSelecionado);
-    const nomeResponsavel = responsavelSelecionadoObj?.nome || '';
     try {
       await criarReposicao.mutateAsync({
         aluno_id: alunoSelecionado,
         turma_id: turma.id,
         data_reposicao: format(dataSelecionada, 'yyyy-MM-dd'),
         data_falta: dataFalta ? format(dataFalta, 'yyyy-MM-dd') : undefined,
-        responsavel_id: responsavelSelecionado,
-        responsavel_tipo: determinarTipoResponsavel(responsavelSelecionado),
-        nome_responsavel: nomeResponsavel,
+        responsavel_id: funcionarioId,
+        responsavel_tipo: 'funcionario',
+        nome_responsavel: funcionarioNome || '',
         observacoes: observacoes || undefined,
         unit_id: turma.unit_id,
-        created_by: 'sistema' // Por enquanto fixo, pois não há login
+        funcionario_registro_id: funcionarioId
       });
 
       // Resetar form
       setAlunoSelecionado("");
-      setResponsavelSelecionado("");
       setDataFalta(undefined);
       setDataSelecionada(undefined);
       setObservacoes("");
@@ -104,21 +92,6 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
               <SelectContent>
                 {pessoas.map(pessoa => <SelectItem key={pessoa.id} value={pessoa.id}>
                     {pessoa.nome} ({pessoa.tipo === 'aluno' ? 'Aluno' : 'Funcionário'})
-                  </SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Seleção do Responsável */}
-          <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável *</Label>
-            <Select value={responsavelSelecionado} onValueChange={setResponsavelSelecionado}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o responsável" />
-              </SelectTrigger>
-              <SelectContent>
-                {responsaveis.map(responsavel => <SelectItem key={responsavel.id} value={responsavel.id}>
-                    {responsavel.nome}
                   </SelectItem>)}
               </SelectContent>
             </Select>
@@ -187,12 +160,11 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
             <Textarea id="observacoes" value={observacoes} onChange={e => setObservacoes(e.target.value)} placeholder="Observações sobre a reposição (opcional)" className="min-h-[60px]" />
           </div>
 
-          {/* Botões */}
           <div className="flex gap-2 pt-4">
             <Button variant="outline" onClick={onClose} className="flex-1" disabled={criarReposicao.isPending}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} className="flex-1" disabled={!alunoSelecionado || !responsavelSelecionado || !dataSelecionada || criarReposicao.isPending}>
+            <Button onClick={handleSubmit} className="flex-1" disabled={!alunoSelecionado || !funcionarioId || !dataSelecionada || criarReposicao.isPending}>
               {criarReposicao.isPending ? "Salvando..." : "Salvar Reposição"}
             </Button>
           </div>

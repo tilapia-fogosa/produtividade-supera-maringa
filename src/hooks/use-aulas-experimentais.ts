@@ -13,6 +13,7 @@ interface AulaExperimentalData {
   descricao_cliente?: string;
   unit_id: string;
   created_by?: string;
+  funcionario_registro_id?: string;
 }
 
 export const useAulasExperimentais = () => {

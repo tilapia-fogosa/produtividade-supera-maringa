@@ -3,11 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Calendar, User } from "lucide-react";
+import { Loader2, Calendar } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFaltasFuturas } from "@/hooks/use-faltas-futuras";
 import { useAlunosTurma } from "@/hooks/use-alunos-turma";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -27,12 +27,11 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
   dataConsulta,
 }) => {
   const [pessoaId, setPessoaId] = useState<string>("");
-  const [responsavelId, setResponsavelId] = useState<string>("");
   const [observacoes, setObservacoes] = useState<string>("");
 
   const { criarFaltaFutura } = useFaltasFuturas();
   const { data: alunosTurma, isLoading: loadingAlunos } = useAlunosTurma(turmaId);
-  const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
 
   // Data da falta é fixada para o dia atual (quando o modal é aberto)
   const dataFalta = dataConsulta || new Date();
@@ -48,41 +47,32 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
     // TODO: Adicionar funcionários da turma quando o hook estiver disponível
   ];
 
-  // Todos os funcionários e professores do sistema (para lista de responsáveis)
-  const responsaveisDisponiveis = responsaveis.map(r => ({
-    id: r.id,
-    nome: r.nome,
-    cargo: r.tipo === 'professor' ? 'Professor' : 'Funcionário',
-    tipo: r.tipo
-  }));
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     const pessoaSelecionada = pessoasDisponiveis.find(p => p.id === pessoaId);
-    const responsavelSelecionado = responsaveisDisponiveis.find(r => r.id === responsavelId);
     
-    if (!pessoaSelecionada || !responsavelSelecionado) return;
+    if (!pessoaSelecionada || !funcionarioId) return;
 
     criarFaltaFutura.mutate({
-      aluno_id: pessoaId, // Campo mantido para compatibilidade com a tabela
+      aluno_id: pessoaId,
       turma_id: turmaId,
       unit_id: unitId,
       data_falta: format(dataFalta, "yyyy-MM-dd"),
-      responsavel_aviso_id: responsavelId,
-      responsavel_aviso_tipo: responsavelSelecionado.tipo,
-      responsavel_aviso_nome: responsavelSelecionado.nome,
+      responsavel_aviso_id: funcionarioId,
+      responsavel_aviso_tipo: 'funcionario',
+      responsavel_aviso_nome: funcionarioNome || '',
       observacoes: observacoes || undefined,
+      funcionario_registro_id: funcionarioId,
     });
 
     // Reset form
     setPessoaId("");
-    setResponsavelId("");
     setObservacoes("");
     onClose();
   };
 
-  const isFormValid = pessoaId && responsavelId;
+  const isFormValid = pessoaId && funcionarioId;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -121,28 +111,6 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
               <span className="text-sm font-medium">{dataFaltaFormatada}</span>
               <span className="text-xs text-muted-foreground">(Data atual)</span>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável pelo Aviso *</Label>
-            <Select value={responsavelId} onValueChange={setResponsavelId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o responsável" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border shadow-lg z-50">
-                {loadingResponsaveis ? (
-                  <SelectItem value="loading" disabled>
-                    Carregando responsáveis...
-                  </SelectItem>
-                ) : (
-                  responsaveisDisponiveis.map((responsavel) => (
-                    <SelectItem key={responsavel.id} value={responsavel.id}>
-                      {responsavel.nome} - {responsavel.cargo}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">

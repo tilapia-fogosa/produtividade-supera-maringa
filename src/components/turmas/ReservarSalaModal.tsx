@@ -14,8 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { useHorariosDisponiveisSalas } from "@/hooks/use-horarios-disponiveis-salas";
 import { useSalas } from "@/hooks/use-salas";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useCriarEventoSala } from "@/hooks/use-criar-evento-sala";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 import { ChevronLeft, Clock, MapPin, User, Calendar as CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -54,7 +54,6 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   const [tipoEvento, setTipoEvento] = useState<string>("");
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [responsavelId, setResponsavelId] = useState<string>("");
   const [recorrente, setRecorrente] = useState(false);
   const [tipoRecorrencia, setTipoRecorrencia] = useState("");
   const [dataInicio, setDataInicio] = useState<Date | null>(null);
@@ -64,7 +63,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
     useHorariosDisponiveisSalas(dataSelecionada, finalUnitId);
   
   const { data: todasSalas } = useSalas(finalUnitId);
-  const { responsaveis } = useResponsaveis();
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
   const criarEventoMutation = useCriarEventoSala();
 
   // Filtrar horários disponíveis baseado na duração selecionada
@@ -121,10 +120,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
   }, [horarioInicioSelecionado, duracaoSelecionada, horariosDisponiveisFiltrados, todasSalas, dataSelecionada]);
 
   const handleSubmit = async () => {
-    if (!dataSelecionada || !salaSelecionada || !horarioInicioSelecionado || !duracaoSelecionada || !finalUnitId) return;
-
-    const responsavel = responsaveis.find(r => r.id === responsavelId);
-    if (!responsavel) return;
+    if (!dataSelecionada || !salaSelecionada || !horarioInicioSelecionado || !duracaoSelecionada || !finalUnitId || !funcionarioId) return;
 
     const horarioFim = calcularHorarioFim(horarioInicioSelecionado, duracaoSelecionada);
 
@@ -139,8 +135,8 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         data: dataSelecionada.toISOString().split('T')[0],
         horario_inicio: horarioInicioSelecionado,
         horario_fim: horarioFim,
-        responsavel_id: responsavelId,
-        responsavel_tipo: responsavel.tipo,
+        responsavel_id: funcionarioId,
+        responsavel_tipo: 'funcionario',
         recorrente,
         tipo_recorrencia: recorrente ? tipoRecorrencia : undefined,
         dia_semana: recorrente && tipoRecorrencia !== 'mensal' 
@@ -150,6 +146,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
         data_inicio_recorrencia: recorrente && dataInicio ? dataInicio.toISOString().split('T')[0] : undefined,
         data_fim_recorrencia: recorrente && dataFim ? dataFim.toISOString().split('T')[0] : undefined,
         unit_id: finalUnitId,
+        funcionario_registro_id: funcionarioId,
       });
       
       console.log('✅ Reserva criada com sucesso!');
@@ -369,22 +366,6 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                     />
                   </div>
 
-                  <div>
-                    <Label>Responsável</Label>
-                    <Select value={responsavelId} onValueChange={setResponsavelId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o responsável" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {responsaveis.map((resp) => (
-                          <SelectItem key={resp.id} value={resp.id}>
-                            {resp.nome} ({resp.tipo})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   <div className="flex items-center gap-2">
                     <Checkbox 
                       id="recorrente" 
@@ -446,7 +427,7 @@ export const ReservarSalaModal: React.FC<ReservarSalaModalProps> = ({
                     </Button>
                     <Button 
                       onClick={handleSubmit}
-                      disabled={!tipoEvento || !titulo || !responsavelId || criarEventoMutation.isPending}
+                      disabled={!tipoEvento || !titulo || !funcionarioId || criarEventoMutation.isPending}
                       className="flex-1"
                     >
                       {criarEventoMutation.isPending ? 'Criando...' : 'Criar Reserva'}

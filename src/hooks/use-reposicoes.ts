@@ -14,6 +14,7 @@ interface ReposicaoData {
   observacoes?: string;
   unit_id: string;
   created_by?: string;
+  funcionario_registro_id?: string;
 }
 
 export const useReposicoes = () => {
