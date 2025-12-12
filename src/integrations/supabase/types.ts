@@ -1502,6 +1502,7 @@ export type Database = {
           camiseta_entregue: boolean
           created_at: string
           data_entrega: string | null
+          funcionario_registro_id: string | null
           id: string
           nao_tem_tamanho: boolean | null
           observacoes: string | null
@@ -1516,6 +1517,7 @@ export type Database = {
           camiseta_entregue?: boolean
           created_at?: string
           data_entrega?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           nao_tem_tamanho?: boolean | null
           observacoes?: string | null
@@ -1530,6 +1532,7 @@ export type Database = {
           camiseta_entregue?: boolean
           created_at?: string
           data_entrega?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           nao_tem_tamanho?: boolean | null
           observacoes?: string | null
@@ -1539,7 +1542,15 @@ export type Database = {
           tamanho_camiseta?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "camisetas_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cash_accounts: {
         Row: {
@@ -2925,6 +2936,7 @@ export type Database = {
           created_by: string | null
           data_evento: string
           descricao: string | null
+          funcionario_registro_id: string | null
           id: string
           local: string | null
           numero_vagas: number
@@ -2940,6 +2952,7 @@ export type Database = {
           created_by?: string | null
           data_evento: string
           descricao?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           local?: string | null
           numero_vagas?: number
@@ -2955,6 +2968,7 @@ export type Database = {
           created_by?: string | null
           data_evento?: string
           descricao?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           local?: string | null
           numero_vagas?: number
@@ -2964,7 +2978,15 @@ export type Database = {
           unit_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "eventos_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eventos_professor: {
         Row: {
