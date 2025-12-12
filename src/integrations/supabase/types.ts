@@ -4451,6 +4451,7 @@ export type Database = {
           email_confirmed: boolean | null
           first_access_at: string | null
           full_name: string | null
+          funcionario_id: string | null
           g_access_token: string | null
           g_refresh_token: string | null
           g_token_expiration: string | null
@@ -4472,6 +4473,7 @@ export type Database = {
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          funcionario_id?: string | null
           g_access_token?: string | null
           g_refresh_token?: string | null
           g_token_expiration?: string | null
@@ -4493,6 +4495,7 @@ export type Database = {
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          funcionario_id?: string | null
           g_access_token?: string | null
           g_refresh_token?: string | null
           g_token_expiration?: string | null
@@ -4505,7 +4508,15 @@ export type Database = {
           must_change_password?: boolean | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projeto_sao_rafael_textos: {
         Row: {
