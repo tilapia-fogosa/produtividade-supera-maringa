@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useProfessores } from "@/hooks/use-professores";
 import { useCriarEventoProfessor } from "@/hooks/use-criar-evento-professor";
-import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 import { TIPOS_EVENTO, OPCOES_DURACAO, obterHorarioFuncionamento, calcularHorarioFim, horarioEstaNoFuncionamento } from "@/constants/horariosFuncionamento";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
@@ -20,8 +20,9 @@ interface BloquearHorarioProfessorModalProps {
 }
 
 export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHorarioProfessorModalProps) {
-  const { professores, isLoading: loadingProfessores } = useProfessores();
+  const { professores } = useProfessores();
   const criarEvento = useCriarEventoProfessor();
+  const { funcionarioId } = useCurrentFuncionario();
 
   const [etapa, setEtapa] = useState(1);
   const [professoresIds, setProfessoresIds] = useState<string[]>([]);
@@ -93,6 +94,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
           diaSemana: tipoBloqueio === "periodico" ? diaSemana : undefined,
           dataInicioRecorrencia,
           dataFimRecorrencia,
+          funcionario_registro_id: funcionarioId || undefined,
         })
       );
 
