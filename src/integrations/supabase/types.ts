@@ -2978,6 +2978,7 @@ export type Database = {
           dia_mes: number | null
           dia_semana: string | null
           duracao_minutos: number | null
+          funcionario_registro_id: string | null
           horario_fim: string
           horario_inicio: string
           id: string
@@ -2999,6 +3000,7 @@ export type Database = {
           dia_mes?: number | null
           dia_semana?: string | null
           duracao_minutos?: number | null
+          funcionario_registro_id?: string | null
           horario_fim: string
           horario_inicio: string
           id?: string
@@ -3020,6 +3022,7 @@ export type Database = {
           dia_mes?: number | null
           dia_semana?: string | null
           duracao_minutos?: number | null
+          funcionario_registro_id?: string | null
           horario_fim?: string
           horario_inicio?: string
           id?: string
@@ -3031,6 +3034,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_professor_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_professor_professor_id_fkey"
             columns: ["professor_id"]
