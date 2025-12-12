@@ -209,6 +209,7 @@ export type Database = {
           data_alerta: string
           data_retencao: string | null
           descritivo: string | null
+          funcionario_registro_id: string | null
           id: string
           kanban_status: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
@@ -222,6 +223,7 @@ export type Database = {
           data_alerta?: string
           data_retencao?: string | null
           descritivo?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           kanban_status?: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
@@ -235,6 +237,7 @@ export type Database = {
           data_alerta?: string
           data_retencao?: string | null
           descritivo?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           kanban_status?: string
           origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
@@ -255,6 +258,13 @@ export type Database = {
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerta_evasao_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
             referencedColumns: ["id"]
           },
         ]

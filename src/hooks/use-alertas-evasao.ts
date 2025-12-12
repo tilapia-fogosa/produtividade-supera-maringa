@@ -3,6 +3,7 @@ import { useAlunos } from "@/hooks/use-alunos";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useResponsaveis, Responsavel } from '@/hooks/use-responsaveis';
+import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 
 type OrigemAlerta = 'conversa_indireta' | 'aviso_recepcao' | 'aviso_professor_coordenador' | 'aviso_whatsapp' | 'inadimplencia' | 'outro';
 
@@ -18,6 +19,7 @@ export const origensAlerta = [
 export function useAlertasEvasao() {
   const { todosAlunos } = useAlunos();
   const { responsaveis, isLoading: carregandoResponsaveis } = useResponsaveis();
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
   const [filtroAluno, setFiltroAluno] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
   const [dataAlerta, setDataAlerta] = useState('');
@@ -36,17 +38,13 @@ export function useAlertasEvasao() {
     aluno.nome.toLowerCase().includes(filtroAluno.toLowerCase())
   );
 
-  // Atualiza o nome do responsável quando o ID é selecionado
+  // Atualiza o nome do responsável com o funcionário logado automaticamente
   useEffect(() => {
-    if (responsavelId) {
-      const responsavelSelecionado = responsaveis.find(r => r.id === responsavelId);
-      if (responsavelSelecionado) {
-        setResponsavelNome(responsavelSelecionado.nome);
-      }
-    } else {
-      setResponsavelNome('');
+    if (funcionarioId && funcionarioNome) {
+      setResponsavelId(funcionarioId);
+      setResponsavelNome(funcionarioNome);
     }
-  }, [responsavelId, responsaveis]);
+  }, [funcionarioId, funcionarioNome]);
 
   // Buscar alertas anteriores e dados da aula zero quando o aluno é selecionado
   useEffect(() => {
@@ -241,10 +239,11 @@ export function useAlertasEvasao() {
             data_alerta: dataAlertaFormatada,
             origem_alerta: origemAlerta,
             descritivo: descritivo,
-            responsavel: responsavelNome,
+            responsavel: funcionarioNome || responsavelNome,
             data_retencao: dataRetencaoFormatada,
             status: 'pendente',
-            kanban_status: 'todo'
+            kanban_status: 'todo',
+            funcionario_registro_id: funcionarioId || undefined
           });
 
         if (alertaError) {
