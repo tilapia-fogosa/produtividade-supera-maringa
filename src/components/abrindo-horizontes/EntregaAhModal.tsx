@@ -10,16 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAhEntrega } from "@/hooks/use-ah-entrega";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { Badge } from "@/components/ui/badge";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { User } from "lucide-react";
 
 interface EntregaAhModalProps {
   open: boolean;
@@ -37,25 +31,25 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
   pessoaNome,
 }) => {
   const [dataEntrega, setDataEntrega] = useState("");
-  const [responsavelId, setResponsavelId] = useState("");
 
   const { registrarEntregaAH, isLoading } = useAhEntrega();
-  const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
+  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const responsavel = responsaveis.find(r => r.id === responsavelId);
+    if (!funcionarioId) {
+      return;
+    }
 
     await registrarEntregaAH.mutateAsync({
       apostilaRecolhidaId,
       dataEntrega,
-      responsavelNome: responsavel?.nome || "",
+      funcionarioRegistroId: funcionarioId,
     });
 
     // Limpar formulário e fechar modal
     setDataEntrega("");
-    setResponsavelId("");
     onOpenChange(false);
   };
 
@@ -91,35 +85,13 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="responsavel">
-              Responsável pela Entrega <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={responsavelId}
-              onValueChange={setResponsavelId}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione quem entregou" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingResponsaveis ? (
-                  <SelectItem value="loading" disabled>
-                    Carregando...
-                  </SelectItem>
-                ) : responsaveis.length === 0 ? (
-                  <SelectItem value="empty" disabled>
-                    Nenhum responsável disponível
-                  </SelectItem>
-                ) : (
-                  responsaveis.map((responsavel) => (
-                    <SelectItem key={responsavel.id} value={responsavel.id}>
-                      {responsavel.nome} ({responsavel.tipo === 'professor' ? 'Professor' : 'Funcionário'})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Label>Responsável pela Entrega</Label>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+              </span>
+            </div>
           </div>
 
           <DialogFooter>
@@ -131,7 +103,7 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !funcionarioId || !dataEntrega}>
               {isLoading ? "Salvando..." : "Registrar Entrega"}
             </Button>
           </DialogFooter>

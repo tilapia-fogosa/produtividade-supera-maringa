@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,18 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useProfessores } from "@/hooks/use-professores";
-import { useEstagiarios } from "@/hooks/use-estagiarios";
 import { useAhCorrecao } from "@/hooks/use-ah-correcao";
-import { BookOpen } from "lucide-react";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { BookOpen, User } from "lucide-react";
 
 interface FinalizarCorrecaoAhModalProps {
   open: boolean;
@@ -41,37 +33,20 @@ export function FinalizarCorrecaoAhModal({
   pessoaNome,
   apostilaNome,
 }: FinalizarCorrecaoAhModalProps) {
-  const { professores } = useProfessores();
-  const { estagiarios, isLoading: loadingEstagiarios } = useEstagiarios();
   const { registrarCorrecaoAH, isLoading } = useAhCorrecao();
+  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
 
   const [exercicios, setExercicios] = useState("");
   const [erros, setErros] = useState("");
-  const [professorCorrecao, setProfessorCorrecao] = useState("");
   const [dataFimCorrecao, setDataFimCorrecao] = useState("");
   const [comentario, setComentario] = useState("");
 
-  // Combinar professores ativos e estagiários em uma lista de corretores
-  const corretores = useMemo(() => {
-    const todosProfessores = professores.map(p => ({
-      id: p.id,
-      nome: p.nome,
-      tipo: 'Professor' as const
-    }));
-    
-    const todosEstagiarios = estagiarios.map(e => ({
-      id: e.id,
-      nome: e.nome,
-      tipo: 'Estagiário' as const
-    }));
-    
-    return [...todosProfessores, ...todosEstagiarios].sort((a, b) => 
-      a.nome.localeCompare(b.nome)
-    );
-  }, [professores, estagiarios]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!funcionarioId) {
+      return;
+    }
 
     await registrarCorrecaoAH.mutateAsync({
       apostilaRecolhidaId,
@@ -79,7 +54,7 @@ export function FinalizarCorrecaoAhModal({
       apostilaNome,
       exercicios: parseInt(exercicios),
       erros: parseInt(erros),
-      professorCorrecao,
+      funcionarioRegistroId: funcionarioId,
       dataFimCorrecao,
       comentario,
     });
@@ -87,7 +62,6 @@ export function FinalizarCorrecaoAhModal({
     // Limpar formulário e fechar modal
     setExercicios("");
     setErros("");
-    setProfessorCorrecao("");
     setDataFimCorrecao("");
     setComentario("");
     onOpenChange(false);
@@ -147,29 +121,15 @@ export function FinalizarCorrecaoAhModal({
             />
           </div>
 
-          {/* Quem corrigiu */}
+          {/* Quem corrigiu - Exibição automática */}
           <div className="space-y-2">
-            <Label htmlFor="professor">
-              Quem corrigiu <span className="text-destructive">*</span>
-            </Label>
-            <Select value={professorCorrecao} onValueChange={setProfessorCorrecao} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o corretor" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingEstagiarios ? (
-                  <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                ) : corretores.length === 0 ? (
-                  <SelectItem value="empty" disabled>Nenhum corretor encontrado</SelectItem>
-                ) : (
-                  corretores.map((corretor) => (
-                    <SelectItem key={corretor.id} value={corretor.id}>
-                      {corretor.nome} ({corretor.tipo})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Label>Quem corrigiu</Label>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+              </span>
+            </div>
           </div>
 
           {/* Data do fim da correção - OBRIGATÓRIO */}
@@ -207,7 +167,7 @@ export function FinalizarCorrecaoAhModal({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !funcionarioId}>
               {isLoading ? "Salvando..." : "Salvar Correção"}
             </Button>
           </DialogFooter>

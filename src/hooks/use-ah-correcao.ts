@@ -8,7 +8,7 @@ interface CorrecaoAHData {
   apostilaNome: string;
   exercicios: number;
   erros: number;
-  professorCorrecao: string;
+  funcionarioRegistroId: string;
   dataFimCorrecao: string;
   comentario?: string;
 }
@@ -29,8 +29,8 @@ export const useAhCorrecao = () => {
         throw new Error("Número de erros não pode ser negativo");
       }
 
-      if (!data.professorCorrecao) {
-        throw new Error("Selecione quem realizou a correção");
+      if (!data.funcionarioRegistroId) {
+        throw new Error("Funcionário não vinculado");
       }
 
       if (!data.dataFimCorrecao) {
@@ -44,7 +44,7 @@ export const useAhCorrecao = () => {
           apostila: data.apostilaNome,
           exercicios: data.exercicios,
           erros: data.erros,
-          professor_correcao: data.professorCorrecao,
+          funcionario_registro_id: data.funcionarioRegistroId,
           data_fim_correcao: data.dataFimCorrecao,
           comentario: data.comentario || null,
           ah_recolhida_id: data.apostilaRecolhidaId,

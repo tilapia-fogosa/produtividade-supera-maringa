@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
@@ -90,7 +89,8 @@ serve(async (req) => {
       apostila: data.apostila,
       exercicios: data.exercicios,
       erros: data.erros,
-      professor_correcao: data.professor_correcao,
+      professor_correcao: data.funcionario_registro_id || data.professor_correcao,
+      funcionario_registro_id: data.funcionario_registro_id || null,
       comentario: data.comentario,
       data_fim_correcao: data.data_fim_correcao,
       aluno_nome: pessoaData?.nome,
@@ -108,30 +108,19 @@ serve(async (req) => {
       throw new Error('Erro ao salvar dados de produtividade: ' + produtividadeError.message);
     }
 
-    // Buscar nome do professor/corretor
-    console.log('Buscando nome do corretor...');
-    let nomeCorretor = data.professor_correcao; // fallback para o ID caso não encontre
+    // Buscar nome do funcionário que registrou
+    console.log('Buscando nome do responsável pelo registro...');
+    let nomeResponsavel = 'Não identificado';
 
-    // Tentar buscar primeiro na tabela de professores
-    const { data: professorData } = await supabase
-      .from('professores')
-      .select('nome')
-      .eq('id', data.professor_correcao)
-      .maybeSingle();
-
-    if (professorData?.nome) {
-      nomeCorretor = professorData.nome;
-    } else {
-      // Se não encontrou nos professores, tentar nos funcionários estagiários
-      const { data: funcionarioCorretorData } = await supabase
+    if (data.funcionario_registro_id) {
+      const { data: funcionarioRegistroData } = await supabase
         .from('funcionarios')
         .select('nome')
-        .eq('id', data.professor_correcao)
-        .eq('cargo', 'Estagiário')
+        .eq('id', data.funcionario_registro_id)
         .maybeSingle();
-      
-      if (funcionarioCorretorData?.nome) {
-        nomeCorretor = funcionarioCorretorData.nome;
+
+      if (funcionarioRegistroData?.nome) {
+        nomeResponsavel = funcionarioRegistroData.nome;
       }
     }
 
@@ -146,7 +135,8 @@ serve(async (req) => {
       apostila: data.apostila,
       exercicios: data.exercicios,
       erros: data.erros,
-      professor_correcao: nomeCorretor,
+      professor_correcao: nomeResponsavel,
+      funcionario_registro_id: data.funcionario_registro_id,
       comentario: data.comentario,
       data_fim_correcao: data.data_fim_correcao,
       data_registro: new Date().toISOString()

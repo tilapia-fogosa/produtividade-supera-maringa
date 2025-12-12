@@ -5,7 +5,7 @@ import { toast } from "sonner";
 interface EntregaAHData {
   apostilaRecolhidaId: string;
   dataEntrega: string;
-  responsavelNome: string;
+  funcionarioRegistroId: string;
 }
 
 export const useAhEntrega = () => {
@@ -20,17 +20,17 @@ export const useAhEntrega = () => {
         throw new Error("Data de entrega é obrigatória");
       }
 
-      if (!data.responsavelNome || data.responsavelNome.trim() === "") {
-        throw new Error("Nome do responsável é obrigatório");
+      if (!data.funcionarioRegistroId) {
+        throw new Error("Funcionário não vinculado");
       }
 
       // Atualizar a apostila recolhida com dados de entrega
-      // A RLS policy permite acesso público, então não precisa verificar usuário
       const { error } = await supabase
         .from("ah_recolhidas")
         .update({
           data_entrega_real: data.dataEntrega,
-          responsavel_entrega_nome: data.responsavelNome,
+          responsavel_entrega_id: data.funcionarioRegistroId,
+          funcionario_registro_id: data.funcionarioRegistroId,
         })
         .eq("id", parseInt(data.apostilaRecolhidaId));
 
