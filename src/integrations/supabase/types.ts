@@ -5395,6 +5395,45 @@ export type Database = {
           },
         ]
       }
+      transcricao_ligacoes: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: number
+          transcricao: Json
+          url_audio: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: number
+          transcricao: Json
+          url_audio?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: number
+          transcricao?: Json
+          url_audio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcricao_ligacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcricao_ligacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trofeus_1000_dias: {
         Row: {
           aluno_id: string
