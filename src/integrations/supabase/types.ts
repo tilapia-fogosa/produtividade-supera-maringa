@@ -7279,6 +7279,8 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_role_in_unit: { Args: { p_unit_id: string }; Returns: string }
+      get_user_unit_ids: { Args: never; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -7286,11 +7288,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_unit_access: { Args: { p_unit_id: string }; Returns: boolean }
       has_unread_updates: { Args: { p_user_id: string }; Returns: boolean }
       inactivate_activity: { Args: { activity_id: string }; Returns: boolean }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_admin_in_unit: { Args: { unit_id: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
+      is_system_admin: { Args: never; Returns: boolean }
       kanban_client_activities: {
         Args: { p_client_id: string; p_limit?: number; p_offset?: number }
         Returns: Json
