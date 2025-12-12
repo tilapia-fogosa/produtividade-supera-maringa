@@ -36,3 +36,5 @@ verify_jwt = false
 [functions.google-calendar]
 verify_jwt = false
 
+[functions.send-password-reset]
+verify_jwt = false
