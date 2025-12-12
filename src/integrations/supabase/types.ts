@@ -4093,6 +4093,7 @@ export type Database = {
           erros: number | null
           exercicios: number | null
           fez_desafio: boolean | null
+          funcionario_registro_id: string | null
           id: string
           is_reposicao: boolean
           motivo_falta: string | null
@@ -4111,6 +4112,7 @@ export type Database = {
           erros?: number | null
           exercicios?: number | null
           fez_desafio?: boolean | null
+          funcionario_registro_id?: string | null
           id?: string
           is_reposicao?: boolean
           motivo_falta?: string | null
@@ -4129,6 +4131,7 @@ export type Database = {
           erros?: number | null
           exercicios?: number | null
           fez_desafio?: boolean | null
+          funcionario_registro_id?: string | null
           id?: string
           is_reposicao?: boolean
           motivo_falta?: string | null
@@ -4138,7 +4141,15 @@ export type Database = {
           tipo_pessoa?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_abaco_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtividade_abaco_backup: {
         Row: {
