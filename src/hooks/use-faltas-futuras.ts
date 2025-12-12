@@ -12,6 +12,7 @@ interface FaltaFuturaData {
   responsavel_aviso_nome: string;
   observacoes?: string;
   created_by?: string;
+  funcionario_registro_id?: string;
 }
 
 export const useFaltasFuturas = () => {

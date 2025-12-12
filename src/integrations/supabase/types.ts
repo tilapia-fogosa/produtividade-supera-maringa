@@ -1331,6 +1331,7 @@ export type Database = {
           created_by: string | null
           data_aula_experimental: string
           descricao_cliente: string | null
+          funcionario_registro_id: string | null
           id: string
           responsavel_id: string
           responsavel_nome: string | null
@@ -1345,6 +1346,7 @@ export type Database = {
           created_by?: string | null
           data_aula_experimental: string
           descricao_cliente?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           responsavel_id: string
           responsavel_nome?: string | null
@@ -1359,6 +1361,7 @@ export type Database = {
           created_by?: string | null
           data_aula_experimental?: string
           descricao_cliente?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           responsavel_id?: string
           responsavel_nome?: string | null
@@ -1366,7 +1369,15 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "aulas_experimentais_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       backup_metadata: {
         Row: {
@@ -3047,6 +3058,7 @@ export type Database = {
           descricao: string | null
           dia_mes: number | null
           dia_semana: string | null
+          funcionario_registro_id: string | null
           horario_fim: string
           horario_inicio: string
           id: string
@@ -3073,6 +3085,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: string | null
+          funcionario_registro_id?: string | null
           horario_fim: string
           horario_inicio: string
           id?: string
@@ -3099,6 +3112,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: string | null
+          funcionario_registro_id?: string | null
           horario_fim?: string
           horario_inicio?: string
           id?: string
@@ -3116,6 +3130,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_sala_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_sala_sala_id_fkey"
             columns: ["sala_id"]
@@ -3167,6 +3188,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_falta: string
+          funcionario_registro_id: string | null
           id: string
           observacoes: string | null
           responsavel_aviso_id: string
@@ -3181,6 +3203,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_falta: string
+          funcionario_registro_id?: string | null
           id?: string
           observacoes?: string | null
           responsavel_aviso_id: string
@@ -3195,6 +3218,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_falta?: string
+          funcionario_registro_id?: string | null
           id?: string
           observacoes?: string | null
           responsavel_aviso_id?: string
@@ -3203,7 +3227,15 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "faltas_antecipadas_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       faq: {
         Row: {
@@ -4618,6 +4650,7 @@ export type Database = {
           created_by: string | null
           data_falta: string | null
           data_reposicao: string
+          funcionario_registro_id: string | null
           id: string
           nome_responsavel: string | null
           observacoes: string | null
@@ -4634,6 +4667,7 @@ export type Database = {
           created_by?: string | null
           data_falta?: string | null
           data_reposicao: string
+          funcionario_registro_id?: string | null
           id?: string
           nome_responsavel?: string | null
           observacoes?: string | null
@@ -4650,6 +4684,7 @@ export type Database = {
           created_by?: string | null
           data_falta?: string | null
           data_reposicao?: string
+          funcionario_registro_id?: string | null
           id?: string
           nome_responsavel?: string | null
           observacoes?: string | null
@@ -4661,6 +4696,13 @@ export type Database = {
           unit_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reposicoes_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reposicoes_turma_id_fkey"
             columns: ["turma_id"]

@@ -25,6 +25,7 @@ type CriarEventoSalaParams = {
   data_inicio_recorrencia?: string;
   data_fim_recorrencia?: string;
   unit_id: string;
+  funcionario_registro_id?: string;
 };
 
 export const useCriarEventoSala = () => {
