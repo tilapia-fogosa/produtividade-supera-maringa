@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 
 interface Aluno {
   id: string;
@@ -43,6 +44,7 @@ interface AulaZeroData {
 
 const AulaZero = () => {
   const navigate = useNavigate();
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -206,7 +208,7 @@ const AulaZero = () => {
         }
       }
 
-      // Salvar os dados no Supabase
+      // Salvar os dados no Supabase (incluindo o coordenador responsável)
       const { error } = await supabase
         .from('alunos')
         .update({
@@ -214,7 +216,8 @@ const AulaZero = () => {
           motivo_procura: data.motivo_procura,
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
-          pontos_atencao: data.pontos_atencao
+          pontos_atencao: data.pontos_atencao,
+          coordenador_responsavel: funcionarioNome || undefined
         })
         .eq('id', data.alunoId);
 
