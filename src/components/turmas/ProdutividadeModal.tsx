@@ -18,6 +18,7 @@ import AlunoProgressoCard from './produtividade/AlunoProgressoCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useProdutividade } from '@/hooks/use-produtividade';
 import { useApostilas } from '@/hooks/use-apostilas';
+import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
@@ -44,6 +45,7 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
   const isMobile = useIsMobile();
   const { registrarPresenca, registrarProdutividade, isLoading } = useProdutividade(aluno.id);
   const { getApostila } = useApostilas();
+  const { funcionarioId } = useCurrentFuncionario();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [presente, setPresente] = useState<"sim" | "não">("sim");
@@ -145,7 +147,8 @@ const ProdutividadeModal: React.FC<ProdutividadeModalProps> = ({
         data_ultima_correcao_ah: new Date().toISOString(),
         apostila_atual: presente === "sim" ? (apostilaAbaco || aluno.ultimo_nivel) : aluno.ultimo_nivel,
         ultima_pagina: presente === "sim" ? (paginaAbaco || aluno.ultima_pagina?.toString()) : aluno.ultima_pagina?.toString(),
-        is_reposicao: false
+        is_reposicao: false,
+        funcionario_registro_id: funcionarioId || undefined
       };
 
       console.log('ProdutividadeModal: Enviando dados para register-productivity:', produtividadeData);

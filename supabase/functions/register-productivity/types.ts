@@ -19,4 +19,5 @@ export interface ProdutividadeData {
   apostila_atual?: string;
   ultima_pagina?: string;
   is_reposicao?: boolean;
+  funcionario_registro_id?: string; // ID do funcionário que registrou a produtividade
 }

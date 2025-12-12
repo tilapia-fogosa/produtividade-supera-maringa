@@ -221,7 +221,8 @@ export async function registrarProdutividade(supabaseClient: any, data: Produtiv
       erros: data.presente && (data.erros_abaco || data.erros) ? parseInt(data.erros_abaco || data.erros) : null,
       fez_desafio: data.presente ? (data.fez_desafio || false) : false,
       comentario: data.comentario || '',
-      motivo_falta: !data.presente ? (data.motivo_falta || null) : null
+      motivo_falta: !data.presente ? (data.motivo_falta || null) : null,
+      funcionario_registro_id: data.funcionario_registro_id || null
     };
     
     console.log('Dados de produtividade a salvar:', produtividadeData);

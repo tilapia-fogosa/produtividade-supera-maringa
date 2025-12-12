@@ -1,15 +1,18 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTurmasPorDia } from '@/hooks/use-turmas-por-dia';
 import { useProjetoSaoRafael } from '@/hooks/use-projeto-sao-rafael';
+import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 import DayTurmasList from '@/components/turmas/DayTurmasList';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, User } from 'lucide-react';
 import { InformativoGlobalDialog } from '@/components/devolutivas/InformativoGlobalDialog';
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const diasSemana = [
   { id: 'segunda', nome: 'Segunda-feira' },
@@ -28,10 +31,15 @@ const Turmas = () => {
   const data = location.state?.data;
   
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(initialDia);
+  const [minhasTurmas, setMinhasTurmas] = useState(false);
+  
+  // Hook para buscar o funcionário atual
+  const { funcionario, isFuncionario } = useCurrentFuncionario();
   
   console.log("Turmas - Dia selecionado:", diaSelecionado);
   console.log("Turmas - Service Type:", serviceType);
   console.log("Turmas - Data selecionada:", data);
+  console.log("Turmas - Funcionário atual:", funcionario);
   
   // Para Projeto São Rafael, usar hook específico
   const { turmas: turmasProjetoSaoRafael, loading: loadingProjetoSaoRafael } = useProjetoSaoRafael();
@@ -39,8 +47,19 @@ const Turmas = () => {
   // Para outros casos, usar hook normal
   const { turmas: turmasNormais, loading: loadingNormais } = useTurmasPorDia(diaSelecionado);
   
+  // Filtrar turmas se "Minhas Turmas" estiver ativo
+  const turmasFiltradas = useMemo(() => {
+    const turmasBase = serviceType === 'projeto_sao_rafael' ? turmasProjetoSaoRafael : turmasNormais;
+    
+    if (minhasTurmas && funcionario?.turma_id) {
+      return turmasBase.filter(turma => turma.id === funcionario.turma_id);
+    }
+    
+    return turmasBase;
+  }, [serviceType, turmasProjetoSaoRafael, turmasNormais, minhasTurmas, funcionario?.turma_id]);
+  
   // Definir quais dados usar baseado no serviceType
-  const turmas = serviceType === 'projeto_sao_rafael' ? turmasProjetoSaoRafael : turmasNormais;
+  const turmas = turmasFiltradas;
   const loading = serviceType === 'projeto_sao_rafael' ? loadingProjetoSaoRafael : loadingNormais;
 
   const handleVoltar = () => {
@@ -141,6 +160,21 @@ const Turmas = () => {
             <InformativoGlobalDialog />
           )}
         </div>
+        
+        {/* Filtro Minhas Turmas - só mostra se for funcionário com turma vinculada */}
+        {isFuncionario && funcionario?.turma_id && (
+          <div className="flex items-center space-x-2 mb-4 p-3 bg-muted/30 rounded-lg">
+            <Switch
+              id="minhas-turmas"
+              checked={minhasTurmas}
+              onCheckedChange={setMinhasTurmas}
+            />
+            <Label htmlFor="minhas-turmas" className="flex items-center gap-2 cursor-pointer">
+              <User className="h-4 w-4" />
+              Minhas Turmas
+            </Label>
+          </div>
+        )}
         
         <h1 className="text-xl font-bold mb-4">
           {getTituloTexto()}
