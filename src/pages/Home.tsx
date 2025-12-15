@@ -6,13 +6,14 @@ import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { useTarefasPessoais, TarefaPessoal } from '@/hooks/use-tarefas-pessoais';
 import { useListaAulasExperimentais } from '@/hooks/use-lista-aulas-experimentais';
 import { useListaReposicoes } from '@/hooks/use-lista-reposicoes';
+import { useProfessorAtividades } from '@/hooks/use-professor-atividades';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,6 +37,17 @@ export default function Home() {
   const { aulasExperimentais = [] } = useListaAulasExperimentais();
   const { reposicoes = [] } = useListaReposicoes();
 
+  // Buscar atividades específicas do professor
+  const { 
+    isProfessor, 
+    isLoading: loadingProfessor,
+    reposicoes: reposicoesProfessor,
+    camisetasPendentes,
+    apostilasAHProntas,
+    isDiaHoje,
+    isDiaSemana,
+  } = useProfessorAtividades();
+
   // Estado para nova tarefa
   const [novaTarefaOpen, setNovaTarefaOpen] = useState(false);
   const [novaTarefa, setNovaTarefa] = useState({
@@ -56,57 +68,120 @@ export default function Home() {
     return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
   });
 
-  // Filtrar eventos por período
-  const eventosHoje = [
-    ...aulasExperimentais.filter(ae => ae.data_aula_experimental === hojeStr).map(ae => ({
-      tipo: 'aula_experimental' as const,
-      titulo: `Aula Experimental: ${ae.cliente_nome}`,
-      data: ae.data_aula_experimental,
-    })),
-    ...reposicoes.filter(r => r.data_reposicao === hojeStr).map(r => ({
-      tipo: 'reposicao' as const,
-      titulo: `Reposição: ${r.aluno_nome}`,
-      data: r.data_reposicao,
-    })),
-  ];
+  // Montar eventos baseado no perfil (professor ou não)
+  const montarEventos = () => {
+    if (isProfessor) {
+      // Para professores: usar apenas atividades das suas turmas
+      const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+      const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
 
-  const eventosSemana = [
-    ...aulasExperimentais.filter(ae => {
-      const data = parseISO(ae.data_aula_experimental);
-      return isSameWeek(data, hoje, { weekStartsOn: 0 }) && ae.data_aula_experimental !== hojeStr;
-    }).map(ae => ({
-      tipo: 'aula_experimental' as const,
-      titulo: `Aula Experimental: ${ae.cliente_nome}`,
-      data: ae.data_aula_experimental,
-    })),
-    ...reposicoes.filter(r => {
-      const data = parseISO(r.data_reposicao);
-      return isSameWeek(data, hoje, { weekStartsOn: 0 }) && r.data_reposicao !== hojeStr;
-    }).map(r => ({
-      tipo: 'reposicao' as const,
-      titulo: `Reposição: ${r.aluno_nome}`,
-      data: r.data_reposicao,
-    })),
-  ];
+      // Reposições do professor
+      reposicoesProfessor.forEach(r => {
+        const evento = {
+          tipo: 'reposicao',
+          titulo: `Reposição: ${r.aluno_nome}`,
+          data: r.data_reposicao,
+          subtitulo: r.turma_reposicao_nome,
+        };
+        if (r.data_reposicao === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataRepo = parseISO(r.data_reposicao);
+          if (isSameWeek(dataRepo, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          }
+        }
+      });
 
-  const eventosProximaSemana = [
-    ...aulasExperimentais.filter(ae => {
-      const data = parseISO(ae.data_aula_experimental);
-      return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
-    }).map(ae => ({
-      tipo: 'aula_experimental' as const,
-      titulo: `Aula Experimental: ${ae.cliente_nome}`,
-      data: ae.data_aula_experimental,
-    })),
-    ...reposicoes.filter(r => {
-      const data = parseISO(r.data_reposicao);
-      return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
-    }).map(r => ({
-      tipo: 'reposicao' as const,
-      titulo: `Reposição: ${r.aluno_nome}`,
-      data: r.data_reposicao,
-    })),
-  ];
+      // Camisetas pendentes
+      camisetasPendentes.forEach(c => {
+        const evento = {
+          tipo: 'camiseta',
+          titulo: `Camiseta: ${c.aluno_nome}`,
+          data: '',
+          subtitulo: `${c.dias_supera} dias no Supera`,
+        };
+        if (isDiaHoje(c.dia_semana)) {
+          eventosHoje.push(evento);
+        } else if (isDiaSemana(c.dia_semana)) {
+          eventosSemana.push(evento);
+        }
+      });
+
+      // Apostilas AH prontas
+      apostilasAHProntas.forEach(a => {
+        const evento = {
+          tipo: 'apostila_ah',
+          titulo: `AH: ${a.pessoa_nome}`,
+          data: '',
+          subtitulo: `${a.apostila} - Pronta para entregar`,
+        };
+        if (isDiaHoje(a.dia_semana)) {
+          eventosHoje.push(evento);
+        } else if (isDiaSemana(a.dia_semana)) {
+          eventosSemana.push(evento);
+        }
+      });
+
+      return { eventosHoje, eventosSemana, eventosProximaSemana: [] };
+    } else {
+      // Para não-professores: comportamento original
+      const eventosHoje = [
+        ...aulasExperimentais.filter(ae => ae.data_aula_experimental === hojeStr).map(ae => ({
+          tipo: 'aula_experimental' as const,
+          titulo: `Aula Experimental: ${ae.cliente_nome}`,
+          data: ae.data_aula_experimental,
+        })),
+        ...reposicoes.filter(r => r.data_reposicao === hojeStr).map(r => ({
+          tipo: 'reposicao' as const,
+          titulo: `Reposição: ${r.aluno_nome}`,
+          data: r.data_reposicao,
+        })),
+      ];
+
+      const eventosSemana = [
+        ...aulasExperimentais.filter(ae => {
+          const data = parseISO(ae.data_aula_experimental);
+          return isSameWeek(data, hoje, { weekStartsOn: 0 }) && ae.data_aula_experimental !== hojeStr;
+        }).map(ae => ({
+          tipo: 'aula_experimental' as const,
+          titulo: `Aula Experimental: ${ae.cliente_nome}`,
+          data: ae.data_aula_experimental,
+        })),
+        ...reposicoes.filter(r => {
+          const data = parseISO(r.data_reposicao);
+          return isSameWeek(data, hoje, { weekStartsOn: 0 }) && r.data_reposicao !== hojeStr;
+        }).map(r => ({
+          tipo: 'reposicao' as const,
+          titulo: `Reposição: ${r.aluno_nome}`,
+          data: r.data_reposicao,
+        })),
+      ];
+
+      const eventosProximaSemana = [
+        ...aulasExperimentais.filter(ae => {
+          const data = parseISO(ae.data_aula_experimental);
+          return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
+        }).map(ae => ({
+          tipo: 'aula_experimental' as const,
+          titulo: `Aula Experimental: ${ae.cliente_nome}`,
+          data: ae.data_aula_experimental,
+        })),
+        ...reposicoes.filter(r => {
+          const data = parseISO(r.data_reposicao);
+          return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
+        }).map(r => ({
+          tipo: 'reposicao' as const,
+          titulo: `Reposição: ${r.aluno_nome}`,
+          data: r.data_reposicao,
+        })),
+      ];
+
+      return { eventosHoje, eventosSemana, eventosProximaSemana };
+    }
+  };
+
+  const { eventosHoje, eventosSemana, eventosProximaSemana } = montarEventos();
 
   const handleCriarTarefa = async () => {
     if (!novaTarefa.titulo.trim()) return;
@@ -171,25 +246,49 @@ export default function Home() {
     </div>
   );
 
-  const renderEvento = (evento: { tipo: string; titulo: string; data: string }, index: number) => (
+  const getEventoIcon = (tipo: string) => {
+    switch (tipo) {
+      case 'aula_experimental':
+        return <Users className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />;
+      case 'reposicao':
+        return <RefreshCw className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />;
+      case 'camiseta':
+        return <Shirt className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />;
+      case 'apostila_ah':
+        return <BookOpen className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />;
+      default:
+        return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
+    }
+  };
+
+  const getEventoBadge = (tipo: string) => {
+    switch (tipo) {
+      case 'aula_experimental':
+        return <Badge className="text-[10px] px-1.5 py-0 text-primary-foreground">Aula</Badge>;
+      case 'reposicao':
+        return <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Repos.</Badge>;
+      case 'camiseta':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Camiseta</Badge>;
+      case 'apostila_ah':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-green-500 text-white">AH</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const renderEvento = (evento: { tipo: string; titulo: string; data: string; subtitulo?: string }, index: number) => (
     <div
       key={`${evento.tipo}-${index}`}
       className="flex items-center gap-2 p-2 rounded-md border bg-card"
     >
-      {evento.tipo === 'aula_experimental' ? (
-        <Users className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-      ) : (
-        <RefreshCw className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
-      )}
+      {getEventoIcon(evento.tipo)}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium">{evento.titulo}</p>
         <p className="text-[10px] text-muted-foreground">
-          {format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR })}
+          {evento.subtitulo || (evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : '')}
         </p>
       </div>
-      <Badge variant={evento.tipo === 'aula_experimental' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 text-primary-foreground">
-        {evento.tipo === 'aula_experimental' ? 'Aula' : 'Repos.'}
-      </Badge>
+      {getEventoBadge(evento.tipo)}
     </div>
   );
 
@@ -197,7 +296,7 @@ export default function Home() {
     titulo: string,
     periodo: string,
     tarefas: TarefaPessoal[],
-    eventos: { tipo: string; titulo: string; data: string }[]
+    eventos: { tipo: string; titulo: string; data: string; subtitulo?: string }[]
   ) => (
     <Card>
       <CardHeader className="py-2 px-3">
@@ -229,6 +328,8 @@ export default function Home() {
       </CardContent>
     </Card>
   );
+
+  const isLoading = loadingTarefas || loadingProfessor;
 
   return (
     <div className="max-w-2xl mx-auto space-y-3 px-2">
@@ -322,7 +423,7 @@ export default function Home() {
       </div>
 
       {/* Seções de Atividades */}
-      {loadingTarefas ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
@@ -345,7 +446,7 @@ export default function Home() {
             )}
           </div>
 
-          {renderSecaoAtividades(
+          {!isProfessor && renderSecaoAtividades(
             'Atividades da Próxima Semana',
             `${format(inicioProximaSemana, "dd/MM")} - ${format(fimProximaSemana, "dd/MM")}`,
             tarefasProximaSemana,
