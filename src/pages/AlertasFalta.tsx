@@ -158,193 +158,113 @@ const AlertasFalta = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-0.5">
-        <h1 className="text-sm font-semibold">Histórico de Alertas de Falta</h1>
-        <p className="text-muted-foreground text-xs">
-          Alertas de falta gerados e status de envio
-        </p>
+    <div className="space-y-2">
+      {/* Estatísticas inline */}
+      <div className="flex items-center gap-3 text-xs">
+        <span className="font-medium">Total: <span className="text-foreground">{total}</span></span>
+        <span className="text-green-600">Enviados: {totalEnviados}</span>
+        <span className="text-red-600">Erro: {totalComErro}</span>
+        <span className="text-blue-600">Resolvidos: {totalResolvidos}</span>
       </div>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome do Aluno</label>
-                <Input
-                  placeholder="Buscar por nome"
-                  value={filtros.nome_aluno}
-                  onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Turma</label>
-                <Select
-                  value={filtros.turma_id}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, turma_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas</SelectItem>
-                    {turmas.map((turma) => (
-                      <SelectItem key={turma.id} value={turma.id}>
-                        {turma.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Professor</label>
-                <Select
-                  value={filtros.professor_id}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, professor_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    {professores?.map((professor) => (
-                      <SelectItem key={professor.id} value={professor.id}>
-                        {professor.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select
-                  value={filtros.status}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="enviado">Enviados</SelectItem>
-                    <SelectItem value="resolvido">Resolvidos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo de Critério</label>
-                <Select
-                  value={filtros.tipo_criterio}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, tipo_criterio: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="aluno_recente">Aluno Recente</SelectItem>
-                    <SelectItem value="faltas_consecutivas">Faltas Consecutivas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Início</label>
-                <Input
-                  type="date"
-                  value={filtros.data_inicio}
-                  onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Fim</label>
-                <Input
-                  type="date"
-                  value={filtros.data_fim}
-                  onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => handleFiltroChange({ 
-                status: 'todos', 
-                data_inicio: '', 
-                data_fim: '', 
-                tipo_criterio: 'todos',
-                nome_aluno: '',
-                turma_id: 'todos',
-                professor_id: 'todos'
-              })}
-            >
-              Limpar Filtros
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Total: {total} {total === 1 ? 'alerta' : 'alertas'}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Total de Alertas</p>
-              <p className="text-3xl font-bold">{total}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Enviados</p>
-              <p className="text-3xl font-bold text-green-500">
-                {totalEnviados}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Com Erro</p>
-              <p className="text-3xl font-bold text-red-500">
-                {totalComErro}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Resolvidos</p>
-              <p className="text-3xl font-bold text-blue-500">
-                {totalResolvidos}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Filtros compactos */}
+      <div className="grid grid-cols-2 gap-2">
+        <Input
+          placeholder="Nome do aluno"
+          value={filtros.nome_aluno}
+          onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
+          className="h-8 text-xs"
+        />
+        <Select
+          value={filtros.turma_id}
+          onValueChange={(value) => handleFiltroChange({ ...filtros, turma_id: value })}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Turma" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas turmas</SelectItem>
+            {turmas.map((turma) => (
+              <SelectItem key={turma.id} value={turma.id}>
+                {turma.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filtros.professor_id}
+          onValueChange={(value) => handleFiltroChange({ ...filtros, professor_id: value })}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Professor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos professores</SelectItem>
+            {professores?.map((professor) => (
+              <SelectItem key={professor.id} value={professor.id}>
+                {professor.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filtros.status}
+          onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos status</SelectItem>
+            <SelectItem value="enviado">Enviados</SelectItem>
+            <SelectItem value="resolvido">Resolvidos</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={filtros.tipo_criterio}
+          onValueChange={(value) => handleFiltroChange({ ...filtros, tipo_criterio: value })}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos tipos</SelectItem>
+            <SelectItem value="aluno_recente">Aluno Recente</SelectItem>
+            <SelectItem value="faltas_consecutivas">Faltas Consecutivas</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex gap-1">
+          <Input
+            type="date"
+            value={filtros.data_inicio}
+            onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
+            className="h-8 text-xs flex-1"
+          />
+          <Input
+            type="date"
+            value={filtros.data_fim}
+            onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
+            className="h-8 text-xs flex-1"
+          />
+        </div>
       </div>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 text-xs px-2"
+        onClick={() => handleFiltroChange({ 
+          status: 'todos', 
+          data_inicio: '', 
+          data_fim: '', 
+          tipo_criterio: 'todos',
+          nome_aluno: '',
+          turma_id: 'todos',
+          professor_id: 'todos'
+        })}
+      >
+        Limpar filtros
+      </Button>
 
       {/* Tabela de Alertas */}
       <Card>
