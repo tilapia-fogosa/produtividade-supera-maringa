@@ -54,9 +54,8 @@ export const ReposicaoLancamentoModal: React.FC<ReposicaoLancamentoModalProps> =
   const datasValidas = turma ? calcularDatasValidas(turma.dia_semana) : [];
 
   // Função para determinar o tipo do responsável
-  const determinarTipoResponsavel = (responsavelId: string): 'professor' | 'funcionario' => {
-    const responsavel = responsaveis.find(r => r.id === responsavelId);
-    return responsavel?.tipo || 'professor';
+  const determinarTipoResponsavel = (_responsavelId: string): 'usuario' => {
+    return 'usuario';
   };
 
   const handleProximaEtapa = () => {

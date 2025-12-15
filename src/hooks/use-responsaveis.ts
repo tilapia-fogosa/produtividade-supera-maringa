@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Responsavel {
   id: string;
   nome: string;
-  tipo: 'professor' | 'funcionario';
+  email: string | null;
 }
 
 export function useResponsaveis(): { responsaveis: Responsavel[]; isLoading: boolean } {
@@ -15,11 +15,14 @@ export function useResponsaveis(): { responsaveis: Responsavel[]; isLoading: boo
     const fetchResponsaveis = async () => {
       try {
         setIsLoading(true);
-        console.log('Buscando responsáveis via view...');
+        console.log('Buscando responsáveis (usuários)...');
         
+        // Buscar usuários da tabela profiles
         const { data, error } = await supabase
-          .from('responsaveis_view')
-          .select('*');
+          .from('profiles')
+          .select('id, full_name, email')
+          .not('full_name', 'is', null)
+          .order('full_name');
 
         if (error) {
           console.error('Erro ao buscar responsáveis:', error);
@@ -28,8 +31,8 @@ export function useResponsaveis(): { responsaveis: Responsavel[]; isLoading: boo
 
         const responsaveisFormatados: Responsavel[] = (data || []).map(r => ({
           id: r.id,
-          nome: r.nome,
-          tipo: r.tipo as 'professor' | 'funcionario'
+          nome: r.full_name || r.email || 'Usuário sem nome',
+          email: r.email
         }));
 
         console.log('Responsáveis carregados:', {

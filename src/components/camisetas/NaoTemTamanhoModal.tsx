@@ -73,7 +73,7 @@ export function NaoTemTamanhoModal({
     try {
       await onConfirm({
         responsavel_id: responsavelId,
-        responsavel_tipo: responsavelSelecionado.tipo,
+        responsavel_tipo: 'usuario',
         responsavel_nome: responsavelSelecionado.nome,
         data_informacao: dataInformacao,
         observacoes: observacoes.trim(),
@@ -127,7 +127,7 @@ export function NaoTemTamanhoModal({
               <SelectContent>
                 {responsaveis.map((responsavel) => (
                   <SelectItem key={responsavel.id} value={responsavel.id}>
-                    {responsavel.nome} ({responsavel.tipo === 'professor' ? 'Professor' : 'Funcionário'})
+                    {responsavel.nome}
                   </SelectItem>
                 ))}
               </SelectContent>

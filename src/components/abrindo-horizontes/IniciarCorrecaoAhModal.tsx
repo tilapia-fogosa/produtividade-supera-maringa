@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, User } from "lucide-react";
 import { useAhIniciarCorrecao } from "@/hooks/use-ah-iniciar-correcao";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 interface IniciarCorrecaoAhModalProps {
   open: boolean;
@@ -23,7 +23,7 @@ export const IniciarCorrecaoAhModal = ({
   apostilaNome,
 }: IniciarCorrecaoAhModalProps) => {
   const { iniciarCorrecao, isLoading } = useAhIniciarCorrecao();
-  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
+  const { userId, userName, isLoading: loadingUser, isAuthenticated } = useCurrentUser();
 
   const [dataInicio, setDataInicio] = useState(() => {
     const now = new Date();
@@ -31,15 +31,15 @@ export const IniciarCorrecaoAhModal = ({
   });
 
   const handleSubmit = async () => {
-    if (!funcionarioId || !dataInicio) {
-      console.error("Funcionário não vinculado ou data não preenchida");
+    if (!userId || !dataInicio) {
+      console.error("Usuário não identificado ou data não preenchida");
       return;
     }
 
     try {
       await iniciarCorrecao.mutateAsync({
         apostilaRecolhidaId,
-        funcionarioRegistroId: funcionarioId,
+        funcionarioRegistroId: userId,
         dataInicio,
       });
 
@@ -76,7 +76,7 @@ export const IniciarCorrecaoAhModal = ({
             <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+                {loadingUser ? 'Carregando...' : userName || 'Usuário não identificado'}
               </span>
             </div>
           </div>
@@ -105,7 +105,7 @@ export const IniciarCorrecaoAhModal = ({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || !funcionarioId || !dataInicio}
+            disabled={isLoading || !isAuthenticated || !dataInicio}
             className="bg-[#4E2CA3] hover:bg-[#4E2CA3]/90"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

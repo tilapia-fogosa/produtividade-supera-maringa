@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAhEntrega } from "@/hooks/use-ah-entrega";
 import { Badge } from "@/components/ui/badge";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { User } from "lucide-react";
 
 interface EntregaAhModalProps {
@@ -33,19 +33,19 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
   const [dataEntrega, setDataEntrega] = useState("");
 
   const { registrarEntregaAH, isLoading } = useAhEntrega();
-  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
+  const { userId, userName, isLoading: loadingUser, isAuthenticated } = useCurrentUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!funcionarioId) {
+    if (!userId) {
       return;
     }
 
     await registrarEntregaAH.mutateAsync({
       apostilaRecolhidaId,
       dataEntrega,
-      funcionarioRegistroId: funcionarioId,
+      funcionarioRegistroId: userId,
     });
 
     // Limpar formulário e fechar modal
@@ -89,7 +89,7 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
             <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+                {loadingUser ? 'Carregando...' : userName || 'Usuário não identificado'}
               </span>
             </div>
           </div>
@@ -103,7 +103,7 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading || !funcionarioId || !dataEntrega}>
+            <Button type="submit" disabled={isLoading || !isAuthenticated || !dataEntrega}>
               {isLoading ? "Salvando..." : "Registrar Entrega"}
             </Button>
           </DialogFooter>

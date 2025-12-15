@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateSaoPaulo, toUtcFromSaoPauloDate } from "@/lib/utils";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 interface RecolherApostilasModalProps {
   open: boolean;
@@ -42,7 +42,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   const [loadingApostilas, setLoadingApostilas] = useState(true);
 
   const { alunos, loading: loadingPessoas } = useTodosAlunos();
-  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
+  const { userId, userName, isLoading: loadingUser, isAuthenticated } = useCurrentUser();
 
   // Carregar apostilas de AH do banco de dados
   useEffect(() => {
@@ -119,10 +119,10 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
   };
 
   const handleConfirmar = async () => {
-    if (!funcionarioId) {
+    if (!userId || !userName) {
       toast({
         title: "Erro",
-        description: "Você precisa estar vinculado a um funcionário para realizar esta ação",
+        description: "Você precisa estar logado para realizar esta ação",
         variant: "destructive",
       });
       return;
@@ -145,8 +145,8 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
         return {
           pessoa_id: item.pessoaId,
           apostila: item.apostilaNome,
-          responsavel_id: funcionarioId,
-          funcionario_registro_id: funcionarioId,
+          responsavel_id: userId,
+          funcionario_registro_id: userId,
           created_at: toUtcFromSaoPauloDate(dataRecolhimento),
           data_recolhida: dataRecolhimento,
         };
@@ -235,7 +235,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+                  {loadingUser ? 'Carregando...' : userName || 'Usuário não identificado'}
                 </span>
               </div>
             </div>
@@ -331,7 +331,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               </Button>
               <Button 
                 onClick={handleAvancar}
-                disabled={pessoasSelecionadas.length === 0 || !funcionarioId || !dataRecolhimento}
+                disabled={pessoasSelecionadas.length === 0 || !isAuthenticated || !dataRecolhimento}
               >
                 Avançar
                 <ChevronRight className="h-4 w-4 ml-2" />
@@ -392,7 +392,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                 </Button>
                 <Button 
                   onClick={handleConfirmar}
-                  disabled={!todasApostilasPreenchidas || isSubmitting || !funcionarioId || !dataRecolhimento}
+                  disabled={!todasApostilasPreenchidas || isSubmitting || !isAuthenticated || !dataRecolhimento}
                 >
                   {isSubmitting ? "Salvando..." : "Confirmar Recolhimento"}
                 </Button>
