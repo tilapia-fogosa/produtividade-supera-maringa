@@ -938,7 +938,7 @@ const AdicionarAlunoModal = ({ onAlunoAdicionado, alunosJaCadastrados, responsav
   const adicionarConvidadoNaoAluno = async (convidado: any) => {
     try {
       // TODO: Pegar o ID do usuário logado para responsavel_cadastro
-      const responsavelCadastroTipo = responsaveis.find(r => r.id === convidado.responsavelId)?.tipo || 'funcionario';
+      const responsavelCadastroTipo = 'usuario';
       
       const { error } = await supabase
         .from('convidados_eventos')

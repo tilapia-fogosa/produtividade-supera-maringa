@@ -4,18 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useIgnorarColetaAH } from "@/hooks/use-ignorar-coleta-ah";
-import { useProfessores } from "@/hooks/use-professores";
-import { useEstagiarios } from "@/hooks/use-estagiarios";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { User } from "lucide-react";
 
 const ignorarColetaSchema = z.object({
   dias: z.number().min(1, "Informe pelo menos 1 dia").max(365, "Máximo de 365 dias"),
   motivo: z.string().min(3, "Motivo deve ter pelo menos 3 caracteres"),
-  responsavel: z.string().min(3, "Responsável deve ter pelo menos 3 caracteres"),
 });
 
 type IgnorarColetaForm = z.infer<typeof ignorarColetaSchema>;
@@ -34,30 +32,29 @@ export const IgnorarColetaModal = ({
   pessoaNome 
 }: IgnorarColetaModalProps) => {
   const { mutate: ignorarColeta, isPending } = useIgnorarColetaAH();
-  const { professores } = useProfessores();
-  const { estagiarios } = useEstagiarios();
+  const { userName, isLoading: loadingUser, isAuthenticated } = useCurrentUser();
   
   const {
     register,
     handleSubmit,
     reset,
-    control,
     formState: { errors }
   } = useForm<IgnorarColetaForm>({
     resolver: zodResolver(ignorarColetaSchema),
     defaultValues: {
       dias: 7,
-      motivo: "",
-      responsavel: ""
+      motivo: ""
     }
   });
 
   const onSubmit = (data: IgnorarColetaForm) => {
+    if (!userName) return;
+    
     ignorarColeta({
       pessoaId,
       dias: data.dias,
       motivo: data.motivo,
-      responsavel: data.responsavel
+      responsavel: userName
     }, {
       onSuccess: () => {
         reset();
@@ -114,36 +111,13 @@ export const IgnorarColetaModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="responsavel">
-              Responsável <span className="text-destructive">*</span>
-            </Label>
-            <Controller
-              name="responsavel"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger id="responsavel" className="bg-background">
-                    <SelectValue placeholder="Selecione o responsável" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    <SelectItem value="coordenacao">Coordenação</SelectItem>
-                    {professores.map((prof) => (
-                      <SelectItem key={`prof-${prof.id}`} value={prof.nome}>
-                        {prof.nome} (Professor)
-                      </SelectItem>
-                    ))}
-                    {estagiarios.map((est) => (
-                      <SelectItem key={`est-${est.id}`} value={est.nome}>
-                        {est.nome} (Estagiário)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.responsavel && (
-              <p className="text-sm text-destructive">{errors.responsavel.message}</p>
-            )}
+            <Label>Responsável</Label>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {loadingUser ? 'Carregando...' : userName || 'Usuário não identificado'}
+              </span>
+            </div>
           </div>
 
           <DialogFooter className="gap-2">
@@ -155,7 +129,7 @@ export const IgnorarColetaModal = ({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !isAuthenticated || !userName}>
               {isPending ? "Salvando..." : "Ignorar"}
             </Button>
           </DialogFooter>

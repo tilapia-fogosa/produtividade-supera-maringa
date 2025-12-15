@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useAhCorrecao } from "@/hooks/use-ah-correcao";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { BookOpen, User } from "lucide-react";
 
 interface FinalizarCorrecaoAhModalProps {
@@ -34,7 +34,7 @@ export function FinalizarCorrecaoAhModal({
   apostilaNome,
 }: FinalizarCorrecaoAhModalProps) {
   const { registrarCorrecaoAH, isLoading } = useAhCorrecao();
-  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
+  const { userId, userName, isLoading: loadingUser, isAuthenticated } = useCurrentUser();
 
   const [exercicios, setExercicios] = useState("");
   const [erros, setErros] = useState("");
@@ -44,7 +44,7 @@ export function FinalizarCorrecaoAhModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!funcionarioId) {
+    if (!userId) {
       return;
     }
 
@@ -54,7 +54,7 @@ export function FinalizarCorrecaoAhModal({
       apostilaNome,
       exercicios: parseInt(exercicios),
       erros: parseInt(erros),
-      funcionarioRegistroId: funcionarioId,
+      funcionarioRegistroId: userId,
       dataFimCorrecao,
       comentario,
     });
@@ -127,7 +127,7 @@ export function FinalizarCorrecaoAhModal({
             <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+                {loadingUser ? 'Carregando...' : userName || 'Usuário não identificado'}
               </span>
             </div>
           </div>
@@ -167,7 +167,7 @@ export function FinalizarCorrecaoAhModal({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading || !funcionarioId}>
+            <Button type="submit" disabled={isLoading || !isAuthenticated}>
               {isLoading ? "Salvando..." : "Salvar Correção"}
             </Button>
           </DialogFooter>
