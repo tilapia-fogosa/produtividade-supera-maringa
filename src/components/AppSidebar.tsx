@@ -110,6 +110,12 @@ const additionalItems = [
     icon: Shield,
     requiresAdmin: true,
   },
+  {
+    title: "Configurações",
+    url: "/admin/configuracao",
+    icon: Settings,
+    requiresAdmin: true,
+  },
 ];
 
 export function AppSidebar() {
