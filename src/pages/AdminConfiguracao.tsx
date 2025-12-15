@@ -25,7 +25,7 @@ const AdminConfiguracao = () => {
   const queryClient = useQueryClient();
 
   // ID da unidade de Maringá
-  const MARINGA_UNIT_ID = '84f98b06-ea0f-4d00-a651-6f5afdd78c60';
+  const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
   // Buscar professores de Maringá
   const { data: professoresMaringa } = useQuery({
