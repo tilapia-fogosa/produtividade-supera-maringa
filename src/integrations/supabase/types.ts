@@ -3641,6 +3641,60 @@ export type Database = {
           },
         ]
       }
+      historico_whatsapp_grupos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enviado_por: string | null
+          from_me: boolean | null
+          grupo_id: number
+          id: number
+          mensagem: string | null
+          nome_remetente: string | null
+          tipo_mensagem: string | null
+          unit_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enviado_por?: string | null
+          from_me?: boolean | null
+          grupo_id: number
+          id?: never
+          mensagem?: string | null
+          nome_remetente?: string | null
+          tipo_mensagem?: string | null
+          unit_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enviado_por?: string | null
+          from_me?: boolean | null
+          grupo_id?: number
+          id?: never
+          mensagem?: string | null
+          nome_remetente?: string | null
+          tipo_mensagem?: string | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_whatsapp_grupos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_sup_mga"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_whatsapp_grupos_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historico_whatsapp_pedagogico: {
         Row: {
           aluno_id: string | null
