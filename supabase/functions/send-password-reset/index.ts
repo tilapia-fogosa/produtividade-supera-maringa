@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Reset link generated successfully");
 
     const emailResponse = await resend.emails.send({
-      from: "Kadin CRM <naoresponda@kadincrm.com.br>",
+      from: "Sistema Kadin <naoresponda@kadincrm.com.br>",
       to: [email],
       subject: "Recuperação de Senha - Método Supera",
       html: `
