@@ -97,17 +97,6 @@ const items = [
     url: "/projeto-sao-rafael",
     icon: Target,
   },
-  {
-    title: "Devolutivas Fim de Ano",
-    url: "/devolutivas/devolutiva-fim-ano",
-    icon: Award,
-  },
-  {
-    title: "Gestão de Retenções",
-    url: "/retencoes",
-    icon: Shield,
-    requiresAdmin: true,
-  },
 ];
 
 const additionalItems = [
