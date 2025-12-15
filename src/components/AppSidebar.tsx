@@ -10,7 +10,6 @@ import {
   Calendar, 
   LogOut,
   Settings,
-  TrendingUp,
   BookOpen,
   Target,
   Building,
@@ -86,12 +85,6 @@ const items = [
     icon: FileSpreadsheet,
   },
   {
-    title: "Painel Pedagógico",
-    url: "/painel-pedagogico",
-    icon: TrendingUp,
-    requiresAdmin: true,
-  },
-  {
     title: "Correções AH",
     url: "/correcoes-ah",
     icon: BookOpen,
@@ -141,7 +134,6 @@ export function AppSidebar() {
   const isFuncionario = ['gestor_pedagogico', 'franqueado'].includes(userRole);
 
   const filteredItems = items.filter(item => {
-    if (item.requiresAdmin && !isAdmin) return false;
     if (item.requiresTeacher && !isTeacher) return false;
     if (item.requiresFuncionario && !isFuncionario) return false;
     return true;
