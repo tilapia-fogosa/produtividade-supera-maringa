@@ -18,7 +18,8 @@ import {
   ListChecks,
   MapPin,
   AlertTriangle,
-  Award
+  Award,
+  Home
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,11 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
+  {
+    title: "Boas Vindas",
+    url: "/home",
+    icon: Home,
+  },
   {
     title: "Lançamentos",
     url: "/lancamentos",
