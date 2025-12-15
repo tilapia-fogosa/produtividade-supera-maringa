@@ -145,6 +145,7 @@ export type Database = {
           data_entrega_real: string | null
           data_inicio_correcao: string | null
           data_recolhida: string
+          funcionario_registro_id: string | null
           id: number
           pessoa_id: string
           professor_id: string | null
@@ -162,6 +163,7 @@ export type Database = {
           data_entrega_real?: string | null
           data_inicio_correcao?: string | null
           data_recolhida: string
+          funcionario_registro_id?: string | null
           id?: number
           pessoa_id: string
           professor_id?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           data_entrega_real?: string | null
           data_inicio_correcao?: string | null
           data_recolhida?: string
+          funcionario_registro_id?: string | null
           id?: number
           pessoa_id?: string
           professor_id?: string | null
@@ -206,6 +209,7 @@ export type Database = {
           data_alerta: string
           data_retencao: string | null
           descritivo: string | null
+          funcionario_registro_id: string | null
           id: string
           kanban_status: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
@@ -219,6 +223,7 @@ export type Database = {
           data_alerta?: string
           data_retencao?: string | null
           descritivo?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           kanban_status?: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
@@ -232,6 +237,7 @@ export type Database = {
           data_alerta?: string
           data_retencao?: string | null
           descritivo?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           kanban_status?: string
           origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
@@ -252,6 +258,13 @@ export type Database = {
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerta_evasao_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
             referencedColumns: ["id"]
           },
         ]
@@ -1318,6 +1331,7 @@ export type Database = {
           created_by: string | null
           data_aula_experimental: string
           descricao_cliente: string | null
+          funcionario_registro_id: string | null
           id: string
           responsavel_id: string
           responsavel_nome: string | null
@@ -1332,6 +1346,7 @@ export type Database = {
           created_by?: string | null
           data_aula_experimental: string
           descricao_cliente?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           responsavel_id: string
           responsavel_nome?: string | null
@@ -1346,6 +1361,7 @@ export type Database = {
           created_by?: string | null
           data_aula_experimental?: string
           descricao_cliente?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           responsavel_id?: string
           responsavel_nome?: string | null
@@ -1353,7 +1369,15 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "aulas_experimentais_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       backup_metadata: {
         Row: {
@@ -1478,6 +1502,7 @@ export type Database = {
           camiseta_entregue: boolean
           created_at: string
           data_entrega: string | null
+          funcionario_registro_id: string | null
           id: string
           nao_tem_tamanho: boolean | null
           observacoes: string | null
@@ -1492,6 +1517,7 @@ export type Database = {
           camiseta_entregue?: boolean
           created_at?: string
           data_entrega?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           nao_tem_tamanho?: boolean | null
           observacoes?: string | null
@@ -1506,6 +1532,7 @@ export type Database = {
           camiseta_entregue?: boolean
           created_at?: string
           data_entrega?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           nao_tem_tamanho?: boolean | null
           observacoes?: string | null
@@ -1515,7 +1542,15 @@ export type Database = {
           tamanho_camiseta?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "camisetas_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cash_accounts: {
         Row: {
@@ -2901,6 +2936,7 @@ export type Database = {
           created_by: string | null
           data_evento: string
           descricao: string | null
+          funcionario_registro_id: string | null
           id: string
           local: string | null
           numero_vagas: number
@@ -2916,6 +2952,7 @@ export type Database = {
           created_by?: string | null
           data_evento: string
           descricao?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           local?: string | null
           numero_vagas?: number
@@ -2931,6 +2968,7 @@ export type Database = {
           created_by?: string | null
           data_evento?: string
           descricao?: string | null
+          funcionario_registro_id?: string | null
           id?: string
           local?: string | null
           numero_vagas?: number
@@ -2940,7 +2978,15 @@ export type Database = {
           unit_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "eventos_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eventos_professor: {
         Row: {
@@ -2954,6 +3000,7 @@ export type Database = {
           dia_mes: number | null
           dia_semana: string | null
           duracao_minutos: number | null
+          funcionario_registro_id: string | null
           horario_fim: string
           horario_inicio: string
           id: string
@@ -2975,6 +3022,7 @@ export type Database = {
           dia_mes?: number | null
           dia_semana?: string | null
           duracao_minutos?: number | null
+          funcionario_registro_id?: string | null
           horario_fim: string
           horario_inicio: string
           id?: string
@@ -2996,6 +3044,7 @@ export type Database = {
           dia_mes?: number | null
           dia_semana?: string | null
           duracao_minutos?: number | null
+          funcionario_registro_id?: string | null
           horario_fim?: string
           horario_inicio?: string
           id?: string
@@ -3007,6 +3056,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_professor_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_professor_professor_id_fkey"
             columns: ["professor_id"]
@@ -3034,6 +3090,7 @@ export type Database = {
           descricao: string | null
           dia_mes: number | null
           dia_semana: string | null
+          funcionario_registro_id: string | null
           horario_fim: string
           horario_inicio: string
           id: string
@@ -3060,6 +3117,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: string | null
+          funcionario_registro_id?: string | null
           horario_fim: string
           horario_inicio: string
           id?: string
@@ -3086,6 +3144,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: string | null
+          funcionario_registro_id?: string | null
           horario_fim?: string
           horario_inicio?: string
           id?: string
@@ -3103,6 +3162,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_sala_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_sala_sala_id_fkey"
             columns: ["sala_id"]
@@ -3154,6 +3220,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_falta: string
+          funcionario_registro_id: string | null
           id: string
           observacoes: string | null
           responsavel_aviso_id: string
@@ -3168,6 +3235,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_falta: string
+          funcionario_registro_id?: string | null
           id?: string
           observacoes?: string | null
           responsavel_aviso_id: string
@@ -3182,6 +3250,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_falta?: string
+          funcionario_registro_id?: string | null
           id?: string
           observacoes?: string | null
           responsavel_aviso_id?: string
@@ -3190,7 +3259,15 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "faltas_antecipadas_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       faq: {
         Row: {
@@ -4093,6 +4170,7 @@ export type Database = {
           erros: number | null
           exercicios: number | null
           fez_desafio: boolean | null
+          funcionario_registro_id: string | null
           id: string
           is_reposicao: boolean
           motivo_falta: string | null
@@ -4111,6 +4189,7 @@ export type Database = {
           erros?: number | null
           exercicios?: number | null
           fez_desafio?: boolean | null
+          funcionario_registro_id?: string | null
           id?: string
           is_reposicao?: boolean
           motivo_falta?: string | null
@@ -4129,6 +4208,7 @@ export type Database = {
           erros?: number | null
           exercicios?: number | null
           fez_desafio?: boolean | null
+          funcionario_registro_id?: string | null
           id?: string
           is_reposicao?: boolean
           motivo_falta?: string | null
@@ -4138,7 +4218,15 @@ export type Database = {
           tipo_pessoa?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_abaco_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtividade_abaco_backup: {
         Row: {
@@ -4207,6 +4295,7 @@ export type Database = {
           data_fim_correcao: string | null
           erros: number | null
           exercicios: number | null
+          funcionario_registro_id: string | null
           id: string
           pessoa_id: string
           professor_correcao: string | null
@@ -4222,6 +4311,7 @@ export type Database = {
           data_fim_correcao?: string | null
           erros?: number | null
           exercicios?: number | null
+          funcionario_registro_id?: string | null
           id?: string
           pessoa_id: string
           professor_correcao?: string | null
@@ -4237,6 +4327,7 @@ export type Database = {
           data_fim_correcao?: string | null
           erros?: number | null
           exercicios?: number | null
+          funcionario_registro_id?: string | null
           id?: string
           pessoa_id?: string
           professor_correcao?: string | null
@@ -4451,6 +4542,7 @@ export type Database = {
           email_confirmed: boolean | null
           first_access_at: string | null
           full_name: string | null
+          funcionario_id: string | null
           g_access_token: string | null
           g_refresh_token: string | null
           g_token_expiration: string | null
@@ -4461,7 +4553,6 @@ export type Database = {
           id: string
           is_admin: boolean | null
           must_change_password: boolean | null
-          role: string | null
           updated_at: string
         }
         Insert: {
@@ -4473,6 +4564,7 @@ export type Database = {
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          funcionario_id?: string | null
           g_access_token?: string | null
           g_refresh_token?: string | null
           g_token_expiration?: string | null
@@ -4483,7 +4575,6 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
-          role?: string | null
           updated_at?: string
         }
         Update: {
@@ -4495,6 +4586,7 @@ export type Database = {
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          funcionario_id?: string | null
           g_access_token?: string | null
           g_refresh_token?: string | null
           g_token_expiration?: string | null
@@ -4505,10 +4597,17 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
-          role?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projeto_sao_rafael_textos: {
         Row: {
@@ -4555,6 +4654,27 @@ export type Database = {
         }
         Relationships: []
       }
+      registro_ponto: {
+        Row: {
+          created_at: string
+          id: string
+          id_usuario: string
+          tipo_registro: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_usuario: string
+          tipo_registro: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_usuario?: string
+          tipo_registro?: string
+        }
+        Relationships: []
+      }
       reposicoes: {
         Row: {
           aluno_id: string | null
@@ -4562,6 +4682,7 @@ export type Database = {
           created_by: string | null
           data_falta: string | null
           data_reposicao: string
+          funcionario_registro_id: string | null
           id: string
           nome_responsavel: string | null
           observacoes: string | null
@@ -4578,6 +4699,7 @@ export type Database = {
           created_by?: string | null
           data_falta?: string | null
           data_reposicao: string
+          funcionario_registro_id?: string | null
           id?: string
           nome_responsavel?: string | null
           observacoes?: string | null
@@ -4594,6 +4716,7 @@ export type Database = {
           created_by?: string | null
           data_falta?: string | null
           data_reposicao?: string
+          funcionario_registro_id?: string | null
           id?: string
           nome_responsavel?: string | null
           observacoes?: string | null
@@ -4605,6 +4728,13 @@ export type Database = {
           unit_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reposicoes_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reposicoes_turma_id_fkey"
             columns: ["turma_id"]
@@ -5276,6 +5406,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefas_pessoais: {
+        Row: {
+          concluida: boolean | null
+          created_at: string
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          prioridade: string | null
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concluida?: boolean | null
+          created_at?: string
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          prioridade?: string | null
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concluida?: boolean | null
+          created_at?: string
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          prioridade?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       temp_produtividade_abaco: {
         Row: {
           fez_desafio: boolean | null
@@ -5337,6 +5503,45 @@ export type Database = {
             columns: ["cash_account_id"]
             isOneToOne: false
             referencedRelation: "cash_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcricao_ligacoes: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: number
+          transcricao: Json
+          url_audio: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: number
+          transcricao: Json
+          url_audio?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: number
+          transcricao?: Json
+          url_audio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcricao_ligacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcricao_ligacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
         ]
@@ -6127,6 +6332,7 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string | null
+          historico_cadastros: string | null
           id: string | null
           last_activity: Json | null
           lead_source: string | null
@@ -6136,6 +6342,7 @@ export type Database = {
           original_ad: string | null
           original_adset: string | null
           phone_number: string | null
+          quantidade_cadastros: number | null
           registration_name: string | null
           scheduled_date: string | null
           status: string | null
@@ -6427,6 +6634,10 @@ export type Database = {
           p_mensalidade: number
         }
         Returns: number
+      }
+      generate_registration_history: {
+        Args: { dates: string[] }
+        Returns: string
       }
       get_activity_funnel_stats: {
         Args: {
@@ -7068,11 +7279,22 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_role_in_unit: { Args: { p_unit_id: string }; Returns: string }
+      get_user_unit_ids: { Args: never; Returns: string[] }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_unit_access: { Args: { p_unit_id: string }; Returns: boolean }
       has_unread_updates: { Args: { p_user_id: string }; Returns: boolean }
       inactivate_activity: { Args: { activity_id: string }; Returns: boolean }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_admin_in_unit: { Args: { unit_id: string }; Returns: boolean }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
+      is_system_admin: { Args: never; Returns: boolean }
       kanban_client_activities: {
         Args: { p_client_id: string; p_limit?: number; p_offset?: number }
         Returns: Json
@@ -7129,25 +7351,6 @@ export type Database = {
         | {
             Args: {
               p_activity_id: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type_id?: string
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_observations?: string
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              p_activity_id: string
               p_commercial_observations?: string
               p_enrollment_amount?: number
               p_enrollment_installments?: number
@@ -7183,6 +7386,25 @@ export type Database = {
               p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
             }
             Returns: Json
+          }
+        | {
+            Args: {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type_id?: string
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_observations?: string
+            }
+            Returns: boolean
           }
       save_pos_venda_pedagogical_data: {
         Args: {
@@ -7329,6 +7551,9 @@ export type Database = {
         | "admin"
         | "educador"
         | "gestor_pedagogico"
+        | "financeiro"
+        | "administrativo"
+        | "estagiario"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
       Vinculo_aluno:
         | "Pai do aluno"
@@ -7547,6 +7772,9 @@ export const Constants = {
         "admin",
         "educador",
         "gestor_pedagogico",
+        "financeiro",
+        "administrativo",
+        "estagiario",
       ],
       user_role_old: ["consultor", "franqueado", "gestor_comercial"],
       Vinculo_aluno: [

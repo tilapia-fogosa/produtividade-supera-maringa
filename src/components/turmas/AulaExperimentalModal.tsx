@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
@@ -12,7 +11,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useAulasExperimentais } from "@/hooks/use-aulas-experimentais";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 
 interface AulaExperimentalModalProps {
   isOpen: boolean;
@@ -32,36 +31,31 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
   unitId
 }) => {
   const [clienteNome, setClienteNome] = useState('');
-  const [responsavelId, setResponsavelId] = useState('');
-  const [responsavelTipo, setResponsavelTipo] = useState<'professor' | 'funcionario' | ''>('');
   const [dataAulaExperimental, setDataAulaExperimental] = useState<Date>();
   const [descricaoCliente, setDescricaoCliente] = useState('');
 
   const { criarAulaExperimental, calcularDatasValidas } = useAulasExperimentais();
-  const { responsaveis, isLoading: isLoadingResponsaveis } = useResponsaveis();
+  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
 
   const datasValidas = calcularDatasValidas(diaSemana);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!clienteNome || !responsavelId || !responsavelTipo || !dataAulaExperimental || !descricaoCliente) {
+    if (!clienteNome || !funcionarioId || !dataAulaExperimental || !descricaoCliente) {
       return;
     }
-
-    // Encontrar o nome do responsável selecionado
-    const responsavelSelecionado = responsaveis.find(r => r.id === responsavelId);
-    const nomeResponsavel = responsavelSelecionado?.nome || '';
 
     criarAulaExperimental.mutate({
       cliente_nome: clienteNome,
       turma_id: turmaId,
       data_aula_experimental: format(dataAulaExperimental, 'yyyy-MM-dd'),
-      responsavel_id: responsavelId,
-      responsavel_tipo: responsavelTipo,
-      responsavel_nome: nomeResponsavel,
+      responsavel_id: funcionarioId,
+      responsavel_tipo: 'funcionario',
+      responsavel_nome: funcionarioNome || '',
       descricao_cliente: descricaoCliente || undefined,
       unit_id: unitId,
+      funcionario_registro_id: funcionarioId,
     }, {
       onSuccess: () => {
         handleClose();
@@ -71,19 +65,9 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
 
   const handleClose = () => {
     setClienteNome('');
-    setResponsavelId('');
-    setResponsavelTipo('');
     setDataAulaExperimental(undefined);
     setDescricaoCliente('');
     onClose();
-  };
-
-  const handleResponsavelChange = (value: string) => {
-    setResponsavelId(value);
-    const responsavel = responsaveis.find(r => r.id === value);
-    if (responsavel) {
-      setResponsavelTipo(responsavel.tipo);
-    }
   };
 
   return (
@@ -103,22 +87,6 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
               placeholder="Digite o nome do cliente"
               required
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsável</Label>
-            <Select value={responsavelId} onValueChange={handleResponsavelChange} required>
-              <SelectTrigger>
-                <SelectValue placeholder={isLoadingResponsaveis ? "Carregando..." : "Selecione o responsável"} />
-              </SelectTrigger>
-              <SelectContent>
-                {responsaveis.map((responsavel) => (
-                  <SelectItem key={responsavel.id} value={responsavel.id}>
-                    {responsavel.nome} ({responsavel.tipo === 'professor' ? 'Professor' : 'Funcionário'})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">

@@ -59,12 +59,18 @@ export const useUserPermissions = () => {
 
   const isAdmin = profile?.role === 'admin';
   const isManagement = profile?.role && (['franqueado', 'gestor_pedagogico', 'admin'] as const).includes(profile.role as any);
+  const isFinanceiro = profile?.role === 'financeiro';
+  const isAdministrativo = profile?.role === 'administrativo';
+  const isEstagiario = profile?.role === 'estagiario';
 
   return {
     hasPageAccess,
     getAccessiblePages,
     isAdmin,
     isManagement,
+    isFinanceiro,
+    isAdministrativo,
+    isEstagiario,
     userRole: profile?.role,
     loading
   };

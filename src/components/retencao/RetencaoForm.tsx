@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Search } from 'lucide-react';
+import { CalendarIcon, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useRetencoes } from '@/hooks/use-retencoes';
 import { useAlunos } from '@/hooks/use-alunos.tsx';
+import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 
 interface RetencaoFormProps {
   onSubmit: () => void;
@@ -22,12 +22,11 @@ export const RetencaoForm: React.FC<RetencaoFormProps> = ({ onSubmit, onCancel }
     formData, 
     updateFormData, 
     isLoading, 
-    responsaveis, 
-    isLoadingResponsaveis, 
     salvarRetencao 
   } = useRetencoes();
 
   const { alunos, carregando: alunosLoading } = useAlunos();
+  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
   const [searchAluno, setSearchAluno] = useState('');
   const [showAlunoList, setShowAlunoList] = useState(false);
   const [date, setDate] = useState<Date>();
@@ -36,6 +35,15 @@ export const RetencaoForm: React.FC<RetencaoFormProps> = ({ onSubmit, onCancel }
     aluno.nome?.toLowerCase().includes(searchAluno.toLowerCase()) ||
     aluno.codigo?.toLowerCase().includes(searchAluno.toLowerCase())
   ).slice(0, 10);
+
+  // Atualizar responsável automaticamente com o funcionário logado
+  useEffect(() => {
+    if (funcionarioId && funcionarioNome) {
+      updateFormData('responsavel_id', funcionarioId);
+      updateFormData('responsavel_tipo', 'funcionario');
+      updateFormData('responsavel_nome', funcionarioNome);
+    }
+  }, [funcionarioId, funcionarioNome, updateFormData]);
 
   useEffect(() => {
     if (date) {
@@ -49,15 +57,6 @@ export const RetencaoForm: React.FC<RetencaoFormProps> = ({ onSubmit, onCancel }
     updateFormData('unit_id', aluno.unit_id);
     setSearchAluno(aluno.nome);
     setShowAlunoList(false);
-  };
-
-  const handleSelectResponsavel = (responsavelId: string) => {
-    const responsavel = responsaveis.find(r => r.id === responsavelId);
-    if (responsavel) {
-      updateFormData('responsavel_id', responsavelId);
-      updateFormData('responsavel_tipo', responsavel.tipo);
-      updateFormData('responsavel_nome', responsavel.nome);
-    }
   };
 
   const handleSubmit = async () => {
@@ -85,15 +84,6 @@ export const RetencaoForm: React.FC<RetencaoFormProps> = ({ onSubmit, onCancel }
               onFocus={() => setShowAlunoList(true)}
               className="pr-10"
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="ml-2"
-              onClick={() => setShowAlunoList(!showAlunoList)}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
           </div>
           
           {showAlunoList && searchAluno && (
@@ -149,25 +139,15 @@ export const RetencaoForm: React.FC<RetencaoFormProps> = ({ onSubmit, onCancel }
         </Popover>
       </div>
 
-      {/* Responsável */}
+      {/* Responsável - Exibição automática */}
       <div className="space-y-2">
-        <Label>Responsável *</Label>
-        <Select onValueChange={handleSelectResponsavel} value={formData.responsavel_id}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o responsável" />
-          </SelectTrigger>
-          <SelectContent>
-            {isLoadingResponsaveis ? (
-              <SelectItem value="loading" disabled>Carregando...</SelectItem>
-            ) : (
-              responsaveis.map((responsavel) => (
-                <SelectItem key={responsavel.id} value={responsavel.id}>
-                  {responsavel.nome} ({responsavel.tipo === 'professor' ? 'Educador' : 'Funcionário'})
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
+        <Label>Responsável</Label>
+        <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
+          <User className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">
+            {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+          </span>
+        </div>
       </div>
 
       {/* Descritivo do Responsável */}
@@ -212,7 +192,7 @@ export const RetencaoForm: React.FC<RetencaoFormProps> = ({ onSubmit, onCancel }
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isLoading}
+          disabled={isLoading || !funcionarioId}
           className="flex-1"
         >
           {isLoading ? 'Salvando...' : 'Salvar Retenção'}

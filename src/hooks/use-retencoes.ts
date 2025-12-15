@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useResponsaveis } from './use-responsaveis';
 
 export interface RetencaoFormData {
   aluno_id: string;
@@ -17,13 +16,12 @@ export interface RetencaoFormData {
 
 export function useRetencoes() {
   const [isLoading, setIsLoading] = useState(false);
-  const { responsaveis, isLoading: isLoadingResponsaveis } = useResponsaveis();
 
   const [formData, setFormData] = useState<RetencaoFormData>({
     aluno_id: '',
     aluno_nome: '',
     responsavel_id: '',
-    responsavel_tipo: 'professor',
+    responsavel_tipo: 'funcionario',
     responsavel_nome: '',
     data_retencao: '',
     descritivo_responsavel: '',
@@ -31,19 +29,19 @@ export function useRetencoes() {
     unit_id: ''
   });
 
-  const updateFormData = (field: keyof RetencaoFormData, value: string) => {
+  const updateFormData = useCallback((field: keyof RetencaoFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
+  }, []);
 
   const resetForm = () => {
     setFormData({
       aluno_id: '',
       aluno_nome: '',
       responsavel_id: '',
-      responsavel_tipo: 'professor',
+      responsavel_tipo: 'funcionario',
       responsavel_nome: '',
       data_retencao: '',
       descritivo_responsavel: '',
@@ -130,8 +128,6 @@ export function useRetencoes() {
     updateFormData,
     resetForm,
     isLoading,
-    responsaveis,
-    isLoadingResponsaveis,
     salvarRetencao,
     validateForm
   };

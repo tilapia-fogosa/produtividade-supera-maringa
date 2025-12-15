@@ -135,31 +135,6 @@ export function AlertaEvasaoForm({
       />
 
       <div>
-        <label htmlFor="responsavel" className="block text-sm font-medium text-gray-700 mb-1">
-          Responsável
-        </label>
-        <Select 
-          value={responsavelId || ''} 
-          onValueChange={setResponsavelId}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o responsável" />
-          </SelectTrigger>
-          <SelectContent>
-            {carregandoResponsaveis ? (
-              <SelectItem value="carregando" disabled>Carregando...</SelectItem>
-            ) : (
-              responsaveis.map((resp) => (
-                <SelectItem key={resp.id} value={resp.id}>
-                  {resp.nome} {resp.tipo === 'funcionario' ? '(Funcionário)' : '(Professor)'}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
         <label htmlFor="data-retencao" className="block text-sm font-medium text-gray-700 mb-1">
           Agendado Retenção (caso tenha)
         </label>

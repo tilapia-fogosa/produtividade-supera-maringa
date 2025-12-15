@@ -1,13 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
-import { useProfessores } from "@/hooks/use-professores";
-import { useEstagiarios } from "@/hooks/use-estagiarios";
+import { Loader2, User } from "lucide-react";
 import { useAhIniciarCorrecao } from "@/hooks/use-ah-iniciar-correcao";
+import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
 
 interface IniciarCorrecaoAhModalProps {
   open: boolean;
@@ -24,58 +22,28 @@ export const IniciarCorrecaoAhModal = ({
   apostilaRecolhidaId,
   apostilaNome,
 }: IniciarCorrecaoAhModalProps) => {
-  const { professores = [] } = useProfessores();
-  const { estagiarios = [] } = useEstagiarios();
   const { iniciarCorrecao, isLoading } = useAhIniciarCorrecao();
+  const { funcionarioId, funcionarioNome, isLoading: loadingFuncionario } = useCurrentFuncionario();
 
-  const [responsavelId, setResponsavelId] = useState("");
   const [dataInicio, setDataInicio] = useState(() => {
     const now = new Date();
     return now.toISOString().slice(0, 10);
   });
 
-  // Combinar professores e estagiários em uma lista única
-  const corretores = useMemo(() => {
-    const professoresList = professores.map((p) => ({
-      id: p.id,
-      nome: p.nome,
-      tipo: "Professor" as const,
-    }));
-
-    const estagiariosList = estagiarios.map((e) => ({
-      id: e.id,
-      nome: e.nome,
-      tipo: "Estagiário" as const,
-    }));
-
-    return [...professoresList, ...estagiariosList].sort((a, b) =>
-      a.nome.localeCompare(b.nome)
-    );
-  }, [professores, estagiarios]);
-
   const handleSubmit = async () => {
-    if (!responsavelId || !dataInicio) {
-      console.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    const corretor = corretores.find((c) => c.id === responsavelId);
-    if (!corretor) {
-      console.error("Corretor não encontrado");
+    if (!funcionarioId || !dataInicio) {
+      console.error("Funcionário não vinculado ou data não preenchida");
       return;
     }
 
     try {
       await iniciarCorrecao.mutateAsync({
         apostilaRecolhidaId,
-        responsavelId: corretor.id,
-        responsavelNome: corretor.nome,
-        responsavelTipo: corretor.tipo,
+        funcionarioRegistroId: funcionarioId,
         dataInicio,
       });
 
       // Resetar form e fechar modal
-      setResponsavelId("");
       setDataInicio(() => {
         const now = new Date();
         return now.toISOString().slice(0, 10);
@@ -102,23 +70,15 @@ export const IniciarCorrecaoAhModal = ({
             </Badge>
           </div>
 
-          {/* Responsável pela correção */}
+          {/* Responsável pela correção - Exibição automática */}
           <div className="space-y-2">
-            <Label htmlFor="responsavel-correcao">
-              Responsável pela correção *
-            </Label>
-            <Select value={responsavelId} onValueChange={setResponsavelId}>
-              <SelectTrigger id="responsavel-correcao">
-                <SelectValue placeholder="Selecione o responsável" />
-              </SelectTrigger>
-              <SelectContent>
-                {corretores.map((corretor) => (
-                  <SelectItem key={corretor.id} value={corretor.id}>
-                    {corretor.nome} ({corretor.tipo})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Responsável pela correção</Label>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {loadingFuncionario ? 'Carregando...' : funcionarioNome || 'Funcionário não vinculado'}
+              </span>
+            </div>
           </div>
 
           {/* Data de início */}
@@ -145,7 +105,7 @@ export const IniciarCorrecaoAhModal = ({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || !responsavelId || !dataInicio}
+            disabled={isLoading || !funcionarioId || !dataInicio}
             className="bg-[#4E2CA3] hover:bg-[#4E2CA3]/90"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

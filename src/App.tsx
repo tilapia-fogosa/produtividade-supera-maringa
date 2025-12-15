@@ -53,6 +53,8 @@ import GerenciarFotosAlunos from "./pages/GerenciarFotosAlunos";
 import CadastroNovoAluno from "./pages/CadastroNovoAluno";
 import CRM from "./pages/CRM";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AccessDenied from "./pages/AccessDenied";
 import PlanejadorDesafios from "./pages/PlanejadorDesafios";
 import Camisetas from "./pages/Camisetas";
@@ -60,6 +62,10 @@ import AgendaProfessores from "./pages/AgendaProfessores";
 import ReservasSala from "./pages/ReservasSala";
 import AlertasFalta from "./pages/AlertasFalta";
 import AlertasEvasao from "./pages/AlertasEvasao";
+import RegistroPonto from "./pages/RegistroPonto";
+import MeuPerfil from "./pages/MeuPerfil";
+import Home from "./pages/Home";
+import TestGoogleCalendar from "./pages/TestGoogleCalendar";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +80,8 @@ function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="/auth/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
                 <Route path="/*" element={
@@ -90,7 +98,8 @@ function App() {
                             <UnitSelector />
                           </div>
               <Routes>
-                <Route path="/" element={<Navigate to="/lancamentos" />} />
+                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/dias-lancamento" element={<DiasLancamento />} />
                             <Route path="/turmas/dia" element={<Turmas />} />
                             <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
@@ -136,6 +145,9 @@ function App() {
                             <Route path="/devolutivas/controle" element={<DevolutivasControle />} />
                             <Route path="/alertas-falta" element={<AlertasFalta />} />
                             <Route path="/alertas-evasao" element={<AlertasEvasao />} />
+                            <Route path="/registro-ponto" element={<RegistroPonto />} />
+                            <Route path="/meu-perfil" element={<MeuPerfil />} />
+                            <Route path="/teste-google-calendar" element={<TestGoogleCalendar />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>

@@ -97,17 +97,6 @@ const items = [
     url: "/projeto-sao-rafael",
     icon: Target,
   },
-  {
-    title: "Devolutivas Fim de Ano",
-    url: "/devolutivas/devolutiva-fim-ano",
-    icon: Award,
-  },
-  {
-    title: "Gestão de Retenções",
-    url: "/retencoes",
-    icon: Shield,
-    requiresAdmin: true,
-  },
 ];
 
 const additionalItems = [
@@ -164,13 +153,16 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border bg-sidebar-accent/50">
-        <div className="flex h-16 items-center px-4">
+        <button 
+          onClick={() => navigate('/home')}
+          className="flex h-16 items-center px-4 hover:bg-sidebar-accent/50 transition-colors w-full"
+        >
           <Building className="h-8 w-8 text-primary mr-3" />
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <span className="text-lg font-bold text-primary">Supera</span>
             <span className="text-xs text-sidebar-foreground/70">Sistema de Gestão</span>
           </div>
-        </div>
+        </button>
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
@@ -225,13 +217,16 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border bg-sidebar-accent/50">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => navigate('/meu-perfil')}
+            className="flex items-center space-x-3 hover:bg-sidebar-accent rounded-md p-1 -m-1 transition-colors"
+          >
             <Avatar className="h-8 w-8 border-2 border-primary/20">
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col min-w-0">
+            <div className="flex flex-col min-w-0 text-left">
               <span className="text-sm font-medium text-sidebar-foreground truncate">
                 {user?.email || 'Usuário'}
               </span>
@@ -239,7 +234,7 @@ export function AppSidebar() {
                 {isAdmin ? 'Administrador' : isTeacher ? 'Professor' : isFuncionario ? 'Funcionário' : 'Usuário'}
               </span>
             </div>
-          </div>
+          </button>
           <Button
             variant="ghost"
             size="icon"
