@@ -132,6 +132,11 @@ export default function MeuPerfil() {
     setErroSenha('');
     setSenhaSalva(false);
 
+    if (!senhaAtual.trim()) {
+      setErroSenha('Informe sua senha atual');
+      return;
+    }
+
     if (novaSenha.length < 6) {
       setErroSenha('A nova senha deve ter pelo menos 6 caracteres');
       return;
@@ -144,6 +149,19 @@ export default function MeuPerfil() {
 
     setIsSavingSenha(true);
     try {
+      // Primeiro, re-autenticar com a senha atual
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: senhaAtual
+      });
+
+      if (signInError) {
+        setErroSenha('Senha atual incorreta');
+        setIsSavingSenha(false);
+        return;
+      }
+
+      // Se a senha atual estiver correta, atualizar para a nova senha
       const { error } = await supabase.auth.updateUser({
         password: novaSenha
       });
@@ -315,6 +333,26 @@ export default function MeuPerfil() {
         </CardHeader>
         <CardContent className="p-0 space-y-3">
           <div className="space-y-1">
+            <Label htmlFor="senha-atual" className="text-xs">Senha Atual</Label>
+            <div className="relative">
+              <Input
+                id="senha-atual"
+                type={mostrarSenhaAtual ? 'text' : 'password'}
+                value={senhaAtual}
+                onChange={(e) => setSenhaAtual(e.target.value)}
+                placeholder="Digite sua senha atual"
+                className="h-8 text-sm pr-8"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenhaAtual(!mostrarSenhaAtual)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {mostrarSenhaAtual ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1">
             <Label htmlFor="nova-senha" className="text-xs">Nova Senha</Label>
             <div className="relative">
               <Input
@@ -359,7 +397,7 @@ export default function MeuPerfil() {
           )}
           <Button 
             onClick={handleAlterarSenha} 
-            disabled={isSavingSenha || !novaSenha || !confirmarSenha}
+            disabled={isSavingSenha || !senhaAtual || !novaSenha || !confirmarSenha}
             variant="outline"
             className="w-full h-8 text-xs"
           >
