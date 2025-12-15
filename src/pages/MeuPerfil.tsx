@@ -209,45 +209,45 @@ export default function MeuPerfil() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-sm mx-auto space-y-3">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Meu Perfil</h1>
-        <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
+        <h1 className="text-base font-bold text-foreground">Meu Perfil</h1>
+        <p className="text-xs text-muted-foreground">Gerencie suas informações pessoais</p>
       </div>
 
       {/* Foto de Perfil */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Foto de Perfil</CardTitle>
-          <CardDescription>Clique na foto para alterar</CardDescription>
+      <Card className="p-3">
+        <CardHeader className="p-0 pb-2">
+          <CardTitle className="text-sm">Foto de Perfil</CardTitle>
+          <CardDescription className="text-xs">Clique na foto para alterar</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
+        <CardContent className="p-0">
+          <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar 
-                className="h-24 w-24 cursor-pointer border-4 border-primary/20 transition-transform hover:scale-105"
+                className="h-12 w-12 cursor-pointer border-2 border-primary/20 transition-transform hover:scale-105"
                 onClick={handleFotoClick}
               >
                 <AvatarImage src={fotoUrl || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                   {getIniciais(profile?.full_name)}
                 </AvatarFallback>
               </Avatar>
               <button
                 onClick={handleFotoClick}
                 disabled={isUploadingFoto}
-                className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+                className="absolute bottom-0 right-0 p-1 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
               >
                 {isUploadingFoto ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3 w-3" />
                 )}
               </button>
             </div>
             <div>
-              <p className="font-medium text-foreground">{profile?.full_name || 'Sem nome'}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <p className="text-sm font-medium text-foreground">{profile?.full_name || 'Sem nome'}</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           </div>
           <input
@@ -261,42 +261,43 @@ export default function MeuPerfil() {
       </Card>
 
       {/* Nome */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Informações Pessoais</CardTitle>
-          <CardDescription>Atualize seu nome de exibição</CardDescription>
+      <Card className="p-3">
+        <CardHeader className="p-0 pb-2">
+          <CardTitle className="text-sm">Informações Pessoais</CardTitle>
+          <CardDescription className="text-xs">Atualize seu nome de exibição</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome Completo</Label>
+        <CardContent className="p-0 space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="nome" className="text-xs">Nome Completo</Label>
             <Input
               id="nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Seu nome completo"
+              className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+          <div className="space-y-1">
+            <Label htmlFor="email" className="text-xs">E-mail</Label>
             <Input
               id="email"
               value={user?.email || ''}
               disabled
-              className="bg-muted"
+              className="bg-muted h-8 text-sm"
             />
-            <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado</p>
+            <p className="text-[10px] text-muted-foreground">O e-mail não pode ser alterado</p>
           </div>
           <Button 
             onClick={handleSalvarNome} 
             disabled={isSavingNome || !nome.trim()}
-            className="w-full"
+            className="w-full h-8 text-xs"
           >
             {isSavingNome ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             ) : nomeSalvo ? (
-              <Check className="h-4 w-4 mr-2" />
+              <Check className="h-3 w-3 mr-1" />
             ) : (
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-3 w-3 mr-1" />
             )}
             {nomeSalvo ? 'Salvo!' : 'Salvar Alterações'}
           </Button>
@@ -304,17 +305,17 @@ export default function MeuPerfil() {
       </Card>
 
       {/* Alterar Senha */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Lock className="h-5 w-5" />
+      <Card className="p-3">
+        <CardHeader className="p-0 pb-2">
+          <CardTitle className="text-sm flex items-center gap-1">
+            <Lock className="h-3 w-3" />
             Alterar Senha
           </CardTitle>
-          <CardDescription>Atualize sua senha de acesso</CardDescription>
+          <CardDescription className="text-xs">Atualize sua senha de acesso</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nova-senha">Nova Senha</Label>
+        <CardContent className="p-0 space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="nova-senha" className="text-xs">Nova Senha</Label>
             <div className="relative">
               <Input
                 id="nova-senha"
@@ -322,18 +323,19 @@ export default function MeuPerfil() {
                 value={novaSenha}
                 onChange={(e) => setNovaSenha(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
+                className="h-8 text-sm pr-8"
               />
               <button
                 type="button"
                 onClick={() => setMostrarNovaSenha(!mostrarNovaSenha)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {mostrarNovaSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {mostrarNovaSenha ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
               </button>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmar-senha">Confirmar Nova Senha</Label>
+          <div className="space-y-1">
+            <Label htmlFor="confirmar-senha" className="text-xs">Confirmar Nova Senha</Label>
             <div className="relative">
               <Input
                 id="confirmar-senha"
@@ -341,31 +343,32 @@ export default function MeuPerfil() {
                 value={confirmarSenha}
                 onChange={(e) => setConfirmarSenha(e.target.value)}
                 placeholder="Repita a nova senha"
+                className="h-8 text-sm pr-8"
               />
               <button
                 type="button"
                 onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {mostrarConfirmarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {mostrarConfirmarSenha ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
               </button>
             </div>
           </div>
           {erroSenha && (
-            <p className="text-sm text-destructive">{erroSenha}</p>
+            <p className="text-xs text-destructive">{erroSenha}</p>
           )}
           <Button 
             onClick={handleAlterarSenha} 
             disabled={isSavingSenha || !novaSenha || !confirmarSenha}
             variant="outline"
-            className="w-full"
+            className="w-full h-8 text-xs"
           >
             {isSavingSenha ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             ) : senhaSalva ? (
-              <Check className="h-4 w-4 mr-2" />
+              <Check className="h-3 w-3 mr-1" />
             ) : (
-              <Lock className="h-4 w-4 mr-2" />
+              <Lock className="h-3 w-3 mr-1" />
             )}
             {senhaSalva ? 'Senha Alterada!' : 'Alterar Senha'}
           </Button>
@@ -373,40 +376,40 @@ export default function MeuPerfil() {
       </Card>
 
       {/* Google Calendar */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+      <Card className="p-3">
+        <CardHeader className="p-0 pb-2">
+          <CardTitle className="text-sm flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
             Google Calendar
           </CardTitle>
-          <CardDescription>Sincronize sua agenda com o sistema</CardDescription>
+          <CardDescription className="text-xs">Sincronize sua agenda com o sistema</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-0 space-y-3">
           {/* Instruções */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-            <p className="text-sm font-medium">Como configurar:</p>
-            <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+          <div className="bg-muted/50 rounded-lg p-2 space-y-2">
+            <p className="text-xs font-medium">Como configurar:</p>
+            <ol className="text-[10px] text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Abra o Google Calendar no computador</li>
               <li>Clique em Configurações (engrenagem) → Configurações</li>
               <li>Na lista à esquerda, clique no calendário que deseja compartilhar</li>
               <li>Em "Compartilhar com pessoas específicas", adicione:</li>
             </ol>
-            <div className="flex items-center gap-2 bg-background rounded-md p-2 border">
-              <code className="text-xs flex-1 break-all">{SERVICE_ACCOUNT_EMAIL}</code>
+            <div className="flex items-center gap-1 bg-background rounded-md p-1.5 border">
+              <code className="text-[9px] flex-1 break-all">{SERVICE_ACCOUNT_EMAIL}</code>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleCopiarEmail}
-                className="shrink-0"
+                className="shrink-0 h-6 w-6 p-0"
               >
                 {emailCopiado ? (
-                  <Check className="h-4 w-4 text-green-500" />
+                  <Check className="h-3 w-3 text-green-500" />
                 ) : (
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-3 w-3" />
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Dê permissão de "Fazer alterações nos eventos"
             </p>
           </div>
@@ -414,32 +417,33 @@ export default function MeuPerfil() {
           <Separator />
 
           {/* ID do Calendário */}
-          <div className="space-y-2">
-            <Label htmlFor="gcalendar">ID do Calendário</Label>
+          <div className="space-y-1">
+            <Label htmlFor="gcalendar" className="text-xs">ID do Calendário</Label>
             <Input
               id="gcalendar"
               value={gcalendarId}
               onChange={(e) => setGcalendarId(e.target.value)}
               placeholder="seuemail@gmail.com ou ID do calendário"
+              className="h-8 text-sm"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Geralmente é seu e-mail do Gmail ou um ID específico do calendário
             </p>
           </div>
 
           {/* Status da conexão */}
           {connectionStatus !== 'idle' && (
-            <div className={`flex items-center gap-2 p-3 rounded-lg ${
+            <div className={`flex items-center gap-1 p-2 rounded-lg ${
               connectionStatus === 'success' 
                 ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
                 : 'bg-destructive/10 text-destructive'
             }`}>
               {connectionStatus === 'success' ? (
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="h-3 w-3" />
               ) : (
-                <XCircle className="h-4 w-4" />
+                <XCircle className="h-3 w-3" />
               )}
-              <span className="text-sm">{connectionMessage}</span>
+              <span className="text-xs">{connectionMessage}</span>
             </div>
           )}
 
@@ -449,26 +453,26 @@ export default function MeuPerfil() {
               variant="outline"
               onClick={handleTestarConexao}
               disabled={testConnection.isPending || !gcalendarId.trim()}
-              className="flex-1"
+              className="flex-1 h-8 text-xs"
             >
               {testConnection.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               ) : (
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-3 w-3 mr-1" />
               )}
-              Testar Conexão
+              Testar
             </Button>
             <Button 
               onClick={handleSalvarCalendar}
               disabled={isSavingCalendar}
-              className="flex-1"
+              className="flex-1 h-8 text-xs"
             >
               {isSavingCalendar ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               ) : calendarSalvo ? (
-                <Check className="h-4 w-4 mr-2" />
+                <Check className="h-3 w-3 mr-1" />
               ) : (
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-3 w-3 mr-1" />
               )}
               {calendarSalvo ? 'Salvo!' : 'Salvar'}
             </Button>
