@@ -3641,6 +3641,70 @@ export type Database = {
           },
         ]
       }
+      historico_whatsapp_pedagogico: {
+        Row: {
+          aluno_id: string | null
+          created_at: string
+          created_by: string | null
+          from_me: boolean | null
+          id: number
+          lida: boolean | null
+          lida_em: string | null
+          mensagem: string | null
+          telefone: string | null
+          tipo_mensagem: string | null
+          unit_id: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_me?: boolean | null
+          id?: never
+          lida?: boolean | null
+          lida_em?: string | null
+          mensagem?: string | null
+          telefone?: string | null
+          tipo_mensagem?: string | null
+          unit_id: string
+        }
+        Update: {
+          aluno_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_me?: boolean | null
+          id?: never
+          lida?: boolean | null
+          lida_em?: string | null
+          mensagem?: string | null
+          telefone?: string | null
+          tipo_mensagem?: string | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_whatsapp_pedagogico_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_whatsapp_pedagogico_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_whatsapp_pedagogico_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanban_cards: {
         Row: {
           acao_retencao: string | null
