@@ -9,7 +9,7 @@ interface ReposicaoData {
   data_reposicao: string;
   data_falta?: string;
   responsavel_id: string;
-  responsavel_tipo: 'professor' | 'funcionario';
+  responsavel_tipo: 'professor' | 'funcionario' | 'usuario';
   nome_responsavel: string;
   observacoes?: string;
   unit_id: string;
