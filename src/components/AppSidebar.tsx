@@ -55,6 +55,11 @@ const items = [
     icon: Calendar,
   },
   {
+    title: "Agenda Professor",
+    url: "/agenda-professores",
+    icon: CalendarDays,
+  },
+  {
     title: "Reservas de Sala",
     url: "/reservas-sala",
     icon: MapPin,
@@ -110,12 +115,6 @@ const additionalItems = [
     title: "Alertas de Evasão",
     url: "/alertas-evasao",
     icon: Shield,
-    requiresAdmin: true,
-  },
-  {
-    title: "Configuração",
-    url: "/admin/configuracao",
-    icon: Settings,
     requiresAdmin: true,
   },
 ];
