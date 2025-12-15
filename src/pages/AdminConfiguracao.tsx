@@ -24,10 +24,33 @@ const AdminConfiguracao = () => {
   const [selectedUser, setSelectedUser] = useState<UsuarioSemVinculo | null>(null);
   const queryClient = useQueryClient();
 
+  // ID da unidade de Maringá
+  const MARINGA_UNIT_ID = '84f98b06-ea0f-4d00-a651-6f5afdd78c60';
+
+  // Buscar professores de Maringá
+  const { data: professoresMaringa } = useQuery({
+    queryKey: ['professores-maringa', MARINGA_UNIT_ID],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('professores')
+        .select('id, email')
+        .eq('unit_id', MARINGA_UNIT_ID);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Buscar usuários e seus vínculos com professores
   const { data: usuarios, isLoading } = useQuery({
-    queryKey: ['usuarios-vinculos-professor'],
+    queryKey: ['usuarios-vinculos-professor', professoresMaringa],
     queryFn: async () => {
+      if (!professoresMaringa) return [];
+
+      // Buscar emails dos professores de Maringá
+      const emailsMaringa = professoresMaringa.map(p => p.email?.toLowerCase()).filter(Boolean);
+      const professorIdsMaringa = professoresMaringa.map(p => p.id);
+
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -43,7 +66,14 @@ const AdminConfiguracao = () => {
 
       if (error) throw error;
       
-      return data?.map(u => ({
+      // Filtrar usuários: email coincide com professor de Maringá OU professor_id é de Maringá
+      const usuariosFiltrados = data?.filter(u => {
+        const emailMatch = u.email && emailsMaringa.includes(u.email.toLowerCase());
+        const professorMatch = u.professor_id && professorIdsMaringa.includes(u.professor_id);
+        return emailMatch || professorMatch;
+      });
+
+      return usuariosFiltrados?.map(u => ({
         id: u.id,
         full_name: u.full_name,
         email: u.email,
@@ -51,6 +81,7 @@ const AdminConfiguracao = () => {
         professor_nome: u.professores?.nome || null
       })) as UsuarioSemVinculo[];
     },
+    enabled: !!professoresMaringa,
   });
 
   // Mutation para desvincular professor
