@@ -31,7 +31,7 @@ const AdminConfiguracao = () => {
   const { data: usuarios, isLoading } = useQuery({
     queryKey: ['usuarios-vinculos-professor', MARINGA_UNIT_ID],
     queryFn: async () => {
-      // 1. Buscar todos os usuários com seus vínculos
+      // 1. Buscar todos os usuários ativos com seus vínculos
       const { data: allProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -39,10 +39,12 @@ const AdminConfiguracao = () => {
           full_name,
           email,
           professor_id,
+          access_blocked,
           professores (
             nome
           )
         `)
+        .or('access_blocked.is.null,access_blocked.eq.false')
         .order('full_name');
 
       if (profilesError) throw profilesError;
