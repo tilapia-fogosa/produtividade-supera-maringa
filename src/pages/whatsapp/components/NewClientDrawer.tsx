@@ -77,9 +77,8 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
     if (open && phoneNumber) {
       console.log("NewClientDrawer: Configurando formulário com telefone:", phoneNumber);
 
-      // Preencher telefone e leadSource
+      // Preencher telefone
       form.setValue('phoneNumber', phoneNumber);
-      form.setValue('leadSource', 'WhatsApp');
 
       // Focar no campo nome após um pequeno delay
       setTimeout(() => {
