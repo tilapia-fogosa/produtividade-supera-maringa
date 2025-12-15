@@ -4553,6 +4553,7 @@ export type Database = {
           id: string
           is_admin: boolean | null
           must_change_password: boolean | null
+          professor_id: string | null
           updated_at: string
         }
         Insert: {
@@ -4575,6 +4576,7 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
+          professor_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -4597,6 +4599,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
+          professor_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4606,6 +4609,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "funcionarios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
           },
         ]
       }
