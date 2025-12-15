@@ -27,31 +27,12 @@ const AdminConfiguracao = () => {
   // ID da unidade de Maringá
   const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
-  // Buscar professores de Maringá
-  const { data: professoresMaringa } = useQuery({
-    queryKey: ['professores-maringa', MARINGA_UNIT_ID],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('professores')
-        .select('id, email')
-        .eq('unit_id', MARINGA_UNIT_ID);
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Buscar usuários e seus vínculos com professores
+  // Buscar usuários de Maringá (via unit_users) ou sem nenhuma unidade
   const { data: usuarios, isLoading } = useQuery({
-    queryKey: ['usuarios-vinculos-professor', professoresMaringa],
+    queryKey: ['usuarios-vinculos-professor', MARINGA_UNIT_ID],
     queryFn: async () => {
-      if (!professoresMaringa) return [];
-
-      // Buscar emails dos professores de Maringá
-      const emailsMaringa = professoresMaringa.map(p => p.email?.toLowerCase()).filter(Boolean);
-      const professorIdsMaringa = professoresMaringa.map(p => p.id);
-
-      const { data, error } = await supabase
+      // 1. Buscar todos os usuários com seus vínculos
+      const { data: allProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -64,13 +45,34 @@ const AdminConfiguracao = () => {
         `)
         .order('full_name');
 
-      if (error) throw error;
-      
-      // Filtrar usuários: email coincide com professor de Maringá OU professor_id é de Maringá
-      const usuariosFiltrados = data?.filter(u => {
-        const emailMatch = u.email && emailsMaringa.includes(u.email.toLowerCase());
-        const professorMatch = u.professor_id && professorIdsMaringa.includes(u.professor_id);
-        return emailMatch || professorMatch;
+      if (profilesError) throw profilesError;
+
+      // 2. Buscar usuários que pertencem a Maringá via unit_users
+      const { data: unitUsersMaringa, error: unitUsersError } = await supabase
+        .from('unit_users')
+        .select('user_id')
+        .eq('unit_id', MARINGA_UNIT_ID)
+        .eq('active', true);
+
+      if (unitUsersError) throw unitUsersError;
+
+      const userIdsMaringa = new Set(unitUsersMaringa?.map(u => u.user_id) || []);
+
+      // 3. Buscar todos os user_ids que têm alguma unidade
+      const { data: allUnitUsers, error: allUnitUsersError } = await supabase
+        .from('unit_users')
+        .select('user_id')
+        .eq('active', true);
+
+      if (allUnitUsersError) throw allUnitUsersError;
+
+      const userIdsComUnidade = new Set(allUnitUsers?.map(u => u.user_id) || []);
+
+      // 4. Filtrar: usuários de Maringá OU sem nenhuma unidade
+      const usuariosFiltrados = allProfiles?.filter(u => {
+        const pertenceMaringa = userIdsMaringa.has(u.id);
+        const semUnidade = !userIdsComUnidade.has(u.id);
+        return pertenceMaringa || semUnidade;
       });
 
       return usuariosFiltrados?.map(u => ({
@@ -81,7 +83,6 @@ const AdminConfiguracao = () => {
         professor_nome: u.professores?.nome || null
       })) as UsuarioSemVinculo[];
     },
-    enabled: !!professoresMaringa,
   });
 
   // Mutation para desvincular professor
