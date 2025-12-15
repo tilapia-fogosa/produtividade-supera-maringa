@@ -159,10 +159,10 @@ const AlertasFalta = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">Histórico de Alertas de Falta</h1>
-        <p className="text-muted-foreground text-sm">
-          Acompanhe todos os alertas de falta gerados e o status de envio para o Slack
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-sm font-semibold">Histórico de Alertas de Falta</h1>
+        <p className="text-muted-foreground text-xs">
+          Alertas de falta gerados e status de envio
         </p>
       </div>
 
