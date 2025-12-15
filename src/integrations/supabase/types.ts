@@ -3556,22 +3556,22 @@ export type Database = {
       grupos_sup_mga: {
         Row: {
           created_at: string
-          grupo_id: string | null
           grupo_nome: string | null
+          grupo_wpp_id: string | null
           id: number
           turma_id: string | null
         }
         Insert: {
           created_at?: string
-          grupo_id?: string | null
           grupo_nome?: string | null
+          grupo_wpp_id?: string | null
           id?: number
           turma_id?: string | null
         }
         Update: {
           created_at?: string
-          grupo_id?: string | null
           grupo_nome?: string | null
+          grupo_wpp_id?: string | null
           id?: number
           turma_id?: string | null
         }
