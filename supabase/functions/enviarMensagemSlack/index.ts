@@ -2,8 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Token real do Slack Bot
-const SLACK_BOT_TOKEN = "xoxb-5990179335553-7417193096371-xICG9oDp0nFrscu3lyaxQxSF";
+// Token do Slack via secrets
+const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
 const SLACK_CHANNEL_ID = "C05UB69SDU7"; // Canal padrão para mensagens
 
 serve(async (req) => {
