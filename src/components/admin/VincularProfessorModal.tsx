@@ -60,7 +60,7 @@ export function VincularProfessorModal({
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usuarios-sem-professor'] });
+      queryClient.invalidateQueries({ queryKey: ['usuarios-vinculos-professor'] });
       queryClient.invalidateQueries({ queryKey: ['current-professor'] });
       onOpenChange(false);
       setSelectedProfessorId('');
