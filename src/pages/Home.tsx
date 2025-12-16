@@ -72,6 +72,7 @@ export default function Home() {
   });
 
   // Filtrar tarefas por período
+  const tarefasAtrasadas = tarefas.filter(t => !t.concluida && t.data_vencimento < hojeStr);
   const tarefasHoje = tarefas.filter(t => t.data_vencimento === hojeStr);
   const tarefasSemana = tarefas.filter(t => {
     const data = parseISO(t.data_vencimento);
@@ -521,8 +522,15 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* Cards lado a lado */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Cards lado a lado - 3 colunas */}
+          <div className="grid grid-cols-3 gap-2">
+            {renderSecaoAtividades(
+              'Atividades Atrasadas',
+              'Pendentes',
+              tarefasAtrasadas,
+              [] // Eventos atrasados podem ser adicionados depois
+            )}
+
             {renderSecaoAtividades(
               'Atividades do Dia',
               format(hoje, "dd 'de' MMMM", { locale: ptBR }),
