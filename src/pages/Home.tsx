@@ -356,7 +356,7 @@ export default function Home() {
       case 'aula_experimental':
         return <Badge className="text-[10px] px-1.5 py-0 text-primary-foreground">Aula</Badge>;
       case 'reposicao':
-        return <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Repos.</Badge>;
+        return <Badge className="text-[10px] px-1.5 py-0 bg-orange-500 text-white">Repos.</Badge>;
       case 'camiseta':
         return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Camiseta</Badge>;
       case 'apostila_ah':
