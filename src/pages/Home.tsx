@@ -9,6 +9,8 @@ import { useListaReposicoes } from '@/hooks/use-lista-reposicoes';
 import { useProfessorAtividades } from '@/hooks/use-professor-atividades';
 import { useProximasColetasAH } from '@/hooks/use-proximas-coletas-ah';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { useCamisetas } from '@/hooks/use-camisetas';
+import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +56,12 @@ export default function Home() {
   // Buscar coletas AH pendentes (para admins)
   const { data: todasColetasAH = [], isLoading: loadingColetasAH } = useProximasColetasAH();
   
+  // Buscar camisetas pendentes (para admins)
+  const { alunos: todosCamisetas = [], loading: loadingCamisetas } = useCamisetas();
+  
+  // Buscar apostilas AH prontas (para admins)
+  const { data: todasApostilasRecolhidas = [], isLoading: loadingApostilas } = useApostilasRecolhidas();
+  
   // Permissões do usuário
   const { isAdmin, isManagement } = useUserPermissions();
   
@@ -61,6 +69,14 @@ export default function Home() {
   const coletasAHAdmins = todasColetasAH.filter(c => 
     c.dias_desde_ultima_correcao !== null && c.dias_desde_ultima_correcao >= 90
   );
+  
+  // Filtrar camisetas pendentes (>60 dias e não entregues) para admins
+  const camisetasAdmins = todosCamisetas.filter(c => 
+    !c.camiseta_entregue && !c.nao_tem_tamanho && (c.dias_supera || 0) >= 60
+  );
+  
+  // Filtrar apostilas prontas (não entregues) para admins
+  const apostilasProntasAdmins = todasApostilasRecolhidas.filter(a => !a.foi_entregue);
 
   // Estado para nova tarefa
   const [novaTarefaOpen, setNovaTarefaOpen] = useState(false);
@@ -87,9 +103,42 @@ export default function Home() {
   const montarEventos = () => {
     // Para admins/gestores: mostrar todas as atividades
     if (isAdmin || isManagement) {
+      const eventosAtrasados: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosProximaSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+
+      // === EVENTOS ATRASADOS ===
+      
+      // Coletas AH pendentes (+90 dias)
+      coletasAHAdmins.forEach(c => {
+        eventosAtrasados.push({
+          tipo: 'coleta_ah',
+          titulo: `Coleta AH: ${c.nome}`,
+          data: '',
+          subtitulo: `${c.dias_desde_ultima_correcao} dias - ${c.professor_nome || 'Sem professor'}`,
+        });
+      });
+      
+      // Camisetas pendentes
+      camisetasAdmins.forEach(c => {
+        eventosAtrasados.push({
+          tipo: 'camiseta',
+          titulo: `Camiseta: ${c.nome}`,
+          data: '',
+          subtitulo: `${c.dias_supera} dias - ${c.professor_nome || 'Sem professor'}`,
+        });
+      });
+      
+      // Apostilas AH prontas (não entregues)
+      apostilasProntasAdmins.forEach(a => {
+        eventosAtrasados.push({
+          tipo: 'apostila_ah',
+          titulo: `AH Pronta: ${a.pessoa_nome}`,
+          data: '',
+          subtitulo: `${a.apostila} - ${a.professor_nome || 'Sem professor'}`,
+        });
+      });
 
       // Aulas experimentais
       aulasExperimentais.forEach(ae => {
@@ -129,23 +178,12 @@ export default function Home() {
         }
       });
 
-      // Coletas AH pendentes (+90 dias) - todas
-      coletasAHAdmins.forEach(c => {
-        const evento = {
-          tipo: 'coleta_ah',
-          titulo: `Coleta AH: ${c.nome}`,
-          data: '',
-          subtitulo: `${c.dias_desde_ultima_correcao} dias - ${c.professor_nome || 'Sem professor'}`,
-        };
-        // Para admins, mostrar todas na semana
-        eventosSemana.push(evento);
-      });
-
-      return { eventosHoje, eventosSemana, eventosProximaSemana };
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     }
     
     if (isProfessor) {
       // Para professores: usar apenas atividades das suas turmas
+      const eventosAtrasados: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
 
@@ -167,52 +205,37 @@ export default function Home() {
         }
       });
 
-      // Camisetas pendentes
+      // Camisetas pendentes (+60 dias) -> atrasadas
       camisetasPendentes.forEach(c => {
-        const evento = {
+        eventosAtrasados.push({
           tipo: 'camiseta',
           titulo: `Camiseta: ${c.aluno_nome}`,
           data: '',
           subtitulo: `${c.dias_supera} dias no Supera`,
-        };
-        if (isDiaHoje(c.dia_semana)) {
-          eventosHoje.push(evento);
-        } else if (isDiaSemana(c.dia_semana)) {
-          eventosSemana.push(evento);
-        }
+        });
       });
 
-      // Apostilas AH prontas
+      // Apostilas AH prontas -> atrasadas
       apostilasAHProntas.forEach(a => {
-        const evento = {
+        eventosAtrasados.push({
           tipo: 'apostila_ah',
           titulo: `AH: ${a.pessoa_nome}`,
           data: '',
           subtitulo: `${a.apostila} - Pronta para entregar`,
-        };
-        if (isDiaHoje(a.dia_semana)) {
-          eventosHoje.push(evento);
-        } else if (isDiaSemana(a.dia_semana)) {
-          eventosSemana.push(evento);
-        }
+        });
       });
 
-      // Coletas AH pendentes (+90 dias)
+      // Coletas AH pendentes (+90 dias) -> atrasadas
       coletasAHPendentes.forEach(c => {
-        const evento = {
+        eventosAtrasados.push({
           tipo: 'coleta_ah',
           titulo: `Coleta AH: ${c.pessoa_nome}`,
           data: '',
           subtitulo: `${c.dias_sem_correcao} dias sem correção`,
-        };
-        if (isDiaHoje(c.dia_semana)) {
-          eventosHoje.push(evento);
-        } else if (isDiaSemana(c.dia_semana)) {
-          eventosSemana.push(evento);
-        }
+        });
       });
 
-      return { eventosHoje, eventosSemana, eventosProximaSemana: [] };
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana: [] };
     } else {
       // Para não-professores: comportamento original
       const eventosHoje = [
@@ -266,11 +289,11 @@ export default function Home() {
         })),
       ];
 
-      return { eventosHoje, eventosSemana, eventosProximaSemana };
+      return { eventosAtrasados: [], eventosHoje, eventosSemana, eventosProximaSemana };
     }
   };
 
-  const { eventosHoje, eventosSemana, eventosProximaSemana } = montarEventos();
+  const { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana } = montarEventos();
 
   const handleCriarTarefa = async () => {
     if (!novaTarefa.titulo.trim()) return;
@@ -528,7 +551,7 @@ export default function Home() {
               'Atividades Atrasadas',
               'Pendentes',
               tarefasAtrasadas,
-              [] // Eventos atrasados podem ser adicionados depois
+              eventosAtrasados
             )}
 
             {renderSecaoAtividades(
