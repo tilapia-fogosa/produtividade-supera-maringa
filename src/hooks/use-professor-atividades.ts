@@ -38,6 +38,14 @@ export interface ApostilaAHPronta {
   dia_semana: string;
 }
 
+export interface ColetaAHPendente {
+  pessoa_id: string;
+  pessoa_nome: string;
+  turma_nome: string;
+  dias_sem_correcao: number;
+  dia_semana: string;
+}
+
 export function useProfessorAtividades() {
   const { professorId, isProfessor } = useCurrentProfessor();
 
@@ -61,13 +69,14 @@ export function useProfessorAtividades() {
           reposicoes: [],
           camisetasPendentes: [],
           apostilasAHProntas: [],
+          coletasAHPendentes: [],
         };
       }
 
       // 2. Buscar alunos dessas turmas (para camisetas e AH)
       const { data: alunos, error: alunosError } = await supabase
         .from('alunos')
-        .select('id, nome, turma_id, dias_supera')
+        .select('id, nome, turma_id, dias_supera, ultima_correcao_ah')
         .in('turma_id', turmaIds)
         .eq('active', true);
 
@@ -156,10 +165,35 @@ export function useProfessorAtividades() {
         }
       }
 
+      // 6. Buscar coletas AH pendentes (alunos com mais de 90 dias sem correção)
+      const coletasAHPendentes: ColetaAHPendente[] = (alunos || [])
+        .filter(aluno => {
+          if (!aluno.ultima_correcao_ah) return false;
+          const diasSemCorrecao = Math.floor(
+            (Date.now() - new Date(aluno.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          return diasSemCorrecao >= 90;
+        })
+        .map(aluno => {
+          const turma = turmas?.find(t => t.id === aluno.turma_id);
+          const diasSemCorrecao = Math.floor(
+            (Date.now() - new Date(aluno.ultima_correcao_ah!).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          return {
+            pessoa_id: aluno.id,
+            pessoa_nome: aluno.nome,
+            turma_nome: turma?.nome || 'Turma não encontrada',
+            dias_sem_correcao: diasSemCorrecao,
+            dia_semana: turma?.dia_semana || '',
+          };
+        })
+        .sort((a, b) => b.dias_sem_correcao - a.dias_sem_correcao);
+
       return {
         reposicoes: reposicoesFiltradas,
         camisetasPendentes,
         apostilasAHProntas,
+        coletasAHPendentes,
       };
     },
     enabled: isProfessor && !!professorId,
@@ -185,6 +219,7 @@ export function useProfessorAtividades() {
     reposicoes: data?.reposicoes || [],
     camisetasPendentes: data?.camisetasPendentes || [],
     apostilasAHProntas: data?.apostilasAHProntas || [],
+    coletasAHPendentes: data?.coletasAHPendentes || [],
     isDiaHoje,
     isDiaSemana,
   };

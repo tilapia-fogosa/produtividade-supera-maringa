@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,6 +44,7 @@ export default function Home() {
     reposicoes: reposicoesProfessor,
     camisetasPendentes,
     apostilasAHProntas,
+    coletasAHPendentes,
     isDiaHoje,
     isDiaSemana,
   } = useProfessorAtividades();
@@ -119,6 +120,21 @@ export default function Home() {
         if (isDiaHoje(a.dia_semana)) {
           eventosHoje.push(evento);
         } else if (isDiaSemana(a.dia_semana)) {
+          eventosSemana.push(evento);
+        }
+      });
+
+      // Coletas AH pendentes (+90 dias)
+      coletasAHPendentes.forEach(c => {
+        const evento = {
+          tipo: 'coleta_ah',
+          titulo: `Coleta AH: ${c.pessoa_nome}`,
+          data: '',
+          subtitulo: `${c.dias_sem_correcao} dias sem correção`,
+        };
+        if (isDiaHoje(c.dia_semana)) {
+          eventosHoje.push(evento);
+        } else if (isDiaSemana(c.dia_semana)) {
           eventosSemana.push(evento);
         }
       });
@@ -256,6 +272,8 @@ export default function Home() {
         return <Shirt className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />;
       case 'apostila_ah':
         return <BookOpen className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />;
+      case 'coleta_ah':
+        return <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -271,6 +289,8 @@ export default function Home() {
         return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Camiseta</Badge>;
       case 'apostila_ah':
         return <Badge className="text-[10px] px-1.5 py-0 bg-green-500 text-white">AH</Badge>;
+      case 'coleta_ah':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white">Coleta</Badge>;
       default:
         return null;
     }
