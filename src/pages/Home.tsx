@@ -425,7 +425,7 @@ export default function Home() {
   const isLoading = loadingTarefas || loadingProfessor || (isAdmin && loadingColetasAH);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-3 px-2">
+    <div className="w-full space-y-3 px-4">
       {/* Header com saudação */}
       <div className="flex items-center justify-between">
         <div>
