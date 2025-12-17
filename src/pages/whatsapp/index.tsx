@@ -4,9 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ConversationsTab } from "./components/ConversationsTab";
 import { ConfigurationTab } from "./components/ConfigurationTab";
+import { useMessagesRealtime } from "./hooks/useMessagesRealtime";
 
 export default function WhatsAppPage() {
   console.log('WhatsAppPage: Renderizando página de WhatsApp (Sem Abas)');
+
+  // Ativa listeners de realtime para novas mensagens
+  useMessagesRealtime();
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
