@@ -7,7 +7,7 @@ import { Loader2, Calendar } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFaltasFuturas } from "@/hooks/use-faltas-futuras";
 import { useAlunosTurma } from "@/hooks/use-alunos-turma";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -31,7 +31,7 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
 
   const { criarFaltaFutura } = useFaltasFuturas();
   const { data: alunosTurma, isLoading: loadingAlunos } = useAlunosTurma(turmaId);
-  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
+  const { user, profile } = useAuth();
 
   // Data da falta é fixada para o dia atual (quando o modal é aberto)
   const dataFalta = dataConsulta || new Date();
@@ -52,18 +52,18 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
     
     const pessoaSelecionada = pessoasDisponiveis.find(p => p.id === pessoaId);
     
-    if (!pessoaSelecionada || !funcionarioId) return;
+    if (!pessoaSelecionada || !user?.id) return;
 
     criarFaltaFutura.mutate({
       aluno_id: pessoaId,
       turma_id: turmaId,
       unit_id: unitId,
       data_falta: format(dataFalta, "yyyy-MM-dd"),
-      responsavel_aviso_id: funcionarioId,
-      responsavel_aviso_tipo: 'funcionario',
-      responsavel_aviso_nome: funcionarioNome || '',
+      responsavel_aviso_id: user.id,
+      responsavel_aviso_tipo: 'usuario',
+      responsavel_aviso_nome: profile?.full_name || user.email || '',
       observacoes: observacoes || undefined,
-      funcionario_registro_id: funcionarioId,
+      funcionario_registro_id: user.id,
     });
 
     // Reset form
@@ -72,7 +72,7 @@ const FaltaFuturaModal: React.FC<FaltaFuturaModalProps> = ({
     onClose();
   };
 
-  const isFormValid = pessoaId && funcionarioId;
+  const isFormValid = pessoaId && user?.id;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
