@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Bot, CheckCheck, ClipboardList, X, Phone } from "lucide-react";
+import { CheckCheck, Phone } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
 import { getStatusConfig } from "../utils/statusConfig";
 
@@ -24,12 +24,10 @@ interface ConversationItemProps {
   conversation: Conversation;
   isSelected: boolean;
   onClick: () => void;
-  onActivityClick?: (e: React.MouseEvent) => void;
-  onToggleTipoAtendimento?: (e: React.MouseEvent) => void;
   onCadastrarClick?: (phoneNumber: string) => void;
 }
 
-export function ConversationItem({ conversation, isSelected, onClick, onActivityClick, onToggleTipoAtendimento, onCadastrarClick }: ConversationItemProps) {
+export function ConversationItem({ conversation, isSelected, onClick, onCadastrarClick }: ConversationItemProps) {
   // Configuração do status para o indicador visual
   const statusConfig = getStatusConfig(conversation.status);
 
@@ -127,55 +125,17 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
           </span>
         </div>
 
-        {/* Linha 3 (Opcional): Badges e Ações - Só aparece no hover ou se for necessário */}
-        <div className="flex items-center justify-between h-5 mt-0.5">
-          {/* Ações (Atividades/Bot) - Visíveis no Hover */}
-          <div className={cn(
-            "flex items-center gap-2 transition-opacity duration-200",
-            // Se tiver badges importantes ou não cadastrado, mostra. Senão, só no hover.
-            conversation.isUnregistered ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          )}>
-            {/* Botão de Atividades (Mini) */}
-            {!conversation.isUnregistered && onActivityClick && (
-              <div
-                role="button"
-                onClick={(e) => { e.stopPropagation(); onActivityClick(e); }}
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted hover:bg-muted/80 text-[10px] text-muted-foreground cursor-pointer transition-colors border border-border/50"
-                title="Ver atividades"
-              >
-                <ClipboardList className="h-3 w-3" />
-              </div>
-            )}
-
-            {/* Configuração de Bot/Humano */}
-            {!conversation.isUnregistered && onToggleTipoAtendimento && (
-              <div
-                role="button"
-                onClick={(e) => { e.stopPropagation(); onToggleTipoAtendimento(e); }}
-                className={cn(
-                  "flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors border",
-                  conversation.tipoAtendimento === 'bot'
-                    ? "bg-orange-50/50 text-orange-700 border-orange-200 hover:bg-orange-100"
-                    : "bg-blue-50/50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                )}
-                title="Alternar atendimento"
-              >
-                <Bot className="h-3 w-3" />
-                <span className="uppercase font-bold tracking-wider text-[9px]">{conversation.tipoAtendimento === 'bot' ? 'Bot' : 'Hum'}</span>
-              </div>
-            )}
-
-            {/* Link para Cadastrar */}
-            {conversation.isUnregistered && (
-              <Badge
-                className="h-5 px-2 bg-purple-600 hover:bg-purple-700 text-[10px] cursor-pointer shadow-sm animate-pulse"
-                onClick={handleCadastrarClick}
-              >
-                Cadastrar
-              </Badge>
-            )}
+        {/* Badge Cadastrar para não cadastrados */}
+        {conversation.isUnregistered && (
+          <div className="flex items-center h-5 mt-0.5">
+            <Badge
+              className="h-5 px-2 bg-purple-600 hover:bg-purple-700 text-[10px] cursor-pointer shadow-sm animate-pulse"
+              onClick={handleCadastrarClick}
+            >
+              Cadastrar
+            </Badge>
           </div>
-        </div>
+        )}
       </div>
     </button>
   );

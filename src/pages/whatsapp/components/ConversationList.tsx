@@ -178,8 +178,6 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             conversation={conversation}
             isSelected={selectedClientId === conversation.clientId}
             onClick={() => onSelectClient(conversation.clientId, conversation.isUnregistered)}
-            onActivityClick={conversation.isUnregistered ? undefined : () => onActivityClick(conversation.clientId)}
-            onToggleTipoAtendimento={conversation.isUnregistered ? undefined : () => onToggleTipoAtendimento(conversation.clientId, conversation.tipoAtendimento)}
             onCadastrarClick={handleCadastrarClick}
           />
         ))}
