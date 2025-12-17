@@ -14,6 +14,7 @@ interface GroupData {
   ultima_mensagem: string | null;
   ultima_mensagem_at: string | null;
   total_mensagens: number;
+  unread_count: number;
 }
 
 export function useGroupConversations() {
@@ -47,7 +48,7 @@ export function useGroupConversations() {
         totalMessages: group.total_mensagens || 0,
         unitId: '', // Grupos não têm unit_id direto
         tipoAtendimento: 'humano',
-        unreadCount: 0,
+        unreadCount: group.unread_count || 0,
         isNewLead: false,
         isUnregistered: false,
         isGroup: true,
@@ -59,5 +60,6 @@ export function useGroupConversations() {
       return conversations;
     },
     staleTime: 30000, // 30 segundos
+    refetchInterval: 30000, // Refetch a cada 30 segundos
   });
 }

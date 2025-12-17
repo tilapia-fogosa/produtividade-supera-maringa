@@ -84,9 +84,9 @@ export function ConversationItem({ conversation, isSelected, onClick, onCadastra
           )}
         </div>
 
-        {/* Badge de contador de mensagens não lidas (Badge flutuante) */}
+        {/* Badge de contador de mensagens não lidas (Badge flutuante - roxo) */}
         {conversation.unreadCount > 0 && (
-          <div className="absolute -bottom-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm border-2 border-background z-10">
+          <div className="absolute -bottom-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm border-2 border-background z-10">
             {conversation.unreadCount}
           </div>
         )}
