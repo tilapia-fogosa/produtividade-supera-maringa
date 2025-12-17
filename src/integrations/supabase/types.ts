@@ -3633,6 +3633,8 @@ export type Database = {
           from_me: boolean | null
           grupo_wpp_id: string
           id: number
+          lida: boolean
+          lida_hora: string | null
           mensagem: string | null
           nome_remetente: string | null
           tipo_mensagem: string | null
@@ -3646,6 +3648,8 @@ export type Database = {
           from_me?: boolean | null
           grupo_wpp_id: string
           id?: never
+          lida?: boolean
+          lida_hora?: string | null
           mensagem?: string | null
           nome_remetente?: string | null
           tipo_mensagem?: string | null
@@ -3659,6 +3663,8 @@ export type Database = {
           from_me?: boolean | null
           grupo_wpp_id?: string
           id?: never
+          lida?: boolean
+          lida_hora?: string | null
           mensagem?: string | null
           nome_remetente?: string | null
           tipo_mensagem?: string | null
