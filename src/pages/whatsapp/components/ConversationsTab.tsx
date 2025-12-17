@@ -11,10 +11,11 @@
  * Utiliza cores do sistema: background, card
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ConversationList } from "./ConversationList";
 import { ChatArea } from "./ChatArea";
 import { useConversations } from "../hooks/useConversations";
+import { useGroupConversations } from "../hooks/useGroupConversations";
 import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useMessagesRealtime } from "../hooks/useMessagesRealtime";
 import { useWhatsappConnectionStatus } from "../hooks/useWhatsappConnectionStatus";
@@ -28,7 +29,13 @@ export function ConversationsTab() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [lastMarkedClientId, setLastMarkedClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
+  const { data: groupConversations = [] } = useGroupConversations();
   const { data: whatsappStatus } = useWhatsappConnectionStatus();
+
+  // Combina conversas individuais + grupos para o ChatArea encontrar qualquer conversa selecionada
+  const allConversations = useMemo(() => {
+    return [...conversations, ...groupConversations];
+  }, [conversations, groupConversations]);
   const markAsRead = useMarkAsRead();
   const queryClient = useQueryClient();
 
@@ -101,7 +108,7 @@ export function ConversationsTab() {
         <div className="absolute top-0 bottom-0 right-0 left-[400px] flex flex-col bg-background overflow-hidden z-0">
           <ChatArea
             selectedClientId={selectedClientId}
-            conversations={conversations}
+            conversations={allConversations}
           />
         </div>
       </div>
