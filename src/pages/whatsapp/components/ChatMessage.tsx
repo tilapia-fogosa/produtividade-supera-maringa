@@ -18,14 +18,20 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Message } from "../types/whatsapp.types";
-import { FileText } from "lucide-react";
+import { FileText, Play, Maximize2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ChatMessageProps {
   message: Message;
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
-  console.log('ChatMessage: Renderizando mensagem ID:', message.id, 'tipo:', message.tipoMensagem);
+  const [isOpen, setIsOpen] = useState(false);
 
   const time = format(new Date(message.createdAt), 'HH:mm', { locale: ptBR });
 
@@ -40,22 +46,54 @@ export function ChatMessage({ message }: ChatMessageProps) {
       case 'imageMessage':
       case 'stickerMessage':
         return (
-          <img 
-            src={message.urlMedia} 
-            alt="Imagem" 
-            className="max-w-full rounded-lg mb-1 cursor-pointer"
-            onClick={() => window.open(message.urlMedia!, '_blank')}
-          />
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <div className="relative cursor-pointer group w-32 h-32 mb-1">
+                <img 
+                  src={message.urlMedia} 
+                  alt="Imagem" 
+                  className="w-full h-full object-cover rounded-lg"
+                />
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <Maximize2 className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+              <img 
+                src={message.urlMedia} 
+                alt="Imagem ampliada" 
+                className="max-w-full max-h-[85vh] object-contain mx-auto"
+              />
+            </DialogContent>
+          </Dialog>
         );
 
       case 'videoMessage':
         return (
-          <video 
-            src={message.urlMedia} 
-            controls 
-            className="max-w-full rounded-lg mb-1"
-            preload="metadata"
-          />
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <div className="relative cursor-pointer group w-32 h-32 mb-1 bg-muted rounded-lg flex items-center justify-center">
+                <video 
+                  src={message.urlMedia} 
+                  className="w-full h-full object-cover rounded-lg"
+                  preload="metadata"
+                  muted
+                />
+                <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+                  <Play className="h-8 w-8 text-white fill-white" />
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+              <video 
+                src={message.urlMedia} 
+                controls 
+                autoPlay
+                className="max-w-full max-h-[85vh] mx-auto"
+              />
+            </DialogContent>
+          </Dialog>
         );
 
       case 'audioMessage':
@@ -64,7 +102,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           <audio 
             src={message.urlMedia} 
             controls 
-            className="w-full mb-1"
+            className="w-48 h-10 mb-1"
             preload="metadata"
           />
         );
