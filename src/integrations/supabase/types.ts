@@ -7077,6 +7077,34 @@ export type Database = {
         Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
       }
+      get_group_messages_with_names: {
+        Args: { p_grupo_wpp_id: string }
+        Returns: {
+          created_at: string
+          enviado_por: string
+          from_me: boolean
+          grupo_id: string
+          grupo_nome: string
+          id: number
+          mensagem: string
+          nome_remetente: string
+          nome_remetente_resolvido: string
+          tipo_mensagem: string
+          url_media: string
+        }[]
+      }
+      get_groups_with_last_message: {
+        Args: never
+        Returns: {
+          grupo_nome: string
+          grupo_wpp_id: string
+          id: string
+          total_mensagens: number
+          turma_id: string
+          ultima_mensagem: string
+          ultima_mensagem_at: string
+        }[]
+      }
       get_horarios_disponiveis_salas: {
         Args: { p_data: string; p_unit_id?: string }
         Returns: {

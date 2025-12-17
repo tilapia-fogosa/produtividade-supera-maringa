@@ -1,18 +1,31 @@
 /**
- * Hook para buscar mensagens de uma conversa específica (MOCK Version)
+ * Hook para buscar mensagens de uma conversa específica
+ * Detecta automaticamente se é grupo ou conversa individual
  */
 import { useQuery } from "@tanstack/react-query";
 import { Message } from "../types/whatsapp.types";
 import { MOCK_MESSAGES } from "../mocks/data";
+import { useGroupMessages } from "./useGroupMessages";
+
+// Função para detectar se é um ID de grupo do WhatsApp
+function isGroupId(clientId: string): boolean {
+  return clientId?.includes('@g.us') || false;
+}
 
 export function useMessages(clientId: string | null) {
-  console.log('useMessages (MOCK): Buscando mensagens para:', clientId);
+  const isGroup = clientId ? isGroupId(clientId) : false;
+  
+  // Hook para mensagens de grupo
+  const groupMessagesQuery = useGroupMessages(isGroup ? clientId : null);
 
-  return useQuery({
-    queryKey: ['whatsapp-messages', clientId],
+  // Hook para mensagens individuais (mock)
+  const individualMessagesQuery = useQuery({
+    queryKey: ['whatsapp-individual-messages', clientId],
     queryFn: async () => {
-      if (!clientId) return [];
+      if (!clientId || isGroup) return [];
 
+      console.log('useMessages: Buscando mensagens individuais (mock) para:', clientId);
+      
       // Simula delay
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -28,6 +41,15 @@ export function useMessages(clientId: string | null) {
         tipoMensagem: "text"
       })) as Message[];
     },
-    enabled: !!clientId
+    enabled: !!clientId && !isGroup
   });
+
+  // Retorna o hook apropriado baseado no tipo
+  if (isGroup) {
+    console.log('useMessages: Usando mensagens de grupo para:', clientId);
+    return groupMessagesQuery;
+  }
+
+  console.log('useMessages: Usando mensagens individuais para:', clientId);
+  return individualMessagesQuery;
 }

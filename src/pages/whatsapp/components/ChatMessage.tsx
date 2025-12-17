@@ -27,6 +27,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   const time = format(new Date(message.createdAt), 'HH:mm', { locale: ptBR });
 
+  // Verifica se tem nome de remetente (mensagens de grupo)
+  const senderName = !message.fromMe ? message.createdByName : null;
+
   return (
     <div
       className={cn(
@@ -42,6 +45,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
             : "bg-card text-card-foreground rounded-bl-none border border-border"
         )}
       >
+        {/* Nome do remetente em grupos (quando não é fromMe) */}
+        {senderName && (
+          <p className="text-xs font-semibold text-primary mb-1 truncate">
+            {senderName}
+          </p>
+        )}
         <p className="text-sm whitespace-pre-wrap break-words">
           {message.tipoMensagem === 'audio' && (
             <span className="font-bold">Áudio transcrito: </span>
