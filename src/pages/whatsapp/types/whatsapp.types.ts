@@ -45,6 +45,22 @@ export interface Message {
   fromMe: boolean;
   createdByName?: string | null;
   tipoMensagem?: string | null;
+  senderName?: string | null; // Nome do remetente em grupos (resolvido da tabela alunos)
+}
+
+// Mensagem de grupo (retorno da RPC)
+export interface GroupMessage {
+  id: number;
+  grupoId: string;
+  mensagem: string;
+  enviadoPor: string;
+  nomeRemetente: string | null;
+  nomeRemetenteResolvido: string;
+  fromMe: boolean;
+  tipoMensagem: string | null;
+  urlMedia: string | null;
+  createdAt: string;
+  grupoNome: string | null;
 }
 
 // Configuração

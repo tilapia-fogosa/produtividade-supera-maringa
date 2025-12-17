@@ -18,9 +18,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Search, MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus } from "lucide-react";
 import { ConversationItem } from "./ConversationItem";
 import { useConversations } from "../hooks/useConversations";
+import { useGroupConversations } from "../hooks/useGroupConversations";
 import { NewClientDrawer } from "./NewClientDrawer";
 import { SendToUnregisteredDrawer } from "./SendToUnregisteredDrawer";
 import { useQueryClient } from "@tanstack/react-query";
@@ -43,7 +44,11 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   const [drawerPhoneNumber, setDrawerPhoneNumber] = useState("");
   const [sendUnregisteredDrawerOpen, setSendUnregisteredDrawerOpen] = useState(false);
 
-  const { data: conversations, isLoading } = useConversations();
+  // Passa filtro "Grupos" para buscar grupos reais quando o switch está ativo
+  const conversationFilter = showGroupsOnly ? 'Grupos' : undefined;
+  const { data: conversations, isLoading } = useConversations(conversationFilter);
+  // Buscar contagem de grupos separadamente para exibir no badge
+  const { data: groupConversations } = useGroupConversations();
   const queryClient = useQueryClient();
 
   // Handler para abrir o drawer de cadastro
@@ -66,9 +71,9 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   );
 
   // Aplicar filtros exclusivos primeiro (Grupos ou Sem Cadastro)
+  // Nota: Quando showGroupsOnly está ativo, useConversations já retorna apenas grupos
   if (showGroupsOnly) {
-    // Mostrar APENAS conversas de Grupo
-    filteredConversations = filteredConversations?.filter(conv => conv.isGroup);
+    // Já vem filtrado do hook, apenas mantém
   } else if (showUnregisteredOnly) {
     // Mostrar APENAS conversas Sem Cadastro
     filteredConversations = filteredConversations?.filter(conv => conv.isUnregistered);
@@ -84,13 +89,11 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
 
   // Calcular totais corretamente para cada categoria
   // Log: Contadores agora contam apenas dentro da sua categoria específica
-  // - Não lidas: conta apenas conversas normais (não Grupos, não Sem Cadastro) que têm unreadCount > 0
-  // - Grupos: conta conversas que são grupos
-  // - Sem Cadastro: conta números não cadastrados
-  const conversasNormais = conversations?.filter(conv => !conv.isGroup && !conv.isUnregistered) || [];
+  const conversasNormais = showGroupsOnly ? [] : (conversations?.filter(conv => !conv.isGroup && !conv.isUnregistered) || []);
   const totalUnread = conversasNormais.filter(conv => conv.unreadCount > 0).length;
-  const totalGroups = conversations?.filter(conv => conv.isGroup).length || 0;
-  const totalUnregistered = conversations?.filter(conv => conv.isUnregistered).length || 0;
+  // Usa a contagem de grupos reais do hook separado
+  const totalGroups = groupConversations?.length || 0;
+  const totalUnregistered = showGroupsOnly ? 0 : (conversations?.filter(conv => conv.isUnregistered).length || 0);
 
   console.log('ConversationList: Conversas filtradas:', filteredConversations?.length);
   console.log('ConversationList: Totais - Não lidas:', totalUnread, 'Grupos:', totalGroups, 'Sem Cadastro:', totalUnregistered);
@@ -101,16 +104,13 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
       <div className="p-3 border-b border-border bg-card space-y-3">
         {/* Campo de busca com botão de nova mensagem */}
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar conversas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <Input
+            type="text"
+            placeholder="Buscar conversas..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
           <Button
             variant="default"
             size="icon"
