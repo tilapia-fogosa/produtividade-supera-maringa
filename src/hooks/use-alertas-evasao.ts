@@ -242,6 +242,11 @@ export function useAlertasEvasao() {
       // Inserir dados na tabela alerta_evasao após o envio para Slack
       try {
         console.log('Salvando alerta no banco de dados...');
+        
+        // Buscar o profile id (auth.uid) do usuário logado
+        const { data: { user } } = await supabase.auth.getUser();
+        const profileId = user?.id || null;
+        
         const { data: alertaData, error: alertaError } = await supabase
           .from('alerta_evasao')
           .insert({
@@ -249,7 +254,7 @@ export function useAlertasEvasao() {
             data_alerta: dataAlertaFormatada,
             origem_alerta: origemAlerta,
             descritivo: descritivo,
-            responsavel: funcionarioNome || responsavelNome,
+            responsavel: profileId,
             data_retencao: dataRetencaoFormatada,
             status: 'pendente',
             kanban_status: 'todo',
