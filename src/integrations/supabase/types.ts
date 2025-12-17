@@ -7112,6 +7112,7 @@ export type Database = {
           turma_id: string
           ultima_mensagem: string
           ultima_mensagem_at: string
+          unread_count: number
         }[]
       }
       get_horarios_disponiveis_salas: {

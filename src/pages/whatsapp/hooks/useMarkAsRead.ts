@@ -1,11 +1,11 @@
 /**
  * Hook para marcar mensagens como lidas
  * 
- * Log: Hook personalizado que marca todas as mensagens de um cliente como lidas
+ * Log: Hook personalizado que marca todas as mensagens de um grupo como lidas
  * Etapas:
- * 1. Recebe o clientId como parâmetro
- * 2. Atualiza todas as mensagens não lidas (lida = false) desse cliente
- * 3. Define lida = true e lida_em = timestamp atual
+ * 1. Recebe o grupoWppId como parâmetro
+ * 2. Atualiza todas as mensagens não lidas (lida = false) desse grupo
+ * 3. Define lida = true e lida_hora = timestamp atual
  * 4. Invalida query de conversas para atualizar a lista
  * 5. Retorna função mutate para ser chamada quando abrir conversa
  */
@@ -19,54 +19,68 @@ export function useMarkAsRead() {
   console.log('useMarkAsRead: Hook inicializado');
 
   return useMutation({
-    mutationFn: async (clientId: string) => {
-      console.log('useMarkAsRead (MOCK): Marcando mensagens como lidas para cliente:', clientId);
-      // Simula delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+    mutationFn: async (grupoWppId: string) => {
+      console.log('useMarkAsRead: Marcando mensagens como lidas para grupo:', grupoWppId);
+      
+      const { error } = await supabase
+        .from('historico_whatsapp_grupos')
+        .update({ 
+          lida: true, 
+          lida_hora: new Date().toISOString() 
+        })
+        .eq('grupo_wpp_id', grupoWppId)
+        .eq('lida', false)
+        .eq('from_me', false);
+      
+      if (error) {
+        console.error('useMarkAsRead: Erro ao marcar como lida:', error);
+        throw error;
+      }
+      
+      console.log('useMarkAsRead: Mensagens marcadas como lidas com sucesso');
     },
-    onMutate: async (clientId: string) => {
-      console.log('useMarkAsRead: Iniciando atualização otimista para cliente:', clientId);
+    onMutate: async (grupoWppId: string) => {
+      console.log('useMarkAsRead: Iniciando atualização otimista para grupo:', grupoWppId);
 
-      // Cancelar queries em andamento que começam com 'whatsapp-conversations'
+      // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: ['whatsapp-conversations'] });
+      await queryClient.cancelQueries({ queryKey: ['whatsapp-group-conversations'] });
 
-      // Atualizar TODAS as queries que começam com 'whatsapp-conversations'
-      // usando setQueriesData com match parcial
+      // Atualizar cache otimisticamente
       queryClient.setQueriesData(
         { queryKey: ['whatsapp-conversations'] },
         (oldData: any) => {
-          if (!oldData) {
-            console.log('useMarkAsRead: Nenhum dado no cache para atualizar');
-            return oldData;
-          }
-
-          console.log('useMarkAsRead: Atualizando cache otimisticamente', oldData);
-          const newData = oldData.map((conversation: any) => {
-            if (conversation.clientId === clientId) {
-              console.log(`useMarkAsRead: Zerando unreadCount para cliente ${clientId}`, {
-                clientName: conversation.clientName,
-                unreadCountAntes: conversation.unreadCount,
-                unreadCountDepois: 0
-              });
+          if (!oldData) return oldData;
+          return oldData.map((conversation: any) => {
+            if (conversation.clientId === grupoWppId) {
               return { ...conversation, unreadCount: 0 };
             }
             return conversation;
           });
-          console.log('useMarkAsRead: Novo estado do cache:', newData);
-          return newData;
+        }
+      );
+
+      queryClient.setQueriesData(
+        { queryKey: ['whatsapp-group-conversations'] },
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.map((conversation: any) => {
+            if (conversation.clientId === grupoWppId) {
+              return { ...conversation, unreadCount: 0 };
+            }
+            return conversation;
+          });
         }
       );
     },
     onSuccess: () => {
-      console.log('useMarkAsRead: Mutation bem-sucedida - cache já atualizado otimisticamente');
-      // Não invalida imediatamente para evitar sobrescrever atualização otimista
-      // A sincronização eventual acontecerá via refetchInterval do useConversations
+      console.log('useMarkAsRead: Mutation bem-sucedida');
     },
-    onError: (error, clientId) => {
+    onError: (error) => {
       console.error('useMarkAsRead: Erro na mutation:', error);
-      // Em caso de erro, invalidar para reverter ao estado do servidor
-      console.log('useMarkAsRead: Revertendo cache devido ao erro');
+      // Invalidar para reverter ao estado do servidor
       queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-group-conversations'] });
     }
   });
 }
