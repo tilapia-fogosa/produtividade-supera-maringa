@@ -8,7 +8,7 @@ interface FaltaFuturaData {
   unit_id: string;
   data_falta: string;
   responsavel_aviso_id: string;
-  responsavel_aviso_tipo: "professor" | "funcionario";
+  responsavel_aviso_tipo: "professor" | "funcionario" | "usuario";
   responsavel_aviso_nome: string;
   observacoes?: string;
   created_by?: string;
