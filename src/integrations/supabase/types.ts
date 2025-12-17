@@ -3631,45 +3631,41 @@ export type Database = {
           created_by: string | null
           enviado_por: string | null
           from_me: boolean | null
-          grupo_id: number
+          grupo_id: string
           id: number
           mensagem: string | null
           nome_remetente: string | null
           tipo_mensagem: string | null
           unit_id: string
+          url_media: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           enviado_por?: string | null
           from_me?: boolean | null
-          grupo_id: number
+          grupo_id: string
           id?: never
           mensagem?: string | null
           nome_remetente?: string | null
           tipo_mensagem?: string | null
           unit_id: string
+          url_media?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           enviado_por?: string | null
           from_me?: boolean | null
-          grupo_id?: number
+          grupo_id?: string
           id?: never
           mensagem?: string | null
           nome_remetente?: string | null
           tipo_mensagem?: string | null
           unit_id?: string
+          url_media?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "historico_whatsapp_grupos_grupo_id_fkey"
-            columns: ["grupo_id"]
-            isOneToOne: false
-            referencedRelation: "grupos_sup_mga"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "historico_whatsapp_grupos_unit_id_fkey"
             columns: ["unit_id"]
