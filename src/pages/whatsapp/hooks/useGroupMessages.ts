@@ -21,6 +21,18 @@ interface GroupMessageData {
   grupo_nome: string | null;
 }
 
+// Corrige URLs de mídia para o formato público do Supabase Storage
+const fixMediaUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  
+  // Se a URL contém /storage/v1/object/ mas não tem /public/, adiciona
+  if (url.includes('/storage/v1/object/') && !url.includes('/storage/v1/object/public/')) {
+    return url.replace('/storage/v1/object/', '/storage/v1/object/public/');
+  }
+  
+  return url;
+};
+
 export function useGroupMessages(grupoWppId: string | null) {
   return useQuery({
     queryKey: ['whatsapp-group-messages', grupoWppId],
@@ -54,7 +66,7 @@ export function useGroupMessages(grupoWppId: string | null) {
         fromMe: msg.from_me || false,
         createdByName: msg.from_me ? null : msg.nome_remetente_resolvido,
         tipoMensagem: msg.tipo_mensagem,
-        urlMedia: msg.url_media,
+        urlMedia: fixMediaUrl(msg.url_media),
       }));
 
       console.log('useGroupMessages: Mensagens carregadas:', messages.length);
