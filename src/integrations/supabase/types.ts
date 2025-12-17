@@ -7098,7 +7098,7 @@ export type Database = {
         Returns: {
           grupo_nome: string
           grupo_wpp_id: string
-          id: string
+          id: number
           total_mensagens: number
           turma_id: string
           ultima_mensagem: string
