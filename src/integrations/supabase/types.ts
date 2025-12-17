@@ -1369,15 +1369,7 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "aulas_experimentais_funcionario_registro_id_fkey"
-            columns: ["funcionario_registro_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       backup_metadata: {
         Row: {
@@ -3259,15 +3251,7 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "faltas_antecipadas_funcionario_registro_id_fkey"
-            columns: ["funcionario_registro_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       faq: {
         Row: {
@@ -4863,13 +4847,6 @@ export type Database = {
           unit_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "reposicoes_funcionario_registro_id_fkey"
-            columns: ["funcionario_registro_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "reposicoes_turma_id_fkey"
             columns: ["turma_id"]
