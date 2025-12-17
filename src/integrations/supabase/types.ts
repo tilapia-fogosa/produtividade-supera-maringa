@@ -3648,7 +3648,7 @@ export type Database = {
           enviado_por?: string | null
           from_me?: boolean | null
           grupo_wpp_id: string
-          id?: string
+          id: string
           lida?: boolean
           lida_hora?: string | null
           mensagem?: string | null
