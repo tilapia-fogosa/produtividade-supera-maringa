@@ -43,9 +43,11 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
         <h3 className="font-medium truncate">
           {conversation.clientName}
         </h3>
-        <p className="text-xs opacity-90">
-          {conversation.phoneNumber}
-        </p>
+        {!conversation.isGroup && (
+          <p className="text-xs opacity-90">
+            {conversation.phoneNumber}
+          </p>
+        )}
       </div>
 
       {/* Status Badge */}
