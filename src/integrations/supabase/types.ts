@@ -3637,6 +3637,7 @@ export type Database = {
           lida_hora: string | null
           mensagem: string | null
           nome_remetente: string | null
+          reaction: string | null
           tipo_mensagem: string | null
           unit_id: string
           url_media: string | null
@@ -3652,6 +3653,7 @@ export type Database = {
           lida_hora?: string | null
           mensagem?: string | null
           nome_remetente?: string | null
+          reaction?: string | null
           tipo_mensagem?: string | null
           unit_id: string
           url_media?: string | null
@@ -3667,6 +3669,7 @@ export type Database = {
           lida_hora?: string | null
           mensagem?: string | null
           nome_remetente?: string | null
+          reaction?: string | null
           tipo_mensagem?: string | null
           unit_id?: string
           url_media?: string | null
