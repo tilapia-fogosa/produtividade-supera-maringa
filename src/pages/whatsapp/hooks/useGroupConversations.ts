@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Conversation } from "../types/whatsapp.types";
 
 interface GroupData {
-  id: string;
+  id: number;
   grupo_nome: string;
   grupo_wpp_id: string;
   turma_id: string | null;
