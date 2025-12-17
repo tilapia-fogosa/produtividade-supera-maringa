@@ -3631,7 +3631,7 @@ export type Database = {
           created_by: string | null
           enviado_por: string | null
           from_me: boolean | null
-          grupo_id: string
+          grupo_wpp_id: string
           id: number
           mensagem: string | null
           nome_remetente: string | null
@@ -3644,7 +3644,7 @@ export type Database = {
           created_by?: string | null
           enviado_por?: string | null
           from_me?: boolean | null
-          grupo_id: string
+          grupo_wpp_id: string
           id?: never
           mensagem?: string | null
           nome_remetente?: string | null
@@ -3657,7 +3657,7 @@ export type Database = {
           created_by?: string | null
           enviado_por?: string | null
           from_me?: boolean | null
-          grupo_id?: string
+          grupo_wpp_id?: string
           id?: never
           mensagem?: string | null
           nome_remetente?: string | null

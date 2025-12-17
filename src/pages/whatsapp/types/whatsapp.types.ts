@@ -46,6 +46,7 @@ export interface Message {
   createdByName?: string | null;
   tipoMensagem?: string | null;
   senderName?: string | null; // Nome do remetente em grupos (resolvido da tabela alunos)
+  urlMedia?: string | null; // URL da mídia (imagem, áudio, vídeo, documento)
 }
 
 // Mensagem de grupo (retorno da RPC)

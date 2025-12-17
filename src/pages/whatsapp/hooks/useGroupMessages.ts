@@ -54,6 +54,7 @@ export function useGroupMessages(grupoWppId: string | null) {
         fromMe: msg.from_me || false,
         createdByName: msg.from_me ? null : msg.nome_remetente_resolvido,
         tipoMensagem: msg.tipo_mensagem,
+        urlMedia: msg.url_media,
       }));
 
       console.log('useGroupMessages: Mensagens carregadas:', messages.length);
