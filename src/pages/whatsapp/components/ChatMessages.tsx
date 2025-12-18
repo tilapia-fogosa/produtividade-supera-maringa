@@ -26,7 +26,7 @@ interface ChatMessagesProps {
 export function ChatMessages({ clientId }: ChatMessagesProps) {
   console.log('ChatMessages: Renderizando mensagens para cliente:', clientId);
 
-  const { data: messages, isLoading } = useMessages(clientId);
+  const { data: messages, isLoading, isError, error } = useMessages(clientId);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll para a última mensagem
@@ -41,6 +41,15 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
     return (
       <div className="flex-1 flex items-center justify-center bg-muted/30">
         <p className="text-muted-foreground">Carregando mensagens...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    console.error('ChatMessages: Erro ao carregar mensagens:', error);
+    return (
+      <div className="flex-1 flex items-center justify-center bg-muted/30">
+        <p className="text-destructive">Erro ao carregar mensagens. Tente novamente.</p>
       </div>
     );
   }

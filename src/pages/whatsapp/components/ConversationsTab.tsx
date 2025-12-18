@@ -68,8 +68,8 @@ export function ConversationsTab() {
   };
 
 
-  const handleSelectClient = (clientId: string, isUnregistered: boolean = false) => {
-    console.log('ConversationsTab: Selecionando cliente:', clientId, 'não cadastrado:', isUnregistered);
+  const handleSelectClient = (clientId: string, isUnregistered: boolean = false, isGroup: boolean = false) => {
+    console.log('ConversationsTab: Selecionando cliente:', clientId, 'não cadastrado:', isUnregistered, 'grupo:', isGroup);
 
     // Permite visualização de mensagens não cadastradas
     if (isUnregistered) {
@@ -77,9 +77,16 @@ export function ConversationsTab() {
     }
 
     // Invalida cache de mensagens do cliente selecionado para garantir dados mais recentes
-    queryClient.invalidateQueries({
-      queryKey: ['whatsapp-messages', clientId]
-    });
+    // Usa queryKey correta dependendo se é grupo ou conversa individual
+    if (isGroup) {
+      queryClient.invalidateQueries({
+        queryKey: ['whatsapp-group-messages', clientId]
+      });
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['whatsapp-messages', clientId]
+      });
+    }
 
     setSelectedClientId(clientId);
   };

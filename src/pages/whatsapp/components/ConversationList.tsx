@@ -28,7 +28,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface ConversationListProps {
   selectedClientId: string | null;
-  onSelectClient: (clientId: string, isUnregistered?: boolean) => void;
+  onSelectClient: (clientId: string, isUnregistered?: boolean, isGroup?: boolean) => void;
   onActivityClick: (clientId: string) => void;
   onToggleTipoAtendimento: (clientId: string, currentTipo: 'bot' | 'humano') => void;
 }
@@ -177,7 +177,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             key={conversation.clientId}
             conversation={conversation}
             isSelected={selectedClientId === conversation.clientId}
-            onClick={() => onSelectClient(conversation.clientId, conversation.isUnregistered)}
+            onClick={() => onSelectClient(conversation.clientId, conversation.isUnregistered, conversation.isGroup)}
             onCadastrarClick={handleCadastrarClick}
           />
         ))}
