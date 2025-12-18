@@ -43,7 +43,20 @@ export function useGroupMessages(grupoWppId: string | null) {
         return [];
       }
 
-      console.log('useGroupMessages: Buscando mensagens do grupo:', grupoWppId);
+      // Verificar sessão antes de fazer a chamada RPC
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('useGroupMessages: Erro ao verificar sessão:', sessionError.message);
+        throw new Error('Erro de autenticação. Faça login novamente.');
+      }
+
+      if (!sessionData.session) {
+        console.error('useGroupMessages: Usuário não autenticado');
+        throw new Error('Usuário não autenticado. Faça login para ver as mensagens.');
+      }
+
+      console.log('useGroupMessages: Sessão válida, buscando mensagens do grupo:', grupoWppId);
 
       const { data, error } = await supabase.rpc('get_group_messages_with_names', {
         p_grupo_wpp_id: grupoWppId
@@ -65,7 +78,7 @@ export function useGroupMessages(grupoWppId: string | null) {
       const normalMessages = allMessages.filter(m => m.tipo_mensagem !== 'reactionMessage');
       const reactionMessages = allMessages.filter(m => m.tipo_mensagem === 'reactionMessage');
 
-      console.log('useGroupMessages: Reações encontradas:', reactionMessages.length);
+      console.log('useGroupMessages: Mensagens carregadas:', normalMessages.length, 'Reações:', reactionMessages.length);
 
       // Criar mapa de reações por ID da mensagem reagida
       const reactionsMap = new Map<string, { emoji: string; senderId: string; senderName?: string }[]>();
@@ -96,7 +109,6 @@ export function useGroupMessages(grupoWppId: string | null) {
         reactions: reactionsMap.get(msg.id) || [],
       }));
 
-      console.log('useGroupMessages: Mensagens carregadas:', messages.length);
       return messages;
     },
     enabled: !!grupoWppId,
