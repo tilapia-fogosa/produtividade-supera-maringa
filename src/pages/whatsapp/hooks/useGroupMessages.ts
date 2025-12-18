@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types/whatsapp.types";
 
 interface GroupMessageData {
-  id: number;
+  id: string;
   grupo_id: string;
   mensagem: string;
   enviado_por: string;
@@ -19,6 +19,7 @@ interface GroupMessageData {
   url_media: string | null;
   created_at: string;
   grupo_nome: string | null;
+  reaction: string | null;
 }
 
 // Corrige URLs de mídia para o formato público do Supabase Storage
@@ -57,8 +58,32 @@ export function useGroupMessages(grupoWppId: string | null) {
         return [];
       }
 
-      // Converter para o formato Message
-      const messages: Message[] = (data as GroupMessageData[]).map((msg) => ({
+      const allMessages = data as GroupMessageData[];
+      
+      // Separar mensagens normais e reações
+      const normalMessages = allMessages.filter(m => m.tipo_mensagem !== 'reactionMessage');
+      const reactionMessages = allMessages.filter(m => m.tipo_mensagem === 'reactionMessage');
+
+      console.log('useGroupMessages: Reações encontradas:', reactionMessages.length);
+
+      // Criar mapa de reações por ID da mensagem reagida
+      const reactionsMap = new Map<string, { emoji: string; senderId: string; senderName?: string }[]>();
+      reactionMessages.forEach(reaction => {
+        const targetId = reaction.reaction;
+        if (!targetId) return;
+        
+        if (!reactionsMap.has(targetId)) {
+          reactionsMap.set(targetId, []);
+        }
+        reactionsMap.get(targetId)!.push({
+          emoji: reaction.mensagem || '',
+          senderId: reaction.enviado_por || '',
+          senderName: reaction.nome_remetente_resolvido || undefined
+        });
+      });
+
+      // Converter para o formato Message e associar reações
+      const messages: Message[] = normalMessages.map((msg) => ({
         id: msg.id,
         clientId: msg.grupo_id,
         content: msg.mensagem || '',
@@ -67,6 +92,7 @@ export function useGroupMessages(grupoWppId: string | null) {
         createdByName: msg.from_me ? null : msg.nome_remetente_resolvido,
         tipoMensagem: msg.tipo_mensagem,
         urlMedia: fixMediaUrl(msg.url_media),
+        reactions: reactionsMap.get(msg.id) || [],
       }));
 
       console.log('useGroupMessages: Mensagens carregadas:', messages.length);
