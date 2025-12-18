@@ -188,7 +188,6 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
     
     if (!blobToSend) {
       console.log('AudioRecorder: Nenhum áudio para enviar');
-      toast.error('Nenhum áudio foi gravado');
       return;
     }
 
@@ -215,32 +214,29 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
 
       const userName = profile?.full_name || 'Usuário';
 
-      console.log('AudioRecorder: Enviando áudio para webhook');
+      // Verifica se é número não cadastrado
+      const isUnregistered = conversation.clientId.startsWith('phone_');
 
-      // Envia para webhook N8N
-      const response = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/envia_audio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          audio: base64Audio,
+      console.log('AudioRecorder: Enviando áudio via edge function');
+
+      // Envia via edge function send-whatsapp-message
+      const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
+        body: {
           phone_number: conversation.phoneNumber,
-          client_id: conversation.clientId,
+          audio: base64Audio,
+          mime_type: blobToSend.type,
           user_name: userName,
+          client_id: isUnregistered ? null : conversation.clientId,
           profile_id: user?.id,
-          mime_type: blobToSend.type
-        })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
+      if (error) {
+        throw error;
       }
 
-      const result = await response.json();
-      console.log('AudioRecorder: Áudio enviado com sucesso:', result);
+      console.log('AudioRecorder: Áudio enviado com sucesso:', data);
 
-      toast.success('Áudio enviado com sucesso!');
       success = true;
 
       // Invalida cache para atualizar mensagens
@@ -252,9 +248,6 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
 
     } catch (error) {
       console.error('AudioRecorder: Erro ao enviar áudio:', error);
-      toast.error('Erro ao enviar áudio', {
-        description: 'Tente novamente'
-      });
       const newState = 'preview';
       setRecordingState(newState);
       onStateChange?.(newState);
