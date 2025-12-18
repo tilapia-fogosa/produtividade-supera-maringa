@@ -138,6 +138,29 @@ export function ChatMessage({ message }: ChatMessageProps) {
     }
   };
 
+  // Renderiza mensagem citada
+  const renderQuotedMessage = () => {
+    if (!message.quotedMessage) return null;
+
+    return (
+      <div 
+        className={cn(
+          "mb-2 rounded-md px-2 py-1.5 border-l-4 text-xs",
+          message.fromMe 
+            ? "bg-black/10 border-l-primary/70" 
+            : "bg-muted/60 border-l-primary"
+        )}
+      >
+        <p className="font-semibold text-primary truncate text-[11px]">
+          {message.quotedMessage.fromMe ? 'Você' : (message.quotedMessage.senderName || 'Desconhecido')}
+        </p>
+        <p className="truncate opacity-80 mt-0.5">
+          {message.quotedMessage.content || '[Mídia]'}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div
       className={cn(
@@ -159,6 +182,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {senderName}
           </p>
         )}
+
+        {/* Mensagem citada/respondida */}
+        {renderQuotedMessage()}
         
         {/* Renderiza mídia se houver */}
         {renderMedia()}

@@ -43,6 +43,14 @@ export interface MessageReaction {
   senderName?: string;
 }
 
+// Mensagem citada (resposta)
+export interface QuotedMessage {
+  id: string;
+  content: string;
+  senderName: string | null;
+  fromMe: boolean;
+}
+
 // Mensagem individual
 export interface Message {
   id: number | string;
@@ -55,6 +63,7 @@ export interface Message {
   senderName?: string | null; // Nome do remetente em grupos (resolvido da tabela alunos)
   urlMedia?: string | null; // URL da mídia (imagem, áudio, vídeo, documento)
   reactions?: MessageReaction[]; // Reações à mensagem
+  quotedMessage?: QuotedMessage | null; // Mensagem citada/respondida
 }
 
 // Mensagem de grupo (retorno da RPC)
