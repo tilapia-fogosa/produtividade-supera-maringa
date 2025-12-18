@@ -85,7 +85,6 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
-                <Route path="/whatsapp" element={<WhatsAppPage />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <SidebarProvider>

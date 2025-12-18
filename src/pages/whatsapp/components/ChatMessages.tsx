@@ -13,7 +13,6 @@
  */
 
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChatMessage } from "./ChatMessage";
@@ -24,15 +23,12 @@ interface ChatMessagesProps {
 }
 
 export function ChatMessages({ clientId }: ChatMessagesProps) {
-  console.log('ChatMessages: Renderizando mensagens para cliente:', clientId);
-
   const { data: messages, isLoading, isError, error } = useMessages(clientId);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll para a última mensagem
   useEffect(() => {
     if (bottomRef.current && messages && messages.length > 0) {
-      console.log('ChatMessages: Auto-scroll para última mensagem');
       bottomRef.current.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages]);
@@ -46,10 +42,28 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
   }
 
   if (isError) {
-    console.error('ChatMessages: Erro ao carregar mensagens:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const isAuthError = errorMessage.toLowerCase().includes('autenticado') || 
+                        errorMessage.toLowerCase().includes('autenticação') ||
+                        errorMessage.toLowerCase().includes('login');
+    
+    console.error('ChatMessages: Erro ao carregar mensagens:', errorMessage);
+    
     return (
-      <div className="flex-1 flex items-center justify-center bg-muted/30">
-        <p className="text-destructive">Erro ao carregar mensagens. Tente novamente.</p>
+      <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 p-4">
+        <p className="text-destructive text-center">
+          {isAuthError 
+            ? 'Sessão expirada. Por favor, faça login novamente.' 
+            : 'Erro ao carregar mensagens. Tente novamente.'}
+        </p>
+        {isAuthError && (
+          <button 
+            onClick={() => window.location.href = '/auth/login'}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Fazer Login
+          </button>
+        )}
       </div>
     );
   }
