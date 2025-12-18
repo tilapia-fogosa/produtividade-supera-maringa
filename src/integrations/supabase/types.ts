@@ -7094,7 +7094,7 @@ export type Database = {
           from_me: boolean
           grupo_id: string
           grupo_nome: string
-          id: number
+          id: string
           mensagem: string
           nome_remetente: string
           nome_remetente_resolvido: string
