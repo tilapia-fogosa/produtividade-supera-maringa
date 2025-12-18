@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 interface IpValidationResult {
   allowed: boolean;
@@ -7,20 +6,38 @@ interface IpValidationResult {
   message: string;
 }
 
+interface N8nCheckResponse {
+  ok: boolean;
+  requestIp: string;
+  officeIp: string;
+}
+
 export function useValidateIp() {
   return useQuery({
     queryKey: ['validate-ip'],
     queryFn: async (): Promise<IpValidationResult> => {
-      const { data, error } = await supabase.functions.invoke('validate-ip');
+      const response = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/cb85ce4c-b305-49a7-9c00-8272c575b2af', {
+        method: 'GET',
+        headers: {
+          'X-Ponto-Secret': 'abc123-supera',
+        },
+      });
 
-      if (error) {
-        console.error('Erro ao validar IP:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error('Erro ao validar IP');
       }
 
-      return data as IpValidationResult;
+      const data: N8nCheckResponse = await response.json();
+
+      return {
+        allowed: data.ok,
+        ip: data.requestIp,
+        message: data.ok 
+          ? 'IP válido para registro de ponto' 
+          : `Você precisa estar conectado ao WiFi da empresa para registrar ponto (seu IP: ${data.requestIp})`
+      };
     },
-    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
+    staleTime: 1000 * 60 * 5,
     retry: 1,
   });
 }

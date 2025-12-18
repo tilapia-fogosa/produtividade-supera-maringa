@@ -7,13 +7,17 @@ import { useTarefasPessoais, TarefaPessoal } from '@/hooks/use-tarefas-pessoais'
 import { useListaAulasExperimentais } from '@/hooks/use-lista-aulas-experimentais';
 import { useListaReposicoes } from '@/hooks/use-lista-reposicoes';
 import { useProfessorAtividades } from '@/hooks/use-professor-atividades';
+import { useProximasColetasAH } from '@/hooks/use-proximas-coletas-ah';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { useCamisetas } from '@/hooks/use-camisetas';
+import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,9 +48,35 @@ export default function Home() {
     reposicoes: reposicoesProfessor,
     camisetasPendentes,
     apostilasAHProntas,
+    coletasAHPendentes,
     isDiaHoje,
     isDiaSemana,
   } = useProfessorAtividades();
+
+  // Buscar coletas AH pendentes (para admins)
+  const { data: todasColetasAH = [], isLoading: loadingColetasAH } = useProximasColetasAH();
+  
+  // Buscar camisetas pendentes (para admins)
+  const { alunos: todosCamisetas = [], loading: loadingCamisetas } = useCamisetas();
+  
+  // Buscar apostilas AH prontas (para admins)
+  const { data: todasApostilasRecolhidas = [], isLoading: loadingApostilas } = useApostilasRecolhidas();
+  
+  // Permissões do usuário
+  const { isAdmin, isManagement } = useUserPermissions();
+  
+  // Filtrar coletas com mais de 90 dias para admins
+  const coletasAHAdmins = todasColetasAH.filter(c => 
+    c.dias_desde_ultima_correcao !== null && c.dias_desde_ultima_correcao >= 90
+  );
+  
+  // Filtrar camisetas pendentes (>60 dias e não entregues) para admins
+  const camisetasAdmins = todosCamisetas.filter(c => 
+    !c.camiseta_entregue && !c.nao_tem_tamanho && (c.dias_supera || 0) >= 60
+  );
+  
+  // Filtrar apostilas prontas (não entregues) para admins
+  const apostilasProntasAdmins = todasApostilasRecolhidas.filter(a => !a.foi_entregue);
 
   // Estado para nova tarefa
   const [novaTarefaOpen, setNovaTarefaOpen] = useState(false);
@@ -58,6 +88,7 @@ export default function Home() {
   });
 
   // Filtrar tarefas por período
+  const tarefasAtrasadas = tarefas.filter(t => !t.concluida && t.data_vencimento < hojeStr);
   const tarefasHoje = tarefas.filter(t => t.data_vencimento === hojeStr);
   const tarefasSemana = tarefas.filter(t => {
     const data = parseISO(t.data_vencimento);
@@ -68,10 +99,91 @@ export default function Home() {
     return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
   });
 
-  // Montar eventos baseado no perfil (professor ou não)
+  // Montar eventos baseado no perfil (admin, professor ou outros)
   const montarEventos = () => {
+    // Para admins/gestores: mostrar todas as atividades
+    if (isAdmin || isManagement) {
+      const eventosAtrasados: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+      const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+      const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+      const eventosProximaSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+
+      // === EVENTOS ATRASADOS ===
+      
+      // Coletas AH pendentes (+90 dias)
+      coletasAHAdmins.forEach(c => {
+        eventosAtrasados.push({
+          tipo: 'coleta_ah',
+          titulo: `Coleta AH: ${c.nome}`,
+          data: '',
+          subtitulo: `${c.dias_desde_ultima_correcao} dias - ${c.professor_nome || 'Sem professor'}`,
+        });
+      });
+      
+      // Camisetas pendentes
+      camisetasAdmins.forEach(c => {
+        eventosAtrasados.push({
+          tipo: 'camiseta',
+          titulo: `Camiseta: ${c.nome}`,
+          data: '',
+          subtitulo: `${c.dias_supera} dias - ${c.professor_nome || 'Sem professor'}`,
+        });
+      });
+      
+      // Apostilas AH prontas (não entregues)
+      apostilasProntasAdmins.forEach(a => {
+        eventosAtrasados.push({
+          tipo: 'apostila_ah',
+          titulo: `AH Pronta: ${a.pessoa_nome}`,
+          data: '',
+          subtitulo: `${a.apostila} - ${a.professor_nome || 'Sem professor'}`,
+        });
+      });
+
+      // Aulas experimentais
+      aulasExperimentais.forEach(ae => {
+        const evento = {
+          tipo: 'aula_experimental',
+          titulo: `Aula Experimental: ${ae.cliente_nome}`,
+          data: ae.data_aula_experimental,
+        };
+        if (ae.data_aula_experimental === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataAe = parseISO(ae.data_aula_experimental);
+          if (isSameWeek(dataAe, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          } else if (isSameWeek(dataAe, inicioProximaSemana, { weekStartsOn: 0 })) {
+            eventosProximaSemana.push(evento);
+          }
+        }
+      });
+
+      // Reposições
+      reposicoes.forEach(r => {
+        const evento = {
+          tipo: 'reposicao',
+          titulo: `Reposição: ${r.aluno_nome}`,
+          data: r.data_reposicao,
+        };
+        if (r.data_reposicao === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataRepo = parseISO(r.data_reposicao);
+          if (isSameWeek(dataRepo, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          } else if (isSameWeek(dataRepo, inicioProximaSemana, { weekStartsOn: 0 })) {
+            eventosProximaSemana.push(evento);
+          }
+        }
+      });
+
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
+    }
+    
     if (isProfessor) {
       // Para professores: usar apenas atividades das suas turmas
+      const eventosAtrasados: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
       const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
 
@@ -93,37 +205,37 @@ export default function Home() {
         }
       });
 
-      // Camisetas pendentes
+      // Camisetas pendentes (+60 dias) -> atrasadas
       camisetasPendentes.forEach(c => {
-        const evento = {
+        eventosAtrasados.push({
           tipo: 'camiseta',
           titulo: `Camiseta: ${c.aluno_nome}`,
           data: '',
           subtitulo: `${c.dias_supera} dias no Supera`,
-        };
-        if (isDiaHoje(c.dia_semana)) {
-          eventosHoje.push(evento);
-        } else if (isDiaSemana(c.dia_semana)) {
-          eventosSemana.push(evento);
-        }
+        });
       });
 
-      // Apostilas AH prontas
+      // Apostilas AH prontas -> atrasadas
       apostilasAHProntas.forEach(a => {
-        const evento = {
+        eventosAtrasados.push({
           tipo: 'apostila_ah',
           titulo: `AH: ${a.pessoa_nome}`,
           data: '',
           subtitulo: `${a.apostila} - Pronta para entregar`,
-        };
-        if (isDiaHoje(a.dia_semana)) {
-          eventosHoje.push(evento);
-        } else if (isDiaSemana(a.dia_semana)) {
-          eventosSemana.push(evento);
-        }
+        });
       });
 
-      return { eventosHoje, eventosSemana, eventosProximaSemana: [] };
+      // Coletas AH pendentes (+90 dias) -> atrasadas
+      coletasAHPendentes.forEach(c => {
+        eventosAtrasados.push({
+          tipo: 'coleta_ah',
+          titulo: `Coleta AH: ${c.pessoa_nome}`,
+          data: '',
+          subtitulo: `${c.dias_sem_correcao} dias sem correção`,
+        });
+      });
+
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana: [] };
     } else {
       // Para não-professores: comportamento original
       const eventosHoje = [
@@ -177,11 +289,11 @@ export default function Home() {
         })),
       ];
 
-      return { eventosHoje, eventosSemana, eventosProximaSemana };
+      return { eventosAtrasados: [], eventosHoje, eventosSemana, eventosProximaSemana };
     }
   };
 
-  const { eventosHoje, eventosSemana, eventosProximaSemana } = montarEventos();
+  const { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana } = montarEventos();
 
   const handleCriarTarefa = async () => {
     if (!novaTarefa.titulo.trim()) return;
@@ -256,6 +368,8 @@ export default function Home() {
         return <Shirt className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />;
       case 'apostila_ah':
         return <BookOpen className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />;
+      case 'coleta_ah':
+        return <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -266,11 +380,13 @@ export default function Home() {
       case 'aula_experimental':
         return <Badge className="text-[10px] px-1.5 py-0 text-primary-foreground">Aula</Badge>;
       case 'reposicao':
-        return <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Repos.</Badge>;
+        return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Repos.</Badge>;
       case 'camiseta':
         return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Camiseta</Badge>;
       case 'apostila_ah':
         return <Badge className="text-[10px] px-1.5 py-0 bg-green-500 text-white">AH</Badge>;
+      case 'coleta_ah':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white">Coleta</Badge>;
       default:
         return null;
     }
@@ -329,10 +445,10 @@ export default function Home() {
     </Card>
   );
 
-  const isLoading = loadingTarefas || loadingProfessor;
+  const isLoading = loadingTarefas || loadingProfessor || (isAdmin && loadingColetasAH);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-3 px-2">
+    <div className="w-full space-y-3 px-4">
       {/* Header com saudação */}
       <div className="flex items-center justify-between">
         <div>
@@ -429,8 +545,15 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* Cards lado a lado */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Cards lado a lado - 3 colunas */}
+          <div className="grid grid-cols-3 gap-2">
+            {renderSecaoAtividades(
+              'Atividades Atrasadas',
+              'Pendentes',
+              tarefasAtrasadas,
+              eventosAtrasados
+            )}
+
             {renderSecaoAtividades(
               'Atividades do Dia',
               format(hoje, "dd 'de' MMMM", { locale: ptBR }),
@@ -446,7 +569,7 @@ export default function Home() {
             )}
           </div>
 
-          {!isProfessor && renderSecaoAtividades(
+          {(isAdmin || isManagement || !isProfessor) && renderSecaoAtividades(
             'Atividades da Próxima Semana',
             `${format(inicioProximaSemana, "dd/MM")} - ${format(fimProximaSemana, "dd/MM")}`,
             tarefasProximaSemana,

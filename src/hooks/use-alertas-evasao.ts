@@ -189,35 +189,45 @@ export function useAlertasEvasao() {
         }
       }
 
-      // Enviar mensagem para o Slack
+      // Enviar dados para webhook n8n (notificação Slack gerenciada pelo n8n)
       try {
-        console.log('Enviando alerta para o Slack...');
-        const { data: slackResponse, error: slackError } = await supabase.functions.invoke(
-          'enviarMensagemSlack', 
-          {
-            body: { 
-              aluno: aluno?.nome || 'Aluno de Teste',
-              alunoId: alunoSelecionado, // Enviamos o ID do aluno
-              dataAlerta: dataAlerta, // Envia a data bruta (YYYY-MM-DD)
-              responsavel: responsavelNome,
-              descritivo: descritivo,
-              origem: origemAlerta,
-              dataRetencao: dataRetencao ? new Date(dataRetencao).toLocaleString('pt-BR') : '',
-              turma: turmaNome,
-              professor: professorNome,
-              professorSlack: professorSlack,
-              username: 'Sistema Kadin'
-            }
-          }
-        );
+        console.log('Enviando alerta para webhook n8n...');
         
-        if (slackError) {
-          console.error('Erro ao enviar para o Slack:', slackError);
-        } else {
-          console.log('Resposta do Slack:', slackResponse);
+        // Buscar o professor_id da turma
+        let professorId = null;
+        if (aluno?.turma_id) {
+          const { data: turmaData } = await supabase
+            .from('turmas')
+            .select('professor_id')
+            .eq('id', aluno.turma_id)
+            .single();
+          
+          professorId = turmaData?.professor_id || null;
         }
-      } catch (slackError) {
-        console.error('Erro ao invocar function de Slack:', slackError);
+        
+        const n8nResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/alerta-evasao', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            aluno_id: alunoSelecionado,
+            turma_id: aluno?.turma_id || null,
+            professor_id: professorId,
+            data_aviso: dataAlerta,
+            responsavel_id: funcionarioId,
+            descricao: descritivo,
+            origem: origemAlerta
+          })
+        });
+
+        if (!n8nResponse.ok) {
+          console.error('Erro ao enviar para webhook n8n:', await n8nResponse.text());
+        } else {
+          console.log('Alerta enviado para n8n com sucesso');
+        }
+      } catch (n8nError) {
+        console.error('Erro ao enviar para webhook n8n:', n8nError);
       }
 
       // Construir o histórico completo com dados da aula zero se disponíveis
@@ -232,6 +242,11 @@ export function useAlertasEvasao() {
       // Inserir dados na tabela alerta_evasao após o envio para Slack
       try {
         console.log('Salvando alerta no banco de dados...');
+        
+        // Buscar o profile id (auth.uid) do usuário logado
+        const { data: { user } } = await supabase.auth.getUser();
+        const profileId = user?.id || null;
+        
         const { data: alertaData, error: alertaError } = await supabase
           .from('alerta_evasao')
           .insert({
@@ -239,7 +254,7 @@ export function useAlertasEvasao() {
             data_alerta: dataAlertaFormatada,
             origem_alerta: origemAlerta,
             descritivo: descritivo,
-            responsavel: funcionarioNome || responsavelNome,
+            responsavel: profileId,
             data_retencao: dataRetencaoFormatada,
             status: 'pendente',
             kanban_status: 'todo',
@@ -292,7 +307,7 @@ export function useAlertasEvasao() {
 
       toast({
         title: "Sucesso",
-        description: "Alerta de evasão processado com sucesso! Dados enviados para Slack, webhook e salvos no banco.",
+        description: "Alerta de evasão processado com sucesso!",
       });
       
       resetForm();

@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useAulasExperimentais } from "@/hooks/use-aulas-experimentais";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AulaExperimentalModalProps {
   isOpen: boolean;
@@ -35,14 +35,14 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
   const [descricaoCliente, setDescricaoCliente] = useState('');
 
   const { criarAulaExperimental, calcularDatasValidas } = useAulasExperimentais();
-  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
+  const { user, profile } = useAuth();
 
   const datasValidas = calcularDatasValidas(diaSemana);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!clienteNome || !funcionarioId || !dataAulaExperimental || !descricaoCliente) {
+    if (!clienteNome || !user?.id || !dataAulaExperimental || !descricaoCliente) {
       return;
     }
 
@@ -50,12 +50,12 @@ const AulaExperimentalModal: React.FC<AulaExperimentalModalProps> = ({
       cliente_nome: clienteNome,
       turma_id: turmaId,
       data_aula_experimental: format(dataAulaExperimental, 'yyyy-MM-dd'),
-      responsavel_id: funcionarioId,
-      responsavel_tipo: 'funcionario',
-      responsavel_nome: funcionarioNome || '',
+      responsavel_id: user.id,
+      responsavel_tipo: 'usuario',
+      responsavel_nome: profile?.full_name || user.email || '',
       descricao_cliente: descricaoCliente || undefined,
       unit_id: unitId,
-      funcionario_registro_id: funcionarioId,
+      funcionario_registro_id: user.id,
     }, {
       onSuccess: () => {
         handleClose();

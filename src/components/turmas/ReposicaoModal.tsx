@@ -12,7 +12,7 @@ import { CalendarIcon } from "lucide-react";
 import { usePessoasReposicao } from "@/hooks/use-alunos-reposicao";
 import { useReposicoes, calcularDatasValidas } from "@/hooks/use-reposicoes";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 interface Turma {
   id: string;
@@ -31,7 +31,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
   turma
 }) => {
   const isMobile = useIsMobile();
-  const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
+  const { user, profile } = useAuth();
   const { data: pessoas = [], isLoading: loadingPessoas } = usePessoasReposicao(null);
   const {
     criarReposicao
@@ -45,7 +45,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
   const datasValidas = calcularDatasValidas(turma.dia_semana);
 
   const handleSubmit = async () => {
-    if (!alunoSelecionado || !funcionarioId || !dataSelecionada) {
+    if (!alunoSelecionado || !user?.id || !dataSelecionada) {
       return;
     }
 
@@ -55,12 +55,12 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
         turma_id: turma.id,
         data_reposicao: format(dataSelecionada, 'yyyy-MM-dd'),
         data_falta: dataFalta ? format(dataFalta, 'yyyy-MM-dd') : undefined,
-        responsavel_id: funcionarioId,
-        responsavel_tipo: 'funcionario',
-        nome_responsavel: funcionarioNome || '',
+        responsavel_id: user.id,
+        responsavel_tipo: 'usuario',
+        nome_responsavel: profile?.full_name || user.email || '',
         observacoes: observacoes || undefined,
         unit_id: turma.unit_id,
-        funcionario_registro_id: funcionarioId
+        funcionario_registro_id: user.id
       });
 
       // Resetar form
@@ -164,7 +164,7 @@ const ReposicaoModal: React.FC<ReposicaoModalProps> = ({
             <Button variant="outline" onClick={onClose} className="flex-1" disabled={criarReposicao.isPending}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} className="flex-1" disabled={!alunoSelecionado || !funcionarioId || !dataSelecionada || criarReposicao.isPending}>
+            <Button onClick={handleSubmit} className="flex-1" disabled={!alunoSelecionado || !user?.id || !dataSelecionada || criarReposicao.isPending}>
               {criarReposicao.isPending ? "Salvando..." : "Salvar Reposição"}
             </Button>
           </div>
