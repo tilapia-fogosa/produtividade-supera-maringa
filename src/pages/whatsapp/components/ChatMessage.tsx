@@ -181,6 +181,33 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {time}
           </span>
         </div>
+
+        {/* Reações */}
+        {message.reactions && message.reactions.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1 -mb-1">
+            {(() => {
+              // Agrupar reações por emoji
+              const grouped = message.reactions.reduce((acc, r) => {
+                if (!acc[r.emoji]) acc[r.emoji] = [];
+                acc[r.emoji].push(r);
+                return acc;
+              }, {} as Record<string, typeof message.reactions>);
+              
+              return Object.entries(grouped).map(([emoji, reactions]) => (
+                <span 
+                  key={emoji}
+                  className="inline-flex items-center gap-0.5 bg-muted/80 rounded-full px-1.5 py-0.5 text-xs border border-border/50"
+                  title={reactions.map(r => r.senderName || 'Alguém').join(', ')}
+                >
+                  <span className="text-sm">{emoji}</span>
+                  {reactions.length > 1 && (
+                    <span className="text-[10px] text-muted-foreground">{reactions.length}</span>
+                  )}
+                </span>
+              ));
+            })()}
+          </div>
+        )}
       </div>
     </div>
   );

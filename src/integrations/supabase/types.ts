@@ -7098,6 +7098,7 @@ export type Database = {
           mensagem: string
           nome_remetente: string
           nome_remetente_resolvido: string
+          reaction: string
           tipo_mensagem: string
           url_media: string
         }[]

@@ -36,6 +36,13 @@ export interface Conversation {
   registrationName?: string; // Nome de registro
 }
 
+// Reação de mensagem
+export interface MessageReaction {
+  emoji: string;
+  senderId: string;
+  senderName?: string;
+}
+
 // Mensagem individual
 export interface Message {
   id: number | string;
@@ -47,6 +54,7 @@ export interface Message {
   tipoMensagem?: string | null;
   senderName?: string | null; // Nome do remetente em grupos (resolvido da tabela alunos)
   urlMedia?: string | null; // URL da mídia (imagem, áudio, vídeo, documento)
+  reactions?: MessageReaction[]; // Reações à mensagem
 }
 
 // Mensagem de grupo (retorno da RPC)
