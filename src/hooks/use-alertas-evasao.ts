@@ -189,6 +189,10 @@ export function useAlertasEvasao() {
         }
       }
 
+      // Buscar o profile id (auth.uid) do usuário logado
+      const { data: { user } } = await supabase.auth.getUser();
+      const profileId = user?.id || null;
+
       // Enviar dados para webhook n8n (notificação Slack gerenciada pelo n8n)
       try {
         console.log('Enviando alerta para webhook n8n...');
@@ -215,7 +219,7 @@ export function useAlertasEvasao() {
             turma_id: aluno?.turma_id || null,
             professor_id: professorId,
             data_aviso: dataAlerta,
-            responsavel_id: funcionarioId,
+            responsavel_id: profileId,
             descricao: descritivo,
             origem: origemAlerta
           })
@@ -242,10 +246,6 @@ export function useAlertasEvasao() {
       // Inserir dados na tabela alerta_evasao após o envio para Slack
       try {
         console.log('Salvando alerta no banco de dados...');
-        
-        // Buscar o profile id (auth.uid) do usuário logado
-        const { data: { user } } = await supabase.auth.getUser();
-        const profileId = user?.id || null;
         
         const { data: alertaData, error: alertaError } = await supabase
           .from('alerta_evasao')
