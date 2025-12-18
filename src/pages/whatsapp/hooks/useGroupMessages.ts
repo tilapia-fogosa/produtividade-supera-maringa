@@ -39,6 +39,7 @@ export function useGroupMessages(grupoWppId: string | null) {
     queryKey: ['whatsapp-group-messages', grupoWppId],
     queryFn: async (): Promise<Message[]> => {
       if (!grupoWppId) {
+        console.log('useGroupMessages: grupoWppId é null, retornando array vazio');
         return [];
       }
 
@@ -49,12 +50,12 @@ export function useGroupMessages(grupoWppId: string | null) {
       });
 
       if (error) {
-        console.error('useGroupMessages: Erro ao buscar mensagens:', error);
-        throw error;
+        console.error('useGroupMessages: Erro ao buscar mensagens:', error.message, error.details, error.hint);
+        throw new Error(`Erro ao buscar mensagens: ${error.message}`);
       }
 
       if (!data || data.length === 0) {
-        console.log('useGroupMessages: Nenhuma mensagem encontrada');
+        console.log('useGroupMessages: Nenhuma mensagem encontrada para grupo:', grupoWppId);
         return [];
       }
 
