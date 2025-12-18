@@ -7,7 +7,7 @@ verify_jwt = false
 verify_jwt = false
 
 [calendar.check-missing-launches]
-schedule = "0 1 * * *"  # Executar todos os dias à 01:00
+schedule = "0 1 * * *"
 
 [functions.check-missing-attendance]
 verify_jwt = false
@@ -25,7 +25,7 @@ verify_jwt = false
 verify_jwt = false
 
 [calendar.check-hibernating-cards]
-schedule = "0 3 * * *"  # Executar todos os dias às 03:00
+schedule = "0 3 * * *"
 
 [functions.sync-turmas-xls]
 verify_jwt = false
@@ -37,4 +37,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-password-reset]
+verify_jwt = false
+
+[functions.send-whatsapp-message]
+verify_jwt = false
+
+[functions.replace-message-variables]
 verify_jwt = false
