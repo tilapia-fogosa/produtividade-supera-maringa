@@ -120,20 +120,26 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
       // Verificar se é número não cadastrado (client_id começa com "phone_")
       const isUnregistered = conversation.clientId.startsWith('phone_');
+      // Verificar se é grupo (termina com @g.us)
+      const isGroup = conversation.clientId.includes('@g.us');
       
       console.log('ChatInput: Enviando mensagem via webhook:', {
         conversationClientId: conversation.clientId,
         isUnregistered,
+        isGroup,
         processedMessageLength: processedMessage.length
       });
 
       // Etapa 3: Enviar mensagem processada
+      // Para grupos: enviar clientId como destinatario
+      // Para contatos: enviar phone_number
       const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
         body: {
-          phone_number: conversation.phoneNumber,
+          destinatario: isGroup ? conversation.clientId : undefined,
+          phone_number: !isGroup ? conversation.phoneNumber : undefined,
           user_name: userName,
-          message: processedMessage,
-          client_id: isUnregistered ? null : conversation.clientId,
+          mensagem: processedMessage,
+          client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
           profile_id: user?.id,
           unit_id: conversation.unitId
         }
