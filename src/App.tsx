@@ -4,8 +4,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+// Componente que oculta ThemeToggle em rotas específicas
+function ConditionalThemeToggle() {
+  const location = useLocation();
+  if (location.pathname === '/whatsapp') return null;
+  return <ThemeToggle />;
+}
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -156,7 +163,7 @@ function App() {
                         </main>
                       </div>
                       <div className="fixed bottom-4 right-4 print:hidden">
-                        <ThemeToggle />
+                        <ConditionalThemeToggle />
                       </div>
                     </SidebarProvider>
                   </ProtectedRoute>
