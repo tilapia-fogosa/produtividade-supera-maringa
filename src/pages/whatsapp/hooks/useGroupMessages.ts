@@ -19,7 +19,7 @@ interface GroupMessageData {
   url_media: string | null;
   created_at: string;
   grupo_nome: string | null;
-  reaction: string | null;
+  reaction: string | null; // ID da mensagem citada (quando é resposta)
 }
 
 // Corrige URLs de mídia para o formato público do Supabase Storage
@@ -80,6 +80,12 @@ export function useGroupMessages(grupoWppId: string | null) {
 
       console.log('useGroupMessages: Mensagens carregadas:', normalMessages.length, 'Reações:', reactionMessages.length);
 
+      // Criar mapa de todas as mensagens por ID para lookup de mensagens citadas
+      const messagesMap = new Map<string, GroupMessageData>();
+      normalMessages.forEach(msg => {
+        messagesMap.set(msg.id, msg);
+      });
+
       // Criar mapa de reações por ID da mensagem reagida
       const reactionsMap = new Map<string, { emoji: string; senderId: string; senderName?: string }[]>();
       reactionMessages.forEach(reaction => {
@@ -96,18 +102,35 @@ export function useGroupMessages(grupoWppId: string | null) {
         });
       });
 
-      // Converter para o formato Message e associar reações
-      const messages: Message[] = normalMessages.map((msg) => ({
-        id: msg.id,
-        clientId: msg.grupo_id,
-        content: msg.mensagem || '',
-        createdAt: msg.created_at,
-        fromMe: msg.from_me || false,
-        createdByName: msg.from_me ? null : msg.nome_remetente_resolvido,
-        tipoMensagem: msg.tipo_mensagem,
-        urlMedia: fixMediaUrl(msg.url_media),
-        reactions: reactionsMap.get(msg.id) || [],
-      }));
+      // Converter para o formato Message e associar reações e mensagens citadas
+      const messages: Message[] = normalMessages.map((msg) => {
+        // Buscar mensagem citada se existir (quando reaction tem valor e não é reactionMessage)
+        let quotedMessage = null;
+        if (msg.reaction && msg.tipo_mensagem === 'conversation') {
+          const quotedMsg = messagesMap.get(msg.reaction);
+          if (quotedMsg) {
+            quotedMessage = {
+              id: quotedMsg.id,
+              content: quotedMsg.mensagem || '',
+              senderName: quotedMsg.from_me ? null : quotedMsg.nome_remetente_resolvido,
+              fromMe: quotedMsg.from_me || false,
+            };
+          }
+        }
+
+        return {
+          id: msg.id,
+          clientId: msg.grupo_id,
+          content: msg.mensagem || '',
+          createdAt: msg.created_at,
+          fromMe: msg.from_me || false,
+          createdByName: msg.from_me ? null : msg.nome_remetente_resolvido,
+          tipoMensagem: msg.tipo_mensagem,
+          urlMedia: fixMediaUrl(msg.url_media),
+          reactions: reactionsMap.get(msg.id) || [],
+          quotedMessage,
+        };
+      });
 
       return messages;
     },
