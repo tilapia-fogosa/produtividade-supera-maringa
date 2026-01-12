@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Check, Trash2 } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 
@@ -39,16 +40,24 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                 : 'bg-card border-border'
             }`}
           >
-            <div className="flex-1">
-              <p className="font-medium text-foreground">{aluno.nome}</p>
-              {aluno.origem === 'funcionario' && (
-                <span className="text-xs text-muted-foreground">(Funcionário)</span>
-              )}
-              {aluno.ultima_pagina && (
-                <p className="text-sm text-muted-foreground">
-                  Página: {aluno.ultima_pagina}
-                </p>
-              )}
+            <div className="flex items-center gap-3 flex-1">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={aluno.foto_url || undefined} alt={aluno.nome} />
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                  {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-medium text-foreground">{aluno.nome}</p>
+                {aluno.origem === 'funcionario' && (
+                  <span className="text-xs text-muted-foreground">(Funcionário)</span>
+                )}
+                {aluno.ultima_pagina && (
+                  <p className="text-sm text-muted-foreground">
+                    Página: {aluno.ultima_pagina}
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="flex gap-2">
