@@ -14,6 +14,7 @@ export interface SalaPessoaTurma {
   ultimo_nivel?: string | null;
   dias_supera?: number | null;
   produtividadeRegistrada?: boolean;
+  foto_url?: string | null;
 }
 
 export function useSalaPessoasTurma() {
@@ -38,7 +39,7 @@ export function useSalaPessoasTurma() {
       // Buscar alunos ativos da turma
       const { data: alunos, error: alunosError } = await supabase
         .from('alunos')
-        .select('id, nome, turma_id, telefone, email, ultima_pagina, ultimo_nivel, dias_supera')
+        .select('id, nome, turma_id, telefone, email, ultima_pagina, ultimo_nivel, dias_supera, foto_url')
         .eq('turma_id', turmaId)
         .eq('active', true)
         .order('nome');
@@ -63,7 +64,7 @@ export function useSalaPessoasTurma() {
       // Combinar alunos e funcionários
       const pessoas: SalaPessoaTurma[] = [
         ...(alunos || []).map(a => ({ ...a, origem: 'aluno' as const })),
-        ...(funcionarios || []).map(f => ({ ...f, origem: 'funcionario' as const, ultima_pagina: null, ultimo_nivel: null, dias_supera: null }))
+        ...(funcionarios || []).map(f => ({ ...f, origem: 'funcionario' as const, ultima_pagina: null, ultimo_nivel: null, dias_supera: null, foto_url: null }))
       ];
 
       // Buscar produtividade registrada para hoje
