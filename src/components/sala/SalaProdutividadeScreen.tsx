@@ -10,7 +10,7 @@ interface SalaProdutividadeScreenProps {
   turma: Turma;
   onBack: () => void;
   alunos?: SalaPessoaTurma[];
-  onRegistrarPresenca?: (aluno: SalaPessoaTurma) => void;
+  onRegistrarPresenca?: (aluno: SalaPessoaTurma, presente: boolean) => void;
   onExcluirRegistro?: (aluno: SalaPessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }
