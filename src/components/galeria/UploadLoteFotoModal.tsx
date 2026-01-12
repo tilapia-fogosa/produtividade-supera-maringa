@@ -206,12 +206,12 @@ export function UploadLoteFotoModal({ open, onOpenChange }: UploadLoteFotoModalP
           {/* Turma */}
           <div className="space-y-2">
             <Label>Turma para todas as fotos (opcional)</Label>
-            <Select value={turmaId} onValueChange={setTurmaId} disabled={isUploading}>
+            <Select value={turmaId || "__none__"} onValueChange={(v) => setTurmaId(v === "__none__" ? "" : v)} disabled={isUploading}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma turma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhuma</SelectItem>
+                <SelectItem value="__none__">Nenhuma</SelectItem>
                 {turmas?.map((turma) => (
                   <SelectItem key={turma.id} value={turma.id}>
                     {turma.nome}
