@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { useSalaPessoasTurma, SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import SalaProdutividadeScreen from '@/components/sala/SalaProdutividadeScreen';
-import SalaProdutividadeModal from '@/components/sala/SalaProdutividadeModal';
+import SalaProdutividadeDrawer from '@/components/sala/SalaProdutividadeDrawer';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -161,7 +161,7 @@ const SalaProdutividadeTurma = () => {
         onExcluirRegistro={handleExcluirRegistro}
       />
 
-      <SalaProdutividadeModal
+      <SalaProdutividadeDrawer
         isOpen={modalAberto}
         onClose={handleFecharModal}
         pessoa={pessoaSelecionada}
