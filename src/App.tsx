@@ -98,6 +98,12 @@ import TestGoogleCalendar from "./pages/TestGoogleCalendar";
 import GaleriaFotos from "./pages/GaleriaFotos";
 import WhatsAppPage from "./pages/whatsapp";
 
+// Páginas do fluxo Sala
+import SalaLancamentos from "./pages/sala/SalaLancamentos";
+import SalaDiasLancamento from "./pages/sala/SalaDiasLancamento";
+import SalaTurmas from "./pages/sala/SalaTurmas";
+import SalaProdutividadeTurma from "./pages/sala/SalaProdutividadeTurma";
+
 const queryClient = new QueryClient();
 
 // Layout protegido que oculta sidebar para perfil sala
@@ -106,9 +112,9 @@ function ProtectedLayout() {
   const location = useLocation();
   const isSala = profile?.role === 'sala';
 
-  // Redireciona perfil sala para /lancamentos se tentar acessar / ou /home
-  if (isSala && (location.pathname === '/' || location.pathname === '/home')) {
-    return <Navigate to="/lancamentos" replace />;
+  // Redireciona perfil sala para /sala/lancamentos se tentar acessar / ou /home
+  if (isSala && (location.pathname === '/' || location.pathname === '/home' || location.pathname === '/lancamentos')) {
+    return <Navigate to="/sala/lancamentos" replace />;
   }
 
   return (
@@ -129,8 +135,9 @@ function ProtectedLayout() {
               <UnitSelector />
             </div>
             <Routes>
-              <Route path="/" element={<Navigate to={isSala ? "/lancamentos" : "/home"} />} />
-              <Route path="/home" element={isSala ? <Navigate to="/lancamentos" /> : <Home />} />
+              <Route path="/" element={<Navigate to={isSala ? "/sala/lancamentos" : "/home"} />} />
+              <Route path="/home" element={isSala ? <Navigate to="/sala/lancamentos" /> : <Home />} />
+              <Route path="/lancamentos" element={isSala ? <Navigate to="/sala/lancamentos" /> : <Lancamentos />} />
               <Route path="/dias-lancamento" element={<DiasLancamento />} />
               <Route path="/turmas/dia" element={<Turmas />} />
               <Route path="/turma/:turmaId/produtividade" element={<ProdutividadeTurma />} />
@@ -181,6 +188,13 @@ function ProtectedLayout() {
               <Route path="/registro-ponto" element={<RegistroPonto />} />
               <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="/teste-google-calendar" element={<TestGoogleCalendar />} />
+              
+              {/* Rotas do fluxo Sala */}
+              <Route path="/sala/lancamentos" element={<SalaLancamentos />} />
+              <Route path="/sala/dias-lancamento" element={<SalaDiasLancamento />} />
+              <Route path="/sala/turmas/dia" element={<SalaTurmas />} />
+              <Route path="/sala/turma/:turmaId/produtividade" element={<SalaProdutividadeTurma />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
