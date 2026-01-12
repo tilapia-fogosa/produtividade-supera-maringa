@@ -83,14 +83,14 @@ export function GaleriaFotosFilters({ filtros, onFiltrosChange }: GaleriaFotosFi
         <div className="space-y-2">
           <Label className="text-sm">Turma</Label>
           <Select 
-            value={filtros.turmaId} 
-            onValueChange={(value) => onFiltrosChange({ ...filtros, turmaId: value })}
+            value={filtros.turmaId || "__all__"} 
+            onValueChange={(value) => onFiltrosChange({ ...filtros, turmaId: value === "__all__" ? "" : value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todas as turmas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as turmas</SelectItem>
+              <SelectItem value="__all__">Todas as turmas</SelectItem>
               {turmas?.map((turma) => (
                 <SelectItem key={turma.id} value={turma.id}>
                   {turma.nome}
