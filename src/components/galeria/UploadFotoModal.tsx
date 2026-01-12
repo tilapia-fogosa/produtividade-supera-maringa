@@ -203,12 +203,12 @@ export function UploadFotoModal({ open, onOpenChange }: UploadFotoModalProps) {
           {/* Turma */}
           <div className="space-y-2">
             <Label>Turma (opcional)</Label>
-            <Select value={turmaId} onValueChange={setTurmaId}>
+            <Select value={turmaId || "__none__"} onValueChange={(v) => setTurmaId(v === "__none__" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma turma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhuma</SelectItem>
+                <SelectItem value="__none__">Nenhuma</SelectItem>
                 {turmas?.map((turma) => (
                   <SelectItem key={turma.id} value={turma.id}>
                     {turma.nome}
@@ -221,12 +221,12 @@ export function UploadFotoModal({ open, onOpenChange }: UploadFotoModalProps) {
           {/* Aluno */}
           <div className="space-y-2">
             <Label>Aluno (opcional)</Label>
-            <Select value={alunoId} onValueChange={setAlunoId}>
+            <Select value={alunoId || "__none__"} onValueChange={(v) => setAlunoId(v === "__none__" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um aluno" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum</SelectItem>
+                <SelectItem value="__none__">Nenhum</SelectItem>
                 {alunos?.map((aluno) => (
                   <SelectItem key={aluno.id} value={aluno.id}>
                     {aluno.nome}
