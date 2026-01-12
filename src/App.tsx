@@ -73,6 +73,7 @@ import RegistroPonto from "./pages/RegistroPonto";
 import MeuPerfil from "./pages/MeuPerfil";
 import Home from "./pages/Home";
 import TestGoogleCalendar from "./pages/TestGoogleCalendar";
+import GaleriaFotos from "./pages/GaleriaFotos";
 import WhatsAppPage from "./pages/whatsapp";
 
 const queryClient = new QueryClient();
@@ -145,6 +146,7 @@ function App() {
                               <Route path="/retencoes" element={<Retencoes />} />
                               <Route path="/resultados-mensais" element={<ResultadosMensais />} />
                               <Route path="/gerenciar-fotos-alunos" element={<GerenciarFotosAlunos />} />
+                              <Route path="/galeria-fotos" element={<GaleriaFotos />} />
                               <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
                               <Route path="/crm" element={<CRM />} />
                               <Route path="/whatsapp" element={<WhatsAppPage />} />
