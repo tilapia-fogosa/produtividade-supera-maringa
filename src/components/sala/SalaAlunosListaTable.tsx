@@ -41,9 +41,13 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
             }`}
           >
             <div className="flex items-center gap-3 flex-1">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={aluno.foto_url || undefined} alt={aluno.nome} />
-                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+              <Avatar className="h-14 w-14 shrink-0">
+                <AvatarImage 
+                  src={aluno.foto_url || undefined} 
+                  alt={aluno.nome}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-primary/10 text-primary text-base font-medium">
                   {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
