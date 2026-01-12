@@ -15,6 +15,8 @@ export interface SalaPessoaTurma {
   dias_supera?: number | null;
   produtividadeRegistrada?: boolean;
   foto_url?: string | null;
+  faltas_consecutivas?: number | null;
+  niveldesafio?: string | null;
 }
 
 export function useSalaPessoasTurma() {
@@ -39,7 +41,7 @@ export function useSalaPessoasTurma() {
       // Buscar alunos ativos da turma
       const { data: alunos, error: alunosError } = await supabase
         .from('alunos')
-        .select('id, nome, turma_id, telefone, email, ultima_pagina, ultimo_nivel, dias_supera, foto_url')
+        .select('id, nome, turma_id, telefone, email, ultima_pagina, ultimo_nivel, dias_supera, foto_url, faltas_consecutivas, niveldesafio')
         .eq('turma_id', turmaId)
         .eq('active', true)
         .order('nome');

@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Check, Trash2, X } from "lucide-react";
+import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
+import { useApostilas } from '@/hooks/use-apostilas';
 
 interface SalaAlunosListaTableProps {
   alunos: SalaPessoaTurma[];
@@ -20,6 +21,7 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
   produtividadeRegistrada = {}
 }) => {
   const [fotoAmpliada, setFotoAmpliada] = useState<{ url: string; nome: string } | null>(null);
+  const { getTotalPaginas } = useApostilas();
 
   if (alunos.length === 0) {
     return (
@@ -34,6 +36,9 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
       <div className="space-y-2">
         {alunos.map((aluno) => {
           const jaRegistrou = aluno.produtividadeRegistrada || produtividadeRegistrada[aluno.id];
+          const totalPaginas = getTotalPaginas(aluno.ultimo_nivel);
+          const paginasRestantes = aluno.ultima_pagina ? totalPaginas - aluno.ultima_pagina : null;
+          const temFaltasConsecutivas = aluno.faltas_consecutivas && aluno.faltas_consecutivas > 0;
           
           return (
             <div
@@ -41,7 +46,9 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
               className={`flex items-center justify-between p-3 rounded-lg border ${
                 jaRegistrou 
                   ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
-                  : 'bg-card border-border'
+                  : temFaltasConsecutivas
+                    ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800'
+                    : 'bg-card border-border'
               }`}
             >
               <div className="flex items-center gap-3 flex-1">
@@ -62,14 +69,46 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                     {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="flex-1 space-y-0.5">
                   <p className="font-medium text-foreground">{aluno.nome}</p>
                   {aluno.origem === 'funcionario' && (
                     <span className="text-xs text-muted-foreground">(Funcionário)</span>
                   )}
+                  
+                  {/* Apostila atual */}
+                  {aluno.ultimo_nivel && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" />
+                      Apostila: {aluno.ultimo_nivel}
+                    </p>
+                  )}
+                  
+                  {/* Página e páginas restantes */}
                   {aluno.ultima_pagina && (
-                    <p className="text-sm text-muted-foreground">
-                      Página: {aluno.ultima_pagina}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Página: {aluno.ultima_pagina} de {totalPaginas}
+                      {paginasRestantes !== null && paginasRestantes > 0 && (
+                        <span className="text-primary font-medium">
+                          ({paginasRestantes} restantes)
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  
+                  {/* Desafio da semana */}
+                  {aluno.niveldesafio && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Target className="h-3 w-3" />
+                      Desafio: {aluno.niveldesafio}
+                    </p>
+                  )}
+                  
+                  {/* Faltas consecutivas */}
+                  {temFaltasConsecutivas && (
+                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      {aluno.faltas_consecutivas} falta{aluno.faltas_consecutivas! > 1 ? 's' : ''} consecutiva{aluno.faltas_consecutivas! > 1 ? 's' : ''}
                     </p>
                   )}
                 </div>
