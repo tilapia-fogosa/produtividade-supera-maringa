@@ -90,7 +90,7 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose} direction="right">
-      <DrawerContent direction="right" className="h-full">
+      <DrawerContent direction="right" className="h-full w-[70%]">
         <DrawerHeader className="border-b">
           <DrawerTitle>Registrar Produtividade</DrawerTitle>
         </DrawerHeader>
