@@ -19,6 +19,7 @@ interface SalaProdutividadeModalProps {
   turma: Turma | null;
   onSuccess: () => void;
   onError: (error: string) => void;
+  presencaInicial?: boolean;
 }
 
 const SalaProdutividadeModal: React.FC<SalaProdutividadeModalProps> = ({
@@ -27,7 +28,8 @@ const SalaProdutividadeModal: React.FC<SalaProdutividadeModalProps> = ({
   pessoa,
   turma,
   onSuccess,
-  onError
+  onError,
+  presencaInicial = true
 }) => {
   const [loading, setLoading] = useState(false);
   const [dataAula, setDataAula] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -40,13 +42,13 @@ const SalaProdutividadeModal: React.FC<SalaProdutividadeModalProps> = ({
   useEffect(() => {
     if (isOpen && pessoa) {
       setDataAula(format(new Date(), 'yyyy-MM-dd'));
-      setPresente(true);
+      setPresente(presencaInicial);
       setPaginaInicial(pessoa.ultima_pagina?.toString() || '');
       setPaginaFinal('');
       setExerciciosAbaco('');
       setObservacoes('');
     }
-  }, [isOpen, pessoa]);
+  }, [isOpen, pessoa, presencaInicial]);
 
   const handleSubmit = async () => {
     if (!pessoa || !turma) return;
@@ -102,6 +104,15 @@ const SalaProdutividadeModal: React.FC<SalaProdutividadeModalProps> = ({
             <p className="text-sm text-muted-foreground">{turma.nome}</p>
           </div>
 
+          {/* Indicador de Presença */}
+          <div className={`p-3 rounded-lg text-center text-sm font-medium ${
+            presente 
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          }`}>
+            {presente ? '✓ Presente' : '✗ Falta'}
+          </div>
+
           {/* Data da aula */}
           <div className="space-y-2">
             <Label>Data da Aula</Label>
@@ -109,15 +120,6 @@ const SalaProdutividadeModal: React.FC<SalaProdutividadeModalProps> = ({
               type="date"
               value={dataAula}
               onChange={(e) => setDataAula(e.target.value)}
-            />
-          </div>
-
-          {/* Presença */}
-          <div className="flex items-center justify-between">
-            <Label>Presente</Label>
-            <Switch
-              checked={presente}
-              onCheckedChange={setPresente}
             />
           </div>
 

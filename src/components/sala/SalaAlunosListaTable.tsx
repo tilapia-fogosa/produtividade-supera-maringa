@@ -8,7 +8,7 @@ import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 
 interface SalaAlunosListaTableProps {
   alunos: SalaPessoaTurma[];
-  onRegistrarPresenca: (aluno: SalaPessoaTurma) => void;
+  onRegistrarPresenca: (aluno: SalaPessoaTurma, presente: boolean) => void;
   onExcluirRegistro?: (aluno: SalaPessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
 }
@@ -94,12 +94,22 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                     )}
                   </>
                 ) : (
-                  <Button
-                    onClick={() => onRegistrarPresenca(aluno)}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    Registrar
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={() => onRegistrarPresenca(aluno, true)}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Presente
+                    </Button>
+                    <Button
+                      onClick={() => onRegistrarPresenca(aluno, false)}
+                      size="sm"
+                      variant="destructive"
+                    >
+                      Falta
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

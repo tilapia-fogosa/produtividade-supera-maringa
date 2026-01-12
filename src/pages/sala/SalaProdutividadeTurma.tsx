@@ -29,6 +29,7 @@ const SalaProdutividadeTurma = () => {
   const [confirmacaoExclusao, setConfirmacaoExclusao] = useState(false);
   const [pessoaParaExcluir, setPessoaParaExcluir] = useState<SalaPessoaTurma | null>(null);
   const [excluindo, setExcluindo] = useState(false);
+  const [presencaInicial, setPresencaInicial] = useState(true);
 
   const {
     pessoasTurma,
@@ -77,8 +78,9 @@ const SalaProdutividadeTurma = () => {
     navigate(-1);
   };
 
-  const handleRegistrarPresenca = (pessoa: SalaPessoaTurma) => {
+  const handleRegistrarPresenca = (pessoa: SalaPessoaTurma, presente: boolean) => {
     setPessoaSelecionada(pessoa);
+    setPresencaInicial(presente);
     setModalAberto(true);
   };
 
@@ -166,6 +168,7 @@ const SalaProdutividadeTurma = () => {
         turma={turma}
         onSuccess={handleSucesso}
         onError={handleErro}
+        presencaInicial={presencaInicial}
       />
 
       <AlertDialog open={confirmacaoExclusao} onOpenChange={setConfirmacaoExclusao}>
