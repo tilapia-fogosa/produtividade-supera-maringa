@@ -34,20 +34,20 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
         return (
           <div
             key={aluno.id}
-            className={`flex items-center justify-between p-4 rounded-lg border ${
+            className={`flex items-center justify-between p-3 rounded-lg border ${
               jaRegistrou 
                 ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
                 : 'bg-card border-border'
             }`}
           >
             <div className="flex items-center gap-3 flex-1">
-              <Avatar className="h-14 w-14 shrink-0">
+              <Avatar className="h-20 w-20 shrink-0">
                 <AvatarImage 
                   src={aluno.foto_url || undefined} 
                   alt={aluno.nome}
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-primary/10 text-primary text-base font-medium">
+                <AvatarFallback className="bg-primary/10 text-primary text-xl font-medium">
                   {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
