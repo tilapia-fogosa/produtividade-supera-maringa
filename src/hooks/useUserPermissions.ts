@@ -2,25 +2,25 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Mapeamento de permissões por página
 const PAGE_PERMISSIONS = {
-  '/lancamentos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/dias-lancamento': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/turmas/dia': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/diario': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/calendario-aulas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/estoque': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/devolutivas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/fichas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/funcionarios': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/alunos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/alunos-ativos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/turma': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'], // rotas dinâmicas de turma
-  '/devolutivas/turma': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/devolutivas/aluno': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/devolutivas/funcionario': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/painel-pedagogico': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/projeto-sao-rafael': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
-  '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin'],
+  '/lancamentos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/dias-lancamento': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/turmas/dia': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/diario': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/calendario-aulas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/estoque': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/devolutivas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/fichas': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/funcionarios': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/alunos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/alunos-ativos': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/turma': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'], // rotas dinâmicas de turma
+  '/devolutivas/turma': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/devolutivas/aluno': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/devolutivas/funcionario': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/painel-pedagogico': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/projeto-sao-rafael': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
+  '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
   '/admin/configuracao': ['admin'], // Só admin tem acesso
 } as const;
 
@@ -62,6 +62,7 @@ export const useUserPermissions = () => {
   const isFinanceiro = profile?.role === 'financeiro';
   const isAdministrativo = profile?.role === 'administrativo';
   const isEstagiario = profile?.role === 'estagiario';
+  const isSala = profile?.role === 'sala';
 
   return {
     hasPageAccess,
@@ -71,6 +72,7 @@ export const useUserPermissions = () => {
     isFinanceiro,
     isAdministrativo,
     isEstagiario,
+    isSala,
     userRole: profile?.role,
     loading
   };

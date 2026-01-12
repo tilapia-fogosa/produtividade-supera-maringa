@@ -6,7 +6,7 @@ interface UserProfile {
   id: string;
   full_name: string | null;
   email: string | null;
-  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | 'financeiro' | 'administrativo' | 'estagiario' | null;
+  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala' | null;
   unit_ids: string[];
   gcalendar_id: string | null;
   professor_id: string | null;
