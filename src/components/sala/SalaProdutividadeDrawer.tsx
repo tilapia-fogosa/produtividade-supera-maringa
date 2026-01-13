@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from 'date-fns';
 import { supabase } from "@/integrations/supabase/client";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { Turma } from '@/hooks/use-professor-turmas';
+import { useApostilas } from '@/hooks/use-apostilas';
 
 interface SalaProdutividadeDrawerProps {
   isOpen: boolean;
@@ -20,6 +23,17 @@ interface SalaProdutividadeDrawerProps {
   presencaInicial?: boolean;
 }
 
+const niveisDesafio = [
+  'Nível 1',
+  'Nível 2', 
+  'Nível 3',
+  'Nível 4',
+  'CCL',
+  'Arrepio',
+  'BPA',
+  'Linguagem'
+];
+
 const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
   isOpen,
   onClose,
@@ -29,22 +43,35 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
   onError,
   presencaInicial = true
 }) => {
+  const { apostilas } = useApostilas();
   const [loading, setLoading] = useState(false);
   const [dataAula, setDataAula] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [presente, setPresente] = useState(true);
-  const [paginaInicial, setPaginaInicial] = useState('');
-  const [paginaFinal, setPaginaFinal] = useState('');
-  const [exerciciosAbaco, setExerciciosAbaco] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  
+  // Campos de Ábaco
+  const [apostilaAbaco, setApostilaAbaco] = useState('');
+  const [paginaAbaco, setPaginaAbaco] = useState('');
+  const [exerciciosRealizados, setExerciciosRealizados] = useState('');
+  const [errosAbaco, setErrosAbaco] = useState('');
+  
+  // Campos de Desafio
+  const [fezDesafio, setFezDesafio] = useState(false);
+  const [nivelDesafio, setNivelDesafio] = useState('');
+  
+  // Comentário
+  const [comentario, setComentario] = useState('');
 
   useEffect(() => {
     if (isOpen && pessoa) {
       setDataAula(format(new Date(), 'yyyy-MM-dd'));
       setPresente(presencaInicial);
-      setPaginaInicial(pessoa.ultima_pagina?.toString() || '');
-      setPaginaFinal('');
-      setExerciciosAbaco('');
-      setObservacoes('');
+      setApostilaAbaco(pessoa.ultimo_nivel || '');
+      setPaginaAbaco(pessoa.ultima_pagina?.toString() || '');
+      setExerciciosRealizados('');
+      setErrosAbaco('');
+      setFezDesafio(false);
+      setNivelDesafio('');
+      setComentario('');
     }
   }, [isOpen, pessoa, presencaInicial]);
 
@@ -54,22 +81,28 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
     setLoading(true);
     try {
       const payload = {
-        pessoa_id: pessoa.id,
-        pessoa_tipo: pessoa.origem,
+        aluno_id: pessoa.id,
+        aluno_nome: pessoa.nome,
         turma_id: turma.id,
+        turma_nome: turma.nome,
         data_aula: dataAula,
+        data_registro: new Date().toISOString(),
         presente,
-        pagina_inicial: paginaInicial ? parseInt(paginaInicial) : null,
-        pagina_final: paginaFinal ? parseInt(paginaFinal) : null,
-        exercicios_abaco: exerciciosAbaco ? parseInt(exerciciosAbaco) : null,
-        observacoes: observacoes || null,
-        unit_id: turma.unit_id
+        apostila_abaco: apostilaAbaco || null,
+        pagina_abaco: paginaAbaco || null,
+        exercicios_abaco: exerciciosRealizados || null,
+        erros_abaco: errosAbaco || null,
+        fez_desafio: fezDesafio,
+        nivel_desafio: nivelDesafio || null,
+        comentario: comentario || null,
+        apostila_atual: apostilaAbaco || null,
+        ultima_pagina: paginaAbaco || null,
       };
 
       console.log('[Sala] Enviando produtividade:', payload);
 
       const { error } = await supabase.functions.invoke('register-productivity', {
-        body: payload
+        body: { data: payload }
       });
 
       if (error) {
@@ -123,47 +156,102 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
 
           {presente && (
             <>
-              {/* Páginas */}
+              {/* Apostila do Ábaco */}
+              <div className="space-y-2">
+                <Label>Apostila do Ábaco</Label>
+                <Select value={apostilaAbaco} onValueChange={setApostilaAbaco}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a apostila" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {apostilas.map((apostila) => (
+                      <SelectItem key={apostila.nome} value={apostila.nome}>
+                        {apostila.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Página e Exercícios */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Página Inicial</Label>
+                  <Label>Página Ábaco</Label>
                   <Input
                     type="number"
-                    value={paginaInicial}
-                    onChange={(e) => setPaginaInicial(e.target.value)}
+                    value={paginaAbaco}
+                    onChange={(e) => setPaginaAbaco(e.target.value)}
                     placeholder="Ex: 10"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Página Final</Label>
+                  <Label>Exercícios Realizados</Label>
                   <Input
                     type="number"
-                    value={paginaFinal}
-                    onChange={(e) => setPaginaFinal(e.target.value)}
-                    placeholder="Ex: 15"
+                    value={exerciciosRealizados}
+                    onChange={(e) => setExerciciosRealizados(e.target.value)}
+                    placeholder="Qtd"
                   />
                 </div>
               </div>
 
-              {/* Exercícios de Ábaco */}
+              {/* Número de Erros */}
               <div className="space-y-2">
-                <Label>Exercícios de Ábaco</Label>
+                <Label>Número de Erros</Label>
                 <Input
                   type="number"
-                  value={exerciciosAbaco}
-                  onChange={(e) => setExerciciosAbaco(e.target.value)}
-                  placeholder="Quantidade de exercícios"
+                  value={errosAbaco}
+                  onChange={(e) => setErrosAbaco(e.target.value)}
+                  placeholder="Quantidade de erros"
                 />
               </div>
+
+              {/* Fez Desafio */}
+              <div className="space-y-2">
+                <Label>Fez Desafio?</Label>
+                <RadioGroup
+                  value={fezDesafio ? 'sim' : 'nao'}
+                  onValueChange={(value) => setFezDesafio(value === 'sim')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="sim" id="desafio-sim" />
+                    <Label htmlFor="desafio-sim" className="cursor-pointer">Sim</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="nao" id="desafio-nao" />
+                    <Label htmlFor="desafio-nao" className="cursor-pointer">Não</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Nível do Desafio - só mostra se fez desafio */}
+              {fezDesafio && (
+                <div className="space-y-2">
+                  <Label>Nível do Desafio</Label>
+                  <Select value={nivelDesafio} onValueChange={setNivelDesafio}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {niveisDesafio.map((nivel) => (
+                        <SelectItem key={nivel} value={nivel}>
+                          {nivel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </>
           )}
 
-          {/* Observações */}
+          {/* Comentário */}
           <div className="space-y-2">
-            <Label>Observações</Label>
+            <Label>Comentário (opcional)</Label>
             <Textarea
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
               placeholder="Observações sobre a aula..."
               rows={3}
             />
