@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UserPlus } from "lucide-react";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import SalaAlunosListaTable from './SalaAlunosListaTable';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SalaProdutividadeScreenProps {
   turma: Turma;
@@ -13,6 +14,7 @@ interface SalaProdutividadeScreenProps {
   onRegistrarPresenca?: (aluno: SalaPessoaTurma, presente: boolean) => void;
   onExcluirRegistro?: (aluno: SalaPessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
+  onReposicao?: () => void;
 }
 
 const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
@@ -21,7 +23,8 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
   alunos = [],
   onRegistrarPresenca = () => {},
   onExcluirRegistro,
-  produtividadeRegistrada = {}
+  produtividadeRegistrada = {},
+  onReposicao
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -52,6 +55,22 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
           produtividadeRegistrada={produtividadeRegistrada}
         />
       </div>
+
+      {/* Card de Reposição */}
+      <Card 
+        className="mt-4 border-dashed border-2 cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={onReposicao}
+      >
+        <CardContent className="flex items-center gap-3 p-4">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <UserPlus className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium">Reposição de Aula</p>
+            <p className="text-sm text-muted-foreground">Lançar produtividade de aluno em reposição</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
