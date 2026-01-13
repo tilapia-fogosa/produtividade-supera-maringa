@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { useApostilas } from '@/hooks/use-apostilas';
+import { usePessoasReposicao } from '@/hooks/use-alunos-reposicao';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SalaProdutividadeDrawerProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ interface SalaProdutividadeDrawerProps {
   onSuccess: () => void;
   onError: (error: string) => void;
   presencaInicial?: boolean;
+  modoReposicao?: boolean;
 }
 
 const niveisDesafio = [
@@ -41,12 +44,19 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
   turma,
   onSuccess,
   onError,
-  presencaInicial = true
+  presencaInicial = true,
+  modoReposicao = false
 }) => {
   const { apostilas } = useApostilas();
+  const { data: pessoasReposicao = [], isLoading: loadingPessoas } = usePessoasReposicao(turma?.id || null);
+  
   const [loading, setLoading] = useState(false);
   const [dataAula, setDataAula] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [presente, setPresente] = useState(true);
+  
+  // Seletor de pessoa para reposição
+  const [pessoaSelecionadaId, setPessoaSelecionadaId] = useState('');
+  const [filtroPessoa, setFiltroPessoa] = useState('');
   
   // Campos de Ábaco
   const [apostilaAbaco, setApostilaAbaco] = useState('');
@@ -61,28 +71,68 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
   // Comentário
   const [comentario, setComentario] = useState('');
 
+  // Pessoa selecionada (da lista de reposição ou a passada por prop)
+  const pessoaAtual = useMemo(() => {
+    if (modoReposicao && pessoaSelecionadaId) {
+      const encontrada = pessoasReposicao.find(p => p.id === pessoaSelecionadaId);
+      if (encontrada) {
+        return {
+          id: encontrada.id,
+          nome: encontrada.nome,
+          origem: encontrada.tipo,
+          ultimo_nivel: null,
+          ultima_pagina: null
+        } as SalaPessoaTurma;
+      }
+    }
+    return pessoa;
+  }, [modoReposicao, pessoaSelecionadaId, pessoasReposicao, pessoa]);
+
+  // Filtrar pessoas por nome
+  const pessoasFiltradas = useMemo(() => {
+    if (!filtroPessoa.trim()) return pessoasReposicao;
+    const termo = filtroPessoa.toLowerCase();
+    return pessoasReposicao.filter(p => p.nome.toLowerCase().includes(termo));
+  }, [pessoasReposicao, filtroPessoa]);
+
   useEffect(() => {
-    if (isOpen && pessoa) {
+    if (isOpen) {
       setDataAula(format(new Date(), 'yyyy-MM-dd'));
       setPresente(presencaInicial);
-      setApostilaAbaco(pessoa.ultimo_nivel || '');
-      setPaginaAbaco(pessoa.ultima_pagina?.toString() || '');
+      setPessoaSelecionadaId('');
+      setFiltroPessoa('');
       setExerciciosRealizados('');
       setErrosAbaco('');
       setFezDesafio(false);
       setNivelDesafio('');
       setComentario('');
+      
+      if (pessoa && !modoReposicao) {
+        setApostilaAbaco(pessoa.ultimo_nivel || '');
+        setPaginaAbaco(pessoa.ultima_pagina?.toString() || '');
+      } else {
+        setApostilaAbaco('');
+        setPaginaAbaco('');
+      }
     }
-  }, [isOpen, pessoa, presencaInicial]);
+  }, [isOpen, pessoa, presencaInicial, modoReposicao]);
+
+  // Atualizar apostila quando selecionar pessoa em reposição
+  useEffect(() => {
+    if (modoReposicao && pessoaAtual) {
+      setApostilaAbaco(pessoaAtual.ultimo_nivel || '');
+      setPaginaAbaco(pessoaAtual.ultima_pagina?.toString() || '');
+    }
+  }, [pessoaAtual, modoReposicao]);
 
   const handleSubmit = async () => {
-    if (!pessoa || !turma) return;
+    if (!pessoaAtual || !turma) return;
 
     setLoading(true);
     try {
       const payload = {
-        aluno_id: pessoa.id,
-        aluno_nome: pessoa.nome,
+        aluno_id: pessoaAtual.id,
+        aluno_nome: pessoaAtual.nome,
         turma_id: turma.id,
         turma_nome: turma.nome,
         data_aula: dataAula,
@@ -97,6 +147,7 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
         comentario: comentario || null,
         apostila_atual: apostilaAbaco || null,
         ultima_pagina: paginaAbaco || null,
+        is_reposicao: modoReposicao,
       };
 
       console.log('[Sala] Enviando produtividade:', payload);
@@ -119,21 +170,72 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
     }
   };
 
-  if (!pessoa || !turma) return null;
+  const podeSubmeter = modoReposicao ? !!pessoaAtual && !!pessoaSelecionadaId : !!pessoaAtual;
+
+  if (!turma) return null;
+  if (!modoReposicao && !pessoa) return null;
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose} direction="right">
       <DrawerContent direction="right" className="h-full w-[85%]">
         <DrawerHeader className="border-b">
-          <DrawerTitle>Registrar Produtividade</DrawerTitle>
+          <DrawerTitle>
+            {modoReposicao ? 'Reposição de Aula' : 'Registrar Produtividade'}
+          </DrawerTitle>
         </DrawerHeader>
 
         <div className="flex-1 overflow-auto p-4 space-y-4">
-          {/* Nome do aluno */}
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="font-medium">{pessoa.nome}</p>
-            <p className="text-sm text-muted-foreground">{turma.nome}</p>
-          </div>
+          {/* Seletor de pessoa para reposição */}
+          {modoReposicao && (
+            <div className="space-y-2">
+              <Label>Selecione o Aluno/Funcionário</Label>
+              <Input
+                placeholder="Filtrar por nome..."
+                value={filtroPessoa}
+                onChange={(e) => setFiltroPessoa(e.target.value)}
+                className="mb-2"
+              />
+              <ScrollArea className="h-40 border rounded-md">
+                {loadingPessoas ? (
+                  <div className="p-4 text-center text-muted-foreground">Carregando...</div>
+                ) : pessoasFiltradas.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">Nenhuma pessoa encontrada</div>
+                ) : (
+                  <div className="p-1">
+                    {pessoasFiltradas.map((p) => (
+                      <div
+                        key={p.id}
+                        className={`p-3 rounded-md cursor-pointer transition-colors ${
+                          pessoaSelecionadaId === p.id 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'hover:bg-muted'
+                        }`}
+                        onClick={() => setPessoaSelecionadaId(p.id)}
+                      >
+                        <p className="font-medium">{p.nome}</p>
+                        <p className={`text-xs ${pessoaSelecionadaId === p.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                          {p.tipo === 'funcionario' ? 'Funcionário' : 'Aluno'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          )}
+
+          {/* Nome do aluno (quando não é reposição ou já selecionou) */}
+          {pessoaAtual && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="font-medium">{pessoaAtual.nome}</p>
+              <p className="text-sm text-muted-foreground">{turma.nome}</p>
+              {modoReposicao && (
+                <span className="inline-block mt-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                  Reposição
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Indicador de Presença */}
           <div className={`p-3 rounded-lg text-center text-sm font-medium ${
@@ -271,7 +373,7 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
             <Button
               onClick={handleSubmit}
               className="flex-1"
-              disabled={loading}
+              disabled={loading || !podeSubmeter}
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
