@@ -11,13 +11,14 @@ import { useProximasColetasAH } from '@/hooks/use-proximas-coletas-ah';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
 import { useCamisetas } from '@/hooks/use-camisetas';
 import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
+import { useAniversariantes } from '@/hooks/use-aniversariantes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -61,6 +62,9 @@ export default function Home() {
   
   // Buscar apostilas AH prontas (para admins)
   const { data: todasApostilasRecolhidas = [], isLoading: loadingApostilas } = useApostilasRecolhidas();
+  
+  // Buscar aniversariantes
+  const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
   
   // Permissões do usuário
   const { isAdmin, isManagement } = useUserPermissions();
@@ -178,6 +182,26 @@ export default function Home() {
         }
       });
 
+      // Aniversariantes de hoje
+      aniversariantes?.aniversariantesHoje?.forEach(a => {
+        eventosHoje.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: 'Aniversário hoje! 🎉',
+        });
+      });
+
+      // Aniversariantes da semana
+      aniversariantes?.aniversariantesSemana?.forEach(a => {
+        eventosSemana.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+        });
+      });
+
       return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     }
     
@@ -235,6 +259,26 @@ export default function Home() {
         });
       });
 
+      // Aniversariantes de hoje (professor)
+      aniversariantes?.aniversariantesHoje?.forEach(a => {
+        eventosHoje.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: 'Aniversário hoje! 🎉',
+        });
+      });
+
+      // Aniversariantes da semana (professor)
+      aniversariantes?.aniversariantesSemana?.forEach(a => {
+        eventosSemana.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`
+        });
+      });
+
       return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana: [] };
     } else {
       // Para não-professores: comportamento original
@@ -289,7 +333,28 @@ export default function Home() {
         })),
       ];
 
-      return { eventosAtrasados: [], eventosHoje, eventosSemana, eventosProximaSemana };
+      // Aniversariantes para não-professores
+      const eventosHojeComAniversarios = [
+        ...eventosHoje,
+        ...(aniversariantes?.aniversariantesHoje || []).map(a => ({
+          tipo: 'aniversario' as const,
+          titulo: a.nome,
+          data: '',
+          subtitulo: 'Aniversário hoje! 🎉',
+        })),
+      ];
+
+      const eventosSemanaComAniversarios = [
+        ...eventosSemana,
+        ...(aniversariantes?.aniversariantesSemana || []).map(a => ({
+          tipo: 'aniversario' as const,
+          titulo: a.nome,
+          data: '',
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+        })),
+      ];
+
+      return { eventosAtrasados: [], eventosHoje: eventosHojeComAniversarios, eventosSemana: eventosSemanaComAniversarios, eventosProximaSemana };
     }
   };
 
@@ -370,6 +435,8 @@ export default function Home() {
         return <BookOpen className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />;
       case 'coleta_ah':
         return <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />;
+      case 'aniversario':
+        return <Cake className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -387,6 +454,8 @@ export default function Home() {
         return <Badge className="text-[10px] px-1.5 py-0 bg-green-500 text-white">AH</Badge>;
       case 'coleta_ah':
         return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white">Coleta</Badge>;
+      case 'aniversario':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-pink-500 text-white">Aniver.</Badge>;
       default:
         return null;
     }
