@@ -30,6 +30,7 @@ const SalaProdutividadeTurma = () => {
   const [pessoaParaExcluir, setPessoaParaExcluir] = useState<SalaPessoaTurma | null>(null);
   const [excluindo, setExcluindo] = useState(false);
   const [presencaInicial, setPresencaInicial] = useState(true);
+  const [modoReposicao, setModoReposicao] = useState(false);
 
   const {
     pessoasTurma,
@@ -95,12 +96,21 @@ const SalaProdutividadeTurma = () => {
   const handleRegistrarPresenca = (pessoa: SalaPessoaTurma, presente: boolean) => {
     setPessoaSelecionada(pessoa);
     setPresencaInicial(presente);
+    setModoReposicao(false);
+    setModalAberto(true);
+  };
+
+  const handleReposicao = () => {
+    setPessoaSelecionada(null);
+    setPresencaInicial(true);
+    setModoReposicao(true);
     setModalAberto(true);
   };
 
   const handleFecharModal = () => {
     setModalAberto(false);
     setPessoaSelecionada(null);
+    setModoReposicao(false);
   };
 
   const handleSucesso = () => {
@@ -173,6 +183,7 @@ const SalaProdutividadeTurma = () => {
         alunos={pessoasTurma}
         onRegistrarPresenca={handleRegistrarPresenca}
         onExcluirRegistro={handleExcluirRegistro}
+        onReposicao={handleReposicao}
       />
 
       <SalaProdutividadeDrawer
@@ -183,6 +194,7 @@ const SalaProdutividadeTurma = () => {
         onSuccess={handleSucesso}
         onError={handleErro}
         presencaInicial={presencaInicial}
+        modoReposicao={modoReposicao}
       />
 
       <AlertDialog open={confirmacaoExclusao} onOpenChange={setConfirmacaoExclusao}>
