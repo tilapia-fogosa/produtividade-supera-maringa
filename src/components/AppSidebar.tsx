@@ -75,12 +75,6 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Funcionários",
-    url: "/funcionarios",
-    icon: User,
-    requiresFuncionario: true,
-  },
-  {
     title: "Alunos Ativos",
     url: "/alunos-ativos",
     icon: Users,
@@ -104,6 +98,12 @@ const items = [
 ];
 
 const additionalItems = [
+  {
+    title: "Funcionários",
+    url: "/funcionarios",
+    icon: User,
+    requiresAdmin: true,
+  },
   {
     title: "Alertas de Falta",
     url: "/alertas-falta",
@@ -147,7 +147,6 @@ export function AppSidebar() {
 
   const filteredItems = items.filter(item => {
     if (item.requiresTeacher && !isTeacher) return false;
-    if (item.requiresFuncionario && !isFuncionario) return false;
     return true;
   });
 
