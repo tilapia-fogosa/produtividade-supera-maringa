@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
 import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
+import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
 
 // Interface para eventos com dados extras
 interface Evento {
@@ -36,6 +37,8 @@ interface Evento {
   pessoa_id?: string;
   pessoa_nome?: string;
   pessoa_origem?: 'aluno' | 'funcionario';
+  apostila_recolhida_id?: string;
+  apostila_nome?: string;
 }
 
 export default function Home() {
@@ -88,6 +91,14 @@ export default function Home() {
     id: string;
     nome: string;
     origem: 'aluno' | 'funcionario';
+  } | null>(null);
+
+  // Estado para modal de entrega AH (apostila pronta)
+  const [entregaAHModalOpen, setEntregaAHModalOpen] = useState(false);
+  const [apostilaSelecionadaEntrega, setApostilaSelecionadaEntrega] = useState<{
+    id: string;
+    apostilaNome: string;
+    pessoaNome: string;
   } | null>(null);
   
   // Buscar aniversariantes
@@ -173,6 +184,9 @@ export default function Home() {
           titulo: `AH Pronta: ${a.pessoa_nome}`,
           data: '',
           subtitulo: `${a.apostila} - ${a.professor_nome || 'Sem professor'}`,
+          apostila_recolhida_id: a.id,
+          apostila_nome: a.apostila,
+          pessoa_nome: a.pessoa_nome,
         });
       });
 
@@ -280,6 +294,9 @@ export default function Home() {
           titulo: `AH: ${a.pessoa_nome}`,
           data: '',
           subtitulo: `${a.apostila} - Pronta para entregar`,
+          apostila_recolhida_id: a.id.toString(),
+          apostila_nome: a.apostila,
+          pessoa_nome: a.pessoa_nome,
         });
       });
 
@@ -516,6 +533,17 @@ export default function Home() {
     }
   };
 
+  const handleAHProntaClick = (evento: Evento) => {
+    if (evento.apostila_recolhida_id && evento.apostila_nome && evento.pessoa_nome) {
+      setApostilaSelecionadaEntrega({
+        id: evento.apostila_recolhida_id,
+        apostilaNome: evento.apostila_nome,
+        pessoaNome: evento.pessoa_nome,
+      });
+      setEntregaAHModalOpen(true);
+    }
+  };
+
   const handleSalvarCamiseta = async (dados: { 
     alunoId: string; 
     tamanho_camiseta: string; 
@@ -533,13 +561,16 @@ export default function Home() {
   const renderEvento = (evento: Evento, index: number) => {
     const isCamisetaClicavel = evento.tipo === 'camiseta' && evento.aluno_id;
     const isColetaAHClicavel = evento.tipo === 'coleta_ah' && evento.pessoa_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel;
+    const isAHProntaClicavel = evento.tipo === 'apostila_ah' && evento.apostila_recolhida_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
         handleCamisetaClick(evento);
       } else if (isColetaAHClicavel) {
         handleColetaAHClick(evento);
+      } else if (isAHProntaClicavel) {
+        handleAHProntaClick(evento);
       }
     };
     
@@ -753,6 +784,15 @@ export default function Home() {
           setColetaAHModalOpen(false);
           setPessoaSelecionadaAH(null);
         }}
+      />
+
+      {/* Modal de Entrega AH (apostila pronta) */}
+      <EntregaAhModal
+        open={entregaAHModalOpen}
+        onOpenChange={setEntregaAHModalOpen}
+        apostilaRecolhidaId={apostilaSelecionadaEntrega?.id || ''}
+        apostilaNome={apostilaSelecionadaEntrega?.apostilaNome || ''}
+        pessoaNome={apostilaSelecionadaEntrega?.pessoaNome || ''}
       />
     </div>
   );

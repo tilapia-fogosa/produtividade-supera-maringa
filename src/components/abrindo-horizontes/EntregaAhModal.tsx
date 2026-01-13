@@ -55,7 +55,7 @@ export const EntregaAhModal: React.FC<EntregaAhModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-sm rounded-lg">
         <DialogHeader>
           <DialogTitle>Registrar Entrega de Apostila</DialogTitle>
           <DialogDescription>
