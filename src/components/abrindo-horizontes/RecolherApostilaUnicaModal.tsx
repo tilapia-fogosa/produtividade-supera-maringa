@@ -120,7 +120,7 @@ export const RecolherApostilaUnicaModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-xs rounded-lg">
+      <DialogContent className="max-w-sm rounded-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <BookOpen className="h-4 w-4" />
