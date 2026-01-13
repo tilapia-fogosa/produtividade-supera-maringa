@@ -74,8 +74,22 @@ const SalaProdutividadeTurma = () => {
     }
   }, [turmaId, buscarPessoasPorTurma]);
 
+  const diasParaState: Record<string, string> = {
+    'Segunda-feira': 'segunda',
+    'Terça-feira': 'terca',
+    'Quarta-feira': 'quarta',
+    'Quinta-feira': 'quinta',
+    'Sexta-feira': 'sexta',
+    'Sábado': 'sabado',
+  };
+
   const handleVoltar = () => {
-    navigate(-1);
+    if (turma?.dia_semana) {
+      const dia = diasParaState[turma.dia_semana] || 'segunda';
+      navigate('/sala/turmas/dia', { state: { dia } });
+    } else {
+      navigate('/sala/dias-lancamento');
+    }
   };
 
   const handleRegistrarPresenca = (pessoa: SalaPessoaTurma, presente: boolean) => {
