@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
+import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
 
 // Interface para eventos com dados extras
 interface Evento {
@@ -32,6 +33,9 @@ interface Evento {
   subtitulo?: string;
   aluno_id?: string;
   aluno_nome?: string;
+  pessoa_id?: string;
+  pessoa_nome?: string;
+  pessoa_origem?: 'aluno' | 'funcionario';
 }
 
 export default function Home() {
@@ -77,6 +81,14 @@ export default function Home() {
   // Estado para modal de camiseta
   const [camisetaModalOpen, setCamisetaModalOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string } | null>(null);
+  
+  // Estado para modal de coleta AH
+  const [coletaAHModalOpen, setColetaAHModalOpen] = useState(false);
+  const [pessoaSelecionadaAH, setPessoaSelecionadaAH] = useState<{
+    id: string;
+    nome: string;
+    origem: 'aluno' | 'funcionario';
+  } | null>(null);
   
   // Buscar aniversariantes
   const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
@@ -136,6 +148,9 @@ export default function Home() {
           titulo: `Coleta AH: ${c.nome}`,
           data: '',
           subtitulo: `${c.dias_desde_ultima_correcao} dias - ${c.professor_nome || 'Sem professor'}`,
+          pessoa_id: c.id,
+          pessoa_nome: c.nome,
+          pessoa_origem: c.origem,
         });
       });
       
@@ -275,6 +290,9 @@ export default function Home() {
           titulo: `Coleta AH: ${c.pessoa_nome}`,
           data: '',
           subtitulo: `${c.dias_sem_correcao} dias sem correção`,
+          pessoa_id: c.pessoa_id,
+          pessoa_nome: c.pessoa_nome,
+          pessoa_origem: 'aluno' as const,
         });
       });
 
@@ -487,6 +505,17 @@ export default function Home() {
     }
   };
 
+  const handleColetaAHClick = (evento: Evento) => {
+    if (evento.pessoa_id && evento.pessoa_nome && evento.pessoa_origem) {
+      setPessoaSelecionadaAH({
+        id: evento.pessoa_id,
+        nome: evento.pessoa_nome,
+        origem: evento.pessoa_origem,
+      });
+      setColetaAHModalOpen(true);
+    }
+  };
+
   const handleSalvarCamiseta = async (dados: { 
     alunoId: string; 
     tamanho_camiseta: string; 
@@ -502,7 +531,17 @@ export default function Home() {
   };
 
   const renderEvento = (evento: Evento, index: number) => {
-    const isClicavel = evento.tipo === 'camiseta' && evento.aluno_id;
+    const isCamisetaClicavel = evento.tipo === 'camiseta' && evento.aluno_id;
+    const isColetaAHClicavel = evento.tipo === 'coleta_ah' && evento.pessoa_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel;
+    
+    const handleClick = () => {
+      if (isCamisetaClicavel) {
+        handleCamisetaClick(evento);
+      } else if (isColetaAHClicavel) {
+        handleColetaAHClick(evento);
+      }
+    };
     
     return (
       <div
@@ -510,7 +549,7 @@ export default function Home() {
         className={`flex items-center gap-2 p-2 rounded-md border bg-card ${
           isClicavel ? 'cursor-pointer hover:bg-accent transition-colors active:scale-[0.98]' : ''
         }`}
-        onClick={isClicavel ? () => handleCamisetaClick(evento) : undefined}
+        onClick={isClicavel ? handleClick : undefined}
       >
         {getEventoIcon(evento.tipo)}
         <div className="flex-1 min-w-0">
@@ -701,6 +740,19 @@ export default function Home() {
         alunoId={alunoSelecionado?.id || ''}
         alunoNome={alunoSelecionado?.nome || ''}
         onSave={handleSalvarCamiseta}
+      />
+
+      {/* Modal de Coleta AH */}
+      <RecolherApostilaUnicaModal
+        open={coletaAHModalOpen}
+        onOpenChange={setColetaAHModalOpen}
+        pessoaId={pessoaSelecionadaAH?.id || ''}
+        pessoaNome={pessoaSelecionadaAH?.nome || ''}
+        pessoaOrigem={pessoaSelecionadaAH?.origem || 'aluno'}
+        onSuccess={() => {
+          setColetaAHModalOpen(false);
+          setPessoaSelecionadaAH(null);
+        }}
       />
     </div>
   );
