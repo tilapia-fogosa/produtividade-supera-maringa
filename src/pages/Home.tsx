@@ -22,6 +22,17 @@ import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
+
+// Interface para eventos com dados extras
+interface Evento {
+  tipo: string;
+  titulo: string;
+  data: string;
+  subtitulo?: string;
+  aluno_id?: string;
+  aluno_nome?: string;
+}
 
 export default function Home() {
   const { profile } = useAuth();
@@ -58,10 +69,14 @@ export default function Home() {
   const { data: todasColetasAH = [], isLoading: loadingColetasAH } = useProximasColetasAH();
   
   // Buscar camisetas pendentes (para admins)
-  const { alunos: todosCamisetas = [], loading: loadingCamisetas } = useCamisetas();
+  const { alunos: todosCamisetas = [], loading: loadingCamisetas, marcarComoEntregueComDetalhes, refetch: refetchCamisetas } = useCamisetas();
   
   // Buscar apostilas AH prontas (para admins)
   const { data: todasApostilasRecolhidas = [], isLoading: loadingApostilas } = useApostilasRecolhidas();
+  
+  // Estado para modal de camiseta
+  const [camisetaModalOpen, setCamisetaModalOpen] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string } | null>(null);
   
   // Buscar aniversariantes
   const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
@@ -107,10 +122,10 @@ export default function Home() {
   const montarEventos = () => {
     // Para admins/gestores: mostrar todas as atividades
     if (isAdmin || isManagement) {
-      const eventosAtrasados: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
-      const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
-      const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
-      const eventosProximaSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+      const eventosAtrasados: Evento[] = [];
+      const eventosHoje: Evento[] = [];
+      const eventosSemana: Evento[] = [];
+      const eventosProximaSemana: Evento[] = [];
 
       // === EVENTOS ATRASADOS ===
       
@@ -131,6 +146,8 @@ export default function Home() {
           titulo: `Camiseta: ${c.nome}`,
           data: '',
           subtitulo: `${c.dias_supera} dias - ${c.professor_nome || 'Sem professor'}`,
+          aluno_id: c.id,
+          aluno_nome: c.nome,
         });
       });
       
@@ -207,13 +224,13 @@ export default function Home() {
     
     if (isProfessor) {
       // Para professores: usar apenas atividades das suas turmas
-      const eventosAtrasados: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
-      const eventosHoje: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
-      const eventosSemana: { tipo: string; titulo: string; data: string; subtitulo?: string }[] = [];
+      const eventosAtrasados: Evento[] = [];
+      const eventosHoje: Evento[] = [];
+      const eventosSemana: Evento[] = [];
 
       // Reposições do professor
       reposicoesProfessor.forEach(r => {
-        const evento = {
+        const evento: Evento = {
           tipo: 'reposicao',
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
@@ -236,6 +253,8 @@ export default function Home() {
           titulo: `Camiseta: ${c.aluno_nome}`,
           data: '',
           subtitulo: `${c.dias_supera} dias no Supera`,
+          aluno_id: c.aluno_id,
+          aluno_nome: c.aluno_nome,
         });
       });
 
@@ -461,27 +480,55 @@ export default function Home() {
     }
   };
 
-  const renderEvento = (evento: { tipo: string; titulo: string; data: string; subtitulo?: string }, index: number) => (
-    <div
-      key={`${evento.tipo}-${index}`}
-      className="flex items-center gap-2 p-2 rounded-md border bg-card"
-    >
-      {getEventoIcon(evento.tipo)}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium">{evento.titulo}</p>
-        <p className="text-[10px] text-muted-foreground">
-          {evento.subtitulo || (evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : '')}
-        </p>
+  const handleCamisetaClick = (evento: Evento) => {
+    if (evento.aluno_id && evento.aluno_nome) {
+      setAlunoSelecionado({ id: evento.aluno_id, nome: evento.aluno_nome });
+      setCamisetaModalOpen(true);
+    }
+  };
+
+  const handleSalvarCamiseta = async (dados: { 
+    alunoId: string; 
+    tamanho_camiseta: string; 
+    data_entrega: Date; 
+    observacoes?: string; 
+    funcionario_registro_id?: string; 
+    responsavel_nome?: string; 
+  }) => {
+    await marcarComoEntregueComDetalhes(dados);
+    refetchCamisetas();
+    setCamisetaModalOpen(false);
+    setAlunoSelecionado(null);
+  };
+
+  const renderEvento = (evento: Evento, index: number) => {
+    const isClicavel = evento.tipo === 'camiseta' && evento.aluno_id;
+    
+    return (
+      <div
+        key={`${evento.tipo}-${index}`}
+        className={`flex items-center gap-2 p-2 rounded-md border bg-card ${
+          isClicavel ? 'cursor-pointer hover:bg-accent transition-colors active:scale-[0.98]' : ''
+        }`}
+        onClick={isClicavel ? () => handleCamisetaClick(evento) : undefined}
+      >
+        {getEventoIcon(evento.tipo)}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium">{evento.titulo}</p>
+          <p className="text-[10px] text-muted-foreground">
+            {evento.subtitulo || (evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : '')}
+          </p>
+        </div>
+        {getEventoBadge(evento.tipo)}
       </div>
-      {getEventoBadge(evento.tipo)}
-    </div>
-  );
+    );
+  };
 
   const renderSecaoAtividades = (
     titulo: string,
     periodo: string,
     tarefas: TarefaPessoal[],
-    eventos: { tipo: string; titulo: string; data: string; subtitulo?: string }[]
+    eventos: Evento[]
   ) => (
     <Card>
       <CardHeader className="py-2 px-3">
@@ -646,6 +693,15 @@ export default function Home() {
           )}
         </>
       )}
+
+      {/* Modal de Camiseta Entregue */}
+      <CamisetaEntregueModal
+        open={camisetaModalOpen}
+        onOpenChange={setCamisetaModalOpen}
+        alunoId={alunoSelecionado?.id || ''}
+        alunoNome={alunoSelecionado?.nome || ''}
+        onSave={handleSalvarCamiseta}
+      />
     </div>
   );
 }
