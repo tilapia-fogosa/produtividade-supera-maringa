@@ -2930,8 +2930,10 @@ export type Database = {
           descricao: string | null
           funcionario_registro_id: string | null
           id: string
+          imagem_url: string | null
           local: string | null
           numero_vagas: number
+          publico: boolean | null
           responsavel: string | null
           tipo: string
           titulo: string
@@ -2946,8 +2948,10 @@ export type Database = {
           descricao?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          imagem_url?: string | null
           local?: string | null
           numero_vagas?: number
+          publico?: boolean | null
           responsavel?: string | null
           tipo?: string
           titulo: string
@@ -2962,8 +2966,10 @@ export type Database = {
           descricao?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          imagem_url?: string | null
           local?: string | null
           numero_vagas?: number
+          publico?: boolean | null
           responsavel?: string | null
           tipo?: string
           titulo?: string
