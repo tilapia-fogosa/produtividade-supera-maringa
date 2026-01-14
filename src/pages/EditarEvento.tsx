@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Calendar, Clock, MapPin, User, Users, Plus, Trash2, Search, Edit } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Users, Plus, Trash2, Search, Edit, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
+import { compressImageIfNeeded } from "@/services/imageCompressionService";
 
 export default function EditarEvento() {
   const { id } = useParams();
@@ -181,6 +183,9 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
   responsaveis: any[];
 }) => {
   const [open, setOpen] = useState(false);
+  const [imagemFile, setImagemFile] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(evento.imagem_url || null);
+  const [uploading, setUploading] = useState(false);
   
   // Função para converter data UTC para local no formato datetime-local
   const getLocalDateTimeString = (dateString: string) => {
@@ -197,9 +202,23 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
     local: evento.local || '',
     responsavel: evento.responsavel || '',
     numero_vagas: evento.numero_vagas || 0,
-    tipo: evento.tipo || ''
+    tipo: evento.tipo || '',
+    publico: evento.publico || false
   });
   const { toast } = useToast();
+
+  const handleImagemChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressedFile = await compressImageIfNeeded(file);
+        setImagemFile(compressedFile);
+        setImagemPreview(URL.createObjectURL(compressedFile));
+      } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,7 +232,25 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
       return;
     }
 
+    setUploading(true);
+    let imagemUrl = evento.imagem_url;
+
     try {
+      // Upload da nova imagem se houver
+      if (imagemFile) {
+        const fileName = `evento_${Date.now()}_${imagemFile.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('eventos-capas')
+          .upload(fileName, imagemFile);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('eventos-capas')
+            .getPublicUrl(fileName);
+          imagemUrl = publicUrl;
+        }
+      }
+
       // Converter a data local para UTC para salvar no banco
       const localDate = new Date(formData.data_evento);
       const utcDate = localDate.toISOString();
@@ -227,7 +264,9 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
           local: formData.local,
           responsavel: formData.responsavel,
           numero_vagas: Number(formData.numero_vagas),
-          tipo: formData.tipo
+          tipo: formData.tipo,
+          imagem_url: imagemUrl,
+          publico: formData.publico
         })
         .eq('id', evento.id);
 
@@ -247,6 +286,8 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
         description: "Erro ao atualizar evento",
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -356,12 +397,50 @@ const EditarEventoModal = ({ evento, onEventoAtualizado, responsaveis }: {
             />
           </div>
 
+          {/* Upload de Capa/Convite */}
+          <div className="space-y-2">
+            <Label>Capa/Convite do Evento</Label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 px-4 py-2 bg-muted rounded-md cursor-pointer hover:bg-muted/80 transition-colors">
+                <Upload className="h-4 w-4" />
+                <span className="text-sm">Escolher imagem</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImagemChange}
+                  className="hidden"
+                />
+              </label>
+              {imagemPreview && (
+                <img 
+                  src={imagemPreview} 
+                  alt="Preview" 
+                  className="h-16 w-16 object-cover rounded-md"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Toggle Público */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Exibir no Visualizador</Label>
+              <p className="text-xs text-muted-foreground">
+                Mostrar este evento na tela de exibição pública
+              </p>
+            </div>
+            <Switch
+              checked={formData.publico}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, publico: checked }))}
+            />
+          </div>
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
-              Salvar Alterações
+            <Button type="submit" disabled={uploading}>
+              {uploading ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </div>
         </form>

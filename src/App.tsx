@@ -96,7 +96,9 @@ import MeuPerfil from "./pages/MeuPerfil";
 import Home from "./pages/Home";
 import TestGoogleCalendar from "./pages/TestGoogleCalendar";
 import GaleriaFotos from "./pages/GaleriaFotos";
+import VisualizadorImagens from "./pages/VisualizadorImagens";
 import WhatsAppPage from "./pages/whatsapp";
+import Avisos from "./pages/Avisos";
 
 // Páginas do fluxo Sala
 import SalaLancamentos from "./pages/sala/SalaLancamentos";
@@ -176,6 +178,7 @@ function ProtectedLayout() {
               <Route path="/resultados-mensais" element={<ResultadosMensais />} />
               <Route path="/gerenciar-fotos-alunos" element={<GerenciarFotosAlunos />} />
               <Route path="/galeria-fotos" element={<GaleriaFotos />} />
+              <Route path="/avisos" element={<Avisos />} />
               <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/whatsapp" element={<WhatsAppPage />} />
@@ -224,6 +227,7 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
+                <Route path="/visualizador" element={<VisualizadorImagens />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <ProtectedLayout />

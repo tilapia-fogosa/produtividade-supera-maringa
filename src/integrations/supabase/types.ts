@@ -1371,6 +1371,50 @@ export type Database = {
         }
         Relationships: []
       }
+      avisos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          id: string
+          imagem_url: string
+          nome: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          id?: string
+          imagem_url: string
+          nome: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          imagem_url?: string
+          nome?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avisos_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backup_metadata: {
         Row: {
           backup_name: string
@@ -2930,8 +2974,10 @@ export type Database = {
           descricao: string | null
           funcionario_registro_id: string | null
           id: string
+          imagem_url: string | null
           local: string | null
           numero_vagas: number
+          publico: boolean | null
           responsavel: string | null
           tipo: string
           titulo: string
@@ -2946,8 +2992,10 @@ export type Database = {
           descricao?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          imagem_url?: string | null
           local?: string | null
           numero_vagas?: number
+          publico?: boolean | null
           responsavel?: string | null
           tipo?: string
           titulo: string
@@ -2962,8 +3010,10 @@ export type Database = {
           descricao?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          imagem_url?: string | null
           local?: string | null
           numero_vagas?: number
+          publico?: boolean | null
           responsavel?: string | null
           tipo?: string
           titulo?: string

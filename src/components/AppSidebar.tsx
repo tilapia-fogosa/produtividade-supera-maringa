@@ -19,7 +19,9 @@ import {
   MapPin,
   AlertTriangle,
   Award,
-  Home
+  Home,
+  Image,
+  Bell
 } from "lucide-react";
 import {
   Sidebar,
@@ -94,6 +96,16 @@ const items = [
     title: "Projeto São Rafael",
     url: "/projeto-sao-rafael",
     icon: Target,
+  },
+  {
+    title: "Galeria de Fotos",
+    url: "/galeria-fotos",
+    icon: Image,
+  },
+  {
+    title: "Avisos",
+    url: "/avisos",
+    icon: Bell,
   },
 ];
 
