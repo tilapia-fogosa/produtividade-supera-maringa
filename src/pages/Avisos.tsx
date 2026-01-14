@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { compressImageIfNeeded } from "@/services/imageCompressionService";
 
-const MARINGA_UNIT_ID = "a80c152e-2854-4cf4-aa81-be484202b899";
+const MARINGA_UNIT_ID = "0df79a04-444e-46ee-b218-59e4b1835f4a";
 
 interface Aviso {
   id: string;
