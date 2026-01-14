@@ -39,6 +39,8 @@ interface Evento {
   pessoa_origem?: 'aluno' | 'funcionario';
   apostila_recolhida_id?: string;
   apostila_nome?: string;
+  turma_nome?: string;
+  educador_nome?: string;
 }
 
 export default function Home() {
@@ -192,10 +194,12 @@ export default function Home() {
 
       // Aulas experimentais
       aulasExperimentais.forEach(ae => {
-        const evento = {
+        const evento: Evento = {
           tipo: 'aula_experimental',
           titulo: `Aula Experimental: ${ae.cliente_nome}`,
           data: ae.data_aula_experimental,
+          turma_nome: ae.turma_nome,
+          educador_nome: ae.responsavel_nome,
         };
         if (ae.data_aula_experimental === hojeStr) {
           eventosHoje.push(evento);
@@ -211,10 +215,12 @@ export default function Home() {
 
       // Reposições
       reposicoes.forEach(r => {
-        const evento = {
+        const evento: Evento = {
           tipo: 'reposicao',
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
+          turma_nome: r.turma_reposicao_nome,
+          educador_nome: r.turma_reposicao_professor,
         };
         if (r.data_reposicao === hojeStr) {
           eventosHoje.push(evento);
@@ -263,7 +269,7 @@ export default function Home() {
           tipo: 'reposicao',
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
-          subtitulo: r.turma_reposicao_nome,
+          turma_nome: r.turma_reposicao_nome,
         };
         if (r.data_reposicao === hojeStr) {
           eventosHoje.push(evento);
@@ -336,20 +342,24 @@ export default function Home() {
       return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana: [] };
     } else {
       // Para não-professores: comportamento original
-      const eventosHoje = [
+      const eventosHoje: Evento[] = [
         ...aulasExperimentais.filter(ae => ae.data_aula_experimental === hojeStr).map(ae => ({
           tipo: 'aula_experimental' as const,
           titulo: `Aula Experimental: ${ae.cliente_nome}`,
           data: ae.data_aula_experimental,
+          turma_nome: ae.turma_nome,
+          educador_nome: ae.responsavel_nome,
         })),
         ...reposicoes.filter(r => r.data_reposicao === hojeStr).map(r => ({
           tipo: 'reposicao' as const,
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
+          turma_nome: r.turma_reposicao_nome,
+          educador_nome: r.turma_reposicao_professor,
         })),
       ];
 
-      const eventosSemana = [
+      const eventosSemana: Evento[] = [
         ...aulasExperimentais.filter(ae => {
           const data = parseISO(ae.data_aula_experimental);
           return isSameWeek(data, hoje, { weekStartsOn: 0 }) && ae.data_aula_experimental !== hojeStr;
@@ -357,18 +367,22 @@ export default function Home() {
           tipo: 'aula_experimental' as const,
           titulo: `Aula Experimental: ${ae.cliente_nome}`,
           data: ae.data_aula_experimental,
+          turma_nome: ae.turma_nome,
+          educador_nome: ae.responsavel_nome,
         })),
         ...reposicoes.filter(r => {
           const data = parseISO(r.data_reposicao);
           return isSameWeek(data, hoje, { weekStartsOn: 0 }) && r.data_reposicao !== hojeStr;
         }).map(r => ({
           tipo: 'reposicao' as const,
+          educador_nome: r.turma_reposicao_professor,
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
+          turma_nome: r.turma_reposicao_nome,
         })),
       ];
 
-      const eventosProximaSemana = [
+      const eventosProximaSemana: Evento[] = [
         ...aulasExperimentais.filter(ae => {
           const data = parseISO(ae.data_aula_experimental);
           return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
@@ -376,14 +390,18 @@ export default function Home() {
           tipo: 'aula_experimental' as const,
           titulo: `Aula Experimental: ${ae.cliente_nome}`,
           data: ae.data_aula_experimental,
+          turma_nome: ae.turma_nome,
+          educador_nome: ae.responsavel_nome,
         })),
         ...reposicoes.filter(r => {
           const data = parseISO(r.data_reposicao);
           return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
         }).map(r => ({
           tipo: 'reposicao' as const,
+          educador_nome: r.turma_reposicao_professor,
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
+          turma_nome: r.turma_reposicao_nome,
         })),
       ];
 
@@ -586,7 +604,11 @@ export default function Home() {
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium">{evento.titulo}</p>
           <p className="text-[10px] text-muted-foreground">
-            {evento.subtitulo || (evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : '')}
+            {evento.subtitulo || (
+              (evento.tipo === 'reposicao' || evento.tipo === 'aula_experimental') 
+                ? `${evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : ''} • ${evento.turma_nome || ''}${evento.educador_nome ? ` • ${evento.educador_nome}` : ''}`
+                : (evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : '')
+            )}
           </p>
         </div>
         {getEventoBadge(evento.tipo)}

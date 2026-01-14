@@ -7307,6 +7307,7 @@ export type Database = {
           turma_original_nome: string
           turma_reposicao_id: string
           turma_reposicao_nome: string
+          turma_reposicao_professor: string
           unit_id: string
         }[]
       }

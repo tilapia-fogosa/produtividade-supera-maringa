@@ -9,6 +9,7 @@ export type ListaReposicaoData = {
   aluno_nome: string;
   turma_original_nome: string;
   turma_reposicao_nome: string;
+  turma_reposicao_professor?: string;
   observacoes?: string;
   unit_id: string;
   aluno_id: string;
