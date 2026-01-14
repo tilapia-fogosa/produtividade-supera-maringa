@@ -220,6 +220,7 @@ export default function Home() {
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
           turma_nome: r.turma_reposicao_nome,
+          educador_nome: r.turma_reposicao_professor,
         };
         if (r.data_reposicao === hojeStr) {
           eventosHoje.push(evento);
@@ -268,7 +269,7 @@ export default function Home() {
           tipo: 'reposicao',
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
-          subtitulo: r.turma_reposicao_nome,
+          turma_nome: r.turma_reposicao_nome,
         };
         if (r.data_reposicao === hojeStr) {
           eventosHoje.push(evento);
@@ -354,6 +355,7 @@ export default function Home() {
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
           turma_nome: r.turma_reposicao_nome,
+          educador_nome: r.turma_reposicao_professor,
         })),
       ];
 
@@ -373,6 +375,7 @@ export default function Home() {
           return isSameWeek(data, hoje, { weekStartsOn: 0 }) && r.data_reposicao !== hojeStr;
         }).map(r => ({
           tipo: 'reposicao' as const,
+          educador_nome: r.turma_reposicao_professor,
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
           turma_nome: r.turma_reposicao_nome,
@@ -395,6 +398,7 @@ export default function Home() {
           return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
         }).map(r => ({
           tipo: 'reposicao' as const,
+          educador_nome: r.turma_reposicao_professor,
           titulo: `Reposição: ${r.aluno_nome}`,
           data: r.data_reposicao,
           turma_nome: r.turma_reposicao_nome,
