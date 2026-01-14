@@ -2,9 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useGaleriaFotosVisualizador } from '@/hooks/use-galeria-fotos-visualizador';
 import { useVisualizadorEventos } from '@/hooks/use-visualizador-eventos';
 import { useVisualizadorAvisos } from '@/hooks/use-visualizador-avisos';
-import { Loader2, Calendar, MapPin } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Loader2 } from 'lucide-react';
 
 // ID fixo da unidade de Maringá
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
@@ -127,28 +125,24 @@ export default function VisualizadorImagens() {
   const renderLadoEsquerdo = () => {
     if (!fotoAtual) {
       return (
-        <div className="w-1/2 h-full flex items-center justify-center bg-black">
-          <p className="text-white/50 text-xl">Nenhuma foto disponível</p>
+        <div className="w-1/2 h-full flex items-center justify-center bg-black p-2">
+          <div className="w-full h-full border-2 border-white/30 rounded-lg flex items-center justify-center">
+            <p className="text-white/50 text-xl">Nenhuma foto disponível</p>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="w-1/2 h-full relative">
+      <div className="w-1/2 h-full relative p-2">
         <div 
-          className={`absolute inset-0 transition-opacity duration-500 ${fadeFoto ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-2 transition-opacity duration-500 border-2 border-white/30 rounded-lg overflow-hidden ${fadeFoto ? 'opacity-100' : 'opacity-0'}`}
         >
           <img
             src={fotoAtual.url}
             alt={fotoAtual.nome}
             className="w-full h-full object-contain"
           />
-          {/* Nome da foto */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-            <p className="text-white text-lg font-medium truncate">
-              {fotoAtual.nome}
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -158,16 +152,18 @@ export default function VisualizadorImagens() {
   const renderLadoDireito = () => {
     if (!itemDireitaAtual) {
       return (
-        <div className="w-1/2 h-full flex items-center justify-center bg-black">
-          <p className="text-white/50 text-xl">Nenhum evento ou aviso</p>
+        <div className="w-1/2 h-full flex items-center justify-center bg-black p-2">
+          <div className="w-full h-full border-2 border-white/30 rounded-lg flex items-center justify-center">
+            <p className="text-white/50 text-xl">Nenhum evento ou aviso</p>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="w-1/2 h-full relative">
+      <div className="w-1/2 h-full relative p-2">
         <div 
-          className={`absolute inset-0 transition-opacity duration-500 ${fadeDireita ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-2 transition-opacity duration-500 border-2 border-white/30 rounded-lg overflow-hidden ${fadeDireita ? 'opacity-100' : 'opacity-0'}`}
         >
           {itemDireitaAtual.imagem_url ? (
             <img
@@ -189,41 +185,6 @@ export default function VisualizadorImagens() {
               </div>
             </div>
           )}
-          
-          {/* Informações do item */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-            <div className="space-y-2">
-              {/* Badge do tipo */}
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                itemDireitaAtual.tipo === 'evento' 
-                  ? 'bg-blue-500/80 text-white' 
-                  : 'bg-amber-500/80 text-white'
-              }`}>
-                {itemDireitaAtual.tipo === 'evento' ? 'Evento' : 'Aviso'}
-              </span>
-              
-              <h3 className="text-white text-2xl font-bold">
-                {itemDireitaAtual.titulo}
-              </h3>
-              
-              {itemDireitaAtual.tipo === 'evento' && itemDireitaAtual.data_evento && (
-                <div className="flex items-center gap-4 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    <span className="text-lg">
-                      {format(new Date(itemDireitaAtual.data_evento), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                  </div>
-                  {itemDireitaAtual.local && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      <span className="text-lg">{itemDireitaAtual.local}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -233,9 +194,6 @@ export default function VisualizadorImagens() {
     <div className="h-screen w-screen bg-black flex overflow-hidden">
       {/* Lado Esquerdo - Fotos da Galeria */}
       {renderLadoEsquerdo()}
-
-      {/* Divisor */}
-      <div className="w-1 bg-white/20" />
 
       {/* Lado Direito - Eventos e Avisos */}
       {renderLadoDireito()}
