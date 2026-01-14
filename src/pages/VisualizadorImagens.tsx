@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGaleriaFotosVisualizador } from '@/hooks/use-galeria-fotos-visualizador';
 import { useVisualizadorEventos } from '@/hooks/use-visualizador-eventos';
 import { useVisualizadorAvisos } from '@/hooks/use-visualizador-avisos';
 import { Loader2 } from 'lucide-react';
+
+// Tempo em segundos para mostrar o countdown
+const COUNTDOWN_THRESHOLD = 10;
 
 // ID fixo da unidade de Maringá
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
@@ -29,6 +32,8 @@ export default function VisualizadorImagens() {
   // Índice para fotos (lado esquerdo)
   const [indiceFoto, setIndiceFoto] = useState(0);
   const [fadeFoto, setFadeFoto] = useState(true);
+  const [countdownFoto, setCountdownFoto] = useState(FOTOS_INTERVAL / 1000);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Índice para eventos/avisos (lado direito)
   const [indiceDireita, setIndiceDireita] = useState(0);
@@ -65,6 +70,7 @@ export default function VisualizadorImagens() {
     setTimeout(() => {
       setIndiceFoto(prev => (prev + 1) % totalFotos);
       setFadeFoto(true);
+      setCountdownFoto(FOTOS_INTERVAL / 1000); // Reset countdown
     }, 500);
   }, [totalFotos]);
 
@@ -83,6 +89,7 @@ export default function VisualizadorImagens() {
   useEffect(() => {
     if (fotos && fotos.length > 0) {
       setIndiceFoto(0);
+      setCountdownFoto(FOTOS_INTERVAL / 1000);
     }
   }, [fotos]);
 
@@ -92,7 +99,27 @@ export default function VisualizadorImagens() {
     }
   }, [eventos, avisos]);
 
-  // Carrossel automático para fotos (90s)
+  // Countdown timer para fotos
+  useEffect(() => {
+    if (totalFotos <= 1) return;
+
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdownFoto(prev => {
+        if (prev <= 1) {
+          return FOTOS_INTERVAL / 1000;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [totalFotos]);
+
+  // Carrossel automático para fotos (60s)
   useEffect(() => {
     if (totalFotos <= 1) return;
 
@@ -120,6 +147,7 @@ export default function VisualizadorImagens() {
 
   const fotoAtual = fotos?.[indiceFoto];
   const itemDireitaAtual = itensDireita[indiceDireita];
+  const showCountdown = totalFotos > 1 && countdownFoto <= COUNTDOWN_THRESHOLD;
 
   // Renderizar lado esquerdo (fotos)
   const renderLadoEsquerdo = () => {
@@ -144,6 +172,41 @@ export default function VisualizadorImagens() {
             className="w-full h-full object-contain"
           />
         </div>
+        
+        {/* Timer no rodapé */}
+        {showCountdown && (
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-black/70 px-4 py-2 rounded-full border border-white/20">
+            <div className="relative w-6 h-6">
+              {/* Círculo de progresso estilo Windows */}
+              <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="white"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <circle
+                  className="opacity-75"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="white"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="31.4"
+                  strokeDashoffset="10"
+                />
+              </svg>
+            </div>
+            <span className="text-white text-sm font-medium tabular-nums">
+              {countdownFoto}s
+            </span>
+          </div>
+        )}
       </div>
     );
   };
