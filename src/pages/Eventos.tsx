@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, MapPin, User, Plus, Edit, Users, Trash2, Search } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Plus, Edit, Users, Trash2, Search, Upload, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { compressImageIfNeeded } from "@/services/imageCompressionService";
 
 
 const getTipoColor = (tipo: string) => {
@@ -138,9 +140,26 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
     hora: '',
     local: '',
     tipo: '',
-    numeroVagas: ''
+    numeroVagas: '',
+    publico: false
   });
+  const [imagemFile, setImagemFile] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+
+  const handleImagemChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressedFile = await compressImageIfNeeded(file);
+        setImagemFile(compressedFile);
+        setImagemPreview(URL.createObjectURL(compressedFile));
+      } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,19 +173,49 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
       return;
     }
 
-    const novoEvento = {
-      titulo: formData.titulo,
-      descricao: formData.descricao,
-      data: formData.data,
-      hora: formData.hora,
-      local: formData.local,
-      responsavel: funcionarioNome || 'Sistema',
-      tipo: formData.tipo,
-      numeroVagas: formData.numeroVagas,
-      funcionario_registro_id: funcionarioId
-    };
+    setUploading(true);
+    let imagemUrl = null;
 
     try {
+      // Upload da imagem se houver
+      if (imagemFile) {
+        const fileName = `evento_${Date.now()}_${imagemFile.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('eventos-capas')
+          .upload(fileName, imagemFile);
+
+        if (uploadError) {
+          console.error('Erro no upload:', uploadError);
+          // Tenta criar o bucket se não existir
+          if (uploadError.message.includes('Bucket not found')) {
+            toast({
+              title: "Aviso",
+              description: "Bucket de armazenamento não configurado. Evento será criado sem imagem.",
+              variant: "destructive"
+            });
+          }
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('eventos-capas')
+            .getPublicUrl(fileName);
+          imagemUrl = publicUrl;
+        }
+      }
+
+      const novoEvento = {
+        titulo: formData.titulo,
+        descricao: formData.descricao,
+        data: formData.data,
+        hora: formData.hora,
+        local: formData.local,
+        responsavel: funcionarioNome || 'Sistema',
+        tipo: formData.tipo,
+        numeroVagas: formData.numeroVagas,
+        funcionario_registro_id: funcionarioId,
+        imagem_url: imagemUrl,
+        publico: formData.publico
+      };
+
       await onEventoCriado(novoEvento);
       setFormData({
         titulo: '',
@@ -175,8 +224,11 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
         hora: '',
         local: '',
         tipo: '',
-        numeroVagas: ''
+        numeroVagas: '',
+        publico: false
       });
+      setImagemFile(null);
+      setImagemPreview(null);
       setOpen(false);
       
       toast({
@@ -189,6 +241,8 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
         description: "Erro ao criar evento. Tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -296,12 +350,50 @@ const NovoEventoModal = ({ onEventoCriado }: { onEventoCriado: (evento: any) => 
             />
           </div>
 
+          {/* Upload de Capa/Convite */}
+          <div className="space-y-2">
+            <Label>Capa/Convite do Evento</Label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 px-4 py-2 bg-muted rounded-md cursor-pointer hover:bg-muted/80 transition-colors">
+                <Upload className="h-4 w-4" />
+                <span className="text-sm">Escolher imagem</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImagemChange}
+                  className="hidden"
+                />
+              </label>
+              {imagemPreview && (
+                <img 
+                  src={imagemPreview} 
+                  alt="Preview" 
+                  className="h-16 w-16 object-cover rounded-md"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Toggle Público */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Exibir no Visualizador</Label>
+              <p className="text-xs text-muted-foreground">
+                Mostrar este evento na tela de exibição pública
+              </p>
+            </div>
+            <Switch
+              checked={formData.publico}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, publico: checked }))}
+            />
+          </div>
+
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
-              Criar Evento
+            <Button type="submit" disabled={uploading}>
+              {uploading ? 'Criando...' : 'Criar Evento'}
             </Button>
           </div>
         </form>
@@ -369,7 +461,9 @@ export default function Eventos() {
         tipo: novoEvento.tipo,
         numero_vagas: parseInt(novoEvento.numeroVagas),
         unit_id: unitId,
-        funcionario_registro_id: novoEvento.funcionario_registro_id
+        funcionario_registro_id: novoEvento.funcionario_registro_id,
+        imagem_url: novoEvento.imagem_url,
+        publico: novoEvento.publico
       };
 
       console.log('Dados do evento a ser inserido:', eventoData);
