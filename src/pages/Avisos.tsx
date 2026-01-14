@@ -171,7 +171,16 @@ export default function Avisos() {
 
     try {
       if (imagemFile) {
-        const fileName = `${Date.now()}-${imagemFile.name}`;
+        // Sanitizar o nome do arquivo removendo caracteres especiais
+        const fileExtension = imagemFile.name.split('.').pop() || 'png';
+        const sanitizedName = imagemFile.name
+          .replace(/\.[^/.]+$/, '') // Remove extensão
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+          .replace(/[^a-zA-Z0-9]/g, '_') // Substitui caracteres especiais por underscore
+          .substring(0, 50); // Limita tamanho
+        const fileName = `${Date.now()}-${sanitizedName}.${fileExtension}`;
+        
         const { error: uploadError } = await supabase.storage
           .from("avisos-imagens")
           .upload(fileName, imagemFile);
