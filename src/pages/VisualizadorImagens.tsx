@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
 // Tempos de troca em milissegundos
-const FOTOS_INTERVAL = 90000; // 90 segundos para fotos
+const FOTOS_INTERVAL = 60000; // 60 segundos para fotos
 const EVENTOS_AVISOS_INTERVAL = 120000; // 120 segundos para eventos/avisos
 
 type ItemDireita = {
