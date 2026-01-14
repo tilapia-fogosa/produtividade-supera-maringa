@@ -20,7 +20,8 @@ import {
   AlertTriangle,
   Award,
   Home,
-  Image
+  Image,
+  Bell
 } from "lucide-react";
 import {
   Sidebar,
@@ -100,6 +101,11 @@ const items = [
     title: "Galeria de Fotos",
     url: "/galeria-fotos",
     icon: Image,
+  },
+  {
+    title: "Avisos",
+    url: "/avisos",
+    icon: Bell,
   },
 ];
 
