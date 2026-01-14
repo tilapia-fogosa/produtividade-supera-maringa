@@ -96,6 +96,7 @@ import MeuPerfil from "./pages/MeuPerfil";
 import Home from "./pages/Home";
 import TestGoogleCalendar from "./pages/TestGoogleCalendar";
 import GaleriaFotos from "./pages/GaleriaFotos";
+import VisualizadorImagens from "./pages/VisualizadorImagens";
 import WhatsAppPage from "./pages/whatsapp";
 
 // Páginas do fluxo Sala
@@ -224,6 +225,7 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
+                <Route path="/visualizador" element={<VisualizadorImagens />} />
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <ProtectedLayout />
