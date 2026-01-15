@@ -92,6 +92,7 @@ import ReservasSala from "./pages/ReservasSala";
 import AlertasFalta from "./pages/AlertasFalta";
 import AlertasEvasao from "./pages/AlertasEvasao";
 import RegistroPonto from "./pages/RegistroPonto";
+import ControlePonto from "./pages/ControlePonto";
 import MeuPerfil from "./pages/MeuPerfil";
 import Home from "./pages/Home";
 import TestGoogleCalendar from "./pages/TestGoogleCalendar";
@@ -189,6 +190,7 @@ function ProtectedLayout() {
               <Route path="/alertas-falta" element={<AlertasFalta />} />
               <Route path="/alertas-evasao" element={<AlertasEvasao />} />
               <Route path="/registro-ponto" element={<RegistroPonto />} />
+              <Route path="/controle-ponto" element={<ControlePonto />} />
               <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="/teste-google-calendar" element={<TestGoogleCalendar />} />
               

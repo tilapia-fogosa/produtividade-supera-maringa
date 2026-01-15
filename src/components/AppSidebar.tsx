@@ -21,7 +21,8 @@ import {
   Award,
   Home,
   Image,
-  Bell
+  Bell,
+  Clock
 } from "lucide-react";
 import {
   Sidebar,
@@ -132,6 +133,12 @@ const additionalItems = [
     title: "Configurações",
     url: "/admin/configuracao",
     icon: Settings,
+    requiresAdmin: true,
+  },
+  {
+    title: "Controle de Ponto",
+    url: "/controle-ponto",
+    icon: Clock,
     requiresAdmin: true,
   },
 ];
