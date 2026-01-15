@@ -8,10 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useRegistrosPontoAdmin, useEstatisticasHoras, TipoRegistro } from '@/hooks/use-registros-ponto-admin';
+import { useSaldoHorasTodos } from '@/hooks/use-saldo-horas';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Edit, Trash2, LogIn, LogOut, Calendar, User, Filter, BarChart3 } from 'lucide-react';
+import { Clock, Edit, Trash2, LogIn, LogOut, Calendar, User, Filter, BarChart3, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -58,6 +59,7 @@ export default function ControlePonto() {
   });
 
   const { data: estatisticas } = useEstatisticasHoras(usuarioEstatisticas || undefined, activeUnit?.id);
+  const { data: saldosTodos, isLoading: isLoadingSaldos } = useSaldoHorasTodos();
 
   const handleEdit = (registro: typeof registroEditando) => {
     if (!registro) return;
@@ -103,10 +105,14 @@ export default function ControlePonto() {
       </div>
 
       <Tabs defaultValue="registros" className="space-y-4">
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
+        <TabsList className="grid grid-cols-3 w-full max-w-lg">
           <TabsTrigger value="registros" className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             Registros
+          </TabsTrigger>
+          <TabsTrigger value="banco-horas" className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            Banco de Horas
           </TabsTrigger>
           <TabsTrigger value="estatisticas" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -288,6 +294,78 @@ export default function ControlePonto() {
                       )}
                     </TableBody>
                   </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="banco-horas" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wallet className="h-5 w-5" />
+                Banco de Horas - Todos Funcionários
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Contagem a partir de 01/02/2026 • Meta: 44h semanais
+              </p>
+            </CardHeader>
+            <CardContent>
+              {isLoadingSaldos ? (
+                <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+              ) : saldosTodos && saldosTodos.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Funcionário</TableHead>
+                        <TableHead className="text-center">Semanas</TableHead>
+                        <TableHead className="text-right">Trabalhadas</TableHead>
+                        <TableHead className="text-right">Esperadas</TableHead>
+                        <TableHead className="text-right">Saldo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {saldosTodos.map((usuario) => (
+                        <TableRow key={usuario.userId}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span>{usuario.userName || usuario.userEmail}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {usuario.semanasCompletas}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {usuario.horasTotaisTrabalhadas.toFixed(1)}h
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {usuario.horasEsperadas}h
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className={`flex items-center justify-end gap-1 font-bold ${
+                              usuario.isPositivo 
+                                ? 'text-green-600 dark:text-green-400' 
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {usuario.isPositivo ? (
+                                <TrendingUp className="h-4 w-4" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4" />
+                              )}
+                              {usuario.saldoFormatado}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhum registro encontrado desde 01/02/2026
                 </div>
               )}
             </CardContent>
