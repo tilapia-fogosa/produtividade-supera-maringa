@@ -4,17 +4,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useRegistroPonto, TipoRegistro } from '@/hooks/use-registro-ponto';
 import { useEstatisticasHoras } from '@/hooks/use-registros-ponto-admin';
+import { useSaldoHoras } from '@/hooks/use-saldo-horas';
 import { useValidateIp } from '@/hooks/use-validate-ip';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, LogIn, LogOut, Wifi, WifiOff, Loader2, Calendar, BarChart3 } from 'lucide-react';
+import { Clock, LogIn, LogOut, Wifi, WifiOff, Loader2, Calendar, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function RegistroPonto() {
   const { user, profile } = useAuth();
   const { registros, registrosHoje, ultimoRegistroHoje, isLoading, registrarPonto } = useRegistroPonto();
   const { data: ipValidation, isLoading: isValidatingIp } = useValidateIp();
   const { data: estatisticas, isLoading: isLoadingStats } = useEstatisticasHoras(user?.id, undefined);
+  const { data: saldoHoras, isLoading: isLoadingSaldo } = useSaldoHoras(user?.id);
 
   const handleRegistrar = (tipo: TipoRegistro) => {
     registrarPonto.mutate(tipo);
@@ -156,6 +158,48 @@ export default function RegistroPonto() {
           </TabsContent>
 
           <TabsContent value="historico" className="mt-4 space-y-4">
+            {/* Banco de Horas */}
+            <Card className={`border-2 ${saldoHoras?.isPositivo ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20'}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  {saldoHoras?.isPositivo ? (
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-red-600" />
+                  )}
+                  Banco de Horas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingSaldo ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <p className={`text-3xl font-bold ${saldoHoras?.isPositivo ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {saldoHoras?.saldoFormatado || '+0h 0min'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Desde 01/02/2026 • {saldoHoras?.semanasCompletas || 0} semanas completas
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-center text-sm">
+                      <div className="p-2 bg-background rounded">
+                        <p className="text-muted-foreground text-xs">Trabalhadas</p>
+                        <p className="font-semibold">{saldoHoras?.horasTotaisTrabalhadas?.toFixed(1) || 0}h</p>
+                      </div>
+                      <div className="p-2 bg-background rounded">
+                        <p className="text-muted-foreground text-xs">Esperadas</p>
+                        <p className="font-semibold">{saldoHoras?.horasEsperadas || 0}h</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Estatísticas */}
             <Card>
               <CardHeader className="pb-3">
