@@ -127,12 +127,12 @@ export default function ControlePonto() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm">Funcionário</Label>
-                  <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
+                  <Select value={filtroUsuario || "all"} onValueChange={(v) => setFiltroUsuario(v === "all" ? "" : v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {usuariosComRegistros?.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
                           {u.full_name || u.email}
@@ -144,12 +144,12 @@ export default function ControlePonto() {
 
                 <div className="space-y-2">
                   <Label className="text-sm">Tipo</Label>
-                  <Select value={filtroTipo} onValueChange={(v) => setFiltroTipo(v as TipoRegistro | '')}>
+                  <Select value={filtroTipo || "all"} onValueChange={(v) => setFiltroTipo(v === "all" ? "" : v as TipoRegistro)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="entrada">Entrada</SelectItem>
                       <SelectItem value="saida">Saída</SelectItem>
                     </SelectContent>
@@ -158,12 +158,12 @@ export default function ControlePonto() {
 
                 <div className="space-y-2">
                   <Label className="text-sm">Departamento</Label>
-                  <Select value={filtroRole} onValueChange={setFiltroRole}>
+                  <Select value={filtroRole || "all"} onValueChange={(v) => setFiltroRole(v === "all" ? "" : v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {rolesDisponiveis?.map((role) => (
                         <SelectItem key={role} value={role}>
                           {ROLE_LABELS[role] || role}
