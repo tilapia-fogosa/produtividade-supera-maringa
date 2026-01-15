@@ -20,7 +20,12 @@ export default function RegistroPonto() {
   const proximoTipo: TipoRegistro = ultimoRegistroHoje?.tipo_registro === 'entrada' ? 'saida' : 'entrada';
 
   const ipAllowed = ipValidation?.allowed ?? false;
-  const buttonsDisabled = registrarPonto.isPending || isValidatingIp || !ipAllowed;
+  const baseDisabled = registrarPonto.isPending || isValidatingIp || !ipAllowed;
+  
+  // Entrada: habilitado se não há registro ou último foi saída
+  const entradaDisabled = baseDisabled || (ultimoRegistroHoje?.tipo_registro === 'entrada');
+  // Saída: habilitado apenas se último foi entrada
+  const saidaDisabled = baseDisabled || (ultimoRegistroHoje?.tipo_registro !== 'entrada');
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -81,7 +86,7 @@ export default function RegistroPonto() {
                 variant={proximoTipo === 'entrada' ? 'default' : 'outline'}
                 className="h-24 flex-col gap-2"
                 onClick={() => handleRegistrar('entrada')}
-                disabled={buttonsDisabled}
+                disabled={entradaDisabled}
               >
                 <LogIn className="h-8 w-8" />
                 <span>Entrada</span>
@@ -90,7 +95,7 @@ export default function RegistroPonto() {
                 variant={proximoTipo === 'saida' ? 'default' : 'outline'}
                 className="h-24 flex-col gap-2"
                 onClick={() => handleRegistrar('saida')}
-                disabled={buttonsDisabled}
+                disabled={saidaDisabled}
               >
                 <LogOut className="h-8 w-8" />
                 <span>Saída</span>
