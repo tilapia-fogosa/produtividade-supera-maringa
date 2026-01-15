@@ -178,7 +178,7 @@ export default function VisualizadorImagens() {
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-black/70 px-6 py-3 rounded-full border border-white/20">
             <div className="relative w-9 h-9">
               {/* Círculo de progresso estilo Windows */}
-              <svg className="w-9 h-9 animate-spin" viewBox="0 0 24 24">
+              <svg className="w-9 h-9" style={{ animation: 'spin 3s linear infinite' }} viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
                   cx="12"
