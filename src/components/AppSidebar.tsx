@@ -141,6 +141,12 @@ const additionalItems = [
     icon: Clock,
     requiresAdmin: true,
   },
+  {
+    title: "Registro de Ponto",
+    url: "/registro-ponto",
+    icon: Clock,
+    requiresAdmin: true,
+  },
 ];
 
 export function AppSidebar() {
