@@ -4,8 +4,8 @@ import { useVisualizadorEventos } from '@/hooks/use-visualizador-eventos';
 import { useVisualizadorAvisos } from '@/hooks/use-visualizador-avisos';
 import { Loader2 } from 'lucide-react';
 
-// Tempo em segundos para mostrar o countdown
-const COUNTDOWN_THRESHOLD = 10;
+// Mostrar countdown o tempo todo (60 segundos)
+const COUNTDOWN_THRESHOLD = 60;
 
 // ID fixo da unidade de Maringá
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
@@ -175,10 +175,10 @@ export default function VisualizadorImagens() {
         
         {/* Timer no rodapé */}
         {showCountdown && (
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-black/70 px-4 py-2 rounded-full border border-white/20">
-            <div className="relative w-6 h-6">
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-black/70 px-6 py-3 rounded-full border border-white/20">
+            <div className="relative w-9 h-9">
               {/* Círculo de progresso estilo Windows */}
-              <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24">
+              <svg className="w-9 h-9 animate-spin" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -202,7 +202,7 @@ export default function VisualizadorImagens() {
                 />
               </svg>
             </div>
-            <span className="text-white text-sm font-medium tabular-nums">
+            <span className="text-white text-xl font-medium tabular-nums">
               {countdownFoto}s
             </span>
           </div>
