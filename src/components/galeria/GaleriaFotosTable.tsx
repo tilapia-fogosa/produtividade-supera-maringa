@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { GaleriaFoto, useGaleriaFotos } from '@/hooks/use-galeria-fotos';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 import {
   Table,
   TableBody,
@@ -13,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +31,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { EditarFotoModal } from './EditarFotoModal';
 
+type OrdenacaoCampo = 'nome' | 'turma' | 'data' | 'visivel';
+type OrdenacaoDirecao = 'asc' | 'desc';
+
 interface GaleriaFotosTableProps {
   fotos: GaleriaFoto[];
 }
@@ -36,6 +44,57 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
   const [fotoParaEditar, setFotoParaEditar] = useState<GaleriaFoto | null>(null);
   const [fotoParaExcluir, setFotoParaExcluir] = useState<GaleriaFoto | null>(null);
   const [atualizandoVisibilidade, setAtualizandoVisibilidade] = useState<string | null>(null);
+  const [ordenacao, setOrdenacao] = useState<{ campo: OrdenacaoCampo; direcao: OrdenacaoDirecao }>({
+    campo: 'data',
+    direcao: 'desc'
+  });
+
+  const handleOrdenacao = (campo: OrdenacaoCampo) => {
+    setOrdenacao(prev => ({
+      campo,
+      direcao: prev.campo === campo && prev.direcao === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const fotosOrdenadas = useMemo(() => {
+    return [...fotos].sort((a, b) => {
+      const direcao = ordenacao.direcao === 'asc' ? 1 : -1;
+      
+      switch (ordenacao.campo) {
+        case 'nome':
+          return direcao * a.nome.localeCompare(b.nome);
+        case 'turma':
+          const turmaA = a.turma?.nome || '';
+          const turmaB = b.turma?.nome || '';
+          return direcao * turmaA.localeCompare(turmaB);
+        case 'data':
+          return direcao * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        case 'visivel':
+          return direcao * (Number(a.visivel) - Number(b.visivel));
+        default:
+          return 0;
+      }
+    });
+  }, [fotos, ordenacao]);
+
+  const renderSortIcon = (campo: OrdenacaoCampo) => {
+    if (ordenacao.campo !== campo) return null;
+    return ordenacao.direcao === 'asc' 
+      ? <ArrowUp className="h-3 w-3 ml-1" /> 
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const SortableHeader = ({ campo, children, className }: { campo: OrdenacaoCampo; children: React.ReactNode; className?: string }) => (
+    <TableHead 
+      className={`cursor-pointer hover:bg-muted/50 select-none ${className || ''}`}
+      onClick={() => handleOrdenacao(campo)}
+    >
+      <div className="flex items-center">
+        {children}
+        {renderSortIcon(campo)}
+      </div>
+    </TableHead>
+  );
 
   const handleExcluir = async () => {
     if (!fotoParaExcluir) return;
@@ -74,24 +133,35 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">Foto</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead className="hidden sm:table-cell">Turma</TableHead>
+              <SortableHeader campo="nome">Nome</SortableHeader>
+              <SortableHeader campo="turma" className="hidden sm:table-cell">Turma</SortableHeader>
               <TableHead className="hidden md:table-cell">Tags</TableHead>
-              <TableHead className="hidden sm:table-cell w-24">Data</TableHead>
-              <TableHead className="w-20 text-center">Visível</TableHead>
+              <SortableHeader campo="data" className="hidden sm:table-cell w-24">Data</SortableHeader>
+              <SortableHeader campo="visivel" className="w-20 text-center">Visível</SortableHeader>
               <TableHead className="w-20">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fotos.map((foto) => (
+            {fotosOrdenadas.map((foto) => (
               <TableRow key={foto.id}>
                 {/* Miniatura */}
                 <TableCell>
-                  <img
-                    src={foto.thumbnail_url || foto.url}
-                    alt={foto.nome}
-                    className="w-12 h-12 rounded object-cover"
-                  />
+                  <HoverCard openDelay={200}>
+                    <HoverCardTrigger asChild>
+                      <img
+                        src={foto.thumbnail_url || foto.url}
+                        alt={foto.nome}
+                        className="w-12 h-12 rounded object-cover cursor-pointer hover:scale-110 transition-transform duration-200"
+                      />
+                    </HoverCardTrigger>
+                    <HoverCardContent side="right" className="w-auto p-2" sideOffset={10}>
+                      <img
+                        src={foto.url}
+                        alt={foto.nome}
+                        className="max-w-[800px] max-h-[800px] rounded object-contain"
+                      />
+                    </HoverCardContent>
+                  </HoverCard>
                 </TableCell>
 
                 {/* Nome */}
