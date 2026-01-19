@@ -158,7 +158,7 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
                       <img
                         src={foto.url}
                         alt={foto.nome}
-                        className="max-w-[500px] max-h-[500px] rounded object-contain"
+                        className="max-w-[800px] max-h-[800px] rounded object-contain"
                       />
                     </HoverCardContent>
                   </HoverCard>
