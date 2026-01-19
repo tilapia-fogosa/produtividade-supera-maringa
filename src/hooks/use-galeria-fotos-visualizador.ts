@@ -21,6 +21,7 @@ export function useGaleriaFotosVisualizador(unitId?: string) {
         .from('galeria_fotos')
         .select('id, nome, url, thumbnail_url, turma_id, created_at')
         .eq('unit_id', unitId)
+        .eq('visivel', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
