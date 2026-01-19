@@ -154,11 +154,11 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
                         className="w-12 h-12 rounded object-cover cursor-pointer hover:scale-110 transition-transform duration-200"
                       />
                     </HoverCardTrigger>
-                    <HoverCardContent side="right" className="w-auto p-1">
+                    <HoverCardContent side="right" className="w-auto p-2" sideOffset={10}>
                       <img
                         src={foto.url}
                         alt={foto.nome}
-                        className="max-w-[300px] max-h-[300px] rounded object-contain"
+                        className="max-w-[500px] max-h-[500px] rounded object-contain"
                       />
                     </HoverCardContent>
                   </HoverCard>
