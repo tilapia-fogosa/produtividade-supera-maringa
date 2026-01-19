@@ -4,14 +4,14 @@ import { useVisualizadorEventos } from '@/hooks/use-visualizador-eventos';
 import { useVisualizadorAvisos } from '@/hooks/use-visualizador-avisos';
 import { Loader2 } from 'lucide-react';
 
-// Mostrar countdown o tempo todo (25 segundos)
-const COUNTDOWN_THRESHOLD = 25;
+// Mostrar countdown o tempo todo (20 segundos)
+const COUNTDOWN_THRESHOLD = 20;
 
 // ID fixo da unidade de Maringá
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
 // Tempos de troca em milissegundos
-const FOTOS_INTERVAL = 25000; // 25 segundos para fotos
+const FOTOS_INTERVAL = 20000; // 20 segundos para fotos
 const EVENTOS_AVISOS_INTERVAL = 75000; // 75 segundos para eventos/avisos
 
 // Proporção de fotos de turmas ativas vs outras (3:1)
