@@ -3,6 +3,11 @@ import { GaleriaFoto, useGaleriaFotos } from '@/hooks/use-galeria-fotos';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import {
   Table,
   TableBody,
   TableCell,
@@ -141,11 +146,22 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
               <TableRow key={foto.id}>
                 {/* Miniatura */}
                 <TableCell>
-                  <img
-                    src={foto.thumbnail_url || foto.url}
-                    alt={foto.nome}
-                    className="w-12 h-12 rounded object-cover"
-                  />
+                  <HoverCard openDelay={200}>
+                    <HoverCardTrigger asChild>
+                      <img
+                        src={foto.thumbnail_url || foto.url}
+                        alt={foto.nome}
+                        className="w-12 h-12 rounded object-cover cursor-pointer hover:scale-110 transition-transform duration-200"
+                      />
+                    </HoverCardTrigger>
+                    <HoverCardContent side="right" className="w-auto p-1">
+                      <img
+                        src={foto.url}
+                        alt={foto.nome}
+                        className="max-w-[300px] max-h-[300px] rounded object-contain"
+                      />
+                    </HoverCardContent>
+                  </HoverCard>
                 </TableCell>
 
                 {/* Nome */}
