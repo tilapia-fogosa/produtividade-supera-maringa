@@ -4,15 +4,15 @@ import { useVisualizadorEventos } from '@/hooks/use-visualizador-eventos';
 import { useVisualizadorAvisos } from '@/hooks/use-visualizador-avisos';
 import { Loader2 } from 'lucide-react';
 
-// Mostrar countdown o tempo todo (60 segundos)
-const COUNTDOWN_THRESHOLD = 60;
+// Mostrar countdown o tempo todo (25 segundos)
+const COUNTDOWN_THRESHOLD = 25;
 
 // ID fixo da unidade de Maringá
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
 // Tempos de troca em milissegundos
-const FOTOS_INTERVAL = 60000; // 60 segundos para fotos
-const EVENTOS_AVISOS_INTERVAL = 120000; // 120 segundos para eventos/avisos
+const FOTOS_INTERVAL = 25000; // 25 segundos para fotos
+const EVENTOS_AVISOS_INTERVAL = 75000; // 75 segundos para eventos/avisos
 
 // Proporção de fotos de turmas ativas vs outras (3:1)
 const PROPORCAO_TURMAS_ATIVAS = 3;
@@ -27,6 +27,16 @@ type ItemDireita = {
   local?: string | null;
 };
 
+// Função de shuffle (Fisher-Yates) - garante ordem aleatória única a cada sessão
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 export default function VisualizadorImagens() {
   const { data: fotos, isLoading: isLoadingFotos } = useGaleriaFotosVisualizador(MARINGA_UNIT_ID);
   const { data: turmasAtivasIds, isLoading: isLoadingTurmas } = useTurmasAtivasAgora(MARINGA_UNIT_ID);
@@ -36,6 +46,11 @@ export default function VisualizadorImagens() {
   // Estado para controlar fotos já exibidas (não repetir)
   const [fotosExibidasIds, setFotosExibidasIds] = useState<Set<string>>(new Set());
   const [contadorCiclo, setContadorCiclo] = useState(0); // Controla proporção 3:1
+  
+  // Estados para listas embaralhadas
+  const [fotosTurmasEmbaralhadas, setFotosTurmasEmbaralhadas] = useState<GaleriaFotoVisualizador[]>([]);
+  const [fotosOutrasEmbaralhadas, setFotosOutrasEmbaralhadas] = useState<GaleriaFotoVisualizador[]>([]);
+  const [indiceEmbaralhado, setIndiceEmbaralhado] = useState({ turmas: 0, outras: 0 });
   
   // Índice para fotos (lado esquerdo)
   const [fotoAtualId, setFotoAtualId] = useState<string | null>(null);
@@ -64,49 +79,62 @@ export default function VisualizadorImagens() {
     };
   }, [fotos, turmasAtivasIds]);
 
+  // Embaralhar fotos quando os dados carregam ou quando um ciclo completo termina
+  const embaralharFotos = useCallback(() => {
+    const turmasShuffled = shuffleArray(fotosTurmasAtivas);
+    const outrasShuffled = shuffleArray(fotosOutras);
+    
+    setFotosTurmasEmbaralhadas(turmasShuffled);
+    setFotosOutrasEmbaralhadas(outrasShuffled);
+    setIndiceEmbaralhado({ turmas: 0, outras: 0 });
+    setFotosExibidasIds(new Set());
+    setContadorCiclo(0);
+    
+    console.log('🔀 Fotos embaralhadas - Nova sequência iniciada');
+  }, [fotosTurmasAtivas, fotosOutras]);
+
   const temTurmasAtivas = turmasAtivasIds && turmasAtivasIds.length > 0 && fotosTurmasAtivas.length > 0;
 
-  // Função para selecionar próxima foto
+  // Função para selecionar próxima foto (usando listas embaralhadas)
   const selecionarProximaFoto = useCallback((): GaleriaFotoVisualizador | null => {
     if (todasFotos.length === 0) return null;
 
-    // Verificar se todas as fotos já foram exibidas - resetar
+    // Verificar se todas as fotos já foram exibidas - re-embaralhar
     const fotosDisponiveis = todasFotos.filter(f => !fotosExibidasIds.has(f.id));
     
     if (fotosDisponiveis.length === 0) {
-      // Todas foram exibidas, resetar
-      setFotosExibidasIds(new Set());
-      // Começar de novo com todas as fotos
+      // Todas foram exibidas, re-embaralhar para nova sequência
+      embaralharFotos();
+      // Retornar primeira foto da nova sequência embaralhada
       if (temTurmasAtivas && fotosTurmasAtivas.length > 0) {
-        return fotosTurmasAtivas[0];
+        const shuffled = shuffleArray(fotosTurmasAtivas);
+        return shuffled[0] || null;
       }
-      return todasFotos[0];
+      const shuffled = shuffleArray(todasFotos);
+      return shuffled[0] || null;
     }
 
-    // Lógica de prioridade 3:1 para turmas ativas
+    // Lógica de prioridade 3:1 para turmas ativas usando listas embaralhadas
     if (temTurmasAtivas) {
-      const fotosturmasNaoExibidas = fotosTurmasAtivas.filter(f => !fotosExibidasIds.has(f.id));
-      const fotosOutrasNaoExibidas = fotosOutras.filter(f => !fotosExibidasIds.has(f.id));
-
-      // Se ainda há fotos de turmas ativas e estamos no ciclo de turmas (0, 1, 2)
-      if (contadorCiclo < PROPORCAO_TURMAS_ATIVAS && fotosturmasNaoExibidas.length > 0) {
-        return fotosturmasNaoExibidas[0];
+      // Se ainda há fotos de turmas e estamos no ciclo de turmas (0, 1, 2)
+      if (contadorCiclo < PROPORCAO_TURMAS_ATIVAS) {
+        const fotoTurma = fotosTurmasEmbaralhadas.find(f => !fotosExibidasIds.has(f.id));
+        if (fotoTurma) return fotoTurma;
       }
 
-      // Ciclo 3 - mostrar foto qualquer
-      if (fotosOutrasNaoExibidas.length > 0) {
-        return fotosOutrasNaoExibidas[0];
-      }
+      // Ciclo 3 - mostrar foto outras
+      const fotoOutra = fotosOutrasEmbaralhadas.find(f => !fotosExibidasIds.has(f.id));
+      if (fotoOutra) return fotoOutra;
 
       // Se não tem mais fotos outras, continuar com turmas
-      if (fotosturmasNaoExibidas.length > 0) {
-        return fotosturmasNaoExibidas[0];
-      }
+      const fotoTurmaFallback = fotosTurmasEmbaralhadas.find(f => !fotosExibidasIds.has(f.id));
+      if (fotoTurmaFallback) return fotoTurmaFallback;
     }
 
-    // Sem turmas ativas ou sem fotos específicas - pegar qualquer disponível
-    return fotosDisponiveis[0];
-  }, [todasFotos, fotosExibidasIds, temTurmasAtivas, fotosTurmasAtivas, fotosOutras, contadorCiclo]);
+    // Sem turmas ativas - usar lista embaralhada geral
+    const todasEmbaralhadas = [...fotosTurmasEmbaralhadas, ...fotosOutrasEmbaralhadas];
+    return todasEmbaralhadas.find(f => !fotosExibidasIds.has(f.id)) || null;
+  }, [todasFotos, fotosExibidasIds, temTurmasAtivas, fotosTurmasAtivas, fotosTurmasEmbaralhadas, fotosOutrasEmbaralhadas, contadorCiclo, embaralharFotos]);
 
   // Combinar eventos e avisos em uma lista única
   const itensDireita: ItemDireita[] = useMemo(() => [
@@ -161,25 +189,27 @@ export default function VisualizadorImagens() {
     }, 500);
   }, [totalDireita]);
 
-  // Inicializar primeira foto quando dados carregam
+  // Embaralhar fotos quando dados carregam pela primeira vez
   useEffect(() => {
-    if (todasFotos.length > 0 && !fotoAtualId) {
-      const primeiraFoto = selecionarProximaFoto();
+    if (fotosTurmasAtivas.length > 0 || fotosOutras.length > 0) {
+      embaralharFotos();
+    }
+  }, [fotosTurmasAtivas.length, fotosOutras.length]);
+
+  // Inicializar primeira foto quando listas embaralhadas estão prontas
+  useEffect(() => {
+    if ((fotosTurmasEmbaralhadas.length > 0 || fotosOutrasEmbaralhadas.length > 0) && !fotoAtualId) {
+      const primeiraFoto = fotosTurmasEmbaralhadas[0] || fotosOutrasEmbaralhadas[0];
       if (primeiraFoto) {
         setFotoAtualId(primeiraFoto.id);
         setFotosExibidasIds(new Set([primeiraFoto.id]));
       }
     }
-  }, [todasFotos, fotoAtualId, selecionarProximaFoto]);
+  }, [fotosTurmasEmbaralhadas, fotosOutrasEmbaralhadas, fotoAtualId]);
 
-  // Reset quando fotos mudam (ex: nova sincronização)
+  // Reset e re-embaralhar quando fotos mudam (ex: nova sincronização)
   useEffect(() => {
     if (fotos && fotos.length > 0) {
-      setFotosExibidasIds(new Set());
-      setContadorCiclo(0);
-      const primeiraFoto = fotos[0];
-      setFotoAtualId(primeiraFoto.id);
-      setFotosExibidasIds(new Set([primeiraFoto.id]));
       setCountdownFoto(FOTOS_INTERVAL / 1000);
     }
   }, [fotos]);
