@@ -3598,6 +3598,7 @@ export type Database = {
           turma_id: string | null
           unit_id: string
           url: string
+          visivel: boolean
         }
         Insert: {
           aluno_id?: string | null
@@ -3609,6 +3610,7 @@ export type Database = {
           turma_id?: string | null
           unit_id: string
           url: string
+          visivel?: boolean
         }
         Update: {
           aluno_id?: string | null
@@ -3620,6 +3622,7 @@ export type Database = {
           turma_id?: string | null
           unit_id?: string
           url?: string
+          visivel?: boolean
         }
         Relationships: [
           {

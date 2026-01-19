@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Pencil, Trash2, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -30,10 +31,11 @@ interface GaleriaFotosTableProps {
 }
 
 export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
-  const { deleteFoto, isDeleting } = useGaleriaFotos();
+  const { deleteFoto, updateFoto, isDeleting, isUpdating } = useGaleriaFotos();
   
   const [fotoParaEditar, setFotoParaEditar] = useState<GaleriaFoto | null>(null);
   const [fotoParaExcluir, setFotoParaExcluir] = useState<GaleriaFoto | null>(null);
+  const [atualizandoVisibilidade, setAtualizandoVisibilidade] = useState<string | null>(null);
 
   const handleExcluir = async () => {
     if (!fotoParaExcluir) return;
@@ -43,6 +45,17 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
       setFotoParaExcluir(null);
     } catch (error) {
       console.error('Erro ao excluir foto:', error);
+    }
+  };
+
+  const handleToggleVisibilidade = async (foto: GaleriaFoto) => {
+    setAtualizandoVisibilidade(foto.id);
+    try {
+      await updateFoto({ id: foto.id, visivel: !foto.visivel });
+    } catch (error) {
+      console.error('Erro ao atualizar visibilidade:', error);
+    } finally {
+      setAtualizandoVisibilidade(null);
     }
   };
 
@@ -65,6 +78,7 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
               <TableHead className="hidden sm:table-cell">Turma</TableHead>
               <TableHead className="hidden md:table-cell">Tags</TableHead>
               <TableHead className="hidden sm:table-cell w-24">Data</TableHead>
+              <TableHead className="w-20 text-center">Visível</TableHead>
               <TableHead className="w-20">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -130,6 +144,15 @@ export function GaleriaFotosTable({ fotos }: GaleriaFotosTableProps) {
                 {/* Data */}
                 <TableCell className="hidden sm:table-cell">
                   {format(new Date(foto.created_at), 'dd/MM/yy', { locale: ptBR })}
+                </TableCell>
+
+                {/* Visível */}
+                <TableCell className="text-center">
+                  <Switch
+                    checked={foto.visivel}
+                    onCheckedChange={() => handleToggleVisibilidade(foto)}
+                    disabled={atualizandoVisibilidade === foto.id}
+                  />
                 </TableCell>
 
                 {/* Ações */}

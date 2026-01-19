@@ -4,15 +4,15 @@ import { useVisualizadorEventos } from '@/hooks/use-visualizador-eventos';
 import { useVisualizadorAvisos } from '@/hooks/use-visualizador-avisos';
 import { Loader2 } from 'lucide-react';
 
-// Mostrar countdown o tempo todo (60 segundos)
-const COUNTDOWN_THRESHOLD = 60;
+// Mostrar countdown o tempo todo (25 segundos)
+const COUNTDOWN_THRESHOLD = 25;
 
 // ID fixo da unidade de Maringá
 const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
 // Tempos de troca em milissegundos
-const FOTOS_INTERVAL = 60000; // 60 segundos para fotos
-const EVENTOS_AVISOS_INTERVAL = 120000; // 120 segundos para eventos/avisos
+const FOTOS_INTERVAL = 25000; // 25 segundos para fotos
+const EVENTOS_AVISOS_INTERVAL = 75000; // 75 segundos para eventos/avisos
 
 // Proporção de fotos de turmas ativas vs outras (3:1)
 const PROPORCAO_TURMAS_ATIVAS = 3;
@@ -66,7 +66,14 @@ export default function VisualizadorImagens() {
 
   const temTurmasAtivas = turmasAtivasIds && turmasAtivasIds.length > 0 && fotosTurmasAtivas.length > 0;
 
-  // Função para selecionar próxima foto
+  // Função auxiliar para seleção aleatória
+  const selecionarAleatorio = useCallback(<T,>(lista: T[]): T | null => {
+    if (lista.length === 0) return null;
+    const indiceAleatorio = Math.floor(Math.random() * lista.length);
+    return lista[indiceAleatorio];
+  }, []);
+
+  // Função para selecionar próxima foto (com randomização)
   const selecionarProximaFoto = useCallback((): GaleriaFotoVisualizador | null => {
     if (todasFotos.length === 0) return null;
 
@@ -76,11 +83,11 @@ export default function VisualizadorImagens() {
     if (fotosDisponiveis.length === 0) {
       // Todas foram exibidas, resetar
       setFotosExibidasIds(new Set());
-      // Começar de novo com todas as fotos
+      // Começar de novo com todas as fotos (seleção aleatória)
       if (temTurmasAtivas && fotosTurmasAtivas.length > 0) {
-        return fotosTurmasAtivas[0];
+        return selecionarAleatorio(fotosTurmasAtivas);
       }
-      return todasFotos[0];
+      return selecionarAleatorio(todasFotos);
     }
 
     // Lógica de prioridade 3:1 para turmas ativas
@@ -90,23 +97,23 @@ export default function VisualizadorImagens() {
 
       // Se ainda há fotos de turmas ativas e estamos no ciclo de turmas (0, 1, 2)
       if (contadorCiclo < PROPORCAO_TURMAS_ATIVAS && fotosturmasNaoExibidas.length > 0) {
-        return fotosturmasNaoExibidas[0];
+        return selecionarAleatorio(fotosturmasNaoExibidas);
       }
 
       // Ciclo 3 - mostrar foto qualquer
       if (fotosOutrasNaoExibidas.length > 0) {
-        return fotosOutrasNaoExibidas[0];
+        return selecionarAleatorio(fotosOutrasNaoExibidas);
       }
 
       // Se não tem mais fotos outras, continuar com turmas
       if (fotosturmasNaoExibidas.length > 0) {
-        return fotosturmasNaoExibidas[0];
+        return selecionarAleatorio(fotosturmasNaoExibidas);
       }
     }
 
-    // Sem turmas ativas ou sem fotos específicas - pegar qualquer disponível
-    return fotosDisponiveis[0];
-  }, [todasFotos, fotosExibidasIds, temTurmasAtivas, fotosTurmasAtivas, fotosOutras, contadorCiclo]);
+    // Sem turmas ativas ou sem fotos específicas - pegar qualquer disponível (aleatório)
+    return selecionarAleatorio(fotosDisponiveis);
+  }, [todasFotos, fotosExibidasIds, temTurmasAtivas, fotosTurmasAtivas, fotosOutras, contadorCiclo, selecionarAleatorio]);
 
   // Combinar eventos e avisos em uma lista única
   const itensDireita: ItemDireita[] = useMemo(() => [

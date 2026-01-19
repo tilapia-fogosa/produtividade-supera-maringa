@@ -12,6 +12,7 @@ export interface GaleriaFoto {
   unit_id: string;
   created_at: string;
   created_by: string | null;
+  visivel: boolean;
   turma?: {
     id: string;
     nome: string;
@@ -42,6 +43,7 @@ interface UpdateFotoInput {
   turma_id?: string | null;
   aluno_id?: string | null;
   tag_ids?: string[];
+  visivel?: boolean;
 }
 
 export function useGaleriaFotos() {
