@@ -4045,15 +4045,7 @@ export type Database = {
           turma?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "kanban_cards_alerta_evasao_id_fkey"
-            columns: ["alerta_evasao_id"]
-            isOneToOne: false
-            referencedRelation: "alerta_evasao"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       kit_versions: {
         Row: {
