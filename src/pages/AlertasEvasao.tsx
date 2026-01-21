@@ -5,14 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useAlertasEvasaoLista, type AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
+import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const AlertasEvasao = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
+  const [drawerAberto, setDrawerAberto] = useState(false);
   const [filtros, setFiltros] = useState({
     status: 'todos',
     origem_alerta: 'todos',
@@ -259,83 +261,16 @@ const AlertasEvasao = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Ver Detalhes
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
-                            <DialogHeader>
-                              <DialogTitle>Detalhes do Alerta de Evasão</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Aluno</p>
-                                  <p>{alerta.aluno?.nome}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Turma</p>
-                                  <p>{alerta.aluno?.turma?.nome || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Professor</p>
-                                  <p>{alerta.aluno?.turma?.professor?.nome || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Data do Alerta</p>
-                                  <p>{formatarData(alerta.data_alerta)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Origem</p>
-                                  <p>{getOrigemLabel(alerta.origem_alerta)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Status</p>
-                                  <Badge className={getStatusBadgeClass(alerta.status)}>
-                                    {alerta.status}
-                                  </Badge>
-                                </div>
-                                {alerta.responsavel && (
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Responsável</p>
-                                    <p>{alerta.responsavel}</p>
-                                  </div>
-                                )}
-                                {alerta.data_retencao && (
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Data Retenção Prevista</p>
-                                    <p>{formatarData(alerta.data_retencao)}</p>
-                                  </div>
-                                )}
-                              </div>
-
-                              {alerta.descritivo && (
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground mb-2">Descrição</p>
-                                  <p className="bg-muted p-3 rounded text-sm">
-                                    {alerta.descritivo}
-                                  </p>
-                                </div>
-                              )}
-
-                              <div className="border-t pt-4">
-                                <h4 className="font-semibold mb-3">Histórico</h4>
-                                <div className="space-y-2 text-sm">
-                                  <div>
-                                    <span className="text-muted-foreground">Criado em: </span>
-                                    {formatarData(alerta.created_at)}
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground">Última atualização: </span>
-                                    {formatarData(alerta.updated_at)}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setAlertaSelecionado(alerta);
+                            setDrawerAberto(true);
+                          }}
+                        >
+                          Ver Detalhes
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -384,6 +319,16 @@ const AlertasEvasao = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Drawer de Atividades */}
+      <AtividadesDrawer 
+        open={drawerAberto} 
+        onClose={() => {
+          setDrawerAberto(false);
+          setAlertaSelecionado(null);
+        }}
+        alerta={alertaSelecionado}
+      />
     </div>
   );
 };

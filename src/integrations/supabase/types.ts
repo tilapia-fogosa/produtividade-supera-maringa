@@ -1266,6 +1266,44 @@ export type Database = {
           },
         ]
       }
+      atividades_alerta_evasao: {
+        Row: {
+          alerta_evasao_id: string
+          created_at: string
+          descricao: string
+          id: string
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
+        }
+        Insert: {
+          alerta_evasao_id: string
+          created_at?: string
+          descricao: string
+          id?: string
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
+        }
+        Update: {
+          alerta_evasao_id?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          tipo_atividade?: Database["public"]["Enums"]["tipo_atividade_evasao"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividades_alerta_evasao_alerta_evasao_id_fkey"
+            columns: ["alerta_evasao_id"]
+            isOneToOne: false
+            referencedRelation: "alerta_evasao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aulas: {
         Row: {
           conteudo: string | null
@@ -7862,6 +7900,12 @@ export type Database = {
         | "aguardando_dados"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
+      tipo_atividade_evasao:
+        | "acolhimento"
+        | "atendimento_financeiro"
+        | "evasao"
+        | "atendimento_pedagogico"
+        | "retencao"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8082,6 +8126,13 @@ export const Constants = {
       ],
       student_status: ["pre_matricula", "matricula_completa"],
       tipo_atendimento: ["bot", "humano"],
+      tipo_atividade_evasao: [
+        "acolhimento",
+        "atendimento_financeiro",
+        "evasao",
+        "atendimento_pedagogico",
+        "retencao",
+      ],
       tipo_evento_sala: [
         "manutencao",
         "reuniao",
