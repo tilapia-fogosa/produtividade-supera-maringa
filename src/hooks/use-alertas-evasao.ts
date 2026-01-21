@@ -243,32 +243,33 @@ export function useAlertasEvasao() {
       // Formatar a data de retenção, se existir (mantém data e hora)
       const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
 
-      // Inserir dados na tabela alerta_evasao após o envio para Slack
-      try {
-        console.log('Salvando alerta no banco de dados...');
-        
-        const { data: alertaData, error: alertaError } = await supabase
-          .from('alerta_evasao')
-          .insert({
-            aluno_id: alunoSelecionado,
-            data_alerta: dataAlertaFormatada,
-            origem_alerta: origemAlerta,
-            descritivo: descritivo,
-            responsavel: profileId,
-            data_retencao: dataRetencaoFormatada,
-            status: 'pendente',
-            kanban_status: 'todo',
-            funcionario_registro_id: funcionarioId || undefined
-          });
+      // Inserir dados na tabela alerta_evasao
+      const dadosAlerta = {
+        aluno_id: alunoSelecionado,
+        data_alerta: dataAlertaFormatada,
+        origem_alerta: origemAlerta!,
+        descritivo: descritivo,
+        responsavel: profileId,
+        data_retencao: dataRetencaoFormatada,
+        status: 'pendente' as const,
+        kanban_status: 'todo',
+        funcionario_registro_id: funcionarioId || null
+      };
+      
+      console.log('Dados para inserir no banco:', dadosAlerta);
 
-        if (alertaError) {
-          console.error('Erro ao salvar alerta no banco:', alertaError);
-        } else {
-          console.log('Alerta salvo no banco com sucesso:', alertaData);
-        }
-      } catch (dbError) {
-        console.error('Erro ao inserir no banco de dados:', dbError);
+      const { data: alertaData, error: alertaError } = await supabase
+        .from('alerta_evasao')
+        .insert(dadosAlerta)
+        .select()
+        .single();
+
+      if (alertaError) {
+        console.error('Erro ao salvar alerta no banco:', alertaError);
+        throw new Error(`Erro ao salvar no banco: ${alertaError.message}`);
       }
+
+      console.log('Alerta salvo com sucesso:', alertaData);
 
       // Sempre envia para o webhook geral de alertas
       const webhookUrl = 'https://hook.us1.make.com/v8b7u98lehutsqqk9tox27b2bn7x1mmx';
