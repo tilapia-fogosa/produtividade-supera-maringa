@@ -27,7 +27,6 @@ export function useAlertasEvasao() {
   const [descritivo, setDescritivo] = useState('');
   const [responsavelId, setResponsavelId] = useState<string | null>(null);
   const [responsavelNome, setResponsavelNome] = useState('');
-  const [dataRetencao, setDataRetencao] = useState('');
   const [historicoAlertas, setHistoricoAlertas] = useState<string | null>(null);
   const [alertasAnteriores, setAlertasAnteriores] = useState<any[]>([]);
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
@@ -145,7 +144,6 @@ export function useAlertasEvasao() {
     setDescritivo('');
     setResponsavelId(null);
     setResponsavelNome('');
-    setDataRetencao('');
     setFiltroAluno('');
     setHistoricoAlertas(null);
     setAlertasAnteriores([]);
@@ -239,9 +237,6 @@ export function useAlertasEvasao() {
       
       // Formatar a data do alerta para ser apenas a data, sem hora
       const dataAlertaFormatada = dataAlerta ? new Date(dataAlerta).toISOString().split('T')[0] : null;
-      
-      // Formatar a data de retenção, se existir (mantém data e hora)
-      const dataRetencaoFormatada = dataRetencao ? new Date(dataRetencao).toISOString() : null;
 
       // Inserir dados na tabela alerta_evasao
       const dadosAlerta = {
@@ -250,7 +245,6 @@ export function useAlertasEvasao() {
         origem_alerta: origemAlerta!,
         descritivo: descritivo,
         responsavel: profileId,
-        data_retencao: dataRetencaoFormatada,
         status: 'pendente' as const,
         kanban_status: 'todo',
         funcionario_registro_id: funcionarioId || null
@@ -293,7 +287,6 @@ export function useAlertasEvasao() {
               origem: origemAlerta,
               descritivo,
               responsavel: responsavelNome,
-              data_retencao: dataRetencaoFormatada,
               historico: historicoCompleto
             }
           })
@@ -339,8 +332,6 @@ export function useAlertasEvasao() {
     responsavelId,
     setResponsavelId,
     responsavelNome,
-    dataRetencao,
-    setDataRetencao,
     alertasAnteriores,
     carregandoHistorico,
     historicoAlertas,

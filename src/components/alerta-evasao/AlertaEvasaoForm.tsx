@@ -28,8 +28,6 @@ interface AlertaEvasaoFormProps {
   responsavelId: string | null;
   setResponsavelId: (id: string) => void;
   responsavelNome: string;
-  dataRetencao: string;
-  setDataRetencao: (data: string) => void;
   alunosFiltrados: any[];
   alertasAnteriores: any[];
   historicoAlertas: string | null;
@@ -58,8 +56,6 @@ export function AlertaEvasaoForm({
   responsavelId,
   setResponsavelId,
   responsavelNome,
-  dataRetencao,
-  setDataRetencao,
   alunosFiltrados,
   alertasAnteriores,
   historicoAlertas,
@@ -133,19 +129,6 @@ export function AlertaEvasaoForm({
         value={descritivo}
         onChange={(e) => setDescritivo(e.target.value)}
       />
-
-      <div>
-        <label htmlFor="data-retencao" className="block text-sm font-medium text-gray-700 mb-1">
-          Agendado Retenção (caso tenha)
-        </label>
-        <Input
-          id="data-retencao"
-          type="datetime-local"
-          value={dataRetencao}
-          onChange={(e) => setDataRetencao(e.target.value)}
-          className="w-full"
-        />
-      </div>
 
       <HistoricoAlertasView
         alertasAnteriores={alertasAnteriores}

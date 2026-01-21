@@ -33,8 +33,6 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
     responsavelId,
     setResponsavelId,
     responsavelNome,
-    dataRetencao,
-    setDataRetencao,
     alertasAnteriores,
     carregandoHistorico,
     historicoAlertas,
@@ -86,8 +84,6 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
               responsavelId={responsavelId}
               setResponsavelId={setResponsavelId as (value: string) => void}
               responsavelNome={responsavelNome}
-              dataRetencao={dataRetencao}
-              setDataRetencao={setDataRetencao}
               alunosFiltrados={alunosFiltrados}
               alertasAnteriores={alertasAnteriores}
               historicoAlertas={historicoAlertas}
