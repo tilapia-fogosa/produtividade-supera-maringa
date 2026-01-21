@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Plus, History, FileText } from 'lucide-react';
+import { X, History, FileText, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -74,8 +74,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
 
   return (
     <Drawer open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DrawerContent direction="right" className="h-full w-[90%] max-w-2xl">
-        <DrawerHeader className="border-b">
+      <DrawerContent direction="right" className="h-full w-[95%] max-w-4xl">
+        <DrawerHeader className="border-b py-3">
           <div className="flex items-center justify-between">
             <div>
               <DrawerTitle className="text-lg">Atividades do Alerta</DrawerTitle>
@@ -89,82 +89,29 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
           </div>
         </DrawerHeader>
 
-        <div className="flex flex-col h-[calc(100%-4rem)]">
-          {/* Seção de Nova Atividade */}
-          <div className="p-4 border-b space-y-4">
-            <div className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              <span className="font-medium">Nova Atividade</span>
-            </div>
-            
-            {/* Botões de tipo de atividade */}
-            <div className="flex flex-wrap gap-2">
-              {TIPOS_ATIVIDADE.map((tipo) => (
-                <Button
-                  key={tipo.value}
-                  variant={tipoSelecionado === tipo.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTipoSelecionado(tipo.value)}
-                  className={tipoSelecionado === tipo.value ? `${tipo.color} text-white border-0` : ''}
-                >
-                  {tipo.label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Campo de descrição (aparece quando um tipo é selecionado) */}
-            {tipoSelecionado && (
-              <div className="space-y-3">
-                <Textarea
-                  placeholder="Descreva a atividade realizada..."
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  className="min-h-[100px]"
-                />
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleCriarAtividade}
-                    disabled={!descricao.trim() || isCriando}
-                    size="sm"
-                  >
-                    {isCriando ? 'Salvando...' : 'Registrar Atividade'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setTipoSelecionado(null);
-                      setDescricao('');
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Histórico de Atividades */}
-          <div className="flex-1 overflow-hidden">
-            <div className="p-4 border-b flex items-center gap-2">
+        {/* Layout de 3 colunas */}
+        <div className="flex h-[calc(100%-4rem)] divide-x">
+          
+          {/* Coluna Esquerda - Histórico */}
+          <div className="w-1/3 flex flex-col">
+            <div className="p-3 border-b flex items-center gap-2 bg-muted/30">
               <History className="h-4 w-4" />
-              <span className="font-medium">Histórico de Atividades</span>
-              <Badge variant="secondary" className="ml-auto">
+              <span className="font-medium text-sm">Histórico</span>
+              <Badge variant="secondary" className="ml-auto text-xs">
                 {atividades.length}
               </Badge>
             </div>
 
-            <ScrollArea className="h-[calc(100%-3rem)]">
-              <div className="p-4 space-y-3">
+            <ScrollArea className="flex-1">
+              <div className="p-3 space-y-2">
                 {isLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Carregando atividades...
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Carregando...
                   </div>
                 ) : atividades.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Nenhuma atividade registrada</p>
-                    <p className="text-sm">Selecione um tipo de atividade acima para começar</p>
+                    <FileText className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhuma atividade</p>
                   </div>
                 ) : (
                   atividades.map((atividade) => {
@@ -172,19 +119,19 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     return (
                       <Card key={atividade.id} className="overflow-hidden">
                         <div className={`h-1 ${tipoConfig.color}`} />
-                        <CardContent className="p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Badge className={`${tipoConfig.color} text-white`}>
+                        <CardContent className="p-2 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <Badge className={`${tipoConfig.color} text-white text-xs`}>
                               {tipoConfig.label}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                               {formatarData(atividade.created_at)}
                             </span>
                           </div>
-                          <p className="text-sm">{atividade.descricao}</p>
+                          <p className="text-xs line-clamp-3">{atividade.descricao}</p>
                           {atividade.responsavel_nome && (
-                            <p className="text-xs text-muted-foreground">
-                              Por: {atividade.responsavel_nome}
+                            <p className="text-[10px] text-muted-foreground">
+                              {atividade.responsavel_nome}
                             </p>
                           )}
                         </CardContent>
@@ -194,6 +141,82 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                 )}
               </div>
             </ScrollArea>
+          </div>
+
+          {/* Coluna do Meio - Tipos de Atividade */}
+          <div className="w-1/3 flex flex-col">
+            <div className="p-3 border-b bg-muted/30">
+              <span className="font-medium text-sm">Tipo de Atividade</span>
+            </div>
+
+            <div className="p-3 space-y-2">
+              {TIPOS_ATIVIDADE.map((tipo) => (
+                <Button
+                  key={tipo.value}
+                  variant={tipoSelecionado === tipo.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTipoSelecionado(tipo.value)}
+                  className={`w-full justify-start ${tipoSelecionado === tipo.value ? `${tipo.color} text-white border-0` : ''}`}
+                >
+                  <div className={`w-2 h-2 rounded-full mr-2 ${tipo.color}`} />
+                  {tipo.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Coluna Direita - Input da Atividade */}
+          <div className="w-1/3 flex flex-col">
+            <div className="p-3 border-b bg-muted/30">
+              <span className="font-medium text-sm">Registrar Atividade</span>
+            </div>
+
+            <div className="p-3 flex flex-col flex-1">
+              {!tipoSelecionado ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <p className="text-sm text-center">
+                    Selecione um tipo de atividade ao lado
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-3">
+                    <Badge className={`${getTipoConfig(tipoSelecionado).color} text-white`}>
+                      {getTipoConfig(tipoSelecionado).label}
+                    </Badge>
+                  </div>
+                  
+                  <Textarea
+                    placeholder="Descreva a atividade realizada..."
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                    className="flex-1 min-h-[150px] resize-none"
+                  />
+                  
+                  <div className="flex gap-2 mt-3">
+                    <Button 
+                      onClick={handleCriarAtividade}
+                      disabled={!descricao.trim() || isCriando}
+                      className="flex-1"
+                      size="sm"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isCriando ? 'Salvando...' : 'Registrar'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setTipoSelecionado(null);
+                        setDescricao('');
+                      }}
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </DrawerContent>
