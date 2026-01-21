@@ -9,6 +9,8 @@ export type TipoAtividadeEvasao =
   | 'atendimento_pedagogico'
   | 'retencao';
 
+export type StatusAtividade = 'pendente' | 'concluida';
+
 export interface AtividadeAlertaEvasao {
   id: string;
   alerta_evasao_id: string;
@@ -17,11 +19,20 @@ export interface AtividadeAlertaEvasao {
   responsavel_id: string | null;
   responsavel_nome: string | null;
   created_at: string;
+  status: StatusAtividade;
 }
+
+// Tipos permitidos ao gerar nova atividade a partir de acolhimento
+export const TIPOS_PERMITIDOS_APOS_ACOLHIMENTO: TipoAtividadeEvasao[] = [
+  'atendimento_financeiro',
+  'atendimento_pedagogico',
+  'acolhimento',
+  'retencao'
+];
 
 export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color: string }[] = [
   { value: 'acolhimento', label: 'Acolhimento', color: 'bg-blue-500' },
-  { value: 'atendimento_financeiro', label: 'Atendimento Financeiro', color: 'bg-purple-500' },
+  { value: 'atendimento_financeiro', label: 'Negociação Financeira', color: 'bg-purple-500' },
   { value: 'evasao', label: 'Evasão', color: 'bg-red-500' },
   { value: 'atendimento_pedagogico', label: 'Atendimento Pedagógico', color: 'bg-orange-500' },
   { value: 'retencao', label: 'Retenção', color: 'bg-green-500' },
@@ -51,15 +62,28 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
   const criarAtividadeMutation = useMutation({
     mutationFn: async ({ 
       tipo_atividade, 
-      descricao 
+      descricao,
+      atividadeAnteriorId
     }: { 
       tipo_atividade: TipoAtividadeEvasao; 
-      descricao: string 
+      descricao: string;
+      atividadeAnteriorId?: string;
     }) => {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Se tem atividade anterior, marca ela como concluída
+      if (atividadeAnteriorId) {
+        const { error: updateError } = await supabase
+          .from('atividades_alerta_evasao')
+          .update({ status: 'concluida' })
+          .eq('id', atividadeAnteriorId);
+        
+        if (updateError) throw updateError;
+      }
+      
+      // Cria a nova atividade
       const { data, error } = await supabase
         .from('atividades_alerta_evasao')
         .insert({
@@ -67,7 +91,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           tipo_atividade,
           descricao,
           responsavel_id: user?.id || null,
-          responsavel_nome: funcionarioNome || user?.email || 'Usuário'
+          responsavel_nome: funcionarioNome || user?.email || 'Usuário',
+          status: 'pendente'
         })
         .select()
         .single();

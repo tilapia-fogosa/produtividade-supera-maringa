@@ -1274,6 +1274,7 @@ export type Database = {
           id: string
           responsavel_id: string | null
           responsavel_nome: string | null
+          status: string
           tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
         }
         Insert: {
@@ -1283,6 +1284,7 @@ export type Database = {
           id?: string
           responsavel_id?: string | null
           responsavel_nome?: string | null
+          status?: string
           tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
         }
         Update: {
@@ -1292,6 +1294,7 @@ export type Database = {
           id?: string
           responsavel_id?: string | null
           responsavel_nome?: string | null
+          status?: string
           tipo_atividade?: Database["public"]["Enums"]["tipo_atividade_evasao"]
         }
         Relationships: [
