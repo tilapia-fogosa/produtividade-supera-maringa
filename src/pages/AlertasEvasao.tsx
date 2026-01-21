@@ -15,7 +15,6 @@ const AlertasEvasao = () => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [filtros, setFiltros] = useState({
     status: 'todos',
-    kanban_status: 'todos',
     origem_alerta: 'todos',
     data_inicio: '',
     data_fim: '',
@@ -25,7 +24,6 @@ const AlertasEvasao = () => {
   // Preparar filtros para a query (converter "todos" para undefined)
   const filtrosQuery = {
     status: filtros.status === 'todos' ? undefined : filtros.status,
-    kanban_status: filtros.kanban_status === 'todos' ? undefined : filtros.kanban_status,
     origem_alerta: filtros.origem_alerta === 'todos' ? undefined : filtros.origem_alerta,
     data_inicio: filtros.data_inicio || undefined,
     data_fim: filtros.data_fim || undefined,
@@ -68,192 +66,140 @@ const AlertasEvasao = () => {
     return labels[origem] || origem;
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    if (status === 'resolvido') return 'default';
-    if (status === 'pendente') return 'secondary';
-    return 'outline';
-  };
-
-  const getKanbanBadgeVariant = (kanban: string) => {
-    if (kanban === 'done') return 'default';
-    if (kanban === 'in_progress') return 'secondary';
-    return 'outline';
-  };
-
-  const getKanbanLabel = (kanban: string) => {
-    const labels: Record<string, string> = {
-      'todo': 'A Fazer',
-      'in_progress': 'Em Andamento',
-      'done': 'Concluído'
-    };
-    return labels[kanban] || kanban;
+  const getStatusBadgeClass = (status: string) => {
+    if (status === 'resolvido') return 'bg-green-600 text-white hover:bg-green-700';
+    if (status === 'pendente') return 'bg-yellow-500 text-white hover:bg-yellow-600';
+    return 'bg-muted text-white';
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">Histórico de Alertas de Evasão</h1>
-        <p className="text-muted-foreground text-sm">
-          Acompanhe todos os alertas de evasão registrados e seus status
-        </p>
-      </div>
+    <div className="space-y-3">
+      <h1 className="text-xl font-bold">Painel de Evasões</h1>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome do Aluno</label>
-                <Input
-                  placeholder="Buscar por nome"
-                  value={filtros.nome_aluno}
-                  onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select
-                  value={filtros.status}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="resolvido">Resolvido</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status Kanban</label>
-                <Select
-                  value={filtros.kanban_status}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, kanban_status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="todo">A Fazer</SelectItem>
-                    <SelectItem value="in_progress">Em Andamento</SelectItem>
-                    <SelectItem value="done">Concluído</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Filtros compactos */}
+      <Card className="py-3">
+        <CardContent className="pb-0">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Aluno</label>
+              <Input
+                placeholder="Nome"
+                value={filtros.nome_aluno}
+                onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
+                className="h-8"
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Origem do Alerta</label>
-                <Select
-                  value={filtros.origem_alerta}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, origem_alerta: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas</SelectItem>
-                    <SelectItem value="conversa_indireta">Conversa Indireta</SelectItem>
-                    <SelectItem value="aviso_recepcao">Aviso na Recepção</SelectItem>
-                    <SelectItem value="aviso_professor_coordenador">Aviso ao Professor/Coordenador</SelectItem>
-                    <SelectItem value="aviso_whatsapp">Aviso no WhatsApp</SelectItem>
-                    <SelectItem value="inadimplencia">Inadimplência</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Início</label>
-                <Input
-                  type="date"
-                  value={filtros.data_inicio}
-                  onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Fim</label>
-                <Input
-                  type="date"
-                  value={filtros.data_fim}
-                  onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
-                />
-              </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Status</label>
+              <Select
+                value={filtros.status}
+                onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="resolvido">Resolvido</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          <div className="mt-4 flex items-center gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Origem</label>
+              <Select
+                value={filtros.origem_alerta}
+                onValueChange={(value) => handleFiltroChange({ ...filtros, origem_alerta: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas</SelectItem>
+                  <SelectItem value="conversa_indireta">Conversa Indireta</SelectItem>
+                  <SelectItem value="aviso_recepcao">Aviso na Recepção</SelectItem>
+                  <SelectItem value="aviso_professor_coordenador">Aviso ao Professor/Coordenador</SelectItem>
+                  <SelectItem value="aviso_whatsapp">Aviso no WhatsApp</SelectItem>
+                  <SelectItem value="inadimplencia">Inadimplência</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium">De</label>
+              <Input
+                type="date"
+                value={filtros.data_inicio}
+                onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
+                className="h-8"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Até</label>
+              <Input
+                type="date"
+                value={filtros.data_fim}
+                onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
+                className="h-8"
+              />
+            </div>
+
             <Button
               variant="outline"
+              size="sm"
+              className="h-8"
               onClick={() => handleFiltroChange({ 
                 status: 'todos',
-                kanban_status: 'todos',
                 origem_alerta: 'todos',
                 data_inicio: '', 
                 data_fim: '', 
                 nome_aluno: ''
               })}
             >
-              Limpar Filtros
+              Limpar
             </Button>
-            <span className="text-sm text-muted-foreground">
-              Total: {total} {total === 1 ? 'alerta' : 'alertas'}
-            </span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Total de Alertas</p>
-              <p className="text-3xl font-bold">{total}</p>
+      {/* Estatísticas compactas */}
+      <div className="grid grid-cols-4 gap-2">
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xl font-bold">{total}</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Pendentes</p>
-              <p className="text-3xl font-bold text-yellow-500">
-                {totalPendentes}
-              </p>
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Pendentes</p>
+              <p className="text-xl font-bold text-yellow-500">{totalPendentes}</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Resolvidos</p>
-              <p className="text-3xl font-bold text-green-500">
-                {totalResolvidos}
-              </p>
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Resolvidos</p>
+              <p className="text-xl font-bold text-green-500">{totalResolvidos}</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Em Andamento</p>
-              <p className="text-3xl font-bold text-blue-500">
-                {totalEmAndamento}
-              </p>
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Em Andamento</p>
+              <p className="text-xl font-bold text-blue-500">{totalEmAndamento}</p>
             </div>
           </CardContent>
         </Card>
@@ -288,7 +234,6 @@ const AlertasEvasao = () => {
                     <TableHead>Professor</TableHead>
                     <TableHead>Origem</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Kanban</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -309,13 +254,8 @@ const AlertasEvasao = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(alerta.status)}>
+                        <Badge className={getStatusBadgeClass(alerta.status)}>
                           {alerta.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getKanbanBadgeVariant(alerta.kanban_status)}>
-                          {getKanbanLabel(alerta.kanban_status)}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -353,14 +293,8 @@ const AlertasEvasao = () => {
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-muted-foreground">Status</p>
-                                  <Badge variant={getStatusBadgeVariant(alerta.status)}>
+                                  <Badge className={getStatusBadgeClass(alerta.status)}>
                                     {alerta.status}
-                                  </Badge>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Status Kanban</p>
-                                  <Badge variant={getKanbanBadgeVariant(alerta.kanban_status)}>
-                                    {getKanbanLabel(alerta.kanban_status)}
                                   </Badge>
                                 </div>
                                 {alerta.responsavel && (
