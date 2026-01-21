@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Drawer, 
   DrawerContent, 
@@ -9,13 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, History, FileText } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { X, History, FileText, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   useAtividadesAlertaEvasao, 
-  TIPOS_ATIVIDADE, 
-  type TipoAtividadeEvasao 
+  TIPOS_ATIVIDADE,
+  TIPOS_PERMITIDOS_APOS_ACOLHIMENTO,
+  type TipoAtividadeEvasao,
+  type AtividadeAlertaEvasao
 } from '@/hooks/use-atividades-alerta-evasao';
 import type { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 
@@ -26,9 +29,15 @@ interface AtividadesDrawerProps {
 }
 
 export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProps) {
+  const [atividadeExpandida, setAtividadeExpandida] = useState<string | null>(null);
+  const [tipoSelecionado, setTipoSelecionado] = useState<TipoAtividadeEvasao | null>(null);
+  const [descricao, setDescricao] = useState('');
+
   const { 
     atividades, 
-    isLoading 
+    isLoading,
+    criarAtividade,
+    isCriando
   } = useAtividadesAlertaEvasao(alerta?.id || null);
 
   const getTipoConfig = (tipo: TipoAtividadeEvasao) => {
@@ -43,10 +52,49 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     }
   };
 
+  const handleExpandirAtividade = (atividade: AtividadeAlertaEvasao) => {
+    if (atividade.status === 'concluida') return;
+    
+    if (atividadeExpandida === atividade.id) {
+      setAtividadeExpandida(null);
+      setTipoSelecionado(null);
+      setDescricao('');
+    } else {
+      setAtividadeExpandida(atividade.id);
+      setTipoSelecionado(null);
+      setDescricao('');
+    }
+  };
+
+  const handleCriarAtividade = async (atividadeAnteriorId: string) => {
+    if (!tipoSelecionado || !descricao.trim()) return;
+    
+    await criarAtividade({
+      tipo_atividade: tipoSelecionado,
+      descricao: descricao.trim(),
+      atividadeAnteriorId
+    });
+    
+    setAtividadeExpandida(null);
+    setTipoSelecionado(null);
+    setDescricao('');
+  };
+
+  const resetState = () => {
+    setAtividadeExpandida(null);
+    setTipoSelecionado(null);
+    setDescricao('');
+  };
+
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
   if (!alerta) return null;
 
   return (
-    <Drawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Drawer open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DrawerContent direction="right" className="h-full w-full max-w-md">
         <DrawerHeader className="border-b py-3">
           <div className="flex items-center justify-between">
@@ -56,7 +104,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                 {alerta.aluno?.nome || 'Aluno não identificado'}
               </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={handleClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -85,23 +133,93 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
               ) : (
                 atividades.map((atividade) => {
                   const tipoConfig = getTipoConfig(atividade.tipo_atividade);
+                  const isPendente = atividade.status === 'pendente';
+                  const isExpanded = atividadeExpandida === atividade.id;
+                  
                   return (
-                    <Card key={atividade.id} className="overflow-hidden">
+                    <Card 
+                      key={atividade.id} 
+                      className={`overflow-hidden transition-all ${
+                        isPendente ? 'cursor-pointer hover:shadow-md' : 'opacity-75'
+                      }`}
+                      onClick={() => handleExpandirAtividade(atividade)}
+                    >
                       <div className={`h-1.5 ${tipoConfig.color}`} />
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <Badge className={`${tipoConfig.color} text-white text-xs`}>
-                            {tipoConfig.label}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            {formatarData(atividade.created_at)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`${tipoConfig.color} text-white text-xs`}>
+                              {tipoConfig.label}
+                            </Badge>
+                            {!isPendente && (
+                              <div className="flex items-center gap-1 text-green-600">
+                                <Check className="h-3 w-3" />
+                                <span className="text-xs">Concluída</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {formatarData(atividade.created_at)}
+                            </span>
+                            {isPendente && (
+                              isExpanded 
+                                ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm">{atividade.descricao}</p>
                         {atividade.responsavel_nome && (
                           <p className="text-xs text-muted-foreground">
                             Responsável: {atividade.responsavel_nome}
                           </p>
+                        )}
+                        
+                        {/* Formulário para criar nova atividade (expandido) */}
+                        {isExpanded && isPendente && (
+                          <div 
+                            className="mt-4 pt-4 border-t space-y-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <p className="text-sm font-medium">Criar nova atividade:</p>
+                            
+                            <div className="flex flex-wrap gap-2">
+                              {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
+                                const config = getTipoConfig(tipo);
+                                const isSelected = tipoSelecionado === tipo;
+                                return (
+                                  <Badge
+                                    key={tipo}
+                                    className={`cursor-pointer transition-all ${
+                                      isSelected 
+                                        ? `${config.color} text-white ring-2 ring-offset-2` 
+                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                    }`}
+                                    onClick={() => setTipoSelecionado(tipo)}
+                                  >
+                                    {config.label}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                            
+                            <Textarea
+                              placeholder="Descreva o que foi feito..."
+                              value={descricao}
+                              onChange={(e) => setDescricao(e.target.value)}
+                              rows={3}
+                            />
+                            
+                            <Button
+                              size="sm"
+                              disabled={!tipoSelecionado || !descricao.trim() || isCriando}
+                              onClick={() => handleCriarAtividade(atividade.id)}
+                              className="w-full"
+                            >
+                              {isCriando ? 'Salvando...' : 'Registrar Atividade'}
+                            </Button>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
