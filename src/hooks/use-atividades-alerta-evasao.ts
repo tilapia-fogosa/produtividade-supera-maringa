@@ -111,12 +111,16 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       tipo_atividade, 
       descricao,
       atividadeAnteriorId,
-      data_agendada
+      data_agendada,
+      horario_agendado,
+      professor_id_agendamento
     }: { 
       tipo_atividade: TipoAtividadeEvasao; 
       descricao: string;
       atividadeAnteriorId?: string;
       data_agendada?: string;
+      horario_agendado?: string;
+      professor_id_agendamento?: string;
     }) => {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
@@ -235,6 +239,51 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           .eq('id', alertaEvasaoId);
         
         if (alertaError) throw alertaError;
+      }
+
+      // Se for atendimento pedagógico com agendamento, criar evento na agenda do professor
+      if (tipo_atividade === 'atendimento_pedagogico' && data_agendada && horario_agendado) {
+        const professorId = professor_id_agendamento || professor_responsavel_id;
+        
+        if (professorId) {
+          // Buscar nome do aluno para o título do evento
+          const { data: alertaData } = await supabase
+            .from('alerta_evasao')
+            .select('alunos(nome)')
+            .eq('id', alertaEvasaoId)
+            .single();
+          
+          const nomeAluno = (alertaData?.alunos as any)?.nome || 'Aluno';
+          
+          // Calcular horário fim (1 hora depois)
+          const [horas, minutos] = horario_agendado.split(':').map(Number);
+          const totalMinutos = horas * 60 + minutos + 60; // +60 minutos
+          const horasFim = Math.floor(totalMinutos / 60);
+          const minutosFim = totalMinutos % 60;
+          const horarioFim = `${String(horasFim).padStart(2, '0')}:${String(minutosFim).padStart(2, '0')}`;
+          
+          // Criar evento na agenda do professor
+          const eventoData = {
+            professor_id: professorId,
+            tipo_evento: 'atendimento_individual',
+            titulo: `Atend. Pedagógico - ${nomeAluno}`,
+            descricao: descricao,
+            data: data_agendada,
+            horario_inicio: horario_agendado,
+            horario_fim: horarioFim,
+            recorrente: false,
+            created_by: user?.id || null
+          };
+          
+          const { error: eventoError } = await supabase
+            .from('eventos_professor')
+            .insert(eventoData);
+          
+          if (eventoError) {
+            console.error('Erro ao criar evento na agenda:', eventoError);
+            // Não lançamos erro para não desfazer a atividade criada
+          }
+        }
       }
       
       return data;
