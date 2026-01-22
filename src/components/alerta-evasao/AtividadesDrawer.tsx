@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Drawer, 
   DrawerContent, 
@@ -13,8 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
-import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock } from 'lucide-react';
+import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { 
@@ -25,6 +26,8 @@ import {
   type AtividadeAlertaEvasao
 } from '@/hooks/use-atividades-alerta-evasao';
 import type { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
+import { useAgendaProfessores } from '@/hooks/use-agenda-professores';
+import { HORARIOS_FUNCIONAMENTO, type DiaSemana } from '@/constants/horariosFuncionamento';
 
 type ResultadoNegociacao = 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo';
 
@@ -42,6 +45,46 @@ const TIPOS_TAREFA_ADMIN = [
   'corrigir_valores_sgs',
   'corrigir_valores_assinatura'
 ];
+
+// Função para gerar slots de horário de 30 em 30 minutos
+function gerarSlotsHorario(inicio: string, fim: string): string[] {
+  const slots: string[] = [];
+  const [horaInicio, minInicio] = inicio.split(':').map(Number);
+  const [horaFim, minFim] = fim.split(':').map(Number);
+  
+  let totalMinutos = horaInicio * 60 + minInicio;
+  const totalMinutosFim = horaFim * 60 + minFim;
+  
+  // Gerar slots até 1 hora antes do fim (para caber atendimento de 1h)
+  while (totalMinutos <= totalMinutosFim - 60) {
+    const horas = Math.floor(totalMinutos / 60);
+    const minutos = totalMinutos % 60;
+    slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
+    totalMinutos += 30;
+  }
+  
+  return slots;
+}
+
+// Função para verificar se um slot colide com um evento
+function slotColideComEvento(
+  slotInicio: string, 
+  eventos: Array<{ horario_inicio: string; horario_fim: string }>
+): boolean {
+  const [slotHora, slotMin] = slotInicio.split(':').map(Number);
+  const slotInicioMin = slotHora * 60 + slotMin;
+  const slotFimMin = slotInicioMin + 60; // 1 hora de duração
+  
+  return eventos.some(evento => {
+    const [eventoInicioHora, eventoInicioMin] = evento.horario_inicio.split(':').map(Number);
+    const [eventoFimHora, eventoFimMin] = evento.horario_fim.split(':').map(Number);
+    const eventoInicioTotal = eventoInicioHora * 60 + eventoInicioMin;
+    const eventoFimTotal = eventoFimHora * 60 + eventoFimMin;
+    
+    // Verifica sobreposição
+    return slotInicioMin < eventoFimTotal && slotFimMin > eventoInicioTotal;
+  });
+}
 
 export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProps) {
   const [atividadeExpandida, setAtividadeExpandida] = useState<string | null>(null);
@@ -66,6 +109,14 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [atividadeTarefaAdmin, setAtividadeTarefaAdmin] = useState<AtividadeAlertaEvasao | null>(null);
   const [observacoesTarefaAdmin, setObservacoesTarefaAdmin] = useState('');
 
+  // Estado para painel de agendamento pedagógico
+  const [mostrarPainelPedagogico, setMostrarPainelPedagogico] = useState(false);
+  const [dataPedagogico, setDataPedagogico] = useState<Date | undefined>(undefined);
+  const [horarioPedagogico, setHorarioPedagogico] = useState('');
+  const [descricaoPedagogico, setDescricaoPedagogico] = useState('');
+  const [professorInfo, setProfessorInfo] = useState<{ id: string; nome: string } | null>(null);
+  const [semanaPedagogico, setSemanaPedagogico] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
+
   const { 
     atividades, 
     isLoading,
@@ -76,6 +127,12 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     concluirTarefa,
     isConcluindoTarefa
   } = useAtividadesAlertaEvasao(alerta?.id || null);
+
+  // Calcular data fim da semana para buscar agenda
+  const dataFimSemana = useMemo(() => addDays(semanaPedagogico, 6), [semanaPedagogico]);
+
+  // Buscar agenda do professor para verificar disponibilidade
+  const { data: agendaData } = useAgendaProfessores(semanaPedagogico, dataFimSemana);
 
   const getTipoConfig = (tipo: TipoAtividadeEvasao) => {
     return TIPOS_ATIVIDADE.find(t => t.value === tipo) || { label: tipo, color: 'bg-gray-500' };
@@ -210,8 +267,32 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setDescricaoProximaAtividade('');
   };
 
+  const fecharPainelPedagogico = () => {
+    setMostrarPainelPedagogico(false);
+    setDataPedagogico(undefined);
+    setHorarioPedagogico('');
+    setDescricaoPedagogico('');
+    setProfessorInfo(null);
+    setSemanaPedagogico(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  };
+
   const handleConfirmarAcolhimento = async () => {
-    if (!tipoProximaAtividade || !descricaoProximaAtividade.trim() || !atividadeAcolhimento) return;
+    if (!tipoProximaAtividade || !atividadeAcolhimento) return;
+    
+    // Se for atendimento pedagógico, abrir painel de agendamento
+    if (tipoProximaAtividade === 'atendimento_pedagogico') {
+      // Buscar professor da turma do aluno
+      const professorTurma = alerta?.aluno?.turma?.professor;
+      if (professorTurma) {
+        setProfessorInfo({ id: professorTurma.id, nome: professorTurma.nome });
+      }
+      
+      setMostrarPainelAcolhimento(false);
+      setMostrarPainelPedagogico(true);
+      return;
+    }
+    
+    if (!descricaoProximaAtividade.trim()) return;
     
     try {
       await criarAtividade({
@@ -226,6 +307,68 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     }
   };
 
+  const handleConfirmarAgendamentoPedagogico = async () => {
+    if (!dataPedagogico || !horarioPedagogico || !descricaoPedagogico.trim() || !atividadeAcolhimento) return;
+    
+    try {
+      const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
+      
+      await criarAtividade({
+        tipo_atividade: 'atendimento_pedagogico',
+        descricao: descricaoPedagogico.trim(),
+        atividadeAnteriorId: atividadeAcolhimento.id,
+        data_agendada: dataFormatada,
+        horario_agendado: horarioPedagogico,
+        professor_id_agendamento: professorInfo?.id
+      });
+      
+      fecharPainelPedagogico();
+      setAtividadeAcolhimento(null);
+      setTipoProximaAtividade(null);
+      setDescricaoProximaAtividade('');
+    } catch (error) {
+      console.error('Erro ao agendar atendimento pedagógico:', error);
+    }
+  };
+
+  // Calcular horários disponíveis para a data selecionada
+  const horariosDisponiveis = useMemo(() => {
+    if (!dataPedagogico || !professorInfo?.id || !agendaData) return [];
+    
+    // Obter dia da semana
+    const diasSemana: DiaSemana[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const diaSemana = diasSemana[dataPedagogico.getDay()];
+    const horarioFuncionamento = HORARIOS_FUNCIONAMENTO[diaSemana];
+    
+    if (!horarioFuncionamento.aberto) return [];
+    
+    // Gerar todos os slots possíveis
+    const todosSlots = gerarSlotsHorario(horarioFuncionamento.inicio, horarioFuncionamento.fim);
+    
+    // Buscar eventos do professor na data selecionada
+    const agendaProfessor = agendaData[professorInfo.id];
+    if (!agendaProfessor) return todosSlots;
+    
+    const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
+    const eventosDoDia = agendaProfessor.eventos.filter(e => e.data === dataFormatada);
+    
+    // Filtrar slots que não colidem com eventos
+    return todosSlots.filter(slot => !slotColideComEvento(slot, eventosDoDia));
+  }, [dataPedagogico, professorInfo?.id, agendaData]);
+
+  // Atualizar semana quando a data pedagógica mudar
+  const handleDataPedagogicoChange = (date: Date | undefined) => {
+    setDataPedagogico(date);
+    setHorarioPedagogico(''); // Reset horário ao mudar data
+    
+    if (date) {
+      const novaSemanainicio = startOfWeek(date, { weekStartsOn: 1 });
+      if (!isSameDay(novaSemanainicio, semanaPedagogico)) {
+        setSemanaPedagogico(novaSemanainicio);
+      }
+    }
+  };
+
   const resetState = () => {
     setAtividadeExpandida(null);
     setTipoSelecionado(null);
@@ -233,6 +376,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     fecharPainelResultado();
     fecharPainelAcolhimento();
     fecharPainelTarefaAdmin();
+    fecharPainelPedagogico();
   };
 
   const handleClose = () => {
@@ -308,7 +452,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
-  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin;
+  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico;
   const drawerWidth = isExpanded ? 'max-w-2xl' : 'max-w-sm';
 
   return (
@@ -651,8 +795,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   );
                 })}
 
-                {/* Campo de descrição da próxima atividade */}
-                {tipoProximaAtividade && (
+                {/* Campo de descrição da próxima atividade - não mostra para atendimento pedagógico */}
+                {tipoProximaAtividade && tipoProximaAtividade !== 'atendimento_pedagogico' && (
                   <div className="space-y-1">
                     <Label className="text-[10px]">Descrição da atividade *</Label>
                     <Textarea
@@ -665,6 +809,13 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   </div>
                 )}
 
+                {/* Mensagem informativa para atendimento pedagógico */}
+                {tipoProximaAtividade === 'atendimento_pedagogico' && (
+                  <div className="p-2 bg-orange-50 border border-orange-200 rounded text-[10px] text-orange-700">
+                    Ao confirmar, você será direcionado para agendar o atendimento na agenda do professor.
+                  </div>
+                )}
+
                 {/* Botão de confirmação */}
                 <div className="pt-2">
                   <Button
@@ -672,12 +823,14 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     className="w-full h-7 text-xs"
                     disabled={
                       !tipoProximaAtividade || 
-                      !descricaoProximaAtividade.trim() ||
+                      (tipoProximaAtividade !== 'atendimento_pedagogico' && !descricaoProximaAtividade.trim()) ||
                       isCriando
                     }
                     onClick={handleConfirmarAcolhimento}
                   >
-                    {isCriando ? 'Registrando...' : 'Confirmar'}
+                    {tipoProximaAtividade === 'atendimento_pedagogico' 
+                      ? 'Agendar Atendimento' 
+                      : isCriando ? 'Registrando...' : 'Confirmar'}
                   </Button>
                 </div>
               </div>
@@ -731,6 +884,157 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   </Button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Coluna direita: Painel de Agendamento Pedagógico */}
+          {mostrarPainelPedagogico && (
+            <div className="w-1/2 flex flex-col bg-muted/20">
+              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
+                <span className="font-medium text-xs">Agendar Atendimento Pedagógico</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelPedagogico}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-3">
+                  {/* Informação do professor */}
+                  {professorInfo && (
+                    <div className="p-2 bg-orange-50 border border-orange-200 rounded">
+                      <p className="text-[10px] text-muted-foreground">Professor responsável</p>
+                      <p className="text-xs font-medium text-orange-700">{professorInfo.nome}</p>
+                    </div>
+                  )}
+
+                  {!professorInfo && (
+                    <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
+                      <p className="text-[10px] text-yellow-700">
+                        Não foi possível identificar o professor da turma do aluno.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Seleção de data */}
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Data do atendimento *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full h-7 justify-start text-left font-normal text-xs",
+                            !dataPedagogico && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {dataPedagogico 
+                            ? format(dataPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                            : <span>Selecione a data</span>
+                          }
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dataPedagogico}
+                          onSelect={handleDataPedagogicoChange}
+                          disabled={(date) => {
+                            // Desabilitar datas passadas e domingos
+                            const hoje = new Date();
+                            hoje.setHours(0, 0, 0, 0);
+                            return date < hoje || date.getDay() === 0;
+                          }}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Seleção de horário */}
+                  {dataPedagogico && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Horário do atendimento *</Label>
+                      {horariosDisponiveis.length === 0 ? (
+                        <div className="p-2 bg-red-50 border border-red-200 rounded">
+                          <p className="text-[10px] text-red-700">
+                            Não há horários disponíveis nesta data. O professor está com a agenda cheia.
+                          </p>
+                        </div>
+                      ) : (
+                        <Select value={horarioPedagogico} onValueChange={setHorarioPedagogico}>
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[9999]">
+                            {horariosDisponiveis.map((horario) => {
+                              // Calcular horário fim
+                              const [h, m] = horario.split(':').map(Number);
+                              const fimMin = h * 60 + m + 60;
+                              const fimH = Math.floor(fimMin / 60);
+                              const fimM = fimMin % 60;
+                              const horarioFim = `${String(fimH).padStart(2, '0')}:${String(fimM).padStart(2, '0')}`;
+                              
+                              return (
+                                <SelectItem key={horario} value={horario} className="text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-3 w-3" />
+                                    {horario} - {horarioFim}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Campo de descrição */}
+                  {dataPedagogico && horarioPedagogico && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Descrição do atendimento *</Label>
+                      <Textarea
+                        placeholder="Descreva o objetivo do atendimento pedagógico..."
+                        value={descricaoPedagogico}
+                        onChange={(e) => setDescricaoPedagogico(e.target.value)}
+                        rows={3}
+                        className="text-xs min-h-[60px] resize-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Resumo do agendamento */}
+                  {dataPedagogico && horarioPedagogico && descricaoPedagogico.trim() && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
+                      <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
+                      <div className="text-[10px] text-green-600 space-y-0.5">
+                        <p>📅 {format(dataPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR })}</p>
+                        <p>🕐 {horarioPedagogico} - 1 hora de duração</p>
+                        {professorInfo && <p>👨‍🏫 {professorInfo.nome}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão de confirmação */}
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      className="w-full h-7 text-xs"
+                      disabled={
+                        !dataPedagogico || 
+                        !horarioPedagogico || 
+                        !descricaoPedagogico.trim() ||
+                        isCriando
+                      }
+                      onClick={handleConfirmarAgendamentoPedagogico}
+                    >
+                      {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
+                    </Button>
+                  </div>
+                </div>
+              </ScrollArea>
             </div>
           )}
         </div>

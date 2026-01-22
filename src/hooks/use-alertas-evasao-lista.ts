@@ -21,6 +21,7 @@ export interface AlertaEvasao {
     turma?: {
       nome: string;
       professor?: {
+        id: string;
         nome: string;
       };
     };
@@ -60,7 +61,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
             turma_id,
             turma:turmas(
               nome,
-              professor:professores(nome)
+              professor:professores(id, nome)
             )
           )
         `, { count: 'exact' })
