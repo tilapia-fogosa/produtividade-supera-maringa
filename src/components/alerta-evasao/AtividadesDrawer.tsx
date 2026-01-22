@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock } from 'lucide-react';
+import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock, Phone, DollarSign } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -1392,12 +1392,25 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
               
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-3">
-                  {/* Informação */}
-                  <div className="p-2 bg-indigo-50 border border-indigo-200 rounded">
-                    <p className="text-[10px] text-indigo-700">
-                      O contato financeiro será feito por WhatsApp para agendar a negociação presencial.
-                    </p>
-                  </div>
+                  {/* Card com estilo igual ao pedagógico */}
+                  <button
+                    type="button"
+                    className="w-full p-2 rounded border border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded bg-indigo-500">
+                        <Phone className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-indigo-700">
+                          Contato Financeiro
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Via WhatsApp para agendar negociação presencial
+                        </p>
+                      </div>
+                    </div>
+                  </button>
 
                   {/* Seleção de data */}
                   <div className="space-y-1">
@@ -1534,13 +1547,37 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                       Contato Financeiro
                     </Badge>
                     <p className="text-xs mt-1">{atividadeContatoParaConcluir.descricao}</p>
+                    {atividadeContatoParaConcluir.data_agendada && (
+                      <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                        <CalendarIcon className="h-2.5 w-2.5" />
+                        Agendado para: {formatarDataAgendada(atividadeContatoParaConcluir.data_agendada)}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="p-2 bg-purple-50 border border-purple-200 rounded">
-                    <p className="text-[10px] text-purple-700">
-                      Agende o atendimento financeiro presencial com o responsável.
-                    </p>
-                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Agende o atendimento financeiro presencial:
+                  </p>
+
+                  {/* Card com estilo igual ao pedagógico */}
+                  <button
+                    type="button"
+                    className="w-full p-2 rounded border border-purple-500 bg-purple-50 ring-1 ring-purple-500 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded bg-purple-500">
+                        <DollarSign className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-purple-700">
+                          Atendimento Financeiro
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Negociação presencial com o responsável
+                        </p>
+                      </div>
+                    </div>
+                  </button>
 
                   {/* Seleção de data */}
                   <div className="space-y-1">
