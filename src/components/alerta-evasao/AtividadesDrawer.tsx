@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { X, History, FileText, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -91,6 +91,62 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     onClose();
   };
 
+  // Renderiza info do responsável baseado no tipo
+  const renderResponsavelInfo = (atividade: AtividadeAlertaEvasao) => {
+    const isPendente = atividade.status === 'pendente';
+    
+    if (!isPendente && atividade.concluido_por_nome) {
+      // Atividade concluída - mostra quem concluiu
+      return (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <User className="h-3 w-3" />
+          Concluído por: {atividade.concluido_por_nome}
+        </p>
+      );
+    }
+    
+    if (atividade.departamento_responsavel) {
+      // Responsável é um departamento
+      return (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Users className="h-3 w-3" />
+          Responsável: {atividade.departamento_responsavel === 'administrativo' ? 'Administrativo' : atividade.departamento_responsavel}
+        </p>
+      );
+    }
+    
+    if (atividade.responsavel_nome) {
+      // Responsável é uma pessoa específica (professor ou quem criou)
+      return (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <User className="h-3 w-3" />
+          Responsável: {atividade.responsavel_nome}
+        </p>
+      );
+    }
+    
+    return null;
+  };
+
+  // Renderiza badge de status terminal
+  const renderTerminalBadge = (atividade: AtividadeAlertaEvasao) => {
+    if (atividade.tipo_atividade === 'retencao') {
+      return (
+        <Badge className="bg-green-100 text-green-700 text-xs">
+          ✓ Aluno retido com sucesso
+        </Badge>
+      );
+    }
+    if (atividade.tipo_atividade === 'evasao') {
+      return (
+        <Badge className="bg-red-100 text-red-700 text-xs">
+          ✗ Aluno evadido
+        </Badge>
+      );
+    }
+    return null;
+  };
+
   if (!alerta) return null;
 
   return (
@@ -135,6 +191,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   const tipoConfig = getTipoConfig(atividade.tipo_atividade);
                   const isPendente = atividade.status === 'pendente';
                   const isExpanded = atividadeExpandida === atividade.id;
+                  const isTerminal = ['retencao', 'evasao'].includes(atividade.tipo_atividade);
                   
                   return (
                     <Card 
@@ -147,16 +204,17 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                       <div className={`h-1.5 ${tipoConfig.color}`} />
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge className={`${tipoConfig.color} text-white text-xs`}>
                               {tipoConfig.label}
                             </Badge>
-                            {!isPendente && (
+                            {!isPendente && !isTerminal && (
                               <div className="flex items-center gap-1 text-green-600">
                                 <Check className="h-3 w-3" />
                                 <span className="text-xs">Concluída</span>
                               </div>
                             )}
+                            {isTerminal && renderTerminalBadge(atividade)}
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -170,11 +228,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                           </div>
                         </div>
                         <p className="text-sm">{atividade.descricao}</p>
-                        {atividade.responsavel_nome && (
-                          <p className="text-xs text-muted-foreground">
-                            Responsável: {atividade.responsavel_nome}
-                          </p>
-                        )}
+                        {renderResponsavelInfo(atividade)}
                         
                         {/* Formulário para criar nova atividade (expandido) */}
                         {isExpanded && isPendente && (
