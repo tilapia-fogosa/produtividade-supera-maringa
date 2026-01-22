@@ -101,6 +101,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   // Estado para painel de acolhimento expandido
   const [mostrarPainelAcolhimento, setMostrarPainelAcolhimento] = useState(false);
   const [atividadeAcolhimento, setAtividadeAcolhimento] = useState<AtividadeAlertaEvasao | null>(null);
+  const [etapaAcolhimento, setEtapaAcolhimento] = useState<'observacoes' | 'proxima_atividade'>('observacoes');
+  const [observacoesAcolhimento, setObservacoesAcolhimento] = useState('');
   const [tipoProximaAtividade, setTipoProximaAtividade] = useState<TipoAtividadeEvasao | null>(null);
   const [descricaoProximaAtividade, setDescricaoProximaAtividade] = useState('');
 
@@ -229,6 +231,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       fecharPainelConclusaoContato();
       setAtividadeAcolhimento(atividade);
       setMostrarPainelAcolhimento(true);
+      setEtapaAcolhimento('observacoes');
+      setObservacoesAcolhimento('');
       setTipoProximaAtividade(null);
       setDescricaoProximaAtividade('');
       return;
@@ -317,6 +321,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const fecharPainelAcolhimento = () => {
     setMostrarPainelAcolhimento(false);
     setAtividadeAcolhimento(null);
+    setEtapaAcolhimento('observacoes');
+    setObservacoesAcolhimento('');
     setTipoProximaAtividade(null);
     setDescricaoProximaAtividade('');
   };
@@ -353,7 +359,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   };
 
   const handleConfirmarAcolhimento = async () => {
-    if (!tipoProximaAtividade || !atividadeAcolhimento) return;
+    if (!tipoProximaAtividade || !atividadeAcolhimento || !observacoesAcolhimento.trim()) return;
     
     // Se for atendimento pedagógico, abrir painel de agendamento
     if (tipoProximaAtividade === 'atendimento_pedagogico') {
@@ -378,9 +384,15 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (!descricaoProximaAtividade.trim()) return;
     
     try {
+      // Primeiro concluir o acolhimento atual com as observações
+      await concluirTarefa(atividadeAcolhimento.id);
+      
+      // Criar próxima atividade com referência às observações do acolhimento
+      const descricaoCompleta = `${descricaoProximaAtividade.trim()} | Obs. Acolhimento: ${observacoesAcolhimento.trim()}`;
+      
       await criarAtividade({
         tipo_atividade: tipoProximaAtividade,
-        descricao: descricaoProximaAtividade.trim(),
+        descricao: descricaoCompleta,
         atividadeAnteriorId: atividadeAcolhimento.id
       });
       
@@ -980,92 +992,150 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
           )}
 
           {/* Coluna direita: Painel de Acolhimento */}
-          {mostrarPainelAcolhimento && (
+          {mostrarPainelAcolhimento && atividadeAcolhimento && (
             <div className="w-1/2 flex flex-col bg-muted/20">
               <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
-                <span className="font-medium text-xs">Próxima Ação do Acolhimento</span>
+                <span className="font-medium text-xs">
+                  {etapaAcolhimento === 'observacoes' ? 'Concluir Acolhimento' : 'Próxima Ação'}
+                </span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelAcolhimento}>
                   <X className="h-3 w-3" />
                 </Button>
               </div>
               
               <div className="p-3 space-y-3 flex-1">
-                <p className="text-[10px] text-muted-foreground">
-                  Selecione a próxima ação após o acolhimento:
-                </p>
+                {/* Etapa 1: Observações do atendimento realizado */}
+                {etapaAcolhimento === 'observacoes' && (
+                  <>
+                    {/* Card da atividade */}
+                    <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
+                      <Badge className="bg-yellow-500 text-white text-[10px] px-1.5 py-0 mb-1">
+                        Acolhimento
+                      </Badge>
+                      <p className="text-xs mt-1">{atividadeAcolhimento.descricao}</p>
+                      {atividadeAcolhimento.data_agendada && (
+                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                          <CalendarIcon className="h-2.5 w-2.5" />
+                          Agendado para: {formatarDataAgendada(atividadeAcolhimento.data_agendada)}
+                        </p>
+                      )}
+                    </div>
 
-                {/* Opções de próxima atividade */}
-                {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
-                  const config = getTipoConfig(tipo);
-                  const isSelected = tipoProximaAtividade === tipo;
-                  
-                  return (
-                    <button
-                      key={tipo}
-                      type="button"
-                      onClick={() => setTipoProximaAtividade(tipo)}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Badge className={`${config.color} text-white text-[10px] px-1.5 py-0`}>
-                          {config.label}
-                        </Badge>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Descreva como foi o acolhimento *</Label>
+                      <Textarea
+                        placeholder="Relate os pontos abordados, percepções sobre o aluno/responsável, situação atual..."
+                        value={observacoesAcolhimento}
+                        onChange={(e) => setObservacoesAcolhimento(e.target.value)}
+                        rows={4}
+                        className="text-xs min-h-[80px] resize-none"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        size="sm"
+                        className="w-full h-7 text-xs"
+                        disabled={!observacoesAcolhimento.trim()}
+                        onClick={() => setEtapaAcolhimento('proxima_atividade')}
+                      >
+                        Próximo
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {/* Etapa 2: Selecionar próxima atividade */}
+                {etapaAcolhimento === 'proxima_atividade' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[10px]"
+                        onClick={() => setEtapaAcolhimento('observacoes')}
+                      >
+                        ← Voltar
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground">
+                        Selecione a próxima ação:
+                      </p>
+                    </div>
+
+                    {/* Opções de próxima atividade */}
+                    {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
+                      const config = getTipoConfig(tipo);
+                      const isSelected = tipoProximaAtividade === tipo;
+                      
+                      return (
+                        <button
+                          key={tipo}
+                          type="button"
+                          onClick={() => setTipoProximaAtividade(tipo)}
+                          className={`w-full p-2 rounded border text-left transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                              : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Badge className={`${config.color} text-white text-[10px] px-1.5 py-0`}>
+                              {config.label}
+                            </Badge>
+                          </div>
+                        </button>
+                      );
+                    })}
+
+                    {/* Campo de descrição da próxima atividade - não mostra para atendimento pedagógico e contato financeiro */}
+                    {tipoProximaAtividade && tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && (
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Descrição da próxima atividade *</Label>
+                        <Textarea
+                          placeholder="Descreva os detalhes da próxima atividade..."
+                          value={descricaoProximaAtividade}
+                          onChange={(e) => setDescricaoProximaAtividade(e.target.value)}
+                          rows={3}
+                          className="text-xs min-h-[60px] resize-none"
+                        />
                       </div>
-                    </button>
-                  );
-                })}
+                    )}
 
-                {/* Campo de descrição da próxima atividade - não mostra para atendimento pedagógico e contato financeiro */}
-                {tipoProximaAtividade && tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && (
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Descrição da atividade *</Label>
-                    <Textarea
-                      placeholder="Descreva os detalhes da próxima atividade..."
-                      value={descricaoProximaAtividade}
-                      onChange={(e) => setDescricaoProximaAtividade(e.target.value)}
-                      rows={3}
-                      className="text-xs min-h-[60px] resize-none"
-                    />
-                  </div>
+                    {/* Mensagem informativa para atendimento pedagógico */}
+                    {tipoProximaAtividade === 'atendimento_pedagogico' && (
+                      <div className="p-2 bg-orange-50 border border-orange-200 rounded text-[10px] text-orange-700">
+                        Ao confirmar, você será direcionado para agendar o atendimento na agenda do professor.
+                      </div>
+                    )}
+
+                    {/* Mensagem informativa para contato financeiro */}
+                    {tipoProximaAtividade === 'contato_financeiro' && (
+                      <div className="p-2 bg-indigo-50 border border-indigo-200 rounded text-[10px] text-indigo-700">
+                        Ao confirmar, você será direcionado para agendar o contato por WhatsApp.
+                      </div>
+                    )}
+
+                    {/* Botão de confirmação */}
+                    <div className="pt-2">
+                      <Button
+                        size="sm"
+                        className="w-full h-7 text-xs"
+                        disabled={
+                          !tipoProximaAtividade || 
+                          (tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && !descricaoProximaAtividade.trim()) ||
+                          isCriando
+                        }
+                        onClick={handleConfirmarAcolhimento}
+                      >
+                        {tipoProximaAtividade === 'atendimento_pedagogico' 
+                          ? 'Agendar Atendimento' 
+                          : tipoProximaAtividade === 'contato_financeiro'
+                          ? 'Agendar Contato'
+                          : isCriando ? 'Registrando...' : 'Confirmar'}
+                      </Button>
+                    </div>
+                  </>
                 )}
-
-                {/* Mensagem informativa para atendimento pedagógico */}
-                {tipoProximaAtividade === 'atendimento_pedagogico' && (
-                  <div className="p-2 bg-orange-50 border border-orange-200 rounded text-[10px] text-orange-700">
-                    Ao confirmar, você será direcionado para agendar o atendimento na agenda do professor.
-                  </div>
-                )}
-
-                {/* Mensagem informativa para contato financeiro */}
-                {tipoProximaAtividade === 'contato_financeiro' && (
-                  <div className="p-2 bg-indigo-50 border border-indigo-200 rounded text-[10px] text-indigo-700">
-                    Ao confirmar, você será direcionado para agendar o contato por WhatsApp.
-                  </div>
-                )}
-
-                {/* Botão de confirmação */}
-                <div className="pt-2">
-                  <Button
-                    size="sm"
-                    className="w-full h-7 text-xs"
-                    disabled={
-                      !tipoProximaAtividade || 
-                      (tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && !descricaoProximaAtividade.trim()) ||
-                      isCriando
-                    }
-                    onClick={handleConfirmarAcolhimento}
-                  >
-                    {tipoProximaAtividade === 'atendimento_pedagogico' 
-                      ? 'Agendar Atendimento' 
-                      : tipoProximaAtividade === 'contato_financeiro'
-                      ? 'Agendar Contato'
-                      : isCriando ? 'Registrando...' : 'Confirmar'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
