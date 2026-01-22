@@ -141,8 +141,9 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       let professor_responsavel_id: string | null = null;
       let responsavel_nome: string | null = funcionarioNome || user?.email || 'Usuário';
       
-      // Tipos terminais: retenção e evasão
-      const isTerminal = ['retencao', 'evasao'].includes(tipo_atividade);
+      // Tipos terminais: retenção (evasão agora gera tarefas admin)
+      const isTerminalRetencao = tipo_atividade === 'retencao';
+      const isEvasaoComTarefas = tipo_atividade === 'evasao';
       
       // Tipos administrativos
       const isAdministrativo = [
@@ -167,6 +168,38 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         }
       }
       
+      // Para evasão, não criamos a atividade evasão diretamente
+      // Criamos as tarefas administrativas que, ao serem concluídas, geram a evasão
+      if (isEvasaoComTarefas) {
+        // Criar as 2 tarefas administrativas
+        const tarefasEvasao = [
+          { tipo: 'cancelar_assinatura' as TipoAtividadeEvasao, descricao: 'Cancelar assinatura no Vindi ou Asaas' },
+          { tipo: 'remover_sgs' as TipoAtividadeEvasao, descricao: 'Remover aluno do sistema SGS' }
+        ];
+        
+        for (const tarefa of tarefasEvasao) {
+          const tarefaData = {
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade: tarefa.tipo as any,
+            descricao: tarefa.descricao,
+            responsavel_id: user?.id || null,
+            responsavel_nome: 'Administrativo',
+            status: 'pendente',
+            departamento_responsavel: 'administrativo'
+          };
+          
+          const { error: insertError } = await supabase
+            .from('atividades_alerta_evasao')
+            .insert(tarefaData as any);
+          
+          if (insertError) throw insertError;
+        }
+        
+        // Marcar atividade anterior como concluída se houver
+        // (já foi feito no início, retorna sem criar atividade de evasão)
+        return { id: 'tarefas_criadas', tipo_atividade: 'evasao' };
+      }
+      
       // Cria a nova atividade
       const insertData = {
         alerta_evasao_id: alertaEvasaoId,
@@ -174,13 +207,13 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         descricao,
         responsavel_id: user?.id || null,
         responsavel_nome,
-        status: isTerminal ? 'concluida' : 'pendente',
+        status: isTerminalRetencao ? 'concluida' : 'pendente',
         departamento_responsavel,
         professor_responsavel_id,
         data_agendada: data_agendada || null,
-        // Se for terminal, já marca quem concluiu
-        concluido_por_id: isTerminal ? (user?.id || null) : null,
-        concluido_por_nome: isTerminal ? (funcionarioNome || user?.email || 'Usuário') : null
+        // Se for retenção, já marca quem concluiu
+        concluido_por_id: isTerminalRetencao ? (user?.id || null) : null,
+        concluido_por_nome: isTerminalRetencao ? (funcionarioNome || user?.email || 'Usuário') : null
       };
       
       const { data, error } = await supabase
@@ -191,8 +224,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       if (error) throw error;
       
-      // Se for tipo terminal, atualiza o status do alerta
-      if (isTerminal) {
+      // Se for retenção, resolve o alerta
+      if (isTerminalRetencao) {
         const { error: alertaError } = await supabase
           .from('alerta_evasao')
           .update({ 
