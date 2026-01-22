@@ -7938,6 +7938,11 @@ export type Database = {
         | "evasao"
         | "atendimento_pedagogico"
         | "retencao"
+        | "remover_sgs"
+        | "cancelar_assinatura"
+        | "remover_whatsapp"
+        | "corrigir_valores_sgs"
+        | "corrigir_valores_assinatura"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8164,6 +8169,11 @@ export const Constants = {
         "evasao",
         "atendimento_pedagogico",
         "retencao",
+        "remover_sgs",
+        "cancelar_assinatura",
+        "remover_whatsapp",
+        "corrigir_valores_sgs",
+        "corrigir_valores_assinatura",
       ],
       tipo_evento_sala: [
         "manutencao",
