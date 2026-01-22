@@ -7943,6 +7943,7 @@ export type Database = {
         | "remover_whatsapp"
         | "corrigir_valores_sgs"
         | "corrigir_valores_assinatura"
+        | "contato_financeiro"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8174,6 +8175,7 @@ export const Constants = {
         "remover_whatsapp",
         "corrigir_valores_sgs",
         "corrigir_valores_assinatura",
+        "contato_financeiro",
       ],
       tipo_evento_sala: [
         "manutencao",
