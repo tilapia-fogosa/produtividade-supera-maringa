@@ -350,7 +350,18 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (!agendaProfessor) return todosSlots;
     
     const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
-    const eventosDoDia = agendaProfessor.eventos.filter(e => e.data === dataFormatada);
+    
+    // Filtrar eventos que acontecem na data selecionada:
+    // 1. Eventos com data específica igual à data selecionada
+    // 2. Aulas regulares (data = null) que acontecem no mesmo dia da semana
+    const eventosDoDia = agendaProfessor.eventos.filter(e => {
+      // Eventos pontuais com data específica
+      if (e.data) {
+        return e.data === dataFormatada;
+      }
+      // Aulas regulares baseadas no dia da semana
+      return e.dia_semana === diaSemana;
+    });
     
     // Filtrar slots que não colidem com eventos
     return todosSlots.filter(slot => !slotColideComEvento(slot, eventosDoDia));
