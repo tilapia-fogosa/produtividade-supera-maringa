@@ -52,6 +52,13 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [resultadoSelecionado, setResultadoSelecionado] = useState<ResultadoNegociacao | null>(null);
   const [dataFimAjuste, setDataFimAjuste] = useState('');
   const [observacoesNegociacao, setObservacoesNegociacao] = useState('');
+
+  // Estado para painel de acolhimento expandido
+  const [mostrarPainelAcolhimento, setMostrarPainelAcolhimento] = useState(false);
+  const [atividadeAcolhimento, setAtividadeAcolhimento] = useState<AtividadeAlertaEvasao | null>(null);
+  const [tipoProximaAtividade, setTipoProximaAtividade] = useState<TipoAtividadeEvasao | null>(null);
+  const [descricaoProximaAtividade, setDescricaoProximaAtividade] = useState('');
+
   const { 
     atividades, 
     isLoading,
@@ -93,10 +100,21 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     
     // Se for negociação financeira, expande o painel de resultado
     if (atividade.tipo_atividade === 'atendimento_financeiro') {
+      fecharPainelAcolhimento();
       setAtividadeNegociacao(atividade);
       setMostrarResultadoNegociacao(true);
       setResultadoSelecionado(null);
       setDataFimAjuste('');
+      return;
+    }
+
+    // Se for acolhimento, expande o painel lateral
+    if (atividade.tipo_atividade === 'acolhimento') {
+      fecharPainelResultado();
+      setAtividadeAcolhimento(atividade);
+      setMostrarPainelAcolhimento(true);
+      setTipoProximaAtividade(null);
+      setDescricaoProximaAtividade('');
       return;
     }
     
@@ -161,11 +179,35 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setObservacoesNegociacao('');
   };
 
+  const fecharPainelAcolhimento = () => {
+    setMostrarPainelAcolhimento(false);
+    setAtividadeAcolhimento(null);
+    setTipoProximaAtividade(null);
+    setDescricaoProximaAtividade('');
+  };
+
+  const handleConfirmarAcolhimento = async () => {
+    if (!tipoProximaAtividade || !descricaoProximaAtividade.trim() || !atividadeAcolhimento) return;
+    
+    try {
+      await criarAtividade({
+        tipo_atividade: tipoProximaAtividade,
+        descricao: descricaoProximaAtividade.trim(),
+        atividadeAnteriorId: atividadeAcolhimento.id
+      });
+      
+      fecharPainelAcolhimento();
+    } catch (error) {
+      console.error('Erro ao processar acolhimento:', error);
+    }
+  };
+
   const resetState = () => {
     setAtividadeExpandida(null);
     setTipoSelecionado(null);
     setDescricao('');
     fecharPainelResultado();
+    fecharPainelAcolhimento();
   };
 
   const handleClose = () => {
@@ -241,7 +283,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
-  const drawerWidth = mostrarResultadoNegociacao ? 'max-w-2xl' : 'max-w-sm';
+  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento;
+  const drawerWidth = isExpanded ? 'max-w-2xl' : 'max-w-sm';
 
   return (
     <Drawer open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
@@ -262,7 +305,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
 
         <div className="flex h-[calc(100%-3rem)]">
           {/* Coluna esquerda: Lista de atividades */}
-          <div className={`flex flex-col ${mostrarResultadoNegociacao ? 'w-1/2 border-r' : 'w-full'}`}>
+          <div className={`flex flex-col ${isExpanded ? 'w-1/2 border-r' : 'w-full'}`}>
             <div className="px-3 py-2 border-b flex items-center gap-1.5 bg-muted/30">
               <History className="h-3 w-3" />
               <span className="font-medium text-xs">Atividades</span>
@@ -290,14 +333,17 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     const isTerminal = ['retencao', 'evasao'].includes(atividade.tipo_atividade);
                     const isTarefaAdmin = TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade);
                     const isNegociacaoFinanceira = atividade.tipo_atividade === 'atendimento_financeiro';
+                    const isAcolhimento = atividade.tipo_atividade === 'acolhimento';
                     const isNegociacaoAtiva = mostrarResultadoNegociacao && atividadeNegociacao?.id === atividade.id;
+                    const isAcolhimentoAtivo = mostrarPainelAcolhimento && atividadeAcolhimento?.id === atividade.id;
+                    const isPainelAtivo = isNegociacaoAtiva || isAcolhimentoAtivo;
                     
                     return (
                       <Card 
                         key={atividade.id} 
                         className={`overflow-hidden transition-all ${
                           isPendente && !isTarefaAdmin ? 'cursor-pointer hover:shadow-sm' : ''
-                        } ${!isPendente ? 'opacity-70' : ''} ${isNegociacaoAtiva ? 'ring-2 ring-primary' : ''}`}
+                        } ${!isPendente ? 'opacity-70' : ''} ${isPainelAtivo ? 'ring-2 ring-primary' : ''}`}
                         onClick={() => handleExpandirAtividade(atividade)}
                       >
                         <div className={`h-1 ${tipoConfig.color}`} />
@@ -316,8 +362,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                               <span className="text-[10px] text-muted-foreground">
                                 {formatarData(atividade.created_at)}
                               </span>
-                              {isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && (
-                                isExpanded 
+                              {isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
+                                atividadeExpandida === atividade.id 
                                   ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
                                   : <ChevronDown className="h-3 w-3 text-muted-foreground" />
                               )}
@@ -355,9 +401,23 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                               Registrar Resultado
                             </Button>
                           )}
+
+                          {/* Botão para processar acolhimento */}
+                          {isPendente && isAcolhimento && !isAcolhimentoAtivo && (
+                            <Button
+                              size="sm"
+                              className="w-full mt-1 h-6 text-[10px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExpandirAtividade(atividade);
+                              }}
+                            >
+                              Registrar Próxima Ação
+                            </Button>
+                          )}
                           
                           {/* Formulário para criar nova atividade (expandido) */}
-                          {isExpanded && isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && (
+                          {atividadeExpandida === atividade.id && isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
                             <div 
                               className="mt-2 pt-2 border-t space-y-2"
                               onClick={(e) => e.stopPropagation()}
@@ -541,6 +601,79 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     onClick={handleConfirmarResultado}
                   >
                     {isProcessandoNegociacao ? 'Processando...' : 'Confirmar'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Coluna direita: Painel de Acolhimento */}
+          {mostrarPainelAcolhimento && (
+            <div className="w-1/2 flex flex-col bg-muted/20">
+              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
+                <span className="font-medium text-xs">Próxima Ação do Acolhimento</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelAcolhimento}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <div className="p-3 space-y-3 flex-1">
+                <p className="text-[10px] text-muted-foreground">
+                  Selecione a próxima ação após o acolhimento:
+                </p>
+
+                {/* Opções de próxima atividade */}
+                {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
+                  const config = getTipoConfig(tipo);
+                  const isSelected = tipoProximaAtividade === tipo;
+                  
+                  return (
+                    <button
+                      key={tipo}
+                      type="button"
+                      onClick={() => setTipoProximaAtividade(tipo)}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${config.color} text-white text-[10px] px-1.5 py-0`}>
+                          {config.label}
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {/* Campo de descrição da próxima atividade */}
+                {tipoProximaAtividade && (
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Descrição da atividade *</Label>
+                    <Textarea
+                      placeholder="Descreva os detalhes da próxima atividade..."
+                      value={descricaoProximaAtividade}
+                      onChange={(e) => setDescricaoProximaAtividade(e.target.value)}
+                      rows={3}
+                      className="text-xs min-h-[60px] resize-none"
+                    />
+                  </div>
+                )}
+
+                {/* Botão de confirmação */}
+                <div className="pt-2">
+                  <Button
+                    size="sm"
+                    className="w-full h-7 text-xs"
+                    disabled={
+                      !tipoProximaAtividade || 
+                      !descricaoProximaAtividade.trim() ||
+                      isCriando
+                    }
+                    onClick={handleConfirmarAcolhimento}
+                  >
+                    {isCriando ? 'Registrando...' : 'Confirmar'}
                   </Button>
                 </div>
               </div>
