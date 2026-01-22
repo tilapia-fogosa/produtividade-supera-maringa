@@ -1062,56 +1062,122 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                       </p>
                     </div>
 
-                    {/* Opções de próxima atividade */}
-                    {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
-                      const config = getTipoConfig(tipo);
-                      const isSelected = tipoProximaAtividade === tipo;
-                      
-                      return (
-                        <button
-                          key={tipo}
-                          type="button"
-                          onClick={() => setTipoProximaAtividade(tipo)}
-                          className={`w-full p-2 rounded border text-left transition-all ${
-                            isSelected
-                              ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                              : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Badge className={`${config.color} text-white text-[10px] px-1.5 py-0`}>
-                              {config.label}
-                            </Badge>
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {/* Opção: Contato Financeiro */}
+                    <button
+                      type="button"
+                      onClick={() => setTipoProximaAtividade('contato_financeiro')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        tipoProximaAtividade === 'contato_financeiro'
+                          ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500'
+                          : 'border-border hover:border-indigo-300 hover:bg-indigo-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${tipoProximaAtividade === 'contato_financeiro' ? 'bg-indigo-500' : 'bg-indigo-100'}`}>
+                          <Phone className={`h-3 w-3 ${tipoProximaAtividade === 'contato_financeiro' ? 'text-white' : 'text-indigo-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${tipoProximaAtividade === 'contato_financeiro' ? 'text-indigo-700' : ''}`}>
+                            Contato Financeiro
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Agendar contato via WhatsApp
+                          </p>
+                        </div>
+                      </div>
+                    </button>
 
-                    {/* Campo de descrição da próxima atividade - não mostra para atendimento pedagógico e contato financeiro */}
-                    {tipoProximaAtividade && tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && (
+                    {/* Opção: Atendimento Pedagógico */}
+                    <button
+                      type="button"
+                      onClick={() => setTipoProximaAtividade('atendimento_pedagogico')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        tipoProximaAtividade === 'atendimento_pedagogico'
+                          ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500'
+                          : 'border-border hover:border-orange-300 hover:bg-orange-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${tipoProximaAtividade === 'atendimento_pedagogico' ? 'bg-orange-500' : 'bg-orange-100'}`}>
+                          <User className={`h-3 w-3 ${tipoProximaAtividade === 'atendimento_pedagogico' ? 'text-white' : 'text-orange-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${tipoProximaAtividade === 'atendimento_pedagogico' ? 'text-orange-700' : ''}`}>
+                            Atendimento Pedagógico
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Agendar com o professor
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Opção: Novo Acolhimento */}
+                    <button
+                      type="button"
+                      onClick={() => setTipoProximaAtividade('acolhimento')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        tipoProximaAtividade === 'acolhimento'
+                          ? 'border-yellow-500 bg-yellow-50 ring-1 ring-yellow-500'
+                          : 'border-border hover:border-yellow-300 hover:bg-yellow-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${tipoProximaAtividade === 'acolhimento' ? 'bg-yellow-500' : 'bg-yellow-100'}`}>
+                          <History className={`h-3 w-3 ${tipoProximaAtividade === 'acolhimento' ? 'text-white' : 'text-yellow-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${tipoProximaAtividade === 'acolhimento' ? 'text-yellow-700' : ''}`}>
+                            Novo Acolhimento
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Agendar outro acolhimento
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Opção: Retenção */}
+                    <button
+                      type="button"
+                      onClick={() => setTipoProximaAtividade('retencao')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        tipoProximaAtividade === 'retencao'
+                          ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
+                          : 'border-border hover:border-green-300 hover:bg-green-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${tipoProximaAtividade === 'retencao' ? 'bg-green-500' : 'bg-green-100'}`}>
+                          <TrendingUp className={`h-3 w-3 ${tipoProximaAtividade === 'retencao' ? 'text-white' : 'text-green-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${tipoProximaAtividade === 'retencao' ? 'text-green-700' : ''}`}>
+                            Retenção
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Aluno retido com sucesso
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Campo de descrição da próxima atividade - só para acolhimento e retenção */}
+                    {tipoProximaAtividade && (tipoProximaAtividade === 'acolhimento' || tipoProximaAtividade === 'retencao') && (
                       <div className="space-y-1">
-                        <Label className="text-[10px]">Descrição da próxima atividade *</Label>
+                        <Label className="text-[10px]">
+                          {tipoProximaAtividade === 'retencao' ? 'Observações da retenção' : 'Descrição do acolhimento'} *
+                        </Label>
                         <Textarea
-                          placeholder="Descreva os detalhes da próxima atividade..."
+                          placeholder={tipoProximaAtividade === 'retencao' 
+                            ? "Descreva como foi a retenção do aluno..."
+                            : "Descreva os detalhes do próximo acolhimento..."
+                          }
                           value={descricaoProximaAtividade}
                           onChange={(e) => setDescricaoProximaAtividade(e.target.value)}
                           rows={3}
                           className="text-xs min-h-[60px] resize-none"
                         />
-                      </div>
-                    )}
-
-                    {/* Mensagem informativa para atendimento pedagógico */}
-                    {tipoProximaAtividade === 'atendimento_pedagogico' && (
-                      <div className="p-2 bg-orange-50 border border-orange-200 rounded text-[10px] text-orange-700">
-                        Ao confirmar, você será direcionado para agendar o atendimento na agenda do professor.
-                      </div>
-                    )}
-
-                    {/* Mensagem informativa para contato financeiro */}
-                    {tipoProximaAtividade === 'contato_financeiro' && (
-                      <div className="p-2 bg-indigo-50 border border-indigo-200 rounded text-[10px] text-indigo-700">
-                        Ao confirmar, você será direcionado para agendar o contato por WhatsApp.
                       </div>
                     )}
 
