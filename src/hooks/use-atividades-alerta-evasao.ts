@@ -217,24 +217,42 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
     mutationFn: async ({ 
       resultado,
       atividadeAnteriorId,
-      dataFimAjuste
+      dataFimAjuste,
+      observacoes
     }: { 
       resultado: 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo';
       atividadeAnteriorId: string;
       dataFimAjuste?: Date;
+      observacoes?: string;
     }) => {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Marca a negociação financeira como concluída
+      // Marca a negociação financeira como concluída com observações
+      const updateData: any = { 
+        status: 'concluida',
+        concluido_por_id: user?.id || null,
+        concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+      };
+      
+      // Atualiza a descrição da atividade com as observações se fornecidas
+      if (observacoes) {
+        // Busca a descrição original para concatenar
+        const { data: atividadeOriginal } = await supabase
+          .from('atividades_alerta_evasao')
+          .select('descricao')
+          .eq('id', atividadeAnteriorId)
+          .single();
+        
+        if (atividadeOriginal) {
+          updateData.descricao = `${atividadeOriginal.descricao}\n\nObservações: ${observacoes}`;
+        }
+      }
+      
       const { error: updateError } = await supabase
         .from('atividades_alerta_evasao')
-        .update({ 
-          status: 'concluida',
-          concluido_por_id: user?.id || null,
-          concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
-        })
+        .update(updateData)
         .eq('id', atividadeAnteriorId);
       
       if (updateError) throw updateError;
