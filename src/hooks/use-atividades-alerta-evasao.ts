@@ -57,6 +57,99 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
   { value: 'corrigir_valores_assinatura', label: 'Corrigir Assinatura', color: 'bg-yellow-500' },
 ];
 
+const WEBHOOK_URL = 'https://webhookn8n.agenciakadin.com.br/webhook/alertas-evasao-slack';
+
+// Função para enviar atividade criada para o webhook
+async function enviarAtividadeParaWebhook(atividade: {
+  id: string;
+  alerta_evasao_id: string;
+  tipo_atividade: TipoAtividadeEvasao;
+  descricao: string;
+  responsavel_nome: string | null;
+  status: string;
+  data_agendada?: string | null;
+  departamento_responsavel?: string | null;
+}) {
+  try {
+    // Buscar dados adicionais do alerta (aluno, turma, professor)
+    const { data: alertaData } = await supabase
+      .from('alerta_evasao')
+      .select(`
+        id,
+        data_alerta,
+        origem_alerta,
+        descritivo,
+        alunos!inner(
+          id,
+          nome,
+          turma_id,
+          turmas(
+            id,
+            nome,
+            professor_id,
+            professores(id, nome, slack_username)
+          )
+        )
+      `)
+      .eq('id', atividade.alerta_evasao_id)
+      .single();
+
+    const aluno = alertaData?.alunos as any;
+    const turma = aluno?.turmas;
+    const professor = turma?.professores;
+
+    const payload = {
+      atividade: {
+        id: atividade.id,
+        tipo_atividade: atividade.tipo_atividade,
+        tipo_label: TIPOS_ATIVIDADE.find(t => t.value === atividade.tipo_atividade)?.label || atividade.tipo_atividade,
+        descricao: atividade.descricao,
+        responsavel_nome: atividade.responsavel_nome,
+        status: atividade.status,
+        data_agendada: atividade.data_agendada,
+        departamento_responsavel: atividade.departamento_responsavel
+      },
+      alerta: {
+        id: alertaData?.id,
+        data_alerta: alertaData?.data_alerta,
+        origem_alerta: alertaData?.origem_alerta,
+        descritivo: alertaData?.descritivo
+      },
+      aluno: {
+        id: aluno?.id,
+        nome: aluno?.nome
+      },
+      turma: {
+        id: turma?.id,
+        nome: turma?.nome
+      },
+      professor: {
+        id: professor?.id,
+        nome: professor?.nome,
+        slack_username: professor?.slack_username
+      },
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      console.error('Erro ao enviar atividade para webhook:', response.status, response.statusText);
+    } else {
+      console.log('Atividade enviada para webhook com sucesso:', atividade.tipo_atividade);
+    }
+  } catch (error) {
+    console.error('Erro ao enviar atividade para webhook:', error);
+    // Não lança erro para não interromper o fluxo principal
+  }
+}
+
 // Busca professor da turma do aluno associado ao alerta
 async function buscarProfessorDaTurma(alertaId: string): Promise<{ id: string; nome: string } | null> {
   const { data, error } = await supabase
@@ -194,11 +287,26 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             departamento_responsavel: 'administrativo'
           };
           
-          const { error: insertError } = await supabase
+          const { data: insertedTarefa, error: insertError } = await supabase
             .from('atividades_alerta_evasao')
-            .insert(tarefaData as any);
+            .insert(tarefaData as any)
+            .select()
+            .single();
           
           if (insertError) throw insertError;
+          
+          // Envia para o webhook
+          if (insertedTarefa) {
+            enviarAtividadeParaWebhook({
+              id: insertedTarefa.id,
+              alerta_evasao_id: alertaEvasaoId,
+              tipo_atividade: tarefa.tipo,
+              descricao: tarefa.descricao,
+              responsavel_nome: 'Administrativo',
+              status: 'pendente',
+              departamento_responsavel: 'administrativo'
+            });
+          }
         }
         
         // Marcar atividade anterior como concluída se houver
@@ -286,6 +394,20 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             // Não lançamos erro para não desfazer a atividade criada
           }
         }
+      }
+      
+      // Envia a atividade criada para o webhook
+      if (data) {
+        enviarAtividadeParaWebhook({
+          id: data.id,
+          alerta_evasao_id: alertaEvasaoId,
+          tipo_atividade,
+          descricao,
+          responsavel_nome,
+          status: isTerminalRetencao ? 'concluida' : 'pendente',
+          data_agendada,
+          departamento_responsavel
+        });
       }
       
       return data;
@@ -390,11 +512,26 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
         };
         
-        const { error: retencaoError } = await supabase
+        const { data: retencaoInserted, error: retencaoError } = await supabase
           .from('atividades_alerta_evasao')
-          .insert(retencaoData as any);
+          .insert(retencaoData as any)
+          .select()
+          .single();
         
         if (retencaoError) throw retencaoError;
+        
+        // Envia para o webhook
+        if (retencaoInserted) {
+          enviarAtividadeParaWebhook({
+            id: retencaoInserted.id,
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade: 'retencao',
+            descricao: retencaoData.descricao,
+            responsavel_nome: retencaoData.responsavel_nome,
+            status: 'concluida'
+          });
+        }
+        
         deveResolverAlerta = true;
       }
       
@@ -411,11 +548,27 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           data_agendada: tarefa.data_agendada || null
         };
         
-        const { error: insertError } = await supabase
+        const { data: insertedTarefa, error: insertError } = await supabase
           .from('atividades_alerta_evasao')
-          .insert(tarefaData as any);
+          .insert(tarefaData as any)
+          .select()
+          .single();
         
         if (insertError) throw insertError;
+        
+        // Envia para o webhook
+        if (insertedTarefa) {
+          enviarAtividadeParaWebhook({
+            id: insertedTarefa.id,
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade: tarefa.tipo,
+            descricao: tarefa.descricao,
+            responsavel_nome: 'Administrativo',
+            status: 'pendente',
+            data_agendada: tarefa.data_agendada,
+            departamento_responsavel: 'administrativo'
+          });
+        }
       }
       
       // Se for ajuste definitivo, resolver o alerta
@@ -489,11 +642,25 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
           };
           
-          const { error: evasaoError } = await supabase
+          const { data: evasaoInserted, error: evasaoError } = await supabase
             .from('atividades_alerta_evasao')
-            .insert(evasaoData as any);
+            .insert(evasaoData as any)
+            .select()
+            .single();
           
           if (evasaoError) throw evasaoError;
+          
+          // Envia para o webhook
+          if (evasaoInserted) {
+            enviarAtividadeParaWebhook({
+              id: evasaoInserted.id,
+              alerta_evasao_id: alertaEvasaoId,
+              tipo_atividade: 'evasao',
+              descricao: evasaoData.descricao,
+              responsavel_nome: evasaoData.responsavel_nome,
+              status: 'concluida'
+            });
+          }
           
           // Resolver o alerta
           const { error: alertaError } = await supabase
