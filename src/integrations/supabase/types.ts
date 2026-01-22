@@ -1269,9 +1269,13 @@ export type Database = {
       atividades_alerta_evasao: {
         Row: {
           alerta_evasao_id: string
+          concluido_por_id: string | null
+          concluido_por_nome: string | null
           created_at: string
+          departamento_responsavel: string | null
           descricao: string
           id: string
+          professor_responsavel_id: string | null
           responsavel_id: string | null
           responsavel_nome: string | null
           status: string
@@ -1279,9 +1283,13 @@ export type Database = {
         }
         Insert: {
           alerta_evasao_id: string
+          concluido_por_id?: string | null
+          concluido_por_nome?: string | null
           created_at?: string
+          departamento_responsavel?: string | null
           descricao: string
           id?: string
+          professor_responsavel_id?: string | null
           responsavel_id?: string | null
           responsavel_nome?: string | null
           status?: string
@@ -1289,9 +1297,13 @@ export type Database = {
         }
         Update: {
           alerta_evasao_id?: string
+          concluido_por_id?: string | null
+          concluido_por_nome?: string | null
           created_at?: string
+          departamento_responsavel?: string | null
           descricao?: string
           id?: string
+          professor_responsavel_id?: string | null
           responsavel_id?: string | null
           responsavel_nome?: string | null
           status?: string
@@ -1304,6 +1316,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "alerta_evasao"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_alerta_evasao_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_alerta_evasao_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
           },
         ]
       }

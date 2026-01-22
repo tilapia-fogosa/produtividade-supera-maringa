@@ -20,6 +20,10 @@ export interface AtividadeAlertaEvasao {
   responsavel_nome: string | null;
   created_at: string;
   status: StatusAtividade;
+  departamento_responsavel: string | null;
+  professor_responsavel_id: string | null;
+  concluido_por_id: string | null;
+  concluido_por_nome: string | null;
 }
 
 // Tipos permitidos ao gerar nova atividade a partir de acolhimento
@@ -37,6 +41,36 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
   { value: 'atendimento_pedagogico', label: 'Atendimento Pedagógico', color: 'bg-orange-500' },
   { value: 'retencao', label: 'Retenção', color: 'bg-green-500' },
 ];
+
+// Busca professor da turma do aluno associado ao alerta
+async function buscarProfessorDaTurma(alertaId: string): Promise<{ id: string; nome: string } | null> {
+  const { data, error } = await supabase
+    .from('alerta_evasao')
+    .select(`
+      alunos!inner(
+        turma_id,
+        turmas!inner(
+          professor_id,
+          professores!inner(id, nome)
+        )
+      )
+    `)
+    .eq('id', alertaId)
+    .single();
+  
+  if (error || !data) return null;
+  
+  // Navegar pela estrutura aninhada
+  const alunos = data.alunos as any;
+  const turmas = alunos?.turmas;
+  const professores = turmas?.professores;
+  
+  if (professores?.id && professores?.nome) {
+    return { id: professores.id, nome: professores.nome };
+  }
+  
+  return null;
+}
 
 export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
   const queryClient = useQueryClient();
@@ -73,14 +107,39 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Se tem atividade anterior, marca ela como concluída
+      // Se tem atividade anterior, marca ela como concluída e registra quem concluiu
       if (atividadeAnteriorId) {
         const { error: updateError } = await supabase
           .from('atividades_alerta_evasao')
-          .update({ status: 'concluida' })
+          .update({ 
+            status: 'concluida',
+            concluido_por_id: user?.id || null,
+            concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+          })
           .eq('id', atividadeAnteriorId);
         
         if (updateError) throw updateError;
+      }
+      
+      // Determinar responsável baseado no tipo
+      let departamento_responsavel: string | null = null;
+      let professor_responsavel_id: string | null = null;
+      let responsavel_nome: string | null = funcionarioNome || user?.email || 'Usuário';
+      
+      // Tipos terminais: retenção e evasão
+      const isTerminal = ['retencao', 'evasao'].includes(tipo_atividade);
+      
+      if (tipo_atividade === 'atendimento_financeiro') {
+        // Negociação Financeira → Departamento Administrativo
+        departamento_responsavel = 'administrativo';
+        responsavel_nome = 'Administrativo';
+      } else if (['acolhimento', 'atendimento_pedagogico'].includes(tipo_atividade)) {
+        // Acolhimento / Atendimento Pedagógico → Professor da turma
+        const professor = await buscarProfessorDaTurma(alertaEvasaoId);
+        if (professor) {
+          professor_responsavel_id = professor.id;
+          responsavel_nome = professor.nome;
+        }
       }
       
       // Cria a nova atividade
@@ -91,17 +150,37 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           tipo_atividade,
           descricao,
           responsavel_id: user?.id || null,
-          responsavel_nome: funcionarioNome || user?.email || 'Usuário',
-          status: 'pendente'
+          responsavel_nome,
+          status: isTerminal ? 'concluida' : 'pendente',
+          departamento_responsavel,
+          professor_responsavel_id,
+          // Se for terminal, já marca quem concluiu
+          concluido_por_id: isTerminal ? (user?.id || null) : null,
+          concluido_por_nome: isTerminal ? (funcionarioNome || user?.email || 'Usuário') : null
         })
         .select()
         .single();
       
       if (error) throw error;
+      
+      // Se for tipo terminal, atualiza o status do alerta
+      if (isTerminal) {
+        const { error: alertaError } = await supabase
+          .from('alerta_evasao')
+          .update({ 
+            status: 'resolvido',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', alertaEvasaoId);
+        
+        if (alertaError) throw alertaError;
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atividades-alerta-evasao', alertaEvasaoId] });
+      queryClient.invalidateQueries({ queryKey: ['alertas-evasao-lista'] });
     },
   });
 
