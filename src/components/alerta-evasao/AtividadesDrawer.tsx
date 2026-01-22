@@ -117,6 +117,12 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [professorInfo, setProfessorInfo] = useState<{ id: string; nome: string } | null>(null);
   const [semanaPedagogico, setSemanaPedagogico] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
 
+  // Estado para painel de conclusão de atendimento pedagógico
+  const [mostrarPainelConclusaoPedagogico, setMostrarPainelConclusaoPedagogico] = useState(false);
+  const [atividadePedagogicoParaConcluir, setAtividadePedagogicoParaConcluir] = useState<AtividadeAlertaEvasao | null>(null);
+  const [resultadoPedagogico, setResultadoPedagogico] = useState<'retencao' | 'negociacao_financeira' | null>(null);
+  const [observacoesPedagogico, setObservacoesPedagogico] = useState('');
+
   const { 
     atividades, 
     isLoading,
@@ -176,6 +182,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     // Se for negociação financeira, expande o painel de resultado
     if (atividade.tipo_atividade === 'atendimento_financeiro') {
       fecharPainelAcolhimento();
+      fecharPainelConclusaoPedagogico();
       setAtividadeNegociacao(atividade);
       setMostrarResultadoNegociacao(true);
       setResultadoSelecionado(null);
@@ -186,10 +193,22 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     // Se for acolhimento, expande o painel lateral
     if (atividade.tipo_atividade === 'acolhimento') {
       fecharPainelResultado();
+      fecharPainelConclusaoPedagogico();
       setAtividadeAcolhimento(atividade);
       setMostrarPainelAcolhimento(true);
       setTipoProximaAtividade(null);
       setDescricaoProximaAtividade('');
+      return;
+    }
+
+    // Se for atendimento pedagógico pendente, expande painel de conclusão
+    if (atividade.tipo_atividade === 'atendimento_pedagogico') {
+      fecharPainelResultado();
+      fecharPainelAcolhimento();
+      setAtividadePedagogicoParaConcluir(atividade);
+      setMostrarPainelConclusaoPedagogico(true);
+      setResultadoPedagogico(null);
+      setObservacoesPedagogico('');
       return;
     }
     
@@ -276,6 +295,13 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setSemanaPedagogico(startOfWeek(new Date(), { weekStartsOn: 1 }));
   };
 
+  const fecharPainelConclusaoPedagogico = () => {
+    setMostrarPainelConclusaoPedagogico(false);
+    setAtividadePedagogicoParaConcluir(null);
+    setResultadoPedagogico(null);
+    setObservacoesPedagogico('');
+  };
+
   const handleConfirmarAcolhimento = async () => {
     if (!tipoProximaAtividade || !atividadeAcolhimento) return;
     
@@ -328,6 +354,36 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       setDescricaoProximaAtividade('');
     } catch (error) {
       console.error('Erro ao agendar atendimento pedagógico:', error);
+    }
+  };
+
+  const handleConfirmarConclusaoPedagogico = async () => {
+    if (!resultadoPedagogico || !atividadePedagogicoParaConcluir) return;
+    
+    try {
+      // Se for retenção, cria atividade de retenção com observações
+      if (resultadoPedagogico === 'retencao') {
+        await criarAtividade({
+          tipo_atividade: 'retencao',
+          descricao: observacoesPedagogico.trim() || 'Aluno retido após atendimento pedagógico',
+          atividadeAnteriorId: atividadePedagogicoParaConcluir.id
+        });
+        fecharPainelConclusaoPedagogico();
+        return;
+      }
+      
+      // Se for negociação financeira, cria atividade de negociação financeira
+      if (resultadoPedagogico === 'negociacao_financeira') {
+        await criarAtividade({
+          tipo_atividade: 'atendimento_financeiro',
+          descricao: observacoesPedagogico.trim() || 'Encaminhado para negociação financeira após atendimento pedagógico',
+          atividadeAnteriorId: atividadePedagogicoParaConcluir.id
+        });
+        fecharPainelConclusaoPedagogico();
+        return;
+      }
+    } catch (error) {
+      console.error('Erro ao concluir atendimento pedagógico:', error);
     }
   };
 
@@ -388,6 +444,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     fecharPainelAcolhimento();
     fecharPainelTarefaAdmin();
     fecharPainelPedagogico();
+    fecharPainelConclusaoPedagogico();
   };
 
   const handleClose = () => {
@@ -463,7 +520,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
-  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico;
+  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico || mostrarPainelConclusaoPedagogico;
   const drawerWidth = isExpanded ? 'max-w-2xl' : 'max-w-sm';
 
   return (
@@ -1046,6 +1103,114 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   </div>
                 </div>
               </ScrollArea>
+            </div>
+          )}
+
+          {/* Coluna direita: Painel de Conclusão do Atendimento Pedagógico */}
+          {mostrarPainelConclusaoPedagogico && atividadePedagogicoParaConcluir && (
+            <div className="w-1/2 flex flex-col bg-muted/20">
+              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
+                <span className="font-medium text-xs">Concluir Atendimento Pedagógico</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelConclusaoPedagogico}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <div className="p-3 space-y-3 flex-1">
+                {/* Informação da atividade */}
+                <div className="p-2 bg-orange-50 border border-orange-200 rounded">
+                  <Badge className="bg-orange-500 text-white text-[10px] px-1.5 py-0 mb-1">
+                    Atendimento Pedagógico
+                  </Badge>
+                  <p className="text-xs mt-1">{atividadePedagogicoParaConcluir.descricao}</p>
+                  {atividadePedagogicoParaConcluir.data_agendada && (
+                    <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                      <CalendarIcon className="h-2.5 w-2.5" />
+                      Agendado para: {formatarDataAgendada(atividadePedagogicoParaConcluir.data_agendada)}
+                    </p>
+                  )}
+                </div>
+
+                <p className="text-[10px] text-muted-foreground">
+                  Selecione o resultado do atendimento pedagógico:
+                </p>
+
+                {/* Opção: Retenção */}
+                <button
+                  type="button"
+                  onClick={() => setResultadoPedagogico('retencao')}
+                  className={`w-full p-2 rounded border text-left transition-all ${
+                    resultadoPedagogico === 'retencao'
+                      ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
+                      : 'border-border hover:border-green-300 hover:bg-green-50/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1 rounded ${resultadoPedagogico === 'retencao' ? 'bg-green-500' : 'bg-green-100'}`}>
+                      <TrendingUp className={`h-3 w-3 ${resultadoPedagogico === 'retencao' ? 'text-white' : 'text-green-600'}`} />
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium ${resultadoPedagogico === 'retencao' ? 'text-green-700' : ''}`}>
+                        Retenção
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Aluno retido com sucesso
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Opção: Negociação Financeira */}
+                <button
+                  type="button"
+                  onClick={() => setResultadoPedagogico('negociacao_financeira')}
+                  className={`w-full p-2 rounded border text-left transition-all ${
+                    resultadoPedagogico === 'negociacao_financeira'
+                      ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
+                      : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1 rounded ${resultadoPedagogico === 'negociacao_financeira' ? 'bg-purple-500' : 'bg-purple-100'}`}>
+                      <TrendingDown className={`h-3 w-3 ${resultadoPedagogico === 'negociacao_financeira' ? 'text-white' : 'text-purple-600'}`} />
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium ${resultadoPedagogico === 'negociacao_financeira' ? 'text-purple-700' : ''}`}>
+                        Negociação Financeira
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Encaminhar para negociação
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Campo de observações */}
+                {resultadoPedagogico && (
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Observações do atendimento</Label>
+                    <Textarea
+                      placeholder="Descreva os detalhes do atendimento realizado..."
+                      value={observacoesPedagogico}
+                      onChange={(e) => setObservacoesPedagogico(e.target.value)}
+                      rows={3}
+                      className="text-xs min-h-[60px] resize-none"
+                    />
+                  </div>
+                )}
+
+                {/* Botão de confirmação */}
+                <div className="pt-2">
+                  <Button
+                    size="sm"
+                    className="w-full h-7 text-xs"
+                    disabled={!resultadoPedagogico || isCriando}
+                    onClick={handleConfirmarConclusaoPedagogico}
+                  >
+                    {isCriando ? 'Processando...' : 'Confirmar'}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>
