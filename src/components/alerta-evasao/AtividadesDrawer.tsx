@@ -123,6 +123,19 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [resultadoPedagogico, setResultadoPedagogico] = useState<'retencao' | 'negociacao_financeira' | null>(null);
   const [observacoesPedagogico, setObservacoesPedagogico] = useState('');
 
+  // Estado para painel de Contato Financeiro (agendar)
+  const [mostrarPainelContatoFinanceiro, setMostrarPainelContatoFinanceiro] = useState(false);
+  const [dataContatoFinanceiro, setDataContatoFinanceiro] = useState<Date | undefined>(undefined);
+  const [horarioContatoFinanceiro, setHorarioContatoFinanceiro] = useState('');
+  const [descricaoContatoFinanceiro, setDescricaoContatoFinanceiro] = useState('');
+
+  // Estado para painel de conclusão do Contato Financeiro (agendar Atendimento Financeiro)
+  const [mostrarPainelConclusaoContato, setMostrarPainelConclusaoContato] = useState(false);
+  const [atividadeContatoParaConcluir, setAtividadeContatoParaConcluir] = useState<AtividadeAlertaEvasao | null>(null);
+  const [dataAtendimentoFinanceiro, setDataAtendimentoFinanceiro] = useState<Date | undefined>(undefined);
+  const [horarioAtendimentoFinanceiro, setHorarioAtendimentoFinanceiro] = useState('');
+  const [descricaoAtendimentoFinanceiro, setDescricaoAtendimentoFinanceiro] = useState('');
+
   const { 
     atividades, 
     isLoading,
@@ -173,16 +186,20 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade)) {
       fecharPainelResultado();
       fecharPainelAcolhimento();
+      fecharPainelContatoFinanceiro();
+      fecharPainelConclusaoContato();
       setAtividadeTarefaAdmin(atividade);
       setMostrarPainelTarefaAdmin(true);
       setObservacoesTarefaAdmin('');
       return;
     }
     
-    // Se for negociação financeira, expande o painel de resultado
+    // Se for atendimento financeiro (presencial), expande o painel de resultado
     if (atividade.tipo_atividade === 'atendimento_financeiro') {
       fecharPainelAcolhimento();
       fecharPainelConclusaoPedagogico();
+      fecharPainelContatoFinanceiro();
+      fecharPainelConclusaoContato();
       setAtividadeNegociacao(atividade);
       setMostrarResultadoNegociacao(true);
       setResultadoSelecionado(null);
@@ -190,10 +207,26 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       return;
     }
 
+    // Se for contato financeiro pendente, expande painel para agendar atendimento financeiro
+    if (atividade.tipo_atividade === 'contato_financeiro') {
+      fecharPainelResultado();
+      fecharPainelAcolhimento();
+      fecharPainelConclusaoPedagogico();
+      fecharPainelContatoFinanceiro();
+      setAtividadeContatoParaConcluir(atividade);
+      setMostrarPainelConclusaoContato(true);
+      setDataAtendimentoFinanceiro(undefined);
+      setHorarioAtendimentoFinanceiro('');
+      setDescricaoAtendimentoFinanceiro('');
+      return;
+    }
+
     // Se for acolhimento, expande o painel lateral
     if (atividade.tipo_atividade === 'acolhimento') {
       fecharPainelResultado();
       fecharPainelConclusaoPedagogico();
+      fecharPainelContatoFinanceiro();
+      fecharPainelConclusaoContato();
       setAtividadeAcolhimento(atividade);
       setMostrarPainelAcolhimento(true);
       setTipoProximaAtividade(null);
@@ -205,6 +238,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (atividade.tipo_atividade === 'atendimento_pedagogico') {
       fecharPainelResultado();
       fecharPainelAcolhimento();
+      fecharPainelContatoFinanceiro();
+      fecharPainelConclusaoContato();
       setAtividadePedagogicoParaConcluir(atividade);
       setMostrarPainelConclusaoPedagogico(true);
       setResultadoPedagogico(null);
@@ -302,6 +337,21 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setObservacoesPedagogico('');
   };
 
+  const fecharPainelContatoFinanceiro = () => {
+    setMostrarPainelContatoFinanceiro(false);
+    setDataContatoFinanceiro(undefined);
+    setHorarioContatoFinanceiro('');
+    setDescricaoContatoFinanceiro('');
+  };
+
+  const fecharPainelConclusaoContato = () => {
+    setMostrarPainelConclusaoContato(false);
+    setAtividadeContatoParaConcluir(null);
+    setDataAtendimentoFinanceiro(undefined);
+    setHorarioAtendimentoFinanceiro('');
+    setDescricaoAtendimentoFinanceiro('');
+  };
+
   const handleConfirmarAcolhimento = async () => {
     if (!tipoProximaAtividade || !atividadeAcolhimento) return;
     
@@ -317,6 +367,13 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       setMostrarPainelPedagogico(true);
       return;
     }
+
+    // Se for contato financeiro, abrir painel de agendamento do contato
+    if (tipoProximaAtividade === 'contato_financeiro') {
+      setMostrarPainelAcolhimento(false);
+      setMostrarPainelContatoFinanceiro(true);
+      return;
+    }
     
     if (!descricaoProximaAtividade.trim()) return;
     
@@ -330,6 +387,103 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       fecharPainelAcolhimento();
     } catch (error) {
       console.error('Erro ao processar acolhimento:', error);
+    }
+  };
+
+  // Gerar slots de horário para contato financeiro (30 min cada)
+  const horariosContatoFinanceiro = useMemo(() => {
+    if (!dataContatoFinanceiro) return [];
+    
+    const diasSemana: DiaSemana[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const diaSemana = diasSemana[dataContatoFinanceiro.getDay()];
+    const horarioFuncionamento = HORARIOS_FUNCIONAMENTO[diaSemana];
+    
+    if (!horarioFuncionamento.aberto) return [];
+    
+    // Gerar slots de 30 em 30 min
+    const slots: string[] = [];
+    const [horaInicio, minInicio] = horarioFuncionamento.inicio.split(':').map(Number);
+    const [horaFim, minFim] = horarioFuncionamento.fim.split(':').map(Number);
+    
+    let totalMinutos = horaInicio * 60 + minInicio;
+    const totalMinutosFim = horaFim * 60 + minFim;
+    
+    while (totalMinutos < totalMinutosFim) {
+      const horas = Math.floor(totalMinutos / 60);
+      const minutos = totalMinutos % 60;
+      slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
+      totalMinutos += 30;
+    }
+    
+    return slots;
+  }, [dataContatoFinanceiro]);
+
+  // Gerar slots de horário para atendimento financeiro (30 min cada)
+  const horariosAtendimentoFinanceiro = useMemo(() => {
+    if (!dataAtendimentoFinanceiro) return [];
+    
+    const diasSemana: DiaSemana[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const diaSemana = diasSemana[dataAtendimentoFinanceiro.getDay()];
+    const horarioFuncionamento = HORARIOS_FUNCIONAMENTO[diaSemana];
+    
+    if (!horarioFuncionamento.aberto) return [];
+    
+    // Gerar slots de 30 em 30 min
+    const slots: string[] = [];
+    const [horaInicio, minInicio] = horarioFuncionamento.inicio.split(':').map(Number);
+    const [horaFim, minFim] = horarioFuncionamento.fim.split(':').map(Number);
+    
+    let totalMinutos = horaInicio * 60 + minInicio;
+    const totalMinutosFim = horaFim * 60 + minFim;
+    
+    while (totalMinutos < totalMinutosFim) {
+      const horas = Math.floor(totalMinutos / 60);
+      const minutos = totalMinutos % 60;
+      slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
+      totalMinutos += 30;
+    }
+    
+    return slots;
+  }, [dataAtendimentoFinanceiro]);
+
+  const handleConfirmarContatoFinanceiro = async () => {
+    if (!dataContatoFinanceiro || !horarioContatoFinanceiro || !descricaoContatoFinanceiro.trim() || !atividadeAcolhimento) return;
+    
+    try {
+      const dataFormatada = format(dataContatoFinanceiro, 'yyyy-MM-dd');
+      
+      await criarAtividade({
+        tipo_atividade: 'contato_financeiro',
+        descricao: `${descricaoContatoFinanceiro.trim()} | Agendado para ${format(dataContatoFinanceiro, 'dd/MM/yyyy')} às ${horarioContatoFinanceiro}`,
+        atividadeAnteriorId: atividadeAcolhimento.id,
+        data_agendada: dataFormatada
+      });
+      
+      fecharPainelContatoFinanceiro();
+      setAtividadeAcolhimento(null);
+      setTipoProximaAtividade(null);
+      setDescricaoProximaAtividade('');
+    } catch (error) {
+      console.error('Erro ao agendar contato financeiro:', error);
+    }
+  };
+
+  const handleConcluirContatoFinanceiro = async () => {
+    if (!dataAtendimentoFinanceiro || !horarioAtendimentoFinanceiro || !descricaoAtendimentoFinanceiro.trim() || !atividadeContatoParaConcluir) return;
+    
+    try {
+      const dataFormatada = format(dataAtendimentoFinanceiro, 'yyyy-MM-dd');
+      
+      await criarAtividade({
+        tipo_atividade: 'atendimento_financeiro',
+        descricao: `${descricaoAtendimentoFinanceiro.trim()} | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`,
+        atividadeAnteriorId: atividadeContatoParaConcluir.id,
+        data_agendada: dataFormatada
+      });
+      
+      fecharPainelConclusaoContato();
+    } catch (error) {
+      console.error('Erro ao agendar atendimento financeiro:', error);
     }
   };
 
@@ -445,6 +599,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     fecharPainelTarefaAdmin();
     fecharPainelPedagogico();
     fecharPainelConclusaoPedagogico();
+    fecharPainelContatoFinanceiro();
+    fecharPainelConclusaoContato();
   };
 
   const handleClose = () => {
@@ -520,7 +676,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
-  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico || mostrarPainelConclusaoPedagogico;
+  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico || mostrarPainelConclusaoPedagogico || mostrarPainelContatoFinanceiro || mostrarPainelConclusaoContato;
   const drawerWidth = isExpanded ? 'max-w-2xl' : 'max-w-sm';
 
   return (
@@ -863,8 +1019,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   );
                 })}
 
-                {/* Campo de descrição da próxima atividade - não mostra para atendimento pedagógico */}
-                {tipoProximaAtividade && tipoProximaAtividade !== 'atendimento_pedagogico' && (
+                {/* Campo de descrição da próxima atividade - não mostra para atendimento pedagógico e contato financeiro */}
+                {tipoProximaAtividade && tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && (
                   <div className="space-y-1">
                     <Label className="text-[10px]">Descrição da atividade *</Label>
                     <Textarea
@@ -884,6 +1040,13 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   </div>
                 )}
 
+                {/* Mensagem informativa para contato financeiro */}
+                {tipoProximaAtividade === 'contato_financeiro' && (
+                  <div className="p-2 bg-indigo-50 border border-indigo-200 rounded text-[10px] text-indigo-700">
+                    Ao confirmar, você será direcionado para agendar o contato por WhatsApp.
+                  </div>
+                )}
+
                 {/* Botão de confirmação */}
                 <div className="pt-2">
                   <Button
@@ -891,13 +1054,15 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     className="w-full h-7 text-xs"
                     disabled={
                       !tipoProximaAtividade || 
-                      (tipoProximaAtividade !== 'atendimento_pedagogico' && !descricaoProximaAtividade.trim()) ||
+                      (tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && !descricaoProximaAtividade.trim()) ||
                       isCriando
                     }
                     onClick={handleConfirmarAcolhimento}
                   >
                     {tipoProximaAtividade === 'atendimento_pedagogico' 
                       ? 'Agendar Atendimento' 
+                      : tipoProximaAtividade === 'contato_financeiro'
+                      ? 'Agendar Contato'
                       : isCriando ? 'Registrando...' : 'Confirmar'}
                   </Button>
                 </div>
@@ -1212,6 +1377,285 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   </Button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Coluna direita: Painel de Agendar Contato Financeiro */}
+          {mostrarPainelContatoFinanceiro && (
+            <div className="w-1/2 flex flex-col bg-muted/20">
+              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
+                <span className="font-medium text-xs">Agendar Contato Financeiro</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelContatoFinanceiro}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-3">
+                  {/* Informação */}
+                  <div className="p-2 bg-indigo-50 border border-indigo-200 rounded">
+                    <p className="text-[10px] text-indigo-700">
+                      O contato financeiro será feito por WhatsApp para agendar a negociação presencial.
+                    </p>
+                  </div>
+
+                  {/* Seleção de data */}
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Data do contato *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full h-7 justify-start text-left font-normal text-xs",
+                            !dataContatoFinanceiro && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {dataContatoFinanceiro 
+                            ? format(dataContatoFinanceiro, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                            : <span>Selecione a data</span>
+                          }
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dataContatoFinanceiro}
+                          onSelect={(date) => {
+                            setDataContatoFinanceiro(date);
+                            setHorarioContatoFinanceiro('');
+                          }}
+                          disabled={(date) => {
+                            const hoje = new Date();
+                            hoje.setHours(0, 0, 0, 0);
+                            return date < hoje || date.getDay() === 0;
+                          }}
+                          locale={ptBR}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Seleção de horário */}
+                  {dataContatoFinanceiro && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Horário do contato *</Label>
+                      {horariosContatoFinanceiro.length === 0 ? (
+                        <div className="p-2 bg-red-50 border border-red-200 rounded">
+                          <p className="text-[10px] text-red-700">
+                            Não há horários disponíveis nesta data.
+                          </p>
+                        </div>
+                      ) : (
+                        <Select value={horarioContatoFinanceiro} onValueChange={setHorarioContatoFinanceiro}>
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[9999]">
+                            {horariosContatoFinanceiro.map((horario) => (
+                              <SelectItem key={horario} value={horario} className="text-xs">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-3 w-3" />
+                                  {horario}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Campo de descrição */}
+                  {dataContatoFinanceiro && horarioContatoFinanceiro && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Descrição do contato *</Label>
+                      <Textarea
+                        placeholder="Descreva o objetivo do contato financeiro..."
+                        value={descricaoContatoFinanceiro}
+                        onChange={(e) => setDescricaoContatoFinanceiro(e.target.value)}
+                        rows={3}
+                        className="text-xs min-h-[60px] resize-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Resumo do agendamento */}
+                  {dataContatoFinanceiro && horarioContatoFinanceiro && descricaoContatoFinanceiro.trim() && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
+                      <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
+                      <div className="text-[10px] text-green-600 space-y-0.5">
+                        <p>📅 {format(dataContatoFinanceiro, "dd/MM/yyyy")}</p>
+                        <p>🕐 {horarioContatoFinanceiro}</p>
+                        <p>📱 Via WhatsApp</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão de confirmação */}
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      className="w-full h-7 text-xs"
+                      disabled={
+                        !dataContatoFinanceiro || 
+                        !horarioContatoFinanceiro || 
+                        !descricaoContatoFinanceiro.trim() ||
+                        isCriando
+                      }
+                      onClick={handleConfirmarContatoFinanceiro}
+                    >
+                      {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
+                    </Button>
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {/* Coluna direita: Painel de Conclusão do Contato Financeiro (Agendar Atendimento Financeiro) */}
+          {mostrarPainelConclusaoContato && atividadeContatoParaConcluir && (
+            <div className="w-1/2 flex flex-col bg-muted/20">
+              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
+                <span className="font-medium text-xs">Agendar Atendimento Financeiro</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelConclusaoContato}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-3">
+                  {/* Informação da atividade anterior */}
+                  <div className="p-2 bg-indigo-50 border border-indigo-200 rounded">
+                    <Badge className="bg-indigo-500 text-white text-[10px] px-1.5 py-0 mb-1">
+                      Contato Financeiro
+                    </Badge>
+                    <p className="text-xs mt-1">{atividadeContatoParaConcluir.descricao}</p>
+                  </div>
+
+                  <div className="p-2 bg-purple-50 border border-purple-200 rounded">
+                    <p className="text-[10px] text-purple-700">
+                      Agende o atendimento financeiro presencial com o responsável.
+                    </p>
+                  </div>
+
+                  {/* Seleção de data */}
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Data do atendimento *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full h-7 justify-start text-left font-normal text-xs",
+                            !dataAtendimentoFinanceiro && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {dataAtendimentoFinanceiro 
+                            ? format(dataAtendimentoFinanceiro, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                            : <span>Selecione a data</span>
+                          }
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dataAtendimentoFinanceiro}
+                          onSelect={(date) => {
+                            setDataAtendimentoFinanceiro(date);
+                            setHorarioAtendimentoFinanceiro('');
+                          }}
+                          disabled={(date) => {
+                            const hoje = new Date();
+                            hoje.setHours(0, 0, 0, 0);
+                            return date < hoje || date.getDay() === 0;
+                          }}
+                          locale={ptBR}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Seleção de horário */}
+                  {dataAtendimentoFinanceiro && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Horário do atendimento *</Label>
+                      {horariosAtendimentoFinanceiro.length === 0 ? (
+                        <div className="p-2 bg-red-50 border border-red-200 rounded">
+                          <p className="text-[10px] text-red-700">
+                            Não há horários disponíveis nesta data.
+                          </p>
+                        </div>
+                      ) : (
+                        <Select value={horarioAtendimentoFinanceiro} onValueChange={setHorarioAtendimentoFinanceiro}>
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[9999]">
+                            {horariosAtendimentoFinanceiro.map((horario) => (
+                              <SelectItem key={horario} value={horario} className="text-xs">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-3 w-3" />
+                                  {horario}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Campo de descrição */}
+                  {dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Descrição do atendimento *</Label>
+                      <Textarea
+                        placeholder="Descreva o objetivo do atendimento financeiro..."
+                        value={descricaoAtendimentoFinanceiro}
+                        onChange={(e) => setDescricaoAtendimentoFinanceiro(e.target.value)}
+                        rows={3}
+                        className="text-xs min-h-[60px] resize-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Resumo do agendamento */}
+                  {dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro && descricaoAtendimentoFinanceiro.trim() && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
+                      <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
+                      <div className="text-[10px] text-green-600 space-y-0.5">
+                        <p>📅 {format(dataAtendimentoFinanceiro, "dd/MM/yyyy")}</p>
+                        <p>🕐 {horarioAtendimentoFinanceiro}</p>
+                        <p>🏢 Atendimento Presencial</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão de confirmação */}
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      className="w-full h-7 text-xs"
+                      disabled={
+                        !dataAtendimentoFinanceiro || 
+                        !horarioAtendimentoFinanceiro || 
+                        !descricaoAtendimentoFinanceiro.trim() ||
+                        isCriando
+                      }
+                      onClick={handleConcluirContatoFinanceiro}
+                    >
+                      {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
+                    </Button>
+                  </div>
+                </div>
+              </ScrollArea>
             </div>
           )}
         </div>
