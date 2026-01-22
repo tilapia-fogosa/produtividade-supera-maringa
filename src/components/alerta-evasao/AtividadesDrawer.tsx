@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { 
   useAtividadesAlertaEvasao, 
   TIPOS_ATIVIDADE,
@@ -540,12 +542,30 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                 {resultadoSelecionado === 'ajuste_temporario' && (
                   <div className="pl-6 space-y-1">
                     <Label className="text-[10px]">Data fim do ajuste *</Label>
-                    <Input
-                      type="date"
-                      value={dataFimAjuste}
-                      onChange={(e) => setDataFimAjuste(e.target.value)}
-                      className="h-7 text-xs"
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full h-7 justify-start text-left font-normal text-xs",
+                            !dataFimAjuste && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3 w-3" />
+                          {dataFimAjuste ? format(new Date(dataFimAjuste), "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dataFimAjuste ? new Date(dataFimAjuste) : undefined}
+                          onSelect={(date) => setDataFimAjuste(date ? date.toISOString().split('T')[0] : '')}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
 
