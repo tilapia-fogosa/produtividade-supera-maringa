@@ -401,47 +401,6 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                             {renderDataAgendada(atividade)}
                           </div>
                           
-                          {/* Botão para processar tarefa administrativa */}
-                          {isPendente && isTarefaAdmin && !isTarefaAdminAtiva && (
-                            <Button
-                              size="sm"
-                              className="w-full mt-1 h-6 text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleExpandirAtividade(atividade);
-                              }}
-                            >
-                              Concluir Tarefa
-                            </Button>
-                          )}
-                          
-                          {/* Botão para processar negociação financeira */}
-                          {isPendente && isNegociacaoFinanceira && !isNegociacaoAtiva && (
-                            <Button
-                              size="sm"
-                              className="w-full mt-1 h-6 text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleExpandirAtividade(atividade);
-                              }}
-                            >
-                              Registrar Resultado
-                            </Button>
-                          )}
-
-                          {/* Botão para processar acolhimento */}
-                          {isPendente && isAcolhimento && !isAcolhimentoAtivo && (
-                            <Button
-                              size="sm"
-                              className="w-full mt-1 h-6 text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleExpandirAtividade(atividade);
-                              }}
-                            >
-                              Registrar Próxima Ação
-                            </Button>
-                          )}
                           
                           {/* Formulário para criar nova atividade (expandido) */}
                           {atividadeExpandida === atividade.id && isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
