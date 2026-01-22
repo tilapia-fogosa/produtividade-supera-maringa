@@ -1272,6 +1272,7 @@ export type Database = {
           concluido_por_id: string | null
           concluido_por_nome: string | null
           created_at: string
+          data_agendada: string | null
           departamento_responsavel: string | null
           descricao: string
           id: string
@@ -1286,6 +1287,7 @@ export type Database = {
           concluido_por_id?: string | null
           concluido_por_nome?: string | null
           created_at?: string
+          data_agendada?: string | null
           departamento_responsavel?: string | null
           descricao: string
           id?: string
@@ -1300,6 +1302,7 @@ export type Database = {
           concluido_por_id?: string | null
           concluido_por_nome?: string | null
           created_at?: string
+          data_agendada?: string | null
           departamento_responsavel?: string | null
           descricao?: string
           id?: string

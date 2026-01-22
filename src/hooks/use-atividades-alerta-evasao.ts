@@ -7,7 +7,13 @@ export type TipoAtividadeEvasao =
   | 'atendimento_financeiro'
   | 'evasao'
   | 'atendimento_pedagogico'
-  | 'retencao';
+  | 'retencao'
+  // Novos tipos - tarefas administrativas
+  | 'remover_sgs'
+  | 'cancelar_assinatura'
+  | 'remover_whatsapp'
+  | 'corrigir_valores_sgs'
+  | 'corrigir_valores_assinatura';
 
 export type StatusAtividade = 'pendente' | 'concluida';
 
@@ -24,6 +30,7 @@ export interface AtividadeAlertaEvasao {
   professor_responsavel_id: string | null;
   concluido_por_id: string | null;
   concluido_por_nome: string | null;
+  data_agendada: string | null;
 }
 
 // Tipos permitidos ao gerar nova atividade a partir de acolhimento
@@ -40,6 +47,12 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
   { value: 'evasao', label: 'Evasão', color: 'bg-red-500' },
   { value: 'atendimento_pedagogico', label: 'Atendimento Pedagógico', color: 'bg-orange-500' },
   { value: 'retencao', label: 'Retenção', color: 'bg-green-500' },
+  // Novos tipos administrativos
+  { value: 'remover_sgs', label: 'Remover do SGS', color: 'bg-red-400' },
+  { value: 'cancelar_assinatura', label: 'Cancelar Assinatura', color: 'bg-red-400' },
+  { value: 'remover_whatsapp', label: 'Remover WhatsApp', color: 'bg-red-400' },
+  { value: 'corrigir_valores_sgs', label: 'Corrigir SGS', color: 'bg-yellow-500' },
+  { value: 'corrigir_valores_assinatura', label: 'Corrigir Assinatura', color: 'bg-yellow-500' },
 ];
 
 // Busca professor da turma do aluno associado ao alerta
@@ -97,11 +110,13 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
     mutationFn: async ({ 
       tipo_atividade, 
       descricao,
-      atividadeAnteriorId
+      atividadeAnteriorId,
+      data_agendada
     }: { 
       tipo_atividade: TipoAtividadeEvasao; 
       descricao: string;
       atividadeAnteriorId?: string;
+      data_agendada?: string;
     }) => {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
@@ -129,8 +144,18 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       // Tipos terminais: retenção e evasão
       const isTerminal = ['retencao', 'evasao'].includes(tipo_atividade);
       
-      if (tipo_atividade === 'atendimento_financeiro') {
-        // Negociação Financeira → Departamento Administrativo
+      // Tipos administrativos
+      const isAdministrativo = [
+        'atendimento_financeiro',
+        'remover_sgs',
+        'cancelar_assinatura',
+        'remover_whatsapp',
+        'corrigir_valores_sgs',
+        'corrigir_valores_assinatura'
+      ].includes(tipo_atividade);
+      
+      if (isAdministrativo) {
+        // Tarefas administrativas → Departamento Administrativo
         departamento_responsavel = 'administrativo';
         responsavel_nome = 'Administrativo';
       } else if (['acolhimento', 'atendimento_pedagogico'].includes(tipo_atividade)) {
@@ -143,21 +168,24 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       }
       
       // Cria a nova atividade
+      const insertData = {
+        alerta_evasao_id: alertaEvasaoId,
+        tipo_atividade: tipo_atividade as any,
+        descricao,
+        responsavel_id: user?.id || null,
+        responsavel_nome,
+        status: isTerminal ? 'concluida' : 'pendente',
+        departamento_responsavel,
+        professor_responsavel_id,
+        data_agendada: data_agendada || null,
+        // Se for terminal, já marca quem concluiu
+        concluido_por_id: isTerminal ? (user?.id || null) : null,
+        concluido_por_nome: isTerminal ? (funcionarioNome || user?.email || 'Usuário') : null
+      };
+      
       const { data, error } = await supabase
         .from('atividades_alerta_evasao')
-        .insert({
-          alerta_evasao_id: alertaEvasaoId,
-          tipo_atividade,
-          descricao,
-          responsavel_id: user?.id || null,
-          responsavel_nome,
-          status: isTerminal ? 'concluida' : 'pendente',
-          departamento_responsavel,
-          professor_responsavel_id,
-          // Se for terminal, já marca quem concluiu
-          concluido_por_id: isTerminal ? (user?.id || null) : null,
-          concluido_por_nome: isTerminal ? (funcionarioNome || user?.email || 'Usuário') : null
-        })
+        .insert(insertData as any)
         .select()
         .single();
       
@@ -184,11 +212,217 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
     },
   });
 
+  // Mutation para processar resultado da negociação financeira
+  const processarNegociacaoMutation = useMutation({
+    mutationFn: async ({ 
+      resultado,
+      atividadeAnteriorId,
+      dataFimAjuste
+    }: { 
+      resultado: 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo';
+      atividadeAnteriorId: string;
+      dataFimAjuste?: Date;
+    }) => {
+      if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Marca a negociação financeira como concluída
+      const { error: updateError } = await supabase
+        .from('atividades_alerta_evasao')
+        .update({ 
+          status: 'concluida',
+          concluido_por_id: user?.id || null,
+          concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+        })
+        .eq('id', atividadeAnteriorId);
+      
+      if (updateError) throw updateError;
+
+      // Definir tarefas a serem criadas baseado no resultado
+      interface TarefaAdmin {
+        tipo: TipoAtividadeEvasao;
+        descricao: string;
+        data_agendada?: string;
+      }
+      
+      let tarefas: TarefaAdmin[] = [];
+      let deveResolverAlerta = false;
+      
+      if (resultado === 'evasao') {
+        // Evasão: 3 tarefas administrativas
+        tarefas = [
+          { tipo: 'remover_sgs', descricao: 'Remover aluno do sistema SGS' },
+          { tipo: 'cancelar_assinatura', descricao: 'Cancelar assinatura no Vindi ou Asaas' },
+          { tipo: 'remover_whatsapp', descricao: 'Remover aluno dos grupos de WhatsApp' }
+        ];
+        // O alerta só será resolvido quando TODAS as tarefas forem concluídas
+      } else if (resultado === 'ajuste_temporario' && dataFimAjuste) {
+        // Ajuste temporário: 2 tarefas imediatas + 1 agendada
+        const dataFormatada = dataFimAjuste.toISOString().split('T')[0];
+        tarefas = [
+          { tipo: 'corrigir_valores_sgs', descricao: 'Corrigir valores no SGS' },
+          { tipo: 'corrigir_valores_assinatura', descricao: 'Corrigir valores da assinatura Vindi/Asaas' },
+          { 
+            tipo: 'atendimento_financeiro', 
+            descricao: `Nova negociação financeira agendada para ${new Date(dataFimAjuste).toLocaleDateString('pt-BR')}`,
+            data_agendada: dataFormatada
+          }
+        ];
+      } else if (resultado === 'ajuste_definitivo') {
+        // Ajuste definitivo: 2 tarefas + resolve o alerta
+        tarefas = [
+          { tipo: 'corrigir_valores_sgs', descricao: 'Corrigir valores no SGS' },
+          { tipo: 'corrigir_valores_assinatura', descricao: 'Corrigir valores da assinatura Vindi/Asaas' }
+        ];
+        
+        // Também cria a atividade de retenção para registrar o sucesso
+        const retencaoData = {
+          alerta_evasao_id: alertaEvasaoId,
+          tipo_atividade: 'retencao' as any,
+          descricao: 'Aluno retido com sucesso através de ajuste definitivo de valores',
+          responsavel_id: user?.id || null,
+          responsavel_nome: funcionarioNome || user?.email || 'Usuário',
+          status: 'concluida',
+          concluido_por_id: user?.id || null,
+          concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+        };
+        
+        const { error: retencaoError } = await supabase
+          .from('atividades_alerta_evasao')
+          .insert(retencaoData as any);
+        
+        if (retencaoError) throw retencaoError;
+        deveResolverAlerta = true;
+      }
+      
+      // Criar todas as tarefas
+      for (const tarefa of tarefas) {
+        const tarefaData = {
+          alerta_evasao_id: alertaEvasaoId,
+          tipo_atividade: tarefa.tipo as any,
+          descricao: tarefa.descricao,
+          responsavel_id: user?.id || null,
+          responsavel_nome: 'Administrativo',
+          status: 'pendente',
+          departamento_responsavel: 'administrativo',
+          data_agendada: tarefa.data_agendada || null
+        };
+        
+        const { error: insertError } = await supabase
+          .from('atividades_alerta_evasao')
+          .insert(tarefaData as any);
+        
+        if (insertError) throw insertError;
+      }
+      
+      // Se for ajuste definitivo, resolver o alerta
+      if (deveResolverAlerta) {
+        const { error: alertaError } = await supabase
+          .from('alerta_evasao')
+          .update({ 
+            status: 'resolvido',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', alertaEvasaoId);
+        
+        if (alertaError) throw alertaError;
+      }
+      
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['atividades-alerta-evasao', alertaEvasaoId] });
+      queryClient.invalidateQueries({ queryKey: ['alertas-evasao-lista'] });
+    },
+  });
+
+  // Mutation para concluir uma tarefa administrativa simples
+  const concluirTarefaMutation = useMutation({
+    mutationFn: async (atividadeId: string) => {
+      if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Marca a atividade como concluída
+      const { error: updateError } = await supabase
+        .from('atividades_alerta_evasao')
+        .update({ 
+          status: 'concluida',
+          concluido_por_id: user?.id || null,
+          concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+        })
+        .eq('id', atividadeId);
+      
+      if (updateError) throw updateError;
+      
+      // Verificar se todas as tarefas de evasão foram concluídas
+      const { data: todasAtividades, error: fetchError } = await supabase
+        .from('atividades_alerta_evasao')
+        .select('*')
+        .eq('alerta_evasao_id', alertaEvasaoId);
+      
+      if (fetchError) throw fetchError;
+      
+      // Verificar se há uma evasão registrada e todas as tarefas relacionadas foram concluídas
+      const tarefasEvasao = ['remover_sgs', 'cancelar_assinatura', 'remover_whatsapp'];
+      const temTarefasEvasao = todasAtividades?.some(a => tarefasEvasao.includes(a.tipo_atividade));
+      
+      if (temTarefasEvasao) {
+        const todasTarefasEvasaoConcluidas = tarefasEvasao.every(tipo => {
+          const tarefa = todasAtividades?.find(a => a.tipo_atividade === tipo);
+          return tarefa?.status === 'concluida';
+        });
+        
+        if (todasTarefasEvasaoConcluidas) {
+          // Criar registro de evasão
+          const evasaoData = {
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade: 'evasao' as any,
+            descricao: 'Processo de evasão concluído - todas as tarefas administrativas finalizadas',
+            responsavel_id: user?.id || null,
+            responsavel_nome: funcionarioNome || user?.email || 'Usuário',
+            status: 'concluida',
+            concluido_por_id: user?.id || null,
+            concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+          };
+          
+          const { error: evasaoError } = await supabase
+            .from('atividades_alerta_evasao')
+            .insert(evasaoData as any);
+          
+          if (evasaoError) throw evasaoError;
+          
+          // Resolver o alerta
+          const { error: alertaError } = await supabase
+            .from('alerta_evasao')
+            .update({ 
+              status: 'resolvido',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', alertaEvasaoId);
+          
+          if (alertaError) throw alertaError;
+        }
+      }
+      
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['atividades-alerta-evasao', alertaEvasaoId] });
+      queryClient.invalidateQueries({ queryKey: ['alertas-evasao-lista'] });
+    },
+  });
+
   return {
     atividades,
     isLoading,
     error,
     criarAtividade: criarAtividadeMutation.mutateAsync,
     isCriando: criarAtividadeMutation.isPending,
+    processarNegociacao: processarNegociacaoMutation.mutateAsync,
+    isProcessandoNegociacao: processarNegociacaoMutation.isPending,
+    concluirTarefa: concluirTarefaMutation.mutateAsync,
+    isConcluindoTarefa: concluirTarefaMutation.isPending,
   };
 }
