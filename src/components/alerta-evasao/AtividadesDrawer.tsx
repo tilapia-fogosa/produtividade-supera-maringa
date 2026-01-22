@@ -51,7 +51,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [atividadeNegociacao, setAtividadeNegociacao] = useState<AtividadeAlertaEvasao | null>(null);
   const [resultadoSelecionado, setResultadoSelecionado] = useState<ResultadoNegociacao | null>(null);
   const [dataFimAjuste, setDataFimAjuste] = useState('');
-
+  const [observacoesNegociacao, setObservacoesNegociacao] = useState('');
   const { 
     atividades, 
     isLoading,
@@ -135,16 +135,22 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     
     if (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) return;
     
-    await processarNegociacao({
-      resultado: resultadoSelecionado,
-      atividadeAnteriorId: atividadeNegociacao.id,
-      dataFimAjuste: resultadoSelecionado === 'ajuste_temporario' ? new Date(dataFimAjuste) : undefined
-    });
-    
-    setMostrarResultadoNegociacao(false);
-    setAtividadeNegociacao(null);
-    setResultadoSelecionado(null);
-    setDataFimAjuste('');
+    try {
+      await processarNegociacao({
+        resultado: resultadoSelecionado,
+        atividadeAnteriorId: atividadeNegociacao.id,
+        dataFimAjuste: resultadoSelecionado === 'ajuste_temporario' ? new Date(dataFimAjuste) : undefined,
+        observacoes: observacoesNegociacao.trim() || undefined
+      });
+      
+      setMostrarResultadoNegociacao(false);
+      setAtividadeNegociacao(null);
+      setResultadoSelecionado(null);
+      setDataFimAjuste('');
+      setObservacoesNegociacao('');
+    } catch (error) {
+      console.error('Erro ao processar negociação:', error);
+    }
   };
 
   const fecharPainelResultado = () => {
@@ -152,6 +158,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setAtividadeNegociacao(null);
     setResultadoSelecionado(null);
     setDataFimAjuste('');
+    setObservacoesNegociacao('');
   };
 
   const resetState = () => {
@@ -506,6 +513,20 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     </div>
                   </div>
                 </button>
+
+                {/* Campo de observações da negociação */}
+                {resultadoSelecionado && (
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Observações da negociação</Label>
+                    <Textarea
+                      placeholder="Descreva os detalhes da negociação, valores acordados, motivos..."
+                      value={observacoesNegociacao}
+                      onChange={(e) => setObservacoesNegociacao(e.target.value)}
+                      rows={3}
+                      className="text-xs min-h-[60px] resize-none"
+                    />
+                  </div>
+                )}
 
                 {/* Botão de confirmação */}
                 <div className="pt-2">
