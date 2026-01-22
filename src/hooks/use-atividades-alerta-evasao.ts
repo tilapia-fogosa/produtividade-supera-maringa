@@ -4,6 +4,7 @@ import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 
 export type TipoAtividadeEvasao = 
   | 'acolhimento'
+  | 'contato_financeiro'
   | 'atendimento_financeiro'
   | 'evasao'
   | 'atendimento_pedagogico'
@@ -35,7 +36,7 @@ export interface AtividadeAlertaEvasao {
 
 // Tipos permitidos ao gerar nova atividade a partir de acolhimento
 export const TIPOS_PERMITIDOS_APOS_ACOLHIMENTO: TipoAtividadeEvasao[] = [
-  'atendimento_financeiro',
+  'contato_financeiro',
   'atendimento_pedagogico',
   'acolhimento',
   'retencao'
@@ -43,7 +44,8 @@ export const TIPOS_PERMITIDOS_APOS_ACOLHIMENTO: TipoAtividadeEvasao[] = [
 
 export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color: string }[] = [
   { value: 'acolhimento', label: 'Acolhimento', color: 'bg-blue-500' },
-  { value: 'atendimento_financeiro', label: 'Negociação Financeira', color: 'bg-purple-500' },
+  { value: 'contato_financeiro', label: 'Contato Financeiro', color: 'bg-indigo-500' },
+  { value: 'atendimento_financeiro', label: 'Atendimento Financeiro', color: 'bg-purple-500' },
   { value: 'evasao', label: 'Evasão', color: 'bg-red-500' },
   { value: 'atendimento_pedagogico', label: 'Atendimento Pedagógico', color: 'bg-orange-500' },
   { value: 'retencao', label: 'Retenção', color: 'bg-green-500' },
