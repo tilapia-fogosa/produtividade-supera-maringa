@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Drawer, 
   DrawerContent, 
@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock, Phone, DollarSign } from 'lucide-react';
+import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock, DollarSign } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -125,15 +125,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [resultadoPedagogico, setResultadoPedagogico] = useState<'retencao' | 'negociacao_financeira' | null>(null);
   const [observacoesPedagogico, setObservacoesPedagogico] = useState('');
 
-  // Estado para painel de Contato Financeiro (agendar)
-  const [mostrarPainelContatoFinanceiro, setMostrarPainelContatoFinanceiro] = useState(false);
-  const [dataContatoFinanceiro, setDataContatoFinanceiro] = useState<Date | undefined>(undefined);
-  const [horarioContatoFinanceiro, setHorarioContatoFinanceiro] = useState('');
-  const [descricaoContatoFinanceiro, setDescricaoContatoFinanceiro] = useState('');
-
-  // Estado para painel de conclusão do Contato Financeiro (agendar Atendimento Financeiro)
-  const [mostrarPainelConclusaoContato, setMostrarPainelConclusaoContato] = useState(false);
-  const [atividadeContatoParaConcluir, setAtividadeContatoParaConcluir] = useState<AtividadeAlertaEvasao | null>(null);
+  // Estado para painel de Atendimento Financeiro (agendar direto do acolhimento)
+  const [mostrarPainelAtendimentoFinanceiro, setMostrarPainelAtendimentoFinanceiro] = useState(false);
   const [dataAtendimentoFinanceiro, setDataAtendimentoFinanceiro] = useState<Date | undefined>(undefined);
   const [horarioAtendimentoFinanceiro, setHorarioAtendimentoFinanceiro] = useState('');
   const [descricaoAtendimentoFinanceiro, setDescricaoAtendimentoFinanceiro] = useState('');
@@ -188,8 +181,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade)) {
       fecharPainelResultado();
       fecharPainelAcolhimento();
-      fecharPainelContatoFinanceiro();
-      fecharPainelConclusaoContato();
+      fecharPainelAtendimentoFinanceiro();
       setAtividadeTarefaAdmin(atividade);
       setMostrarPainelTarefaAdmin(true);
       setObservacoesTarefaAdmin('');
@@ -200,8 +192,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (atividade.tipo_atividade === 'atendimento_financeiro') {
       fecharPainelAcolhimento();
       fecharPainelConclusaoPedagogico();
-      fecharPainelContatoFinanceiro();
-      fecharPainelConclusaoContato();
+      fecharPainelAtendimentoFinanceiro();
       setAtividadeNegociacao(atividade);
       setMostrarResultadoNegociacao(true);
       setResultadoSelecionado(null);
@@ -209,26 +200,12 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       return;
     }
 
-    // Se for contato financeiro pendente, expande painel para agendar atendimento financeiro
-    if (atividade.tipo_atividade === 'contato_financeiro') {
-      fecharPainelResultado();
-      fecharPainelAcolhimento();
-      fecharPainelConclusaoPedagogico();
-      fecharPainelContatoFinanceiro();
-      setAtividadeContatoParaConcluir(atividade);
-      setMostrarPainelConclusaoContato(true);
-      setDataAtendimentoFinanceiro(undefined);
-      setHorarioAtendimentoFinanceiro('');
-      setDescricaoAtendimentoFinanceiro('');
-      return;
-    }
 
     // Se for acolhimento, expande o painel lateral
     if (atividade.tipo_atividade === 'acolhimento') {
       fecharPainelResultado();
       fecharPainelConclusaoPedagogico();
-      fecharPainelContatoFinanceiro();
-      fecharPainelConclusaoContato();
+      fecharPainelAtendimentoFinanceiro();
       setAtividadeAcolhimento(atividade);
       setMostrarPainelAcolhimento(true);
       setEtapaAcolhimento('observacoes');
@@ -242,8 +219,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     if (atividade.tipo_atividade === 'atendimento_pedagogico') {
       fecharPainelResultado();
       fecharPainelAcolhimento();
-      fecharPainelContatoFinanceiro();
-      fecharPainelConclusaoContato();
+      fecharPainelAtendimentoFinanceiro();
       setAtividadePedagogicoParaConcluir(atividade);
       setMostrarPainelConclusaoPedagogico(true);
       setResultadoPedagogico(null);
@@ -343,16 +319,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setObservacoesPedagogico('');
   };
 
-  const fecharPainelContatoFinanceiro = () => {
-    setMostrarPainelContatoFinanceiro(false);
-    setDataContatoFinanceiro(undefined);
-    setHorarioContatoFinanceiro('');
-    setDescricaoContatoFinanceiro('');
-  };
-
-  const fecharPainelConclusaoContato = () => {
-    setMostrarPainelConclusaoContato(false);
-    setAtividadeContatoParaConcluir(null);
+  const fecharPainelAtendimentoFinanceiro = () => {
+    setMostrarPainelAtendimentoFinanceiro(false);
     setDataAtendimentoFinanceiro(undefined);
     setHorarioAtendimentoFinanceiro('');
     setDescricaoAtendimentoFinanceiro('');
@@ -374,10 +342,10 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       return;
     }
 
-    // Se for contato financeiro, abrir painel de agendamento do contato
-    if (tipoProximaAtividade === 'contato_financeiro') {
+    // Se for atendimento financeiro, abrir painel de agendamento
+    if (tipoProximaAtividade === 'atendimento_financeiro') {
       setMostrarPainelAcolhimento(false);
-      setMostrarPainelContatoFinanceiro(true);
+      setMostrarPainelAtendimentoFinanceiro(true);
       return;
     }
     
@@ -401,34 +369,6 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       console.error('Erro ao processar acolhimento:', error);
     }
   };
-
-  // Gerar slots de horário para contato financeiro (30 min cada)
-  const horariosContatoFinanceiro = useMemo(() => {
-    if (!dataContatoFinanceiro) return [];
-    
-    const diasSemana: DiaSemana[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-    const diaSemana = diasSemana[dataContatoFinanceiro.getDay()];
-    const horarioFuncionamento = HORARIOS_FUNCIONAMENTO[diaSemana];
-    
-    if (!horarioFuncionamento.aberto) return [];
-    
-    // Gerar slots de 30 em 30 min
-    const slots: string[] = [];
-    const [horaInicio, minInicio] = horarioFuncionamento.inicio.split(':').map(Number);
-    const [horaFim, minFim] = horarioFuncionamento.fim.split(':').map(Number);
-    
-    let totalMinutos = horaInicio * 60 + minInicio;
-    const totalMinutosFim = horaFim * 60 + minFim;
-    
-    while (totalMinutos < totalMinutosFim) {
-      const horas = Math.floor(totalMinutos / 60);
-      const minutos = totalMinutos % 60;
-      slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
-      totalMinutos += 30;
-    }
-    
-    return slots;
-  }, [dataContatoFinanceiro]);
 
   // Gerar slots de horário para atendimento financeiro (30 min cada)
   const horariosAtendimentoFinanceiro = useMemo(() => {
@@ -458,42 +398,28 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     return slots;
   }, [dataAtendimentoFinanceiro]);
 
-  const handleConfirmarContatoFinanceiro = async () => {
-    if (!dataContatoFinanceiro || !horarioContatoFinanceiro || !descricaoContatoFinanceiro.trim() || !atividadeAcolhimento) return;
-    
-    try {
-      const dataFormatada = format(dataContatoFinanceiro, 'yyyy-MM-dd');
-      
-      await criarAtividade({
-        tipo_atividade: 'contato_financeiro',
-        descricao: `${descricaoContatoFinanceiro.trim()} | Agendado para ${format(dataContatoFinanceiro, 'dd/MM/yyyy')} às ${horarioContatoFinanceiro}`,
-        atividadeAnteriorId: atividadeAcolhimento.id,
-        data_agendada: dataFormatada
-      });
-      
-      fecharPainelContatoFinanceiro();
-      setAtividadeAcolhimento(null);
-      setTipoProximaAtividade(null);
-      setDescricaoProximaAtividade('');
-    } catch (error) {
-      console.error('Erro ao agendar contato financeiro:', error);
-    }
-  };
-
-  const handleConcluirContatoFinanceiro = async () => {
-    if (!dataAtendimentoFinanceiro || !horarioAtendimentoFinanceiro || !descricaoAtendimentoFinanceiro.trim() || !atividadeContatoParaConcluir) return;
+  const handleConfirmarAtendimentoFinanceiro = async () => {
+    if (!dataAtendimentoFinanceiro || !horarioAtendimentoFinanceiro || !descricaoAtendimentoFinanceiro.trim() || !atividadeAcolhimento) return;
     
     try {
       const dataFormatada = format(dataAtendimentoFinanceiro, 'yyyy-MM-dd');
       
+      // Primeiro concluir o acolhimento
+      await concluirTarefa(atividadeAcolhimento.id);
+      
+      // Criar o atendimento financeiro
       await criarAtividade({
         tipo_atividade: 'atendimento_financeiro',
-        descricao: `${descricaoAtendimentoFinanceiro.trim()} | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`,
-        atividadeAnteriorId: atividadeContatoParaConcluir.id,
+        descricao: `${descricaoAtendimentoFinanceiro.trim()} | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro} | Obs. Acolhimento: ${observacoesAcolhimento.trim()}`,
+        atividadeAnteriorId: atividadeAcolhimento.id,
         data_agendada: dataFormatada
       });
       
-      fecharPainelConclusaoContato();
+      fecharPainelAtendimentoFinanceiro();
+      setAtividadeAcolhimento(null);
+      setTipoProximaAtividade(null);
+      setDescricaoProximaAtividade('');
+      setObservacoesAcolhimento('');
     } catch (error) {
       console.error('Erro ao agendar atendimento financeiro:', error);
     }
@@ -611,8 +537,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     fecharPainelTarefaAdmin();
     fecharPainelPedagogico();
     fecharPainelConclusaoPedagogico();
-    fecharPainelContatoFinanceiro();
-    fecharPainelConclusaoContato();
+    fecharPainelAtendimentoFinanceiro();
   };
 
   const handleClose = () => {
@@ -688,7 +613,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
-  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico || mostrarPainelConclusaoPedagogico || mostrarPainelContatoFinanceiro || mostrarPainelConclusaoContato;
+  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin || mostrarPainelPedagogico || mostrarPainelConclusaoPedagogico || mostrarPainelAtendimentoFinanceiro;
   const drawerWidth = isExpanded ? 'max-w-2xl' : 'max-w-sm';
 
   return (
@@ -1062,26 +987,26 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                       </p>
                     </div>
 
-                    {/* Opção: Contato Financeiro */}
+                    {/* Opção: Atendimento Financeiro */}
                     <button
                       type="button"
-                      onClick={() => setTipoProximaAtividade('contato_financeiro')}
+                      onClick={() => setTipoProximaAtividade('atendimento_financeiro')}
                       className={`w-full p-2 rounded border text-left transition-all ${
-                        tipoProximaAtividade === 'contato_financeiro'
-                          ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500'
-                          : 'border-border hover:border-indigo-300 hover:bg-indigo-50/50'
+                        tipoProximaAtividade === 'atendimento_financeiro'
+                          ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
+                          : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className={`p-1 rounded ${tipoProximaAtividade === 'contato_financeiro' ? 'bg-indigo-500' : 'bg-indigo-100'}`}>
-                          <Phone className={`h-3 w-3 ${tipoProximaAtividade === 'contato_financeiro' ? 'text-white' : 'text-indigo-600'}`} />
+                        <div className={`p-1 rounded ${tipoProximaAtividade === 'atendimento_financeiro' ? 'bg-purple-500' : 'bg-purple-100'}`}>
+                          <DollarSign className={`h-3 w-3 ${tipoProximaAtividade === 'atendimento_financeiro' ? 'text-white' : 'text-purple-600'}`} />
                         </div>
                         <div>
-                          <p className={`text-xs font-medium ${tipoProximaAtividade === 'contato_financeiro' ? 'text-indigo-700' : ''}`}>
-                            Contato Financeiro
+                          <p className={`text-xs font-medium ${tipoProximaAtividade === 'atendimento_financeiro' ? 'text-purple-700' : ''}`}>
+                            Atendimento Financeiro
                           </p>
                           <p className="text-[10px] text-muted-foreground">
-                            Agendar contato via WhatsApp
+                            Agendar negociação presencial
                           </p>
                         </div>
                       </div>
@@ -1188,15 +1113,15 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                         className="w-full h-7 text-xs"
                         disabled={
                           !tipoProximaAtividade || 
-                          (tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'contato_financeiro' && !descricaoProximaAtividade.trim()) ||
+                          (tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'atendimento_financeiro' && !descricaoProximaAtividade.trim()) ||
                           isCriando
                         }
                         onClick={handleConfirmarAcolhimento}
                       >
                         {tipoProximaAtividade === 'atendimento_pedagogico' 
                           ? 'Agendar Atendimento' 
-                          : tipoProximaAtividade === 'contato_financeiro'
-                          ? 'Agendar Contato'
+                          : tipoProximaAtividade === 'atendimento_financeiro'
+                          ? 'Agendar Atendimento'
                           : isCriando ? 'Registrando...' : 'Confirmar'}
                       </Button>
                     </div>
@@ -1516,185 +1441,18 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
             </div>
           )}
 
-          {/* Coluna direita: Painel de Agendar Contato Financeiro */}
-          {mostrarPainelContatoFinanceiro && (
-            <div className="w-1/2 flex flex-col bg-muted/20">
-              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
-                <span className="font-medium text-xs">Agendar Contato Financeiro</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelContatoFinanceiro}>
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-              
-              <ScrollArea className="flex-1">
-                <div className="p-3 space-y-3">
-                  {/* Card com estilo igual ao pedagógico */}
-                  <button
-                    type="button"
-                    className="w-full p-2 rounded border border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 text-left"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded bg-indigo-500">
-                        <Phone className="h-3 w-3 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-indigo-700">
-                          Contato Financeiro
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Via WhatsApp para agendar negociação presencial
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Seleção de data */}
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Data do contato *</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full h-7 justify-start text-left font-normal text-xs",
-                            !dataContatoFinanceiro && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-3 w-3" />
-                          {dataContatoFinanceiro 
-                            ? format(dataContatoFinanceiro, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
-                            : <span>Selecione a data</span>
-                          }
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={dataContatoFinanceiro}
-                          onSelect={(date) => {
-                            setDataContatoFinanceiro(date);
-                            setHorarioContatoFinanceiro('');
-                          }}
-                          disabled={(date) => {
-                            const hoje = new Date();
-                            hoje.setHours(0, 0, 0, 0);
-                            return date < hoje || date.getDay() === 0;
-                          }}
-                          locale={ptBR}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Seleção de horário */}
-                  {dataContatoFinanceiro && (
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Horário do contato *</Label>
-                      {horariosContatoFinanceiro.length === 0 ? (
-                        <div className="p-2 bg-red-50 border border-red-200 rounded">
-                          <p className="text-[10px] text-red-700">
-                            Não há horários disponíveis nesta data.
-                          </p>
-                        </div>
-                      ) : (
-                        <Select value={horarioContatoFinanceiro} onValueChange={setHorarioContatoFinanceiro}>
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue placeholder="Selecione o horário" />
-                          </SelectTrigger>
-                          <SelectContent className="z-[9999]">
-                            {horariosContatoFinanceiro.map((horario) => (
-                              <SelectItem key={horario} value={horario} className="text-xs">
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-3 w-3" />
-                                  {horario}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Campo de descrição */}
-                  {dataContatoFinanceiro && horarioContatoFinanceiro && (
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Descrição do contato *</Label>
-                      <Textarea
-                        placeholder="Descreva o objetivo do contato financeiro..."
-                        value={descricaoContatoFinanceiro}
-                        onChange={(e) => setDescricaoContatoFinanceiro(e.target.value)}
-                        rows={3}
-                        className="text-xs min-h-[60px] resize-none"
-                      />
-                    </div>
-                  )}
-
-                  {/* Resumo do agendamento */}
-                  {dataContatoFinanceiro && horarioContatoFinanceiro && descricaoContatoFinanceiro.trim() && (
-                    <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
-                      <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
-                      <div className="text-[10px] text-green-600 space-y-0.5">
-                        <p>📅 {format(dataContatoFinanceiro, "dd/MM/yyyy")}</p>
-                        <p>🕐 {horarioContatoFinanceiro}</p>
-                        <p>📱 Via WhatsApp</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Botão de confirmação */}
-                  <div className="pt-2">
-                    <Button
-                      size="sm"
-                      className="w-full h-7 text-xs"
-                      disabled={
-                        !dataContatoFinanceiro || 
-                        !horarioContatoFinanceiro || 
-                        !descricaoContatoFinanceiro.trim() ||
-                        isCriando
-                      }
-                      onClick={handleConfirmarContatoFinanceiro}
-                    >
-                      {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
-                    </Button>
-                  </div>
-                </div>
-              </ScrollArea>
-            </div>
-          )}
-
-          {/* Coluna direita: Painel de Conclusão do Contato Financeiro (Agendar Atendimento Financeiro) */}
-          {mostrarPainelConclusaoContato && atividadeContatoParaConcluir && (
+          {/* Coluna direita: Painel de Agendar Atendimento Financeiro */}
+          {mostrarPainelAtendimentoFinanceiro && (
             <div className="w-1/2 flex flex-col bg-muted/20">
               <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
                 <span className="font-medium text-xs">Agendar Atendimento Financeiro</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelConclusaoContato}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelAtendimentoFinanceiro}>
                   <X className="h-3 w-3" />
                 </Button>
               </div>
               
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-3">
-                  {/* Informação da atividade anterior */}
-                  <div className="p-2 bg-indigo-50 border border-indigo-200 rounded">
-                    <Badge className="bg-indigo-500 text-white text-[10px] px-1.5 py-0 mb-1">
-                      Contato Financeiro
-                    </Badge>
-                    <p className="text-xs mt-1">{atividadeContatoParaConcluir.descricao}</p>
-                    {atividadeContatoParaConcluir.data_agendada && (
-                      <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                        <CalendarIcon className="h-2.5 w-2.5" />
-                        Agendado para: {formatarDataAgendada(atividadeContatoParaConcluir.data_agendada)}
-                      </p>
-                    )}
-                  </div>
-
-                  <p className="text-[10px] text-muted-foreground">
-                    Agende o atendimento financeiro presencial:
-                  </p>
-
                   {/* Card com estilo igual ao pedagógico */}
                   <button
                     type="button"
@@ -1822,7 +1580,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                         !descricaoAtendimentoFinanceiro.trim() ||
                         isCriando
                       }
-                      onClick={handleConcluirContatoFinanceiro}
+                      onClick={handleConfirmarAtendimentoFinanceiro}
                     >
                       {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
                     </Button>
