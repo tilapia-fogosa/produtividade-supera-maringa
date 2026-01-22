@@ -1078,7 +1078,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
                       <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
                       <div className="text-[10px] text-green-600 space-y-0.5">
-                        <p>📅 {format(dataPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR })}</p>
+                        <p>📅 {format(dataPedagogico, "dd/MM/yyyy").toUpperCase()}</p>
                         <p>🕐 {horarioPedagogico} - 1 hora de duração</p>
                         {professorInfo && <p>👨‍🏫 {professorInfo.nome}</p>}
                       </div>
