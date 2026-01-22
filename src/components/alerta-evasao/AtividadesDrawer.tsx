@@ -61,6 +61,11 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [tipoProximaAtividade, setTipoProximaAtividade] = useState<TipoAtividadeEvasao | null>(null);
   const [descricaoProximaAtividade, setDescricaoProximaAtividade] = useState('');
 
+  // Estado para painel de confirmação de tarefa administrativa
+  const [mostrarPainelTarefaAdmin, setMostrarPainelTarefaAdmin] = useState(false);
+  const [atividadeTarefaAdmin, setAtividadeTarefaAdmin] = useState<AtividadeAlertaEvasao | null>(null);
+  const [observacoesTarefaAdmin, setObservacoesTarefaAdmin] = useState('');
+
   const { 
     atividades, 
     isLoading,
@@ -92,11 +97,22 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     }
   };
 
+  const fecharPainelTarefaAdmin = () => {
+    setMostrarPainelTarefaAdmin(false);
+    setAtividadeTarefaAdmin(null);
+    setObservacoesTarefaAdmin('');
+  };
+
   const handleExpandirAtividade = (atividade: AtividadeAlertaEvasao) => {
     if (atividade.status === 'concluida') return;
     
-    // Se for tarefa administrativa simples, não expande - apenas conclui
+    // Se for tarefa administrativa, expande o painel de confirmação
     if (TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade)) {
+      fecharPainelResultado();
+      fecharPainelAcolhimento();
+      setAtividadeTarefaAdmin(atividade);
+      setMostrarPainelTarefaAdmin(true);
+      setObservacoesTarefaAdmin('');
       return;
     }
     
@@ -131,9 +147,15 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     }
   };
 
-  const handleConcluirTarefaAdmin = async (atividade: AtividadeAlertaEvasao, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await concluirTarefa(atividade.id);
+  const handleConcluirTarefaAdmin = async () => {
+    if (!atividadeTarefaAdmin) return;
+    
+    try {
+      await concluirTarefa(atividadeTarefaAdmin.id);
+      fecharPainelTarefaAdmin();
+    } catch (error) {
+      console.error('Erro ao concluir tarefa:', error);
+    }
   };
 
   const handleCriarAtividade = async (atividadeAnteriorId: string) => {
@@ -210,6 +232,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setDescricao('');
     fecharPainelResultado();
     fecharPainelAcolhimento();
+    fecharPainelTarefaAdmin();
   };
 
   const handleClose = () => {
@@ -285,7 +308,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
-  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento;
+  const isExpanded = mostrarResultadoNegociacao || mostrarPainelAcolhimento || mostrarPainelTarefaAdmin;
   const drawerWidth = isExpanded ? 'max-w-2xl' : 'max-w-sm';
 
   return (
@@ -338,13 +361,14 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     const isAcolhimento = atividade.tipo_atividade === 'acolhimento';
                     const isNegociacaoAtiva = mostrarResultadoNegociacao && atividadeNegociacao?.id === atividade.id;
                     const isAcolhimentoAtivo = mostrarPainelAcolhimento && atividadeAcolhimento?.id === atividade.id;
-                    const isPainelAtivo = isNegociacaoAtiva || isAcolhimentoAtivo;
+                    const isTarefaAdminAtiva = mostrarPainelTarefaAdmin && atividadeTarefaAdmin?.id === atividade.id;
+                    const isPainelAtivo = isNegociacaoAtiva || isAcolhimentoAtivo || isTarefaAdminAtiva;
                     
                     return (
                       <Card 
                         key={atividade.id} 
                         className={`overflow-hidden transition-all ${
-                          isPendente && !isTarefaAdmin ? 'cursor-pointer hover:shadow-sm' : ''
+                          isPendente ? 'cursor-pointer hover:shadow-sm' : ''
                         } ${!isPendente ? 'opacity-70' : ''} ${isPainelAtivo ? 'ring-2 ring-primary' : ''}`}
                         onClick={() => handleExpandirAtividade(atividade)}
                       >
@@ -377,16 +401,17 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                             {renderDataAgendada(atividade)}
                           </div>
                           
-                          {/* Botão para concluir tarefa administrativa */}
-                          {isPendente && isTarefaAdmin && (
+                          {/* Botão para processar tarefa administrativa */}
+                          {isPendente && isTarefaAdmin && !isTarefaAdminAtiva && (
                             <Button
                               size="sm"
-                              variant="outline"
                               className="w-full mt-1 h-6 text-[10px]"
-                              disabled={isConcluindoTarefa}
-                              onClick={(e) => handleConcluirTarefaAdmin(atividade, e)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExpandirAtividade(atividade);
+                              }}
                             >
-                              {isConcluindoTarefa ? 'Concluindo...' : 'Concluir'}
+                              Concluir Tarefa
                             </Button>
                           )}
                           
@@ -694,6 +719,56 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     onClick={handleConfirmarAcolhimento}
                   >
                     {isCriando ? 'Registrando...' : 'Confirmar'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Coluna direita: Painel de Confirmação de Tarefa Administrativa */}
+          {mostrarPainelTarefaAdmin && atividadeTarefaAdmin && (
+            <div className="w-1/2 flex flex-col bg-muted/20">
+              <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
+                <span className="font-medium text-xs">Confirmar Tarefa</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelTarefaAdmin}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              <div className="p-3 space-y-3 flex-1">
+                {/* Informação da tarefa */}
+                <div className="p-2 bg-muted/50 rounded border">
+                  <Badge className={`${getTipoConfig(atividadeTarefaAdmin.tipo_atividade).color} text-white text-[10px] px-1.5 py-0 mb-1`}>
+                    {getTipoConfig(atividadeTarefaAdmin.tipo_atividade).label}
+                  </Badge>
+                  <p className="text-xs mt-1">{atividadeTarefaAdmin.descricao}</p>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground">
+                  Confirme que a tarefa foi realizada:
+                </p>
+
+                {/* Campo de observações */}
+                <div className="space-y-1">
+                  <Label className="text-[10px]">Observações (opcional)</Label>
+                  <Textarea
+                    placeholder="Adicione observações sobre a execução da tarefa..."
+                    value={observacoesTarefaAdmin}
+                    onChange={(e) => setObservacoesTarefaAdmin(e.target.value)}
+                    rows={3}
+                    className="text-xs min-h-[60px] resize-none"
+                  />
+                </div>
+
+                {/* Botão de confirmação */}
+                <div className="pt-2">
+                  <Button
+                    size="sm"
+                    className="w-full h-7 text-xs"
+                    disabled={isConcluindoTarefa}
+                    onClick={handleConcluirTarefaAdmin}
+                  >
+                    {isConcluindoTarefa ? 'Concluindo...' : 'Confirmar Conclusão'}
                   </Button>
                 </div>
               </div>
