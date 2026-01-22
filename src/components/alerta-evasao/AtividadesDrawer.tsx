@@ -1013,6 +1013,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                             hoje.setHours(0, 0, 0, 0);
                             return date < hoje || date.getDay() === 0;
                           }}
+                          locale={ptBR}
                           initialFocus
                           className={cn("p-3 pointer-events-auto")}
                         />
