@@ -150,13 +150,12 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         pendentesQuery = pendentesQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
       
-      // Contagem de retidos (resolvidos com kanban_status = 'retido')
+      // Contagem de retidos
       let retidosQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
-        .eq('status', 'resolvido')
-        .eq('kanban_status', 'retido');
+        .eq('status', 'retido');
       
       if (filtros?.data_inicio) {
         retidosQuery = retidosQuery.gte('data_alerta', filtros.data_inicio);
@@ -170,13 +169,12 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         retidosQuery = retidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
       
-      // Contagem de evadidos (resolvidos com kanban_status = 'evadido')
+      // Contagem de evadidos
       let evadidosQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
-        .eq('status', 'resolvido')
-        .eq('kanban_status', 'evadido');
+        .eq('status', 'evadido');
       
       if (filtros?.data_inicio) {
         evadidosQuery = evadidosQuery.gte('data_alerta', filtros.data_inicio);
