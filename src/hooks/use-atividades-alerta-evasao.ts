@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
+import { format } from 'date-fns';
 
 export type TipoAtividadeEvasao = 
   | 'acolhimento'
@@ -314,6 +315,9 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         return { id: 'tarefas_criadas', tipo_atividade: 'evasao' };
       }
       
+      // Se não tiver data_agendada, usa a data de hoje como padrão
+      const dataAgendadaFinal = data_agendada || format(new Date(), 'yyyy-MM-dd');
+      
       // Cria a nova atividade
       const insertData = {
         alerta_evasao_id: alertaEvasaoId,
@@ -324,7 +328,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         status: isTerminalRetencao ? 'concluida' : 'pendente',
         departamento_responsavel,
         professor_responsavel_id,
-        data_agendada: data_agendada || null,
+        data_agendada: dataAgendadaFinal,
         // Se for retenção, já marca quem concluiu
         concluido_por_id: isTerminalRetencao ? (user?.id || null) : null,
         concluido_por_nome: isTerminalRetencao ? (funcionarioNome || user?.email || 'Usuário') : null
