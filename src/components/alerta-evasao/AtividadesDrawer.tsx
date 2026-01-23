@@ -399,20 +399,27 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   }, [dataAtendimentoFinanceiro]);
 
   const handleConfirmarAtendimentoFinanceiro = async () => {
-    if (!dataAtendimentoFinanceiro || !horarioAtendimentoFinanceiro || !descricaoAtendimentoFinanceiro.trim() || !atividadeAcolhimento) return;
+    if (!descricaoAtendimentoFinanceiro.trim() || !atividadeAcolhimento) return;
     
     try {
-      const dataFormatada = format(dataAtendimentoFinanceiro, 'yyyy-MM-dd');
-      
       // Primeiro concluir o acolhimento
       await concluirTarefa(atividadeAcolhimento.id);
+      
+      // Montar descrição com agendamento opcional
+      let descricaoCompleta = descricaoAtendimentoFinanceiro.trim();
+      if (dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro) {
+        descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`;
+      } else if (dataAtendimentoFinanceiro) {
+        descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')}`;
+      }
+      descricaoCompleta += ` | Obs. Acolhimento: ${observacoesAcolhimento.trim()}`;
       
       // Criar o atendimento financeiro
       await criarAtividade({
         tipo_atividade: 'atendimento_financeiro',
-        descricao: `${descricaoAtendimentoFinanceiro.trim()} | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro} | Obs. Acolhimento: ${observacoesAcolhimento.trim()}`,
+        descricao: descricaoCompleta,
         atividadeAnteriorId: atividadeAcolhimento.id,
-        data_agendada: dataFormatada
+        data_agendada: dataAtendimentoFinanceiro ? format(dataAtendimentoFinanceiro, 'yyyy-MM-dd') : undefined
       });
       
       fecharPainelAtendimentoFinanceiro();
@@ -1475,7 +1482,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
 
                   {/* Seleção de data */}
                   <div className="space-y-1">
-                    <Label className="text-[10px]">Data do atendimento *</Label>
+                    <Label className="text-[10px]">Data do atendimento (opcional)</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -1516,7 +1523,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                   {/* Seleção de horário */}
                   {dataAtendimentoFinanceiro && (
                     <div className="space-y-1">
-                      <Label className="text-[10px]">Horário do atendimento *</Label>
+                      <Label className="text-[10px]">Horário do atendimento (opcional)</Label>
                       {horariosAtendimentoFinanceiro.length === 0 ? (
                         <div className="p-2 bg-red-50 border border-red-200 rounded">
                           <p className="text-[10px] text-red-700">
@@ -1543,27 +1550,25 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     </div>
                   )}
 
-                  {/* Campo de descrição */}
-                  {dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro && (
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Descrição do atendimento *</Label>
-                      <Textarea
-                        placeholder="Descreva o objetivo do atendimento financeiro..."
-                        value={descricaoAtendimentoFinanceiro}
-                        onChange={(e) => setDescricaoAtendimentoFinanceiro(e.target.value)}
-                        rows={3}
-                        className="text-xs min-h-[60px] resize-none"
-                      />
-                    </div>
-                  )}
+                  {/* Campo de descrição - sempre visível */}
+                  <div className="space-y-1">
+                    <Label className="text-[10px]">Descrição do atendimento *</Label>
+                    <Textarea
+                      placeholder="Descreva o objetivo do atendimento financeiro..."
+                      value={descricaoAtendimentoFinanceiro}
+                      onChange={(e) => setDescricaoAtendimentoFinanceiro(e.target.value)}
+                      rows={3}
+                      className="text-xs min-h-[60px] resize-none"
+                    />
+                  </div>
 
-                  {/* Resumo do agendamento */}
-                  {dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro && descricaoAtendimentoFinanceiro.trim() && (
+                  {/* Resumo do agendamento - só mostra se tiver data ou hora */}
+                  {(dataAtendimentoFinanceiro || horarioAtendimentoFinanceiro) && descricaoAtendimentoFinanceiro.trim() && (
                     <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
-                      <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
+                      <p className="text-[10px] font-medium text-green-700">Resumo:</p>
                       <div className="text-[10px] text-green-600 space-y-0.5">
-                        <p>📅 {format(dataAtendimentoFinanceiro, "dd/MM/yyyy")}</p>
-                        <p>🕐 {horarioAtendimentoFinanceiro}</p>
+                        {dataAtendimentoFinanceiro && <p>📅 {format(dataAtendimentoFinanceiro, "dd/MM/yyyy")}</p>}
+                        {horarioAtendimentoFinanceiro && <p>🕐 {horarioAtendimentoFinanceiro}</p>}
                         <p>🏢 Atendimento Presencial</p>
                       </div>
                     </div>
@@ -1574,12 +1579,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     <Button
                       size="sm"
                       className="w-full h-7 text-xs"
-                      disabled={
-                        !dataAtendimentoFinanceiro || 
-                        !horarioAtendimentoFinanceiro || 
-                        !descricaoAtendimentoFinanceiro.trim() ||
-                        isCriando
-                      }
+                      disabled={!descricaoAtendimentoFinanceiro.trim() || isCriando}
                       onClick={handleConfirmarAtendimentoFinanceiro}
                     >
                       {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
