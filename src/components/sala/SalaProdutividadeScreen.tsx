@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
+import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
+import { ReposicaoHoje } from '@/hooks/sala/use-reposicoes-hoje';
 import SalaAlunosListaTable from './SalaAlunosListaTable';
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -15,6 +17,8 @@ interface SalaProdutividadeScreenProps {
   onExcluirRegistro?: (aluno: SalaPessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
   onReposicao?: () => void;
+  lembretes?: Record<string, LembretesAluno>;
+  reposicoesHoje?: ReposicaoHoje[];
 }
 
 const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
@@ -24,7 +28,9 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
   onRegistrarPresenca = () => {},
   onExcluirRegistro,
   produtividadeRegistrada = {},
-  onReposicao
+  onReposicao,
+  lembretes = {},
+  reposicoesHoje = []
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -53,6 +59,8 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
           onRegistrarPresenca={onRegistrarPresenca}
           onExcluirRegistro={onExcluirRegistro}
           produtividadeRegistrada={produtividadeRegistrada}
+          lembretes={lembretes}
+          reposicoesHoje={reposicoesHoje}
         />
       </div>
 
