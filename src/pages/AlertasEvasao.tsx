@@ -238,12 +238,18 @@ const AlertasEvasao = () => {
                     <TableHead>Professor</TableHead>
                     <TableHead>Origem</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {alertas.map((alerta) => (
-                    <TableRow key={alerta.id}>
+                    <TableRow 
+                      key={alerta.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        setAlertaSelecionado(alerta);
+                        setDrawerAberto(true);
+                      }}
+                    >
                       <TableCell className="text-xs">
                         {formatarData(alerta.data_alerta)}
                       </TableCell>
@@ -261,18 +267,6 @@ const AlertasEvasao = () => {
                         <Badge className={getStatusBadgeClass(alerta.status)}>
                           {alerta.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setAlertaSelecionado(alerta);
-                            setDrawerAberto(true);
-                          }}
-                        >
-                          Ver Detalhes
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
