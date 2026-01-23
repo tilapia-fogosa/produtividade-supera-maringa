@@ -69,7 +69,8 @@ const AlertasEvasao = () => {
   };
 
   const getStatusBadgeClass = (status: string) => {
-    if (status === 'resolvido') return 'bg-green-600 text-white hover:bg-green-700';
+    if (status === 'retido') return 'bg-green-600 text-white hover:bg-green-700';
+    if (status === 'evadido') return 'bg-red-600 text-white hover:bg-red-700';
     if (status === 'pendente') return 'bg-yellow-500 text-white hover:bg-yellow-600';
     return 'bg-muted text-white';
   };
@@ -104,7 +105,8 @@ const AlertasEvasao = () => {
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="resolvido">Resolvido</SelectItem>
+                  <SelectItem value="retido">Retido</SelectItem>
+                  <SelectItem value="evadido">Evadido</SelectItem>
                 </SelectContent>
               </Select>
             </div>
