@@ -7,6 +7,7 @@ export interface AtividadeAlerta {
   descricao: string;
   status: string;
   created_at: string;
+  data_agendada: string | null;
 }
 
 export interface AlertaEvasao {
@@ -114,7 +115,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
       if (alertaIds.length > 0) {
         const { data: atividades } = await supabase
           .from('atividades_alerta_evasao')
-          .select('id, alerta_evasao_id, tipo_atividade, descricao, status, created_at')
+          .select('id, alerta_evasao_id, tipo_atividade, descricao, status, created_at, data_agendada')
           .in('alerta_evasao_id', alertaIds)
           .order('created_at', { ascending: false });
         
@@ -127,7 +128,8 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
                 tipo_atividade: atividade.tipo_atividade,
                 descricao: atividade.descricao,
                 status: atividade.status,
-                created_at: atividade.created_at
+                created_at: atividade.created_at,
+                data_agendada: atividade.data_agendada
               };
             }
           }
