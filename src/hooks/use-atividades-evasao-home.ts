@@ -27,7 +27,7 @@ export function useAtividadesEvasaoHome() {
   return useQuery({
     queryKey: ['atividades-evasao-home', professorId, isAdministrativo],
     queryFn: async () => {
-      // Buscar atividades pendentes
+      // Buscar atividades pendentes de alertas que ainda estão pendentes
       let query = supabase
         .from('atividades_alerta_evasao')
         .select(`
@@ -51,6 +51,7 @@ export function useAtividadesEvasaoHome() {
           )
         `)
         .eq('status', 'pendente')
+        .eq('alerta_evasao.status', 'pendente')
         .eq('alerta_evasao.aluno.active', true);
       
       // Filtrar baseado no perfil do usuário
