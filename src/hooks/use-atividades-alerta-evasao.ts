@@ -60,6 +60,53 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
 
 const WEBHOOK_URL = 'https://webhookn8n.agenciakadin.com.br/webhook/alertas-evasao-slack';
 
+// Função para buscar usuários de um departamento
+async function buscarUsuariosDoDepartamento(departamento: string): Promise<Array<{ id: string; nome: string; email: string }>> {
+  try {
+    // Mapeia o nome do departamento para a role correspondente
+    type RoleType = 'admin' | 'administrativo' | 'consultor' | 'educador' | 'estagiario' | 'financeiro' | 'franqueado' | 'gestor_pedagogico' | 'sala';
+    
+    const roleMap: Record<string, RoleType> = {
+      'administrativo': 'administrativo',
+      'financeiro': 'financeiro',
+      'pedagogico': 'gestor_pedagogico'
+    };
+    
+    const role = roleMap[departamento.toLowerCase()];
+    if (!role) return [];
+
+    const { data, error } = await supabase
+      .from('unit_users')
+      .select(`
+        user_id,
+        role,
+        profiles!inner(
+          id,
+          full_name,
+          email,
+          access_blocked
+        )
+      `)
+      .eq('role', role)
+      .eq('active', true)
+      .eq('profiles.access_blocked', false);
+
+    if (error || !data) {
+      console.error('Erro ao buscar usuários do departamento:', error);
+      return [];
+    }
+
+    return data.map((item: any) => ({
+      id: item.profiles.id,
+      nome: item.profiles.full_name || '',
+      email: item.profiles.email || ''
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar usuários do departamento:', error);
+    return [];
+  }
+}
+
 // Função para enviar atividade criada para o webhook
 async function enviarAtividadeParaWebhook(atividade: {
   id: string;
@@ -99,6 +146,12 @@ async function enviarAtividadeParaWebhook(atividade: {
     const turma = aluno?.turmas;
     const professor = turma?.professores;
 
+    // Buscar usuários do departamento se houver departamento_responsavel
+    let usuariosDepartamento: Array<{ id: string; nome: string; email: string }> = [];
+    if (atividade.departamento_responsavel) {
+      usuariosDepartamento = await buscarUsuariosDoDepartamento(atividade.departamento_responsavel);
+    }
+
     const payload = {
       atividade: {
         id: atividade.id,
@@ -129,6 +182,7 @@ async function enviarAtividadeParaWebhook(atividade: {
         nome: professor?.nome,
         slack_username: professor?.slack_username
       },
+      usuarios_departamento: usuariosDepartamento,
       created_at: new Date().toISOString()
     };
 
