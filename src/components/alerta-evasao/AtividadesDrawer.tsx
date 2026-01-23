@@ -347,18 +347,14 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       return;
     }
     
-    if (!descricaoProximaAtividade.trim()) return;
-    
     try {
       // Primeiro concluir o acolhimento atual com as observações
       await concluirTarefa(atividadeAcolhimento.id);
       
-      // Criar próxima atividade com referência às observações do acolhimento
-      const descricaoCompleta = `${descricaoProximaAtividade.trim()} | Obs. Acolhimento: ${observacoesAcolhimento.trim()}`;
-      
+      // Usar as observações do acolhimento como descrição da próxima atividade
       await criarAtividade({
         tipo_atividade: tipoProximaAtividade,
-        descricao: descricaoCompleta,
+        descricao: observacoesAcolhimento.trim(),
         atividadeAnteriorId: atividadeAcolhimento.id
       });
       
@@ -1091,35 +1087,12 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                       </div>
                     </button>
 
-                    {/* Campo de descrição da próxima atividade - só para acolhimento e retenção */}
-                    {tipoProximaAtividade && (tipoProximaAtividade === 'acolhimento' || tipoProximaAtividade === 'retencao') && (
-                      <div className="space-y-1">
-                        <Label className="text-[10px]">
-                          {tipoProximaAtividade === 'retencao' ? 'Observações da retenção' : 'Descrição do acolhimento'} *
-                        </Label>
-                        <Textarea
-                          placeholder={tipoProximaAtividade === 'retencao' 
-                            ? "Descreva como foi a retenção do aluno..."
-                            : "Descreva os detalhes do próximo acolhimento..."
-                          }
-                          value={descricaoProximaAtividade}
-                          onChange={(e) => setDescricaoProximaAtividade(e.target.value)}
-                          rows={3}
-                          className="text-xs min-h-[60px] resize-none"
-                        />
-                      </div>
-                    )}
-
                     {/* Botão de confirmação */}
                     <div className="pt-2">
                       <Button
                         size="sm"
                         className="w-full h-7 text-xs"
-                        disabled={
-                          !tipoProximaAtividade || 
-                          (tipoProximaAtividade !== 'atendimento_pedagogico' && tipoProximaAtividade !== 'atendimento_financeiro' && !descricaoProximaAtividade.trim()) ||
-                          isCriando
-                        }
+                        disabled={!tipoProximaAtividade || isCriando}
                         onClick={handleConfirmarAcolhimento}
                       >
                         {tipoProximaAtividade === 'atendimento_pedagogico' 
