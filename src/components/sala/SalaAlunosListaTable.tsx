@@ -97,7 +97,8 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                 : 'bg-card border-border'
         }`}
       >
-        <div className="flex items-center gap-3 flex-1">
+        {/* Coluna 1: Foto + Dados do Aluno */}
+        <div className="flex items-center gap-3">
           <Avatar 
             className="h-20 w-20 shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
             onClick={() => {
@@ -115,7 +116,7 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
               {aluno.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-0.5">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <p className="font-medium text-foreground">{aluno.nome}</p>
               {isReposicao && (
@@ -173,54 +174,40 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                 {aluno.faltas_consecutivas} falta{aluno.faltas_consecutivas! > 1 ? 's' : ''} consecutiva{aluno.faltas_consecutivas! > 1 ? 's' : ''}
               </p>
             )}
-            
-            {/* Ícones de lembretes */}
-            {temLembretes && (
-              <div className="flex gap-2 mt-1">
-                {alunoLembretes.aniversarioHoje && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center justify-center h-7 w-7 rounded-full bg-pink-100 dark:bg-pink-900/30">
-                        <Cake className="h-4 w-4 text-pink-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>🎂 Aniversariante de hoje!</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                
-                {alunoLembretes.camisetaPendente && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center justify-center h-7 w-7 rounded-full bg-amber-100 dark:bg-amber-900/30">
-                        <Shirt className="h-4 w-4 text-amber-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>👕 Entregar camiseta</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                
-                {alunoLembretes.apostilaAHPronta && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center justify-center h-7 w-7 rounded-full bg-green-100 dark:bg-green-900/30">
-                        <BookMarked className="h-4 w-4 text-green-500" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>📖 Devolver apostila AH corrigida</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-            )}
           </div>
         </div>
         
-        <div className="flex gap-2">
+        {/* Coluna 2: Caixa de Lembretes (centralizada) */}
+        {temLembretes && (
+          <div className="flex-1 flex justify-center px-4">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 min-w-[180px]">
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">Lembretes</p>
+              <div className="space-y-1.5">
+                {alunoLembretes.aniversarioHoje && (
+                  <div className="flex items-center gap-2 text-sm text-pink-600 dark:text-pink-400">
+                    <Cake className="h-4 w-4" />
+                    <span>Aniversariante!</span>
+                  </div>
+                )}
+                {alunoLembretes.camisetaPendente && (
+                  <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                    <Shirt className="h-4 w-4" />
+                    <span>Entregar camiseta</span>
+                  </div>
+                )}
+                {alunoLembretes.apostilaAHPronta && (
+                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    <BookMarked className="h-4 w-4" />
+                    <span>Devolver apostila AH</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Coluna 3: Botões de ação */}
+        <div className="flex gap-2 shrink-0">
           {jaRegistrou ? (
             <>
               <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
