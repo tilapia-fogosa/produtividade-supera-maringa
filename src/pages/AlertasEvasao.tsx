@@ -273,6 +273,7 @@ const AlertasEvasao = () => {
                     <TableHead>Professor</TableHead>
                     <TableHead>Origem</TableHead>
                     <TableHead>Etapa</TableHead>
+                    <TableHead>Data Limite</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -306,6 +307,13 @@ const AlertasEvasao = () => {
                           </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">Sem atividades</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {alerta.ultima_atividade?.data_agendada ? (
+                          formatarData(alerta.ultima_atividade.data_agendada)
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>
