@@ -50,7 +50,7 @@ const AlertasEvasao = () => {
 
   const formatarData = (data: string) => {
     try {
-      return format(new Date(data), 'dd/MM/yyyy HH:mm', { locale: ptBR });
+      return format(new Date(data), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return data;
     }
@@ -71,8 +71,8 @@ const AlertasEvasao = () => {
   const getTipoAtividadeLabel = (tipo: string) => {
     const labels: Record<string, string> = {
       'acolhimento': 'Acolhimento',
-      'contato_financeiro': 'Contato Financeiro',
-      'contato_pedagogico': 'Contato Pedagógico',
+      'atendimento_financeiro': 'Atendimento Financeiro',
+      'atendimento_pedagogico': 'Atendimento Pedagógico',
       'novo_acolhimento': 'Novo Acolhimento',
       'retencao': 'Retenção',
       'evasao': 'Evasão',
@@ -81,14 +81,6 @@ const AlertasEvasao = () => {
       'remover_whatsapp': 'Remover de Grupos',
       'corrigir_valores_sgs': 'Corrigir SGS',
       'corrigir_valores_assinatura': 'Corrigir Assinatura',
-      'ligacao_pedagogo': 'Ligação Pedagogo',
-      'ligacao_adm': 'Ligação ADM',
-      'reuniao_presencial': 'Reunião Presencial',
-      'contato_whatsapp': 'Contato WhatsApp',
-      'acompanhamento_aula': 'Acompanhamento Aula',
-      'desconto_oferecido': 'Desconto Oferecido',
-      'troca_horario': 'Troca de Horário',
-      'troca_professor': 'Troca de Professor',
       'outro': 'Outro'
     };
     return labels[tipo] || tipo;
@@ -97,8 +89,8 @@ const AlertasEvasao = () => {
   const getEtapaBadgeClass = (tipo: string) => {
     const classes: Record<string, string> = {
       'acolhimento': 'border-blue-500 text-blue-600',
-      'contato_financeiro': 'border-purple-500 text-purple-600',
-      'contato_pedagogico': 'border-orange-500 text-orange-600',
+      'atendimento_financeiro': 'border-purple-500 text-purple-600',
+      'atendimento_pedagogico': 'border-orange-500 text-orange-600',
       'novo_acolhimento': 'border-yellow-500 text-yellow-600',
       'retencao': 'border-green-500 text-green-600',
       'evasao': 'border-red-500 text-red-600',
