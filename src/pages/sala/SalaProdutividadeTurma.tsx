@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { useSalaPessoasTurma, SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
+import { useLembretesAlunos } from '@/hooks/sala/use-lembretes-alunos';
 import SalaProdutividadeScreen from '@/components/sala/SalaProdutividadeScreen';
 import SalaProdutividadeDrawer from '@/components/sala/SalaProdutividadeDrawer';
 import {
@@ -39,6 +40,14 @@ const SalaProdutividadeTurma = () => {
     atualizarProdutividadeRegistrada,
     recarregarDadosAposExclusao
   } = useSalaPessoasTurma();
+
+  // IDs dos alunos para buscar lembretes
+  const alunoIds = useMemo(() => 
+    pessoasTurma.filter(p => p.origem === 'aluno').map(p => p.id),
+    [pessoasTurma]
+  );
+
+  const { lembretes } = useLembretesAlunos(alunoIds);
 
   // Buscar dados da turma
   useEffect(() => {
@@ -184,6 +193,7 @@ const SalaProdutividadeTurma = () => {
         onRegistrarPresenca={handleRegistrarPresenca}
         onExcluirRegistro={handleExcluirRegistro}
         onReposicao={handleReposicao}
+        lembretes={lembretes}
       />
 
       <SalaProdutividadeDrawer

@@ -3,22 +3,26 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useApostilas } from '@/hooks/use-apostilas';
+import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
 
 interface SalaAlunosListaTableProps {
   alunos: SalaPessoaTurma[];
   onRegistrarPresenca: (aluno: SalaPessoaTurma, presente: boolean) => void;
   onExcluirRegistro?: (aluno: SalaPessoaTurma) => void;
   produtividadeRegistrada?: Record<string, boolean>;
+  lembretes?: Record<string, LembretesAluno>;
 }
 
 const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
   alunos,
   onRegistrarPresenca,
   onExcluirRegistro,
-  produtividadeRegistrada = {}
+  produtividadeRegistrada = {},
+  lembretes = {}
 }) => {
   const [fotoAmpliada, setFotoAmpliada] = useState<{ url: string; nome: string } | null>(null);
   const { getTotalPaginas } = useApostilas();
@@ -31,16 +35,22 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
     );
   }
 
-  return (
-    <>
-      <div className="space-y-2">
-        {alunos.map((aluno) => {
-          const jaRegistrou = aluno.produtividadeRegistrada || produtividadeRegistrada[aluno.id];
-          const totalPaginas = getTotalPaginas(aluno.ultimo_nivel);
-          const paginasRestantes = aluno.ultima_pagina ? totalPaginas - aluno.ultima_pagina : null;
-          const temFaltasConsecutivas = aluno.faltas_consecutivas && aluno.faltas_consecutivas > 0;
+    return (
+      <TooltipProvider>
+        <div className="space-y-2">
+          {alunos.map((aluno) => {
+            const jaRegistrou = aluno.produtividadeRegistrada || produtividadeRegistrada[aluno.id];
+            const totalPaginas = getTotalPaginas(aluno.ultimo_nivel);
+            const paginasRestantes = aluno.ultima_pagina ? totalPaginas - aluno.ultima_pagina : null;
+            const temFaltasConsecutivas = aluno.faltas_consecutivas && aluno.faltas_consecutivas > 0;
+            const alunoLembretes = lembretes[aluno.id];
+            const temLembretes = alunoLembretes && (
+              alunoLembretes.aniversarioHoje || 
+              alunoLembretes.camisetaPendente || 
+              alunoLembretes.apostilaAHPronta
+            );
           
-          return (
+            return (
             <div
               key={aluno.id}
               className={`flex items-center justify-between p-3 rounded-lg border ${
@@ -111,6 +121,50 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                       {aluno.faltas_consecutivas} falta{aluno.faltas_consecutivas! > 1 ? 's' : ''} consecutiva{aluno.faltas_consecutivas! > 1 ? 's' : ''}
                     </p>
                   )}
+                  
+                  {/* Ícones de lembretes */}
+                  {temLembretes && (
+                    <div className="flex gap-2 mt-1">
+                      {alunoLembretes.aniversarioHoje && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center justify-center h-7 w-7 rounded-full bg-pink-100 dark:bg-pink-900/30">
+                              <Cake className="h-4 w-4 text-pink-500" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>🎂 Aniversariante de hoje!</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      {alunoLembretes.camisetaPendente && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center justify-center h-7 w-7 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                              <Shirt className="h-4 w-4 text-amber-500" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>👕 Entregar camiseta</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      {alunoLembretes.apostilaAHPronta && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center justify-center h-7 w-7 rounded-full bg-green-100 dark:bg-green-900/30">
+                              <BookMarked className="h-4 w-4 text-green-500" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>📖 Devolver apostila AH corrigida</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -154,31 +208,31 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
             </div>
           );
         })}
-      </div>
+        </div>
 
-      {/* Lightbox Fullscreen */}
-      <Dialog open={!!fotoAmpliada} onOpenChange={() => setFotoAmpliada(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/90 border-none flex items-center justify-center">
-          <button
-            onClick={() => setFotoAmpliada(null)}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          {fotoAmpliada && (
-            <div className="flex flex-col items-center gap-4 p-4">
-              <img
-                src={fotoAmpliada.url}
-                alt={fotoAmpliada.nome}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg"
-              />
-              <p className="text-white text-lg font-medium">{fotoAmpliada.nome}</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+        {/* Lightbox Fullscreen */}
+        <Dialog open={!!fotoAmpliada} onOpenChange={() => setFotoAmpliada(null)}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/90 border-none flex items-center justify-center">
+            <button
+              onClick={() => setFotoAmpliada(null)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            {fotoAmpliada && (
+              <div className="flex flex-col items-center gap-4 p-4">
+                <img
+                  src={fotoAmpliada.url}
+                  alt={fotoAmpliada.nome}
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                />
+                <p className="text-white text-lg font-medium">{fotoAmpliada.nome}</p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </TooltipProvider>
+    );
 };
 
 export default SalaAlunosListaTable;
