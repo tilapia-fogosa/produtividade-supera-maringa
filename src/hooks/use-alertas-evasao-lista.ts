@@ -150,54 +150,56 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         pendentesQuery = pendentesQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
       
-      // Contagem de resolvidos
-      let resolvidosQuery = supabase
+      // Contagem de retidos (resolvidos com kanban_status = 'retido')
+      let retidosQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
-        .eq('status', 'resolvido');
+        .eq('status', 'resolvido')
+        .eq('kanban_status', 'retido');
       
       if (filtros?.data_inicio) {
-        resolvidosQuery = resolvidosQuery.gte('data_alerta', filtros.data_inicio);
+        retidosQuery = retidosQuery.gte('data_alerta', filtros.data_inicio);
       }
       
       if (filtros?.data_fim) {
-        resolvidosQuery = resolvidosQuery.lte('data_alerta', filtros.data_fim);
+        retidosQuery = retidosQuery.lte('data_alerta', filtros.data_fim);
       }
       
       if (filtros?.origem_alerta) {
-        resolvidosQuery = resolvidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
+        retidosQuery = retidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
       
-      // Contagem de em andamento
-      let emAndamentoQuery = supabase
+      // Contagem de evadidos (resolvidos com kanban_status = 'evadido')
+      let evadidosQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
-        .eq('kanban_status', 'in_progress');
+        .eq('status', 'resolvido')
+        .eq('kanban_status', 'evadido');
       
       if (filtros?.data_inicio) {
-        emAndamentoQuery = emAndamentoQuery.gte('data_alerta', filtros.data_inicio);
+        evadidosQuery = evadidosQuery.gte('data_alerta', filtros.data_inicio);
       }
       
       if (filtros?.data_fim) {
-        emAndamentoQuery = emAndamentoQuery.lte('data_alerta', filtros.data_fim);
+        evadidosQuery = evadidosQuery.lte('data_alerta', filtros.data_fim);
       }
       
       if (filtros?.origem_alerta) {
-        emAndamentoQuery = emAndamentoQuery.eq('origem_alerta', filtros.origem_alerta as any);
+        evadidosQuery = evadidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
 
       const [
         { count: totalCount },
         { count: pendentesCount },
-        { count: resolvidosCount },
-        { count: emAndamentoCount }
+        { count: retidosCount },
+        { count: evadidosCount }
       ] = await Promise.all([
         countQuery,
         pendentesQuery,
-        resolvidosQuery,
-        emAndamentoQuery
+        retidosQuery,
+        evadidosQuery
       ]);
 
       const totalPages = count ? Math.ceil(count / pageSize) : 0;
@@ -206,8 +208,8 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         alertas: alertasFiltrados,
         total: count || 0,
         totalPendentes: pendentesCount || 0,
-        totalResolvidos: resolvidosCount || 0,
-        totalEmAndamento: emAndamentoCount || 0,
+        totalRetidos: retidosCount || 0,
+        totalEvadidos: evadidosCount || 0,
         page,
         pageSize,
         totalPages

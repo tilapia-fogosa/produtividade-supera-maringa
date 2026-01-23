@@ -39,8 +39,8 @@ const AlertasEvasao = () => {
   const totalPages = data?.totalPages || 0;
   const total = data?.total || 0;
   const totalPendentes = data?.totalPendentes || 0;
-  const totalResolvidos = data?.totalResolvidos || 0;
-  const totalEmAndamento = data?.totalEmAndamento || 0;
+  const totalRetidos = data?.totalRetidos || 0;
+  const totalEvadidos = data?.totalEvadidos || 0;
 
   // Resetar para página 1 quando filtros mudarem
   const handleFiltroChange = (novosFiltros: typeof filtros) => {
@@ -191,8 +191,8 @@ const AlertasEvasao = () => {
         <Card className="py-2">
           <CardContent className="pb-0 pt-0">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Resolvidos</p>
-              <p className="text-xl font-bold text-green-500">{totalResolvidos}</p>
+              <p className="text-xs text-muted-foreground">Retidos</p>
+              <p className="text-xl font-bold text-green-500">{totalRetidos}</p>
             </div>
           </CardContent>
         </Card>
@@ -200,8 +200,8 @@ const AlertasEvasao = () => {
         <Card className="py-2">
           <CardContent className="pb-0 pt-0">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Em Andamento</p>
-              <p className="text-xl font-bold text-blue-500">{totalEmAndamento}</p>
+              <p className="text-xs text-muted-foreground">Evadidos</p>
+              <p className="text-xl font-bold text-red-500">{totalEvadidos}</p>
             </div>
           </CardContent>
         </Card>
