@@ -1,21 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useAlertasEvasaoLista, type AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
+import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const AlertasEvasao = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
+  const [drawerAberto, setDrawerAberto] = useState(false);
+  const [processouUrlParam, setProcessouUrlParam] = useState(false);
   const [filtros, setFiltros] = useState({
     status: 'todos',
-    kanban_status: 'todos',
     origem_alerta: 'todos',
     data_inicio: '',
     data_fim: '',
@@ -25,7 +29,6 @@ const AlertasEvasao = () => {
   // Preparar filtros para a query (converter "todos" para undefined)
   const filtrosQuery = {
     status: filtros.status === 'todos' ? undefined : filtros.status,
-    kanban_status: filtros.kanban_status === 'todos' ? undefined : filtros.kanban_status,
     origem_alerta: filtros.origem_alerta === 'todos' ? undefined : filtros.origem_alerta,
     data_inicio: filtros.data_inicio || undefined,
     data_fim: filtros.data_fim || undefined,
@@ -39,8 +42,25 @@ const AlertasEvasao = () => {
   const totalPages = data?.totalPages || 0;
   const total = data?.total || 0;
   const totalPendentes = data?.totalPendentes || 0;
-  const totalResolvidos = data?.totalResolvidos || 0;
-  const totalEmAndamento = data?.totalEmAndamento || 0;
+  const totalRetidos = data?.totalRetidos || 0;
+  const totalEvadidos = data?.totalEvadidos || 0;
+
+  // Abrir drawer automaticamente se vier com parâmetro alerta na URL
+  useEffect(() => {
+    const alertaIdParam = searchParams.get('alerta');
+    
+    if (alertaIdParam && !processouUrlParam && alertas.length > 0) {
+      const alertaEncontrado = alertas.find(a => a.id === alertaIdParam);
+      if (alertaEncontrado) {
+        setAlertaSelecionado(alertaEncontrado);
+        setDrawerAberto(true);
+        // Remover o parâmetro da URL para evitar reabrir ao navegar
+        searchParams.delete('alerta');
+        setSearchParams(searchParams, { replace: true });
+      }
+      setProcessouUrlParam(true);
+    }
+  }, [alertas, searchParams, processouUrlParam, setSearchParams]);
 
   // Resetar para página 1 quando filtros mudarem
   const handleFiltroChange = (novosFiltros: typeof filtros) => {
@@ -50,7 +70,7 @@ const AlertasEvasao = () => {
 
   const formatarData = (data: string) => {
     try {
-      return format(new Date(data), 'dd/MM/yyyy HH:mm', { locale: ptBR });
+      return format(new Date(data), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return data;
     }
@@ -68,192 +88,177 @@ const AlertasEvasao = () => {
     return labels[origem] || origem;
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    if (status === 'resolvido') return 'default';
-    if (status === 'pendente') return 'secondary';
-    return 'outline';
-  };
-
-  const getKanbanBadgeVariant = (kanban: string) => {
-    if (kanban === 'done') return 'default';
-    if (kanban === 'in_progress') return 'secondary';
-    return 'outline';
-  };
-
-  const getKanbanLabel = (kanban: string) => {
+  const getTipoAtividadeLabel = (tipo: string) => {
     const labels: Record<string, string> = {
-      'todo': 'A Fazer',
-      'in_progress': 'Em Andamento',
-      'done': 'Concluído'
+      'acolhimento': 'Acolhimento',
+      'atendimento_financeiro': 'Atendimento Financeiro',
+      'atendimento_pedagogico': 'Atendimento Pedagógico',
+      'novo_acolhimento': 'Novo Acolhimento',
+      'retencao': 'Retenção',
+      'evasao': 'Evasão',
+      'remover_sgs': 'Remover do SGS',
+      'cancelar_assinatura': 'Cancelar Assinatura',
+      'remover_whatsapp': 'Remover de Grupos',
+      'corrigir_valores_sgs': 'Corrigir SGS',
+      'corrigir_valores_assinatura': 'Corrigir Assinatura',
+      'outro': 'Outro'
     };
-    return labels[kanban] || kanban;
+    return labels[tipo] || tipo;
+  };
+
+  const getEtapaBadgeClass = (tipo: string) => {
+    const classes: Record<string, string> = {
+      'acolhimento': 'border-blue-500 text-blue-600',
+      'atendimento_financeiro': 'border-purple-500 text-purple-600',
+      'atendimento_pedagogico': 'border-orange-500 text-orange-600',
+      'novo_acolhimento': 'border-yellow-500 text-yellow-600',
+      'retencao': 'border-green-500 text-green-600',
+      'evasao': 'border-red-500 text-red-600',
+      'remover_sgs': 'border-red-400 text-red-500',
+      'cancelar_assinatura': 'border-red-400 text-red-500',
+      'remover_whatsapp': 'border-red-400 text-red-500',
+      'corrigir_valores_sgs': 'border-amber-500 text-amber-600',
+      'corrigir_valores_assinatura': 'border-amber-500 text-amber-600',
+    };
+    return classes[tipo] || 'border-muted-foreground text-muted-foreground';
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    if (status === 'retido') return 'bg-green-600 text-white hover:bg-green-700';
+    if (status === 'evadido') return 'bg-red-600 text-white hover:bg-red-700';
+    if (status === 'pendente') return 'bg-yellow-500 text-white hover:bg-yellow-600';
+    return 'bg-muted text-white';
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">Histórico de Alertas de Evasão</h1>
-        <p className="text-muted-foreground text-sm">
-          Acompanhe todos os alertas de evasão registrados e seus status
-        </p>
-      </div>
+    <div className="space-y-3">
+      <h1 className="text-xl font-bold">Painel de Evasões</h1>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome do Aluno</label>
-                <Input
-                  placeholder="Buscar por nome"
-                  value={filtros.nome_aluno}
-                  onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select
-                  value={filtros.status}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="resolvido">Resolvido</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status Kanban</label>
-                <Select
-                  value={filtros.kanban_status}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, kanban_status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="todo">A Fazer</SelectItem>
-                    <SelectItem value="in_progress">Em Andamento</SelectItem>
-                    <SelectItem value="done">Concluído</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Filtros compactos */}
+      <Card className="py-3">
+        <CardContent className="pb-0">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Aluno</label>
+              <Input
+                placeholder="Nome"
+                value={filtros.nome_aluno}
+                onChange={(e) => handleFiltroChange({ ...filtros, nome_aluno: e.target.value })}
+                className="h-8"
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Origem do Alerta</label>
-                <Select
-                  value={filtros.origem_alerta}
-                  onValueChange={(value) => handleFiltroChange({ ...filtros, origem_alerta: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas</SelectItem>
-                    <SelectItem value="conversa_indireta">Conversa Indireta</SelectItem>
-                    <SelectItem value="aviso_recepcao">Aviso na Recepção</SelectItem>
-                    <SelectItem value="aviso_professor_coordenador">Aviso ao Professor/Coordenador</SelectItem>
-                    <SelectItem value="aviso_whatsapp">Aviso no WhatsApp</SelectItem>
-                    <SelectItem value="inadimplencia">Inadimplência</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Início</label>
-                <Input
-                  type="date"
-                  value={filtros.data_inicio}
-                  onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Fim</label>
-                <Input
-                  type="date"
-                  value={filtros.data_fim}
-                  onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
-                />
-              </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Status</label>
+              <Select
+                value={filtros.status}
+                onValueChange={(value) => handleFiltroChange({ ...filtros, status: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="retido">Retido</SelectItem>
+                  <SelectItem value="evadido">Evadido</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          <div className="mt-4 flex items-center gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Origem</label>
+              <Select
+                value={filtros.origem_alerta}
+                onValueChange={(value) => handleFiltroChange({ ...filtros, origem_alerta: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas</SelectItem>
+                  <SelectItem value="conversa_indireta">Conversa Indireta</SelectItem>
+                  <SelectItem value="aviso_recepcao">Aviso na Recepção</SelectItem>
+                  <SelectItem value="aviso_professor_coordenador">Aviso ao Professor/Coordenador</SelectItem>
+                  <SelectItem value="aviso_whatsapp">Aviso no WhatsApp</SelectItem>
+                  <SelectItem value="inadimplencia">Inadimplência</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium">De</label>
+              <Input
+                type="date"
+                value={filtros.data_inicio}
+                onChange={(e) => handleFiltroChange({ ...filtros, data_inicio: e.target.value })}
+                className="h-8"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Até</label>
+              <Input
+                type="date"
+                value={filtros.data_fim}
+                onChange={(e) => handleFiltroChange({ ...filtros, data_fim: e.target.value })}
+                className="h-8"
+              />
+            </div>
+
             <Button
               variant="outline"
+              size="sm"
+              className="h-8"
               onClick={() => handleFiltroChange({ 
                 status: 'todos',
-                kanban_status: 'todos',
                 origem_alerta: 'todos',
                 data_inicio: '', 
                 data_fim: '', 
                 nome_aluno: ''
               })}
             >
-              Limpar Filtros
+              Limpar
             </Button>
-            <span className="text-sm text-muted-foreground">
-              Total: {total} {total === 1 ? 'alerta' : 'alertas'}
-            </span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Total de Alertas</p>
-              <p className="text-3xl font-bold">{total}</p>
+      {/* Estatísticas compactas */}
+      <div className="grid grid-cols-4 gap-2">
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xl font-bold">{total}</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Pendentes</p>
-              <p className="text-3xl font-bold text-yellow-500">
-                {totalPendentes}
-              </p>
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Pendentes</p>
+              <p className="text-xl font-bold text-yellow-500">{totalPendentes}</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Resolvidos</p>
-              <p className="text-3xl font-bold text-green-500">
-                {totalResolvidos}
-              </p>
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Retidos</p>
+              <p className="text-xl font-bold text-green-500">{totalRetidos}</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Em Andamento</p>
-              <p className="text-3xl font-bold text-blue-500">
-                {totalEmAndamento}
-              </p>
+        <Card className="py-2">
+          <CardContent className="pb-0 pt-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Evadidos</p>
+              <p className="text-xl font-bold text-red-500">{totalEvadidos}</p>
             </div>
           </CardContent>
         </Card>
@@ -287,14 +292,21 @@ const AlertasEvasao = () => {
                     <TableHead>Turma</TableHead>
                     <TableHead>Professor</TableHead>
                     <TableHead>Origem</TableHead>
+                    <TableHead>Etapa</TableHead>
+                    <TableHead>Data Limite</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Kanban</TableHead>
-                    <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {alertas.map((alerta) => (
-                    <TableRow key={alerta.id}>
+                    <TableRow 
+                      key={alerta.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        setAlertaSelecionado(alerta);
+                        setDrawerAberto(true);
+                      }}
+                    >
                       <TableCell className="text-xs">
                         {formatarData(alerta.data_alerta)}
                       </TableCell>
@@ -309,99 +321,25 @@ const AlertasEvasao = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(alerta.status)}>
+                        {alerta.ultima_atividade ? (
+                          <Badge variant="outline" className={getEtapaBadgeClass(alerta.ultima_atividade.tipo_atividade)}>
+                            {getTipoAtividadeLabel(alerta.ultima_atividade.tipo_atividade)}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sem atividades</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {alerta.ultima_atividade?.data_agendada ? (
+                          formatarData(alerta.ultima_atividade.data_agendada)
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadgeClass(alerta.status)}>
                           {alerta.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getKanbanBadgeVariant(alerta.kanban_status)}>
-                          {getKanbanLabel(alerta.kanban_status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Ver Detalhes
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
-                            <DialogHeader>
-                              <DialogTitle>Detalhes do Alerta de Evasão</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Aluno</p>
-                                  <p>{alerta.aluno?.nome}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Turma</p>
-                                  <p>{alerta.aluno?.turma?.nome || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Professor</p>
-                                  <p>{alerta.aluno?.turma?.professor?.nome || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Data do Alerta</p>
-                                  <p>{formatarData(alerta.data_alerta)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Origem</p>
-                                  <p>{getOrigemLabel(alerta.origem_alerta)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Status</p>
-                                  <Badge variant={getStatusBadgeVariant(alerta.status)}>
-                                    {alerta.status}
-                                  </Badge>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Status Kanban</p>
-                                  <Badge variant={getKanbanBadgeVariant(alerta.kanban_status)}>
-                                    {getKanbanLabel(alerta.kanban_status)}
-                                  </Badge>
-                                </div>
-                                {alerta.responsavel && (
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Responsável</p>
-                                    <p>{alerta.responsavel}</p>
-                                  </div>
-                                )}
-                                {alerta.data_retencao && (
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Data Retenção Prevista</p>
-                                    <p>{formatarData(alerta.data_retencao)}</p>
-                                  </div>
-                                )}
-                              </div>
-
-                              {alerta.descritivo && (
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground mb-2">Descrição</p>
-                                  <p className="bg-muted p-3 rounded text-sm">
-                                    {alerta.descritivo}
-                                  </p>
-                                </div>
-                              )}
-
-                              <div className="border-t pt-4">
-                                <h4 className="font-semibold mb-3">Histórico</h4>
-                                <div className="space-y-2 text-sm">
-                                  <div>
-                                    <span className="text-muted-foreground">Criado em: </span>
-                                    {formatarData(alerta.created_at)}
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground">Última atualização: </span>
-                                    {formatarData(alerta.updated_at)}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -450,6 +388,16 @@ const AlertasEvasao = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Drawer de Atividades */}
+      <AtividadesDrawer 
+        open={drawerAberto} 
+        onClose={() => {
+          setDrawerAberto(false);
+          setAlertaSelecionado(null);
+        }}
+        alerta={alertaSelecionado}
+      />
     </div>
   );
 };

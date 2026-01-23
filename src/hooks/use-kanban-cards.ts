@@ -416,11 +416,12 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
         throw errorCard;
       }
       
-      // Atualiza o alerta na tabela alerta_evasao
+      // Atualiza o alerta na tabela alerta_evasao com o status correto
+      const statusAlerta = resultado === 'evadiu' ? 'evadido' : 'retido';
       const { error: errorAlerta } = await supabase
         .from('alerta_evasao')
         .update({ 
-          status: 'resolvido',
+          status: statusAlerta,
           kanban_status: 'done'
         })
         .eq('id', alertaId);

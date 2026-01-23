@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface AtividadeAlerta {
+  id: string;
+  tipo_atividade: string;
+  descricao: string;
+  status: string;
+  created_at: string;
+  data_agendada: string | null;
+}
+
 export interface AlertaEvasao {
   id: string;
   aluno_id: string;
@@ -21,10 +30,12 @@ export interface AlertaEvasao {
     turma?: {
       nome: string;
       professor?: {
+        id: string;
         nome: string;
       };
     };
   };
+  ultima_atividade?: AtividadeAlerta | null;
 }
 
 interface FiltrosAlertasEvasao {
@@ -60,7 +71,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
             turma_id,
             turma:turmas(
               nome,
-              professor:professores(nome)
+              professor:professores(id, nome)
             )
           )
         `, { count: 'exact' })
@@ -96,8 +107,41 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         throw error;
       }
 
-      // Aplicar filtro de nome do aluno no lado do cliente
-      let alertasFiltrados = data as AlertaEvasao[];
+      // Buscar última atividade de cada alerta
+      const alertaIds = (data || []).map(a => a.id);
+      
+      let atividadesMap: Record<string, AtividadeAlerta> = {};
+      
+      if (alertaIds.length > 0) {
+        const { data: atividades } = await supabase
+          .from('atividades_alerta_evasao')
+          .select('id, alerta_evasao_id, tipo_atividade, descricao, status, created_at, data_agendada')
+          .in('alerta_evasao_id', alertaIds)
+          .order('created_at', { ascending: false });
+        
+        // Pegar apenas a última atividade de cada alerta
+        if (atividades) {
+          for (const atividade of atividades) {
+            if (!atividadesMap[atividade.alerta_evasao_id]) {
+              atividadesMap[atividade.alerta_evasao_id] = {
+                id: atividade.id,
+                tipo_atividade: atividade.tipo_atividade,
+                descricao: atividade.descricao,
+                status: atividade.status,
+                created_at: atividade.created_at,
+                data_agendada: atividade.data_agendada
+              };
+            }
+          }
+        }
+      }
+
+      // Aplicar filtro de nome do aluno no lado do cliente e adicionar última atividade
+      let alertasFiltrados = (data as AlertaEvasao[]).map(alerta => ({
+        ...alerta,
+        ultima_atividade: atividadesMap[alerta.id] || null
+      }));
+      
       if (filtros?.nome_aluno) {
         alertasFiltrados = alertasFiltrados.filter(alerta => 
           alerta.aluno?.nome.toLowerCase().includes(filtros.nome_aluno!.toLowerCase())
@@ -149,54 +193,54 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         pendentesQuery = pendentesQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
       
-      // Contagem de resolvidos
-      let resolvidosQuery = supabase
+      // Contagem de retidos
+      let retidosQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
-        .eq('status', 'resolvido');
+        .eq('status', 'retido');
       
       if (filtros?.data_inicio) {
-        resolvidosQuery = resolvidosQuery.gte('data_alerta', filtros.data_inicio);
+        retidosQuery = retidosQuery.gte('data_alerta', filtros.data_inicio);
       }
       
       if (filtros?.data_fim) {
-        resolvidosQuery = resolvidosQuery.lte('data_alerta', filtros.data_fim);
+        retidosQuery = retidosQuery.lte('data_alerta', filtros.data_fim);
       }
       
       if (filtros?.origem_alerta) {
-        resolvidosQuery = resolvidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
+        retidosQuery = retidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
       
-      // Contagem de em andamento
-      let emAndamentoQuery = supabase
+      // Contagem de evadidos
+      let evadidosQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
-        .eq('kanban_status', 'in_progress');
+        .eq('status', 'evadido');
       
       if (filtros?.data_inicio) {
-        emAndamentoQuery = emAndamentoQuery.gte('data_alerta', filtros.data_inicio);
+        evadidosQuery = evadidosQuery.gte('data_alerta', filtros.data_inicio);
       }
       
       if (filtros?.data_fim) {
-        emAndamentoQuery = emAndamentoQuery.lte('data_alerta', filtros.data_fim);
+        evadidosQuery = evadidosQuery.lte('data_alerta', filtros.data_fim);
       }
       
       if (filtros?.origem_alerta) {
-        emAndamentoQuery = emAndamentoQuery.eq('origem_alerta', filtros.origem_alerta as any);
+        evadidosQuery = evadidosQuery.eq('origem_alerta', filtros.origem_alerta as any);
       }
 
       const [
         { count: totalCount },
         { count: pendentesCount },
-        { count: resolvidosCount },
-        { count: emAndamentoCount }
+        { count: retidosCount },
+        { count: evadidosCount }
       ] = await Promise.all([
         countQuery,
         pendentesQuery,
-        resolvidosQuery,
-        emAndamentoQuery
+        retidosQuery,
+        evadidosQuery
       ]);
 
       const totalPages = count ? Math.ceil(count / pageSize) : 0;
@@ -205,8 +249,8 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         alertas: alertasFiltrados,
         total: count || 0,
         totalPendentes: pendentesCount || 0,
-        totalResolvidos: resolvidosCount || 0,
-        totalEmAndamento: emAndamentoCount || 0,
+        totalRetidos: retidosCount || 0,
+        totalEvadidos: evadidosCount || 0,
         page,
         pageSize,
         totalPages

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, startOfWeek, endOfWeek, addWeeks, isToday, isSameWeek, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, isToday, isSameWeek, parseISO, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
@@ -12,20 +12,23 @@ import { useUserPermissions } from '@/hooks/useUserPermissions';
 import { useCamisetas } from '@/hooks/use-camisetas';
 import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
 import { useAniversariantes } from '@/hooks/use-aniversariantes';
+import { useAtividadesEvasaoHome } from '@/hooks/use-atividades-evasao-home';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
 import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
-
+import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
+import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
+import { supabase } from '@/integrations/supabase/client';
 // Interface para eventos com dados extras
 interface Evento {
   tipo: string;
@@ -41,6 +44,10 @@ interface Evento {
   apostila_nome?: string;
   turma_nome?: string;
   educador_nome?: string;
+  // Campos para alerta de evasão
+  alerta_evasao_id?: string;
+  atividade_evasao_id?: string;
+  tipo_atividade_evasao?: string;
 }
 
 export default function Home() {
@@ -102,9 +109,16 @@ export default function Home() {
     apostilaNome: string;
     pessoaNome: string;
   } | null>(null);
+
+  // Estado para drawer de atividades de evasão
+  const [drawerEvasaoAberto, setDrawerEvasaoAberto] = useState(false);
+  const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
   
   // Buscar aniversariantes
   const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
+  
+  // Buscar atividades de alerta de evasão pendentes
+  const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao } = useAtividadesEvasaoHome();
   
   // Permissões do usuário
   const { isAdmin, isManagement } = useUserPermissions();
@@ -143,6 +157,58 @@ export default function Home() {
     return isSameWeek(data, inicioProximaSemana, { weekStartsOn: 0 });
   });
 
+  // Helper para obter label do tipo de atividade de evasão
+  const getTipoAtividadeLabel = (tipo: string) => {
+    const labels: Record<string, string> = {
+      'acolhimento': 'Acolhimento',
+      'atendimento_pedagogico': 'Atend. Pedagógico',
+      'atendimento_financeiro': 'Atend. Financeiro',
+      'remover_sgs': 'Remover SGS',
+      'evasao': 'Evasão',
+      'tarefa_admin': 'Tarefa Admin',
+    };
+    return labels[tipo] || tipo;
+  };
+
+  // Helper para categorizar evento de evasão por data
+  const categorizarEventoEvasao = (
+    atividade: typeof atividadesEvasao[0],
+    eventosAtrasados: Evento[],
+    eventosHoje: Evento[],
+    eventosSemana: Evento[],
+    eventosProximaSemana: Evento[]
+  ) => {
+    const evento: Evento = {
+      tipo: 'alerta_evasao',
+      titulo: `${getTipoAtividadeLabel(atividade.tipo_atividade)}: ${atividade.aluno_nome}`,
+      data: atividade.data_agendada || '',
+      subtitulo: atividade.turma_nome || 'Sem turma',
+      aluno_id: atividade.aluno_id,
+      aluno_nome: atividade.aluno_nome,
+      alerta_evasao_id: atividade.alerta_evasao_id,
+      atividade_evasao_id: atividade.id,
+      tipo_atividade_evasao: atividade.tipo_atividade,
+    };
+
+    if (!atividade.data_agendada) {
+      // Sem data agendada = atrasado (prioridade alta)
+      eventosAtrasados.push(evento);
+    } else {
+      const dataAgendada = parseISO(atividade.data_agendada);
+      const hojeInicio = startOfDay(hoje);
+      
+      if (isBefore(dataAgendada, hojeInicio)) {
+        eventosAtrasados.push(evento);
+      } else if (atividade.data_agendada === hojeStr) {
+        eventosHoje.push(evento);
+      } else if (isSameWeek(dataAgendada, hoje, { weekStartsOn: 0 })) {
+        eventosSemana.push(evento);
+      } else if (isSameWeek(dataAgendada, inicioProximaSemana, { weekStartsOn: 0 })) {
+        eventosProximaSemana.push(evento);
+      }
+    }
+  };
+
   // Montar eventos baseado no perfil (admin, professor ou outros)
   const montarEventos = () => {
     // Para admins/gestores: mostrar todas as atividades
@@ -151,6 +217,11 @@ export default function Home() {
       const eventosHoje: Evento[] = [];
       const eventosSemana: Evento[] = [];
       const eventosProximaSemana: Evento[] = [];
+
+      // === ATIVIDADES DE ALERTA DE EVASÃO ===
+      atividadesEvasao.forEach(atividade => {
+        categorizarEventoEvasao(atividade, eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana);
+      });
 
       // === EVENTOS ATRASADOS ===
       
@@ -262,6 +333,12 @@ export default function Home() {
       const eventosAtrasados: Evento[] = [];
       const eventosHoje: Evento[] = [];
       const eventosSemana: Evento[] = [];
+      const eventosProximaSemana: Evento[] = [];
+
+      // === ATIVIDADES DE ALERTA DE EVASÃO DO PROFESSOR ===
+      atividadesEvasao.forEach(atividade => {
+        categorizarEventoEvasao(atividade, eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana);
+      });
 
       // Reposições do professor
       reposicoesProfessor.forEach(r => {
@@ -509,12 +586,14 @@ export default function Home() {
         return <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />;
       case 'aniversario':
         return <Cake className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" />;
+      case 'alerta_evasao':
+        return <UserX className="h-3.5 w-3.5 text-destructive flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
   };
 
-  const getEventoBadge = (tipo: string) => {
+  const getEventoBadge = (tipo: string, tipoAtividade?: string) => {
     switch (tipo) {
       case 'aula_experimental':
         return <Badge className="text-[10px] px-1.5 py-0 text-primary-foreground">Aula</Badge>;
@@ -528,8 +607,42 @@ export default function Home() {
         return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white">Coleta</Badge>;
       case 'aniversario':
         return <Badge className="text-[10px] px-1.5 py-0 bg-pink-500 text-white">Aniver.</Badge>;
+      case 'alerta_evasao':
+        // Badge colorido por tipo de atividade
+        const badgeColors: Record<string, string> = {
+          'acolhimento': 'bg-blue-500',
+          'atendimento_pedagogico': 'bg-orange-500',
+          'atendimento_financeiro': 'bg-violet-500',
+          'remover_sgs': 'bg-slate-500',
+          'evasao': 'bg-destructive',
+          'tarefa_admin': 'bg-amber-500',
+        };
+        const color = badgeColors[tipoAtividade || ''] || 'bg-destructive';
+        return <Badge className={`text-[10px] px-1.5 py-0 ${color} text-white`}>Evasão</Badge>;
       default:
         return null;
+    }
+  };
+
+  const handleAlertaEvasaoClick = async (evento: Evento) => {
+    if (evento.alerta_evasao_id) {
+      // Buscar dados completos do alerta para o drawer
+      const { data: alertaData } = await supabase
+        .from('alerta_evasao')
+        .select(`
+          *,
+          aluno:alunos!inner(
+            id, nome, foto_url, active,
+            turma:turmas(id, nome, professor:professores(id, nome))
+          )
+        `)
+        .eq('id', evento.alerta_evasao_id)
+        .single();
+      
+      if (alertaData) {
+        setAlertaSelecionado(alertaData as unknown as AlertaEvasao);
+        setDrawerEvasaoAberto(true);
+      }
     }
   };
 
@@ -580,7 +693,8 @@ export default function Home() {
     const isCamisetaClicavel = evento.tipo === 'camiseta' && evento.aluno_id;
     const isColetaAHClicavel = evento.tipo === 'coleta_ah' && evento.pessoa_id;
     const isAHProntaClicavel = evento.tipo === 'apostila_ah' && evento.apostila_recolhida_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel;
+    const isAlertaEvasaoClicavel = evento.tipo === 'alerta_evasao' && evento.alerta_evasao_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -589,6 +703,8 @@ export default function Home() {
         handleColetaAHClick(evento);
       } else if (isAHProntaClicavel) {
         handleAHProntaClick(evento);
+      } else if (isAlertaEvasaoClicavel) {
+        handleAlertaEvasaoClick(evento);
       }
     };
     
@@ -611,7 +727,7 @@ export default function Home() {
             )}
           </p>
         </div>
-        {getEventoBadge(evento.tipo)}
+        {getEventoBadge(evento.tipo, evento.tipo_atividade_evasao)}
       </div>
     );
   };
@@ -653,7 +769,7 @@ export default function Home() {
     </Card>
   );
 
-  const isLoading = loadingTarefas || loadingProfessor || (isAdmin && loadingColetasAH);
+  const isLoading = loadingTarefas || loadingProfessor || loadingAtividadesEvasao || (isAdmin && loadingColetasAH);
 
   return (
     <div className="w-full space-y-3 px-4">
@@ -815,6 +931,16 @@ export default function Home() {
         apostilaRecolhidaId={apostilaSelecionadaEntrega?.id || ''}
         apostilaNome={apostilaSelecionadaEntrega?.apostilaNome || ''}
         pessoaNome={apostilaSelecionadaEntrega?.pessoaNome || ''}
+      />
+
+      {/* Drawer de Atividades de Evasão */}
+      <AtividadesDrawer
+        open={drawerEvasaoAberto}
+        onClose={() => {
+          setDrawerEvasaoAberto(false);
+          setAlertaSelecionado(null);
+        }}
+        alerta={alertaSelecionado}
       />
     </div>
   );
