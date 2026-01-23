@@ -177,34 +177,34 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
           </div>
         </div>
         
-        {/* Coluna 2: Caixa de Lembretes (centralizada) */}
-        {temLembretes && (
-          <div className="flex-1 flex justify-center px-4">
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 min-w-[180px]">
+        {/* Coluna 2: Caixa de Lembretes (posição fixa) */}
+        <div className="flex-1 flex justify-end px-4">
+          {temLembretes && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 w-[200px]">
               <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">Lembretes</p>
               <div className="space-y-1.5">
                 {alunoLembretes.aniversarioHoje && (
                   <div className="flex items-center gap-2 text-sm text-pink-600 dark:text-pink-400">
-                    <Cake className="h-4 w-4" />
+                    <Cake className="h-4 w-4 shrink-0" />
                     <span>Aniversariante!</span>
                   </div>
                 )}
                 {alunoLembretes.camisetaPendente && (
                   <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                    <Shirt className="h-4 w-4" />
+                    <Shirt className="h-4 w-4 shrink-0" />
                     <span>Entregar camiseta</span>
                   </div>
                 )}
                 {alunoLembretes.apostilaAHPronta && (
                   <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                    <BookMarked className="h-4 w-4" />
+                    <BookMarked className="h-4 w-4 shrink-0" />
                     <span>Devolver apostila AH</span>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
         
         {/* Coluna 3: Botões de ação */}
         <div className="flex gap-2 shrink-0">
