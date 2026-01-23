@@ -94,6 +94,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   // Estado para painel de resultado da negociação
   const [mostrarResultadoNegociacao, setMostrarResultadoNegociacao] = useState(false);
   const [atividadeNegociacao, setAtividadeNegociacao] = useState<AtividadeAlertaEvasao | null>(null);
+  const [etapaNegociacao, setEtapaNegociacao] = useState<'observacoes' | 'resultado'>('observacoes');
   const [resultadoSelecionado, setResultadoSelecionado] = useState<ResultadoNegociacao | null>(null);
   const [dataFimAjuste, setDataFimAjuste] = useState('');
   const [observacoesNegociacao, setObservacoesNegociacao] = useState('');
@@ -289,6 +290,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const fecharPainelResultado = () => {
     setMostrarResultadoNegociacao(false);
     setAtividadeNegociacao(null);
+    setEtapaNegociacao('observacoes');
     setResultadoSelecionado(null);
     setDataFimAjuste('');
     setObservacoesNegociacao('');
@@ -774,155 +776,199 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
           </div>
 
           {/* Coluna direita: Resultado da Negociação Financeira */}
-          {mostrarResultadoNegociacao && (
+          {mostrarResultadoNegociacao && atividadeNegociacao && (
             <div className="w-1/2 flex flex-col bg-muted/20">
               <div className="px-3 py-2 border-b flex items-center justify-between bg-muted/30">
-                <span className="font-medium text-xs">Resultado da Negociação</span>
+                <span className="font-medium text-xs">
+                  {etapaNegociacao === 'observacoes' ? 'Concluir Atendimento' : 'Resultado da Negociação'}
+                </span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fecharPainelResultado}>
                   <X className="h-3 w-3" />
                 </Button>
               </div>
               
               <div className="p-3 space-y-3 flex-1">
-                <p className="text-[10px] text-muted-foreground">
-                  Selecione o resultado da negociação financeira:
-                </p>
+                {/* Etapa 1: Observações do atendimento realizado */}
+                {etapaNegociacao === 'observacoes' && (
+                  <>
+                    {/* Card da atividade */}
+                    <div className="p-2 bg-purple-50 border border-purple-200 rounded">
+                      <Badge className="bg-purple-500 text-white text-[10px] px-1.5 py-0 mb-1">
+                        Atendimento Financeiro
+                      </Badge>
+                      <p className="text-xs mt-1">{atividadeNegociacao.descricao}</p>
+                      {atividadeNegociacao.data_agendada && (
+                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                          <CalendarIcon className="h-2.5 w-2.5" />
+                          Agendado para: {formatarDataAgendada(atividadeNegociacao.data_agendada)}
+                        </p>
+                      )}
+                    </div>
 
-                {/* Opção: Evasão */}
-                <button
-                  type="button"
-                  onClick={() => setResultadoSelecionado('evasao')}
-                  className={`w-full p-2 rounded border text-left transition-all ${
-                    resultadoSelecionado === 'evasao'
-                      ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
-                      : 'border-border hover:border-red-300 hover:bg-red-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded ${resultadoSelecionado === 'evasao' ? 'bg-red-500' : 'bg-red-100'}`}>
-                      <AlertTriangle className={`h-3 w-3 ${resultadoSelecionado === 'evasao' ? 'text-white' : 'text-red-600'}`} />
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Descreva como foi o atendimento *</Label>
+                      <Textarea
+                        placeholder="Relate os pontos abordados, valores discutidos, percepções sobre o responsável..."
+                        value={observacoesNegociacao}
+                        onChange={(e) => setObservacoesNegociacao(e.target.value)}
+                        rows={4}
+                        className="text-xs min-h-[80px] resize-none"
+                      />
                     </div>
-                    <div>
-                      <p className={`text-xs font-medium ${resultadoSelecionado === 'evasao' ? 'text-red-700' : ''}`}>
-                        Evasão
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Aluno não retido
-                      </p>
-                    </div>
-                  </div>
-                </button>
 
-                {/* Opção: Ajuste Temporário */}
-                <button
-                  type="button"
-                  onClick={() => setResultadoSelecionado('ajuste_temporario')}
-                  className={`w-full p-2 rounded border text-left transition-all ${
-                    resultadoSelecionado === 'ajuste_temporario'
-                      ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500'
-                      : 'border-border hover:border-amber-300 hover:bg-amber-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded ${resultadoSelecionado === 'ajuste_temporario' ? 'bg-amber-500' : 'bg-amber-100'}`}>
-                      <TrendingDown className={`h-3 w-3 ${resultadoSelecionado === 'ajuste_temporario' ? 'text-white' : 'text-amber-600'}`} />
+                    <div className="pt-2">
+                      <Button
+                        size="sm"
+                        className="w-full h-7 text-xs"
+                        disabled={!observacoesNegociacao.trim()}
+                        onClick={() => setEtapaNegociacao('resultado')}
+                      >
+                        Próximo
+                      </Button>
                     </div>
-                    <div>
-                      <p className={`text-xs font-medium ${resultadoSelecionado === 'ajuste_temporario' ? 'text-amber-700' : ''}`}>
-                        Ajuste Temporário
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Nova negociação na data fim
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Campo de data para ajuste temporário */}
-                {resultadoSelecionado === 'ajuste_temporario' && (
-                  <div className="pl-6 space-y-1">
-                    <Label className="text-[10px]">Data fim do ajuste *</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full h-7 justify-start text-left font-normal text-xs",
-                            !dataFimAjuste && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-3 w-3" />
-                          {dataFimAjuste ? format(new Date(dataFimAjuste), "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={dataFimAjuste ? new Date(dataFimAjuste) : undefined}
-                          onSelect={(date) => setDataFimAjuste(date ? date.toISOString().split('T')[0] : '')}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  </>
                 )}
 
-                {/* Opção: Ajuste Definitivo */}
-                <button
-                  type="button"
-                  onClick={() => setResultadoSelecionado('ajuste_definitivo')}
-                  className={`w-full p-2 rounded border text-left transition-all ${
-                    resultadoSelecionado === 'ajuste_definitivo'
-                      ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
-                      : 'border-border hover:border-green-300 hover:bg-green-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded ${resultadoSelecionado === 'ajuste_definitivo' ? 'bg-green-500' : 'bg-green-100'}`}>
-                      <TrendingUp className={`h-3 w-3 ${resultadoSelecionado === 'ajuste_definitivo' ? 'text-white' : 'text-green-600'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-xs font-medium ${resultadoSelecionado === 'ajuste_definitivo' ? 'text-green-700' : ''}`}>
-                        Ajuste Definitivo
-                      </p>
+                {/* Etapa 2: Selecionar resultado */}
+                {etapaNegociacao === 'resultado' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[10px]"
+                        onClick={() => setEtapaNegociacao('observacoes')}
+                      >
+                        ← Voltar
+                      </Button>
                       <p className="text-[10px] text-muted-foreground">
-                        Aluno retido com sucesso
+                        Selecione o resultado:
                       </p>
                     </div>
-                  </div>
-                </button>
 
-                {/* Campo de observações da negociação */}
-                {resultadoSelecionado && (
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Observações da negociação</Label>
-                    <Textarea
-                      placeholder="Descreva os detalhes da negociação, valores acordados, motivos..."
-                      value={observacoesNegociacao}
-                      onChange={(e) => setObservacoesNegociacao(e.target.value)}
-                      rows={3}
-                      className="text-xs min-h-[60px] resize-none"
-                    />
-                  </div>
+                    {/* Opção: Evasão */}
+                    <button
+                      type="button"
+                      onClick={() => setResultadoSelecionado('evasao')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        resultadoSelecionado === 'evasao'
+                          ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
+                          : 'border-border hover:border-red-300 hover:bg-red-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${resultadoSelecionado === 'evasao' ? 'bg-red-500' : 'bg-red-100'}`}>
+                          <AlertTriangle className={`h-3 w-3 ${resultadoSelecionado === 'evasao' ? 'text-white' : 'text-red-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${resultadoSelecionado === 'evasao' ? 'text-red-700' : ''}`}>
+                            Evasão
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Aluno não retido
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Opção: Ajuste Temporário */}
+                    <button
+                      type="button"
+                      onClick={() => setResultadoSelecionado('ajuste_temporario')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        resultadoSelecionado === 'ajuste_temporario'
+                          ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500'
+                          : 'border-border hover:border-amber-300 hover:bg-amber-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${resultadoSelecionado === 'ajuste_temporario' ? 'bg-amber-500' : 'bg-amber-100'}`}>
+                          <TrendingDown className={`h-3 w-3 ${resultadoSelecionado === 'ajuste_temporario' ? 'text-white' : 'text-amber-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${resultadoSelecionado === 'ajuste_temporario' ? 'text-amber-700' : ''}`}>
+                            Ajuste Temporário
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Nova negociação na data fim
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Campo de data para ajuste temporário */}
+                    {resultadoSelecionado === 'ajuste_temporario' && (
+                      <div className="pl-6 space-y-1">
+                        <Label className="text-[10px]">Data fim do ajuste *</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-7 justify-start text-left font-normal text-xs",
+                                !dataFimAjuste && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              {dataFimAjuste ? format(new Date(dataFimAjuste), "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={dataFimAjuste ? new Date(dataFimAjuste) : undefined}
+                              onSelect={(date) => setDataFimAjuste(date ? date.toISOString().split('T')[0] : '')}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    )}
+
+                    {/* Opção: Ajuste Definitivo */}
+                    <button
+                      type="button"
+                      onClick={() => setResultadoSelecionado('ajuste_definitivo')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        resultadoSelecionado === 'ajuste_definitivo'
+                          ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
+                          : 'border-border hover:border-green-300 hover:bg-green-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${resultadoSelecionado === 'ajuste_definitivo' ? 'bg-green-500' : 'bg-green-100'}`}>
+                          <TrendingUp className={`h-3 w-3 ${resultadoSelecionado === 'ajuste_definitivo' ? 'text-white' : 'text-green-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${resultadoSelecionado === 'ajuste_definitivo' ? 'text-green-700' : ''}`}>
+                            Ajuste Definitivo
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Aluno retido com sucesso
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Botão de confirmação */}
+                    <div className="pt-2">
+                      <Button
+                        size="sm"
+                        className="w-full h-7 text-xs"
+                        disabled={
+                          !resultadoSelecionado || 
+                          (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) ||
+                          isProcessandoNegociacao
+                        }
+                        onClick={handleConfirmarResultado}
+                      >
+                        {isProcessandoNegociacao ? 'Processando...' : 'Confirmar'}
+                      </Button>
+                    </div>
+                  </>
                 )}
-
-                {/* Botão de confirmação */}
-                <div className="pt-2">
-                  <Button
-                    size="sm"
-                    className="w-full h-7 text-xs"
-                    disabled={
-                      !resultadoSelecionado || 
-                      (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) ||
-                      isProcessandoNegociacao
-                    }
-                    onClick={handleConfirmarResultado}
-                  >
-                    {isProcessandoNegociacao ? 'Processando...' : 'Confirmar'}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
