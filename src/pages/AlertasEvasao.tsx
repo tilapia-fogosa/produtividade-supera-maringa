@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +13,11 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const AlertasEvasao = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
   const [drawerAberto, setDrawerAberto] = useState(false);
+  const [processouUrlParam, setProcessouUrlParam] = useState(false);
   const [filtros, setFiltros] = useState({
     status: 'todos',
     origem_alerta: 'todos',
@@ -41,6 +44,23 @@ const AlertasEvasao = () => {
   const totalPendentes = data?.totalPendentes || 0;
   const totalRetidos = data?.totalRetidos || 0;
   const totalEvadidos = data?.totalEvadidos || 0;
+
+  // Abrir drawer automaticamente se vier com parâmetro alerta na URL
+  useEffect(() => {
+    const alertaIdParam = searchParams.get('alerta');
+    
+    if (alertaIdParam && !processouUrlParam && alertas.length > 0) {
+      const alertaEncontrado = alertas.find(a => a.id === alertaIdParam);
+      if (alertaEncontrado) {
+        setAlertaSelecionado(alertaEncontrado);
+        setDrawerAberto(true);
+        // Remover o parâmetro da URL para evitar reabrir ao navegar
+        searchParams.delete('alerta');
+        setSearchParams(searchParams, { replace: true });
+      }
+      setProcessouUrlParam(true);
+    }
+  }, [alertas, searchParams, processouUrlParam, setSearchParams]);
 
   // Resetar para página 1 quando filtros mudarem
   const handleFiltroChange = (novosFiltros: typeof filtros) => {
