@@ -7925,13 +7925,7 @@ export type Database = {
         | "60+"
         | "80+"
       sale_type: "matricula" | "outros"
-      status_alerta:
-        | "pendente"
-        | "em_andamento"
-        | "resolvido"
-        | "cancelado"
-        | "retido"
-        | "evadido"
+      status_alerta: "pendente" | "retido" | "evadido"
       status_sincronizacao:
         | "nome_incorreto"
         | "sincronizado"
@@ -8162,14 +8156,7 @@ export const Constants = {
         "80+",
       ],
       sale_type: ["matricula", "outros"],
-      status_alerta: [
-        "pendente",
-        "em_andamento",
-        "resolvido",
-        "cancelado",
-        "retido",
-        "evadido",
-      ],
+      status_alerta: ["pendente", "retido", "evadido"],
       status_sincronizacao: [
         "nome_incorreto",
         "sincronizado",
