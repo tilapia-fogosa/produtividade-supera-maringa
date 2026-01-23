@@ -1,11 +1,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format } from 'date-fns';
+import { format, startOfWeek, addDays } from 'date-fns';
 
 export interface LembretesAluno {
   camisetaPendente: boolean;
   aniversarioHoje: boolean;
+  aniversarioSemana: boolean;
   apostilaAHPronta: boolean;
 }
 
@@ -18,7 +19,15 @@ export function useLembretesAlunos(alunoIds: string[]) {
 
     setLoading(true);
     try {
-      const hoje = format(new Date(), 'dd/MM');
+      const hoje = new Date();
+      const hojeFormatado = format(hoje, 'dd/MM');
+      
+      // Gerar lista de datas da semana no formato DD/MM
+      const inicioSemana = startOfWeek(hoje, { weekStartsOn: 0 });
+      const datasSemana: string[] = [];
+      for (let i = 0; i < 7; i++) {
+        datasSemana.push(format(addDays(inicioSemana, i), 'dd/MM'));
+      }
       
       // Buscar dados dos alunos (dias_supera e aniversario)
       const { data: alunosData } = await supabase
@@ -59,7 +68,10 @@ export function useLembretesAlunos(alunoIds: string[]) {
           (!camiseta || (!camiseta.camiseta_entregue && !camiseta.nao_tem_tamanho));
 
         // Aniversário hoje
-        const aniversarioHoje = aluno.aniversario_mes_dia === hoje;
+        const aniversarioHoje = aluno.aniversario_mes_dia === hojeFormatado;
+
+        // Aniversário na semana
+        const aniversarioSemana = datasSemana.includes(aluno.aniversario_mes_dia || '');
 
         // Apostila AH pronta para devolução
         const apostilaAHPronta = ahProntaSet.has(aluno.id);
@@ -67,6 +79,7 @@ export function useLembretesAlunos(alunoIds: string[]) {
         lembretesMap[aluno.id] = {
           camisetaPendente,
           aniversarioHoje,
+          aniversarioSemana,
           apostilaAHPronta,
         };
       });
