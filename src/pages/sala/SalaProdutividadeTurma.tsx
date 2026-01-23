@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { useSalaPessoasTurma, SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useLembretesAlunos } from '@/hooks/sala/use-lembretes-alunos';
+import { useReposicoesHoje } from '@/hooks/sala/use-reposicoes-hoje';
 import SalaProdutividadeScreen from '@/components/sala/SalaProdutividadeScreen';
 import SalaProdutividadeDrawer from '@/components/sala/SalaProdutividadeDrawer';
 import {
@@ -41,11 +42,15 @@ const SalaProdutividadeTurma = () => {
     recarregarDadosAposExclusao
   } = useSalaPessoasTurma();
 
-  // IDs dos alunos para buscar lembretes
-  const alunoIds = useMemo(() => 
-    pessoasTurma.filter(p => p.origem === 'aluno').map(p => p.id),
-    [pessoasTurma]
-  );
+  // Buscar reposições do dia para esta turma
+  const { reposicoes: reposicoesHoje } = useReposicoesHoje(turmaId);
+
+  // IDs dos alunos para buscar lembretes (incluindo reposições)
+  const alunoIds = useMemo(() => {
+    const idsFixos = pessoasTurma.filter(p => p.origem === 'aluno').map(p => p.id);
+    const idsReposicao = reposicoesHoje.filter(r => r.pessoa_tipo === 'aluno').map(r => r.pessoa_id);
+    return [...new Set([...idsFixos, ...idsReposicao])];
+  }, [pessoasTurma, reposicoesHoje]);
 
   const { lembretes } = useLembretesAlunos(alunoIds);
 
@@ -194,6 +199,7 @@ const SalaProdutividadeTurma = () => {
         onExcluirRegistro={handleExcluirRegistro}
         onReposicao={handleReposicao}
         lembretes={lembretes}
+        reposicoesHoje={reposicoesHoje}
       />
 
       <SalaProdutividadeDrawer
