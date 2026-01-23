@@ -124,8 +124,11 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   // Estado para painel de conclusão de atendimento pedagógico
   const [mostrarPainelConclusaoPedagogico, setMostrarPainelConclusaoPedagogico] = useState(false);
   const [atividadePedagogicoParaConcluir, setAtividadePedagogicoParaConcluir] = useState<AtividadeAlertaEvasao | null>(null);
-  const [resultadoPedagogico, setResultadoPedagogico] = useState<'retencao' | 'negociacao_financeira' | null>(null);
+  const [etapaConclusaoPedagogico, setEtapaConclusaoPedagogico] = useState<'descricao' | 'opcoes' | 'financeiro'>('descricao');
+  const [resultadoPedagogico, setResultadoPedagogico] = useState<'retencao' | 'atendimento_financeiro' | null>(null);
   const [observacoesPedagogico, setObservacoesPedagogico] = useState('');
+  const [dataFinanceiroPedagogico, setDataFinanceiroPedagogico] = useState<Date | undefined>(undefined);
+  const [horarioFinanceiroPedagogico, setHorarioFinanceiroPedagogico] = useState('');
 
   // Estado para painel de Atendimento Financeiro (agendar direto do acolhimento)
   const [mostrarPainelAtendimentoFinanceiro, setMostrarPainelAtendimentoFinanceiro] = useState(false);
@@ -318,8 +321,11 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const fecharPainelConclusaoPedagogico = () => {
     setMostrarPainelConclusaoPedagogico(false);
     setAtividadePedagogicoParaConcluir(null);
+    setEtapaConclusaoPedagogico('descricao');
     setResultadoPedagogico(null);
     setObservacoesPedagogico('');
+    setDataFinanceiroPedagogico(undefined);
+    setHorarioFinanceiroPedagogico('');
   };
 
   const fecharPainelAtendimentoFinanceiro = () => {
@@ -464,26 +470,34 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   };
 
   const handleConfirmarConclusaoPedagogico = async () => {
-    if (!resultadoPedagogico || !atividadePedagogicoParaConcluir) return;
+    if (!resultadoPedagogico || !atividadePedagogicoParaConcluir || !observacoesPedagogico.trim()) return;
     
     try {
       // Se for retenção, cria atividade de retenção com observações
       if (resultadoPedagogico === 'retencao') {
         await criarAtividade({
           tipo_atividade: 'retencao',
-          descricao: observacoesPedagogico.trim() || 'Aluno retido após atendimento pedagógico',
+          descricao: observacoesPedagogico.trim(),
           atividadeAnteriorId: atividadePedagogicoParaConcluir.id
         });
         fecharPainelConclusaoPedagogico();
         return;
       }
       
-      // Se for negociação financeira, cria atividade de negociação financeira
-      if (resultadoPedagogico === 'negociacao_financeira') {
+      // Se for atendimento financeiro, cria atividade de atendimento financeiro
+      if (resultadoPedagogico === 'atendimento_financeiro') {
+        let descricaoCompleta = observacoesPedagogico.trim();
+        if (dataFinanceiroPedagogico && horarioFinanceiroPedagogico) {
+          descricaoCompleta += ` | Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')} às ${horarioFinanceiroPedagogico}`;
+        } else if (dataFinanceiroPedagogico) {
+          descricaoCompleta += ` | Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')}`;
+        }
+        
         await criarAtividade({
           tipo_atividade: 'atendimento_financeiro',
-          descricao: observacoesPedagogico.trim() || 'Encaminhado para negociação financeira após atendimento pedagógico',
-          atividadeAnteriorId: atividadePedagogicoParaConcluir.id
+          descricao: descricaoCompleta,
+          atividadeAnteriorId: atividadePedagogicoParaConcluir.id,
+          data_agendada: dataFinanceiroPedagogico ? format(dataFinanceiroPedagogico, 'yyyy-MM-dd') : undefined
         });
         fecharPainelConclusaoPedagogico();
         return;
@@ -492,6 +506,22 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       console.error('Erro ao concluir atendimento pedagógico:', error);
     }
   };
+
+  // Gerar horários para atendimento financeiro (pós-pedagógico)
+  const horariosAtendimentoFinanceiroPedagogico = useMemo(() => {
+    const slots: string[] = [];
+    let totalMinutos = 8 * 60; // 08:00
+    const totalMinutosFim = 18 * 60 + 30; // 18:30
+    
+    while (totalMinutos <= totalMinutosFim) {
+      const horas = Math.floor(totalMinutos / 60);
+      const minutos = totalMinutos % 60;
+      slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
+      totalMinutos += 30;
+    }
+    
+    return slots;
+  }, []);
 
   // Calcular horários disponíveis para a data selecionada
   const horariosDisponiveis = useMemo(() => {
@@ -1402,101 +1432,248 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                 </Button>
               </div>
               
-              <div className="p-3 space-y-3 flex-1">
-                {/* Informação da atividade */}
-                <div className="p-2 bg-orange-50 border border-orange-200 rounded">
-                  <Badge className="bg-orange-500 text-white text-[10px] px-1.5 py-0 mb-1">
-                    Atendimento Pedagógico
-                  </Badge>
-                  <p className="text-xs mt-1">{atividadePedagogicoParaConcluir.descricao}</p>
-                  {atividadePedagogicoParaConcluir.data_agendada && (
-                    <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                      <CalendarIcon className="h-2.5 w-2.5" />
-                      Agendado para: {formatarDataAgendada(atividadePedagogicoParaConcluir.data_agendada)}
-                    </p>
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-3">
+                  {/* Informação da atividade */}
+                  <div className="p-2 bg-orange-50 border border-orange-200 rounded">
+                    <Badge className="bg-orange-500 text-white text-[10px] px-1.5 py-0 mb-1">
+                      Atendimento Pedagógico
+                    </Badge>
+                    <p className="text-xs mt-1">{atividadePedagogicoParaConcluir.descricao}</p>
+                    {atividadePedagogicoParaConcluir.data_agendada && (
+                      <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                        <CalendarIcon className="h-2.5 w-2.5" />
+                        Agendado para: {formatarDataAgendada(atividadePedagogicoParaConcluir.data_agendada)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* ETAPA 1: Descrição do atendimento */}
+                  {etapaConclusaoPedagogico === 'descricao' && (
+                    <>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Como foi o atendimento? *</Label>
+                        <Textarea
+                          placeholder="Descreva como foi o atendimento pedagógico realizado..."
+                          value={observacoesPedagogico}
+                          onChange={(e) => setObservacoesPedagogico(e.target.value)}
+                          rows={4}
+                          className="text-xs min-h-[80px] resize-none"
+                        />
+                      </div>
+
+                      <div className="pt-2">
+                        <Button
+                          size="sm"
+                          className="w-full h-7 text-xs"
+                          disabled={!observacoesPedagogico.trim()}
+                          onClick={() => setEtapaConclusaoPedagogico('opcoes')}
+                        >
+                          Próximo
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* ETAPA 2: Escolha do resultado */}
+                  {etapaConclusaoPedagogico === 'opcoes' && (
+                    <>
+                      <p className="text-[10px] text-muted-foreground">
+                        Selecione o resultado do atendimento:
+                      </p>
+
+                      {/* Opção: Retenção */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResultadoPedagogico('retencao');
+                        }}
+                        className={`w-full p-2 rounded border text-left transition-all ${
+                          resultadoPedagogico === 'retencao'
+                            ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
+                            : 'border-border hover:border-green-300 hover:bg-green-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1 rounded ${resultadoPedagogico === 'retencao' ? 'bg-green-500' : 'bg-green-100'}`}>
+                            <TrendingUp className={`h-3 w-3 ${resultadoPedagogico === 'retencao' ? 'text-white' : 'text-green-600'}`} />
+                          </div>
+                          <div>
+                            <p className={`text-xs font-medium ${resultadoPedagogico === 'retencao' ? 'text-green-700' : ''}`}>
+                              Retenção
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Aluno retido com sucesso
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Opção: Atendimento Financeiro */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResultadoPedagogico('atendimento_financeiro');
+                          setEtapaConclusaoPedagogico('financeiro');
+                        }}
+                        className={`w-full p-2 rounded border text-left transition-all ${
+                          resultadoPedagogico === 'atendimento_financeiro'
+                            ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
+                            : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1 rounded ${resultadoPedagogico === 'atendimento_financeiro' ? 'bg-purple-500' : 'bg-purple-100'}`}>
+                            <DollarSign className={`h-3 w-3 ${resultadoPedagogico === 'atendimento_financeiro' ? 'text-white' : 'text-purple-600'}`} />
+                          </div>
+                          <div>
+                            <p className={`text-xs font-medium ${resultadoPedagogico === 'atendimento_financeiro' ? 'text-purple-700' : ''}`}>
+                              Atendimento Financeiro
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Encaminhar para negociação
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Botão de confirmação para Retenção */}
+                      {resultadoPedagogico === 'retencao' && (
+                        <div className="pt-2">
+                          <Button
+                            size="sm"
+                            className="w-full h-7 text-xs"
+                            disabled={isCriando}
+                            onClick={handleConfirmarConclusaoPedagogico}
+                          >
+                            {isCriando ? 'Processando...' : 'Confirmar Retenção'}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Botão voltar */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-6 text-[10px] text-muted-foreground"
+                        onClick={() => setEtapaConclusaoPedagogico('descricao')}
+                      >
+                        ← Voltar para descrição
+                      </Button>
+                    </>
+                  )}
+
+                  {/* ETAPA 3: Agendamento Financeiro (opcional) */}
+                  {etapaConclusaoPedagogico === 'financeiro' && (
+                    <>
+                      <div className="p-2 bg-purple-50 border border-purple-200 rounded">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 rounded bg-purple-500">
+                            <DollarSign className="h-3 w-3 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-purple-700">
+                              Atendimento Financeiro
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Negociação presencial com o responsável
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Data opcional */}
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Data do atendimento (opcional)</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-7 justify-start text-left font-normal text-xs",
+                                !dataFinanceiroPedagogico && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              {dataFinanceiroPedagogico 
+                                ? format(dataFinanceiroPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                                : <span>Selecione a data</span>
+                              }
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={dataFinanceiroPedagogico}
+                              onSelect={(date) => {
+                                setDataFinanceiroPedagogico(date);
+                                setHorarioFinanceiroPedagogico('');
+                              }}
+                              disabled={(date) => {
+                                const hoje = new Date();
+                                hoje.setHours(0, 0, 0, 0);
+                                return date < hoje || date.getDay() === 0;
+                              }}
+                              locale={ptBR}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Horário opcional (só aparece se tiver data) */}
+                      {dataFinanceiroPedagogico && (
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Horário do atendimento (opcional)</Label>
+                          <Select value={horarioFinanceiroPedagogico} onValueChange={setHorarioFinanceiroPedagogico}>
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue placeholder="Selecione o horário" />
+                            </SelectTrigger>
+                            <SelectContent className="z-[9999]">
+                              {horariosAtendimentoFinanceiroPedagogico.map((horario) => (
+                                <SelectItem key={horario} value={horario}>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-3 w-3" />
+                                    {horario}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Botão de confirmação */}
+                      <div className="pt-2">
+                        <Button
+                          size="sm"
+                          className="w-full h-7 text-xs"
+                          disabled={isCriando}
+                          onClick={handleConfirmarConclusaoPedagogico}
+                        >
+                          {isCriando ? 'Processando...' : 'Confirmar Atendimento Financeiro'}
+                        </Button>
+                      </div>
+
+                      {/* Botão voltar */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-6 text-[10px] text-muted-foreground"
+                        onClick={() => {
+                          setEtapaConclusaoPedagogico('opcoes');
+                          setResultadoPedagogico(null);
+                          setDataFinanceiroPedagogico(undefined);
+                          setHorarioFinanceiroPedagogico('');
+                        }}
+                      >
+                        ← Voltar para opções
+                      </Button>
+                    </>
                   )}
                 </div>
-
-                <p className="text-[10px] text-muted-foreground">
-                  Selecione o resultado do atendimento pedagógico:
-                </p>
-
-                {/* Opção: Retenção */}
-                <button
-                  type="button"
-                  onClick={() => setResultadoPedagogico('retencao')}
-                  className={`w-full p-2 rounded border text-left transition-all ${
-                    resultadoPedagogico === 'retencao'
-                      ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
-                      : 'border-border hover:border-green-300 hover:bg-green-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded ${resultadoPedagogico === 'retencao' ? 'bg-green-500' : 'bg-green-100'}`}>
-                      <TrendingUp className={`h-3 w-3 ${resultadoPedagogico === 'retencao' ? 'text-white' : 'text-green-600'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-xs font-medium ${resultadoPedagogico === 'retencao' ? 'text-green-700' : ''}`}>
-                        Retenção
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Aluno retido com sucesso
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Opção: Negociação Financeira */}
-                <button
-                  type="button"
-                  onClick={() => setResultadoPedagogico('negociacao_financeira')}
-                  className={`w-full p-2 rounded border text-left transition-all ${
-                    resultadoPedagogico === 'negociacao_financeira'
-                      ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
-                      : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1 rounded ${resultadoPedagogico === 'negociacao_financeira' ? 'bg-purple-500' : 'bg-purple-100'}`}>
-                      <TrendingDown className={`h-3 w-3 ${resultadoPedagogico === 'negociacao_financeira' ? 'text-white' : 'text-purple-600'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-xs font-medium ${resultadoPedagogico === 'negociacao_financeira' ? 'text-purple-700' : ''}`}>
-                        Negociação Financeira
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Encaminhar para negociação
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Campo de observações */}
-                {resultadoPedagogico && (
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Observações do atendimento</Label>
-                    <Textarea
-                      placeholder="Descreva os detalhes do atendimento realizado..."
-                      value={observacoesPedagogico}
-                      onChange={(e) => setObservacoesPedagogico(e.target.value)}
-                      rows={3}
-                      className="text-xs min-h-[60px] resize-none"
-                    />
-                  </div>
-                )}
-
-                {/* Botão de confirmação */}
-                <div className="pt-2">
-                  <Button
-                    size="sm"
-                    className="w-full h-7 text-xs"
-                    disabled={!resultadoPedagogico || isCriando}
-                    onClick={handleConfirmarConclusaoPedagogico}
-                  >
-                    {isCriando ? 'Processando...' : 'Confirmar'}
-                  </Button>
-                </div>
-              </div>
+              </ScrollArea>
             </div>
           )}
 
