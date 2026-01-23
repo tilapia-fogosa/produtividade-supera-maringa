@@ -187,8 +187,7 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                 : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700'
             }`}>
               {alunoLembretes.aniversarioSemana ? (
-                <ConfettiBackground>
-                  <p className="text-xs font-semibold text-pink-700 dark:text-pink-300 mb-2">🎉 Lembretes</p>
+              <ConfettiBackground>
                   <div className="space-y-1.5">
                     {alunoLembretes.aniversarioHoje && (
                       <div className="flex items-center gap-2 text-sm text-pink-600 dark:text-pink-400 font-medium">
@@ -218,7 +217,6 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                 </ConfettiBackground>
               ) : (
                 <>
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">Lembretes</p>
                   <div className="space-y-1.5">
                     {alunoLembretes.camisetaPendente && (
                       <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
