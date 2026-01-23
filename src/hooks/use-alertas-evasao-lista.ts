@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface AtividadeAlerta {
+  id: string;
+  tipo_atividade: string;
+  descricao: string;
+  status: string;
+  created_at: string;
+}
+
 export interface AlertaEvasao {
   id: string;
   aluno_id: string;
@@ -26,6 +34,7 @@ export interface AlertaEvasao {
       };
     };
   };
+  ultima_atividade?: AtividadeAlerta | null;
 }
 
 interface FiltrosAlertasEvasao {
@@ -97,8 +106,40 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         throw error;
       }
 
-      // Aplicar filtro de nome do aluno no lado do cliente
-      let alertasFiltrados = data as AlertaEvasao[];
+      // Buscar última atividade de cada alerta
+      const alertaIds = (data || []).map(a => a.id);
+      
+      let atividadesMap: Record<string, AtividadeAlerta> = {};
+      
+      if (alertaIds.length > 0) {
+        const { data: atividades } = await supabase
+          .from('atividades_alerta_evasao')
+          .select('id, alerta_evasao_id, tipo_atividade, descricao, status, created_at')
+          .in('alerta_evasao_id', alertaIds)
+          .order('created_at', { ascending: false });
+        
+        // Pegar apenas a última atividade de cada alerta
+        if (atividades) {
+          for (const atividade of atividades) {
+            if (!atividadesMap[atividade.alerta_evasao_id]) {
+              atividadesMap[atividade.alerta_evasao_id] = {
+                id: atividade.id,
+                tipo_atividade: atividade.tipo_atividade,
+                descricao: atividade.descricao,
+                status: atividade.status,
+                created_at: atividade.created_at
+              };
+            }
+          }
+        }
+      }
+
+      // Aplicar filtro de nome do aluno no lado do cliente e adicionar última atividade
+      let alertasFiltrados = (data as AlertaEvasao[]).map(alerta => ({
+        ...alerta,
+        ultima_atividade: atividadesMap[alerta.id] || null
+      }));
+      
       if (filtros?.nome_aluno) {
         alertasFiltrados = alertasFiltrados.filter(alerta => 
           alerta.aluno?.nome.toLowerCase().includes(filtros.nome_aluno!.toLowerCase())

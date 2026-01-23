@@ -68,6 +68,21 @@ const AlertasEvasao = () => {
     return labels[origem] || origem;
   };
 
+  const getTipoAtividadeLabel = (tipo: string) => {
+    const labels: Record<string, string> = {
+      'ligacao_pedagogo': 'Ligação Pedagogo',
+      'ligacao_adm': 'Ligação ADM',
+      'reuniao_presencial': 'Reunião Presencial',
+      'contato_whatsapp': 'Contato WhatsApp',
+      'acompanhamento_aula': 'Acompanhamento Aula',
+      'desconto_oferecido': 'Desconto Oferecido',
+      'troca_horario': 'Troca de Horário',
+      'troca_professor': 'Troca de Professor',
+      'outro': 'Outro'
+    };
+    return labels[tipo] || tipo;
+  };
+
   const getStatusBadgeClass = (status: string) => {
     if (status === 'retido') return 'bg-green-600 text-white hover:bg-green-700';
     if (status === 'evadido') return 'bg-red-600 text-white hover:bg-red-700';
@@ -237,6 +252,7 @@ const AlertasEvasao = () => {
                     <TableHead>Turma</TableHead>
                     <TableHead>Professor</TableHead>
                     <TableHead>Origem</TableHead>
+                    <TableHead>Etapa</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -262,6 +278,11 @@ const AlertasEvasao = () => {
                         <Badge variant="outline">
                           {getOrigemLabel(alerta.origem_alerta)}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {alerta.ultima_atividade 
+                          ? getTipoAtividadeLabel(alerta.ultima_atividade.tipo_atividade)
+                          : 'Sem atividades'}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeClass(alerta.status)}>
