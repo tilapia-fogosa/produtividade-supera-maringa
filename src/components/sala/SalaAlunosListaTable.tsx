@@ -10,7 +10,7 @@ import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useApostilas } from '@/hooks/use-apostilas';
 import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
 import { ReposicaoHoje } from '@/hooks/sala/use-reposicoes-hoje';
-
+import { ConfettiBackground } from './ConfettiBackground';
 interface SalaAlunosListaTableProps {
   alunos: SalaPessoaTurma[];
   onRegistrarPresenca: (aluno: SalaPessoaTurma, presente: boolean) => void;
@@ -80,6 +80,7 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
     const alunoLembretes = lembretes[aluno.id];
     const temLembretes = alunoLembretes && (
       alunoLembretes.aniversarioHoje || 
+      alunoLembretes.aniversarioSemana ||
       alunoLembretes.camisetaPendente || 
       alunoLembretes.apostilaAHPronta
     );
@@ -180,28 +181,60 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
         {/* Coluna 2: Caixa de Lembretes (posição fixa) */}
         <div className="flex-1 flex justify-end px-4">
           {temLembretes && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 w-[200px]">
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">Lembretes</p>
-              <div className="space-y-1.5">
-                {alunoLembretes.aniversarioHoje && (
-                  <div className="flex items-center gap-2 text-sm text-pink-600 dark:text-pink-400">
-                    <Cake className="h-4 w-4 shrink-0" />
-                    <span>Aniversariante!</span>
+            <div className={`rounded-lg p-3 w-[200px] border ${
+              alunoLembretes.aniversarioSemana 
+                ? 'bg-gradient-to-br from-pink-100 via-purple-50 to-yellow-50 dark:from-pink-900/30 dark:via-purple-900/20 dark:to-yellow-900/20 border-pink-300 dark:border-pink-700'
+                : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700'
+            }`}>
+              {alunoLembretes.aniversarioSemana ? (
+                <ConfettiBackground>
+                  <p className="text-xs font-semibold text-pink-700 dark:text-pink-300 mb-2">🎉 Lembretes</p>
+                  <div className="space-y-1.5">
+                    {alunoLembretes.aniversarioHoje && (
+                      <div className="flex items-center gap-2 text-sm text-pink-600 dark:text-pink-400 font-medium">
+                        <Cake className="h-4 w-4 shrink-0" />
+                        <span>Aniversariante!</span>
+                      </div>
+                    )}
+                    {!alunoLembretes.aniversarioHoje && alunoLembretes.aniversarioSemana && (
+                      <div className="flex items-center gap-2 text-sm text-pink-600 dark:text-pink-400">
+                        <Cake className="h-4 w-4 shrink-0" />
+                        <span>Aniversário essa semana!</span>
+                      </div>
+                    )}
+                    {alunoLembretes.camisetaPendente && (
+                      <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                        <Shirt className="h-4 w-4 shrink-0" />
+                        <span>Entregar camiseta</span>
+                      </div>
+                    )}
+                    {alunoLembretes.apostilaAHPronta && (
+                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                        <BookMarked className="h-4 w-4 shrink-0" />
+                        <span>Devolver apostila AH</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {alunoLembretes.camisetaPendente && (
-                  <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                    <Shirt className="h-4 w-4 shrink-0" />
-                    <span>Entregar camiseta</span>
+                </ConfettiBackground>
+              ) : (
+                <>
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">Lembretes</p>
+                  <div className="space-y-1.5">
+                    {alunoLembretes.camisetaPendente && (
+                      <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                        <Shirt className="h-4 w-4 shrink-0" />
+                        <span>Entregar camiseta</span>
+                      </div>
+                    )}
+                    {alunoLembretes.apostilaAHPronta && (
+                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                        <BookMarked className="h-4 w-4 shrink-0" />
+                        <span>Devolver apostila AH</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {alunoLembretes.apostilaAHPronta && (
-                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                    <BookMarked className="h-4 w-4 shrink-0" />
-                    <span>Devolver apostila AH</span>
-                  </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           )}
         </div>
