@@ -648,7 +648,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     
     return (
       <span className="text-[10px] text-amber-600 flex items-center gap-1">
-        <Calendar className="h-2.5 w-2.5" />
+        <CalendarIcon className="h-2.5 w-2.5" />
         {formatarDataAgendada(atividade.data_agendada)}
       </span>
     );
