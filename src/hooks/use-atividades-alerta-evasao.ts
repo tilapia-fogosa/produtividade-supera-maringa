@@ -338,12 +338,12 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       if (error) throw error;
       
-      // Se for retenção, resolve o alerta
+      // Se for retenção, marca o alerta como retido
       if (isTerminalRetencao) {
         const { error: alertaError } = await supabase
           .from('alerta_evasao')
           .update({ 
-            status: 'resolvido',
+            status: 'retido',
             updated_at: new Date().toISOString()
           })
           .eq('id', alertaEvasaoId);
@@ -571,12 +571,12 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         }
       }
       
-      // Se for ajuste definitivo, resolver o alerta
+      // Se for ajuste definitivo, marca o alerta como retido
       if (deveResolverAlerta) {
         const { error: alertaError } = await supabase
           .from('alerta_evasao')
           .update({ 
-            status: 'resolvido',
+            status: 'retido',
             updated_at: new Date().toISOString()
           })
           .eq('id', alertaEvasaoId);
@@ -662,11 +662,11 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             });
           }
           
-          // Resolver o alerta
+          // Marca o alerta como evadido
           const { error: alertaError } = await supabase
             .from('alerta_evasao')
             .update({ 
-              status: 'resolvido',
+              status: 'evadido',
               updated_at: new Date().toISOString()
             })
             .eq('id', alertaEvasaoId);
