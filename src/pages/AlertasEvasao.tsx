@@ -70,6 +70,17 @@ const AlertasEvasao = () => {
 
   const getTipoAtividadeLabel = (tipo: string) => {
     const labels: Record<string, string> = {
+      'acolhimento': 'Acolhimento',
+      'contato_financeiro': 'Contato Financeiro',
+      'contato_pedagogico': 'Contato Pedagógico',
+      'novo_acolhimento': 'Novo Acolhimento',
+      'retencao': 'Retenção',
+      'evasao': 'Evasão',
+      'remover_sgs': 'Remover do SGS',
+      'cancelar_assinatura': 'Cancelar Assinatura',
+      'remover_whatsapp': 'Remover de Grupos',
+      'corrigir_valores_sgs': 'Corrigir SGS',
+      'corrigir_valores_assinatura': 'Corrigir Assinatura',
       'ligacao_pedagogo': 'Ligação Pedagogo',
       'ligacao_adm': 'Ligação ADM',
       'reuniao_presencial': 'Reunião Presencial',
@@ -81,6 +92,23 @@ const AlertasEvasao = () => {
       'outro': 'Outro'
     };
     return labels[tipo] || tipo;
+  };
+
+  const getEtapaBadgeClass = (tipo: string) => {
+    const classes: Record<string, string> = {
+      'acolhimento': 'border-blue-500 text-blue-600',
+      'contato_financeiro': 'border-purple-500 text-purple-600',
+      'contato_pedagogico': 'border-orange-500 text-orange-600',
+      'novo_acolhimento': 'border-yellow-500 text-yellow-600',
+      'retencao': 'border-green-500 text-green-600',
+      'evasao': 'border-red-500 text-red-600',
+      'remover_sgs': 'border-red-400 text-red-500',
+      'cancelar_assinatura': 'border-red-400 text-red-500',
+      'remover_whatsapp': 'border-red-400 text-red-500',
+      'corrigir_valores_sgs': 'border-amber-500 text-amber-600',
+      'corrigir_valores_assinatura': 'border-amber-500 text-amber-600',
+    };
+    return classes[tipo] || 'border-muted-foreground text-muted-foreground';
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -279,10 +307,14 @@ const AlertasEvasao = () => {
                           {getOrigemLabel(alerta.origem_alerta)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {alerta.ultima_atividade 
-                          ? getTipoAtividadeLabel(alerta.ultima_atividade.tipo_atividade)
-                          : 'Sem atividades'}
+                      <TableCell>
+                        {alerta.ultima_atividade ? (
+                          <Badge variant="outline" className={getEtapaBadgeClass(alerta.ultima_atividade.tipo_atividade)}>
+                            {getTipoAtividadeLabel(alerta.ultima_atividade.tipo_atividade)}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sem atividades</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeClass(alerta.status)}>
