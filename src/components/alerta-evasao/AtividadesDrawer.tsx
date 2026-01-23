@@ -129,7 +129,6 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [mostrarPainelAtendimentoFinanceiro, setMostrarPainelAtendimentoFinanceiro] = useState(false);
   const [dataAtendimentoFinanceiro, setDataAtendimentoFinanceiro] = useState<Date | undefined>(undefined);
   const [horarioAtendimentoFinanceiro, setHorarioAtendimentoFinanceiro] = useState('');
-  const [descricaoAtendimentoFinanceiro, setDescricaoAtendimentoFinanceiro] = useState('');
 
   const { 
     atividades, 
@@ -323,7 +322,6 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setMostrarPainelAtendimentoFinanceiro(false);
     setDataAtendimentoFinanceiro(undefined);
     setHorarioAtendimentoFinanceiro('');
-    setDescricaoAtendimentoFinanceiro('');
   };
 
   const handleConfirmarAcolhimento = async () => {
@@ -399,20 +397,19 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   }, [dataAtendimentoFinanceiro]);
 
   const handleConfirmarAtendimentoFinanceiro = async () => {
-    if (!descricaoAtendimentoFinanceiro.trim() || !atividadeAcolhimento) return;
+    if (!atividadeAcolhimento || !observacoesAcolhimento.trim()) return;
     
     try {
       // Primeiro concluir o acolhimento
       await concluirTarefa(atividadeAcolhimento.id);
       
-      // Montar descrição com agendamento opcional
-      let descricaoCompleta = descricaoAtendimentoFinanceiro.trim();
+      // Montar descrição usando as observações do acolhimento + agendamento opcional
+      let descricaoCompleta = observacoesAcolhimento.trim();
       if (dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro) {
         descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`;
       } else if (dataAtendimentoFinanceiro) {
         descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')}`;
       }
-      descricaoCompleta += ` | Obs. Acolhimento: ${observacoesAcolhimento.trim()}`;
       
       // Criar o atendimento financeiro
       await criarAtividade({
@@ -1550,20 +1547,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     </div>
                   )}
 
-                  {/* Campo de descrição - sempre visível */}
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Descrição do atendimento *</Label>
-                    <Textarea
-                      placeholder="Descreva o objetivo do atendimento financeiro..."
-                      value={descricaoAtendimentoFinanceiro}
-                      onChange={(e) => setDescricaoAtendimentoFinanceiro(e.target.value)}
-                      rows={3}
-                      className="text-xs min-h-[60px] resize-none"
-                    />
-                  </div>
-
                   {/* Resumo do agendamento - só mostra se tiver data ou hora */}
-                  {(dataAtendimentoFinanceiro || horarioAtendimentoFinanceiro) && descricaoAtendimentoFinanceiro.trim() && (
+                  {(dataAtendimentoFinanceiro || horarioAtendimentoFinanceiro) && (
                     <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
                       <p className="text-[10px] font-medium text-green-700">Resumo:</p>
                       <div className="text-[10px] text-green-600 space-y-0.5">
@@ -1579,7 +1564,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     <Button
                       size="sm"
                       className="w-full h-7 text-xs"
-                      disabled={!descricaoAtendimentoFinanceiro.trim() || isCriando}
+                      disabled={isCriando}
                       onClick={handleConfirmarAtendimentoFinanceiro}
                     >
                       {isCriando ? 'Agendando...' : 'Confirmar Agendamento'}
