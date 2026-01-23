@@ -439,14 +439,15 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   };
 
   const handleConfirmarAgendamentoPedagogico = async () => {
-    if (!dataPedagogico || !horarioPedagogico || !descricaoPedagogico.trim() || !atividadeAcolhimento) return;
+    if (!dataPedagogico || !horarioPedagogico || !atividadeAcolhimento) return;
     
     try {
       const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
+      const descricaoAutomatica = `Atendimento pedagógico agendado para ${format(dataPedagogico, 'dd/MM/yyyy')} às ${horarioPedagogico}${professorInfo ? ` com ${professorInfo.nome}` : ''}`;
       
       await criarAtividade({
         tipo_atividade: 'atendimento_pedagogico',
-        descricao: descricaoPedagogico.trim(),
+        descricao: descricaoAutomatica,
         atividadeAnteriorId: atividadeAcolhimento.id,
         data_agendada: dataFormatada,
         horario_agendado: horarioPedagogico,
@@ -1359,22 +1360,8 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                     </div>
                   )}
 
-                  {/* Campo de descrição */}
-                  {dataPedagogico && horarioPedagogico && (
-                    <div className="space-y-1">
-                      <Label className="text-[10px]">Descrição do atendimento *</Label>
-                      <Textarea
-                        placeholder="Descreva o objetivo do atendimento pedagógico..."
-                        value={descricaoPedagogico}
-                        onChange={(e) => setDescricaoPedagogico(e.target.value)}
-                        rows={3}
-                        className="text-xs min-h-[60px] resize-none"
-                      />
-                    </div>
-                  )}
-
                   {/* Resumo do agendamento */}
-                  {dataPedagogico && horarioPedagogico && descricaoPedagogico.trim() && (
+                  {dataPedagogico && horarioPedagogico && (
                     <div className="p-2 bg-green-50 border border-green-200 rounded space-y-1">
                       <p className="text-[10px] font-medium text-green-700">Resumo do agendamento:</p>
                       <div className="text-[10px] text-green-600 space-y-0.5">
@@ -1393,7 +1380,6 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                       disabled={
                         !dataPedagogico || 
                         !horarioPedagogico || 
-                        !descricaoPedagogico.trim() ||
                         isCriando
                       }
                       onClick={handleConfirmarAgendamentoPedagogico}
