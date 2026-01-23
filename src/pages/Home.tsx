@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { format, startOfWeek, endOfWeek, addWeeks, isToday, isSameWeek, parseISO, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { useTarefasPessoais, TarefaPessoal } from '@/hooks/use-tarefas-pessoais';
@@ -27,6 +26,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
 import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
+import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
+import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
+import { supabase } from '@/integrations/supabase/client';
 // Interface para eventos com dados extras
 interface Evento {
   tipo: string;
@@ -49,7 +51,6 @@ interface Evento {
 }
 
 export default function Home() {
-  const navigate = useNavigate();
   const { profile } = useAuth();
   const { activeUnit } = useActiveUnit();
   const hoje = new Date();
@@ -108,6 +109,10 @@ export default function Home() {
     apostilaNome: string;
     pessoaNome: string;
   } | null>(null);
+
+  // Estado para drawer de atividades de evasão
+  const [drawerEvasaoAberto, setDrawerEvasaoAberto] = useState(false);
+  const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
   
   // Buscar aniversariantes
   const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
@@ -619,9 +624,25 @@ export default function Home() {
     }
   };
 
-  const handleAlertaEvasaoClick = (evento: Evento) => {
+  const handleAlertaEvasaoClick = async (evento: Evento) => {
     if (evento.alerta_evasao_id) {
-      navigate(`/alertas-evasao?alerta=${evento.alerta_evasao_id}`);
+      // Buscar dados completos do alerta para o drawer
+      const { data: alertaData } = await supabase
+        .from('alerta_evasao')
+        .select(`
+          *,
+          aluno:alunos!inner(
+            id, nome, foto_url, active,
+            turma:turmas(id, nome, professor:professores(id, nome))
+          )
+        `)
+        .eq('id', evento.alerta_evasao_id)
+        .single();
+      
+      if (alertaData) {
+        setAlertaSelecionado(alertaData as unknown as AlertaEvasao);
+        setDrawerEvasaoAberto(true);
+      }
     }
   };
 
@@ -910,6 +931,16 @@ export default function Home() {
         apostilaRecolhidaId={apostilaSelecionadaEntrega?.id || ''}
         apostilaNome={apostilaSelecionadaEntrega?.apostilaNome || ''}
         pessoaNome={apostilaSelecionadaEntrega?.pessoaNome || ''}
+      />
+
+      {/* Drawer de Atividades de Evasão */}
+      <AtividadesDrawer
+        open={drawerEvasaoAberto}
+        onClose={() => {
+          setDrawerEvasaoAberto(false);
+          setAlertaSelecionado(null);
+        }}
+        alerta={alertaSelecionado}
       />
     </div>
   );
