@@ -105,6 +105,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
   const [observacoesAcolhimento, setObservacoesAcolhimento] = useState('');
   const [tipoProximaAtividade, setTipoProximaAtividade] = useState<TipoAtividadeEvasao | null>(null);
   const [descricaoProximaAtividade, setDescricaoProximaAtividade] = useState('');
+  const [dataNovoAcolhimento, setDataNovoAcolhimento] = useState<Date | undefined>(undefined);
 
   // Estado para painel de confirmação de tarefa administrativa
   const [mostrarPainelTarefaAdmin, setMostrarPainelTarefaAdmin] = useState(false);
@@ -300,6 +301,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     setObservacoesAcolhimento('');
     setTipoProximaAtividade(null);
     setDescricaoProximaAtividade('');
+    setDataNovoAcolhimento(undefined);
   };
 
   const fecharPainelPedagogico = () => {
@@ -351,11 +353,20 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       // Primeiro concluir o acolhimento atual com as observações
       await concluirTarefa(atividadeAcolhimento.id);
       
+      // Montar descrição com data opcional para novo acolhimento
+      let descricao = observacoesAcolhimento.trim();
+      if (tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento) {
+        descricao += ` | Agendado para ${format(dataNovoAcolhimento, 'dd/MM/yyyy')}`;
+      }
+      
       // Usar as observações do acolhimento como descrição da próxima atividade
       await criarAtividade({
         tipo_atividade: tipoProximaAtividade,
-        descricao: observacoesAcolhimento.trim(),
-        atividadeAnteriorId: atividadeAcolhimento.id
+        descricao,
+        atividadeAnteriorId: atividadeAcolhimento.id,
+        data_agendada: tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento 
+          ? format(dataNovoAcolhimento, 'yyyy-MM-dd') 
+          : undefined
       });
       
       fecharPainelAcolhimento();
@@ -1086,6 +1097,45 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
                         </div>
                       </div>
                     </button>
+
+                    {/* Campo de data opcional para Novo Acolhimento */}
+                    {tipoProximaAtividade === 'acolhimento' && (
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Data do acolhimento (opcional)</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-7 justify-start text-left font-normal text-xs",
+                                !dataNovoAcolhimento && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              {dataNovoAcolhimento 
+                                ? format(dataNovoAcolhimento, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                                : <span>Selecione a data</span>
+                              }
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={dataNovoAcolhimento}
+                              onSelect={setDataNovoAcolhimento}
+                              disabled={(date) => {
+                                const hoje = new Date();
+                                hoje.setHours(0, 0, 0, 0);
+                                return date < hoje || date.getDay() === 0;
+                              }}
+                              locale={ptBR}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    )}
 
                     {/* Botão de confirmação */}
                     <div className="pt-2">
