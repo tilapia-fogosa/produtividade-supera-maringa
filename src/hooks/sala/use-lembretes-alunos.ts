@@ -3,11 +3,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfWeek, addDays } from 'date-fns';
 
+export interface ApostilaAHPendente {
+  recolhidaId: number;
+  apostilaNome: string;
+}
+
 export interface LembretesAluno {
   camisetaPendente: boolean;
   aniversarioHoje: boolean;
   aniversarioSemana: boolean;
   apostilaAHPronta: boolean;
+  // Dados extras para ações interativas
+  apostilaAHDados?: ApostilaAHPendente;
 }
 
 export function useLembretesAlunos(alunoIds: string[]) {
@@ -41,10 +48,10 @@ export function useLembretesAlunos(alunoIds: string[]) {
         .select('aluno_id, camiseta_entregue, nao_tem_tamanho')
         .in('aluno_id', alunoIds);
 
-      // Buscar apostilas AH prontas para devolução (não entregues)
+      // Buscar apostilas AH prontas para devolução (não entregues) - COM dados completos
       const { data: ahRecolhidas } = await supabase
         .from('ah_recolhidas')
-        .select('pessoa_id')
+        .select('id, pessoa_id, apostila')
         .in('pessoa_id', alunoIds)
         .is('data_entrega_real', null);
 
@@ -53,8 +60,16 @@ export function useLembretesAlunos(alunoIds: string[]) {
         camisetasData?.map(c => [c.aluno_id, c]) || []
       );
 
-      // Criar set de alunos com AH pronta
-      const ahProntaSet = new Set(ahRecolhidas?.map(ah => ah.pessoa_id) || []);
+      // Criar mapa de apostilas AH pendentes (pegar a primeira se houver múltiplas)
+      const ahPendentesMap = new Map<string, ApostilaAHPendente>();
+      ahRecolhidas?.forEach(ah => {
+        if (!ahPendentesMap.has(ah.pessoa_id)) {
+          ahPendentesMap.set(ah.pessoa_id, {
+            recolhidaId: ah.id,
+            apostilaNome: ah.apostila
+          });
+        }
+      });
 
       // Montar lembretes por aluno
       const lembretesMap: Record<string, LembretesAluno> = {};
@@ -74,13 +89,15 @@ export function useLembretesAlunos(alunoIds: string[]) {
         const aniversarioSemana = datasSemana.includes(aluno.aniversario_mes_dia || '');
 
         // Apostila AH pronta para devolução
-        const apostilaAHPronta = ahProntaSet.has(aluno.id);
+        const apostilaAHDados = ahPendentesMap.get(aluno.id);
+        const apostilaAHPronta = !!apostilaAHDados;
 
         lembretesMap[aluno.id] = {
           camisetaPendente,
           aniversarioHoje,
           aniversarioSemana,
           apostilaAHPronta,
+          apostilaAHDados,
         };
       });
 
@@ -96,5 +113,5 @@ export function useLembretesAlunos(alunoIds: string[]) {
     buscarLembretes();
   }, [buscarLembretes]);
 
-  return { lembretes, loading };
+  return { lembretes, loading, refetch: buscarLembretes };
 }
