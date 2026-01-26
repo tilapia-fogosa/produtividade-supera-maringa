@@ -52,7 +52,12 @@ const SalaProdutividadeTurma = () => {
     return [...new Set([...idsFixos, ...idsReposicao])];
   }, [pessoasTurma, reposicoesHoje]);
 
-  const { lembretes } = useLembretesAlunos(alunoIds);
+  const { lembretes, refetch: refetchLembretes } = useLembretesAlunos(alunoIds);
+
+  // Callback quando um lembrete é concluído (camiseta ou apostila AH)
+  const handleLembreteConcluido = () => {
+    refetchLembretes();
+  };
 
   // Buscar dados da turma
   useEffect(() => {
@@ -217,6 +222,7 @@ const SalaProdutividadeTurma = () => {
         onReposicao={handleReposicao}
         lembretes={lembretes}
         reposicoesHoje={reposicoesHoje}
+        onLembreteConcluido={handleLembreteConcluido}
       />
 
       <SalaProdutividadeDrawer
