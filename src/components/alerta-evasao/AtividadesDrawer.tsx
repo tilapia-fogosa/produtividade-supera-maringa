@@ -35,6 +35,7 @@ interface AtividadesDrawerProps {
   open: boolean;
   onClose: () => void;
   alerta: AlertaEvasao | null;
+  onActivityCompleted?: () => void;
 }
 
 // Tipos que são tarefas administrativas simples (podem ser concluídas diretamente)
@@ -86,7 +87,7 @@ function slotColideComEvento(
   });
 }
 
-export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProps) {
+export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }: AtividadesDrawerProps) {
   const [atividadeExpandida, setAtividadeExpandida] = useState<string | null>(null);
   const [tipoSelecionado, setTipoSelecionado] = useState<TipoAtividadeEvasao | null>(null);
   const [descricao, setDescricao] = useState('');
@@ -248,6 +249,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
     try {
       await concluirTarefa(atividadeTarefaAdmin.id);
       fecharPainelTarefaAdmin();
+      onActivityCompleted?.();
     } catch (error) {
       console.error('Erro ao concluir tarefa:', error);
     }
@@ -285,6 +287,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       setResultadoSelecionado(null);
       setDataFimAjuste('');
       setObservacoesNegociacao('');
+      onActivityCompleted?.();
     } catch (error) {
       console.error('Erro ao processar negociação:', error);
     }
@@ -378,6 +381,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       });
       
       fecharPainelAcolhimento();
+      onActivityCompleted?.();
     } catch (error) {
       console.error('Erro ao processar acolhimento:', error);
     }
@@ -439,6 +443,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       setTipoProximaAtividade(null);
       setDescricaoProximaAtividade('');
       setObservacoesAcolhimento('');
+      onActivityCompleted?.();
     } catch (error) {
       console.error('Erro ao agendar atendimento financeiro:', error);
     }
@@ -464,6 +469,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
       setAtividadeAcolhimento(null);
       setTipoProximaAtividade(null);
       setDescricaoProximaAtividade('');
+      onActivityCompleted?.();
     } catch (error) {
       console.error('Erro ao agendar atendimento pedagógico:', error);
     }
@@ -481,6 +487,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
           atividadeAnteriorId: atividadePedagogicoParaConcluir.id
         });
         fecharPainelConclusaoPedagogico();
+        onActivityCompleted?.();
         return;
       }
       
@@ -500,6 +507,7 @@ export function AtividadesDrawer({ open, onClose, alerta }: AtividadesDrawerProp
           data_agendada: dataFinanceiroPedagogico ? format(dataFinanceiroPedagogico, 'yyyy-MM-dd') : undefined
         });
         fecharPainelConclusaoPedagogico();
+        onActivityCompleted?.();
         return;
       }
     } catch (error) {
