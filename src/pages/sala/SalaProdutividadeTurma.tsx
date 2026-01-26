@@ -43,7 +43,7 @@ const SalaProdutividadeTurma = () => {
   } = useSalaPessoasTurma();
 
   // Buscar reposições do dia para esta turma
-  const { reposicoes: reposicoesHoje } = useReposicoesHoje(turmaId);
+  const { reposicoes: reposicoesHoje, refetch: refetchReposicoes } = useReposicoesHoje(turmaId);
 
   // IDs dos alunos para buscar lembretes (incluindo reposições)
   const alunoIds = useMemo(() => {
@@ -52,7 +52,12 @@ const SalaProdutividadeTurma = () => {
     return [...new Set([...idsFixos, ...idsReposicao])];
   }, [pessoasTurma, reposicoesHoje]);
 
-  const { lembretes } = useLembretesAlunos(alunoIds);
+  const { lembretes, refetch: refetchLembretes } = useLembretesAlunos(alunoIds);
+
+  // Callback quando um lembrete é concluído (camiseta ou apostila AH)
+  const handleLembreteConcluido = () => {
+    refetchLembretes();
+  };
 
   // Buscar dados da turma
   useEffect(() => {
@@ -88,6 +93,23 @@ const SalaProdutividadeTurma = () => {
       buscarPessoasPorTurma(turmaId);
     }
   }, [turmaId, buscarPessoasPorTurma]);
+
+  // Refresh automático a cada 60 segundos
+  const REFRESH_INTERVAL = 60 * 1000;
+  
+  useEffect(() => {
+    if (!turmaId) return;
+
+    const intervalId = setInterval(() => {
+      console.log('[Sala] Refresh automático - recarregando dados...');
+      buscarPessoasPorTurma(turmaId);
+      refetchReposicoes();
+    }, REFRESH_INTERVAL);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [turmaId, buscarPessoasPorTurma, refetchReposicoes]);
 
   const diasParaState: Record<string, string> = {
     'Segunda-feira': 'segunda',
@@ -200,6 +222,7 @@ const SalaProdutividadeTurma = () => {
         onReposicao={handleReposicao}
         lembretes={lembretes}
         reposicoesHoje={reposicoesHoje}
+        onLembreteConcluido={handleLembreteConcluido}
       />
 
       <SalaProdutividadeDrawer

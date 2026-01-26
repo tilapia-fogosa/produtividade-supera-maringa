@@ -19,6 +19,7 @@ interface SalaProdutividadeScreenProps {
   onReposicao?: () => void;
   lembretes?: Record<string, LembretesAluno>;
   reposicoesHoje?: ReposicaoHoje[];
+  onLembreteConcluido?: () => void;
 }
 
 const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
@@ -30,7 +31,8 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
   produtividadeRegistrada = {},
   onReposicao,
   lembretes = {},
-  reposicoesHoje = []
+  reposicoesHoje = [],
+  onLembreteConcluido
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -61,6 +63,7 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
           produtividadeRegistrada={produtividadeRegistrada}
           lembretes={lembretes}
           reposicoesHoje={reposicoesHoje}
+          onLembreteConcluido={onLembreteConcluido}
         />
       </div>
 

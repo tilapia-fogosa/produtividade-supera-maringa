@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
@@ -11,6 +11,10 @@ import { useApostilas } from '@/hooks/use-apostilas';
 import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
 import { ReposicaoHoje } from '@/hooks/sala/use-reposicoes-hoje';
 import { ConfettiBackground } from './ConfettiBackground';
+import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
+import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
+import { useCamisetas } from '@/hooks/use-camisetas';
+
 interface SalaAlunosListaTableProps {
   alunos: SalaPessoaTurma[];
   onRegistrarPresenca: (aluno: SalaPessoaTurma, presente: boolean) => void;
@@ -18,6 +22,7 @@ interface SalaAlunosListaTableProps {
   produtividadeRegistrada?: Record<string, boolean>;
   lembretes?: Record<string, LembretesAluno>;
   reposicoesHoje?: ReposicaoHoje[];
+  onLembreteConcluido?: () => void;
 }
 
 // Tipo estendido para incluir dados de reposição
@@ -32,10 +37,60 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
   onExcluirRegistro,
   produtividadeRegistrada = {},
   lembretes = {},
-  reposicoesHoje = []
+  reposicoesHoje = [],
+  onLembreteConcluido
 }) => {
   const [fotoAmpliada, setFotoAmpliada] = useState<{ url: string; nome: string } | null>(null);
   const { getTotalPaginas } = useApostilas();
+  const { marcarComoEntregueComDetalhes } = useCamisetas();
+
+  // Estados dos modais interativos
+  const [camisetaModalOpen, setCamisetaModalOpen] = useState(false);
+  const [alunoSelecionadoCamiseta, setAlunoSelecionadoCamiseta] = useState<{ id: string; nome: string } | null>(null);
+  
+  const [entregaAHModalOpen, setEntregaAHModalOpen] = useState(false);
+  const [apostilaSelecionadaEntrega, setApostilaSelecionadaEntrega] = useState<{
+    id: number;
+    apostilaNome: string;
+    pessoaNome: string;
+  } | null>(null);
+
+  // Handlers para ações interativas dos lembretes
+  const handleCamisetaClick = (alunoId: string, alunoNome: string) => {
+    setAlunoSelecionadoCamiseta({ id: alunoId, nome: alunoNome });
+    setCamisetaModalOpen(true);
+  };
+
+  const handleApostilaAHClick = (alunoId: string, alunoNome: string, recolhidaId: number, apostilaNome: string) => {
+    setApostilaSelecionadaEntrega({
+      id: recolhidaId,
+      apostilaNome,
+      pessoaNome: alunoNome
+    });
+    setEntregaAHModalOpen(true);
+  };
+
+  const handleSalvarCamiseta = async (dados: { 
+    alunoId: string; 
+    tamanho_camiseta: string; 
+    data_entrega: Date; 
+    observacoes?: string; 
+    funcionario_registro_id?: string; 
+    responsavel_nome?: string; 
+  }) => {
+    await marcarComoEntregueComDetalhes(dados);
+    setCamisetaModalOpen(false);
+    setAlunoSelecionadoCamiseta(null);
+    onLembreteConcluido?.();
+  };
+
+  const handleEntregaAHClose = (open: boolean) => {
+    setEntregaAHModalOpen(open);
+    if (!open) {
+      setApostilaSelecionadaEntrega(null);
+      onLembreteConcluido?.();
+    }
+  };
 
   // Converter reposições em formato compatível com SalaPessoaTurma
   const alunosReposicao: AlunoComReposicao[] = useMemo(() => {
@@ -178,7 +233,7 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
           </div>
         </div>
         
-        {/* Coluna 2: Caixa de Lembretes (posição fixa) */}
+        {/* Coluna 2: Caixa de Lembretes (posição fixa) - INTERATIVOS */}
         <div className="flex-1 flex justify-end px-4">
           {temLembretes && (
             <div className={`rounded-lg p-3 w-[200px] border ${
@@ -202,13 +257,24 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                       </div>
                     )}
                     {alunoLembretes.camisetaPendente && (
-                      <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <div 
+                        className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 cursor-pointer hover:underline"
+                        onClick={() => handleCamisetaClick(aluno.id, aluno.nome)}
+                      >
                         <Shirt className="h-4 w-4 shrink-0" />
                         <span>Entregar camiseta</span>
                       </div>
                     )}
-                    {alunoLembretes.apostilaAHPronta && (
-                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    {alunoLembretes.apostilaAHPronta && alunoLembretes.apostilaAHDados && (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 cursor-pointer hover:underline"
+                        onClick={() => handleApostilaAHClick(
+                          aluno.id, 
+                          aluno.nome, 
+                          alunoLembretes.apostilaAHDados!.recolhidaId,
+                          alunoLembretes.apostilaAHDados!.apostilaNome
+                        )}
+                      >
                         <BookMarked className="h-4 w-4 shrink-0" />
                         <span>Devolver apostila AH</span>
                       </div>
@@ -219,13 +285,24 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                 <>
                   <div className="space-y-1.5">
                     {alunoLembretes.camisetaPendente && (
-                      <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <div 
+                        className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 cursor-pointer hover:underline"
+                        onClick={() => handleCamisetaClick(aluno.id, aluno.nome)}
+                      >
                         <Shirt className="h-4 w-4 shrink-0" />
                         <span>Entregar camiseta</span>
                       </div>
                     )}
-                    {alunoLembretes.apostilaAHPronta && (
-                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    {alunoLembretes.apostilaAHPronta && alunoLembretes.apostilaAHDados && (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 cursor-pointer hover:underline"
+                        onClick={() => handleApostilaAHClick(
+                          aluno.id, 
+                          aluno.nome, 
+                          alunoLembretes.apostilaAHDados!.recolhidaId,
+                          alunoLembretes.apostilaAHDados!.apostilaNome
+                        )}
+                      >
                         <BookMarked className="h-4 w-4 shrink-0" />
                         <span>Devolver apostila AH</span>
                       </div>
@@ -324,6 +401,24 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Camiseta Entregue */}
+      <CamisetaEntregueModal
+        open={camisetaModalOpen}
+        onOpenChange={setCamisetaModalOpen}
+        alunoId={alunoSelecionadoCamiseta?.id || ''}
+        alunoNome={alunoSelecionadoCamiseta?.nome || ''}
+        onSave={handleSalvarCamiseta}
+      />
+
+      {/* Modal de Entrega AH (apostila pronta) */}
+      <EntregaAhModal
+        open={entregaAHModalOpen}
+        onOpenChange={handleEntregaAHClose}
+        apostilaRecolhidaId={apostilaSelecionadaEntrega?.id?.toString() || ''}
+        apostilaNome={apostilaSelecionadaEntrega?.apostilaNome || ''}
+        pessoaNome={apostilaSelecionadaEntrega?.pessoaNome || ''}
+      />
     </TooltipProvider>
   );
 };
