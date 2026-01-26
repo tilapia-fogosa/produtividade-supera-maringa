@@ -118,7 +118,7 @@ export default function Home() {
   const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
   
   // Buscar atividades de alerta de evasão pendentes
-  const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao } = useAtividadesEvasaoHome();
+  const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao, refetch: refetchAtividadesEvasao } = useAtividadesEvasaoHome();
   
   // Permissões do usuário
   const { isAdmin, isManagement } = useUserPermissions();
@@ -941,6 +941,7 @@ export default function Home() {
           setAlertaSelecionado(null);
         }}
         alerta={alertaSelecionado}
+        onActivityCompleted={refetchAtividadesEvasao}
       />
     </div>
   );
