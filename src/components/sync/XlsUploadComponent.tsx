@@ -230,6 +230,16 @@ const XlsUploadComponent = () => {
       
       toast.success(`Sincronização concluída! ${totalCriados} registros criados, ${totalReativados} reativados.`, { duration: 5000 });
 
+      // Chamar webhook para atualizar contatos no n8n
+      try {
+        console.log('[Sync] Disparando webhook de atualização de contatos...');
+        await fetch('https://webhookn8n.agenciakadin.com.br/webhook/atualiza-contatos', { method: 'GET' });
+        console.log('[Sync] Webhook disparado com sucesso');
+      } catch (webhookError) {
+        console.error('[Sync] Erro ao disparar webhook:', webhookError);
+        // Não interrompe o fluxo, apenas loga o erro
+      }
+
       // Limpar dados após sucesso
       setSelectedFile(null);
       setPreviewData(null);
