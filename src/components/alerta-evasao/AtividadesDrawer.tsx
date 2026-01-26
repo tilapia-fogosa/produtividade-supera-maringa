@@ -939,30 +939,58 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     {resultadoSelecionado === 'ajuste_temporario' && (
                       <div className="pl-6 space-y-1">
                         <Label className="text-[10px]">Data fim do ajuste *</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full h-7 justify-start text-left font-normal text-xs",
-                                !dataFimAjuste && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-3 w-3" />
-                              {dataFimAjuste ? format(new Date(dataFimAjuste), "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={dataFimAjuste ? new Date(dataFimAjuste) : undefined}
-                              onSelect={(date) => setDataFimAjuste(date ? date.toISOString().split('T')[0] : '')}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                              className={cn("p-3 pointer-events-auto")}
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            placeholder="dd/mm/aaaa"
+                            value={dataFimAjuste ? format(new Date(dataFimAjuste), "dd/MM/yyyy", { locale: ptBR }) : ''}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              let formatted = '';
+                              if (value.length >= 1) formatted = value.substring(0, 2);
+                              if (value.length >= 3) formatted += '/' + value.substring(2, 4);
+                              if (value.length >= 5) formatted += '/' + value.substring(4, 8);
+                              e.target.value = formatted;
+                              
+                              // Se tiver 8 dígitos, tentar converter para data
+                              if (value.length === 8) {
+                                const day = parseInt(value.substring(0, 2), 10);
+                                const month = parseInt(value.substring(2, 4), 10) - 1;
+                                const year = parseInt(value.substring(4, 8), 10);
+                                const date = new Date(year, month, day);
+                                
+                                // Validar se a data é válida e não é passada
+                                if (!isNaN(date.getTime()) && date >= new Date(new Date().setHours(0,0,0,0))) {
+                                  setDataFimAjuste(date.toISOString().split('T')[0]);
+                                }
+                              } else if (value.length === 0) {
+                                setDataFimAjuste('');
+                              }
+                            }}
+                            className="flex-1 h-7 px-2 text-xs rounded-md border border-input bg-background"
+                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 shrink-0"
+                              >
+                                <CalendarIcon className="h-3 w-3" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={dataFimAjuste ? new Date(dataFimAjuste) : undefined}
+                                onSelect={(date) => setDataFimAjuste(date ? date.toISOString().split('T')[0] : '')}
+                                disabled={(date) => date < new Date()}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                     )}
 
