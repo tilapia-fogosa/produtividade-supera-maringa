@@ -1,16 +1,8 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -24,10 +16,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { cn } from "@/lib/utils";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useResponsaveis } from "@/hooks/use-responsaveis";
+import { useSalvarDadosPedagogicos } from "@/hooks/use-salvar-dados-pedagogicos";
+import { AulaInauguralSelector } from "./AulaInauguralSelector";
 
 interface DadosPedagogicosFormProps {
   cliente: ClienteMatriculado;
@@ -37,12 +30,17 @@ interface DadosPedagogicosFormProps {
 export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosFormProps) {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
+  const salvarDados = useSalvarDadosPedagogicos();
 
   const [turmaId, setTurmaId] = useState<string>("");
   const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("o_proprio");
   const [telefoneResponsavel, setTelefoneResponsavel] = useState<string>("");
+  
+  // Estados da aula inaugural
   const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
-  const [isSaving, setIsSaving] = useState(false);
+  const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
+  const [professorSelecionado, setProfessorSelecionado] = useState<{ id: string; nome: string; prioridade: number } | null>(null);
+  const [salaSelecionada, setSalaSelecionada] = useState<{ id: string; nome: string } | null>(null);
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -59,25 +57,21 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      // TODO: Implementar salvamento dos dados pedagógicos
-      console.log("Salvando dados pedagógicos:", {
-        turmaId,
-        responsavelPedagogico,
-        telefoneResponsavel,
-        dataAulaInaugural,
-      });
-      
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onCancel();
-    } catch (error) {
-      console.error("Erro ao salvar dados pedagógicos:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    await salvarDados.mutateAsync({
+      clientId: cliente.id,
+      turmaId: turmaId || undefined,
+      responsavel: responsavelPedagogico !== "o_proprio" ? responsavelPedagogico : undefined,
+      whatsappContato: telefoneResponsavel || undefined,
+      dataAulaInaugural: dataAulaInaugural,
+      horarioAulaInaugural: horarioSelecionado || undefined,
+      professorId: professorSelecionado?.id,
+      salaId: salaSelecionada?.id,
+    });
+    
+    onCancel();
   };
+
+  const canSave = !salvarDados.isPending;
 
   return (
     <div className="space-y-4">
@@ -151,36 +145,17 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
             Aula Inaugural
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-3 pt-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Data da Aula Inaugural</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-9 justify-start text-left font-normal",
-                        !dataAulaInaugural && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dataAulaInaugural
-                        ? format(dataAulaInaugural, "dd/MM/yyyy", { locale: ptBR })
-                        : "Selecione uma data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dataAulaInaugural}
-                      onSelect={setDataAulaInaugural}
-                      locale={ptBR}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+            <div className="pt-2">
+              <AulaInauguralSelector
+                dataAulaInaugural={dataAulaInaugural}
+                setDataAulaInaugural={setDataAulaInaugural}
+                horarioSelecionado={horarioSelecionado}
+                setHorarioSelecionado={setHorarioSelecionado}
+                professorSelecionado={professorSelecionado}
+                setProfessorSelecionado={setProfessorSelecionado}
+                salaSelecionada={salaSelecionada}
+                setSalaSelecionada={setSalaSelecionada}
+              />
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -194,13 +169,14 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
         <Button
           size="sm"
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={!canSave}
           className="bg-orange-500 hover:bg-orange-600"
         >
-          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {salvarDados.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Salvar Dados
         </Button>
       </div>
     </div>
   );
 }
+
