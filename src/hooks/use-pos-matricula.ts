@@ -6,6 +6,7 @@ export interface ClienteMatriculado {
   id: string;
   name: string;
   data_matricula: string;
+  created_by: string | null;
   vendedor_nome: string | null;
 }
 
@@ -15,24 +16,20 @@ export function usePosMatricula() {
   return useQuery({
     queryKey: ["pos-matricula", activeUnit],
     queryFn: async (): Promise<ClienteMatriculado[]> => {
-      // Busca atividades de matrícula em 2026
+      // Busca atividades de matrícula após 01/01/2026
       let query = supabase
         .from("client_activities")
         .select(`
           id,
           created_at,
-          client_id,
+          created_by,
           clients!client_activities_client_id_fkey (
             id,
             name
-          ),
-          profiles:created_by (
-            full_name
           )
         `)
         .eq("tipo_atividade", "Matricula")
         .gte("created_at", "2026-01-01T00:00:00")
-        .lt("created_at", "2027-01-01T00:00:00")
         .order("created_at", { ascending: false });
 
       // Filtra por unidade se selecionada
@@ -54,12 +51,37 @@ export function usePosMatricula() {
             id: clientId,
             name: activity.clients.name || "Sem nome",
             data_matricula: activity.created_at,
-            vendedor_nome: activity.profiles?.full_name || null,
+            created_by: activity.created_by,
+            vendedor_nome: null,
           });
         }
       });
 
-      return Array.from(clientesMap.values());
+      // Buscar nomes dos vendedores
+      const createdByIds = [...new Set(
+        Array.from(clientesMap.values())
+          .map(c => c.created_by)
+          .filter(Boolean)
+      )] as string[];
+
+      let profilesMap = new Map<string, string>();
+
+      if (createdByIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", createdByIds);
+
+        profiles?.forEach((p: any) => {
+          profilesMap.set(p.id, p.full_name);
+        });
+      }
+
+      // Retornar com nome do vendedor
+      return Array.from(clientesMap.values()).map(cliente => ({
+        ...cliente,
+        vendedor_nome: cliente.created_by ? profilesMap.get(cliente.created_by) || null : null,
+      }));
     },
     enabled: true,
   });
