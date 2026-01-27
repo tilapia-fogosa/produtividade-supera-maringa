@@ -133,6 +133,69 @@ const calcularDuracaoAula = (categoria: string): number => {
   return 120;
 };
 
+// Componente para renderizar uma TURMA no grid (visual diferente, apenas informativo)
+const BlocoTurma = ({ 
+  evento 
+}: { 
+  evento: CalendarioEvento; 
+}) => {
+  const corSala = evento.sala_cor || '#9CA3AF';
+  const corClara = clarearCor(corSala);
+  
+  return (
+    <Tooltip delayDuration={200}>
+      <TooltipTrigger asChild>
+        <div
+          className="p-2 rounded-md border transition-all text-xs h-full overflow-hidden cursor-default opacity-70"
+          style={{
+            backgroundColor: corClara,
+            borderColor: corSala,
+            borderStyle: 'dashed'
+          }}
+        >
+          <div className="font-semibold text-gray-700 truncate">
+            📚 {evento.sala_nome}
+          </div>
+          <div className="text-gray-600 truncate mt-1">
+            {evento.titulo}
+          </div>
+          <div className="text-gray-500 truncate text-[10px] mt-1">
+            {evento.professor_nome ? formatarNomeProfessor(evento.professor_nome) : ''}
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent 
+        side="right" 
+        className="max-w-xs bg-popover border shadow-lg z-[99999]"
+        sideOffset={5}
+      >
+        <div className="space-y-2">
+          <div className="font-medium text-muted-foreground">Aula Regular (não editável)</div>
+          <div>
+            <span className="font-semibold">Sala:</span> {evento.sala_nome}
+          </div>
+          <div>
+            <span className="font-semibold">Turma:</span> {evento.titulo}
+          </div>
+          <div>
+            <span className="font-semibold">Horário:</span> {evento.horario_inicio} - {evento.horario_fim}
+          </div>
+          {evento.professor_nome && (
+            <div>
+              <span className="font-semibold">Professor:</span> {evento.professor_nome}
+            </div>
+          )}
+          {evento.perfil && (
+            <div>
+              <span className="font-semibold">Perfil:</span> {evento.perfil}
+            </div>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 // Componente para renderizar um bloqueio/evento de sala no grid
 const BlocoEvento = ({ 
   evento, 
@@ -258,7 +321,7 @@ export default function ReservasSala() {
 
   // Não precisamos mais de perfis para eventos de sala
 
-  // Aplicar filtros (excluindo domingo) - mostrar APENAS eventos de sala
+  // Aplicar filtros (excluindo domingo) - mostrar TODOS os eventos (turmas + reservas)
   const eventosFiltradasPorDia = useMemo(() => {
     if (!eventosPorDia) return {};
     
@@ -273,12 +336,8 @@ export default function ReservasSala() {
         return;
       }
       
-      const eventosFiltrados = eventos.filter(evento => {
-        // Filtrar APENAS eventos de sala (não mostrar turmas)
-        return evento.tipo_evento === 'evento_sala';
-      });
-      
-      resultado[dia] = eventosFiltrados;
+      // Mostrar todos os eventos (turmas e eventos de sala)
+      resultado[dia] = eventos;
     });
     
     return resultado;
@@ -598,10 +657,14 @@ export default function ReservasSala() {
                         }}
                       >
                         <div className="h-full border border-gray-300 bg-white rounded-sm overflow-hidden">
-                          <BlocoEvento 
-                            evento={evento}
-                            onDelete={() => handleExcluirEvento(evento)}
-                          />
+                          {evento.tipo_evento === 'turma' ? (
+                            <BlocoTurma evento={evento} />
+                          ) : (
+                            <BlocoEvento 
+                              evento={evento}
+                              onDelete={() => handleExcluirEvento(evento)}
+                            />
+                          )}
                         </div>
                       </div>
                     );
