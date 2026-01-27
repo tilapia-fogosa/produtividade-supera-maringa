@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
+import { WebcamCapture } from "./WebcamCapture";
 const ESTADOS_BRASILEIROS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 const dadosCadastraisSchema = z.object({
   nome: z.string().min(2, "Nome obrigatório"),
@@ -46,6 +47,8 @@ export function DadosCadastraisForm({
   onCancel
 }: DadosCadastraisFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
+  
   const form = useForm<DadosCadastraisFormData>({
     resolver: zodResolver(dadosCadastraisSchema),
     defaultValues: {
@@ -67,6 +70,7 @@ export function DadosCadastraisForm({
     try {
       // Por enquanto, apenas log dos dados
       console.log("Dados Cadastrais:", data);
+      console.log("Foto capturada:", fotoCapturada ? "Sim" : "Não");
       // TODO: Integração com banco será implementada depois
     } finally {
       setIsSubmitting(false);
@@ -220,6 +224,13 @@ export function DadosCadastraisForm({
                 </FormItem>} />
           </div>
         </div>
+
+        {/* Seção: Foto do Aluno */}
+        <WebcamCapture
+          capturedImage={fotoCapturada}
+          onCapture={setFotoCapturada}
+          onClear={() => setFotoCapturada(null)}
+        />
 
         {/* Botões */}
         <div className="flex justify-end gap-3 pt-4 border-t">
