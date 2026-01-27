@@ -1,132 +1,129 @@
 
-# Plano: Agendamento de Aula Inaugural com Verificacao de Disponibilidade
+# Plano: Corrigir Erro de Tipo na Funcao RPC de Professores Disponiveis
 
-## Resumo
+## Problema Identificado
 
-Implementar a logica de agendamento de aula inaugural que verifica automaticamente a disponibilidade de **salas** e **professores**, selecionando o primeiro professor disponivel por ordem de prioridade.
+A funcao `get_professores_disponiveis_por_horario` esta falhando porque a coluna `dia_semana` na tabela `turmas` e do tipo **ENUM** (tipo personalizado chamado `dia_semana`), mas a funcao esta tentando comparar com uma variavel do tipo **TEXT**.
 
-## Fluxo do Usuario
-
-1. Usuario seleciona uma **data** no calendario
-2. Sistema carrega os **horarios disponiveis** (slots de 30 min ou 1 hora)
-3. Usuario seleciona um **horario de inicio**
-4. Sistema verifica:
-   - Salas disponiveis naquele horario
-   - Professores disponiveis ordenados por prioridade
-5. Sistema exibe o **professor selecionado automaticamente** e a **sala disponivel**
-6. Usuario confirma e salva os dados pedagogicos
-
-## Detalhes Tecnicos
-
-### 1. Criar Funcao RPC no Supabase
-
-Criar uma funcao `get_professores_disponiveis_por_horario` que:
-- Recebe: data, horario_inicio, horario_fim, unit_id
-- Retorna: lista de professores disponiveis ordenados por prioridade
-
-A logica verifica conflitos com:
-- **Turmas regulares**: professores que tem aula naquele dia da semana e horario
-- **Eventos pontuais**: eventos na tabela `eventos_professor` para a data especifica
-- **Eventos recorrentes**: bloqueios semanais recorrentes
-
-```text
-+-------------------+
-|   Data + Horario  |
-+-------------------+
-          |
-          v
-+-------------------+     +-------------------+
-| Verificar Turmas  | --> | Verificar Eventos |
-| (dia_semana)      |     | (data especifica) |
-+-------------------+     +-------------------+
-          |                        |
-          +----------+-------------+
-                     |
-                     v
-        +-------------------------+
-        | Professores Disponiveis |
-        | ORDER BY prioridade ASC |
-        +-------------------------+
+O erro exato e:
+```
+operator does not exist: dia_semana = text
 ```
 
-### 2. Criar Hook `use-professores-disponiveis`
+## Analise das Estruturas
 
-Hook React Query que:
-- Chama a funcao RPC criada
-- Recebe data, horario_inicio e duracao
-- Retorna lista de professores disponiveis com prioridade
+| Tabela/Variavel | Tipo da coluna `dia_semana` |
+|-----------------|----------------------------|
+| `turmas` | ENUM (`dia_semana`) |
+| `eventos_professor` | TEXT |
+| Variavel na funcao | TEXT |
 
-### 3. Atualizar o Formulario `DadosPedagogicosForm`
+## Solucao
 
-Modificar a secao "Aula Inaugural" para incluir:
+Atualizar a funcao RPC para fazer um **cast explicito** de TEXT para o tipo ENUM `dia_semana` quando comparar com a tabela `turmas`.
 
-**Etapa 1 - Selecao de Data:**
-- Calendario para escolher a data
-- Ao selecionar, carrega horarios disponiveis
+### Alteracao Necessaria
 
-**Etapa 2 - Selecao de Horario:**
-- Dropdown com horarios disponiveis (usa hook `useHorariosDisponiveisSalas`)
-- Duracao fixa de 1 hora para aula inaugural
-
-**Etapa 3 - Confirmacao Automatica:**
-- Exibe o professor selecionado automaticamente (primeiro por prioridade)
-- Exibe a sala selecionada automaticamente (primeira disponivel)
-- Permite ao usuario confirmar ou escolher outra opcao
-
-### 4. Atualizar Hook de Salvamento
-
-Criar/atualizar hook para salvar os dados pedagogicos na tabela `atividade_pos_venda`:
-- `turma_id` - turma selecionada
-- `responsavel` - responsavel pedagogico
-- `whatsapp_contato` - telefone do responsavel
-- `data_aula_inaugural` - data da aula
-
-Alem disso, criar evento na tabela `eventos_professor` para bloquear o horario do professor.
-
-### 5. Estrutura dos Arquivos
-
-```text
-src/
-  hooks/
-    use-professores-disponiveis.ts  (novo)
-    use-salvar-dados-pedagogicos.ts (novo)
-  components/
-    painel-administrativo/
-      DadosPedagogicosForm.tsx (atualizar)
-      AulaInauguralSelector.tsx (novo - componente dedicado)
-      
-supabase/
-  migrations/
-    XXXXXX_professores_disponiveis.sql (nova funcao RPC)
+**Linha atual:**
+```sql
+AND t.dia_semana = v_dia_semana
 ```
 
-### 6. Layout do Componente de Aula Inaugural
-
-O accordion "Aula Inaugural" tera o seguinte layout:
-
-```text
-+------------------------------------------+
-| Aula Inaugural                       [-] |
-+------------------------------------------+
-| Data da Aula                             |
-| [Calendario]                             |
-|                                          |
-| Horario (se data selecionada)            |
-| [Dropdown com horarios disponiveis]      |
-|                                          |
-| Resultado (se horario selecionado)       |
-| +--------------------------------------+ |
-| | Professor: Andre do Valle (prio. 1)  | |
-| | Sala: Sala 1 - Azul                  | |
-| | Data: 28/01/2026 as 09:00            | |
-| +--------------------------------------+ |
-+------------------------------------------+
+**Linha corrigida:**
+```sql
+AND t.dia_semana = v_dia_semana::dia_semana
 ```
 
-## Consideracoes
+## Etapas de Implementacao
 
-- A duracao da aula inaugural sera **fixa em 1 hora** (60 minutos)
-- O professor e selecionado automaticamente baseado na **prioridade** (coluna `prioridade` na tabela `professores`)
-- Se nao houver professor disponivel, exibir mensagem informativa
-- O horario sera bloqueado na agenda do professor ao salvar
-- A unidade sera sempre **Maringa** (conforme padrao do projeto)
+1. **Criar migracao SQL** para atualizar a funcao `get_professores_disponiveis_por_horario`
+   - Usar `CREATE OR REPLACE FUNCTION` para substituir a funcao existente
+   - Adicionar o cast `::dia_semana` na comparacao com a tabela `turmas`
+
+2. **Testar o fluxo** de selecao de aula inaugural no painel administrativo
+
+## Codigo da Migracao
+
+```sql
+CREATE OR REPLACE FUNCTION get_professores_disponiveis_por_horario(
+  p_data DATE,
+  p_horario_inicio TIME,
+  p_horario_fim TIME,
+  p_unit_id UUID DEFAULT NULL
+)
+RETURNS TABLE (
+  professor_id UUID,
+  professor_nome TEXT,
+  prioridade INTEGER
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_dia_semana TEXT;
+  v_unit_id UUID;
+BEGIN
+  -- Determinar o dia da semana em portugues
+  v_dia_semana := CASE EXTRACT(DOW FROM p_data)
+    WHEN 0 THEN 'domingo'
+    WHEN 1 THEN 'segunda'
+    WHEN 2 THEN 'terca'
+    WHEN 3 THEN 'quarta'
+    WHEN 4 THEN 'quinta'
+    WHEN 5 THEN 'sexta'
+    WHEN 6 THEN 'sabado'
+  END;
+  
+  -- Se unit_id nao foi passado, usar Maringa como padrao
+  v_unit_id := COALESCE(p_unit_id, '0df79a04-444e-46ee-b218-59e4b1835f4a'::UUID);
+  
+  RETURN QUERY
+  SELECT 
+    p.id AS professor_id,
+    p.nome AS professor_nome,
+    COALESCE(p.prioridade, 999) AS prioridade
+  FROM professores p
+  WHERE p.status = true
+    AND p.unit_id = v_unit_id
+    -- Excluir professores com turmas regulares no mesmo dia/horario
+    -- CORRECAO: Cast explicito para o tipo ENUM dia_semana
+    AND NOT EXISTS (
+      SELECT 1 FROM turmas t
+      WHERE t.professor_id = p.id
+        AND t.active = true
+        AND t.dia_semana = v_dia_semana::dia_semana
+        AND t.horario_inicio < p_horario_fim
+        AND t.horario_fim > p_horario_inicio
+    )
+    -- Excluir professores com eventos pontuais na data especifica
+    AND NOT EXISTS (
+      SELECT 1 FROM eventos_professor ep
+      WHERE ep.professor_id = p.id
+        AND ep.recorrente = false
+        AND ep.data = p_data
+        AND ep.horario_inicio < p_horario_fim
+        AND ep.horario_fim > p_horario_inicio
+    )
+    -- Excluir professores com eventos recorrentes semanais no mesmo dia
+    AND NOT EXISTS (
+      SELECT 1 FROM eventos_professor ep
+      WHERE ep.professor_id = p.id
+        AND ep.recorrente = true
+        AND ep.tipo_recorrencia = 'semanal'
+        AND ep.dia_semana = v_dia_semana
+        AND (ep.data_inicio_recorrencia IS NULL OR ep.data_inicio_recorrencia <= p_data)
+        AND (ep.data_fim_recorrencia IS NULL OR ep.data_fim_recorrencia >= p_data)
+        AND ep.horario_inicio < p_horario_fim
+        AND ep.horario_fim > p_horario_inicio
+    )
+  ORDER BY COALESCE(p.prioridade, 999) ASC, p.nome ASC;
+END;
+$$;
+```
+
+## Resultado Esperado
+
+Apos a correcao, ao selecionar uma data e horario no formulario de Aula Inaugural, o sistema devera:
+1. Retornar a lista de professores disponiveis ordenados por prioridade
+2. Exibir automaticamente o primeiro professor disponivel
+3. Mostrar a confirmacao de disponibilidade com professor e sala
