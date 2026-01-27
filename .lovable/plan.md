@@ -1,67 +1,82 @@
 
-# Plano: Unificar Etapas 2 e 3 do Modal de Bloquear Horário
+# Plano: Criar Página "Painel Administrativo" com aba "Pós-Matrícula"
 
 ## Objetivo
-Mesclar a etapa 2 (Data/Horário/Duração) com a etapa 3 (Tipo de Evento/Título/Descrição) em uma única etapa, com layout lado a lado.
+Criar uma nova página chamada "Painel Administrativo" que inicialmente terá uma aba "Pós-Matrícula" mostrando clientes que realizaram matrículas em 2026.
 
-## Estrutura Atual
-- **Etapa 1**: Seleção de professores + tipo de bloqueio (pontual/periódico)
-- **Etapa 2**: Calendário/dia da semana + horário + duração
-- **Etapa 3**: Tipo de evento + título + descrição + resumo
+## Entendimento do Requisito
 
-## Nova Estrutura Proposta
-- **Etapa 1**: Seleção de professores + tipo de bloqueio (mantém igual)
-- **Etapa 2**: Layout em duas colunas:
-  - **Coluna Esquerda**: Calendário (pontual) ou Dia da semana + calendários de recorrência (periódico), horário e duração
-  - **Coluna Direita**: Tipo de evento, título, descrição e resumo
+### Lógica de Dados
+- Buscar clientes da tabela `clients` que possuem um registro na tabela `client_activities` com `tipo_atividade = 'Matricula'`
+- Filtrar apenas registros onde o `created_at` da atividade de matrícula seja no ano de 2026
 
-## Layout Visual da Nova Etapa 2
+### Estrutura das Tabelas Relevantes
+**clients:**
+- id, name, phone_number, email, status, unit_id, created_at
+
+**client_activities:**
+- id, client_id, tipo_atividade, created_at, created_by, unit_id
+
+## Nova Estrutura de Arquivos
 
 ```text
-+------------------------------------------+
-|  Bloquear Horário - Etapa 2/2            |
-+------------------------------------------+
-|                                          |
-| +------------------+  +----------------+ |
-| | CALENDÁRIO/DIA   |  | Tipo Evento    | |
-| |                  |  | [Select    v]  | |
-| | [  Calendário  ] |  |                | |
-| |                  |  | Título         | |
-| | Horário  Duração |  | [Input       ] | |
-| | [Select] [Select]|  |                | |
-| |                  |  | Descrição      | |
-| | 10:00 - 11:00    |  | [Textarea    ] | |
-| +------------------+  +----------------+ |
-|                                          |
-| +--------------------------------------+ |
-| | RESUMO                               | |
-| | Professores: João, Maria             | |
-| | Tipo: Pontual | Data: 27/01/2026     | |
-| | Horário: 10:00 - 11:00               | |
-| +--------------------------------------+ |
-|                                          |
-| [Voltar]                   [Salvar]      |
-+------------------------------------------+
+src/pages/
+  PainelAdministrativo.tsx      (nova página)
+src/hooks/
+  use-pos-matricula.ts          (novo hook para buscar dados)
 ```
 
-## Alterações Técnicas
+## Implementação
 
-### 1. Atualizar Contador de Etapas
-- Alterar título de "Etapa {etapa}/3" para "Etapa {etapa}/2"
+### 1. Criar Hook `use-pos-matricula.ts`
+Query que faz JOIN entre `clients` e `client_activities`:
+- Filtra `tipo_atividade = 'Matricula'`
+- Filtra `created_at` entre '2026-01-01' e '2026-12-31'
+- Agrupa por cliente para evitar duplicatas
+- Respeita a unidade ativa do contexto
 
-### 2. Remover Navegação para Etapa 3
-- Botão "Próximo" da etapa 2 se torna "Salvar Bloqueio"
-- Remover lógica de `etapa === 3`
+### 2. Criar Página `PainelAdministrativo.tsx`
+Layout:
+- Estrutura de abas (Tabs) para permitir futuras expansões
+- Aba "Pós-Matrícula" como aba inicial/ativa
+- Tabela com lista de clientes matriculados em 2026
 
-### 3. Unificar Layout da Etapa 2
-- Criar grid com 2 colunas (`grid grid-cols-2 gap-6`)
-- Coluna esquerda: conteúdo atual da etapa 2
-- Coluna direita: conteúdo atual da etapa 3 (tipo, título, descrição)
-- Resumo abaixo das duas colunas (full width)
+Colunas da Tabela:
+| Nome | Telefone | Email | Data da Matrícula | Status |
 
-### 4. Ajustar Validação do Botão Salvar
-- Mover validação atual do botão salvar para a nova etapa 2
-- Validar: data/dia + horário + tipoEvento + titulo
+### 3. Adicionar Rota no App.tsx
+- Rota: `/painel-administrativo`
+- Dentro do layout protegido
 
-## Arquivo Modificado
-- `src/components/professores/BloquearHorarioProfessorModal.tsx`
+### 4. Adicionar no Menu Lateral (AppSidebar)
+- Adicionar item "Painel Administrativo" na seção de Administração
+- Ícone sugerido: Clipboard ou FileText
+- Acesso restrito a admins
+
+## Layout Visual
+
+```text
++----------------------------------------------------+
+|  Painel Administrativo                             |
++----------------------------------------------------+
+|  [ Pós-Matrícula ]  [ Aba Futura 2 ]  [ ... ]      |
++----------------------------------------------------+
+|                                                     |
+|  +------------------------------------------------+|
+|  | Nome        | Telefone    | Email   | Data     ||
+|  |-------------|-------------|---------|----------||
+|  | João Silva  | 44999...    | j@...   | 15/01/26 ||
+|  | Maria Lima  | 44988...    | m@...   | 22/01/26 ||
+|  +------------------------------------------------+|
+|                                                     |
++----------------------------------------------------+
+```
+
+## Arquivos Modificados/Criados
+
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/PainelAdministrativo.tsx` | Criar |
+| `src/hooks/use-pos-matricula.ts` | Criar |
+| `src/App.tsx` | Adicionar rota |
+| `src/components/AppSidebar.tsx` | Adicionar menu item |
