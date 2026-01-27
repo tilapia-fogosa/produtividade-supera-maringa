@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { usePosMatricula, ClienteMatriculado } from "@/hooks/use-pos-matricula";
-import { PosMatriculaDrawer, DrawerType } from "@/components/painel-administrativo/PosMatriculaDrawer";
+import { PosMatriculaModal, ModalType } from "@/components/painel-administrativo/PosMatriculaModal";
 
 export default function PainelAdministrativo() {
   const { data: clientes, isLoading, error } = usePosMatricula();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerTipo, setDrawerTipo] = useState<DrawerType | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTipo, setModalTipo] = useState<ModalType | null>(null);
   const [selectedCliente, setSelectedCliente] = useState<ClienteMatriculado | null>(null);
 
   const formatDate = (dateString: string) => {
@@ -29,10 +29,10 @@ export default function PainelAdministrativo() {
     }
   };
 
-  const handleOpenDrawer = (tipo: DrawerType, cliente: ClienteMatriculado) => {
-    setDrawerTipo(tipo);
+  const handleOpenModal = (tipo: ModalType, cliente: ClienteMatriculado) => {
+    setModalTipo(tipo);
     setSelectedCliente(cliente);
-    setDrawerOpen(true);
+    setModalOpen(true);
   };
 
   return (
@@ -101,7 +101,7 @@ export default function PainelAdministrativo() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("cadastrais", cliente)}
+                          onClick={() => handleOpenModal("cadastrais", cliente)}
                         >
                           <User className="h-4 w-4" />
                         </Button>
@@ -111,7 +111,7 @@ export default function PainelAdministrativo() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("comerciais", cliente)}
+                          onClick={() => handleOpenModal("comerciais", cliente)}
                         >
                           <DollarSign className="h-4 w-4" />
                         </Button>
@@ -121,7 +121,7 @@ export default function PainelAdministrativo() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("pedagogicos", cliente)}
+                          onClick={() => handleOpenModal("pedagogicos", cliente)}
                         >
                           <GraduationCap className="h-4 w-4" />
                         </Button>
@@ -141,10 +141,10 @@ export default function PainelAdministrativo() {
         </TabsContent>
       </Tabs>
 
-      <PosMatriculaDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        tipo={drawerTipo}
+      <PosMatriculaModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        tipo={modalTipo}
         cliente={selectedCliente}
       />
     </div>
