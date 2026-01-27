@@ -5,10 +5,8 @@ import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 export interface ClienteMatriculado {
   id: string;
   name: string;
-  phone_number: string | null;
-  email: string | null;
-  status: string | null;
   data_matricula: string;
+  vendedor_nome: string | null;
 }
 
 export function usePosMatricula() {
@@ -26,10 +24,10 @@ export function usePosMatricula() {
           client_id,
           clients!client_activities_client_id_fkey (
             id,
-            name,
-            phone_number,
-            email,
-            status
+            name
+          ),
+          profiles:created_by (
+            full_name
           )
         `)
         .eq("tipo_atividade", "Matricula")
@@ -55,10 +53,8 @@ export function usePosMatricula() {
           clientesMap.set(clientId, {
             id: clientId,
             name: activity.clients.name || "Sem nome",
-            phone_number: activity.clients.phone_number,
-            email: activity.clients.email,
-            status: activity.clients.status,
             data_matricula: activity.created_at,
+            vendedor_nome: activity.profiles?.full_name || null,
           });
         }
       });
