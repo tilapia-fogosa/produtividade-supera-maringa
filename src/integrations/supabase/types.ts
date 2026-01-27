@@ -1071,6 +1071,11 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           birth_date: string | null
+          check_assinar_contrato: boolean | null
+          check_cadastrar_pagamento: boolean | null
+          check_entregar_kit: boolean | null
+          check_grupo_whatsapp: boolean | null
+          check_lancar_sgs: boolean | null
           client_activity_id: string
           client_id: string
           client_name: string
@@ -1122,6 +1127,11 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           birth_date?: string | null
+          check_assinar_contrato?: boolean | null
+          check_cadastrar_pagamento?: boolean | null
+          check_entregar_kit?: boolean | null
+          check_grupo_whatsapp?: boolean | null
+          check_lancar_sgs?: boolean | null
           client_activity_id: string
           client_id: string
           client_name: string
@@ -1173,6 +1183,11 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           birth_date?: string | null
+          check_assinar_contrato?: boolean | null
+          check_cadastrar_pagamento?: boolean | null
+          check_entregar_kit?: boolean | null
+          check_grupo_whatsapp?: boolean | null
+          check_lancar_sgs?: boolean | null
           client_activity_id?: string
           client_id?: string
           client_name?: string

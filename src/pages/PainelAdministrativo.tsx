@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ClipboardList, Loader2, User, DollarSign, GraduationCap } from "lucide-react";
+import { ClipboardList, Loader2, User, DollarSign, GraduationCap, CheckSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -65,24 +65,25 @@ export default function PainelAdministrativo() {
                   <TableHead className="text-center">Dados Cadastrais</TableHead>
                   <TableHead className="text-center">Dados Comerciais</TableHead>
                   <TableHead className="text-center">Dados Pedagógicos</TableHead>
+                  <TableHead className="text-center">Dados Finais</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12">
+                    <TableCell colSpan={7} className="text-center py-12">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-destructive">
+                    <TableCell colSpan={7} className="text-center py-12 text-destructive">
                       Erro ao carregar dados
                     </TableCell>
                   </TableRow>
                 ) : !clientes?.length ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                       Nenhuma matrícula encontrada em 2026
                     </TableCell>
                   </TableRow>
@@ -124,6 +125,16 @@ export default function PainelAdministrativo() {
                           onClick={() => handleOpenDrawer("pedagogicos", cliente)}
                         >
                           <GraduationCap className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleOpenDrawer("finais", cliente)}
+                        >
+                          <CheckSquare className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
