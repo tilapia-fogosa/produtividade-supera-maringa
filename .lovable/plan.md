@@ -1,150 +1,132 @@
 
-
-# Plano: Formulário de Dados Comerciais
+# Plano: Agendamento de Aula Inaugural com Verificacao de Disponibilidade
 
 ## Resumo
 
-Criar o formulário de **Dados Comerciais** dentro do drawer `PosMatriculaDrawer`, com 4 seções organizadas: Tipo de Kit, Matrícula, Mensalidade e Material. Os dados serão salvos na tabela `atividade_pos_venda` que já possui os campos necessários.
+Implementar a logica de agendamento de aula inaugural que verifica automaticamente a disponibilidade de **salas** e **professores**, selecionando o primeiro professor disponivel por ordem de prioridade.
 
----
+## Fluxo do Usuario
 
-## Estrutura do Formulário
+1. Usuario seleciona uma **data** no calendario
+2. Sistema carrega os **horarios disponiveis** (slots de 30 min ou 1 hora)
+3. Usuario seleciona um **horario de inicio**
+4. Sistema verifica:
+   - Salas disponiveis naquele horario
+   - Professores disponiveis ordenados por prioridade
+5. Sistema exibe o **professor selecionado automaticamente** e a **sala disponivel**
+6. Usuario confirma e salva os dados pedagogicos
 
-### Seção 1: Tipo de Kit
-| Campo | Tipo | Opções |
-|-------|------|--------|
-| Tipo de Kit | Select | Kit 1, Kit 2, Kit 3, Kit 4, Kit 5, Kit 6, Kit 7, Kit 8 |
+## Detalhes Tecnicos
 
-### Seção 2: Matrícula
-| Campo | Tipo | Observação |
-|-------|------|------------|
-| Valor | Input numérico | Máscara de moeda (R$) |
-| Data de Pagamento | Input texto | Máscara: DD/MM/AAAA |
-| Forma de Pagamento | Select | Pix, Dinheiro, Cartão de Crédito, Cartão de Débito, Transferência, Boleto, Recorrência |
-| Parcelas | Select | 1x a 12x |
-| Pagamento Confirmado | Switch | Sim/Não |
+### 1. Criar Funcao RPC no Supabase
 
-### Seção 3: Mensalidade
-| Campo | Tipo | Observação |
-|-------|------|------------|
-| Valor | Input numérico | Máscara de moeda (R$) |
-| 1ª Mensalidade | Input texto | Data da primeira mensalidade (DD/MM/AAAA) |
-| Forma de Pagamento | Select | Pix, Dinheiro, Cartão de Crédito, Cartão de Débito, Transferência, Boleto, Recorrência |
+Criar uma funcao `get_professores_disponiveis_por_horario` que:
+- Recebe: data, horario_inicio, horario_fim, unit_id
+- Retorna: lista de professores disponiveis ordenados por prioridade
 
-### Seção 4: Material
-| Campo | Tipo | Observação |
-|-------|------|------------|
-| Valor | Input numérico | Máscara de moeda (R$) |
-| Data de Pagamento | Input texto | Máscara: DD/MM/AAAA |
-| Forma de Pagamento | Select | Pix, Dinheiro, Cartão de Crédito, Cartão de Débito, Transferência, Boleto, Recorrência |
-| Parcelas | Select | 1x a 12x |
-| Pagamento Confirmado | Switch | Sim/Não |
-
----
-
-## Alterações Necessárias
-
-### 1. Migration: Adicionar 'transferencia' ao enum payment_method
-
-Adicionar o valor "transferencia" ao enum `payment_method` existente no banco de dados.
-
-### 2. Criar: `src/components/painel-administrativo/DadosComercaisForm.tsx`
-
-Componente de formulário seguindo o padrão do `DadosCadastraisForm`:
-- Usar `react-hook-form` com validação `zod`
-- Layout desktop de alta densidade com grid de 2-3 colunas
-- Organização visual por seções com títulos em uppercase
-- Máscara de moeda para campos de valor
-- Máscara de data (DD/MM/AAAA) para datas
-- Switch para confirmação de pagamento
-
-### 3. Criar: `src/hooks/use-salvar-dados-comerciais.ts`
-
-Hook de mutation para salvar os dados comerciais na tabela `atividade_pos_venda`, atualizando o registro pelo `client_id`.
-
-### 4. Modificar: `src/components/painel-administrativo/PosMatriculaDrawer.tsx`
-
-Importar e renderizar o `DadosComercaisForm` quando `tipo === "comerciais"`.
-
----
-
-## Layout Visual Proposto
+A logica verifica conflitos com:
+- **Turmas regulares**: professores que tem aula naquele dia da semana e horario
+- **Eventos pontuais**: eventos na tabela `eventos_professor` para a data especifica
+- **Eventos recorrentes**: bloqueios semanais recorrentes
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│ Dados Comerciais                                            │
-│ [Nome do Cliente]                                           │
-├─────────────────────────────────────────────────────────────┤
-│ TIPO DE KIT                                                 │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ Tipo de Kit                          [Kit 1 ▼]          │ │
-│ └─────────────────────────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│ MATRÍCULA                                                   │
-│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
-│ │ Valor           │ │ Data Pagamento  │ │ Forma Pagamento │ │
-│ │ R$ 0,00         │ │ DD/MM/AAAA      │ │ [Selecione ▼]   │ │
-│ └─────────────────┘ └─────────────────┘ └─────────────────┘ │
-│ ┌─────────────────┐ ┌─────────────────────────────────────┐ │
-│ │ Parcelas        │ │ Pagamento Confirmado    [ toggle ]  │ │
-│ │ [1x ▼]          │ │                                     │ │
-│ └─────────────────┘ └─────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│ MENSALIDADE                                                 │
-│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
-│ │ Valor           │ │ 1ª Mensalidade  │ │ Forma Pagamento │ │
-│ │ R$ 0,00         │ │ DD/MM/AAAA      │ │ [Selecione ▼]   │ │
-│ └─────────────────┘ └─────────────────┘ └─────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│ MATERIAL                                                    │
-│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
-│ │ Valor           │ │ Data Pagamento  │ │ Forma Pagamento │ │
-│ │ R$ 0,00         │ │ DD/MM/AAAA      │ │ [Selecione ▼]   │ │
-│ └─────────────────┘ └─────────────────┘ └─────────────────┘ │
-│ ┌─────────────────┐ ┌─────────────────────────────────────┐ │
-│ │ Parcelas        │ │ Pagamento Confirmado    [ toggle ]  │ │
-│ │ [1x ▼]          │ │                                     │ │
-│ └─────────────────┘ └─────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│                               [Cancelar] [Salvar]           │
-└─────────────────────────────────────────────────────────────┘
++-------------------+
+|   Data + Horario  |
++-------------------+
+          |
+          v
++-------------------+     +-------------------+
+| Verificar Turmas  | --> | Verificar Eventos |
+| (dia_semana)      |     | (data especifica) |
++-------------------+     +-------------------+
+          |                        |
+          +----------+-------------+
+                     |
+                     v
+        +-------------------------+
+        | Professores Disponiveis |
+        | ORDER BY prioridade ASC |
+        +-------------------------+
 ```
 
----
+### 2. Criar Hook `use-professores-disponiveis`
 
-## Detalhes Técnicos
+Hook React Query que:
+- Chama a funcao RPC criada
+- Recebe data, horario_inicio e duracao
+- Retorna lista de professores disponiveis com prioridade
 
-### Mapeamento de Campos para o Banco
+### 3. Atualizar o Formulario `DadosPedagogicosForm`
 
-| Campo do Formulário | Coluna no Banco |
-|---------------------|-----------------|
-| Tipo de Kit | `kit_type` |
-| Matrícula - Valor | `enrollment_amount` |
-| Matrícula - Data | `enrollment_payment_date` |
-| Matrícula - Forma | `enrollment_payment_method` |
-| Matrícula - Parcelas | `enrollment_installments` |
-| Matrícula - Confirmado | `enrollment_payment_confirmed` |
-| Mensalidade - Valor | `monthly_fee_amount` |
-| Mensalidade - 1ª Data | `first_monthly_fee_date` |
-| Mensalidade - Forma | `monthly_fee_payment_method` |
-| Material - Valor | `material_amount` |
-| Material - Data | `material_payment_date` |
-| Material - Forma | `material_payment_method` |
-| Material - Parcelas | `material_installments` |
-| Material - Confirmado | `material_payment_confirmed` |
+Modificar a secao "Aula Inaugural" para incluir:
 
-### Formas de Pagamento (após migration)
-- dinheiro
-- pix
-- cartao_credito
-- cartao_debito
-- boleto
-- recorrencia
-- transferencia (novo)
+**Etapa 1 - Selecao de Data:**
+- Calendario para escolher a data
+- Ao selecionar, carrega horarios disponiveis
 
-### Funcionalidades
-- Botão **Salvar** com estado de loading durante o processamento
-- Mensagem de sucesso após salvar e fechamento automático do drawer (1.5s)
-- Botão **Cancelar** fecha o drawer sem salvar
-- Todos os campos são opcionais para permitir preenchimento parcial
+**Etapa 2 - Selecao de Horario:**
+- Dropdown com horarios disponiveis (usa hook `useHorariosDisponiveisSalas`)
+- Duracao fixa de 1 hora para aula inaugural
 
+**Etapa 3 - Confirmacao Automatica:**
+- Exibe o professor selecionado automaticamente (primeiro por prioridade)
+- Exibe a sala selecionada automaticamente (primeira disponivel)
+- Permite ao usuario confirmar ou escolher outra opcao
+
+### 4. Atualizar Hook de Salvamento
+
+Criar/atualizar hook para salvar os dados pedagogicos na tabela `atividade_pos_venda`:
+- `turma_id` - turma selecionada
+- `responsavel` - responsavel pedagogico
+- `whatsapp_contato` - telefone do responsavel
+- `data_aula_inaugural` - data da aula
+
+Alem disso, criar evento na tabela `eventos_professor` para bloquear o horario do professor.
+
+### 5. Estrutura dos Arquivos
+
+```text
+src/
+  hooks/
+    use-professores-disponiveis.ts  (novo)
+    use-salvar-dados-pedagogicos.ts (novo)
+  components/
+    painel-administrativo/
+      DadosPedagogicosForm.tsx (atualizar)
+      AulaInauguralSelector.tsx (novo - componente dedicado)
+      
+supabase/
+  migrations/
+    XXXXXX_professores_disponiveis.sql (nova funcao RPC)
+```
+
+### 6. Layout do Componente de Aula Inaugural
+
+O accordion "Aula Inaugural" tera o seguinte layout:
+
+```text
++------------------------------------------+
+| Aula Inaugural                       [-] |
++------------------------------------------+
+| Data da Aula                             |
+| [Calendario]                             |
+|                                          |
+| Horario (se data selecionada)            |
+| [Dropdown com horarios disponiveis]      |
+|                                          |
+| Resultado (se horario selecionado)       |
+| +--------------------------------------+ |
+| | Professor: Andre do Valle (prio. 1)  | |
+| | Sala: Sala 1 - Azul                  | |
+| | Data: 28/01/2026 as 09:00            | |
+| +--------------------------------------+ |
++------------------------------------------+
+```
+
+## Consideracoes
+
+- A duracao da aula inaugural sera **fixa em 1 hora** (60 minutos)
+- O professor e selecionado automaticamente baseado na **prioridade** (coluna `prioridade` na tabela `professores`)
+- Se nao houver professor disponivel, exibir mensagem informativa
+- O horario sera bloqueado na agenda do professor ao salvar
+- A unidade sera sempre **Maringa** (conforme padrao do projeto)
