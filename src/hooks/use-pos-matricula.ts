@@ -24,7 +24,7 @@ export function usePosMatricula() {
           id,
           created_at,
           client_id,
-          clients!inner (
+          clients!client_activities_client_id_fkey (
             id,
             name,
             phone_number,
