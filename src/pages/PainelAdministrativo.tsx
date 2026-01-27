@@ -61,31 +61,37 @@ export default function PainelAdministrativo() {
 
         <TabsContent value="pos-matricula" className="mt-4">
           <div className="rounded-md border">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : error ? (
-              <div className="flex items-center justify-center py-12 text-destructive">
-                Erro ao carregar dados
-              </div>
-            ) : !clientes?.length ? (
-              <div className="flex items-center justify-center py-12 text-muted-foreground">
-                Nenhuma matrícula encontrada em 2026
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Data da Matrícula</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Data da Matrícula</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableCell colSpan={5} className="text-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clientes.map((cliente) => (
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-12 text-destructive">
+                      Erro ao carregar dados
+                    </TableCell>
+                  </TableRow>
+                ) : !clientes?.length ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                      Nenhuma matrícula encontrada em 2026
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  clientes.map((cliente) => (
                     <TableRow key={cliente.id}>
                       <TableCell className="font-medium">
                         {cliente.name}
@@ -97,10 +103,10 @@ export default function PainelAdministrativo() {
                       </TableCell>
                       <TableCell>{getStatusBadge(cliente.status)}</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
 
           {clientes && clientes.length > 0 && (
