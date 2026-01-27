@@ -98,7 +98,7 @@ export default function PainelAdministrativo() {
                       <TableCell>{cliente.vendedor_nome || "-"}</TableCell>
                       <TableCell className="text-center">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleOpenDrawer("cadastrais", cliente)}
@@ -108,7 +108,7 @@ export default function PainelAdministrativo() {
                       </TableCell>
                       <TableCell className="text-center">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleOpenDrawer("comerciais", cliente)}
@@ -118,7 +118,7 @@ export default function PainelAdministrativo() {
                       </TableCell>
                       <TableCell className="text-center">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleOpenDrawer("pedagogicos", cliente)}
