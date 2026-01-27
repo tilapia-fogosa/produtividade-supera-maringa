@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
+import { useSalvarDadosCadastrais } from "@/hooks/use-salvar-dados-cadastrais";
 import { WebcamCapture } from "./WebcamCapture";
 const ESTADOS_BRASILEIROS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 const dadosCadastraisSchema = z.object({
@@ -56,8 +57,10 @@ export function DadosCadastraisForm({
   cliente,
   onCancel
 }: DadosCadastraisFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
+  const [salvoComSucesso, setSalvoComSucesso] = useState(false);
+  
+  const salvarDados = useSalvarDadosCadastrais();
   
   const form = useForm<DadosCadastraisFormData>({
     resolver: zodResolver(dadosCadastraisSchema),
@@ -77,15 +80,35 @@ export function DadosCadastraisForm({
       estado: ""
     }
   });
+
   const onSubmit = async (data: DadosCadastraisFormData) => {
-    setIsSubmitting(true);
     try {
-      // Por enquanto, apenas log dos dados
-      console.log("Dados Cadastrais:", data);
-      console.log("Foto capturada:", fotoCapturada ? "Sim" : "Não");
-      // TODO: Integração com banco será implementada depois
-    } finally {
-      setIsSubmitting(false);
+      await salvarDados.mutateAsync({
+        clientId: cliente.id,
+        nome: data.nome,
+        dataNascimento: data.data_nascimento,
+        cpf: data.cpf,
+        rg: data.rg,
+        telefone: data.telefone,
+        email: data.email,
+        cep: data.cep,
+        rua: data.rua,
+        numero: data.numero,
+        complemento: data.complemento,
+        bairro: data.bairro,
+        cidade: data.cidade,
+        estado: data.estado,
+        fotoBase64: fotoCapturada,
+      });
+      
+      setSalvoComSucesso(true);
+      
+      // Fechar drawer após 1.5 segundos
+      setTimeout(() => {
+        onCancel();
+      }, 1500);
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
     }
   };
   return <Form {...form}>
@@ -268,13 +291,22 @@ export function DadosCadastraisForm({
 
         {/* Botões */}
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
-          </Button>
+          {salvoComSucesso ? (
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Dados salvos com sucesso!</span>
+            </div>
+          ) : (
+            <>
+              <Button type="button" variant="outline" onClick={onCancel} disabled={salvarDados.isPending}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={salvarDados.isPending}>
+                {salvarDados.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar
+              </Button>
+            </>
+          )}
         </div>
       </form>
     </Form>;
