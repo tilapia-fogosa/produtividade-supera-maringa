@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { DadosCadastraisForm } from "./DadosCadastraisForm";
 import { DadosComercaisForm } from "./DadosComercaisForm";
+import { DadosPedagogicosForm } from "./DadosPedagogicosForm";
 import { DollarSign, User, GraduationCap } from "lucide-react";
 
 export type DrawerType = "cadastrais" | "comerciais" | "pedagogicos";
@@ -57,9 +58,7 @@ export function PosMatriculaDrawer({
               <DadosComercaisForm cliente={cliente} onCancel={handleClose} />
             )}
             {tipo === "pedagogicos" && (
-              <p className="text-muted-foreground text-sm">
-                Formulário de Dados Pedagógicos será implementado aqui.
-              </p>
+              <DadosPedagogicosForm cliente={cliente} onCancel={handleClose} />
             )}
           </div>
         </ScrollArea>
