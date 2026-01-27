@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format, startOfWeek, endOfWeek, addWeeks, isToday, isSameWeek, parseISO, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { useTarefasPessoais, TarefaPessoal } from '@/hooks/use-tarefas-pessoais';
@@ -14,13 +15,14 @@ import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
 import { useAniversariantes } from '@/hooks/use-aniversariantes';
 import { useAtividadesEvasaoHome } from '@/hooks/use-atividades-evasao-home';
 import { useAulasInauguraisProfessor } from '@/hooks/use-aulas-inaugurais-professor';
+import { usePosMatriculasIncompletas } from '@/hooks/use-pos-matriculas-incompletas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -49,11 +51,14 @@ interface Evento {
   alerta_evasao_id?: string;
   atividade_evasao_id?: string;
   tipo_atividade_evasao?: string;
+  // Campos para pós-matrícula incompleta
+  pos_matricula_client_id?: string;
 }
 
 export default function Home() {
   const { profile } = useAuth();
   const { activeUnit } = useActiveUnit();
+  const navigate = useNavigate();
   const hoje = new Date();
   
   // Datas para os períodos
@@ -125,7 +130,10 @@ export default function Home() {
   const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao, refetch: refetchAtividadesEvasao } = useAtividadesEvasaoHome();
   
   // Permissões do usuário
-  const { isAdmin, isManagement } = useUserPermissions();
+  const { isAdmin, isManagement, isAdministrativo } = useUserPermissions();
+  
+  // Buscar pós-matrículas incompletas (para admins e administrativo)
+  const { data: posMatriculasIncompletas = [], isLoading: loadingPosMatriculas } = usePosMatriculasIncompletas();
   
   // Filtrar coletas com mais de 90 dias para admins
   const coletasAHAdmins = todasColetasAH.filter(c => 
@@ -264,6 +272,22 @@ export default function Home() {
           apostila_recolhida_id: a.id,
           apostila_nome: a.apostila,
           pessoa_nome: a.pessoa_nome,
+        });
+      });
+      
+      // Pós-matrículas incompletas (para admins e administrativo)
+      posMatriculasIncompletas.forEach(pm => {
+        const pendentes: string[] = [];
+        if (!pm.cadastrais_completo) pendentes.push('Cadastrais');
+        if (!pm.comerciais_completo) pendentes.push('Comerciais');
+        if (!pm.pedagogicos_completo) pendentes.push('Pedagógicos');
+        
+        eventosAtrasados.push({
+          tipo: 'pos_matricula',
+          titulo: `Pós-Matrícula: ${pm.client_name}`,
+          data: pm.data_matricula,
+          subtitulo: `Faltam: ${pendentes.join(', ')}`,
+          pos_matricula_client_id: pm.client_id,
         });
       });
 
@@ -441,6 +465,49 @@ export default function Home() {
       });
 
       return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
+    } else if (isAdministrativo) {
+      // Para setor administrativo: mostrar pós-matrículas incompletas
+      const eventosAtrasados: Evento[] = [];
+      const eventosHoje: Evento[] = [];
+      const eventosSemana: Evento[] = [];
+      const eventosProximaSemana: Evento[] = [];
+
+      // Pós-matrículas incompletas
+      posMatriculasIncompletas.forEach(pm => {
+        const pendentes: string[] = [];
+        if (!pm.cadastrais_completo) pendentes.push('Cadastrais');
+        if (!pm.comerciais_completo) pendentes.push('Comerciais');
+        if (!pm.pedagogicos_completo) pendentes.push('Pedagógicos');
+        
+        eventosAtrasados.push({
+          tipo: 'pos_matricula',
+          titulo: `Pós-Matrícula: ${pm.client_name}`,
+          data: pm.data_matricula,
+          subtitulo: `Faltam: ${pendentes.join(', ')}`,
+          pos_matricula_client_id: pm.client_id,
+        });
+      });
+
+      // Aniversariantes
+      aniversariantes?.aniversariantesHoje?.forEach(a => {
+        eventosHoje.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: 'Aniversário hoje! 🎉',
+        });
+      });
+
+      aniversariantes?.aniversariantesSemana?.forEach(a => {
+        eventosSemana.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+        });
+      });
+
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     } else {
       // Para não-professores: comportamento original
       const eventosHoje: Evento[] = [
@@ -614,6 +681,8 @@ export default function Home() {
         return <UserX className="h-3.5 w-3.5 text-destructive flex-shrink-0" />;
       case 'aula_inaugural':
         return <GraduationCap className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />;
+      case 'pos_matricula':
+        return <FileText className="h-3.5 w-3.5 text-cyan-600 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -647,6 +716,8 @@ export default function Home() {
         return <Badge className={`text-[10px] px-1.5 py-0 ${color} text-white`}>Evasão</Badge>;
       case 'aula_inaugural':
         return <Badge className="text-[10px] px-1.5 py-0 bg-emerald-600 text-white">Inaugural</Badge>;
+      case 'pos_matricula':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-cyan-600 text-white">Pós-Mat.</Badge>;
       default:
         return null;
     }
@@ -722,7 +793,8 @@ export default function Home() {
     const isColetaAHClicavel = evento.tipo === 'coleta_ah' && evento.pessoa_id;
     const isAHProntaClicavel = evento.tipo === 'apostila_ah' && evento.apostila_recolhida_id;
     const isAlertaEvasaoClicavel = evento.tipo === 'alerta_evasao' && evento.alerta_evasao_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel;
+    const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -733,6 +805,8 @@ export default function Home() {
         handleAHProntaClick(evento);
       } else if (isAlertaEvasaoClicavel) {
         handleAlertaEvasaoClick(evento);
+      } else if (isPosMatriculaClicavel) {
+        navigate('/painel-administrativo');
       }
     };
     
@@ -797,7 +871,7 @@ export default function Home() {
     </Card>
   );
 
-  const isLoading = loadingTarefas || loadingProfessor || loadingAtividadesEvasao || (isAdmin && loadingColetasAH);
+  const isLoading = loadingTarefas || loadingProfessor || loadingAtividadesEvasao || (isAdmin && loadingColetasAH) || (isAdministrativo && loadingPosMatriculas);
 
   return (
     <div className="w-full space-y-3 px-4">
