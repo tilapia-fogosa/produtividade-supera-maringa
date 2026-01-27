@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ClipboardList, Loader2, User, DollarSign, GraduationCap, CheckSquare, Check, X, CalendarIcon } from "lucide-react";
+import { ClipboardList, Loader2, User, DollarSign, GraduationCap, CheckSquare, Check, X, CalendarIcon, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePosMatricula, ClienteMatriculado, PosMatriculaFilters } from "@/hooks/use-pos-matricula";
 import { PosMatriculaDrawer, DrawerType } from "@/components/painel-administrativo/PosMatriculaDrawer";
+import { FichasRescisaoTab } from "@/components/painel-administrativo/FichasRescisaoTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -80,6 +81,7 @@ export default function PainelAdministrativo() {
       <Tabs defaultValue="pos-matricula" className="w-full">
         <TabsList>
           <TabsTrigger value="pos-matricula">Pós-Matrícula</TabsTrigger>
+          <TabsTrigger value="fichas-rescisao">Fichas de Rescisão</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pos-matricula" className="mt-4 space-y-4">
@@ -266,6 +268,10 @@ export default function PainelAdministrativo() {
               Total: {clientes.length} matrícula(s)
             </p>
           )}
+        </TabsContent>
+
+        <TabsContent value="fichas-rescisao" className="mt-4">
+          <FichasRescisaoTab />
         </TabsContent>
       </Tabs>
 
