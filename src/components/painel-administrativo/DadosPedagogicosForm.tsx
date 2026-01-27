@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/accordion";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
-import { useResponsaveis } from "@/hooks/use-responsaveis";
 import { useSalvarDadosPedagogicos } from "@/hooks/use-salvar-dados-pedagogicos";
 import { AulaInauguralSelector } from "./AulaInauguralSelector";
 
@@ -29,11 +28,10 @@ interface DadosPedagogicosFormProps {
 
 export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosFormProps) {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
-  const { responsaveis, isLoading: loadingResponsaveis } = useResponsaveis();
   const salvarDados = useSalvarDadosPedagogicos();
 
   const [turmaId, setTurmaId] = useState<string>("");
-  const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("o_proprio");
+  const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("O próprio");
   const [telefoneResponsavel, setTelefoneResponsavel] = useState<string>("");
   
   // Estados da aula inaugural
@@ -60,7 +58,7 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
     await salvarDados.mutateAsync({
       clientId: cliente.id,
       turmaId: turmaId || undefined,
-      responsavel: responsavelPedagogico !== "o_proprio" ? responsavelPedagogico : undefined,
+      responsavel: responsavelPedagogico !== "O próprio" ? responsavelPedagogico : undefined,
       whatsappContato: telefoneResponsavel || undefined,
       dataAulaInaugural: dataAulaInaugural,
       horarioAulaInaugural: horarioSelecionado || undefined,
@@ -111,19 +109,12 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
             <div className="space-y-3 pt-2">
               <div className="space-y-1.5">
                 <Label className="text-xs">Responsável</Label>
-                <Select value={responsavelPedagogico} onValueChange={setResponsavelPedagogico}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder={loadingResponsaveis ? "Carregando..." : "Selecione"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="o_proprio">O próprio</SelectItem>
-                    {responsaveis.map((resp) => (
-                      <SelectItem key={resp.id} value={resp.id}>
-                        {resp.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={responsavelPedagogico}
+                  onChange={(e) => setResponsavelPedagogico(e.target.value)}
+                  placeholder="Nome do responsável pedagógico"
+                  className="h-9"
+                />
               </div>
 
               <div className="space-y-1.5">
