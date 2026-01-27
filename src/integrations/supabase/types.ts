@@ -7918,6 +7918,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
+        | "transferencia"
       Perfil_idade:
         | "crianca-adolescente"
         | "adulto"
@@ -8147,6 +8148,7 @@ export const Constants = {
         "cartao_debito",
         "boleto",
         "recorrencia",
+        "transferencia",
       ],
       Perfil_idade: [
         "crianca-adolescente",

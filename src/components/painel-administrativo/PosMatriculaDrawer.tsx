@@ -8,6 +8,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { DadosCadastraisForm } from "./DadosCadastraisForm";
+import { DadosComercaisForm } from "./DadosComercaisForm";
 
 export type DrawerType = "cadastrais" | "comerciais" | "pedagogicos";
 
@@ -48,9 +49,7 @@ export function PosMatriculaDrawer({
               <DadosCadastraisForm cliente={cliente} onCancel={handleClose} />
             )}
             {tipo === "comerciais" && (
-              <p className="text-muted-foreground text-sm">
-                Formulário de Dados Comerciais será implementado aqui.
-              </p>
+              <DadosComercaisForm cliente={cliente} onCancel={handleClose} />
             )}
             {tipo === "pedagogicos" && (
               <p className="text-muted-foreground text-sm">
