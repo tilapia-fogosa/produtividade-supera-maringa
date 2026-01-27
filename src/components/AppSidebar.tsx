@@ -22,7 +22,8 @@ import {
   Home,
   Image,
   Bell,
-  Clock
+  Clock,
+  LayoutDashboard
 } from "lucide-react";
 import {
   Sidebar,
@@ -145,6 +146,12 @@ const additionalItems = [
     title: "Registro de Ponto",
     url: "/registro-ponto",
     icon: Clock,
+    requiresAdmin: true,
+  },
+  {
+    title: "Painel Administrativo",
+    url: "/painel-administrativo",
+    icon: LayoutDashboard,
     requiresAdmin: true,
   },
 ];
