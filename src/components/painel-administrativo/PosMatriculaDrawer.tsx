@@ -10,9 +10,10 @@ import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { DadosCadastraisForm } from "./DadosCadastraisForm";
 import { DadosComercaisForm } from "./DadosComercaisForm";
 import { DadosPedagogicosForm } from "./DadosPedagogicosForm";
-import { DollarSign, User, GraduationCap } from "lucide-react";
+import { DadosFinaisForm } from "./DadosFinaisForm";
+import { DollarSign, User, GraduationCap, CheckSquare } from "lucide-react";
 
-export type DrawerType = "cadastrais" | "comerciais" | "pedagogicos";
+export type DrawerType = "cadastrais" | "comerciais" | "pedagogicos" | "finais";
 
 interface PosMatriculaDrawerProps {
   open: boolean;
@@ -25,6 +26,7 @@ const drawerConfig: Record<DrawerType, { title: string; icon: React.ReactNode }>
   cadastrais: { title: "Dados Cadastrais", icon: <User className="h-5 w-5" /> },
   comerciais: { title: "Dados Comerciais", icon: <DollarSign className="h-5 w-5" /> },
   pedagogicos: { title: "Dados Pedagógicos", icon: <GraduationCap className="h-5 w-5" /> },
+  finais: { title: "Dados Finais", icon: <CheckSquare className="h-5 w-5" /> },
 };
 
 export function PosMatriculaDrawer({
@@ -59,6 +61,9 @@ export function PosMatriculaDrawer({
             )}
             {tipo === "pedagogicos" && (
               <DadosPedagogicosForm cliente={cliente} onCancel={handleClose} />
+            )}
+            {tipo === "finais" && (
+              <DadosFinaisForm cliente={cliente} onCancel={handleClose} />
             )}
           </div>
         </ScrollArea>
