@@ -37,7 +37,7 @@ export function PosMatriculaDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-3xl p-0 flex flex-col">
+      <SheetContent className="w-[33vw] min-w-[400px] max-w-[600px] p-0 flex flex-col">
         <SheetHeader className="p-6 pb-0">
           <SheetTitle>{drawerTitles[tipo]}</SheetTitle>
           <p className="text-sm text-muted-foreground">{cliente.name}</p>

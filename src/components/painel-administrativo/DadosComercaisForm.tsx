@@ -183,10 +183,10 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {/* TIPO DE KIT */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">
+        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Tipo de Kit
           </h3>
           <FormField
@@ -215,11 +215,11 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
         </div>
 
         {/* MATRÍCULA */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">
+        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Matrícula
           </h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="enrollmentAmount"
@@ -275,8 +275,6 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
                 </FormItem>
               )}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="enrollmentInstallments"
@@ -304,7 +302,7 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
               control={form.control}
               name="enrollmentPaymentConfirmed"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-background p-3">
                   <FormLabel className="text-sm">Pagamento Confirmado</FormLabel>
                   <FormControl>
                     <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -316,11 +314,11 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
         </div>
 
         {/* MENSALIDADE */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">
+        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Mensalidade
           </h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="monthlyFeeAmount"
@@ -380,11 +378,11 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
         </div>
 
         {/* MATERIAL */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">
+        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Material
           </h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="materialAmount"
@@ -440,8 +438,6 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
                 </FormItem>
               )}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="materialInstallments"
@@ -469,7 +465,7 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
               control={form.control}
               name="materialPaymentConfirmed"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-background p-3">
                   <FormLabel className="text-sm">Pagamento Confirmado</FormLabel>
                   <FormControl>
                     <Switch checked={field.value} onCheckedChange={field.onChange} />
