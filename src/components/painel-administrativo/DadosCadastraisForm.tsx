@@ -15,6 +15,8 @@ const dadosCadastraisSchema = z.object({
   data_nascimento: z.string().optional(),
   cpf: z.string().optional(),
   rg: z.string().optional(),
+  telefone: z.string().optional(),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   cep: z.string().optional(),
   rua: z.string().optional(),
   numero: z.string().optional(),
@@ -42,6 +44,14 @@ const formatDate = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 8);
   return digits.replace(/(\d{2})(\d)/, "$1/$2").replace(/(\d{2})(\d)/, "$1/$2");
 };
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 10) {
+    return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+};
 export function DadosCadastraisForm({
   cliente,
   onCancel
@@ -56,6 +66,8 @@ export function DadosCadastraisForm({
       data_nascimento: "",
       cpf: "",
       rg: "",
+      telefone: "",
+      email: "",
       cep: "",
       rua: "",
       numero: "",
@@ -121,6 +133,28 @@ export function DadosCadastraisForm({
                   <FormLabel>RG</FormLabel>
                   <FormControl>
                     <Input placeholder="RG" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField control={form.control} name="telefone" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Telefone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(00) 00000-0000" {...field} onChange={e => field.onChange(formatPhone(e.target.value))} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>} />
+
+            <FormField control={form.control} name="email" render={({
+            field
+          }) => <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@exemplo.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
