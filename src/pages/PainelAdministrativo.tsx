@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { usePosMatricula } from "@/hooks/use-pos-matricula";
 
 export default function PainelAdministrativo() {
@@ -22,22 +21,6 @@ export default function PainelAdministrativo() {
     } catch {
       return "-";
     }
-  };
-
-  const getStatusBadge = (status: string | null) => {
-    if (!status) return <Badge variant="secondary">-</Badge>;
-    
-    const statusMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      ativo: "default",
-      inativo: "destructive",
-      pendente: "secondary",
-    };
-
-    return (
-      <Badge variant={statusMap[status.toLowerCase()] || "outline"}>
-        {status}
-      </Badge>
-    );
   };
 
   return (
@@ -65,28 +48,26 @@ export default function PainelAdministrativo() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Email</TableHead>
                   <TableHead>Data da Matrícula</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Vendedor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12">
+                    <TableCell colSpan={3} className="text-center py-12">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-destructive">
+                    <TableCell colSpan={3} className="text-center py-12 text-destructive">
                       Erro ao carregar dados
                     </TableCell>
                   </TableRow>
                 ) : !clientes?.length ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
                       Nenhuma matrícula encontrada em 2026
                     </TableCell>
                   </TableRow>
@@ -96,12 +77,10 @@ export default function PainelAdministrativo() {
                       <TableCell className="font-medium">
                         {cliente.name}
                       </TableCell>
-                      <TableCell>{cliente.phone_number || "-"}</TableCell>
-                      <TableCell>{cliente.email || "-"}</TableCell>
                       <TableCell>
                         {formatDate(cliente.data_matricula)}
                       </TableCell>
-                      <TableCell>{getStatusBadge(cliente.status)}</TableCell>
+                      <TableCell>{cliente.vendedor_nome || "-"}</TableCell>
                     </TableRow>
                   ))
                 )}
