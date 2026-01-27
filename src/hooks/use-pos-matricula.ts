@@ -28,7 +28,7 @@ export function usePosMatricula() {
             name
           )
         `)
-        .eq("tipo_atividade", "Matricula")
+        .eq("tipo_atividade", "Matrícula")
         .gte("created_at", "2026-01-01T00:00:00")
         .order("created_at", { ascending: false });
 
