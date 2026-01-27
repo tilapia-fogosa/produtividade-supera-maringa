@@ -37,10 +37,12 @@ export function PosMatriculaModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle>{modalTitles[tipo]}</DialogTitle>
-          <p className="text-sm text-muted-foreground">{cliente.name}</p>
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 flex flex-col">
+        <DialogHeader className="p-6 pb-4 border-b">
+          <div className="flex items-center gap-2">
+            <span className="text-primary">$</span>
+            <DialogTitle>{modalTitles[tipo]}</DialogTitle>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="flex-1 px-6 pb-6">

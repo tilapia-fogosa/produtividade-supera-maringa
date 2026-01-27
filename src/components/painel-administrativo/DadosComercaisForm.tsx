@@ -19,6 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useSalvarDadosComerciais } from "@/hooks/use-salvar-dados-comerciais";
 import { Loader2, CheckCircle } from "lucide-react";
@@ -73,7 +79,6 @@ const INSTALLMENTS = Array.from({ length: 12 }, (_, i) => ({
   label: `${i + 1}x`,
 }));
 
-// Máscara de moeda
 const formatCurrency = (value: string) => {
   const numbers = value.replace(/\D/g, "");
   const amount = parseInt(numbers || "0", 10) / 100;
@@ -88,7 +93,6 @@ const parseCurrency = (value: string): number => {
   return parseInt(numbers || "0", 10) / 100;
 };
 
-// Máscara de data
 const formatDate = (value: string) => {
   const numbers = value.replace(/\D/g, "");
   if (numbers.length <= 2) return numbers;
@@ -183,307 +187,331 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* TIPO DE KIT */}
-        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Tipo de Kit
-          </h3>
-          <FormField
-            control={form.control}
-            name="kitType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo de Kit</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o kit" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {KIT_OPTIONS.map((kit) => (
-                      <SelectItem key={kit.value} value={kit.value}>
-                        {kit.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-        </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Accordion type="multiple" defaultValue={["kit"]} className="w-full">
+          {/* TIPO DE KIT */}
+          <AccordionItem value="kit" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <span className="text-sm font-medium">Tipo de Kit</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <FormField
+                control={form.control}
+                name="kitType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Selecione o Kit</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o kit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {KIT_OPTIONS.map((kit) => (
+                          <SelectItem key={kit.value} value={kit.value}>
+                            {kit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* MATRÍCULA */}
-        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Matrícula
-          </h3>
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="enrollmentAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={(e) => handleCurrencyChange("enrollmentAmount", e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="enrollmentPaymentDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Pagamento</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="DD/MM/AAAA"
-                      maxLength={10}
-                      onChange={(e) => handleDateChange("enrollmentPaymentDate", e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="enrollmentPaymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Forma de Pagamento</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="enrollmentInstallments"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parcelas</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {INSTALLMENTS.map((inst) => (
-                        <SelectItem key={inst.value} value={inst.value}>
-                          {inst.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="enrollmentPaymentConfirmed"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-background p-3">
-                  <FormLabel className="text-sm">Pagamento Confirmado</FormLabel>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+          {/* MATRÍCULA */}
+          <AccordionItem value="matricula" className="border rounded-lg px-4 mt-2">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <span className="text-sm font-medium">Matrícula</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="enrollmentAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onChange={(e) => handleCurrencyChange("enrollmentAmount", e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="enrollmentPaymentDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de Pagamento</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
+                          onChange={(e) => handleDateChange("enrollmentPaymentDate", e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="enrollmentPaymentMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="enrollmentInstallments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {INSTALLMENTS.map((inst) => (
+                            <SelectItem key={inst.value} value={inst.value}>
+                              {inst.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* MENSALIDADE */}
-        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Mensalidade
-          </h3>
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="monthlyFeeAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={(e) => handleCurrencyChange("monthlyFeeAmount", e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="firstMonthlyFeeDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>1ª Mensalidade</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="DD/MM/AAAA"
-                      maxLength={10}
-                      onChange={(e) => handleDateChange("firstMonthlyFeeDate", e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="monthlyFeePaymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Forma de Pagamento</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+          {/* MENSALIDADE */}
+          <AccordionItem value="mensalidade" className="border rounded-lg px-4 mt-2">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <span className="text-sm font-medium">Mensalidade</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="monthlyFeeAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onChange={(e) => handleCurrencyChange("monthlyFeeAmount", e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="firstMonthlyFeeDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>1ª Mensalidade</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
+                          onChange={(e) => handleDateChange("firstMonthlyFeeDate", e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="monthlyFeePaymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Forma de Pagamento</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PAYMENT_METHODS.map((method) => (
+                          <SelectItem key={method.value} value={method.value}>
+                            {method.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* MATERIAL */}
-        <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Material
-          </h3>
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="materialAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={(e) => handleCurrencyChange("materialAmount", e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="materialPaymentDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Pagamento</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="DD/MM/AAAA"
-                      maxLength={10}
-                      onChange={(e) => handleDateChange("materialPaymentDate", e.target.value)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="materialPaymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Forma de Pagamento</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="materialInstallments"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parcelas</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {INSTALLMENTS.map((inst) => (
-                        <SelectItem key={inst.value} value={inst.value}>
-                          {inst.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="materialPaymentConfirmed"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-background p-3">
-                  <FormLabel className="text-sm">Pagamento Confirmado</FormLabel>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+          {/* MATERIAL */}
+          <AccordionItem value="material" className="border rounded-lg px-4 mt-2">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <span className="text-sm font-medium">Material</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="materialAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onChange={(e) => handleCurrencyChange("materialAmount", e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="materialPaymentDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de Pagamento</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
+                          onChange={(e) => handleDateChange("materialPaymentDate", e.target.value)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="materialPaymentMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="materialInstallments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {INSTALLMENTS.map((inst) => (
+                            <SelectItem key={inst.value} value={inst.value}>
+                              {inst.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* BOTÕES */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isPending}>
+          {/* CONFIRMAÇÕES DE PAGAMENTOS */}
+          <AccordionItem value="confirmacoes" className="border rounded-lg px-4 mt-2">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <span className="text-sm font-medium">Confirmações de Pagamentos</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-4">
+              <FormField
+                control={form.control}
+                name="enrollmentPaymentConfirmed"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <FormLabel className="text-sm font-normal">Matrícula Confirmada</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="materialPaymentConfirmed"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <FormLabel className="text-sm font-normal">Material Confirmado</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* BOTÃO SALVAR */}
+        <div className="flex justify-end pt-4">
+          <Button 
+            type="submit" 
+            disabled={isPending}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
+            Salvar Dados
           </Button>
         </div>
       </form>
