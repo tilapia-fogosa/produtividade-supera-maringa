@@ -7973,6 +7973,7 @@ export type Database = {
         | "corrigir_valores_sgs"
         | "corrigir_valores_assinatura"
         | "contato_financeiro"
+        | "criar_ficha_rescisao"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8206,6 +8207,7 @@ export const Constants = {
         "corrigir_valores_sgs",
         "corrigir_valores_assinatura",
         "contato_financeiro",
+        "criar_ficha_rescisao",
       ],
       tipo_evento_sala: [
         "manutencao",

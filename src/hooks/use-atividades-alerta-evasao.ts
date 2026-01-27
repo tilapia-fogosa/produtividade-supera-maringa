@@ -15,7 +15,8 @@ export type TipoAtividadeEvasao =
   | 'cancelar_assinatura'
   | 'remover_whatsapp'
   | 'corrigir_valores_sgs'
-  | 'corrigir_valores_assinatura';
+  | 'corrigir_valores_assinatura'
+  | 'criar_ficha_rescisao';
 
 export type StatusAtividade = 'pendente' | 'concluida';
 
@@ -54,6 +55,7 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
   { value: 'remover_sgs', label: 'Remover do SGS', color: 'bg-red-400' },
   { value: 'cancelar_assinatura', label: 'Cancelar Assinatura', color: 'bg-red-400' },
   { value: 'remover_whatsapp', label: 'Remover WhatsApp', color: 'bg-red-400' },
+  { value: 'criar_ficha_rescisao', label: 'Criar Ficha de Rescisão', color: 'bg-red-400' },
   { value: 'corrigir_valores_sgs', label: 'Corrigir SGS', color: 'bg-yellow-500' },
   { value: 'corrigir_valores_assinatura', label: 'Corrigir Assinatura', color: 'bg-yellow-500' },
 ];
@@ -532,11 +534,12 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       let deveResolverAlerta = false;
       
       if (resultado === 'evasao') {
-        // Evasão: 3 tarefas administrativas
+        // Evasão: 4 tarefas administrativas
         tarefas = [
           { tipo: 'remover_sgs', descricao: 'Remover aluno do sistema SGS' },
           { tipo: 'cancelar_assinatura', descricao: 'Cancelar assinatura no Vindi ou Asaas' },
-          { tipo: 'remover_whatsapp', descricao: 'Remover aluno dos grupos de WhatsApp' }
+          { tipo: 'remover_whatsapp', descricao: 'Remover aluno dos grupos de WhatsApp' },
+          { tipo: 'criar_ficha_rescisao', descricao: 'Criar e imprimir ficha de rescisão do aluno' }
         ];
         // O alerta só será resolvido quando TODAS as tarefas forem concluídas
       } else if (resultado === 'ajuste_temporario' && dataFimAjuste) {
@@ -678,7 +681,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       if (fetchError) throw fetchError;
       
       // Verificar se há uma evasão registrada e todas as tarefas relacionadas foram concluídas
-      const tarefasEvasao = ['remover_sgs', 'cancelar_assinatura', 'remover_whatsapp'];
+      const tarefasEvasao = ['remover_sgs', 'cancelar_assinatura', 'remover_whatsapp', 'criar_ficha_rescisao'];
       const temTarefasEvasao = todasAtividades?.some(a => tarefasEvasao.includes(a.tipo_atividade));
       
       if (temTarefasEvasao) {

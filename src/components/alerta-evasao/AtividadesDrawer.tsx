@@ -43,6 +43,7 @@ const TIPOS_TAREFA_ADMIN = [
   'remover_sgs',
   'cancelar_assinatura',
   'remover_whatsapp',
+  'criar_ficha_rescisao',
   'corrigir_valores_sgs',
   'corrigir_valores_assinatura'
 ];
