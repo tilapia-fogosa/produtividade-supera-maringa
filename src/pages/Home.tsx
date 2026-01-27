@@ -13,13 +13,14 @@ import { useCamisetas } from '@/hooks/use-camisetas';
 import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
 import { useAniversariantes } from '@/hooks/use-aniversariantes';
 import { useAtividadesEvasaoHome } from '@/hooks/use-atividades-evasao-home';
+import { useAulasInauguraisProfessor } from '@/hooks/use-aulas-inaugurais-professor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -80,6 +81,9 @@ export default function Home() {
     isDiaHoje,
     isDiaSemana,
   } = useProfessorAtividades();
+
+  // Buscar aulas inaugurais do professor
+  const { aulasInaugurais } = useAulasInauguraisProfessor();
 
   // Buscar coletas AH pendentes (para admins)
   const { data: todasColetasAH = [], isLoading: loadingColetasAH } = useProximasColetasAH();
@@ -340,6 +344,26 @@ export default function Home() {
         categorizarEventoEvasao(atividade, eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana);
       });
 
+      // === AULAS INAUGURAIS DO PROFESSOR ===
+      aulasInaugurais.forEach(ai => {
+        const evento: Evento = {
+          tipo: 'aula_inaugural',
+          titulo: `Aula Inaugural`,
+          data: ai.data,
+          subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
+        };
+        if (ai.data === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataAi = parseISO(ai.data);
+          if (isSameWeek(dataAi, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          } else if (isSameWeek(dataAi, inicioProximaSemana, { weekStartsOn: 0 })) {
+            eventosProximaSemana.push(evento);
+          }
+        }
+      });
+
       // Reposições do professor
       reposicoesProfessor.forEach(r => {
         const evento: Evento = {
@@ -416,7 +440,7 @@ export default function Home() {
         });
       });
 
-      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana: [] };
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     } else {
       // Para não-professores: comportamento original
       const eventosHoje: Evento[] = [
@@ -588,6 +612,8 @@ export default function Home() {
         return <Cake className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" />;
       case 'alerta_evasao':
         return <UserX className="h-3.5 w-3.5 text-destructive flex-shrink-0" />;
+      case 'aula_inaugural':
+        return <GraduationCap className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -619,6 +645,8 @@ export default function Home() {
         };
         const color = badgeColors[tipoAtividade || ''] || 'bg-destructive';
         return <Badge className={`text-[10px] px-1.5 py-0 ${color} text-white`}>Evasão</Badge>;
+      case 'aula_inaugural':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-emerald-600 text-white">Inaugural</Badge>;
       default:
         return null;
     }
