@@ -177,7 +177,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
     }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Bloquear Horário - Etapa {etapa}/3</DialogTitle>
+          <DialogTitle>Bloquear Horário - Etapa {etapa}/2</DialogTitle>
           <DialogDescription>
             Configure o bloqueio de horário para um ou mais professores
           </DialogDescription>
@@ -244,158 +244,142 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
             </div>
           )}
 
-          {/* Etapa 2: Data/Dia, Horário e Duração */}
+          {/* Etapa 2: Data/Horário + Tipo de Evento (layout lado a lado) */}
           {etapa === 2 && (
             <div className="space-y-6">
-              {/* Data ou Dia da Semana */}
-              <div className="space-y-4">
-                {tipoBloqueio === "pontual" ? (
-                  <>
-                    <Label>Selecione a Data</Label>
-                    <Calendar
-                      mode="single"
-                      selected={dataSelecionada}
-                      onSelect={setDataSelecionada}
-                      locale={pt}
-                      className="rounded-md border w-full"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Label>Selecione o Dia da Semana</Label>
-                    <Select value={diaSemana} onValueChange={setDiaSemana}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Escolha o dia" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {diasSemana.map((dia) => (
-                          <SelectItem key={dia.valor} value={dia.valor}>
-                            {dia.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <div className="grid grid-cols-2 gap-6">
+                {/* Coluna Esquerda: Data/Dia, Horário e Duração */}
+                <div className="space-y-4">
+                  {tipoBloqueio === "pontual" ? (
+                    <>
+                      <Label>Selecione a Data</Label>
+                      <Calendar
+                        mode="single"
+                        selected={dataSelecionada}
+                        onSelect={setDataSelecionada}
+                        locale={pt}
+                        className="rounded-md border w-full pointer-events-auto"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Label>Selecione o Dia da Semana</Label>
+                      <Select value={diaSemana} onValueChange={setDiaSemana}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Escolha o dia" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {diasSemana.map((dia) => (
+                            <SelectItem key={dia.valor} value={dia.valor}>
+                              {dia.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
+                      <div className="space-y-2">
                         <Label className="text-sm">Data Início (opcional)</Label>
                         <Calendar
                           mode="single"
                           selected={dataInicioRecorrencia}
                           onSelect={setDataInicioRecorrencia}
                           locale={pt}
-                          className="rounded-md border text-xs"
+                          className="rounded-md border text-xs pointer-events-auto"
                         />
                       </div>
-                      <div>
+                      <div className="space-y-2">
                         <Label className="text-sm">Data Fim (opcional)</Label>
                         <Calendar
                           mode="single"
                           selected={dataFimRecorrencia}
                           onSelect={setDataFimRecorrencia}
                           locale={pt}
-                          className="rounded-md border text-xs"
+                          className="rounded-md border text-xs pointer-events-auto"
                         />
                       </div>
+                    </>
+                  )}
+
+                  {/* Horário e Duração */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Horário de Início</Label>
+                      <Select value={horarioInicio} onValueChange={setHorarioInicio}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Horário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {horariosDisponiveis.map((horario) => (
+                            <SelectItem key={horario} value={horario}>
+                              {horario}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </>
-                )}
-              </div>
 
-              {/* Horário e Duração */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Horário de Início</Label>
-                  <Select value={horarioInicio} onValueChange={setHorarioInicio}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Horário" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {horariosDisponiveis.map((horario) => (
-                        <SelectItem key={horario} value={horario}>
-                          {horario}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <div>
+                      <Label>Duração</Label>
+                      <Select value={String(duracao)} onValueChange={(v) => setDuracao(Number(v))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Duração" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {duracoesFiltradas.map((opcao) => (
+                            <SelectItem key={opcao.valor} value={String(opcao.valor)}>
+                              {opcao.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {horarioInicio && (
+                    <p className="text-sm text-muted-foreground">
+                      Horário completo: {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}
+                    </p>
+                  )}
                 </div>
 
-                <div>
-                  <Label>Duração</Label>
-                  <Select value={String(duracao)} onValueChange={(v) => setDuracao(Number(v))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Duração" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {duracoesFiltradas.map((opcao) => (
-                        <SelectItem key={opcao.valor} value={String(opcao.valor)}>
-                          {opcao.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Coluna Direita: Tipo de Evento, Título e Descrição */}
+                <div className="space-y-4">
+                  <div>
+                    <Label>Tipo de Evento</Label>
+                    <Select value={tipoEvento} onValueChange={setTipoEvento}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_EVENTO.map((tipo) => (
+                          <SelectItem key={tipo.valor} value={tipo.valor}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Título</Label>
+                    <Input
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      placeholder="Ex: Reunião pedagógica"
+                    />
+                  </div>
+                  <div>
+                    <Label>Descrição (opcional)</Label>
+                    <Textarea
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value)}
+                      placeholder="Detalhes adicionais..."
+                      rows={3}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {horarioInicio && (
-                <p className="text-sm text-muted-foreground">
-                  Horário completo: {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}
-                </p>
-              )}
-
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleVoltar}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
-                </Button>
-                <Button 
-                  onClick={handleProximo}
-                  disabled={
-                    (tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana) || 
-                    !horarioInicio
-                  }
-                >
-                  Próximo <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Etapa 3: Tipo de Evento e Detalhes */}
-          {etapa === 3 && (
-            <div className="space-y-4">
-              <div>
-                <Label>Tipo de Evento</Label>
-                <Select value={tipoEvento} onValueChange={setTipoEvento}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_EVENTO.map((tipo) => (
-                      <SelectItem key={tipo.valor} value={tipo.valor}>
-                        {tipo.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Título</Label>
-                <Input
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  placeholder="Ex: Reunião pedagógica"
-                />
-              </div>
-              <div>
-                <Label>Descrição (opcional)</Label>
-                <Textarea
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  placeholder="Detalhes adicionais..."
-                  rows={3}
-                />
-              </div>
-
+              {/* Resumo - Full Width */}
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">Resumo</h4>
                 <div className="text-sm space-y-1 text-muted-foreground">
@@ -404,11 +388,15 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
                   {tipoBloqueio === "pontual" && dataSelecionada && (
                     <p><strong>Data:</strong> {format(dataSelecionada, "dd/MM/yyyy", { locale: pt })}</p>
                   )}
-                  {tipoBloqueio === "periodico" && (
+                  {tipoBloqueio === "periodico" && diaSemana && (
                     <p><strong>Dia:</strong> {diasSemana.find(d => d.valor === diaSemana)?.label}</p>
                   )}
-                  <p><strong>Horário:</strong> {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}</p>
-                  <p><strong>Tipo Evento:</strong> {TIPOS_EVENTO.find(t => t.valor === tipoEvento)?.label}</p>
+                  {horarioInicio && (
+                    <p><strong>Horário:</strong> {horarioInicio} - {calcularHorarioFim(horarioInicio, duracao)}</p>
+                  )}
+                  {tipoEvento && (
+                    <p><strong>Tipo Evento:</strong> {TIPOS_EVENTO.find(t => t.valor === tipoEvento)?.label}</p>
+                  )}
                 </div>
               </div>
 
@@ -417,8 +405,14 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
                   <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
                 </Button>
                 <Button 
-                  onClick={handleSalvar} 
-                  disabled={!tipoEvento || !titulo || criarEvento.isPending}
+                  onClick={handleSalvar}
+                  disabled={
+                    (tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana) || 
+                    !horarioInicio ||
+                    !tipoEvento || 
+                    !titulo || 
+                    criarEvento.isPending
+                  }
                 >
                   {criarEvento.isPending ? "Salvando..." : "Salvar Bloqueio"}
                 </Button>

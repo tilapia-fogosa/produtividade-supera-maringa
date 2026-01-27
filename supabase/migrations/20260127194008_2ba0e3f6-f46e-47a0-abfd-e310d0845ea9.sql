@@ -1,50 +1,3 @@
-
-# Plano: Corrigir Erro de Tipo na Funcao RPC de Professores Disponiveis
-
-## Problema Identificado
-
-A funcao `get_professores_disponiveis_por_horario` esta falhando porque a coluna `dia_semana` na tabela `turmas` e do tipo **ENUM** (tipo personalizado chamado `dia_semana`), mas a funcao esta tentando comparar com uma variavel do tipo **TEXT**.
-
-O erro exato e:
-```
-operator does not exist: dia_semana = text
-```
-
-## Analise das Estruturas
-
-| Tabela/Variavel | Tipo da coluna `dia_semana` |
-|-----------------|----------------------------|
-| `turmas` | ENUM (`dia_semana`) |
-| `eventos_professor` | TEXT |
-| Variavel na funcao | TEXT |
-
-## Solucao
-
-Atualizar a funcao RPC para fazer um **cast explicito** de TEXT para o tipo ENUM `dia_semana` quando comparar com a tabela `turmas`.
-
-### Alteracao Necessaria
-
-**Linha atual:**
-```sql
-AND t.dia_semana = v_dia_semana
-```
-
-**Linha corrigida:**
-```sql
-AND t.dia_semana = v_dia_semana::dia_semana
-```
-
-## Etapas de Implementacao
-
-1. **Criar migracao SQL** para atualizar a funcao `get_professores_disponiveis_por_horario`
-   - Usar `CREATE OR REPLACE FUNCTION` para substituir a funcao existente
-   - Adicionar o cast `::dia_semana` na comparacao com a tabela `turmas`
-
-2. **Testar o fluxo** de selecao de aula inaugural no painel administrativo
-
-## Codigo da Migracao
-
-```sql
 CREATE OR REPLACE FUNCTION get_professores_disponiveis_por_horario(
   p_data DATE,
   p_horario_inicio TIME,
@@ -119,11 +72,3 @@ BEGIN
   ORDER BY COALESCE(p.prioridade, 999) ASC, p.nome ASC;
 END;
 $$;
-```
-
-## Resultado Esperado
-
-Apos a correcao, ao selecionar uma data e horario no formulario de Aula Inaugural, o sistema devera:
-1. Retornar a lista de professores disponiveis ordenados por prioridade
-2. Exibir automaticamente o primeiro professor disponivel
-3. Mostrar a confirmacao de disponibilidade com professor e sala

@@ -7543,6 +7543,19 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_professores_disponiveis_por_horario: {
+        Args: {
+          p_data: string
+          p_horario_fim: string
+          p_horario_inicio: string
+          p_unit_id?: string
+        }
+        Returns: {
+          prioridade: number
+          professor_id: string
+          professor_nome: string
+        }[]
+      }
       get_registration_stats: {
         Args: {
           p_end_date: string
@@ -7918,6 +7931,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
+        | "transferencia"
       Perfil_idade:
         | "crianca-adolescente"
         | "adulto"
@@ -8147,6 +8161,7 @@ export const Constants = {
         "cartao_debito",
         "boleto",
         "recorrencia",
+        "transferencia",
       ],
       Perfil_idade: [
         "crianca-adolescente",
