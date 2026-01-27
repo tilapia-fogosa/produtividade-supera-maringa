@@ -1,86 +1,67 @@
 
+# Plano: Unificar Etapas 2 e 3 do Modal de Bloquear Horário
 
-## Plano: Refresh Automático a Cada 60 Segundos
+## Objetivo
+Mesclar a etapa 2 (Data/Horário/Duração) com a etapa 3 (Tipo de Evento/Título/Descrição) em uma única etapa, com layout lado a lado.
 
-### Objetivo
-Implementar um refresh automático dos dados de alunos, reposições e lembretes na tela de produtividade de sala (`/sala/turma/:turmaId/produtividade`) a cada 60 segundos.
+## Estrutura Atual
+- **Etapa 1**: Seleção de professores + tipo de bloqueio (pontual/periódico)
+- **Etapa 2**: Calendário/dia da semana + horário + duração
+- **Etapa 3**: Tipo de evento + título + descrição + resumo
 
-### Abordagem
-Adicionar um `useEffect` com `setInterval` que chama as funções de busca de dados periodicamente, garantindo limpeza adequada do intervalo ao desmontar o componente.
+## Nova Estrutura Proposta
+- **Etapa 1**: Seleção de professores + tipo de bloqueio (mantém igual)
+- **Etapa 2**: Layout em duas colunas:
+  - **Coluna Esquerda**: Calendário (pontual) ou Dia da semana + calendários de recorrência (periódico), horário e duração
+  - **Coluna Direita**: Tipo de evento, título, descrição e resumo
 
-### Alterações Necessárias
-
-#### 1. Atualizar Hook `useSalaPessoasTurma`
-**Arquivo**: `src/hooks/sala/use-sala-pessoas-turma.ts`
-
-Expor a função `buscarPessoasPorTurma` para permitir chamadas externas de refresh:
-- A função já está sendo retornada pelo hook, então nenhuma alteração necessária aqui
-
-#### 2. Atualizar Hook `useReposicoesHoje`
-**Arquivo**: `src/hooks/sala/use-reposicoes-hoje.ts`
-
-Expor uma função `refetch` para recarregar as reposições:
-
-```typescript
-// Adicionar função de refetch
-const refetch = useCallback(() => {
-  // Re-executar a query
-}, [turmaId]);
-
-return { reposicoes, loading, refetch };
-```
-
-#### 3. Implementar Refresh Automático na Página
-**Arquivo**: `src/pages/sala/SalaProdutividadeTurma.tsx`
-
-Adicionar lógica de refresh automático:
-
-```typescript
-// Constante para intervalo (60 segundos)
-const REFRESH_INTERVAL = 60 * 1000;
-
-// useEffect para refresh automático
-useEffect(() => {
-  if (!turmaId) return;
-
-  const intervalId = setInterval(() => {
-    console.log('[Sala] Refresh automático - recarregando dados...');
-    buscarPessoasPorTurma(turmaId);
-    // refetchReposicoes(); // se implementado
-  }, REFRESH_INTERVAL);
-
-  // Cleanup ao desmontar
-  return () => {
-    clearInterval(intervalId);
-  };
-}, [turmaId, buscarPessoasPorTurma]);
-```
-
-### Comportamento Esperado
+## Layout Visual da Nova Etapa 2
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│  Tela de Produtividade de Sala                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  [Página carrega] → Busca inicial de dados                  │
-│        ↓                                                    │
-│  [60s depois] → Refresh automático (silencioso)             │
-│        ↓                                                    │
-│  [120s depois] → Refresh automático (silencioso)            │
-│        ↓                                                    │
-│  [Usuário sai] → Intervalo limpo, sem memory leak           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
++------------------------------------------+
+|  Bloquear Horário - Etapa 2/2            |
++------------------------------------------+
+|                                          |
+| +------------------+  +----------------+ |
+| | CALENDÁRIO/DIA   |  | Tipo Evento    | |
+| |                  |  | [Select    v]  | |
+| | [  Calendário  ] |  |                | |
+| |                  |  | Título         | |
+| | Horário  Duração |  | [Input       ] | |
+| | [Select] [Select]|  |                | |
+| |                  |  | Descrição      | |
+| | 10:00 - 11:00    |  | [Textarea    ] | |
+| +------------------+  +----------------+ |
+|                                          |
+| +--------------------------------------+ |
+| | RESUMO                               | |
+| | Professores: João, Maria             | |
+| | Tipo: Pontual | Data: 27/01/2026     | |
+| | Horário: 10:00 - 11:00               | |
+| +--------------------------------------+ |
+|                                          |
+| [Voltar]                   [Salvar]      |
++------------------------------------------+
 ```
 
-### Detalhes Técnicos
+## Alterações Técnicas
 
-- O refresh será silencioso (sem loading spinner) para não interromper o fluxo do usuário
-- Os dados locais (como produtividade já registrada) serão preservados e mesclados com os novos dados
-- O intervalo será limpo corretamente ao navegar para outra página
+### 1. Atualizar Contador de Etapas
+- Alterar título de "Etapa {etapa}/3" para "Etapa {etapa}/2"
 
-### Arquivos a Modificar
-1. **Editar**: `src/hooks/sala/use-reposicoes-hoje.ts` - Adicionar função `refetch`
-2. **Editar**: `src/pages/sala/SalaProdutividadeTurma.tsx` - Implementar `setInterval` com refresh
+### 2. Remover Navegação para Etapa 3
+- Botão "Próximo" da etapa 2 se torna "Salvar Bloqueio"
+- Remover lógica de `etapa === 3`
 
+### 3. Unificar Layout da Etapa 2
+- Criar grid com 2 colunas (`grid grid-cols-2 gap-6`)
+- Coluna esquerda: conteúdo atual da etapa 2
+- Coluna direita: conteúdo atual da etapa 3 (tipo, título, descrição)
+- Resumo abaixo das duas colunas (full width)
+
+### 4. Ajustar Validação do Botão Salvar
+- Mover validação atual do botão salvar para a nova etapa 2
+- Validar: data/dia + horário + tipoEvento + titulo
+
+## Arquivo Modificado
+- `src/components/professores/BloquearHorarioProfessorModal.tsx`
