@@ -79,7 +79,7 @@ const FormItem = React.forwardRef<
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-3 md:space-y-2", className)} {...props} />
+      <div ref={ref} className={cn("space-y-3 md:space-y-2 py-0.5", className)} {...props} />
     </FormItemContext.Provider>
   )
 })
