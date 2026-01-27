@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { DadosCadastraisForm } from "./DadosCadastraisForm";
 import { DadosComercaisForm } from "./DadosComercaisForm";
+import { DollarSign, User, GraduationCap } from "lucide-react";
 
 export type DrawerType = "cadastrais" | "comerciais" | "pedagogicos";
 
@@ -19,10 +20,10 @@ interface PosMatriculaDrawerProps {
   cliente: ClienteMatriculado | null;
 }
 
-const drawerTitles: Record<DrawerType, string> = {
-  cadastrais: "Dados Cadastrais",
-  comerciais: "Dados Comerciais",
-  pedagogicos: "Dados Pedagógicos",
+const drawerConfig: Record<DrawerType, { title: string; icon: React.ReactNode }> = {
+  cadastrais: { title: "Dados Cadastrais", icon: <User className="h-5 w-5" /> },
+  comerciais: { title: "Dados Comerciais", icon: <DollarSign className="h-5 w-5" /> },
+  pedagogicos: { title: "Dados Pedagógicos", icon: <GraduationCap className="h-5 w-5" /> },
 };
 
 export function PosMatriculaDrawer({
@@ -34,17 +35,21 @@ export function PosMatriculaDrawer({
   if (!tipo || !cliente) return null;
 
   const handleClose = () => onOpenChange(false);
+  const config = drawerConfig[tipo];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[33vw] min-w-[400px] max-w-[600px] p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-0">
-          <SheetTitle>{drawerTitles[tipo]}</SheetTitle>
+      <SheetContent className="w-[480px] sm:max-w-[480px] p-0 flex flex-col">
+        <SheetHeader className="p-6 pb-4 border-b">
+          <div className="flex items-center gap-2 text-primary">
+            {config.icon}
+            <SheetTitle>{config.title}</SheetTitle>
+          </div>
           <p className="text-sm text-muted-foreground">{cliente.name}</p>
         </SheetHeader>
 
         <ScrollArea className="flex-1 px-6 pb-6">
-          <div className="mt-6">
+          <div className="mt-4">
             {tipo === "cadastrais" && (
               <DadosCadastraisForm cliente={cliente} onCancel={handleClose} />
             )}
