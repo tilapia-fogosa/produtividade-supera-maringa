@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type SalvarDadosPedagogicosParams = {
   clientId: string;
+  alunoId?: string; // ID do aluno vinculado
   turmaId?: string;
   responsavel?: string;
   whatsappContato?: string;
@@ -24,11 +25,13 @@ export const useSalvarDadosPedagogicos = () => {
       if (params.responsavel) updateData.responsavel = params.responsavel;
       if (params.whatsappContato) updateData.whatsapp_contato = params.whatsappContato;
       
+      let dataAulaInauguralISO: string | null = null;
       if (params.dataAulaInaugural && params.horarioAulaInaugural) {
         // Combinar data e horário para o campo data_aula_inaugural
         const dataStr = params.dataAulaInaugural.toISOString().split('T')[0];
         const dataHoraCompleta = `${dataStr}T${params.horarioAulaInaugural}:00`;
         updateData.data_aula_inaugural = dataHoraCompleta;
+        dataAulaInauguralISO = dataStr;
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -40,7 +43,28 @@ export const useSalvarDadosPedagogicos = () => {
         if (updateError) throw updateError;
       }
 
-      // 2. Criar evento na agenda do professor (se tiver aula inaugural agendada)
+      // 2. Se tiver aluno vinculado, atualizar também a tabela alunos
+      if (params.alunoId) {
+        const alunoUpdateData: Record<string, unknown> = {};
+        
+        if (params.turmaId) alunoUpdateData.turma_id = params.turmaId;
+        if (params.responsavel) alunoUpdateData.responsavel = params.responsavel;
+        if (params.whatsappContato) alunoUpdateData.whatapp_contato = params.whatsappContato;
+        if (dataAulaInauguralISO) alunoUpdateData.data_onboarding = dataAulaInauguralISO;
+
+        if (Object.keys(alunoUpdateData).length > 0) {
+          const { error: alunoError } = await supabase
+            .from('alunos')
+            .update(alunoUpdateData)
+            .eq('id', params.alunoId);
+
+          if (alunoError) {
+            console.error("Erro ao atualizar aluno:", alunoError);
+          }
+        }
+      }
+
+      // 3. Criar evento na agenda do professor (se tiver aula inaugural agendada)
       if (params.dataAulaInaugural && params.horarioAulaInaugural && params.professorId) {
         const { data: userData } = await supabase.auth.getUser();
         const userId = userData.user?.id ?? null;
@@ -74,6 +98,7 @@ export const useSalvarDadosPedagogicos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pos-matricula"] });
       queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
+      queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
     }
   });
 };
