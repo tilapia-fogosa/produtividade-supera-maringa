@@ -473,6 +473,7 @@ export type Database = {
           curso: string | null
           data_nascimento: string | null
           data_onboarding: string | null
+          data_primeira_mensalidade: string | null
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
@@ -521,6 +522,7 @@ export type Database = {
           curso?: string | null
           data_nascimento?: string | null
           data_onboarding?: string | null
+          data_primeira_mensalidade?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
@@ -569,6 +571,7 @@ export type Database = {
           curso?: string | null
           data_nascimento?: string | null
           data_onboarding?: string | null
+          data_primeira_mensalidade?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null

@@ -25,6 +25,7 @@ interface UpdateFunctions {
   atualizarValorMatricula: (id: string, valor: number) => Promise<boolean>;
   atualizarValorMaterial: (id: string, valor: number) => Promise<boolean>;
   atualizarKitSugerido: (id: string, kit: string) => Promise<boolean>;
+  atualizarDataPrimeiraMensalidade: (id: string, data: string) => Promise<boolean>;
 }
 
 interface ExpandableAlunoCardProps {
@@ -101,6 +102,9 @@ export function ExpandableAlunoCard({ aluno, onClose, updateFunctions }: Expanda
         break;
       case 'kit_sugerido':
         sucesso = await updateFunctions.atualizarKitSugerido(aluno.id, valor);
+        break;
+      case 'data_primeira_mensalidade':
+        sucesso = await updateFunctions.atualizarDataPrimeiraMensalidade(aluno.id, valor);
         break;
     }
 
@@ -218,6 +222,20 @@ export function ExpandableAlunoCard({ aluno, onClose, updateFunctions }: Expanda
                     onSalvar={() => handleSalvar('data_onboarding')}
                     onCancelar={handleCancelar}
                     onChange={(v) => setValores({ ...valores, data_onboarding: v })}
+                    type="date"
+                  />
+
+                  <EditableInfoItem
+                    label="Data 1ª Mensalidade"
+                    value={(aluno as any).data_primeira_mensalidade ? new Date((aluno as any).data_primeira_mensalidade).toLocaleDateString('pt-BR') : 'Não informado'}
+                    campo="data_primeira_mensalidade"
+                    editando={editando === 'data_primeira_mensalidade'}
+                    salvando={salvando === 'data_primeira_mensalidade'}
+                    valorTemp={valores.data_primeira_mensalidade || ''}
+                    onEditar={() => handleEditar('data_primeira_mensalidade', (aluno as any).data_primeira_mensalidade)}
+                    onSalvar={() => handleSalvar('data_primeira_mensalidade')}
+                    onCancelar={handleCancelar}
+                    onChange={(v) => setValores({ ...valores, data_primeira_mensalidade: v })}
                     type="date"
                   />
                   

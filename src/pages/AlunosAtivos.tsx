@@ -33,6 +33,7 @@ export default function AlunosAtivos() {
     atualizarValorMatricula,
     atualizarValorMaterial,
     atualizarKitSugerido,
+    atualizarDataPrimeiraMensalidade,
   } = useAlunosAtivos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState<string[]>([]);
@@ -616,6 +617,7 @@ export default function AlunosAtivos() {
           atualizarValorMatricula,
           atualizarValorMaterial,
           atualizarKitSugerido,
+          atualizarDataPrimeiraMensalidade,
         }}
       />
     </div>;
