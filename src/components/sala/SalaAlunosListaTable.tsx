@@ -135,7 +135,7 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
         ultimo_nivel: r.ultimo_nivel || null,
         niveldesafio: r.niveldesafio || null,
         faltas_consecutivas: r.faltas_consecutivas || 0,
-        produtividadeRegistrada: false,
+        produtividadeRegistrada: r.produtividadeRegistrada || false,
         isReposicao: true,
         turmaOriginalNome: r.turma_original_nome
       }));
