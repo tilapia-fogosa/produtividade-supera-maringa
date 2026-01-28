@@ -40,6 +40,7 @@ export interface AlunoAtivo {
   valor_matricula: number | null;
   valor_material: number | null;
   kit_sugerido: string | null;
+  data_primeira_mensalidade: string | null;
   foto_url: string | null;
   foto_devolutiva_url: string | null;
   pdf_devolutiva_url: string | null;
@@ -718,6 +719,37 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarDataPrimeiraMensalidade = async (alunoId: string, data: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      // Apenas para alunos, não funcionários
+      if (pessoa.tipo_pessoa === 'funcionario') return false;
+
+      const { error } = await supabase
+        .from('alunos')
+        .update({ data_primeira_mensalidade: data } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, data_primeira_mensalidade: data } as any : aluno
+      ));
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar data da primeira mensalidade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a data da primeira mensalidade.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
@@ -739,5 +771,6 @@ export function useAlunosAtivos() {
     atualizarValorMatricula,
     atualizarValorMaterial,
     atualizarKitSugerido,
+    atualizarDataPrimeiraMensalidade,
   };
 }

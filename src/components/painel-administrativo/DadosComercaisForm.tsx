@@ -28,6 +28,7 @@ import {
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useSalvarDadosComerciais } from "@/hooks/use-salvar-dados-comerciais";
 import { Loader2, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   kitType: z.string().optional(),
@@ -147,7 +148,36 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
     form.setValue(field, formatDate(value));
   };
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    // Converter data DD/MM/AAAA para YYYY-MM-DD para o banco
+    const parseDate = (dateStr: string | undefined): string | null => {
+      if (!dateStr || dateStr.length !== 10) return null;
+      const [day, month, year] = dateStr.split("/");
+      if (!day || !month || !year) return null;
+      return `${year}-${month}-${day}`;
+    };
+
+    // Se tiver data da primeira mensalidade e o cliente tiver um aluno vinculado, salvar na tabela alunos
+    if (data.firstMonthlyFeeDate && cliente.name) {
+      const dataPrimeiraMensalidade = parseDate(data.firstMonthlyFeeDate);
+      if (dataPrimeiraMensalidade) {
+        // Buscar aluno pelo nome do cliente
+        const { data: alunoData } = await supabase
+          .from('alunos')
+          .select('id')
+          .ilike('nome', cliente.name)
+          .limit(1)
+          .maybeSingle();
+
+        if (alunoData) {
+          await supabase
+            .from('alunos')
+            .update({ data_primeira_mensalidade: dataPrimeiraMensalidade } as any)
+            .eq('id', alunoData.id);
+        }
+      }
+    }
+
     salvar(
       {
         clientId: cliente.id,
