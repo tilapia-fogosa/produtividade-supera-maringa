@@ -30,6 +30,7 @@ import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueMo
 import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
 import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
+import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioModal';
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
 // Interface para eventos com dados extras
@@ -53,6 +54,8 @@ interface Evento {
   tipo_atividade_evasao?: string;
   // Campos para pós-matrícula incompleta
   pos_matricula_client_id?: string;
+  // Campos para aniversário
+  aniversario_mes_dia?: string;
 }
 
 export default function Home() {
@@ -125,8 +128,15 @@ export default function Home() {
   const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
   
   // Buscar aniversariantes
-  const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
+  const { data: aniversariantes, refetch: refetchAniversariantes } = useAniversariantes(activeUnit?.id);
   
+  // Estado para modal de aniversário
+  const [aniversarioModalOpen, setAniversarioModalOpen] = useState(false);
+  const [aniversariantesSelecionado, setAniversariantesSelecionado] = useState<{
+    id: string;
+    nome: string;
+    aniversario_mes_dia: string;
+  } | null>(null);
   // Buscar atividades de alerta de evasão pendentes
   const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao, refetch: refetchAtividadesEvasao } = useAtividadesEvasaoHome();
   
@@ -341,6 +351,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -351,6 +364,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -464,6 +480,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -473,7 +492,10 @@ export default function Home() {
           tipo: 'aniversario',
           titulo: a.nome,
           data: '',
-          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -508,6 +530,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -517,6 +542,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -594,6 +622,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         })),
       ];
 
@@ -604,6 +635,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         })),
       ];
 
@@ -787,6 +821,17 @@ export default function Home() {
     }
   };
 
+  const handleAniversarioClick = (evento: Evento) => {
+    if (evento.aluno_id && evento.aluno_nome && evento.aniversario_mes_dia) {
+      setAniversariantesSelecionado({
+        id: evento.aluno_id,
+        nome: evento.aluno_nome,
+        aniversario_mes_dia: evento.aniversario_mes_dia,
+      });
+      setAniversarioModalOpen(true);
+    }
+  };
+
   const handleSalvarCamiseta = async (dados: { 
     alunoId: string; 
     tamanho_camiseta: string; 
@@ -807,7 +852,8 @@ export default function Home() {
     const isAHProntaClicavel = evento.tipo === 'apostila_ah' && evento.apostila_recolhida_id;
     const isAlertaEvasaoClicavel = evento.tipo === 'alerta_evasao' && evento.alerta_evasao_id;
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel;
+    const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -820,6 +866,8 @@ export default function Home() {
         handleAlertaEvasaoClick(evento);
       } else if (isPosMatriculaClicavel) {
         navigate('/painel-administrativo');
+      } else if (isAniversarioClicavel) {
+        handleAniversarioClick(evento);
       }
     };
     
@@ -1057,6 +1105,17 @@ export default function Home() {
         }}
         alerta={alertaSelecionado}
         onActivityCompleted={refetchAtividadesEvasao}
+      />
+
+      {/* Modal de Concluir Aniversário */}
+      <ConcluirAniversarioModal
+        open={aniversarioModalOpen}
+        onOpenChange={setAniversarioModalOpen}
+        aluno={aniversariantesSelecionado}
+        onSuccess={() => {
+          refetchAniversariantes();
+          setAniversariantesSelecionado(null);
+        }}
       />
     </div>
   );
