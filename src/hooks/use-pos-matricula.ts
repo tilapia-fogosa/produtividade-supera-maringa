@@ -90,6 +90,7 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
           check_assinar_contrato,
           check_entregar_kit,
           check_cadastrar_pagamento,
+          check_sincronizar_sgs,
           check_grupo_whatsapp
         `)
         .in("client_id", clientIds);
@@ -150,6 +151,7 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
           posVenda.check_assinar_contrato &&
           posVenda.check_entregar_kit &&
           posVenda.check_cadastrar_pagamento &&
+          (posVenda as any).check_sincronizar_sgs &&
           posVenda.check_grupo_whatsapp
         );
 
