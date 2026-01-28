@@ -470,6 +470,7 @@ export type Database = {
           aniversario_mes_dia: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
+          client_id: string | null
           codigo: string | null
           coordenador_responsavel: string | null
           created_at: string
@@ -519,6 +520,7 @@ export type Database = {
           aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
+          client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
           created_at?: string
@@ -568,6 +570,7 @@ export type Database = {
           aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
+          client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
           created_at?: string
@@ -613,6 +616,20 @@ export type Database = {
           whatapp_contato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "alunos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_alunos_turma_id"
             columns: ["turma_id"]
