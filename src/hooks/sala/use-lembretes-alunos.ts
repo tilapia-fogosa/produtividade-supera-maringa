@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, startOfMonth, addDays } from 'date-fns';
 
 export interface ApostilaAHPendente {
   recolhidaId: number;
@@ -19,6 +19,8 @@ export interface LembretesAluno {
   aniversarioSemana: boolean;
   apostilaAHPronta: boolean;
   botomPendente: boolean;
+  faltouNoMes: boolean;
+  faltasNoMes?: number;
   // Dados extras para ações interativas
   apostilaAHDados?: ApostilaAHPendente;
   botomDados?: BotomPendente;
@@ -69,6 +71,16 @@ export function useLembretesAlunos(alunoIds: string[]) {
         .in('aluno_id', alunoIds)
         .eq('status', 'pendente');
 
+      // Buscar faltas do mês atual
+      const inicioMes = startOfMonth(hoje);
+      const { data: faltasData } = await supabase
+        .from('produtividade_abaco')
+        .select('pessoa_id')
+        .in('pessoa_id', alunoIds)
+        .eq('presente', false)
+        .gte('data_aula', format(inicioMes, 'yyyy-MM-dd'))
+        .lte('data_aula', format(hoje, 'yyyy-MM-dd'));
+
       // Criar mapa de camisetas por aluno
       const camisetasMap = new Map(
         camisetasData?.map(c => [c.aluno_id, c]) || []
@@ -96,6 +108,13 @@ export function useLembretesAlunos(alunoIds: string[]) {
         }
       });
 
+      // Contar faltas por aluno no mês
+      const faltasPorAlunoMap = new Map<string, number>();
+      faltasData?.forEach(f => {
+        const count = faltasPorAlunoMap.get(f.pessoa_id) || 0;
+        faltasPorAlunoMap.set(f.pessoa_id, count + 1);
+      });
+
       // Montar lembretes por aluno
       const lembretesMap: Record<string, LembretesAluno> = {};
 
@@ -121,12 +140,18 @@ export function useLembretesAlunos(alunoIds: string[]) {
         const botomDados = botomPendentesMap.get(aluno.id);
         const botomPendente = !!botomDados;
 
+        // Faltas no mês
+        const faltasNoMes = faltasPorAlunoMap.get(aluno.id) || 0;
+        const faltouNoMes = faltasNoMes > 0;
+
         lembretesMap[aluno.id] = {
           camisetaPendente,
           aniversarioHoje,
           aniversarioSemana,
           apostilaAHPronta,
           botomPendente,
+          faltouNoMes,
+          faltasNoMes: faltouNoMes ? faltasNoMes : undefined,
           apostilaAHDados,
           botomDados,
         };

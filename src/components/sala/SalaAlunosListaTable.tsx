@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw, Award } from "lucide-react";
+import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw, Award, CalendarX } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useApostilas } from '@/hooks/use-apostilas';
 import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
@@ -164,7 +164,8 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
       alunoLembretes.aniversarioSemana ||
       alunoLembretes.camisetaPendente || 
       alunoLembretes.apostilaAHPronta ||
-      alunoLembretes.botomPendente
+      alunoLembretes.botomPendente ||
+      alunoLembretes.faltouNoMes
     );
   
     return (
@@ -319,6 +320,12 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                         <span>Entregar botom</span>
                       </div>
                     )}
+                    {alunoLembretes.faltouNoMes && (
+                      <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                        <CalendarX className="h-4 w-4 shrink-0" />
+                        <span>{alunoLembretes.faltasNoMes} falta{alunoLembretes.faltasNoMes! > 1 ? 's' : ''} no mês</span>
+                      </div>
+                    )}
                   </div>
                 </ConfettiBackground>
               ) : (
@@ -358,6 +365,12 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                       >
                         <Award className="h-4 w-4 shrink-0" />
                         <span>Entregar botom</span>
+                      </div>
+                    )}
+                    {alunoLembretes.faltouNoMes && (
+                      <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                        <CalendarX className="h-4 w-4 shrink-0" />
+                        <span>{alunoLembretes.faltasNoMes} falta{alunoLembretes.faltasNoMes! > 1 ? 's' : ''} no mês</span>
                       </div>
                     )}
                   </div>
