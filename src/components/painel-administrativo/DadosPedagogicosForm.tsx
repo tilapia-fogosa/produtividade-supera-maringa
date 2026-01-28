@@ -19,6 +19,7 @@ import {
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useSalvarDadosPedagogicos } from "@/hooks/use-salvar-dados-pedagogicos";
+import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { AulaInauguralSelector } from "./AulaInauguralSelector";
 
 interface DadosPedagogicosFormProps {
@@ -29,6 +30,7 @@ interface DadosPedagogicosFormProps {
 export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosFormProps) {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const salvarDados = useSalvarDadosPedagogicos();
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
 
   const [turmaId, setTurmaId] = useState<string>("");
   const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("O próprio");
@@ -57,6 +59,7 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   const handleSave = async () => {
     await salvarDados.mutateAsync({
       clientId: cliente.id,
+      alunoId: alunoVinculado?.id,
       turmaId: turmaId || undefined,
       responsavel: responsavelPedagogico !== "O próprio" ? responsavelPedagogico : undefined,
       whatsappContato: telefoneResponsavel || undefined,
