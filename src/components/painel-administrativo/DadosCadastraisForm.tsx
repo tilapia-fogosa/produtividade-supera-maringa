@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
+import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { useSalvarDadosCadastrais } from "@/hooks/use-salvar-dados-cadastrais";
 const ESTADOS_BRASILEIROS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 const dadosCadastraisSchema = z.object({
@@ -59,11 +60,12 @@ export function DadosCadastraisForm({
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   
   const salvarDados = useSalvarDadosCadastrais();
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
   
   const form = useForm<DadosCadastraisFormData>({
     resolver: zodResolver(dadosCadastraisSchema),
     defaultValues: {
-      nome: cliente.name || "",
+      nome: "",
       data_nascimento: "",
       cpf: "",
       rg: "",
@@ -78,6 +80,13 @@ export function DadosCadastraisForm({
       estado: ""
     }
   });
+
+  // Atualizar o nome quando o aluno vinculado for carregado
+  useEffect(() => {
+    if (alunoVinculado?.nome) {
+      form.setValue("nome", alunoVinculado.nome);
+    }
+  }, [alunoVinculado, form]);
 
   const onSubmit = async (data: DadosCadastraisFormData) => {
     try {
@@ -118,9 +127,14 @@ export function DadosCadastraisForm({
             <FormField control={form.control} name="nome" render={({
             field
           }) => <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel>Nome do Aluno</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome completo" {...field} />
+                    <Input 
+                      placeholder="Nome completo" 
+                      {...field} 
+                      disabled 
+                      className="bg-muted cursor-not-allowed"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
