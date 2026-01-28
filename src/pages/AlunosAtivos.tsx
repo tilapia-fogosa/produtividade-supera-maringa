@@ -19,7 +19,20 @@ export default function AlunosAtivos() {
     error, 
     atualizarWhatsApp, 
     atualizarResponsavel,
-    atualizarDataNascimento 
+    atualizarDataNascimento,
+    atualizarFoto,
+    atualizarEmail,
+    atualizarTelefone,
+    atualizarCoordenadorResponsavel,
+    atualizarValorMensalidade,
+    atualizarVencimentoContrato,
+    atualizarMotivoProcura,
+    atualizarPercepcaoCoordenador,
+    atualizarPontosAtencao,
+    atualizarDataOnboarding,
+    atualizarValorMatricula,
+    atualizarValorMaterial,
+    atualizarKitSugerido,
   } = useAlunosAtivos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState<string[]>([]);
@@ -582,7 +595,22 @@ export default function AlunosAtivos() {
       {/* Card expandido do aluno */}
       <ExpandableAlunoCard 
         aluno={alunoExpandido} 
-        onClose={() => setAlunoExpandido(null)} 
+        onClose={() => setAlunoExpandido(null)}
+        updateFunctions={{
+          atualizarFoto,
+          atualizarEmail,
+          atualizarTelefone,
+          atualizarCoordenadorResponsavel,
+          atualizarValorMensalidade,
+          atualizarVencimentoContrato,
+          atualizarMotivoProcura,
+          atualizarPercepcaoCoordenador,
+          atualizarPontosAtencao,
+          atualizarDataOnboarding,
+          atualizarValorMatricula,
+          atualizarValorMaterial,
+          atualizarKitSugerido,
+        }}
       />
     </div>;
 }
