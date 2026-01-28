@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format, addMonths, differenceInMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Printer, FileText, CalendarIcon, Check, Clock, ClipboardEdit } from "lucide-react";
+import { Loader2, FileText, CalendarIcon, Check, Clock, ClipboardEdit } from "lucide-react";
 import { PreencherFichaRescisaoModal, DadosExtrasFicha } from "./PreencherFichaRescisaoModal";
 import {
   Table,
@@ -276,126 +276,6 @@ export function FichasRescisaoTab() {
     printWindow.document.close();
   };
 
-  const handlePrint = (ficha: FichaRescisao) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    const content = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Ficha de Rescisão - ${ficha.aluno_nome}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 40px;
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            h1 {
-              text-align: center;
-              border-bottom: 2px solid #333;
-              padding-bottom: 10px;
-              margin-bottom: 30px;
-            }
-            .field {
-              margin-bottom: 20px;
-              display: flex;
-              border-bottom: 1px solid #ddd;
-              padding-bottom: 10px;
-            }
-            .label {
-              font-weight: bold;
-              width: 250px;
-              flex-shrink: 0;
-            }
-            .value {
-              flex: 1;
-            }
-            .signature-section {
-              margin-top: 80px;
-              display: flex;
-              justify-content: space-between;
-            }
-            .signature-box {
-              width: 45%;
-              text-align: center;
-            }
-            .signature-line {
-              border-top: 1px solid #333;
-              margin-top: 60px;
-              padding-top: 10px;
-            }
-            .footer {
-              margin-top: 40px;
-              text-align: center;
-              font-size: 12px;
-              color: #666;
-            }
-            @media print {
-              body { padding: 20px; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>FICHA DE RESCISÃO</h1>
-          
-          <div class="field">
-            <span class="label">Nome do Aluno:</span>
-            <span class="value">${ficha.aluno_nome}</span>
-          </div>
-          
-          <div class="field">
-            <span class="label">Turma:</span>
-            <span class="value">${ficha.turma_nome || "Não informada"}</span>
-          </div>
-          
-          <div class="field">
-            <span class="label">Professor:</span>
-            <span class="value">${ficha.professor_nome || "Não informado"}</span>
-          </div>
-          
-          <div class="field">
-            <span class="label">Data da Solicitação:</span>
-            <span class="value">${formatDate(ficha.data_criacao)}</span>
-          </div>
-
-          <div class="field">
-            <span class="label">Motivo da Rescisão:</span>
-            <span class="value">_____________________________________________</span>
-          </div>
-
-          <div class="field">
-            <span class="label">Observações:</span>
-            <span class="value">_____________________________________________</span>
-          </div>
-
-          <div class="signature-section">
-            <div class="signature-box">
-              <div class="signature-line">Assinatura do Responsável</div>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line">Assinatura da Unidade</div>
-            </div>
-          </div>
-
-          <div class="footer">
-            <p>Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(content);
-    printWindow.document.close();
-  };
-
   const handleClearFilters = () => {
     setFiltroNome("");
     setDataInicio(undefined);
@@ -431,24 +311,14 @@ export function FichasRescisaoTab() {
               <TableCell>{formatDate(ficha.data_criacao)}</TableCell>
               {!isPendente && <TableCell>{ficha.concluido_por_nome || "-"}</TableCell>}
               <TableCell className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenPreencher(ficha)}
-                  >
-                    <ClipboardEdit className="h-4 w-4 mr-1" />
-                    Preencher
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePrint(ficha)}
-                  >
-                    <Printer className="h-4 w-4 mr-1" />
-                    Imprimir
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenPreencher(ficha)}
+                >
+                  <ClipboardEdit className="h-4 w-4 mr-1" />
+                  Preencher
+                </Button>
               </TableCell>
             </TableRow>
           ))
