@@ -89,10 +89,15 @@ export function DadosCadastraisForm({
   }, [alunoVinculado, form]);
 
   const onSubmit = async (data: DadosCadastraisFormData) => {
+    if (!alunoVinculado?.id) {
+      console.error("Nenhum aluno vinculado encontrado");
+      return;
+    }
+
     try {
       await salvarDados.mutateAsync({
         clientId: cliente.id,
-        nome: data.nome,
+        alunoId: alunoVinculado.id,
         dataNascimento: data.data_nascimento,
         cpf: data.cpf,
         rg: data.rg,
