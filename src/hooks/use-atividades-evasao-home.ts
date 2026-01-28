@@ -77,7 +77,8 @@ export function useAtividadesEvasaoHome() {
       // Transformar dados para o formato esperado
       const atividades: AtividadeEvasaoHome[] = (data || []).map((item: any) => {
         // Se não tem data_agendada, usar created_at como referência (apenas a parte da data)
-        const dataReferencia = item.data_agendada || item.created_at.split('T')[0];
+        const hoje = new Date().toISOString().split('T')[0];
+        const dataReferencia = item.data_agendada || (item.created_at ? item.created_at.split('T')[0] : hoje);
         
         return {
           id: item.id,
