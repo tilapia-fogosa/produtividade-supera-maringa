@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, addMonths, differenceInMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2, Printer, FileText, CalendarIcon, Check, Clock, ClipboardEdit } from "lucide-react";
 import { PreencherFichaRescisaoModal, DadosExtrasFicha } from "./PreencherFichaRescisaoModal";
@@ -52,6 +52,41 @@ export function FichasRescisaoTab() {
       ? format(dadosExtras.dataComunicacao, "dd/MM/yyyy", { locale: ptBR })
       : "Não informada";
 
+    const dataPrimeiraMensalidadeFormatada = dadosExtras.dataPrimeiraMensalidade
+      ? format(dadosExtras.dataPrimeiraMensalidade, "dd/MM/yyyy", { locale: ptBR })
+      : "Não informada";
+
+    // Cálculos
+    let ultimaMensalidadeContrato = "";
+    let mensalidadesAteRescisao = 0;
+    let mensalidadesRestantes = 0;
+    let mensalidadeProximoMes = 0;
+    let valorRescisao = 0;
+
+    if (dadosExtras.dataPrimeiraMensalidade && dadosExtras.dataComunicacao) {
+      const ultimaData = addMonths(dadosExtras.dataPrimeiraMensalidade, 17);
+      ultimaMensalidadeContrato = format(ultimaData, "dd/MM/yyyy", { locale: ptBR });
+
+      const mesesDecorridos = differenceInMonths(dadosExtras.dataComunicacao, dadosExtras.dataPrimeiraMensalidade);
+      mensalidadesAteRescisao = Math.max(0, mesesDecorridos);
+      mensalidadesRestantes = Math.max(0, 18 - mensalidadesAteRescisao);
+
+      const diaVencimento = dadosExtras.dataPrimeiraMensalidade.getDate();
+      const diaComunicado = dadosExtras.dataComunicacao.getDate();
+      mensalidadeProximoMes = diaComunicado >= diaVencimento ? dadosExtras.valorMensalidade : 0;
+      
+      valorRescisao = mensalidadesRestantes * (dadosExtras.valorMensalidade * 0.4);
+    }
+
+    const pendenciaNum = parseFloat(dadosExtras.pendenciaFinanceira.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
+    const descontoNum = parseFloat(dadosExtras.descontoNegociado.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
+    const total = pendenciaNum + mensalidadeProximoMes + valorRescisao;
+    const totalLiquido = total - descontoNum;
+
+    const formatCurrency = (value: number) => {
+      return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    };
+
     const content = `
       <!DOCTYPE html>
       <html>
@@ -63,29 +98,55 @@ export function FichasRescisaoTab() {
               padding: 40px;
               max-width: 800px;
               margin: 0 auto;
+              font-size: 14px;
             }
             h1 {
               text-align: center;
-              border-bottom: 2px solid #333;
-              padding-bottom: 10px;
               margin-bottom: 30px;
+              font-size: 20px;
             }
-            .field {
-              margin-bottom: 20px;
+            .section {
+              margin-bottom: 24px;
+            }
+            .section-title {
+              font-weight: bold;
+              font-size: 13px;
+              color: #666;
+              margin-bottom: 8px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .row {
               display: flex;
-              border-bottom: 1px solid #ddd;
-              padding-bottom: 10px;
+              justify-content: space-between;
+              padding: 8px 0;
+              border-bottom: 1px solid #eee;
+            }
+            .row:last-child {
+              border-bottom: none;
             }
             .label {
-              font-weight: bold;
-              width: 250px;
-              flex-shrink: 0;
+              color: #555;
             }
             .value {
-              flex: 1;
+              font-weight: 500;
+              text-align: right;
+            }
+            .highlight {
+              background-color: #f8f9fa;
+              padding: 12px;
+              border-radius: 6px;
+              margin-top: 8px;
+            }
+            .total-row {
+              font-weight: bold;
+              font-size: 15px;
+              padding: 12px 0;
+              border-top: 2px solid #333;
+              margin-top: 8px;
             }
             .signature-section {
-              margin-top: 80px;
+              margin-top: 60px;
               display: flex;
               justify-content: space-between;
             }
@@ -95,14 +156,15 @@ export function FichasRescisaoTab() {
             }
             .signature-line {
               border-top: 1px solid #333;
-              margin-top: 60px;
-              padding-top: 10px;
+              margin-top: 50px;
+              padding-top: 8px;
+              font-size: 12px;
             }
             .footer {
-              margin-top: 40px;
+              margin-top: 30px;
               text-align: center;
-              font-size: 12px;
-              color: #666;
+              font-size: 11px;
+              color: #999;
             }
             @media print {
               body { padding: 20px; }
@@ -112,49 +174,80 @@ export function FichasRescisaoTab() {
         <body>
           <h1>FICHA DE RESCISÃO</h1>
           
-          <div class="field">
-            <span class="label">Nome do Aluno:</span>
-            <span class="value">${ficha.aluno_nome}</span>
-          </div>
-          
-          <div class="field">
-            <span class="label">Turma:</span>
-            <span class="value">${ficha.turma_nome || "Não informada"}</span>
-          </div>
-          
-          <div class="field">
-            <span class="label">Professor:</span>
-            <span class="value">${ficha.professor_nome || "Não informado"}</span>
-          </div>
-          
-          <div class="field">
-            <span class="label">Data da Solicitação:</span>
-            <span class="value">${formatDate(ficha.data_criacao)}</span>
+          <div class="section">
+            <div class="section-title">Dados do Aluno</div>
+            <div class="row">
+              <span class="label">Nome</span>
+              <span class="value">${ficha.aluno_nome}</span>
+            </div>
+            <div class="row">
+              <span class="label">Turma</span>
+              <span class="value">${ficha.turma_nome || "-"}</span>
+            </div>
+            <div class="row">
+              <span class="label">Professor</span>
+              <span class="value">${ficha.professor_nome || "-"}</span>
+            </div>
           </div>
 
-          <div class="field">
-            <span class="label">Data Comunicação Rescisão:</span>
-            <span class="value">${dataComunicacaoFormatada}</span>
+          <div class="section">
+            <div class="section-title">Dados do Contrato</div>
+            <div class="row">
+              <span class="label">Data Primeira Mensalidade</span>
+              <span class="value">${dataPrimeiraMensalidadeFormatada}</span>
+            </div>
+            <div class="row">
+              <span class="label">Valor da Mensalidade</span>
+              <span class="value">${formatCurrency(dadosExtras.valorMensalidade)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Data Comunicação Rescisão</span>
+              <span class="value">${dataComunicacaoFormatada}</span>
+            </div>
           </div>
 
-          <div class="field">
-            <span class="label">Pendência Financeira:</span>
-            <span class="value">${dadosExtras.pendenciaFinanceira || "Nenhuma"}</span>
+          <div class="section highlight">
+            <div class="section-title">Cálculo de Rescisão Contratual</div>
+            <div class="row">
+              <span class="label">Última Mensalidade em Contrato</span>
+              <span class="value">${ultimaMensalidadeContrato || "-"}</span>
+            </div>
+            <div class="row">
+              <span class="label">Mensalidades até Rescisão</span>
+              <span class="value">${mensalidadesAteRescisao}</span>
+            </div>
+            <div class="row">
+              <span class="label">Mensalidades Restantes</span>
+              <span class="value">${mensalidadesRestantes}</span>
+            </div>
           </div>
 
-          <div class="field">
-            <span class="label">Desconto Negociado:</span>
-            <span class="value">${dadosExtras.descontoNegociado || "Nenhum"}</span>
-          </div>
-
-          <div class="field">
-            <span class="label">Motivo da Rescisão:</span>
-            <span class="value">_____________________________________________</span>
-          </div>
-
-          <div class="field">
-            <span class="label">Observações:</span>
-            <span class="value">_____________________________________________</span>
+          <div class="section">
+            <div class="section-title">Resumo Financeiro</div>
+            <div class="row">
+              <span class="label">Pendências Financeiras (Mês Atual ou Anteriores)</span>
+              <span class="value">${dadosExtras.pendenciaFinanceira || formatCurrency(0)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Mensalidade Próximo Mês (Aviso 30 dias)</span>
+              <span class="value">${formatCurrency(mensalidadeProximoMes)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Rescisão (40% × ${mensalidadesRestantes} meses restantes)</span>
+              <span class="value">${formatCurrency(valorRescisao)}</span>
+            </div>
+            <div class="row total-row">
+              <span class="label">Total</span>
+              <span class="value">${formatCurrency(total)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Desconto Negociado</span>
+              <span class="value">${dadosExtras.descontoNegociado || formatCurrency(0)}</span>
+            </div>
+            <div class="row total-row">
+              <span class="label">Total Líquido</span>
+              <span class="value">${formatCurrency(totalLiquido)}</span>
+            </div>
           </div>
 
           <div class="signature-section">

@@ -12,6 +12,7 @@ export interface FichaRescisao {
   data_criacao: string;
   status: 'pendente' | 'concluida';
   concluido_por_nome: string | null;
+  valor_mensalidade: number | null;
 }
 
 export interface FichasRescisaoFilters {
@@ -42,6 +43,7 @@ export function useFichasRescisao(filters: FichasRescisaoFilters = {}) {
               nome,
               unit_id,
               turma_id,
+              valor_mensalidade,
               turmas (
                 id,
                 nome,
@@ -77,6 +79,7 @@ export function useFichasRescisao(filters: FichasRescisaoFilters = {}) {
           data_criacao: atividade.created_at,
           status: atividade.status as 'pendente' | 'concluida',
           concluido_por_nome: atividade.concluido_por_nome,
+          valor_mensalidade: aluno?.valor_mensalidade || null,
           unit_id: aluno?.unit_id
         };
       });
