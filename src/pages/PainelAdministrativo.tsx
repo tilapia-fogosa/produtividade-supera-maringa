@@ -166,98 +166,103 @@ export default function PainelAdministrativo() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Data da Matrícula</TableHead>
-                  <TableHead>Vendedor</TableHead>
+                  <TableHead className="text-center">Dados Iniciais</TableHead>
                   <TableHead className="text-center">Dados Cadastrais</TableHead>
                   <TableHead className="text-center">Dados Comerciais</TableHead>
                   <TableHead className="text-center">Dados Pedagógicos</TableHead>
-                  <TableHead className="text-center">Dados Finais</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
+                    <TableCell colSpan={7} className="text-center py-12">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-destructive">
+                    <TableCell colSpan={7} className="text-center py-12 text-destructive">
                       Erro ao carregar dados
                     </TableCell>
                   </TableRow>
                 ) : !clientes?.length ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                       Nenhuma matrícula encontrada
                     </TableCell>
                   </TableRow>
                 ) : (
-                  clientes.map((cliente) => (
-                    <TableRow key={cliente.id}>
-                      <TableCell className="font-medium">
-                        {cliente.name}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(cliente.data_matricula)}
-                      </TableCell>
-                      <TableCell>{cliente.vendedor_nome || "-"}</TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant={cliente.cadastrais_completo ? "default" : "outline"}
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("cadastrais", cliente)}
-                        >
-                          <User className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant={cliente.comerciais_completo ? "default" : "outline"}
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("comerciais", cliente)}
-                        >
-                          <DollarSign className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant={cliente.pedagogicos_completo ? "default" : "outline"}
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("pedagogicos", cliente)}
-                        >
-                          <GraduationCap className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant={cliente.finais_completo ? "default" : "outline"}
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleOpenDrawer("finais", cliente)}
-                        >
-                          <CheckSquare className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {isClienteCompleto(cliente) ? (
-                          <span className="inline-flex items-center gap-1 text-sm text-green-600">
-                            <Check className="h-4 w-4" />
-                            Concluído
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-sm text-amber-600">
-                            <X className="h-4 w-4" />
-                            Pendente
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  clientes.map((cliente) => {
+                    const iniciaisCompleto = cliente.finais_completo;
+                    
+                    return (
+                      <TableRow key={cliente.id}>
+                        <TableCell className="font-medium">
+                          {cliente.name}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(cliente.data_matricula)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant={iniciaisCompleto ? "default" : "outline"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenDrawer("iniciais", cliente)}
+                          >
+                            <CheckSquare className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant={cliente.cadastrais_completo ? "default" : "outline"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenDrawer("cadastrais", cliente)}
+                            disabled={!iniciaisCompleto}
+                          >
+                            <User className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant={cliente.comerciais_completo ? "default" : "outline"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenDrawer("comerciais", cliente)}
+                            disabled={!iniciaisCompleto}
+                          >
+                            <DollarSign className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant={cliente.pedagogicos_completo ? "default" : "outline"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenDrawer("pedagogicos", cliente)}
+                            disabled={!iniciaisCompleto}
+                          >
+                            <GraduationCap className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {isClienteCompleto(cliente) ? (
+                            <span className="inline-flex items-center gap-1 text-sm text-green-600">
+                              <Check className="h-4 w-4" />
+                              Concluído
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-sm text-amber-600">
+                              <X className="h-4 w-4" />
+                              Pendente
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
