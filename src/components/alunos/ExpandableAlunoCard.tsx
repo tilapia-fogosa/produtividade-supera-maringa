@@ -151,21 +151,19 @@ export function ExpandableAlunoCard({ aluno, onClose, updateFunctions }: Expanda
 
           {/* Content */}
           <ScrollArea className="flex-1 p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Foto - Aparece primeiro em mobile, à direita em desktop */}
-              <div className="order-first lg:order-last lg:col-span-1 flex justify-center">
-                <div className="lg:sticky lg:top-0">
-                  <FotoUpload
-                    alunoId={aluno.id}
-                    alunoNome={aluno.nome}
-                    fotoUrl={aluno.foto_url}
-                    onFotoUpdate={(novaFotoUrl) => updateFunctions.atualizarFoto(aluno.id, novaFotoUrl)}
-                  />
-                </div>
+            <div className="space-y-6">
+              {/* Foto - Entre o cabeçalho e as informações básicas */}
+              <div className="flex justify-center pb-4 border-b">
+                <FotoUpload
+                  alunoId={aluno.id}
+                  alunoNome={aluno.nome}
+                  fotoUrl={aluno.foto_url}
+                  onFotoUpdate={(novaFotoUrl) => updateFunctions.atualizarFoto(aluno.id, novaFotoUrl)}
+                />
               </div>
 
-              {/* Coluna Esquerda - Informações */}
-              <div className="lg:col-span-3 space-y-6">
+              {/* Informações */}
+              <div className="space-y-6">
                 {/* Informações Básicas */}
                 <Section title="Informações Básicas">
                   <InfoItem label="Nome" value={aluno.nome} />

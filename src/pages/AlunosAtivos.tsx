@@ -52,6 +52,12 @@ export default function AlunosAtivos() {
   const [dataNascimentoTemp, setDataNascimentoTemp] = useState('');
   const [salvandoDataNascimento, setSalvandoDataNascimento] = useState<string | null>(null);
 
+  // Sincronizar alunoExpandido com a lista de alunos atualizada
+  const alunoExpandidoSincronizado = useMemo(() => {
+    if (!alunoExpandido) return null;
+    return alunos.find(a => a.id === alunoExpandido.id) || null;
+  }, [alunos, alunoExpandido]);
+
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
     return Array.from(new Set(alunos.map(aluno => aluno.turma_nome).filter(Boolean))).sort();
@@ -594,7 +600,7 @@ export default function AlunosAtivos() {
 
       {/* Card expandido do aluno */}
       <ExpandableAlunoCard 
-        aluno={alunoExpandido} 
+        aluno={alunoExpandidoSincronizado} 
         onClose={() => setAlunoExpandido(null)}
         updateFunctions={{
           atualizarFoto,
