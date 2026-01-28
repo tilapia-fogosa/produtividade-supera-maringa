@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useAlunosSemVinculo, useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
+import { WebcamCapture } from "./WebcamCapture";
 import {
   Popover,
   PopoverContent,
@@ -56,6 +56,8 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   const [openAlunoPopover, setOpenAlunoPopover] = useState(false);
   const [selectedAlunoId, setSelectedAlunoId] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState("");
+  const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
+  const [fotoUrlExistente, setFotoUrlExistente] = useState<string | null>(null);
 
   // Hooks para alunos
   const { data: alunosDisponiveis = [], isLoading: isLoadingAlunos } = useAlunosSemVinculo(cliente.id);
@@ -95,7 +97,8 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_entregar_kit,
             check_cadastrar_pagamento,
             check_sincronizar_sgs,
-            check_grupo_whatsapp
+            check_grupo_whatsapp,
+            photo_url
           `)
           .eq("client_id", cliente.id)
           .maybeSingle();
@@ -109,6 +112,9 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_sincronizar_sgs: (data as any).check_sincronizar_sgs ?? false,
             check_grupo_whatsapp: data.check_grupo_whatsapp ?? false,
           });
+          if (data.photo_url) {
+            setFotoUrlExistente(data.photo_url);
+          }
         }
       } catch (error) {
         console.error("Erro ao carregar dados finais:", error);
@@ -121,11 +127,39 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   }, [cliente.id]);
 
   const mutation = useMutation({
-    mutationFn: async (data: { checklist: Record<string, boolean>; alunoId: string | null }) => {
-      // Atualizar checklist na atividade_pos_venda
+    mutationFn: async (data: { checklist: Record<string, boolean>; alunoId: string | null; fotoBase64: string | null }) => {
+      let photoUrl = fotoUrlExistente;
+
+      // Upload da foto se houver nova captura
+      if (data.fotoBase64) {
+        const base64Data = data.fotoBase64.split(',')[1];
+        const fileName = `${cliente.id}-${Date.now()}.jpg`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('alunos-fotos')
+          .upload(fileName, Buffer.from(base64Data, 'base64'), {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('alunos-fotos')
+          .getPublicUrl(fileName);
+        
+        photoUrl = urlData.publicUrl;
+      }
+
+      // Atualizar checklist e foto na atividade_pos_venda
+      const updateData: Record<string, any> = { ...data.checklist };
+      if (photoUrl) {
+        updateData.photo_url = photoUrl;
+      }
+
       const { error: checklistError } = await supabase
         .from("atividade_pos_venda")
-        .update(data.checklist)
+        .update(updateData)
         .eq("client_id", cliente.id);
 
       if (checklistError) throw checklistError;
@@ -146,11 +180,17 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         if (data.alunoId) {
           const { error: addError } = await supabase
             .from("alunos")
-            .update({ client_id: cliente.id })
+            .update({ client_id: cliente.id, foto_url: photoUrl })
             .eq("id", data.alunoId);
 
           if (addError) throw addError;
         }
+      } else if (data.alunoId && photoUrl) {
+        // Atualizar foto do aluno vinculado existente
+        await supabase
+          .from("alunos")
+          .update({ foto_url: photoUrl })
+          .eq("id", data.alunoId);
       }
     },
     onSuccess: () => {
@@ -171,7 +211,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ checklist, alunoId: selectedAlunoId });
+    mutation.mutate({ checklist, alunoId: selectedAlunoId, fotoBase64: fotoCapturada });
   };
 
   const handleRemoveAluno = () => {
@@ -188,6 +228,17 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Seção: Foto do Aluno */}
+      <WebcamCapture
+        capturedImage={fotoCapturada}
+        existingImageUrl={fotoUrlExistente}
+        onCapture={setFotoCapturada}
+        onClear={() => {
+          setFotoCapturada(null);
+          setFotoUrlExistente(null);
+        }}
+      />
+
       {/* Checklist */}
       <div className="space-y-4">
         {CHECKLIST_ITEMS.map((item) => (

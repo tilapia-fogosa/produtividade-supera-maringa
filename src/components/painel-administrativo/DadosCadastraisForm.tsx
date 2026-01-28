@@ -9,7 +9,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useSalvarDadosCadastrais } from "@/hooks/use-salvar-dados-cadastrais";
-import { WebcamCapture } from "./WebcamCapture";
 const ESTADOS_BRASILEIROS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 const dadosCadastraisSchema = z.object({
   nome: z.string().min(2, "Nome obrigatório"),
@@ -57,7 +56,6 @@ export function DadosCadastraisForm({
   cliente,
   onCancel
 }: DadosCadastraisFormProps) {
-  const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   
   const salvarDados = useSalvarDadosCadastrais();
@@ -98,7 +96,6 @@ export function DadosCadastraisForm({
         bairro: data.bairro,
         cidade: data.cidade,
         estado: data.estado,
-        fotoBase64: fotoCapturada,
       });
       
       setSalvoComSucesso(true);
@@ -281,13 +278,6 @@ export function DadosCadastraisForm({
                 </FormItem>} />
           </div>
         </div>
-
-        {/* Seção: Foto do Aluno */}
-        <WebcamCapture
-          capturedImage={fotoCapturada}
-          onCapture={setFotoCapturada}
-          onClear={() => setFotoCapturada(null)}
-        />
 
         {/* Botões */}
         <div className="flex justify-end gap-3 pt-4 border-t">
