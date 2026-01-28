@@ -10,6 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { useSalvarDadosCadastrais } from "@/hooks/use-salvar-dados-cadastrais";
+import { 
+  useDadosPosVenda, 
+  formatDateToBR, 
+  formatCPFDisplay, 
+  formatCEPDisplay, 
+  formatPhoneDisplay 
+} from "@/hooks/use-dados-pos-venda";
+
 const ESTADOS_BRASILEIROS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 const dadosCadastraisSchema = z.object({
   nome: z.string().min(2, "Nome obrigatório"),
@@ -53,6 +61,7 @@ const formatPhone = (value: string) => {
   }
   return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
 };
+
 export function DadosCadastraisForm({
   cliente,
   onCancel
@@ -61,6 +70,7 @@ export function DadosCadastraisForm({
   
   const salvarDados = useSalvarDadosCadastrais();
   const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
   
   const form = useForm<DadosCadastraisFormData>({
     resolver: zodResolver(dadosCadastraisSchema),
@@ -81,12 +91,26 @@ export function DadosCadastraisForm({
     }
   });
 
-  // Atualizar o nome quando o aluno vinculado for carregado
+  // Carregar dados salvos quando disponíveis
   useEffect(() => {
     if (alunoVinculado?.nome) {
       form.setValue("nome", alunoVinculado.nome);
     }
-  }, [alunoVinculado, form]);
+    
+    if (dadosSalvos) {
+      form.setValue("data_nascimento", formatDateToBR(dadosSalvos.birth_date));
+      form.setValue("cpf", formatCPFDisplay(dadosSalvos.cpf));
+      form.setValue("rg", dadosSalvos.rg || "");
+      form.setValue("telefone", formatPhoneDisplay(dadosSalvos.whatsapp_contato));
+      form.setValue("cep", formatCEPDisplay(dadosSalvos.address_postal_code));
+      form.setValue("rua", dadosSalvos.address_street || "");
+      form.setValue("numero", dadosSalvos.address_number || "");
+      form.setValue("complemento", dadosSalvos.address_complement || "");
+      form.setValue("bairro", dadosSalvos.address_neighborhood || "");
+      form.setValue("cidade", dadosSalvos.address_city || "");
+      form.setValue("estado", dadosSalvos.address_state || "");
+    }
+  }, [alunoVinculado, dadosSalvos, form]);
 
   const onSubmit = async (data: DadosCadastraisFormData) => {
     if (!alunoVinculado?.id) {
