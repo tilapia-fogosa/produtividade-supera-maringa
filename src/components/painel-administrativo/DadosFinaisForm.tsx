@@ -23,6 +23,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "assinar_contrato", label: "Assinar Contrato", field: "check_assinar_contrato" },
   { id: "entregar_kit", label: "Entregar Kit", field: "check_entregar_kit" },
   { id: "cadastrar_pagamento", label: "Cadastrar forma de pagamento", field: "check_cadastrar_pagamento" },
+  { id: "sincronizar_sgs", label: "Sincronizar dados SGS", field: "check_sincronizar_sgs" },
   { id: "grupo_whatsapp", label: "Adicionar Grupo Whatsapp", field: "check_grupo_whatsapp" },
 ];
 
@@ -33,6 +34,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
     check_assinar_contrato: false,
     check_entregar_kit: false,
     check_cadastrar_pagamento: false,
+    check_sincronizar_sgs: false,
     check_grupo_whatsapp: false,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +51,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_assinar_contrato,
             check_entregar_kit,
             check_cadastrar_pagamento,
+            check_sincronizar_sgs,
             check_grupo_whatsapp
           `)
           .eq("client_id", cliente.id)
@@ -60,6 +63,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_assinar_contrato: data.check_assinar_contrato ?? false,
             check_entregar_kit: data.check_entregar_kit ?? false,
             check_cadastrar_pagamento: data.check_cadastrar_pagamento ?? false,
+            check_sincronizar_sgs: (data as any).check_sincronizar_sgs ?? false,
             check_grupo_whatsapp: data.check_grupo_whatsapp ?? false,
           });
         }
