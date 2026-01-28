@@ -1,34 +1,41 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Pencil, Loader2 } from 'lucide-react';
-import { AlunoAtivo, useAlunosAtivos } from '@/hooks/use-alunos-ativos';
+import { AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FotoUpload } from './FotoUpload';
+
+// Tipos das funções de atualização
+interface UpdateFunctions {
+  atualizarFoto: (id: string, fotoUrl: string | null) => Promise<boolean>;
+  atualizarEmail: (id: string, email: string) => Promise<boolean>;
+  atualizarTelefone: (id: string, telefone: string) => Promise<boolean>;
+  atualizarCoordenadorResponsavel: (id: string, coordenador: string) => Promise<boolean>;
+  atualizarValorMensalidade: (id: string, valor: number) => Promise<boolean>;
+  atualizarVencimentoContrato: (id: string, vencimento: string) => Promise<boolean>;
+  atualizarMotivoProcura: (id: string, motivo: string) => Promise<boolean>;
+  atualizarPercepcaoCoordenador: (id: string, percepcao: string) => Promise<boolean>;
+  atualizarPontosAtencao: (id: string, pontos: string) => Promise<boolean>;
+  atualizarDataOnboarding: (id: string, data: string) => Promise<boolean>;
+  atualizarValorMatricula: (id: string, valor: number) => Promise<boolean>;
+  atualizarValorMaterial: (id: string, valor: number) => Promise<boolean>;
+  atualizarKitSugerido: (id: string, kit: string) => Promise<boolean>;
+}
 
 interface ExpandableAlunoCardProps {
   aluno: AlunoAtivo | null;
   onClose: () => void;
+  updateFunctions: UpdateFunctions;
 }
 
-export function ExpandableAlunoCard({ aluno, onClose }: ExpandableAlunoCardProps) {
-  const { 
-    atualizarFoto,
-    atualizarEmail,
-    atualizarTelefone,
-    atualizarCoordenadorResponsavel,
-    atualizarValorMensalidade,
-    atualizarVencimentoContrato,
-    atualizarMotivoProcura,
-    atualizarPercepcaoCoordenador,
-    atualizarPontosAtencao,
-    atualizarDataOnboarding
-  } = useAlunosAtivos();
+const KIT_OPTIONS = ['Kit 1', 'Kit 2', 'Kit 3', 'Kit 4', 'Kit 5', 'Kit 6', 'Kit 7', 'Kit 8'];
 
-  // Estados de edição
+export function ExpandableAlunoCard({ aluno, onClose, updateFunctions }: ExpandableAlunoCardProps) {
   const [editando, setEditando] = useState<string | null>(null);
   const [valores, setValores] = useState<Record<string, string>>({});
   const [salvando, setSalvando] = useState<string | null>(null);
@@ -60,34 +67,52 @@ export function ExpandableAlunoCard({ aluno, onClose }: ExpandableAlunoCardProps
 
     switch (campo) {
       case 'email':
-        sucesso = await atualizarEmail(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarEmail(aluno.id, valor);
         break;
       case 'telefone':
-        sucesso = await atualizarTelefone(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarTelefone(aluno.id, valor);
         break;
       case 'coordenador_responsavel':
-        sucesso = await atualizarCoordenadorResponsavel(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarCoordenadorResponsavel(aluno.id, valor);
         break;
       case 'valor_mensalidade':
-        sucesso = await atualizarValorMensalidade(aluno.id, parseFloat(valor) || 0);
+        sucesso = await updateFunctions.atualizarValorMensalidade(aluno.id, parseFloat(valor) || 0);
+        break;
+      case 'valor_matricula':
+        sucesso = await updateFunctions.atualizarValorMatricula(aluno.id, parseFloat(valor) || 0);
+        break;
+      case 'valor_material':
+        sucesso = await updateFunctions.atualizarValorMaterial(aluno.id, parseFloat(valor) || 0);
         break;
       case 'vencimento_contrato':
-        sucesso = await atualizarVencimentoContrato(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarVencimentoContrato(aluno.id, valor);
         break;
       case 'motivo_procura':
-        sucesso = await atualizarMotivoProcura(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarMotivoProcura(aluno.id, valor);
         break;
       case 'percepcao_coordenador':
-        sucesso = await atualizarPercepcaoCoordenador(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarPercepcaoCoordenador(aluno.id, valor);
         break;
       case 'pontos_atencao':
-        sucesso = await atualizarPontosAtencao(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarPontosAtencao(aluno.id, valor);
         break;
       case 'data_onboarding':
-        sucesso = await atualizarDataOnboarding(aluno.id, valor);
+        sucesso = await updateFunctions.atualizarDataOnboarding(aluno.id, valor);
+        break;
+      case 'kit_sugerido':
+        sucesso = await updateFunctions.atualizarKitSugerido(aluno.id, valor);
         break;
     }
 
+    if (sucesso) {
+      setEditando(null);
+    }
+    setSalvando(null);
+  };
+
+  const handleKitChange = async (kit: string) => {
+    setSalvando('kit_sugerido');
+    const sucesso = await updateFunctions.atualizarKitSugerido(aluno.id, kit);
     if (sucesso) {
       setEditando(null);
     }
@@ -127,6 +152,18 @@ export function ExpandableAlunoCard({ aluno, onClose }: ExpandableAlunoCardProps
           {/* Content */}
           <ScrollArea className="flex-1 p-6">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Foto - Aparece primeiro em mobile, à direita em desktop */}
+              <div className="order-first lg:order-last lg:col-span-1 flex justify-center">
+                <div className="lg:sticky lg:top-0">
+                  <FotoUpload
+                    alunoId={aluno.id}
+                    alunoNome={aluno.nome}
+                    fotoUrl={aluno.foto_url}
+                    onFotoUpdate={(novaFotoUrl) => updateFunctions.atualizarFoto(aluno.id, novaFotoUrl)}
+                  />
+                </div>
+              </div>
+
               {/* Coluna Esquerda - Informações */}
               <div className="lg:col-span-3 space-y-6">
                 {/* Informações Básicas */}
@@ -212,6 +249,34 @@ export function ExpandableAlunoCard({ aluno, onClose }: ExpandableAlunoCardProps
                     onChange={(v) => setValores({ ...valores, valor_mensalidade: v })}
                     type="number"
                   />
+
+                  <EditableInfoItem
+                    label="Valor da Matrícula"
+                    value={formatarValorMensalidade(aluno.valor_matricula)}
+                    campo="valor_matricula"
+                    editando={editando === 'valor_matricula'}
+                    salvando={salvando === 'valor_matricula'}
+                    valorTemp={valores.valor_matricula || ''}
+                    onEditar={() => handleEditar('valor_matricula', aluno.valor_matricula)}
+                    onSalvar={() => handleSalvar('valor_matricula')}
+                    onCancelar={handleCancelar}
+                    onChange={(v) => setValores({ ...valores, valor_matricula: v })}
+                    type="number"
+                  />
+
+                  <EditableInfoItem
+                    label="Valor do Material"
+                    value={formatarValorMensalidade(aluno.valor_material)}
+                    campo="valor_material"
+                    editando={editando === 'valor_material'}
+                    salvando={salvando === 'valor_material'}
+                    valorTemp={valores.valor_material || ''}
+                    onEditar={() => handleEditar('valor_material', aluno.valor_material)}
+                    onSalvar={() => handleSalvar('valor_material')}
+                    onCancelar={handleCancelar}
+                    onChange={(v) => setValores({ ...valores, valor_material: v })}
+                    type="number"
+                  />
                   
                   <InfoItem label="Última Falta" value={aluno.ultima_falta ? new Date(aluno.ultima_falta).toLocaleDateString('pt-BR') : 'Não registrado'} />
                 </Section>
@@ -250,6 +315,29 @@ export function ExpandableAlunoCard({ aluno, onClose }: ExpandableAlunoCardProps
                     onCancelar={handleCancelar}
                     onChange={(v) => setValores({ ...valores, coordenador_responsavel: v })}
                   />
+
+                  {/* Kit Inicial com Select */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Kit Inicial:</p>
+                    <div className="md:col-span-2">
+                      <Select
+                        value={aluno.kit_sugerido || ''}
+                        onValueChange={handleKitChange}
+                        disabled={salvando === 'kit_sugerido'}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione o kit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {KIT_OPTIONS.map((kit) => (
+                            <SelectItem key={kit} value={kit}>
+                              {kit}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                   
                   <EditableInfoItem
                     label="Motivo da Procura"
@@ -321,18 +409,6 @@ export function ExpandableAlunoCard({ aluno, onClose }: ExpandableAlunoCardProps
                     )}
                   </div>
                 </Section>
-              </div>
-
-              {/* Coluna Direita - Foto */}
-              <div className="lg:col-span-1 flex justify-center lg:justify-start">
-                <div className="lg:sticky lg:top-0">
-                  <FotoUpload
-                    alunoId={aluno.id}
-                    alunoNome={aluno.nome}
-                    fotoUrl={aluno.foto_url}
-                    onFotoUpdate={(novaFotoUrl) => atualizarFoto(aluno.id, novaFotoUrl)}
-                  />
-                </div>
               </div>
             </div>
           </ScrollArea>
@@ -451,4 +527,3 @@ function EditableInfoItem({
     </div>
   );
 }
-

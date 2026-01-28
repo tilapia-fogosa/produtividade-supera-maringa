@@ -37,14 +37,16 @@ export interface AlunoAtivo {
   ultima_correcao_ah: string | null;
   is_funcionario: boolean | null;
   valor_mensalidade: number | null;
+  valor_matricula: number | null;
+  valor_material: number | null;
+  kit_sugerido: string | null;
   foto_url: string | null;
   foto_devolutiva_url: string | null;
   pdf_devolutiva_url: string | null;
   data_nascimento: string | null;
-  aniversario_mes_dia: string | null; // Formato 'DD/MM' calculado automaticamente
-  // Campos específicos para identificar origem
+  aniversario_mes_dia: string | null;
   tipo_pessoa: 'aluno' | 'funcionario';
-  cargo?: string | null; // Específico para funcionários
+  cargo?: string | null;
 }
 
 export function useAlunosAtivos() {
@@ -691,6 +693,111 @@ export function useAlunosAtivos() {
     }
   };
 
+  const atualizarValorMatricula = async (alunoId: string, valor: number): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ valor_matricula: valor } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, valor_matricula: valor } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Valor da matrícula atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar valor da matrícula:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o valor da matrícula.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarValorMaterial = async (alunoId: string, valor: number): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ valor_material: valor } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, valor_material: valor } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Valor do material atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar valor do material:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o valor do material.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarKitSugerido = async (alunoId: string, kit: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ kit_sugerido: kit } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, kit_sugerido: kit } : aluno
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Kit inicial atualizado com sucesso.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar kit inicial:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o kit inicial.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     alunos,
     loading,
@@ -709,5 +816,8 @@ export function useAlunosAtivos() {
     atualizarPercepcaoCoordenador,
     atualizarPontosAtencao,
     atualizarDataOnboarding,
+    atualizarValorMatricula,
+    atualizarValorMaterial,
+    atualizarKitSugerido,
   };
 }
