@@ -35,19 +35,12 @@ export function useSalvarDadosCadastrais() {
         ? parseDataNascimento(input.dataNascimento)
         : null;
 
-      // Calcular aniversario_mes_dia (MM-DD)
-      let aniversarioMesDia: string | null = null;
-      if (dataNascimentoISO) {
-        const [, mes, dia] = dataNascimentoISO.split("-");
-        aniversarioMesDia = `${mes}-${dia}`;
-      }
-
       // 1. Atualizar registro na tabela alunos (aluno vinculado)
+      // Nota: aniversario_mes_dia é uma coluna gerada automaticamente pelo banco
       const { error: alunoError } = await supabase
         .from("alunos")
         .update({
           data_nascimento: dataNascimentoISO,
-          aniversario_mes_dia: aniversarioMesDia,
           telefone: input.telefone || null,
           email: input.email || null,
           whatapp_contato: input.telefone || null,
