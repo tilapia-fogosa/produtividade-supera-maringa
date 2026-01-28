@@ -46,6 +46,15 @@ export interface ColetaAHPendente {
   dia_semana: string;
 }
 
+export interface BotomPendenteProfessor {
+  pendencia_id: string;
+  aluno_id: string;
+  aluno_nome: string;
+  apostila_nova: string;
+  turma_nome: string;
+  dia_semana: string;
+}
+
 export function useProfessorAtividades() {
   const { professorId, isProfessor } = useCurrentProfessor();
 
@@ -70,6 +79,7 @@ export function useProfessorAtividades() {
           camisetasPendentes: [],
           apostilasAHProntas: [],
           coletasAHPendentes: [],
+          botomPendentes: [],
         };
       }
 
@@ -189,11 +199,34 @@ export function useProfessorAtividades() {
         })
         .sort((a, b) => b.dias_sem_correcao - a.dias_sem_correcao);
 
+      // 7. Buscar pendências de botom do professor
+      const { data: botomData, error: botomError } = await supabase
+        .from('pendencias_botom')
+        .select('id, aluno_id, apostila_nova')
+        .eq('professor_responsavel_id', professorId)
+        .eq('status', 'pendente');
+
+      if (botomError) throw botomError;
+
+      const botomPendentes: BotomPendenteProfessor[] = (botomData || []).map(b => {
+        const aluno = alunos?.find(a => a.id === b.aluno_id);
+        const turma = turmas?.find(t => t.id === aluno?.turma_id);
+        return {
+          pendencia_id: b.id,
+          aluno_id: b.aluno_id,
+          aluno_nome: aluno?.nome || 'Aluno não encontrado',
+          apostila_nova: b.apostila_nova,
+          turma_nome: turma?.nome || 'Turma não encontrada',
+          dia_semana: turma?.dia_semana || '',
+        };
+      });
+
       return {
         reposicoes: reposicoesFiltradas,
         camisetasPendentes,
         apostilasAHProntas,
         coletasAHPendentes,
+        botomPendentes,
       };
     },
     enabled: isProfessor && !!professorId,
@@ -220,6 +253,7 @@ export function useProfessorAtividades() {
     camisetasPendentes: data?.camisetasPendentes || [],
     apostilasAHProntas: data?.apostilasAHProntas || [],
     coletasAHPendentes: data?.coletasAHPendentes || [],
+    botomPendentes: data?.botomPendentes || [],
     isDiaHoje,
     isDiaSemana,
   };

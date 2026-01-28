@@ -1,11 +1,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, startOfMonth, addDays } from 'date-fns';
 
 export interface ApostilaAHPendente {
   recolhidaId: number;
   apostilaNome: string;
+}
+
+export interface BotomPendente {
+  pendenciaId: string;
+  apostilaNova: string;
 }
 
 export interface LembretesAluno {
@@ -13,8 +18,12 @@ export interface LembretesAluno {
   aniversarioHoje: boolean;
   aniversarioSemana: boolean;
   apostilaAHPronta: boolean;
+  botomPendente: boolean;
+  faltouNoMes: boolean;
+  faltasNoMes?: number;
   // Dados extras para ações interativas
   apostilaAHDados?: ApostilaAHPendente;
+  botomDados?: BotomPendente;
 }
 
 export function useLembretesAlunos(alunoIds: string[]) {
@@ -55,6 +64,23 @@ export function useLembretesAlunos(alunoIds: string[]) {
         .in('pessoa_id', alunoIds)
         .is('data_entrega_real', null);
 
+      // Buscar pendências de botom
+      const { data: botomPendencias } = await supabase
+        .from('pendencias_botom')
+        .select('id, aluno_id, apostila_nova')
+        .in('aluno_id', alunoIds)
+        .eq('status', 'pendente');
+
+      // Buscar faltas do mês atual
+      const inicioMes = startOfMonth(hoje);
+      const { data: faltasData } = await supabase
+        .from('produtividade_abaco')
+        .select('pessoa_id')
+        .in('pessoa_id', alunoIds)
+        .eq('presente', false)
+        .gte('data_aula', format(inicioMes, 'yyyy-MM-dd'))
+        .lte('data_aula', format(hoje, 'yyyy-MM-dd'));
+
       // Criar mapa de camisetas por aluno
       const camisetasMap = new Map(
         camisetasData?.map(c => [c.aluno_id, c]) || []
@@ -69,6 +95,24 @@ export function useLembretesAlunos(alunoIds: string[]) {
             apostilaNome: ah.apostila
           });
         }
+      });
+
+      // Criar mapa de botom pendentes (pegar o primeiro se houver múltiplos)
+      const botomPendentesMap = new Map<string, BotomPendente>();
+      botomPendencias?.forEach(b => {
+        if (!botomPendentesMap.has(b.aluno_id)) {
+          botomPendentesMap.set(b.aluno_id, {
+            pendenciaId: b.id,
+            apostilaNova: b.apostila_nova
+          });
+        }
+      });
+
+      // Contar faltas por aluno no mês
+      const faltasPorAlunoMap = new Map<string, number>();
+      faltasData?.forEach(f => {
+        const count = faltasPorAlunoMap.get(f.pessoa_id) || 0;
+        faltasPorAlunoMap.set(f.pessoa_id, count + 1);
       });
 
       // Montar lembretes por aluno
@@ -92,12 +136,24 @@ export function useLembretesAlunos(alunoIds: string[]) {
         const apostilaAHDados = ahPendentesMap.get(aluno.id);
         const apostilaAHPronta = !!apostilaAHDados;
 
+        // Botom pendente para entrega
+        const botomDados = botomPendentesMap.get(aluno.id);
+        const botomPendente = !!botomDados;
+
+        // Faltas no mês
+        const faltasNoMes = faltasPorAlunoMap.get(aluno.id) || 0;
+        const faltouNoMes = faltasNoMes > 0;
+
         lembretesMap[aluno.id] = {
           camisetaPendente,
           aniversarioHoje,
           aniversarioSemana,
           apostilaAHPronta,
+          botomPendente,
+          faltouNoMes,
+          faltasNoMes: faltouNoMes ? faltasNoMes : undefined,
           apostilaAHDados,
+          botomDados,
         };
       });
 

@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/accordion";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useSalvarDadosComerciais } from "@/hooks/use-salvar-dados-comerciais";
+import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
+import { useDadosPosVenda, formatDateToBR, formatNumberToCurrency } from "@/hooks/use-dados-pos-venda";
 import { Loader2, CheckCircle } from "lucide-react";
 
 const formSchema = z.object({
@@ -103,6 +105,8 @@ const formatDate = (value: string) => {
 export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProps) {
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   const { mutate: salvar, isPending } = useSalvarDadosComerciais();
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -123,6 +127,26 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
       materialPaymentConfirmed: false,
     },
   });
+
+  // Carregar dados salvos quando disponíveis
+  useEffect(() => {
+    if (dadosSalvos) {
+      form.setValue("kitType", dadosSalvos.kit_type || "");
+      form.setValue("enrollmentAmount", formatNumberToCurrency(dadosSalvos.enrollment_amount));
+      form.setValue("enrollmentPaymentDate", formatDateToBR(dadosSalvos.enrollment_payment_date));
+      form.setValue("enrollmentPaymentMethod", dadosSalvos.enrollment_payment_method || "");
+      form.setValue("enrollmentInstallments", dadosSalvos.enrollment_installments?.toString() || "");
+      form.setValue("enrollmentPaymentConfirmed", dadosSalvos.enrollment_payment_confirmed || false);
+      form.setValue("monthlyFeeAmount", formatNumberToCurrency(dadosSalvos.monthly_fee_amount));
+      form.setValue("firstMonthlyFeeDate", formatDateToBR(dadosSalvos.first_monthly_fee_date));
+      form.setValue("monthlyFeePaymentMethod", dadosSalvos.monthly_fee_payment_method || "");
+      form.setValue("materialAmount", formatNumberToCurrency(dadosSalvos.material_amount));
+      form.setValue("materialPaymentDate", formatDateToBR(dadosSalvos.material_payment_date));
+      form.setValue("materialPaymentMethod", dadosSalvos.material_payment_method || "");
+      form.setValue("materialInstallments", dadosSalvos.material_installments?.toString() || "");
+      form.setValue("materialPaymentConfirmed", dadosSalvos.material_payment_confirmed || false);
+    }
+  }, [dadosSalvos, form]);
 
   useEffect(() => {
     if (salvoComSucesso) {
@@ -147,10 +171,11 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
     form.setValue(field, formatDate(value));
   };
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     salvar(
       {
         clientId: cliente.id,
+        alunoId: alunoVinculado?.id,
         kitType: data.kitType || undefined,
         enrollmentAmount: parseCurrency(data.enrollmentAmount || "") || undefined,
         enrollmentPaymentDate: data.enrollmentPaymentDate || undefined,

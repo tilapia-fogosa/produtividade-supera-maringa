@@ -1,129 +1,76 @@
 
-# Plano: Corrigir Erro de Tipo na Funcao RPC de Professores Disponiveis
+
+# Plano: Corrigir Erro ao Salvar Dados Iniciais
 
 ## Problema Identificado
+O erro ao salvar os "Dados Iniciais" é causado pelo uso de `Buffer.from()` no código do cliente. Esta é uma API exclusiva do Node.js que não existe no navegador, causando um erro de JavaScript quando o usuário tenta salvar com uma foto capturada.
 
-A funcao `get_professores_disponiveis_por_horario` esta falhando porque a coluna `dia_semana` na tabela `turmas` e do tipo **ENUM** (tipo personalizado chamado `dia_semana`), mas a funcao esta tentando comparar com uma variavel do tipo **TEXT**.
-
-O erro exato e:
-```
-operator does not exist: dia_semana = text
-```
-
-## Analise das Estruturas
-
-| Tabela/Variavel | Tipo da coluna `dia_semana` |
-|-----------------|----------------------------|
-| `turmas` | ENUM (`dia_semana`) |
-| `eventos_professor` | TEXT |
-| Variavel na funcao | TEXT |
-
-## Solucao
-
-Atualizar a funcao RPC para fazer um **cast explicito** de TEXT para o tipo ENUM `dia_semana` quando comparar com a tabela `turmas`.
-
-### Alteracao Necessaria
-
-**Linha atual:**
-```sql
-AND t.dia_semana = v_dia_semana
+## Causa Raiz
+No arquivo `DadosFinaisForm.tsx`, linha 140, o código utiliza:
+```typescript
+Buffer.from(base64Data, 'base64')
 ```
 
-**Linha corrigida:**
-```sql
-AND t.dia_semana = v_dia_semana::dia_semana
-```
+Esta função não está disponível no ambiente do navegador e causa um `ReferenceError: Buffer is not defined`.
 
-## Etapas de Implementacao
+## Solução
+Substituir `Buffer.from()` por uma função compatível com navegador que converte base64 para Blob usando APIs nativas do browser.
 
-1. **Criar migracao SQL** para atualizar a funcao `get_professores_disponiveis_por_horario`
-   - Usar `CREATE OR REPLACE FUNCTION` para substituir a funcao existente
-   - Adicionar o cast `::dia_semana` na comparacao com a tabela `turmas`
+## Alterações Necessárias
 
-2. **Testar o fluxo** de selecao de aula inaugural no painel administrativo
+### Arquivo: `src/components/painel-administrativo/DadosFinaisForm.tsx`
 
-## Codigo da Migracao
-
-```sql
-CREATE OR REPLACE FUNCTION get_professores_disponiveis_por_horario(
-  p_data DATE,
-  p_horario_inicio TIME,
-  p_horario_fim TIME,
-  p_unit_id UUID DEFAULT NULL
-)
-RETURNS TABLE (
-  professor_id UUID,
-  professor_nome TEXT,
-  prioridade INTEGER
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_dia_semana TEXT;
-  v_unit_id UUID;
-BEGIN
-  -- Determinar o dia da semana em portugues
-  v_dia_semana := CASE EXTRACT(DOW FROM p_data)
-    WHEN 0 THEN 'domingo'
-    WHEN 1 THEN 'segunda'
-    WHEN 2 THEN 'terca'
-    WHEN 3 THEN 'quarta'
-    WHEN 4 THEN 'quinta'
-    WHEN 5 THEN 'sexta'
-    WHEN 6 THEN 'sabado'
-  END;
+**Mudança 1:** Adicionar função auxiliar para converter base64 para Blob
+```typescript
+// Função para converter base64 em Blob (compatível com navegador)
+function base64ToBlob(base64: string, contentType: string): Blob {
+  const byteCharacters = atob(base64);
+  const byteArrays = [];
   
-  -- Se unit_id nao foi passado, usar Maringa como padrao
-  v_unit_id := COALESCE(p_unit_id, '0df79a04-444e-46ee-b218-59e4b1835f4a'::UUID);
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
   
-  RETURN QUERY
-  SELECT 
-    p.id AS professor_id,
-    p.nome AS professor_nome,
-    COALESCE(p.prioridade, 999) AS prioridade
-  FROM professores p
-  WHERE p.status = true
-    AND p.unit_id = v_unit_id
-    -- Excluir professores com turmas regulares no mesmo dia/horario
-    -- CORRECAO: Cast explicito para o tipo ENUM dia_semana
-    AND NOT EXISTS (
-      SELECT 1 FROM turmas t
-      WHERE t.professor_id = p.id
-        AND t.active = true
-        AND t.dia_semana = v_dia_semana::dia_semana
-        AND t.horario_inicio < p_horario_fim
-        AND t.horario_fim > p_horario_inicio
-    )
-    -- Excluir professores com eventos pontuais na data especifica
-    AND NOT EXISTS (
-      SELECT 1 FROM eventos_professor ep
-      WHERE ep.professor_id = p.id
-        AND ep.recorrente = false
-        AND ep.data = p_data
-        AND ep.horario_inicio < p_horario_fim
-        AND ep.horario_fim > p_horario_inicio
-    )
-    -- Excluir professores com eventos recorrentes semanais no mesmo dia
-    AND NOT EXISTS (
-      SELECT 1 FROM eventos_professor ep
-      WHERE ep.professor_id = p.id
-        AND ep.recorrente = true
-        AND ep.tipo_recorrencia = 'semanal'
-        AND ep.dia_semana = v_dia_semana
-        AND (ep.data_inicio_recorrencia IS NULL OR ep.data_inicio_recorrencia <= p_data)
-        AND (ep.data_fim_recorrencia IS NULL OR ep.data_fim_recorrencia >= p_data)
-        AND ep.horario_inicio < p_horario_fim
-        AND ep.horario_fim > p_horario_inicio
-    )
-  ORDER BY COALESCE(p.prioridade, 999) ASC, p.nome ASC;
-END;
-$$;
+  return new Blob(byteArrays, { type: contentType });
+}
 ```
+
+**Mudança 2:** Substituir o uso de `Buffer.from()` pela nova função
+```typescript
+// De:
+const { error: uploadError } = await supabase.storage
+  .from('alunos-fotos')
+  .upload(fileName, Buffer.from(base64Data, 'base64'), {
+    contentType: 'image/jpeg',
+    upsert: true
+  });
+
+// Para:
+const blob = base64ToBlob(base64Data, 'image/jpeg');
+const { error: uploadError } = await supabase.storage
+  .from('alunos-fotos')
+  .upload(fileName, blob, {
+    contentType: 'image/jpeg',
+    upsert: true
+  });
+```
+
+## Resumo das Alterações
+
+| Arquivo | Tipo de Alteração |
+|---------|-------------------|
+| `src/components/painel-administrativo/DadosFinaisForm.tsx` | Adicionar função `base64ToBlob` e substituir `Buffer.from()` |
 
 ## Resultado Esperado
+Após a correção, o usuário poderá:
+- Capturar foto com a webcam
+- Marcar todos os checkboxes
+- Vincular um aluno
+- Salvar os dados sem erro
 
-Apos a correcao, ao selecionar uma data e horario no formulario de Aula Inaugural, o sistema devera:
-1. Retornar a lista de professores disponiveis ordenados por prioridade
-2. Exibir automaticamente o primeiro professor disponivel
-3. Mostrar a confirmacao de disponibilidade com professor e sala

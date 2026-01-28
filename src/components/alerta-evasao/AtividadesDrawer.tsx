@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Drawer, 
   DrawerContent, 
@@ -14,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calendar as CalendarIcon, AlertTriangle, TrendingDown, TrendingUp, Clock, DollarSign, Upload, Image } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,10 @@ const TIPOS_TAREFA_ADMIN = [
   'remover_sgs',
   'cancelar_assinatura',
   'remover_whatsapp',
+  'criar_ficha_rescisao',
+  'lancar_multa_sgs',
+  'envio_agradecimento_nps',
+  'digitalizar_rescisao',
   'corrigir_valores_sgs',
   'corrigir_valores_assinatura'
 ];
@@ -113,6 +118,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   const [mostrarPainelTarefaAdmin, setMostrarPainelTarefaAdmin] = useState(false);
   const [atividadeTarefaAdmin, setAtividadeTarefaAdmin] = useState<AtividadeAlertaEvasao | null>(null);
   const [observacoesTarefaAdmin, setObservacoesTarefaAdmin] = useState('');
+  const [arquivoRescisao, setArquivoRescisao] = useState<File | null>(null);
+  const [uploadingRescisao, setUploadingRescisao] = useState(false);
 
   // Estado para painel de agendamento pedagógico
   const [mostrarPainelPedagogico, setMostrarPainelPedagogico] = useState(false);
@@ -177,6 +184,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     setMostrarPainelTarefaAdmin(false);
     setAtividadeTarefaAdmin(null);
     setObservacoesTarefaAdmin('');
+    setArquivoRescisao(null);
   };
 
   const handleExpandirAtividade = (atividade: AtividadeAlertaEvasao) => {
@@ -244,14 +252,52 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   };
 
   const handleConcluirTarefaAdmin = async () => {
-    if (!atividadeTarefaAdmin) return;
+    if (!atividadeTarefaAdmin || !alerta) return;
     
     try {
+      // Se for digitalizar_rescisao e tiver arquivo, fazer upload primeiro
+      if (atividadeTarefaAdmin.tipo_atividade === 'digitalizar_rescisao' && arquivoRescisao) {
+        setUploadingRescisao(true);
+        
+        // Criar nome único para o arquivo
+        const fileExt = arquivoRescisao.name.split('.').pop();
+        const fileName = `${alerta.id}_${Date.now()}.${fileExt}`;
+        
+        // Upload para o bucket
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('rescisoes-digitalizadas')
+          .upload(fileName, arquivoRescisao);
+        
+        if (uploadError) {
+          console.error('Erro ao fazer upload:', uploadError);
+          setUploadingRescisao(false);
+          return;
+        }
+        
+        // Obter URL pública
+        const { data: urlData } = supabase.storage
+          .from('rescisoes-digitalizadas')
+          .getPublicUrl(fileName);
+        
+        // Atualizar o alerta com a URL
+        const { error: updateError } = await supabase
+          .from('alerta_evasao')
+          .update({ rescisao_digitalizada_url: urlData.publicUrl })
+          .eq('id', alerta.id);
+        
+        if (updateError) {
+          console.error('Erro ao atualizar alerta:', updateError);
+        }
+        
+        setUploadingRescisao(false);
+      }
+      
       await concluirTarefa(atividadeTarefaAdmin.id);
       fecharPainelTarefaAdmin();
       onActivityCompleted?.();
     } catch (error) {
       console.error('Erro ao concluir tarefa:', error);
+      setUploadingRescisao(false);
     }
   };
 
@@ -1294,6 +1340,45 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   Confirme que a tarefa foi realizada:
                 </p>
 
+                {/* Campo de upload para digitalizar_rescisao */}
+                {atividadeTarefaAdmin.tipo_atividade === 'digitalizar_rescisao' && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px]">Imagem da Rescisão *</Label>
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-3">
+                      {arquivoRescisao ? (
+                        <div className="flex items-center gap-2">
+                          <Image className="h-4 w-4 text-green-600" />
+                          <span className="text-xs text-green-600 flex-1 truncate">{arquivoRescisao.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => setArquivoRescisao(null)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center gap-1 cursor-pointer">
+                          <Upload className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground text-center">
+                            Clique para selecionar uma imagem
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) setArquivoRescisao(file);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Campo de observações */}
                 <div className="space-y-1">
                   <Label className="text-[10px]">Observações (opcional)</Label>
@@ -1311,10 +1396,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <Button
                     size="sm"
                     className="w-full h-7 text-xs"
-                    disabled={isConcluindoTarefa}
+                    disabled={isConcluindoTarefa || uploadingRescisao || (atividadeTarefaAdmin.tipo_atividade === 'digitalizar_rescisao' && !arquivoRescisao)}
                     onClick={handleConcluirTarefaAdmin}
                   >
-                    {isConcluindoTarefa ? 'Concluindo...' : 'Confirmar Conclusão'}
+                    {uploadingRescisao ? 'Enviando imagem...' : isConcluindoTarefa ? 'Concluindo...' : 'Confirmar Conclusão'}
                   </Button>
                 </div>
               </div>

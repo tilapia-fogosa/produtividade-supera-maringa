@@ -3,7 +3,6 @@ import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 
 interface FotoUploadProps {
   alunoId: string;
@@ -33,20 +32,12 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
     const tamanhoMaximo = 5 * 1024 * 1024; // 5MB
 
     if (!tiposPermitidos.includes(file.type)) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione um arquivo JPG, PNG ou WEBP.",
-        variant: "destructive"
-      });
+      console.error('Tipo de arquivo inválido:', file.type);
       return false;
     }
 
     if (file.size > tamanhoMaximo) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "O arquivo deve ter no máximo 5MB.",
-        variant: "destructive"
-      });
+      console.error('Arquivo muito grande:', file.size);
       return false;
     }
 
@@ -93,22 +84,10 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
       // Atualizar no banco de dados
       const sucesso = await onFotoUpdate(novaFotoUrl);
       console.log('Resultado da atualização no banco:', sucesso);
-      
-      if (sucesso) {
-        toast({
-          title: "Sucesso",
-          description: "Foto enviada com sucesso!",
-        });
-      }
 
       return sucesso;
     } catch (error) {
       console.error('Erro no upload da foto:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar a foto. Tente novamente.",
-        variant: "destructive"
-      });
       return false;
     } finally {
       setUploading(false);
@@ -143,21 +122,9 @@ export function FotoUpload({ alunoId, alunoNome, fotoUrl, onFotoUpdate }: FotoUp
       await removerFotoAnterior();
 
       // Atualizar no banco de dados
-      const sucesso = await onFotoUpdate(null);
-      
-      if (sucesso) {
-        toast({
-          title: "Sucesso",
-          description: "Foto removida com sucesso!",
-        });
-      }
+      await onFotoUpdate(null);
     } catch (error) {
       console.error('Erro ao remover foto:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover a foto. Tente novamente.",
-        variant: "destructive"
-      });
     } finally {
       setRemoving(false);
     }
