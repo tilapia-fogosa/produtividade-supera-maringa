@@ -51,7 +51,7 @@ export function useAtividadesEvasaoHome() {
           )
         `)
         .eq('status', 'pendente')
-        .eq('alerta_evasao.status', 'pendente')
+        .in('alerta_evasao.status', ['pendente', 'evadido'])
         .eq('alerta_evasao.aluno.active', true);
       
       // Filtrar baseado no perfil do usuário
