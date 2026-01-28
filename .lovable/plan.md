@@ -1,101 +1,176 @@
 
+# Plano: Criar Atividade "Entregar Botom" por Troca de Apostila
 
-# Plano de Correções para a Tela de Alunos Ativos
+## Resumo
 
-## Resumo dos Problemas Identificados
+Quando um aluno troca de apostila de Abaco, o sistema cria automaticamente uma atividade **"Entregar Botom"** atribuida ao professor do aluno. Esta atividade aparece:
+1. Na tela **Home** como um evento pendente
+2. Na pagina **/sala/turma** como um lembrete clicavel no card do aluno
 
-Após analisar o código, identifiquei as seguintes questões:
-
-### 1. Dados não salvando na gaveta de edição
-O componente `ExpandableAlunoCard` cria uma nova instância do hook `useAlunosAtivos()`. Isso significa que quando você salva os dados, a atualização acontece no banco de dados, mas o estado local atualizado é de uma instância diferente da que está na página principal `AlunosAtivos.tsx`. Por isso, ao fechar e reabrir a gaveta, os dados parecem não ter sido salvos (embora estejam no banco).
-
-### 2. Campos faltantes nas seções
-**Informações Contratuais** - Adicionar:
-- Valor Matrícula (campo `valor_matricula` já existe na tabela)
-- Valor Material (campo `valor_material` já existe na tabela)
-
-**Dados do Onboarding** - Adicionar:
-- Kit Inicial (campo `kit_sugerido` já existe na tabela - Kit 1 a Kit 8)
-
-### 3. Foto sumindo em telas menores
-O layout atual coloca a foto na coluna da direita com `lg:col-span-1`, que só aparece em telas grandes (lg+). Em telas menores, a ordem do grid faz a foto aparecer no final, abaixo de todo o conteúdo, e pode ficar cortada ou fora da área visível.
+Ao clicar no lembrete, abre um modal simples para confirmar a entrega do botom.
 
 ---
 
-## Implementação Proposta
+## Arquitetura da Solucao
 
-### Etapa 1: Corrigir o problema de salvamento
+### 1. Nova Tabela: `pendencias_botom`
 
-**Arquivo**: `src/components/alunos/ExpandableAlunoCard.tsx`
+Criaremos uma tabela dedicada para rastrear as entregas de botom pendentes:
 
-- Remover a criação interna do hook `useAlunosAtivos()`
-- Receber as funções de atualização como props do componente pai
-- Adicionar callback de `onSave` para notificar a página principal sobre mudanças
-
-**Arquivo**: `src/pages/AlunosAtivos.tsx`
-
-- Passar as funções de atualização do hook para o `ExpandableAlunoCard`
-- Garantir que o estado seja atualizado na mesma instância
-
-### Etapa 2: Adicionar novos campos
-
-**Arquivo**: `src/hooks/use-alunos-ativos.ts`
-
-- Adicionar funções de atualização para `valor_matricula`, `valor_material` e `kit_sugerido`
-- Atualizar a interface `AlunoAtivo` se necessário (verificar se os campos já estão)
-
-**Arquivo**: `src/components/alunos/ExpandableAlunoCard.tsx`
-
-Na seção **Informações Contratuais**, adicionar:
 ```text
-- Valor Matrícula (campo editável, tipo number, formatação R$)
-- Valor Material (campo editável, tipo number, formatação R$)
+pendencias_botom
+- id (uuid, PK)
+- aluno_id (uuid, FK -> alunos.id)
+- apostila_nova (text) - apostila para a qual trocou
+- apostila_anterior (text, nullable) - apostila antes da troca
+- professor_responsavel_id (uuid, FK -> professores.id)
+- status ('pendente' | 'entregue')
+- data_criacao (timestamp)
+- data_entrega (timestamp, nullable)
+- funcionario_registro_id (uuid, nullable) - quem confirmou entrega
 ```
 
-Na seção **Dados do Onboarding**, adicionar:
+### 2. Deteccao da Troca de Apostila
+
+Alteraremos a Edge Function `register-productivity/database-service.ts` para:
+1. Antes de atualizar `ultimo_nivel` no aluno, verificar se o valor anterior e diferente
+2. Se for diferente (troca de apostila), buscar o professor da turma do aluno
+3. Criar um registro em `pendencias_botom` com status 'pendente'
+
 ```text
-- Kit Inicial (campo editável com Select: Kit 1, Kit 2, ..., Kit 8)
+Logica no database-service.ts:
+
+SE presente E apostila_nova != apostila_atual DO ALUNO:
+  -> Buscar turma_id do aluno
+  -> Buscar professor_id da turma
+  -> Inserir em pendencias_botom
 ```
 
-### Etapa 3: Corrigir responsividade da foto
+### 3. Hook: `use-pendencias-botom.ts`
 
-**Arquivo**: `src/components/alunos/ExpandableAlunoCard.tsx`
+Novo hook para buscar e gerenciar pendencias de botom:
+- Lista pendencias por professor (para professores)
+- Lista todas pendencias (para admins)
+- Funcao para confirmar entrega
 
-Reorganizar o layout para que:
-- Em telas menores: foto aparece no topo, antes das informações
-- Em telas maiores (desktop): foto fica na coluna da direita como está hoje
+### 4. Integracao na Tela Home
 
-Alteração no grid:
-```
-De: grid-cols-1 lg:grid-cols-4
-Para: reordenar para que a foto venha primeiro em mobile usando order-first/order-last
-```
+Adicionaremos no `Home.tsx`:
+- Novo tipo de evento 'botom_pendente'
+- Cards com icone distintivo (ex: Award/Medal)
+- Exibicao na lista de eventos "Atrasados" ou "Hoje"
 
----
+### 5. Integracao na Pagina /sala/turma
 
-## Detalhes Técnicos
-
-### Interface AlunoAtivo
-Os campos já existem, mas precisam ser incluídos no retorno se ainda não estiverem:
-- `valor_matricula: number | null`
-- `valor_material: number | null` 
-- `kit_sugerido: string | null`
-
-### Funções de atualização a criar
+#### 5.1 Hook `use-lembretes-alunos.ts`
+Adicionar nova propriedade:
 ```typescript
-atualizarValorMatricula(id, valor: number)
-atualizarValorMaterial(id, valor: number)
-atualizarKitSugerido(id, kit: string)
+interface LembretesAluno {
+  // ... campos existentes
+  botomPendente: boolean;
+  botomDados?: {
+    pendenciaId: string;
+    apostilaNova: string;
+  };
+}
 ```
 
-### Opções do Kit Inicial
-- Kit 1, Kit 2, Kit 3, Kit 4, Kit 5, Kit 6, Kit 7, Kit 8
+Buscar na tabela `pendencias_botom` WHERE aluno_id IN (...) AND status = 'pendente'
+
+#### 5.2 Componente `SalaAlunosListaTable.tsx`
+- Novo lembrete visual com icone de medalha/premio
+- Clicavel -> abre modal de confirmacao
+
+### 6. Modal `EntregaBotomModal.tsx`
+
+Modal simples de confirmacao:
+- Nome do aluno
+- Apostila para a qual trocou
+- Botao "Confirmar Entrega"
+- Atualiza status para 'entregue' e registra data/funcionario
 
 ---
 
-## Arquivos a Modificar
+## Detalhes Tecnicos
 
-1. `src/hooks/use-alunos-ativos.ts` - Adicionar novas funções de atualização
-2. `src/components/alunos/ExpandableAlunoCard.tsx` - Receber props, adicionar campos e corrigir layout
-3. `src/pages/AlunosAtivos.tsx` - Passar funções para o componente
+### Migracao SQL
 
+```sql
+-- Criar tabela de pendencias de botom
+CREATE TABLE pendencias_botom (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  aluno_id UUID NOT NULL REFERENCES alunos(id) ON DELETE CASCADE,
+  apostila_nova TEXT NOT NULL,
+  apostila_anterior TEXT,
+  professor_responsavel_id UUID REFERENCES professores(id),
+  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'entregue')),
+  data_criacao TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  data_entrega TIMESTAMPTZ,
+  funcionario_registro_id UUID
+);
+
+-- Indices para performance
+CREATE INDEX idx_pendencias_botom_aluno ON pendencias_botom(aluno_id);
+CREATE INDEX idx_pendencias_botom_professor ON pendencias_botom(professor_responsavel_id);
+CREATE INDEX idx_pendencias_botom_status ON pendencias_botom(status);
+
+-- RLS
+ALTER TABLE pendencias_botom ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuarios autenticados podem ver pendencias"
+  ON pendencias_botom FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Usuarios autenticados podem inserir pendencias"
+  ON pendencias_botom FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Usuarios autenticados podem atualizar pendencias"
+  ON pendencias_botom FOR UPDATE TO authenticated USING (true);
+```
+
+### Arquivos a Criar
+
+| Arquivo | Descricao |
+|---------|-----------|
+| `src/hooks/use-pendencias-botom.ts` | Hook para buscar e gerenciar pendencias |
+| `src/components/botom/EntregaBotomModal.tsx` | Modal de confirmacao de entrega |
+
+### Arquivos a Modificar
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `supabase/functions/register-productivity/database-service.ts` | Adicionar logica de deteccao de troca e criacao de pendencia |
+| `src/hooks/sala/use-lembretes-alunos.ts` | Adicionar busca de pendencias de botom |
+| `src/components/sala/SalaAlunosListaTable.tsx` | Adicionar lembrete visual e modal |
+| `src/pages/Home.tsx` | Adicionar eventos de botom pendente |
+| `src/hooks/use-professor-atividades.ts` | Adicionar busca de botom pendentes do professor |
+
+---
+
+## Fluxo de Usuario
+
+### Professor na Sala de Aula
+
+1. Professor registra produtividade com nova apostila
+2. Sistema detecta troca e cria pendencia automaticamente
+3. Na proxima vez que abrir a turma, ve lembrete "Entregar Botom" no card do aluno
+4. Clica no lembrete -> abre modal
+5. Confirma entrega -> lembrete desaparece
+
+### Professor/Admin na Home
+
+1. Na lista de eventos, ve "Botom: [Nome do Aluno]"
+2. Pode ver detalhes (apostila nova)
+3. Eventos aparecem como "Atrasados" ou por data
+
+---
+
+## Ordem de Implementacao
+
+1. Criar tabela `pendencias_botom` (migracao SQL)
+2. Modificar Edge Function para detectar troca e criar pendencia
+3. Criar hook `use-pendencias-botom.ts`
+4. Criar modal `EntregaBotomModal.tsx`
+5. Integrar no `use-lembretes-alunos.ts`
+6. Integrar no `SalaAlunosListaTable.tsx`
+7. Integrar na Home (eventos)
+8. Testar fluxo completo
