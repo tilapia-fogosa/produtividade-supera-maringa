@@ -1,134 +1,107 @@
 
-# Plano: Adicionar Indicador "Falta no Mes" na Tela de Sala/Turma
+# Plano: Adicionar Vinculação de Aluno no Formulário de Dados Iniciais
 
 ## Resumo
-
-Adicionar um novo indicador visual que mostra se o aluno teve alguma falta durante o mes atual. Este indicador aparecera junto com o aviso de faltas consecutivas existente.
+Adicionar uma seção no formulário de "Dados Iniciais" para vincular a venda (client) a um aluno existente no sistema, posicionada antes do checkbox "Adicionar Grupo Whatsapp". O dropdown mostrará apenas alunos que ainda não possuem vínculo com nenhuma venda.
 
 ---
 
-## Arquitetura da Solucao
+## Etapas de Implementação
 
-### Dados Necessarios
-
-A informacao de faltas esta na tabela `produtividade_abaco`:
-- Campo `presente = false` indica falta
-- Campo `data_aula` para filtrar pelo mes atual
-
-### Query para Buscar Faltas do Mes
+### 1. Migração do Banco de Dados
+Criar uma nova coluna na tabela `alunos` para armazenar o vínculo com o client:
 
 ```sql
-SELECT pessoa_id, COUNT(*) as total_faltas
-FROM produtividade_abaco
-WHERE pessoa_id IN (lista_de_alunos)
-  AND presente = false
-  AND data_aula >= inicio_do_mes
-  AND data_aula <= hoje
-GROUP BY pessoa_id
+ALTER TABLE public.alunos 
+ADD COLUMN IF NOT EXISTS client_id uuid REFERENCES public.clients(id);
+
+-- Índice para busca rápida de alunos sem vínculo
+CREATE INDEX IF NOT EXISTS idx_alunos_client_id ON public.alunos(client_id);
 ```
 
----
+### 2. Atualizar o Formulário DadosFinaisForm
+Modificar `src/components/painel-administrativo/DadosFinaisForm.tsx`:
 
-## Alteracoes Necessarias
+- Adicionar estado para:
+  - Filtro de busca por nome
+  - Aluno selecionado
+  - Lista de alunos disponíveis (sem vínculo)
 
-### 1. Hook `use-lembretes-alunos.ts`
+- Criar nova seção antes do checkbox "Adicionar Grupo Whatsapp":
+  - Campo de input para filtrar por nome
+  - Dropdown com lista de alunos sem vínculo
+  - Exibição do aluno selecionado (se houver)
 
-Adicionar nova propriedade na interface:
+- Atualizar lógica de salvamento:
+  - Ao salvar, atualizar a coluna `client_id` na tabela `alunos`
+
+### 3. Criar Hook para Alunos Sem Vínculo
+Criar `src/hooks/use-alunos-sem-vinculo.ts`:
 
 ```typescript
-export interface LembretesAluno {
-  // ... campos existentes
-  faltouNoMes: boolean;
-  faltasNoMes?: number; // quantidade de faltas
-}
+// Buscar alunos ativos que não possuem client_id preenchido
+// OU que já estão vinculados ao client atual (para edição)
+const { data } = await supabase
+  .from("alunos")
+  .select("id, nome, turma_id")
+  .eq("active", true)
+  .or(`client_id.is.null,client_id.eq.${currentClientId}`)
+  .order("nome");
 ```
 
-Adicionar query para buscar faltas do mes:
-
-```typescript
-// Buscar faltas do mes atual
-const inicioMes = startOfMonth(hoje);
-const { data: faltasData } = await supabase
-  .from('produtividade_abaco')
-  .select('pessoa_id')
-  .in('pessoa_id', alunoIds)
-  .eq('presente', false)
-  .gte('data_aula', format(inicioMes, 'yyyy-MM-dd'))
-  .lte('data_aula', format(hoje, 'yyyy-MM-dd'));
-
-// Contar faltas por aluno
-const faltasPorAluno = new Map<string, number>();
-faltasData?.forEach(f => {
-  const count = faltasPorAluno.get(f.pessoa_id) || 0;
-  faltasPorAluno.set(f.pessoa_id, count + 1);
-});
-```
-
-### 2. Componente `SalaAlunosListaTable.tsx`
-
-Atualizar a verificacao de lembretes para incluir `faltouNoMes`:
-
-```typescript
-const temLembretes = alunoLembretes && (
-  alunoLembretes.aniversarioHoje || 
-  alunoLembretes.aniversarioSemana ||
-  alunoLembretes.camisetaPendente || 
-  alunoLembretes.apostilaAHPronta ||
-  alunoLembretes.botomPendente ||
-  alunoLembretes.faltouNoMes  // NOVO
-);
-```
-
-Adicionar exibicao visual do lembrete:
-
-```tsx
-{alunoLembretes.faltouNoMes && (
-  <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
-    <Calendar className="h-4 w-4 shrink-0" />
-    <span>
-      {alunoLembretes.faltasNoMes} falta{alunoLembretes.faltasNoMes! > 1 ? 's' : ''} no mes
-    </span>
-  </div>
-)}
-```
-
----
-
-## Layout Visual
-
-O indicador aparecera na caixa de lembretes do card do aluno, junto com os outros avisos:
+### 4. Layout da Seção de Vinculação
 
 ```text
-+----------------------------------+
-| Card do Aluno                    |
-|                                  |
-| [Foto] Nome do Aluno            |
-|        Apostila: Abaco 5        |
-|        Pagina: 32 de 50         |
-|        ⚠ 2 faltas consecutivas  |  <-- Existente
-|                                  |
-|        +-------------------+     |
-|        | 🎂 Aniversario!   |     |
-|        | 📅 2 faltas mes   |     |  <-- NOVO
-|        | 👕 Entregar camis.|     |
-|        +-------------------+     |
-+----------------------------------+
++------------------------------------------+
+|  Vincular Aluno                          |
+|  ----------------------------------------|
+|  [Input: Filtrar por nome              ] |
+|                                          |
+|  [Dropdown: Selecione um aluno        v] |
+|  - João Silva (Turma A)                  |
+|  - Maria Santos (Turma B)                |
+|  - ...                                   |
+|                                          |
+|  Aluno vinculado: João Silva             |
++------------------------------------------+
 ```
+
+### 5. Atualizar Validação de Completude
+Modificar `src/hooks/use-pos-matricula.ts`:
+
+- Adicionar verificação se existe um aluno vinculado
+- A seção "Dados Iniciais" só estará completa quando:
+  - Todos os checkboxes estiverem marcados
+  - Um aluno estiver vinculado
 
 ---
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteracao |
+| Arquivo | Alteração |
 |---------|-----------|
-| `src/hooks/sala/use-lembretes-alunos.ts` | Adicionar propriedade `faltouNoMes` e `faltasNoMes`, adicionar query para buscar faltas do mes |
-| `src/components/sala/SalaAlunosListaTable.tsx` | Exibir lembrete visual de faltas no mes na caixa de lembretes |
+| `supabase/migrations/` | Nova migração para coluna `client_id` |
+| `src/components/painel-administrativo/DadosFinaisForm.tsx` | Adicionar seção de vinculação |
+| `src/hooks/use-pos-matricula.ts` | Atualizar validação de completude |
+| `src/hooks/use-alunos-sem-vinculo.ts` | Novo hook (criar) |
+| `src/integrations/supabase/types.ts` | Tipos atualizados automaticamente |
 
 ---
 
-## Regra de Negocio
+## Detalhes Técnicos
 
-- O indicador aparece se o aluno teve **pelo menos 1 falta** no mes atual
-- Exibe a quantidade de faltas: "1 falta no mes" ou "2 faltas no mes"
-- Cor vermelha/laranja para destacar o aviso
-- O indicador e apenas informativo (nao clicavel)
+### Estrutura do Dropdown
+- Usar componente `Select` do shadcn/ui
+- Incluir campo de busca integrado (usar `Command` ou filtro manual)
+- Mostrar nome do aluno e turma para facilitar identificação
+
+### Fluxo de Dados
+1. Ao abrir o formulário, carregar alunos sem vínculo + aluno atualmente vinculado
+2. Permitir busca por nome no input
+3. Ao selecionar aluno no dropdown, armazenar no estado
+4. Ao salvar, fazer UPDATE na tabela `alunos` com o `client_id`
+
+### Considerações
+- Se o client já tinha um aluno vinculado e mudar para outro, o antigo perde o vínculo (client_id = null)
+- Alunos com is_funcionario = true também podem ser vinculados
+- Filtrar por unit_id para mostrar apenas alunos da mesma unidade (se aplicável)
