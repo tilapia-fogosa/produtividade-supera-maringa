@@ -153,7 +153,7 @@ export function ExpandableAlunoCard({ aluno, onClose, updateFunctions }: Expanda
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-6">
               {/* Foto - Entre o cabeçalho e as informações básicas */}
-              <div className="flex justify-center pb-4 border-b">
+              <div className="flex justify-start pb-4 border-b">
                 <FotoUpload
                   alunoId={aluno.id}
                   alunoNome={aluno.nome}
