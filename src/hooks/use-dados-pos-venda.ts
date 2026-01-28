@@ -29,6 +29,10 @@ export interface DadosPosVenda {
   material_payment_method: string | null;
   material_installments: number | null;
   material_payment_confirmed: boolean | null;
+  // Dados pedagógicos
+  turma_id: string | null;
+  responsavel: string | null;
+  data_aula_inaugural: string | null;
 }
 
 // Formata data ISO (YYYY-MM-DD) para formato brasileiro (DD/MM/AAAA)
@@ -108,7 +112,10 @@ export function useDadosPosVenda(clientId?: string) {
           material_payment_date,
           material_payment_method,
           material_installments,
-          material_payment_confirmed
+          material_payment_confirmed,
+          turma_id,
+          responsavel,
+          data_aula_inaugural
         `)
         .eq("client_id", clientId)
         .maybeSingle();
