@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface DadosComerciais {
   clientId: string;
+  alunoId?: string; // ID do aluno vinculado
   kitType?: string;
   enrollmentAmount?: number;
   enrollmentPaymentDate?: string;
@@ -32,6 +33,7 @@ export function useSalvarDadosComerciais() {
 
   return useMutation({
     mutationFn: async (input: DadosComerciais) => {
+      // 1. Atualizar atividade_pos_venda
       const { error } = await supabase
         .from("atividade_pos_venda")
         .update({
@@ -53,9 +55,28 @@ export function useSalvarDadosComerciais() {
         .eq("client_id", input.clientId);
 
       if (error) throw error;
+
+      // 2. Se tiver aluno vinculado, atualizar também a tabela alunos
+      if (input.alunoId) {
+        const { error: alunoError } = await supabase
+          .from("alunos")
+          .update({
+            valor_matricula: input.enrollmentAmount || null,
+            valor_mensalidade: input.monthlyFeeAmount || null,
+            valor_material: input.materialAmount || null,
+            data_primeira_mensalidade: parseDate(input.firstMonthlyFeeDate),
+            kit_sugerido: input.kitType || null,
+          })
+          .eq("id", input.alunoId);
+
+        if (alunoError) {
+          console.error("Erro ao atualizar aluno:", alunoError);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clientes-matriculados"] });
+      queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
     },
   });
 }
