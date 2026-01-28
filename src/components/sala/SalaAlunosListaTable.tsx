@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw } from "lucide-react";
+import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw, Award } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useApostilas } from '@/hooks/use-apostilas';
 import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
@@ -13,6 +13,7 @@ import { ReposicaoHoje } from '@/hooks/sala/use-reposicoes-hoje';
 import { ConfettiBackground } from './ConfettiBackground';
 import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
+import { EntregaBotomModal } from '@/components/botom/EntregaBotomModal';
 import { useCamisetas } from '@/hooks/use-camisetas';
 
 interface SalaAlunosListaTableProps {
@@ -55,6 +56,14 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
     pessoaNome: string;
   } | null>(null);
 
+  // Estado para modal de botom
+  const [botomModalOpen, setBotomModalOpen] = useState(false);
+  const [botomSelecionado, setBotomSelecionado] = useState<{
+    pendenciaId: string;
+    alunoNome: string;
+    apostilaNova: string;
+  } | null>(null);
+
   // Handlers para ações interativas dos lembretes
   const handleCamisetaClick = (alunoId: string, alunoNome: string) => {
     setAlunoSelecionadoCamiseta({ id: alunoId, nome: alunoNome });
@@ -68,6 +77,23 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
       pessoaNome: alunoNome
     });
     setEntregaAHModalOpen(true);
+  };
+
+  const handleBotomClick = (alunoNome: string, pendenciaId: string, apostilaNova: string) => {
+    setBotomSelecionado({
+      pendenciaId,
+      alunoNome,
+      apostilaNova
+    });
+    setBotomModalOpen(true);
+  };
+
+  const handleBotomModalClose = (open: boolean) => {
+    setBotomModalOpen(open);
+    if (!open) {
+      setBotomSelecionado(null);
+      onLembreteConcluido?.();
+    }
   };
 
   const handleSalvarCamiseta = async (dados: { 
@@ -137,7 +163,8 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
       alunoLembretes.aniversarioHoje || 
       alunoLembretes.aniversarioSemana ||
       alunoLembretes.camisetaPendente || 
-      alunoLembretes.apostilaAHPronta
+      alunoLembretes.apostilaAHPronta ||
+      alunoLembretes.botomPendente
     );
   
     return (
@@ -279,6 +306,19 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                         <span>Devolver apostila AH</span>
                       </div>
                     )}
+                    {alunoLembretes.botomPendente && alunoLembretes.botomDados && (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-amber-500 dark:text-amber-400 cursor-pointer hover:underline"
+                        onClick={() => handleBotomClick(
+                          aluno.nome,
+                          alunoLembretes.botomDados!.pendenciaId,
+                          alunoLembretes.botomDados!.apostilaNova
+                        )}
+                      >
+                        <Award className="h-4 w-4 shrink-0" />
+                        <span>Entregar botom</span>
+                      </div>
+                    )}
                   </div>
                 </ConfettiBackground>
               ) : (
@@ -305,6 +345,19 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
                       >
                         <BookMarked className="h-4 w-4 shrink-0" />
                         <span>Devolver apostila AH</span>
+                      </div>
+                    )}
+                    {alunoLembretes.botomPendente && alunoLembretes.botomDados && (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-amber-500 dark:text-amber-400 cursor-pointer hover:underline"
+                        onClick={() => handleBotomClick(
+                          aluno.nome,
+                          alunoLembretes.botomDados!.pendenciaId,
+                          alunoLembretes.botomDados!.apostilaNova
+                        )}
+                      >
+                        <Award className="h-4 w-4 shrink-0" />
+                        <span>Entregar botom</span>
                       </div>
                     )}
                   </div>
@@ -418,6 +471,16 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
         apostilaRecolhidaId={apostilaSelecionadaEntrega?.id?.toString() || ''}
         apostilaNome={apostilaSelecionadaEntrega?.apostilaNome || ''}
         pessoaNome={apostilaSelecionadaEntrega?.pessoaNome || ''}
+      />
+
+      {/* Modal de Entrega de Botom */}
+      <EntregaBotomModal
+        open={botomModalOpen}
+        onOpenChange={handleBotomModalClose}
+        pendenciaId={botomSelecionado?.pendenciaId || ''}
+        alunoNome={botomSelecionado?.alunoNome || ''}
+        apostilaNova={botomSelecionado?.apostilaNova || ''}
+        onSuccess={() => onLembreteConcluido?.()}
       />
     </TooltipProvider>
   );

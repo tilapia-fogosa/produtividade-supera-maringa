@@ -4411,6 +4411,71 @@ export type Database = {
           },
         ]
       }
+      pendencias_botom: {
+        Row: {
+          aluno_id: string
+          apostila_anterior: string | null
+          apostila_nova: string
+          data_criacao: string
+          data_entrega: string | null
+          funcionario_registro_id: string | null
+          id: string
+          professor_responsavel_id: string | null
+          status: string
+        }
+        Insert: {
+          aluno_id: string
+          apostila_anterior?: string | null
+          apostila_nova: string
+          data_criacao?: string
+          data_entrega?: string | null
+          funcionario_registro_id?: string | null
+          id?: string
+          professor_responsavel_id?: string | null
+          status?: string
+        }
+        Update: {
+          aluno_id?: string
+          apostila_anterior?: string | null
+          apostila_nova?: string
+          data_criacao?: string
+          data_entrega?: string | null
+          funcionario_registro_id?: string | null
+          id?: string
+          professor_responsavel_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pendencias_botom_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pendencias_botom_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pendencias_botom_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pendencias_botom_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+        ]
+      }
       pos_venda_atividades_config: {
         Row: {
           ativa: boolean

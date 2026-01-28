@@ -83,6 +83,7 @@ export default function Home() {
     camisetasPendentes,
     apostilasAHProntas,
     coletasAHPendentes,
+    botomPendentes,
     isDiaHoje,
     isDiaSemana,
   } = useProfessorAtividades();
@@ -441,6 +442,18 @@ export default function Home() {
           pessoa_id: c.pessoa_id,
           pessoa_nome: c.pessoa_nome,
           pessoa_origem: 'aluno' as const,
+        });
+      });
+
+      // Botom pendentes -> atrasadas
+      botomPendentes.forEach(b => {
+        eventosAtrasados.push({
+          tipo: 'botom_pendente',
+          titulo: `Botom: ${b.aluno_nome}`,
+          data: '',
+          subtitulo: `Avançou para ${b.apostila_nova}`,
+          aluno_id: b.aluno_id,
+          aluno_nome: b.aluno_nome,
         });
       });
 

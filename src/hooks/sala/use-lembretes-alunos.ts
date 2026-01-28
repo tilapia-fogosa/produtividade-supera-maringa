@@ -8,13 +8,20 @@ export interface ApostilaAHPendente {
   apostilaNome: string;
 }
 
+export interface BotomPendente {
+  pendenciaId: string;
+  apostilaNova: string;
+}
+
 export interface LembretesAluno {
   camisetaPendente: boolean;
   aniversarioHoje: boolean;
   aniversarioSemana: boolean;
   apostilaAHPronta: boolean;
+  botomPendente: boolean;
   // Dados extras para ações interativas
   apostilaAHDados?: ApostilaAHPendente;
+  botomDados?: BotomPendente;
 }
 
 export function useLembretesAlunos(alunoIds: string[]) {
@@ -55,6 +62,13 @@ export function useLembretesAlunos(alunoIds: string[]) {
         .in('pessoa_id', alunoIds)
         .is('data_entrega_real', null);
 
+      // Buscar pendências de botom
+      const { data: botomPendencias } = await supabase
+        .from('pendencias_botom')
+        .select('id, aluno_id, apostila_nova')
+        .in('aluno_id', alunoIds)
+        .eq('status', 'pendente');
+
       // Criar mapa de camisetas por aluno
       const camisetasMap = new Map(
         camisetasData?.map(c => [c.aluno_id, c]) || []
@@ -67,6 +81,17 @@ export function useLembretesAlunos(alunoIds: string[]) {
           ahPendentesMap.set(ah.pessoa_id, {
             recolhidaId: ah.id,
             apostilaNome: ah.apostila
+          });
+        }
+      });
+
+      // Criar mapa de botom pendentes (pegar o primeiro se houver múltiplos)
+      const botomPendentesMap = new Map<string, BotomPendente>();
+      botomPendencias?.forEach(b => {
+        if (!botomPendentesMap.has(b.aluno_id)) {
+          botomPendentesMap.set(b.aluno_id, {
+            pendenciaId: b.id,
+            apostilaNova: b.apostila_nova
           });
         }
       });
@@ -92,12 +117,18 @@ export function useLembretesAlunos(alunoIds: string[]) {
         const apostilaAHDados = ahPendentesMap.get(aluno.id);
         const apostilaAHPronta = !!apostilaAHDados;
 
+        // Botom pendente para entrega
+        const botomDados = botomPendentesMap.get(aluno.id);
+        const botomPendente = !!botomDados;
+
         lembretesMap[aluno.id] = {
           camisetaPendente,
           aniversarioHoje,
           aniversarioSemana,
           apostilaAHPronta,
+          botomPendente,
           apostilaAHDados,
+          botomDados,
         };
       });
 
