@@ -95,6 +95,20 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
         `)
         .in("client_id", clientIds);
 
+      // Buscar alunos vinculados para verificar se tem aluno associado
+      const { data: alunosVinculados } = await supabase
+        .from("alunos")
+        .select("id, client_id")
+        .in("client_id", clientIds);
+
+      // Mapear alunos por client_id
+      const alunosMap = new Map<string, boolean>();
+      alunosVinculados?.forEach((aluno: any) => {
+        if (aluno.client_id) {
+          alunosMap.set(aluno.client_id, true);
+        }
+      });
+
       // Buscar nomes dos vendedores
       const createdByIds = [...new Set(
         data.map((a: any) => a.created_by).filter(Boolean)
@@ -146,13 +160,17 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
           posVenda.data_aula_inaugural
         );
 
+        // Verificar se tem aluno vinculado
+        const temAlunoVinculado = alunosMap.has(clientId);
+
         const finais_completo = posVenda && !!(
           posVenda.check_lancar_sgs &&
           posVenda.check_assinar_contrato &&
           posVenda.check_entregar_kit &&
           posVenda.check_cadastrar_pagamento &&
           (posVenda as any).check_sincronizar_sgs &&
-          posVenda.check_grupo_whatsapp
+          posVenda.check_grupo_whatsapp &&
+          temAlunoVinculado
         );
 
         clientesMap.set(clientId, {

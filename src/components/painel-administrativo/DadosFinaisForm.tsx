@@ -1,11 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
+import { useAlunosSemVinculo, useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 interface DadosFinaisFormProps {
   cliente: ClienteMatriculado;
@@ -24,7 +40,6 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "entregar_kit", label: "Entregar Kit", field: "check_entregar_kit" },
   { id: "cadastrar_pagamento", label: "Cadastrar forma de pagamento", field: "check_cadastrar_pagamento" },
   { id: "sincronizar_sgs", label: "Sincronizar dados SGS", field: "check_sincronizar_sgs" },
-  { id: "grupo_whatsapp", label: "Adicionar Grupo Whatsapp", field: "check_grupo_whatsapp" },
 ];
 
 export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
@@ -38,6 +53,34 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
     check_grupo_whatsapp: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [openAlunoPopover, setOpenAlunoPopover] = useState(false);
+  const [selectedAlunoId, setSelectedAlunoId] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState("");
+
+  // Hooks para alunos
+  const { data: alunosDisponiveis = [], isLoading: isLoadingAlunos } = useAlunosSemVinculo(cliente.id);
+  const { data: alunoVinculado, isLoading: isLoadingVinculado } = useAlunoVinculado(cliente.id);
+
+  // Atualizar o aluno selecionado quando carregar o vinculado
+  useEffect(() => {
+    if (alunoVinculado) {
+      setSelectedAlunoId(alunoVinculado.id);
+    }
+  }, [alunoVinculado]);
+
+  // Filtrar alunos pela busca
+  const alunosFiltrados = useMemo(() => {
+    if (!searchFilter) return alunosDisponiveis;
+    return alunosDisponiveis.filter(aluno =>
+      aluno.nome.toLowerCase().includes(searchFilter.toLowerCase())
+    );
+  }, [alunosDisponiveis, searchFilter]);
+
+  // Encontrar o aluno selecionado
+  const alunoSelecionado = useMemo(() => {
+    if (!selectedAlunoId) return null;
+    return alunosDisponiveis.find(a => a.id === selectedAlunoId) || alunoVinculado;
+  }, [selectedAlunoId, alunosDisponiveis, alunoVinculado]);
 
   // Carregar dados existentes
   useEffect(() => {
@@ -78,17 +121,43 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   }, [cliente.id]);
 
   const mutation = useMutation({
-    mutationFn: async (data: Record<string, boolean>) => {
-      const { error } = await supabase
+    mutationFn: async (data: { checklist: Record<string, boolean>; alunoId: string | null }) => {
+      // Atualizar checklist na atividade_pos_venda
+      const { error: checklistError } = await supabase
         .from("atividade_pos_venda")
-        .update(data)
+        .update(data.checklist)
         .eq("client_id", cliente.id);
 
-      if (error) throw error;
+      if (checklistError) throw checklistError;
+
+      // Se mudou o aluno vinculado
+      if (data.alunoId !== alunoVinculado?.id) {
+        // Remover vínculo do aluno anterior (se existir)
+        if (alunoVinculado?.id) {
+          const { error: removeError } = await supabase
+            .from("alunos")
+            .update({ client_id: null })
+            .eq("id", alunoVinculado.id);
+
+          if (removeError) throw removeError;
+        }
+
+        // Adicionar vínculo ao novo aluno (se selecionado)
+        if (data.alunoId) {
+          const { error: addError } = await supabase
+            .from("alunos")
+            .update({ client_id: cliente.id })
+            .eq("id", data.alunoId);
+
+          if (addError) throw addError;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pos-matricula"] });
       queryClient.invalidateQueries({ queryKey: ["pos-matriculas-incompletas"] });
+      queryClient.invalidateQueries({ queryKey: ["alunos-sem-vinculo"] });
+      queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
       setTimeout(() => onCancel(), 1500);
     },
   });
@@ -102,10 +171,14 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(checklist);
+    mutation.mutate({ checklist, alunoId: selectedAlunoId });
   };
 
-  if (isLoading) {
+  const handleRemoveAluno = () => {
+    setSelectedAlunoId(null);
+  };
+
+  if (isLoading || isLoadingVinculado) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -115,6 +188,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Checklist */}
       <div className="space-y-4">
         {CHECKLIST_ITEMS.map((item) => (
           <div key={item.id} className="flex items-center space-x-3">
@@ -131,6 +205,112 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             </Label>
           </div>
         ))}
+      </div>
+
+      {/* Seção Vincular Aluno */}
+      <div className="space-y-3 pt-4 border-t">
+        <Label className="text-sm font-semibold">Vincular Aluno</Label>
+        
+        <Popover open={openAlunoPopover} onOpenChange={setOpenAlunoPopover}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={openAlunoPopover}
+              className="w-full justify-between"
+              disabled={isLoadingAlunos}
+            >
+              {isLoadingAlunos ? (
+                <span className="text-muted-foreground">Carregando alunos...</span>
+              ) : alunoSelecionado ? (
+                <span className="truncate">
+                  {alunoSelecionado.nome}
+                  {alunoSelecionado.turma_nome && (
+                    <span className="text-muted-foreground ml-1">
+                      ({alunoSelecionado.turma_nome})
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Selecione um aluno...</span>
+              )}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-0" align="start">
+            <Command shouldFilter={false}>
+              <CommandInput 
+                placeholder="Filtrar por nome..." 
+                value={searchFilter}
+                onValueChange={setSearchFilter}
+              />
+              <CommandList>
+                <CommandEmpty>Nenhum aluno encontrado.</CommandEmpty>
+                <CommandGroup>
+                  {alunosFiltrados.map((aluno) => (
+                    <CommandItem
+                      key={aluno.id}
+                      value={aluno.id}
+                      onSelect={(value) => {
+                        setSelectedAlunoId(value === selectedAlunoId ? null : value);
+                        setOpenAlunoPopover(false);
+                        setSearchFilter("");
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedAlunoId === aluno.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <span>{aluno.nome}</span>
+                      {aluno.turma_nome && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {aluno.turma_nome}
+                        </span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {alunoSelecionado && (
+          <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+            <div>
+              <p className="text-sm font-medium">{alunoSelecionado.nome}</p>
+              {alunoSelecionado.turma_nome && (
+                <p className="text-xs text-muted-foreground">{alunoSelecionado.turma_nome}</p>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleRemoveAluno}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Checkbox Grupo WhatsApp (último item) */}
+      <div className="flex items-center space-x-3 pt-4 border-t">
+        <Checkbox
+          id="grupo_whatsapp"
+          checked={checklist.check_grupo_whatsapp}
+          onCheckedChange={() => handleToggle("check_grupo_whatsapp")}
+        />
+        <Label
+          htmlFor="grupo_whatsapp"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+        >
+          Adicionar Grupo Whatsapp
+        </Label>
       </div>
 
       {mutation.isSuccess && (
