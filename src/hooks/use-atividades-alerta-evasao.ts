@@ -16,7 +16,10 @@ export type TipoAtividadeEvasao =
   | 'remover_whatsapp'
   | 'corrigir_valores_sgs'
   | 'corrigir_valores_assinatura'
-  | 'criar_ficha_rescisao';
+  | 'criar_ficha_rescisao'
+  | 'lancar_multa_sgs'
+  | 'envio_agradecimento_nps'
+  | 'digitalizar_rescisao';
 
 export type StatusAtividade = 'pendente' | 'concluida';
 
@@ -56,6 +59,9 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
   { value: 'cancelar_assinatura', label: 'Cancelar Assinatura', color: 'bg-red-400' },
   { value: 'remover_whatsapp', label: 'Remover WhatsApp', color: 'bg-red-400' },
   { value: 'criar_ficha_rescisao', label: 'Criar Ficha de Rescisão', color: 'bg-red-400' },
+  { value: 'lancar_multa_sgs', label: 'Lançar Multa SGS', color: 'bg-red-400' },
+  { value: 'envio_agradecimento_nps', label: 'Envio Agradecimento/NPS', color: 'bg-red-400' },
+  { value: 'digitalizar_rescisao', label: 'Digitalizar Rescisão', color: 'bg-red-400' },
   { value: 'corrigir_valores_sgs', label: 'Corrigir SGS', color: 'bg-yellow-500' },
   { value: 'corrigir_valores_assinatura', label: 'Corrigir Assinatura', color: 'bg-yellow-500' },
 ];
@@ -534,13 +540,27 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       let deveResolverAlerta = false;
       
       if (resultado === 'evasao') {
-        // Evasão: 4 tarefas administrativas
+        // Evasão: 7 tarefas administrativas
         tarefas = [
           { tipo: 'remover_sgs', descricao: 'Remover aluno do sistema SGS' },
           { tipo: 'cancelar_assinatura', descricao: 'Cancelar assinatura no Vindi ou Asaas' },
           { tipo: 'remover_whatsapp', descricao: 'Remover aluno dos grupos de WhatsApp' },
-          { tipo: 'criar_ficha_rescisao', descricao: 'Criar e imprimir ficha de rescisão do aluno' }
+          { tipo: 'criar_ficha_rescisao', descricao: 'Criar e imprimir ficha de rescisão do aluno' },
+          { tipo: 'lancar_multa_sgs', descricao: 'Lançar multa de rescisão no sistema SGS' },
+          { tipo: 'envio_agradecimento_nps', descricao: 'Enviar mensagem de agradecimento e pesquisa NPS via WhatsApp' },
+          { tipo: 'digitalizar_rescisao', descricao: 'Digitalizar documento de rescisão assinado' }
         ];
+        
+        // Marca o alerta como evadido imediatamente quando o atendimento financeiro é finalizado com evasão
+        const { error: alertaEvasaoError } = await supabase
+          .from('alerta_evasao')
+          .update({ 
+            status: 'evadido',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', alertaEvasaoId);
+        
+        if (alertaEvasaoError) throw alertaEvasaoError;
         // O alerta só será resolvido quando TODAS as tarefas forem concluídas
       } else if (resultado === 'ajuste_temporario' && dataFimAjuste) {
         // Ajuste temporário: 2 tarefas imediatas + 1 agendada
@@ -681,7 +701,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       if (fetchError) throw fetchError;
       
       // Verificar se há uma evasão registrada e todas as tarefas relacionadas foram concluídas
-      const tarefasEvasao = ['remover_sgs', 'cancelar_assinatura', 'remover_whatsapp', 'criar_ficha_rescisao'];
+      const tarefasEvasao = ['remover_sgs', 'cancelar_assinatura', 'remover_whatsapp', 'criar_ficha_rescisao', 'lancar_multa_sgs', 'envio_agradecimento_nps', 'digitalizar_rescisao'];
       const temTarefasEvasao = todasAtividades?.some(a => tarefasEvasao.includes(a.tipo_atividade));
       
       if (temTarefasEvasao) {

@@ -213,6 +213,7 @@ export type Database = {
           id: string
           kanban_status: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
+          rescisao_digitalizada_url: string | null
           responsavel: string | null
           status: Database["public"]["Enums"]["status_alerta"]
           updated_at: string
@@ -227,6 +228,7 @@ export type Database = {
           id?: string
           kanban_status?: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
+          rescisao_digitalizada_url?: string | null
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
           updated_at?: string
@@ -241,6 +243,7 @@ export type Database = {
           id?: string
           kanban_status?: string
           origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
+          rescisao_digitalizada_url?: string | null
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
           updated_at?: string
@@ -7977,6 +7980,9 @@ export type Database = {
         | "corrigir_valores_assinatura"
         | "contato_financeiro"
         | "criar_ficha_rescisao"
+        | "lancar_multa_sgs"
+        | "envio_agradecimento_nps"
+        | "digitalizar_rescisao"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8211,6 +8217,9 @@ export const Constants = {
         "corrigir_valores_assinatura",
         "contato_financeiro",
         "criar_ficha_rescisao",
+        "lancar_multa_sgs",
+        "envio_agradecimento_nps",
+        "digitalizar_rescisao",
       ],
       tipo_evento_sala: [
         "manutencao",
