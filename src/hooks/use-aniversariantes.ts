@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, addDays } from 'date-fns';
 
-interface Aniversariante {
+export interface Aniversariante {
   id: string;
   nome: string;
   aniversario_mes_dia: string;
@@ -10,8 +10,11 @@ interface Aniversariante {
 }
 
 export const useAniversariantes = (unitId?: string) => {
-  return useQuery({
-    queryKey: ['aniversariantes', unitId],
+  const queryClient = useQueryClient();
+  const anoAtual = new Date().getFullYear();
+
+  const query = useQuery({
+    queryKey: ['aniversariantes', unitId, anoAtual],
     queryFn: async () => {
       const hoje = new Date();
       
@@ -28,6 +31,14 @@ export const useAniversariantes = (unitId?: string) => {
           datasSemana.push(dataStr);
         }
       }
+
+      // Buscar aniversários já concluídos neste ano
+      const { data: concluidos } = await supabase
+        .from('aniversarios_concluidos')
+        .select('aluno_id')
+        .eq('ano', anoAtual);
+
+      const alunosConcluidosIds = new Set((concluidos || []).map(c => c.aluno_id));
 
       // Buscar alunos aniversariantes de hoje
       let queryHoje = supabase
@@ -55,16 +66,34 @@ export const useAniversariantes = (unitId?: string) => {
 
       const { data: alunosSemana } = await querySemana;
 
+      // Filtrar apenas os que ainda não foram parabenizados
+      const aniversariantesHoje = (alunosHoje || [])
+        .filter(a => !alunosConcluidosIds.has(a.id))
+        .map(a => ({
+          ...a,
+          tipo: 'aluno' as const
+        }));
+
+      const aniversariantesSemana = (alunosSemana || [])
+        .filter(a => !alunosConcluidosIds.has(a.id))
+        .map(a => ({
+          ...a,
+          tipo: 'aluno' as const
+        }));
+
       return {
-        aniversariantesHoje: (alunosHoje || []).map(a => ({
-          ...a,
-          tipo: 'aluno' as const
-        })),
-        aniversariantesSemana: (alunosSemana || []).map(a => ({
-          ...a,
-          tipo: 'aluno' as const
-        })),
+        aniversariantesHoje,
+        aniversariantesSemana,
       };
     },
   });
+
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: ['aniversariantes', unitId, anoAtual] });
+  };
+
+  return {
+    ...query,
+    refetch,
+  };
 };

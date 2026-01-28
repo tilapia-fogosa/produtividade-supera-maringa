@@ -1018,6 +1018,61 @@ export type Database = {
         }
         Relationships: []
       }
+      aniversarios_concluidos: {
+        Row: {
+          aluno_id: string
+          ano: number
+          created_at: string
+          data_conclusao: string
+          funcionario_registro_id: string | null
+          id: string
+          observacoes: string | null
+          responsavel_nome: string | null
+        }
+        Insert: {
+          aluno_id: string
+          ano: number
+          created_at?: string
+          data_conclusao?: string
+          funcionario_registro_id?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_nome?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          ano?: number
+          created_at?: string
+          data_conclusao?: string
+          funcionario_registro_id?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aniversarios_concluidos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aniversarios_concluidos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aniversarios_concluidos_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apostilas: {
         Row: {
           created_at: string
