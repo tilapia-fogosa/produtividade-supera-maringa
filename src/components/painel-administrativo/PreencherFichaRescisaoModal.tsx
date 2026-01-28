@@ -84,8 +84,8 @@ export function PreencherFichaRescisaoModal({
     const diaComunicado = dataComunicacao.getDate();
     const mensalidadeProximoMes = diaComunicado >= diaVencimento ? valorMensalidadeNum : 0;
 
-    // Total rescisão (apenas mensalidades restantes * valor proporcional - geralmente 40%)
-    const valorRescisao = mensalidadesRestantes * (valorMensalidadeNum * 0.4);
+    // Total rescisão (apenas mensalidades restantes * valor proporcional - 10%)
+    const valorRescisao = mensalidadesRestantes * (valorMensalidadeNum * 0.1);
     
     // Parse pendência financeira
     const pendenciaNum = parseFloat(pendenciaFinanceira.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
@@ -277,9 +277,9 @@ export function PreencherFichaRescisaoModal({
                   <span className="font-medium">{formatCurrency(dadosCalculados.mensalidadeProximoMes)}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b">
-                  <span className="text-muted-foreground">Rescisão (40% × Meses Restantes)</span>
+                  <span className="text-muted-foreground">Rescisão (10% × Meses Restantes)</span>
                   <span className="font-medium">
-                    {formatCurrency(dadosCalculados.mensalidadesRestantes * (valorMensalidadeNum * 0.4))}
+                    {formatCurrency(dadosCalculados.mensalidadesRestantes * (valorMensalidadeNum * 0.1))}
                   </span>
                 </div>
               </div>
