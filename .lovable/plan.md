@@ -1,129 +1,101 @@
 
-# Plano: Corrigir Erro de Tipo na Funcao RPC de Professores Disponiveis
 
-## Problema Identificado
+# Plano de Correções para a Tela de Alunos Ativos
 
-A funcao `get_professores_disponiveis_por_horario` esta falhando porque a coluna `dia_semana` na tabela `turmas` e do tipo **ENUM** (tipo personalizado chamado `dia_semana`), mas a funcao esta tentando comparar com uma variavel do tipo **TEXT**.
+## Resumo dos Problemas Identificados
 
-O erro exato e:
-```
-operator does not exist: dia_semana = text
-```
+Após analisar o código, identifiquei as seguintes questões:
 
-## Analise das Estruturas
+### 1. Dados não salvando na gaveta de edição
+O componente `ExpandableAlunoCard` cria uma nova instância do hook `useAlunosAtivos()`. Isso significa que quando você salva os dados, a atualização acontece no banco de dados, mas o estado local atualizado é de uma instância diferente da que está na página principal `AlunosAtivos.tsx`. Por isso, ao fechar e reabrir a gaveta, os dados parecem não ter sido salvos (embora estejam no banco).
 
-| Tabela/Variavel | Tipo da coluna `dia_semana` |
-|-----------------|----------------------------|
-| `turmas` | ENUM (`dia_semana`) |
-| `eventos_professor` | TEXT |
-| Variavel na funcao | TEXT |
+### 2. Campos faltantes nas seções
+**Informações Contratuais** - Adicionar:
+- Valor Matrícula (campo `valor_matricula` já existe na tabela)
+- Valor Material (campo `valor_material` já existe na tabela)
 
-## Solucao
+**Dados do Onboarding** - Adicionar:
+- Kit Inicial (campo `kit_sugerido` já existe na tabela - Kit 1 a Kit 8)
 
-Atualizar a funcao RPC para fazer um **cast explicito** de TEXT para o tipo ENUM `dia_semana` quando comparar com a tabela `turmas`.
+### 3. Foto sumindo em telas menores
+O layout atual coloca a foto na coluna da direita com `lg:col-span-1`, que só aparece em telas grandes (lg+). Em telas menores, a ordem do grid faz a foto aparecer no final, abaixo de todo o conteúdo, e pode ficar cortada ou fora da área visível.
 
-### Alteracao Necessaria
+---
 
-**Linha atual:**
-```sql
-AND t.dia_semana = v_dia_semana
-```
+## Implementação Proposta
 
-**Linha corrigida:**
-```sql
-AND t.dia_semana = v_dia_semana::dia_semana
-```
+### Etapa 1: Corrigir o problema de salvamento
 
-## Etapas de Implementacao
+**Arquivo**: `src/components/alunos/ExpandableAlunoCard.tsx`
 
-1. **Criar migracao SQL** para atualizar a funcao `get_professores_disponiveis_por_horario`
-   - Usar `CREATE OR REPLACE FUNCTION` para substituir a funcao existente
-   - Adicionar o cast `::dia_semana` na comparacao com a tabela `turmas`
+- Remover a criação interna do hook `useAlunosAtivos()`
+- Receber as funções de atualização como props do componente pai
+- Adicionar callback de `onSave` para notificar a página principal sobre mudanças
 
-2. **Testar o fluxo** de selecao de aula inaugural no painel administrativo
+**Arquivo**: `src/pages/AlunosAtivos.tsx`
 
-## Codigo da Migracao
+- Passar as funções de atualização do hook para o `ExpandableAlunoCard`
+- Garantir que o estado seja atualizado na mesma instância
 
-```sql
-CREATE OR REPLACE FUNCTION get_professores_disponiveis_por_horario(
-  p_data DATE,
-  p_horario_inicio TIME,
-  p_horario_fim TIME,
-  p_unit_id UUID DEFAULT NULL
-)
-RETURNS TABLE (
-  professor_id UUID,
-  professor_nome TEXT,
-  prioridade INTEGER
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_dia_semana TEXT;
-  v_unit_id UUID;
-BEGIN
-  -- Determinar o dia da semana em portugues
-  v_dia_semana := CASE EXTRACT(DOW FROM p_data)
-    WHEN 0 THEN 'domingo'
-    WHEN 1 THEN 'segunda'
-    WHEN 2 THEN 'terca'
-    WHEN 3 THEN 'quarta'
-    WHEN 4 THEN 'quinta'
-    WHEN 5 THEN 'sexta'
-    WHEN 6 THEN 'sabado'
-  END;
-  
-  -- Se unit_id nao foi passado, usar Maringa como padrao
-  v_unit_id := COALESCE(p_unit_id, '0df79a04-444e-46ee-b218-59e4b1835f4a'::UUID);
-  
-  RETURN QUERY
-  SELECT 
-    p.id AS professor_id,
-    p.nome AS professor_nome,
-    COALESCE(p.prioridade, 999) AS prioridade
-  FROM professores p
-  WHERE p.status = true
-    AND p.unit_id = v_unit_id
-    -- Excluir professores com turmas regulares no mesmo dia/horario
-    -- CORRECAO: Cast explicito para o tipo ENUM dia_semana
-    AND NOT EXISTS (
-      SELECT 1 FROM turmas t
-      WHERE t.professor_id = p.id
-        AND t.active = true
-        AND t.dia_semana = v_dia_semana::dia_semana
-        AND t.horario_inicio < p_horario_fim
-        AND t.horario_fim > p_horario_inicio
-    )
-    -- Excluir professores com eventos pontuais na data especifica
-    AND NOT EXISTS (
-      SELECT 1 FROM eventos_professor ep
-      WHERE ep.professor_id = p.id
-        AND ep.recorrente = false
-        AND ep.data = p_data
-        AND ep.horario_inicio < p_horario_fim
-        AND ep.horario_fim > p_horario_inicio
-    )
-    -- Excluir professores com eventos recorrentes semanais no mesmo dia
-    AND NOT EXISTS (
-      SELECT 1 FROM eventos_professor ep
-      WHERE ep.professor_id = p.id
-        AND ep.recorrente = true
-        AND ep.tipo_recorrencia = 'semanal'
-        AND ep.dia_semana = v_dia_semana
-        AND (ep.data_inicio_recorrencia IS NULL OR ep.data_inicio_recorrencia <= p_data)
-        AND (ep.data_fim_recorrencia IS NULL OR ep.data_fim_recorrencia >= p_data)
-        AND ep.horario_inicio < p_horario_fim
-        AND ep.horario_fim > p_horario_inicio
-    )
-  ORDER BY COALESCE(p.prioridade, 999) ASC, p.nome ASC;
-END;
-$$;
+### Etapa 2: Adicionar novos campos
+
+**Arquivo**: `src/hooks/use-alunos-ativos.ts`
+
+- Adicionar funções de atualização para `valor_matricula`, `valor_material` e `kit_sugerido`
+- Atualizar a interface `AlunoAtivo` se necessário (verificar se os campos já estão)
+
+**Arquivo**: `src/components/alunos/ExpandableAlunoCard.tsx`
+
+Na seção **Informações Contratuais**, adicionar:
+```text
+- Valor Matrícula (campo editável, tipo number, formatação R$)
+- Valor Material (campo editável, tipo number, formatação R$)
 ```
 
-## Resultado Esperado
+Na seção **Dados do Onboarding**, adicionar:
+```text
+- Kit Inicial (campo editável com Select: Kit 1, Kit 2, ..., Kit 8)
+```
 
-Apos a correcao, ao selecionar uma data e horario no formulario de Aula Inaugural, o sistema devera:
-1. Retornar a lista de professores disponiveis ordenados por prioridade
-2. Exibir automaticamente o primeiro professor disponivel
-3. Mostrar a confirmacao de disponibilidade com professor e sala
+### Etapa 3: Corrigir responsividade da foto
+
+**Arquivo**: `src/components/alunos/ExpandableAlunoCard.tsx`
+
+Reorganizar o layout para que:
+- Em telas menores: foto aparece no topo, antes das informações
+- Em telas maiores (desktop): foto fica na coluna da direita como está hoje
+
+Alteração no grid:
+```
+De: grid-cols-1 lg:grid-cols-4
+Para: reordenar para que a foto venha primeiro em mobile usando order-first/order-last
+```
+
+---
+
+## Detalhes Técnicos
+
+### Interface AlunoAtivo
+Os campos já existem, mas precisam ser incluídos no retorno se ainda não estiverem:
+- `valor_matricula: number | null`
+- `valor_material: number | null` 
+- `kit_sugerido: string | null`
+
+### Funções de atualização a criar
+```typescript
+atualizarValorMatricula(id, valor: number)
+atualizarValorMaterial(id, valor: number)
+atualizarKitSugerido(id, kit: string)
+```
+
+### Opções do Kit Inicial
+- Kit 1, Kit 2, Kit 3, Kit 4, Kit 5, Kit 6, Kit 7, Kit 8
+
+---
+
+## Arquivos a Modificar
+
+1. `src/hooks/use-alunos-ativos.ts` - Adicionar novas funções de atualização
+2. `src/components/alunos/ExpandableAlunoCard.tsx` - Receber props, adicionar campos e corrigir layout
+3. `src/pages/AlunosAtivos.tsx` - Passar funções para o componente
+
