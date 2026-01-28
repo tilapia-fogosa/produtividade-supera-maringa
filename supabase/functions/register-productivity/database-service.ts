@@ -24,7 +24,7 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
     // Primeiro verificar se é um aluno
     const { data: alunoExiste, error: alunoError } = await supabaseClient
       .from('alunos')
-      .select('id')
+      .select('id, ultimo_nivel, turma_id')
       .eq('id', data.pessoa_id || data.aluno_id)
       .maybeSingle();
     
@@ -37,6 +37,8 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
       console.log('Encontrado como aluno, atualizando dados...');
       
       const updateData: any = {};
+      const apostilaAtual = alunoExiste.ultimo_nivel;
+      const apostilaNova = data.apostila_abaco || data.apostila_atual;
       
       // Atualizar contador de faltas consecutivas
       if (data.presente) {
@@ -45,9 +47,45 @@ export async function registrarDadosAluno(supabaseClient: any, data: Produtivida
         console.log('Zerando faltas consecutivas (presente)');
         
         // Só atualizar outros dados se presente e com dados válidos
-        if (data.apostila_atual || data.apostila_abaco) {
-          updateData.ultimo_nivel = data.apostila_atual || data.apostila_abaco;
+        if (apostilaNova) {
+          updateData.ultimo_nivel = apostilaNova;
           console.log('Atualizando último nível do aluno para:', updateData.ultimo_nivel);
+          
+          // === DETECÇÃO DE TROCA DE APOSTILA - CRIAR PENDÊNCIA DE BOTOM ===
+          if (apostilaAtual && apostilaNova !== apostilaAtual) {
+            console.log(`Detectada troca de apostila: ${apostilaAtual} -> ${apostilaNova}`);
+            
+            // Buscar professor da turma do aluno
+            let professorResponsavelId = null;
+            if (alunoExiste.turma_id) {
+              const { data: turma, error: turmaError } = await supabaseClient
+                .from('turmas')
+                .select('professor_id')
+                .eq('id', alunoExiste.turma_id)
+                .maybeSingle();
+              
+              if (!turmaError && turma) {
+                professorResponsavelId = turma.professor_id;
+              }
+            }
+            
+            // Criar pendência de botom
+            const { error: botomError } = await supabaseClient
+              .from('pendencias_botom')
+              .insert({
+                aluno_id: data.pessoa_id || data.aluno_id,
+                apostila_nova: apostilaNova,
+                apostila_anterior: apostilaAtual,
+                professor_responsavel_id: professorResponsavelId,
+                status: 'pendente',
+              });
+            
+            if (botomError) {
+              console.error('Erro ao criar pendência de botom:', botomError);
+            } else {
+              console.log('Pendência de botom criada com sucesso!');
+            }
+          }
         }
         
         if (data.ultima_pagina || data.pagina_abaco) {
