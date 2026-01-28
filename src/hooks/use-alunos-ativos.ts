@@ -234,11 +234,6 @@ export function useAlunosAtivos() {
           : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "WhatsApp atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar WhatsApp:', error);
@@ -272,11 +267,6 @@ export function useAlunosAtivos() {
           ? { ...aluno, responsavel: responsavel }
           : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Responsável atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -325,11 +315,6 @@ export function useAlunosAtivos() {
 
       console.log('Estado local atualizado');
 
-      toast({
-        title: "Sucesso",
-        description: fotoUrl ? "Foto atualizada com sucesso." : "Foto removida com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar foto:', error);
@@ -361,11 +346,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, data_nascimento: dataNascimento } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Data de nascimento atualizada com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar data de nascimento:', error);
@@ -395,11 +375,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, email } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Email atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -431,11 +406,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, telefone } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Telefone atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar telefone:', error);
@@ -465,11 +435,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, coordenador_responsavel: coordenador } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Coordenador responsável atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -501,11 +466,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, valor_mensalidade: valor } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Valor da mensalidade atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar valor da mensalidade:', error);
@@ -535,11 +495,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, vencimento_contrato: vencimento } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Vencimento do contrato atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -571,11 +526,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, motivo_procura: motivo } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Motivo da procura atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar motivo da procura:', error);
@@ -605,11 +555,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, percepcao_coordenador: percepcao } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Percepção do coordenador atualizada com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -641,11 +586,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, pontos_atencao: pontos } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Pontos de atenção atualizados com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar pontos de atenção:', error);
@@ -675,11 +615,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, data_onboarding: dataOnboarding } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Data de onboarding atualizada com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -711,11 +646,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, valor_matricula: valor } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Valor da matrícula atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar valor da matrícula:', error);
@@ -746,11 +676,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, valor_material: valor } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Valor do material atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar valor do material:', error);
@@ -780,11 +705,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, kit_sugerido: kit } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Kit inicial atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
