@@ -204,7 +204,7 @@ export default function Home() {
     const evento: Evento = {
       tipo: 'alerta_evasao',
       titulo: `${getTipoAtividadeLabel(atividade.tipo_atividade)}: ${atividade.aluno_nome}`,
-      data: atividade.data_agendada || '',
+      data: atividade.data_referencia,
       subtitulo: atividade.turma_nome || 'Sem turma',
       aluno_id: atividade.aluno_id,
       aluno_nome: atividade.aluno_nome,
@@ -213,22 +213,18 @@ export default function Home() {
       tipo_atividade_evasao: atividade.tipo_atividade,
     };
 
-    if (!atividade.data_agendada) {
-      // Sem data agendada = atrasado (prioridade alta)
+    // Usar data_referencia (que é data_agendada ou created_at)
+    const dataReferencia = parseISO(atividade.data_referencia);
+    const hojeInicio = startOfDay(hoje);
+    
+    if (isBefore(dataReferencia, hojeInicio)) {
       eventosAtrasados.push(evento);
-    } else {
-      const dataAgendada = parseISO(atividade.data_agendada);
-      const hojeInicio = startOfDay(hoje);
-      
-      if (isBefore(dataAgendada, hojeInicio)) {
-        eventosAtrasados.push(evento);
-      } else if (atividade.data_agendada === hojeStr) {
-        eventosHoje.push(evento);
-      } else if (isSameWeek(dataAgendada, hoje, { weekStartsOn: 0 })) {
-        eventosSemana.push(evento);
-      } else if (isSameWeek(dataAgendada, inicioProximaSemana, { weekStartsOn: 0 })) {
-        eventosProximaSemana.push(evento);
-      }
+    } else if (atividade.data_referencia === hojeStr) {
+      eventosHoje.push(evento);
+    } else if (isSameWeek(dataReferencia, hoje, { weekStartsOn: 0 })) {
+      eventosSemana.push(evento);
+    } else if (isSameWeek(dataReferencia, inicioProximaSemana, { weekStartsOn: 0 })) {
+      eventosProximaSemana.push(evento);
     }
   };
 
