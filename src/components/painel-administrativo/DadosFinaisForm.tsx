@@ -2,6 +2,24 @@ import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+
+// Função para converter base64 em Blob (compatível com navegador)
+function base64ToBlob(base64: string, contentType: string): Blob {
+  const byteCharacters = atob(base64);
+  const byteArrays: BlobPart[] = [];
+  
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+  
+  return new Blob(byteArrays, { type: contentType });
+}
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
@@ -135,9 +153,10 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         const base64Data = data.fotoBase64.split(',')[1];
         const fileName = `${cliente.id}-${Date.now()}.jpg`;
         
+        const blob = base64ToBlob(base64Data, 'image/jpeg');
         const { error: uploadError } = await supabase.storage
           .from('alunos-fotos')
-          .upload(fileName, Buffer.from(base64Data, 'base64'), {
+          .upload(fileName, blob, {
             contentType: 'image/jpeg',
             upsert: true
           });
