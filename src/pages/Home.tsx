@@ -201,6 +201,12 @@ export default function Home() {
     eventosSemana: Evento[],
     eventosProximaSemana: Evento[]
   ) => {
+    // Validar que data_referencia existe antes de processar
+    if (!atividade.data_referencia) {
+      console.warn('Atividade de evasão sem data_referencia:', atividade.id);
+      return;
+    }
+
     const evento: Evento = {
       tipo: 'alerta_evasao',
       titulo: `${getTipoAtividadeLabel(atividade.tipo_atividade)}: ${atividade.aluno_nome}`,
