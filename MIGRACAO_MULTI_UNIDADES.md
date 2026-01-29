@@ -243,12 +243,180 @@ Tabelas que também precisarão de `unit_id` ou revisão:
 
 ---
 
+## Fase 5: Tela Home (Dashboard) - Análise Detalhada
+
+### 5.1 Visão Geral da Arquitetura
+
+A tela Home é uma **agregação de 13+ fontes de dados** diferentes, não uma tabela única. Os dados são carregados dinamicamente baseados no perfil do usuário (Professor vs Administrativo).
+
+**Componentes principais:**
+- `src/pages/Home.tsx` - Componente principal
+- Múltiplos hooks para buscar dados de diferentes tabelas
+
+---
+
+### 5.2 Tabelas Envolvidas na Home
+
+| Tabela | Uso na Home | Status unit_id | Ação |
+|--------|-------------|----------------|------|
+| `tarefas_pessoais` | Tarefas do usuário | ⚠️ Verificar | Analisar |
+| `alunos` | Aniversariantes, camisetas, coletas | ✅ OK | - |
+| `funcionarios` | Aniversariantes funcionários | ✅ OK | - |
+| `camisetas` | Entregas pendentes | ❌ Não possui | Adicionar |
+| `ah_recolhidas` | Apostilas para entregar | ❌ Não possui | Adicionar |
+| `eventos_professor` | Aulas inaugurais | ⚠️ Verificar | Analisar |
+| `alerta_evasao` | Alertas de evasão | ❌ Não possui | Adicionar |
+| `atividades_alerta_evasao` | Atividades pendentes | ❌ Não possui | Adicionar |
+| `pos_venda_dados` | Pós-matrículas incompletas | ⚠️ Verificar | Analisar |
+| `reposicoes` (RPC) | Reposições do dia | ⚠️ Verificar | Analisar |
+| `aulas_experimentais` (RPC) | Aulas experimentais | ⚠️ Verificar | Analisar |
+| `pendencias_botom` | Entregas de botom | ⚠️ Verificar | Analisar |
+
+---
+
+### 5.3 Hooks que Precisam de Correção
+
+| Hook | Arquivo | Problema | Ação Necessária |
+|------|---------|----------|-----------------|
+| `useCamisetas` | `use-camisetas.ts` | Não filtra por unidade | Adicionar filtro unit_id via join com alunos |
+| `useProximasColetasAH` | `use-proximas-coletas-ah.ts` | Busca todos alunos/funcionários ativos | Filtrar por activeUnit |
+| `useApostilasRecolhidas` | `use-apostilas-recolhidas.ts` | Não filtra por unidade | Adicionar filtro unit_id via join |
+| `useAtividadesEvasaoHome` | `use-atividades-evasao-home.ts` | Não filtra por unidade | Adicionar filtro unit_id |
+| `useAulasInauguraisProfessor` | `use-aulas-inaugurais-professor.ts` | Não filtra por unidade | Adicionar filtro unit_id |
+| `useProfessorAtividades` | `use-professor-atividades.ts` | Busca turmas sem filtro de unidade | Filtrar turmas por activeUnit |
+
+---
+
+### 5.4 Hooks que já Suportam Multi-Unidades ✅
+
+| Hook | Arquivo | Como filtra |
+|------|---------|-------------|
+| `useAniversariantes` | `use-aniversariantes.ts` | Filtra por unit_id diretamente |
+| `usePosMatriculasIncompletas` | `use-pos-matriculas-incompletas.ts` | Filtra via aluno.unit_id |
+| RPC `get_lista_aulas_experimentais` | - | Recebe unit_id como parâmetro |
+| RPC `get_lista_completa_reposicoes` | - | Recebe unit_id como parâmetro |
+
+---
+
+### 5.5 SQL para Adicionar unit_id nas Tabelas da Home
+
+#### 5.5.1 Tabela `camisetas`
+```sql
+-- Adicionar coluna
+ALTER TABLE public.camisetas 
+ADD COLUMN IF NOT EXISTS unit_id UUID REFERENCES public.units(id);
+
+-- Popular baseado no aluno
+UPDATE public.camisetas c
+SET unit_id = (SELECT unit_id FROM public.alunos WHERE id = c.aluno_id)
+WHERE c.unit_id IS NULL;
+
+-- Tornar NOT NULL após verificação
+ALTER TABLE public.camisetas 
+ALTER COLUMN unit_id SET NOT NULL;
+
+-- Índice
+CREATE INDEX IF NOT EXISTS idx_camisetas_unit_id ON public.camisetas(unit_id);
+```
+
+#### 5.5.2 Tabela `ah_recolhidas`
+```sql
+-- Adicionar coluna
+ALTER TABLE public.ah_recolhidas 
+ADD COLUMN IF NOT EXISTS unit_id UUID REFERENCES public.units(id);
+
+-- Popular baseado no aluno/funcionário
+UPDATE public.ah_recolhidas ar
+SET unit_id = (
+  SELECT COALESCE(
+    (SELECT unit_id FROM public.alunos WHERE id = ar.pessoa_id),
+    (SELECT unit_id FROM public.funcionarios WHERE id = ar.pessoa_id)
+  )
+)
+WHERE ar.unit_id IS NULL;
+
+-- Tornar NOT NULL após verificação
+ALTER TABLE public.ah_recolhidas 
+ALTER COLUMN unit_id SET NOT NULL;
+
+-- Índice
+CREATE INDEX IF NOT EXISTS idx_ah_recolhidas_unit_id ON public.ah_recolhidas(unit_id);
+```
+
+#### 5.5.3 Tabela `alerta_evasao`
+```sql
+-- Adicionar coluna
+ALTER TABLE public.alerta_evasao 
+ADD COLUMN IF NOT EXISTS unit_id UUID REFERENCES public.units(id);
+
+-- Popular baseado no aluno
+UPDATE public.alerta_evasao ae
+SET unit_id = (SELECT unit_id FROM public.alunos WHERE id = ae.aluno_id)
+WHERE ae.unit_id IS NULL;
+
+-- Tornar NOT NULL após verificação
+ALTER TABLE public.alerta_evasao 
+ALTER COLUMN unit_id SET NOT NULL;
+
+-- Índice
+CREATE INDEX IF NOT EXISTS idx_alerta_evasao_unit_id ON public.alerta_evasao(unit_id);
+```
+
+#### 5.5.4 Tabela `atividades_alerta_evasao`
+```sql
+-- Adicionar coluna
+ALTER TABLE public.atividades_alerta_evasao 
+ADD COLUMN IF NOT EXISTS unit_id UUID REFERENCES public.units(id);
+
+-- Popular baseado no alerta pai
+UPDATE public.atividades_alerta_evasao aae
+SET unit_id = (
+  SELECT ae.unit_id 
+  FROM public.alerta_evasao ae 
+  WHERE ae.id = aae.alerta_id
+)
+WHERE aae.unit_id IS NULL;
+
+-- Tornar NOT NULL após verificação
+ALTER TABLE public.atividades_alerta_evasao 
+ALTER COLUMN unit_id SET NOT NULL;
+
+-- Índice
+CREATE INDEX IF NOT EXISTS idx_atividades_alerta_evasao_unit_id 
+ON public.atividades_alerta_evasao(unit_id);
+```
+
+---
+
+### 5.6 Checklist de Tarefas - Tela Home
+
+#### Banco de Dados
+- [ ] Adicionar `unit_id` na tabela `camisetas`
+- [ ] Popular dados existentes de `camisetas` com unit_id
+- [ ] Adicionar `unit_id` na tabela `ah_recolhidas`
+- [ ] Popular dados existentes de `ah_recolhidas` com unit_id
+- [ ] Adicionar `unit_id` na tabela `alerta_evasao`
+- [ ] Popular dados existentes de `alerta_evasao` com unit_id
+- [ ] Adicionar `unit_id` na tabela `atividades_alerta_evasao`
+- [ ] Popular dados existentes de `atividades_alerta_evasao` com unit_id
+
+#### Frontend (Hooks)
+- [ ] Atualizar `use-camisetas.ts` para filtrar por unidade ativa
+- [ ] Atualizar `use-proximas-coletas-ah.ts` para usar activeUnit
+- [ ] Atualizar `use-apostilas-recolhidas.ts` para filtrar por unidade
+- [ ] Atualizar `use-atividades-evasao-home.ts` para filtrar por unidade
+- [ ] Atualizar `use-aulas-inaugurais-professor.ts` para filtrar por unidade
+- [ ] Atualizar `use-professor-atividades.ts` para filtrar turmas por unidade
+
+---
+
 ## Próximos Passos
 
 1. ✅ **Criar este documento de plano**
-2. ⏳ **Executar migrations** para adicionar colunas `unit_id`
-3. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
-4. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
+2. ✅ **Documentar análise da tela Home**
+3. ⏳ **Executar migrations** para adicionar colunas `unit_id`
+4. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
+5. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
 
 ---
 
@@ -257,3 +425,4 @@ Tabelas que também precisarão de `unit_id` ou revisão:
 | Data | Descrição |
 |------|-----------|
 | 2025-01-29 | Documento criado com plano inicial |
+| 2025-01-29 | Adicionada análise detalhada da tela Home (Fase 5) |
