@@ -1083,15 +1083,718 @@ export const ListaFaltasFuturasModal = ({ open, onOpenChange, unitId }: ListaFal
 
 ---
 
+## Fase 8: Tela Abrindo Horizontes
+
+### 8.1 Visão Geral da Arquitetura
+
+A funcionalidade de Abrindo Horizontes (AH) gerencia o fluxo completo de correção de apostilas: recolhimento → correção → entrega. Possui múltiplas telas e abas para gerenciar este processo.
+
+**Arquivos principais:**
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/pages/AbrindoHorizontesFila.tsx` | Página | Fila principal com 3 abas |
+| `src/pages/AbrindoHorizontesSelecao.tsx` | Página | Seleção de método de lançamento |
+| `src/pages/AbrindoHorizontesAlunos.tsx` | Página | Lançamento AH por aluno |
+| `src/pages/CorrecoesAbrindoHorizontes.tsx` | Página | Estatísticas de correções por professor |
+| `src/components/abrindo-horizontes/FilaApostilasTable.tsx` | Componente | Tabela de apostilas recolhidas |
+| `src/components/abrindo-horizontes/EstatisticasAH.tsx` | Componente | Cards de estatísticas de tempo |
+| `src/components/abrindo-horizontes/ProximasColetasAH.tsx` | Componente | Lista de próximas coletas |
+| `src/components/abrindo-horizontes/RecolherApostilasModal.tsx` | Modal | Recolher apostilas de pessoas |
+| `src/components/abrindo-horizontes/IgnorarColetaModal.tsx` | Modal | Ignorar coleta temporariamente |
+
+---
+
+### 8.2 Status Atual do Banco de Dados
+
+#### Tabelas que PRECISAM de `unit_id`:
+
+| Tabela | unit_id | Ação necessária |
+|--------|---------|-----------------|
+| `ah_recolhidas` | ❌ NÃO POSSUI | Adicionar coluna |
+| `ah_ignorar_coleta` | ❌ NÃO POSSUI | Adicionar coluna |
+| `produtividade_ah` | ❌ NÃO POSSUI | Adicionar coluna |
+
+#### RPCs que PRECISAM de parâmetro `p_unit_id`:
+
+| RPC | Status | Ação necessária |
+|-----|--------|-----------------|
+| `get_todas_pessoas` | ❌ Não filtra | Adicionar parâmetro |
+| `get_correcoes_ah_stats` | ❌ Não filtra | Adicionar parâmetro |
+| `get_ah_tempo_stats` | ❌ Não filtra | Adicionar parâmetro |
+
+---
+
+### 8.3 Migrações de Banco de Dados Necessárias
+
+#### 8.3.1 Adicionar Colunas `unit_id`
+
+```sql
+-- 1. Adicionar unit_id às tabelas de AH (nullable primeiro)
+ALTER TABLE ah_recolhidas 
+ADD COLUMN unit_id uuid REFERENCES units(id);
+
+ALTER TABLE ah_ignorar_coleta 
+ADD COLUMN unit_id uuid REFERENCES units(id);
+
+ALTER TABLE produtividade_ah 
+ADD COLUMN unit_id uuid REFERENCES units(id);
+```
+
+#### 8.3.2 Migrar Dados Existentes
+
+```sql
+-- 2. Preencher unit_id com base na pessoa (aluno ou funcionário)
+UPDATE ah_recolhidas ar
+SET unit_id = COALESCE(
+  (SELECT unit_id FROM alunos WHERE id = ar.pessoa_id),
+  (SELECT unit_id FROM funcionarios WHERE id = ar.pessoa_id)
+)
+WHERE ar.unit_id IS NULL;
+
+UPDATE ah_ignorar_coleta aic
+SET unit_id = COALESCE(
+  (SELECT unit_id FROM alunos WHERE id = aic.pessoa_id),
+  (SELECT unit_id FROM funcionarios WHERE id = aic.pessoa_id)
+)
+WHERE aic.unit_id IS NULL;
+
+UPDATE produtividade_ah pah
+SET unit_id = COALESCE(
+  (SELECT unit_id FROM alunos WHERE id = pah.pessoa_id),
+  (SELECT unit_id FROM funcionarios WHERE id = pah.pessoa_id)
+)
+WHERE pah.unit_id IS NULL;
+
+-- 3. Definir unidade de Maringá como padrão para registros órfãos
+UPDATE ah_recolhidas 
+SET unit_id = (SELECT id FROM units WHERE nome ILIKE '%maringá%' LIMIT 1) 
+WHERE unit_id IS NULL;
+
+UPDATE ah_ignorar_coleta 
+SET unit_id = (SELECT id FROM units WHERE nome ILIKE '%maringá%' LIMIT 1) 
+WHERE unit_id IS NULL;
+
+UPDATE produtividade_ah 
+SET unit_id = (SELECT id FROM units WHERE nome ILIKE '%maringá%' LIMIT 1) 
+WHERE unit_id IS NULL;
+
+-- 4. Tornar NOT NULL após preencher
+ALTER TABLE ah_recolhidas ALTER COLUMN unit_id SET NOT NULL;
+ALTER TABLE ah_ignorar_coleta ALTER COLUMN unit_id SET NOT NULL;
+ALTER TABLE produtividade_ah ALTER COLUMN unit_id SET NOT NULL;
+```
+
+---
+
+### 8.4 Atualização de RPCs
+
+#### 8.4.1 RPC `get_todas_pessoas`
+
+```sql
+CREATE OR REPLACE FUNCTION get_todas_pessoas(p_unit_id uuid DEFAULT NULL)
+RETURNS TABLE(
+  id uuid,
+  nome text,
+  tipo text,
+  turma_nome text,
+  turma_id uuid,
+  ultima_correcao_ah timestamp with time zone
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    a.id,
+    a.nome,
+    'aluno'::text as tipo,
+    t.nome as turma_nome,
+    a.turma_id,
+    a.ultima_correcao_ah
+  FROM alunos a
+  LEFT JOIN turmas t ON a.turma_id = t.id
+  WHERE a.active = true
+    AND (p_unit_id IS NULL OR a.unit_id = p_unit_id)
+  UNION ALL
+  SELECT 
+    f.id,
+    f.nome,
+    'funcionario'::text as tipo,
+    t.nome as turma_nome,
+    f.turma_id,
+    f.ultima_correcao_ah
+  FROM funcionarios f
+  LEFT JOIN turmas t ON f.turma_id = t.id
+  WHERE f.active = true 
+    AND f.turma_id IS NOT NULL
+    AND (p_unit_id IS NULL OR f.unit_id = p_unit_id)
+  ORDER BY nome;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### 8.4.2 RPC `get_correcoes_ah_stats`
+
+```sql
+CREATE OR REPLACE FUNCTION get_correcoes_ah_stats(p_unit_id uuid DEFAULT NULL)
+RETURNS TABLE(
+  professor_correcao text,
+  mes_atual bigint,
+  mes_anterior bigint,
+  ultimos_3_meses bigint,
+  ultimos_6_meses bigint,
+  ultimos_12_meses bigint
+) AS $$
+DECLARE
+  data_atual date := CURRENT_DATE;
+  inicio_mes_atual date := date_trunc('month', data_atual)::date;
+  inicio_mes_anterior date := (date_trunc('month', data_atual) - interval '1 month')::date;
+  fim_mes_anterior date := (date_trunc('month', data_atual) - interval '1 day')::date;
+BEGIN
+  RETURN QUERY
+  SELECT 
+    f.nome as professor_correcao,
+    COUNT(*) FILTER (WHERE pah.created_at >= inicio_mes_atual) as mes_atual,
+    COUNT(*) FILTER (WHERE pah.created_at >= inicio_mes_anterior AND pah.created_at < inicio_mes_atual) as mes_anterior,
+    COUNT(*) FILTER (WHERE pah.created_at >= (data_atual - interval '3 months')) as ultimos_3_meses,
+    COUNT(*) FILTER (WHERE pah.created_at >= (data_atual - interval '6 months')) as ultimos_6_meses,
+    COUNT(*) FILTER (WHERE pah.created_at >= (data_atual - interval '12 months')) as ultimos_12_meses
+  FROM produtividade_ah pah
+  JOIN funcionarios f ON pah.professor_correcao = f.id::text OR pah.funcionario_registro_id = f.id
+  WHERE pah.created_at >= (data_atual - interval '12 months')
+    AND (p_unit_id IS NULL OR pah.unit_id = p_unit_id)
+  GROUP BY f.nome
+  ORDER BY ultimos_12_meses DESC;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### 8.4.3 RPC `get_ah_tempo_stats`
+
+```sql
+CREATE OR REPLACE FUNCTION get_ah_tempo_stats(p_unit_id uuid DEFAULT NULL)
+RETURNS TABLE(
+  tempo_medio_coleta_correcao numeric,
+  tempo_medio_coleta_entrega numeric,
+  tempo_medio_correcao_entrega numeric,
+  tempo_medio_inicio_fim_correcao numeric,
+  total_apostilas_corrigidas bigint,
+  total_apostilas_entregues bigint
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    ROUND(AVG(EXTRACT(EPOCH FROM (ar.data_inicio_correcao - ar.data_recolhida::timestamp)) / 86400)::numeric, 1) as tempo_medio_coleta_correcao,
+    ROUND(AVG(EXTRACT(EPOCH FROM (ar.data_entrega_real::timestamp - ar.data_recolhida::timestamp)) / 86400)::numeric, 1) as tempo_medio_coleta_entrega,
+    ROUND(AVG(EXTRACT(EPOCH FROM (ar.data_entrega_real::timestamp - ar.data_inicio_correcao)) / 86400)::numeric, 1) as tempo_medio_correcao_entrega,
+    NULL::numeric as tempo_medio_inicio_fim_correcao,
+    COUNT(*) FILTER (WHERE ar.data_inicio_correcao IS NOT NULL) as total_apostilas_corrigidas,
+    COUNT(*) FILTER (WHERE ar.data_entrega_real IS NOT NULL) as total_apostilas_entregues
+  FROM ah_recolhidas ar
+  WHERE (p_unit_id IS NULL OR ar.unit_id = p_unit_id);
+END;
+$$ LANGUAGE plpgsql;
+```
+
+---
+
+### 8.5 Atualização da Edge Function
+
+#### 8.5.1 `register-ah/index.ts`
+
+**Alterações necessárias:**
+
+1. Receber `unit_id` no body da requisição
+2. Incluir `unit_id` ao inserir em `produtividade_ah`
+
+```typescript
+// Extrair unit_id do body
+const data = requestData.data || requestData;
+const unitId = data.unit_id;
+
+if (!unitId) {
+  console.error('unit_id não fornecido');
+  return new Response(
+    JSON.stringify({ error: 'unit_id é obrigatório.' }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+  );
+}
+
+// Incluir na inserção
+const insertData = {
+  pessoa_id: data.aluno_id,
+  tipo_pessoa: tipoPessoa,
+  apostila: data.apostila,
+  exercicios: data.exercicios,
+  erros: data.erros,
+  professor_correcao: data.funcionario_registro_id || data.professor_correcao,
+  funcionario_registro_id: data.funcionario_registro_id || null,
+  comentario: data.comentario,
+  data_fim_correcao: data.data_fim_correcao,
+  aluno_nome: pessoaData?.nome,
+  ah_recolhida_id: data.ah_recolhida_id || null,
+  unit_id: unitId  // Novo campo
+};
+```
+
+---
+
+### 8.6 Alterações no Frontend (Hooks)
+
+#### 8.6.1 `use-apostilas-recolhidas.ts`
+
+```typescript
+export const useApostilasRecolhidas = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["apostilas-recolhidas", unitId],
+    queryFn: async () => {
+      let query = supabase
+        .from("ah_recolhidas")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (unitId) {
+        query = query.eq('unit_id', unitId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+```
+
+#### 8.6.2 `use-proximas-coletas-ah.ts`
+
+```typescript
+export const useProximasColetasAH = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["proximas-coletas-ah", unitId],
+    queryFn: async () => {
+      // Filtrar alunos por unidade
+      let alunosQuery = supabase.from("alunos").select("*").eq("active", true);
+      if (unitId) {
+        alunosQuery = alunosQuery.eq('unit_id', unitId);
+      }
+      // ... resto da lógica
+    },
+  });
+};
+```
+
+#### 8.6.3 `use-alunos-ignorados-ah.ts`
+
+```typescript
+export const useAlunosIgnoradosAH = (unitId?: string) => {
+  return useQuery({
+    queryKey: ['alunos-ignorados-ah', unitId],
+    queryFn: async () => {
+      let query = supabase
+        .from('ah_ignorar_coleta')
+        .select('*')
+        .eq('active', true)
+        .gte('data_fim', new Date().toISOString())
+        .order('data_fim', { ascending: true });
+
+      if (unitId) {
+        query = query.eq('unit_id', unitId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      // ... resto da lógica
+    },
+  });
+};
+```
+
+#### 8.6.4 `use-todos-alunos.ts`
+
+```typescript
+export const useTodosAlunos = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["todos-alunos", unitId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_todas_pessoas', {
+        p_unit_id: unitId || null
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+```
+
+#### 8.6.5 `use-ah-tempo-stats.ts`
+
+```typescript
+export const useAHTempoStats = (unitId?: string) => {
+  return useQuery({
+    queryKey: ['ah-tempo-stats', unitId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_ah_tempo_stats', {
+        p_unit_id: unitId || null
+      });
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
+    },
+  });
+};
+```
+
+#### 8.6.6 `use-correcoes-ah-stats.ts`
+
+```typescript
+export const useCorrecoesAHStats = (unitId?: string) => {
+  return useQuery({
+    queryKey: ['correcoes-ah-stats', unitId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_correcoes_ah_stats', {
+        p_unit_id: unitId || null
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+```
+
+#### 8.6.7 `use-pessoas-com-recolhimento-aberto.ts`
+
+```typescript
+export const usePessoasComRecolhimentoAberto = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["pessoas-com-recolhimento-aberto", unitId],
+    queryFn: async () => {
+      let query = supabase
+        .from("ah_recolhidas")
+        .select("*")
+        .is("data_entrega_real", null);
+
+      if (unitId) {
+        query = query.eq('unit_id', unitId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+```
+
+#### 8.6.8 `use-ah-correcao.ts`
+
+```typescript
+interface CorrecaoAHData {
+  apostilaRecolhidaId: string;
+  pessoaId: string;
+  apostilaNome: string;
+  exercicios: number;
+  erros: number;
+  funcionarioRegistroId: string;
+  dataFimCorrecao: string;
+  comentario?: string;
+  unitId: string;  // Novo campo
+}
+
+export const useAhCorrecao = () => {
+  const registrarCorrecaoAH = useMutation({
+    mutationFn: async (data: CorrecaoAHData) => {
+      const { data: result, error } = await supabase.functions.invoke("register-ah", {
+        body: {
+          aluno_id: data.pessoaId,
+          apostila: data.apostilaNome,
+          exercicios: data.exercicios,
+          erros: data.erros,
+          funcionario_registro_id: data.funcionarioRegistroId,
+          data_fim_correcao: data.dataFimCorrecao,
+          comentario: data.comentario || null,
+          ah_recolhida_id: data.apostilaRecolhidaId,
+          unit_id: data.unitId,  // Novo campo
+        },
+      });
+      if (error) throw error;
+      return result;
+    },
+  });
+  // ...
+};
+```
+
+---
+
+### 8.7 Alterações no Frontend (Páginas e Componentes)
+
+#### 8.7.1 Páginas
+
+**`AbrindoHorizontesFila.tsx`:**
+```typescript
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+
+const AbrindoHorizontesFila = () => {
+  const { activeUnit } = useActiveUnit();
+  
+  return (
+    <div>
+      <FilaApostilasTable unitId={activeUnit?.id} />
+      <EstatisticasAH unitId={activeUnit?.id} />
+      <ProximasColetasAH unitId={activeUnit?.id} />
+    </div>
+  );
+};
+```
+
+**`AbrindoHorizontesAlunos.tsx`:**
+```typescript
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+
+const AbrindoHorizontesAlunos = () => {
+  const { activeUnit } = useActiveUnit();
+  const { data: pessoas } = useTodosAlunos(activeUnit?.id);
+  // ... usar activeUnit?.id nas chamadas de correção
+};
+```
+
+**`CorrecoesAbrindoHorizontes.tsx`:**
+```typescript
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+
+const CorrecoesAbrindoHorizontes = () => {
+  const { activeUnit } = useActiveUnit();
+  const { data: stats } = useCorrecoesAHStats(activeUnit?.id);
+  // ...
+};
+```
+
+#### 8.7.2 Componentes
+
+**`FilaApostilasTable.tsx`:**
+```typescript
+interface FilaApostilasTableProps {
+  unitId?: string;
+}
+
+const FilaApostilasTable = ({ unitId }: FilaApostilasTableProps) => {
+  const { data: apostilas } = useApostilasRecolhidas(unitId);
+  const { data: pessoasAbertas } = usePessoasComRecolhimentoAberto(unitId);
+  // ...
+};
+```
+
+**`EstatisticasAH.tsx`:**
+```typescript
+interface EstatisticasAHProps {
+  unitId?: string;
+}
+
+const EstatisticasAH = ({ unitId }: EstatisticasAHProps) => {
+  const { data: stats } = useAHTempoStats(unitId);
+  // ...
+};
+```
+
+**`ProximasColetasAH.tsx`:**
+```typescript
+interface ProximasColetasAHProps {
+  unitId?: string;
+}
+
+const ProximasColetasAH = ({ unitId }: ProximasColetasAHProps) => {
+  const { data: proximasColetas } = useProximasColetasAH(unitId);
+  const { data: ignorados } = useAlunosIgnoradosAH(unitId);
+  // ...
+};
+```
+
+**`RecolherApostilasModal.tsx`:**
+```typescript
+interface RecolherApostilasModalProps {
+  unitId?: string;
+  // ... outras props
+}
+
+const RecolherApostilasModal = ({ unitId, ...props }: RecolherApostilasModalProps) => {
+  const handleRecolher = async () => {
+    await supabase.from('ah_recolhidas').insert({
+      pessoa_id: pessoaSelecionada.id,
+      apostila: apostilaSelecionada,
+      data_recolhida: new Date().toISOString(),
+      unit_id: unitId,  // Incluir unit_id
+      // ... outros campos
+    });
+  };
+  // ...
+};
+```
+
+**`IgnorarColetaModal.tsx`:**
+```typescript
+interface IgnorarColetaModalProps {
+  unitId?: string;
+  // ... outras props
+}
+
+const IgnorarColetaModal = ({ unitId, ...props }: IgnorarColetaModalProps) => {
+  const handleIgnorar = async () => {
+    await supabase.from('ah_ignorar_coleta').insert({
+      pessoa_id: pessoaSelecionada.id,
+      dias: diasIgnorar,
+      motivo: motivo,
+      unit_id: unitId,  // Incluir unit_id
+      // ... outros campos
+    });
+  };
+  // ...
+};
+```
+
+---
+
+### 8.8 Checklist de Tarefas
+
+#### Banco de Dados (Migrações)
+- [ ] Adicionar `unit_id` à tabela `ah_recolhidas`
+- [ ] Adicionar `unit_id` à tabela `ah_ignorar_coleta`
+- [ ] Adicionar `unit_id` à tabela `produtividade_ah`
+- [ ] Migrar dados existentes (preencher unit_id baseado na pessoa)
+- [ ] Definir colunas como NOT NULL após migração
+
+#### Banco de Dados (RPCs)
+- [ ] Atualizar RPC `get_todas_pessoas`:
+  - [ ] Adicionar parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro por unidade nas queries
+
+- [ ] Atualizar RPC `get_correcoes_ah_stats`:
+  - [ ] Adicionar parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro por unidade
+
+- [ ] Atualizar RPC `get_ah_tempo_stats`:
+  - [ ] Adicionar parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro por unidade
+
+#### Edge Function
+- [ ] Atualizar `register-ah/index.ts`:
+  - [ ] Receber `unit_id` no body
+  - [ ] Incluir `unit_id` ao inserir em `produtividade_ah`
+
+#### Frontend (Hooks)
+- [ ] Atualizar `use-apostilas-recolhidas.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Filtrar por `unit_id`
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-proximas-coletas-ah.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Filtrar alunos e funcionários por `unit_id`
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-alunos-ignorados-ah.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Filtrar por `unit_id`
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-todos-alunos.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Passar `p_unit_id` para RPC
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-ah-tempo-stats.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Passar `p_unit_id` para RPC
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-correcoes-ah-stats.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Passar `p_unit_id` para RPC
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-pessoas-com-recolhimento-aberto.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Filtrar por `unit_id`
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-ah-correcao.ts`:
+  - [ ] Receber `unitId` como parâmetro na interface
+  - [ ] Passar `unit_id` para edge function
+
+#### Frontend (Páginas)
+- [ ] Atualizar `AbrindoHorizontesFila.tsx`:
+  - [ ] Importar e usar `useActiveUnit()`
+  - [ ] Passar `activeUnit?.id` para componentes filhos
+
+- [ ] Atualizar `AbrindoHorizontesAlunos.tsx`:
+  - [ ] Importar e usar `useActiveUnit()`
+  - [ ] Passar `activeUnit?.id` para hooks
+
+- [ ] Atualizar `CorrecoesAbrindoHorizontes.tsx`:
+  - [ ] Importar e usar `useActiveUnit()`
+  - [ ] Passar `activeUnit?.id` para hook
+
+#### Frontend (Componentes)
+- [ ] Atualizar `FilaApostilasTable.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar para useApostilasRecolhidas
+  - [ ] Passar para usePessoasComRecolhimentoAberto
+
+- [ ] Atualizar `EstatisticasAH.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar para useAHTempoStats
+
+- [ ] Atualizar `ProximasColetasAH.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar para useProximasColetasAH
+  - [ ] Passar para useAlunosIgnoradosAH
+
+- [ ] Atualizar `RecolherApostilasModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Incluir `unit_id` ao inserir em ah_recolhidas
+
+- [ ] Atualizar `IgnorarColetaModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Incluir `unit_id` ao inserir em ah_ignorar_coleta
+
+#### Testes
+- [ ] Verificar que fila de apostilas filtra por unidade
+- [ ] Verificar que próximas coletas filtra por unidade
+- [ ] Verificar que estatísticas de tempo filtra por unidade
+- [ ] Verificar que estatísticas de correções filtra por unidade
+- [ ] Verificar que recolher apostilas salva com unit_id correto
+- [ ] Verificar que ignorar coleta salva com unit_id correto
+- [ ] Verificar que lançar AH (register-ah) salva com unit_id correto
+- [ ] Testar troca de unidade e verificar atualização dos dados
+
+---
+
+### 8.9 Observações Importantes
+
+1. **Migração de dados é crítica** - Todas as 3 tabelas precisam de `unit_id` preenchido antes de implementar os filtros no frontend.
+
+2. **Edge function precisa de atualização** - A função `register-ah` precisa receber e salvar o `unit_id` para novos registros.
+
+3. **RPCs são centrais** - Três RPCs (`get_todas_pessoas`, `get_correcoes_ah_stats`, `get_ah_tempo_stats`) precisam de atualização para suportar filtro por unidade.
+
+4. **Muitos hooks afetados** - São 8 hooks que precisam de atualização para receber e usar `unitId`.
+
+5. **Ordem de implementação sugerida**:
+   - 1º: Migração do banco (adicionar colunas, preencher dados, definir NOT NULL)
+   - 2º: Atualizar RPCs
+   - 3º: Atualizar edge function
+   - 4º: Atualizar hooks
+   - 5º: Atualizar páginas e componentes
+
+---
+
 ## Próximos Passos
 
 1. ✅ **Criar este documento de plano**
 2. ✅ **Documentar análise da tela Home (Fase 5)**
 3. ✅ **Documentar análise da tela Sincronizar Turmas (Fase 6)**
 4. ✅ **Documentar análise da tela Calendário de Aulas (Fase 7)**
-5. ⏳ **Executar migrations** para adicionar colunas `unit_id`
-6. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
-7. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
+5. ✅ **Documentar análise da tela Abrindo Horizontes (Fase 8)**
+6. ⏳ **Executar migrations** para adicionar colunas `unit_id`
+7. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
+8. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
 
 ---
 
@@ -1103,3 +1806,4 @@ export const ListaFaltasFuturasModal = ({ open, onOpenChange, unitId }: ListaFal
 | 2025-01-29 | Adicionada análise detalhada da tela Home (Fase 5) |
 | 2025-01-29 | Adicionada análise detalhada da tela Sincronizar Turmas (Fase 6) |
 | 2025-01-29 | Adicionada análise detalhada da tela Calendário de Aulas (Fase 7) |
+| 2025-01-29 | Adicionada análise detalhada da tela Abrindo Horizontes (Fase 8) |
