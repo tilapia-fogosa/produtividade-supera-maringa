@@ -679,14 +679,419 @@ A tabela `data_imports` já possui a coluna `unit_id` (NOT NULL), portanto **nã
 
 ---
 
+## Fase 7: Tela Calendário de Aulas - Análise Detalhada
+
+### 7.1 Visão Geral da Arquitetura
+
+A tela de Calendário de Aulas exibe um grid semanal com turmas e eventos de sala. Possui modais auxiliares para listar reposições, aulas experimentais e faltas futuras.
+
+**Arquivos principais:**
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/pages/CalendarioAulas.tsx` | Frontend | Página principal do calendário |
+| `src/hooks/use-calendario-eventos-unificados.ts` | Hook | Busca eventos unificados |
+| `src/hooks/use-lista-reposicoes.ts` | Hook | Lista de reposições |
+| `src/hooks/use-lista-aulas-experimentais.ts` | Hook | Lista de aulas experimentais |
+| `src/hooks/use-lista-faltas-futuras.ts` | Hook | Lista de faltas futuras |
+| `src/components/turmas/ListaReposicoesModal.tsx` | Modal | Modal de reposições |
+| `src/components/turmas/ListaAulasExperimentaisModal.tsx` | Modal | Modal de aulas experimentais |
+| `src/components/turmas/ListaFaltasFuturasModal.tsx` | Modal | Modal de faltas futuras |
+
+---
+
+### 7.2 Status Atual - O que JÁ FUNCIONA
+
+| Componente | Status | Como funciona |
+|------------|--------|---------------|
+| `CalendarioAulas.tsx` | ✅ OK | Usa `useActiveUnit()` e passa `activeUnit?.id` |
+| `useCalendarioEventosUnificados` | ✅ OK | Recebe `unitId` e inclui na queryKey |
+| RPC `get_calendario_eventos_unificados` | ✅ OK | Recebe `p_unit_id` e filtra na view |
+| View `vw_calendario_eventos_unificados` | ✅ OK | Usa `turmas.unit_id` e `eventos_sala.unit_id` |
+| Tabela `turmas` | ✅ OK | Possui `unit_id` NOT NULL |
+| Tabela `eventos_sala` | ✅ OK | Possui `unit_id` NOT NULL |
+| Tabela `salas` | ✅ OK | Possui `unit_id` NOT NULL |
+
+---
+
+### 7.3 Problema Atual - Modais Auxiliares
+
+Os modais de listagem não filtram por unidade, mostrando dados de todas as unidades:
+
+| Hook | RPC/Query | Problema | Impacto |
+|------|-----------|----------|---------|
+| `useListaReposicoes` | `get_lista_completa_reposicoes` | Não recebe `unit_id` | Mostra reposições de todas unidades |
+| `useListaAulasExperimentais` | `get_lista_aulas_experimentais` | Não recebe `unit_id` | Mostra aulas experimentais de todas unidades |
+| `useListaFaltasFuturas` | Query direta `faltas_antecipadas` | Não filtra por `unit_id` | Mostra faltas de todas unidades |
+
+**Observação**: Todas as tabelas (`reposicoes`, `aulas_experimentais`, `faltas_antecipadas`) JÁ possuem `unit_id` NOT NULL.
+
+---
+
+### 7.4 Banco de Dados - Migrações Necessárias
+
+#### 7.4.1 Atualizar RPC `get_lista_completa_reposicoes`
+
+```sql
+-- Dropar função existente (sem parâmetros)
+DROP FUNCTION IF EXISTS get_lista_completa_reposicoes();
+
+-- Criar nova função com parâmetro p_unit_id
+CREATE OR REPLACE FUNCTION get_lista_completa_reposicoes(
+  p_unit_id uuid DEFAULT NULL
+)
+RETURNS TABLE(
+  reposicao_id uuid,
+  data_reposicao date,
+  data_falta date,
+  aluno_nome text,
+  turma_original_nome text,
+  turma_reposicao_nome text,
+  turma_reposicao_professor text,
+  observacoes text,
+  unit_id uuid,
+  aluno_id uuid,
+  turma_original_id uuid,
+  turma_reposicao_id uuid,
+  pessoa_tipo text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    r.id as reposicao_id,
+    r.data_reposicao,
+    r.data_falta,
+    COALESCE(a.nome, f.nome, r.aluno_nome) as aluno_nome,
+    t_orig.nome as turma_original_nome,
+    t_rep.nome as turma_reposicao_nome,
+    p.nome as turma_reposicao_professor,
+    r.observacoes,
+    r.unit_id,
+    r.aluno_id,
+    r.turma_original_id,
+    r.turma_reposicao_id,
+    r.pessoa_tipo
+  FROM reposicoes r
+  LEFT JOIN alunos a ON r.aluno_id = a.id AND r.pessoa_tipo = 'aluno'
+  LEFT JOIN funcionarios f ON r.aluno_id = f.id AND r.pessoa_tipo = 'funcionario'
+  LEFT JOIN turmas t_orig ON r.turma_original_id = t_orig.id
+  LEFT JOIN turmas t_rep ON r.turma_reposicao_id = t_rep.id
+  LEFT JOIN professores p ON t_rep.professor_id = p.id
+  WHERE r.data_reposicao >= CURRENT_DATE
+    AND (p_unit_id IS NULL OR r.unit_id = p_unit_id)
+  ORDER BY r.data_reposicao ASC;
+END;
+$function$;
+```
+
+#### 7.4.2 Atualizar RPC `get_lista_aulas_experimentais`
+
+```sql
+-- Dropar função existente (sem parâmetros)
+DROP FUNCTION IF EXISTS get_lista_aulas_experimentais();
+
+-- Criar nova função com parâmetro p_unit_id
+CREATE OR REPLACE FUNCTION get_lista_aulas_experimentais(
+  p_unit_id uuid DEFAULT NULL
+)
+RETURNS TABLE(
+  id uuid,
+  cliente_nome text,
+  cliente_telefone text,
+  data_aula_experimental date,
+  turma_id uuid,
+  turma_nome text,
+  professor_nome text,
+  observacoes text,
+  created_at timestamptz,
+  active boolean,
+  unit_id uuid
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    ae.id,
+    ae.cliente_nome,
+    ae.cliente_telefone,
+    ae.data_aula_experimental,
+    ae.turma_id,
+    t.nome as turma_nome,
+    p.nome as professor_nome,
+    ae.observacoes,
+    ae.created_at,
+    ae.active,
+    ae.unit_id
+  FROM aulas_experimentais ae
+  LEFT JOIN turmas t ON ae.turma_id = t.id
+  LEFT JOIN professores p ON t.professor_id = p.id
+  WHERE ae.active = true
+    AND (p_unit_id IS NULL OR ae.unit_id = p_unit_id)
+  ORDER BY ae.data_aula_experimental DESC, ae.cliente_nome ASC;
+END;
+$function$;
+```
+
+---
+
+### 7.5 Frontend - Alterações Necessárias
+
+#### 7.5.1 Hook `use-lista-reposicoes.ts`
+
+**Alterações:**
+- Receber `unitId` como parâmetro
+- Passar `p_unit_id` para a RPC
+- Incluir `unitId` na queryKey
+
+**Código novo:**
+```typescript
+export const useListaReposicoes = (unitId?: string) => {
+  const { data: reposicoes = [], isLoading, refetch } = useQuery({
+    queryKey: ["lista-reposicoes", unitId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_lista_completa_reposicoes", {
+        p_unit_id: unitId || null
+      });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  return { reposicoes, isLoading, refetch };
+};
+```
+
+#### 7.5.2 Hook `use-lista-aulas-experimentais.ts`
+
+**Alterações:**
+- Receber `unitId` como parâmetro
+- Passar `p_unit_id` para a RPC
+- Incluir `unitId` na queryKey
+
+**Código novo:**
+```typescript
+export const useListaAulasExperimentais = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["lista-aulas-experimentais", unitId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_lista_aulas_experimentais", {
+        p_unit_id: unitId || null
+      });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+```
+
+#### 7.5.3 Hook `use-lista-faltas-futuras.ts`
+
+**Alterações:**
+- Receber `unitId` como parâmetro
+- Adicionar filtro `.eq('unit_id', unitId)` quando unitId existir
+- Incluir `unitId` na queryKey
+
+**Código novo:**
+```typescript
+export const useListaFaltasFuturas = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["lista-faltas-futuras", unitId],
+    queryFn: async () => {
+      let query = supabase
+        .from('faltas_antecipadas')
+        .select(`
+          id,
+          data_falta,
+          motivo,
+          observacoes,
+          aluno_id,
+          turma_id,
+          active,
+          unit_id,
+          alunos!inner(nome),
+          turmas!inner(nome, professores(nome))
+        `)
+        .eq('active', true);
+      
+      if (unitId) {
+        query = query.eq('unit_id', unitId);
+      }
+      
+      const { data, error } = await query.order('data_falta', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+```
+
+#### 7.5.4 Modal `ListaReposicoesModal.tsx`
+
+**Alterações:**
+- Adicionar prop `unitId?: string`
+- Passar `unitId` para o hook
+
+```typescript
+interface ListaReposicoesModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  unitId?: string;
+}
+
+export const ListaReposicoesModal = ({ open, onOpenChange, unitId }: ListaReposicoesModalProps) => {
+  const { reposicoes, isLoading } = useListaReposicoes(unitId);
+  // ... resto do componente
+};
+```
+
+#### 7.5.5 Modal `ListaAulasExperimentaisModal.tsx`
+
+**Alterações:**
+- Adicionar prop `unitId?: string`
+- Passar `unitId` para o hook
+
+```typescript
+interface ListaAulasExperimentaisModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  unitId?: string;
+}
+
+export const ListaAulasExperimentaisModal = ({ open, onOpenChange, unitId }: ListaAulasExperimentaisModalProps) => {
+  const { data: aulasExperimentais = [], isLoading } = useListaAulasExperimentais(unitId);
+  // ... resto do componente
+};
+```
+
+#### 7.5.6 Modal `ListaFaltasFuturasModal.tsx`
+
+**Alterações:**
+- Adicionar prop `unitId?: string`
+- Passar `unitId` para o hook
+
+```typescript
+interface ListaFaltasFuturasModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  unitId?: string;
+}
+
+export const ListaFaltasFuturasModal = ({ open, onOpenChange, unitId }: ListaFaltasFuturasModalProps) => {
+  const { data: faltasFuturas = [], isLoading } = useListaFaltasFuturas(unitId);
+  // ... resto do componente
+};
+```
+
+#### 7.5.7 Página `CalendarioAulas.tsx`
+
+**Alterações:**
+- Passar `activeUnit?.id` para cada modal
+
+```typescript
+<ListaReposicoesModal
+  open={showReposicoesModal}
+  onOpenChange={setShowReposicoesModal}
+  unitId={activeUnit?.id}
+/>
+
+<ListaAulasExperimentaisModal
+  open={showAulasExperimentaisModal}
+  onOpenChange={setShowAulasExperimentaisModal}
+  unitId={activeUnit?.id}
+/>
+
+<ListaFaltasFuturasModal
+  open={showFaltasFuturasModal}
+  onOpenChange={setShowFaltasFuturasModal}
+  unitId={activeUnit?.id}
+/>
+```
+
+---
+
+### 7.6 Checklist de Tarefas - Tela Calendário de Aulas
+
+#### Banco de Dados (RPCs)
+- [ ] Atualizar RPC `get_lista_completa_reposicoes`:
+  - [ ] Dropar função existente
+  - [ ] Criar nova com parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro `(p_unit_id IS NULL OR r.unit_id = p_unit_id)`
+
+- [ ] Atualizar RPC `get_lista_aulas_experimentais`:
+  - [ ] Dropar função existente
+  - [ ] Criar nova com parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro `(p_unit_id IS NULL OR ae.unit_id = p_unit_id)`
+
+#### Frontend (Hooks)
+- [ ] Atualizar `use-lista-reposicoes.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Passar `p_unit_id` para RPC
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-lista-aulas-experimentais.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Passar `p_unit_id` para RPC
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-lista-faltas-futuras.ts`:
+  - [ ] Adicionar parâmetro `unitId?: string`
+  - [ ] Adicionar `.eq('unit_id', unitId)` quando unitId existir
+  - [ ] Incluir `unitId` na queryKey
+
+#### Frontend (Modais)
+- [ ] Atualizar `ListaReposicoesModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar `unitId` para o hook
+
+- [ ] Atualizar `ListaAulasExperimentaisModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar `unitId` para o hook
+
+- [ ] Atualizar `ListaFaltasFuturasModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar `unitId` para o hook
+
+- [ ] Atualizar `CalendarioAulas.tsx`:
+  - [ ] Passar `activeUnit?.id` para `ListaReposicoesModal`
+  - [ ] Passar `activeUnit?.id` para `ListaAulasExperimentaisModal`
+  - [ ] Passar `activeUnit?.id` para `ListaFaltasFuturasModal`
+
+#### Testes
+- [ ] Verificar que o calendário principal já filtra por unidade (deve funcionar)
+- [ ] Testar modal de reposições filtrando por unidade
+- [ ] Testar modal de aulas experimentais filtrando por unidade
+- [ ] Testar modal de faltas futuras filtrando por unidade
+- [ ] Testar troca de unidade e verificar atualização dos dados
+
+---
+
+### 7.7 Observações Importantes
+
+1. **Calendário principal já funciona** - A tela principal já está preparada para multi-unidades.
+
+2. **Apenas modais precisam de correção** - O trabalho é focado nos 3 modais auxiliares.
+
+3. **Não há migração de dados** - Todas as tabelas já possuem `unit_id` preenchido.
+
+4. **RPCs precisam de parâmetro opcional** - Para manter compatibilidade, usar `DEFAULT NULL`.
+
+---
+
 ## Próximos Passos
 
 1. ✅ **Criar este documento de plano**
 2. ✅ **Documentar análise da tela Home (Fase 5)**
 3. ✅ **Documentar análise da tela Sincronizar Turmas (Fase 6)**
-4. ⏳ **Executar migrations** para adicionar colunas `unit_id`
-5. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
-6. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
+4. ✅ **Documentar análise da tela Calendário de Aulas (Fase 7)**
+5. ⏳ **Executar migrations** para adicionar colunas `unit_id`
+6. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
+7. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
 
 ---
 
@@ -697,3 +1102,4 @@ A tabela `data_imports` já possui a coluna `unit_id` (NOT NULL), portanto **nã
 | 2025-01-29 | Documento criado com plano inicial |
 | 2025-01-29 | Adicionada análise detalhada da tela Home (Fase 5) |
 | 2025-01-29 | Adicionada análise detalhada da tela Sincronizar Turmas (Fase 6) |
+| 2025-01-29 | Adicionada análise detalhada da tela Calendário de Aulas (Fase 7) |
