@@ -2150,6 +2150,161 @@ export function useAlertasEvasao(unitId?: string) {
 
 ---
 
+## Fase 10: Página Configurações (Vínculos Professor) - Análise para Migração Multi-Unidades
+
+### 10.1 Visão Geral da Arquitetura
+
+A página de Configurações do Sistema (`AdminConfiguracao.tsx`) possui atualmente 4 abas:
+- **Dados Importantes** - Será removida
+- **Vínculos Professor** - Será migrada para multi-unidades
+- **Sincronização XLS** - Será removida (já documentada na Fase 6)
+- **Configurações Gerais** - Será removida (placeholder sem funcionalidade)
+
+**Arquivos principais:**
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/pages/AdminConfiguracao.tsx` | Página | Página de configurações com abas |
+| `src/components/admin/VincularProfessorModal.tsx` | Componente | Modal para vincular professor a usuário |
+
+---
+
+### 10.2 Status Atual - Análise do Código
+
+#### Problemas identificados:
+
+| Item | Status Atual | Problema |
+|------|--------------|----------|
+| `MARINGA_UNIT_ID` | Hardcoded na página | ID fixo de Maringá |
+| Query de usuários | Filtra por Maringá | Não usa `useActiveUnit()` |
+| Query de professores (modal) | Busca todos ativos | Não filtra por unidade |
+
+#### Código problemático em `AdminConfiguracao.tsx`:
+
+```typescript
+// HARDCODED - Deve ser removido
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+```
+
+---
+
+### 10.3 Alterações Necessárias
+
+#### 10.3.1 Simplificação da Página
+
+**Remover:**
+- Estrutura de `Tabs` (ficará apenas conteúdo de vínculos)
+- Imports não utilizados: `AdminDadosImportantesForm`, `XlsUploadComponent`, `XlsSyncStatus`
+- Ícones não utilizados: `Database`, `FileSpreadsheet`, `Settings`
+
+**Alterar:**
+- Título da página: "Configurações do Sistema" → "Vínculos Professor"
+
+#### 10.3.2 Migração Multi-Unidades
+
+##### `AdminConfiguracao.tsx`:
+
+```typescript
+// ANTES
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+// ... query usando MARINGA_UNIT_ID
+
+// DEPOIS
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
+
+const { activeUnit } = useActiveUnit();
+
+// Na query: trocar MARINGA_UNIT_ID por activeUnit?.id
+const { data: unitUsersMaringa, error: unitUsersError } = await supabase
+  .from('unit_users')
+  .select('user_id')
+  .eq('unit_id', activeUnit?.id)  // ALTERADO
+  .eq('active', true);
+```
+
+##### `VincularProfessorModal.tsx`:
+
+```typescript
+// Adicionar prop unitId
+interface VincularProfessorModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  userId: string;
+  userName: string;
+  unitId?: string;  // NOVO
+}
+
+// Na query de professores, filtrar por unidade
+const { data: professores, isLoading } = useQuery({
+  queryKey: ['professores-disponiveis', unitId],  // ALTERADO
+  queryFn: async () => {
+    let query = supabase
+      .from('professores')
+      .select('id, nome, email')
+      .eq('status', true)
+      .order('nome');
+    
+    // NOVO: Filtrar por unidade
+    if (unitId) {
+      query = query.eq('unit_id', unitId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+  enabled: open,
+});
+```
+
+---
+
+### 10.4 Checklist de Tarefas
+
+#### Simplificação da Página
+- [ ] Remover estrutura de Tabs
+- [ ] Remover imports: `AdminDadosImportantesForm`, `XlsUploadComponent`, `XlsSyncStatus`
+- [ ] Remover ícones não utilizados: `Database`, `FileSpreadsheet`, `Settings`
+- [ ] Alterar título para "Vínculos Professor"
+
+#### Frontend (Página)
+- [ ] Atualizar `AdminConfiguracao.tsx`:
+  - [ ] Importar `useActiveUnit()`
+  - [ ] Remover constante `MARINGA_UNIT_ID` hardcoded
+  - [ ] Usar `activeUnit?.id` na query de usuários
+  - [ ] Passar `activeUnit?.id` para `VincularProfessorModal`
+  - [ ] Atualizar `queryKey` para incluir `activeUnit?.id`
+
+#### Frontend (Componente)
+- [ ] Atualizar `VincularProfessorModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Filtrar professores por `unit_id` se fornecido
+  - [ ] Atualizar `queryKey` para incluir `unitId`
+
+#### Testes
+- [ ] Verificar que usuários são filtrados pela unidade ativa
+- [ ] Verificar que professores disponíveis são filtrados pela unidade ativa
+- [ ] Verificar que vínculo funciona corretamente
+- [ ] Testar troca de unidade e verificar atualização dos dados
+
+---
+
+### 10.5 Observações Importantes
+
+1. **Fase simples** - Esta é uma migração simples, apenas frontend, sem alterações de banco de dados.
+
+2. **Não há tabelas para migrar** - Os dados já estão vinculados via `unit_users` e `professores.unit_id`.
+
+3. **Remoção de código legado** - As abas removidas são funcionalidades já migradas (XLS na Fase 6) ou não implementadas.
+
+4. **Ordem de implementação sugerida**:
+   - 1º: Remover abas e simplificar página
+   - 2º: Adicionar `useActiveUnit()` 
+   - 3º: Atualizar `VincularProfessorModal` para receber `unitId`
+   - 4º: Testar funcionalidade
+
+---
+
 ## Próximos Passos
 
 1. ✅ **Criar este documento de plano**
@@ -2158,9 +2313,10 @@ export function useAlertasEvasao(unitId?: string) {
 4. ✅ **Documentar análise da tela Calendário de Aulas (Fase 7)**
 5. ✅ **Documentar análise da tela Abrindo Horizontes (Fase 8)**
 6. ✅ **Documentar análise da tela Alertas de Evasão (Fase 9)**
-7. ⏳ **Executar migrations** para adicionar colunas `unit_id`
-8. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
-9. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
+7. ✅ **Documentar análise da página Configurações/Vínculos Professor (Fase 10)**
+8. ⏳ **Executar migrations** para adicionar colunas `unit_id`
+9. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
+10. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
 
 ---
 
@@ -2174,3 +2330,4 @@ export function useAlertasEvasao(unitId?: string) {
 | 2025-01-29 | Adicionada análise detalhada da tela Calendário de Aulas (Fase 7) |
 | 2025-01-29 | Adicionada análise detalhada da tela Abrindo Horizontes (Fase 8) |
 | 2025-01-29 | Adicionada análise detalhada da tela Alertas de Evasão (Fase 9) |
+| 2025-01-29 | Adicionada análise da página Configurações/Vínculos Professor (Fase 10) |
