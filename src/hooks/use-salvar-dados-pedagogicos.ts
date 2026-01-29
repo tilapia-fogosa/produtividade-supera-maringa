@@ -93,6 +93,63 @@ export const useSalvarDadosPedagogicos = () => {
         if (eventoError) throw eventoError;
       }
 
+      // 4. Enviar webhook com dados do aluno para sincronização de contatos
+      try {
+        // Buscar dados do aluno
+        let nomeAluno = '';
+        let telefoneAluno = '';
+        
+        if (params.alunoId) {
+          const { data: alunoData } = await supabase
+            .from('alunos')
+            .select('nome, telefone')
+            .eq('id', params.alunoId)
+            .maybeSingle();
+          
+          if (alunoData) {
+            nomeAluno = alunoData.nome || '';
+            telefoneAluno = alunoData.telefone || '';
+          }
+        }
+
+        // Buscar nome da turma
+        let nomeTurma = '';
+        if (params.turmaId) {
+          const { data: turmaData } = await supabase
+            .from('turmas')
+            .select('nome')
+            .eq('id', params.turmaId)
+            .maybeSingle();
+          
+          if (turmaData) {
+            nomeTurma = turmaData.nome || '';
+          }
+        }
+
+        const webhookPayload = {
+          nome_aluno: nomeAluno,
+          telefone_aluno: telefoneAluno,
+          turma: nomeTurma,
+          responsavel: params.responsavel || '',
+          telefone_responsavel: params.whatsappContato || ''
+        };
+
+        console.log('[Webhook Contatos Google] Enviando payload:', webhookPayload);
+
+        await fetch('https://webhookn8n.agenciakadin.com.br/webhook/contatos-google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookPayload),
+        });
+
+        console.log('[Webhook Contatos Google] Enviado com sucesso');
+      } catch (webhookError) {
+        console.error('[Webhook Contatos Google] Erro ao enviar:', webhookError);
+        // Não propagar o erro do webhook para não impedir o salvamento
+      }
+
       return { success: true };
     },
     onSuccess: () => {
