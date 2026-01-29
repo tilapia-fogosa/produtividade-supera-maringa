@@ -1,63 +1,79 @@
 
 
-## Plano: Adicionar Fase 9 (Alertas de Evasão) ao MD de Migração
+# Plano: Habilitar RLS e Marcar Fases 1 e 2 como Concluídas
 
-### Objetivo
-Adicionar a documentação completa da Fase 9 (Tela Alertas de Evasão) ao arquivo `MIGRACAO_MULTI_UNIDADES.md`.
+## Resumo
 
----
-
-### Estrutura da Adição
-
-A Fase 9 será adicionada após a linha 1785 (final da Fase 8, antes da seção "Próximos Passos") com a seguinte estrutura:
-
-1. **Seção 9.1** - Visão Geral da Arquitetura
-2. **Seção 9.2** - Status Atual do Banco de Dados
-3. **Seção 9.3** - Migrações de Banco de Dados Necessárias
-4. **Seção 9.4** - Atualização de RPCs
-5. **Seção 9.5** - Alterações no Frontend (Hooks)
-6. **Seção 9.6** - Alterações no Frontend (Páginas e Componentes)
-7. **Seção 9.7** - Checklist de Tarefas
-8. **Seção 9.8** - Observações Importantes
+Este plano cobre duas ações: habilitar o RLS na tabela `produtividade_ah` e atualizar o documento de migração marcando as Fases 1 e 2 como concluídas.
 
 ---
 
-### Detalhes Técnicos
+## Ações a Executar
 
-#### Tabelas que Precisam de `unit_id`:
-| Tabela | Ação |
-|--------|------|
-| `alerta_evasao` | Adicionar coluna |
-| `atividades_alerta_evasao` | Adicionar coluna |
-| `kanban_cards` | Adicionar coluna |
+### 1. Habilitar RLS na tabela `produtividade_ah`
 
-#### RPCs que Precisam de Atualização:
-| RPC | Ação |
-|-----|------|
-| `get_alunos_retencoes_historico` | Adicionar `p_unit_id` |
-| `get_aluno_detalhes` | Adicionar `p_unit_id` |
+Executar o seguinte comando SQL via migration:
 
-#### Hooks que Precisam de Atualização:
-- `use-alertas-evasao.ts`
-- `use-alertas-evasao-lista.ts`
-- `use-atividades-alerta-evasao.ts`
-- `use-atividades-evasao-home.ts`
-- `use-retencoes-historico.ts`
-- `use-kanban-cards.ts`
+```sql
+ALTER TABLE produtividade_ah ENABLE ROW LEVEL SECURITY;
+```
 
-#### Páginas e Componentes:
-- `AlertasEvasao.tsx`
-- `PainelPedagogico.tsx`
-- `Retencoes.tsx`
-- `AlertaEvasaoModal.tsx`
-- `AtividadesDrawer.tsx`
-- `PedagogicalKanban.tsx`
+**Por que é necessário:** A tabela já possui as políticas RLS configuradas corretamente, mas o RLS está desabilitado (`relrowsecurity: false`). Habilitar o RLS ativa a proteção multi-unidades.
 
 ---
 
-### Alterações no Documento
+### 2. Atualizar `MIGRACAO_MULTI_UNIDADES.md`
 
-1. **Inserir Fase 9** - ~400 linhas de documentação completa após a linha 1785
-2. **Atualizar "Próximos Passos"** - Marcar Fase 9 como documentada
-3. **Atualizar "Histórico de Alterações"** - Adicionar entrada para Fase 9
+Marcar as Fases 1 e 2 como **CONCLUÍDAS** com a seguinte justificativa:
+
+- **Status:** ✅ Implementada por Design
+- **Justificativa:** 
+  - Ambas as tabelas (`produtividade_abaco` e `produtividade_ah`) herdam o isolamento multi-unidades através do vínculo com `pessoa_id`
+  - As pessoas (alunos/funcionários) já possuem `unit_id`
+  - As políticas RLS já fazem JOIN para verificar acesso via `user_has_access_to_unit(unit_id)`
+  - Não é necessário adicionar coluna `unit_id` diretamente nas tabelas de produtividade
+
+---
+
+## Detalhes Técnicos
+
+### Arquitetura de Isolamento Existente
+
+```
+produtividade_abaco/ah
+        │
+        └── pessoa_id ──► alunos/funcionarios
+                                │
+                                └── unit_id ──► units
+```
+
+### Políticas RLS Existentes
+
+As políticas já verificam o acesso através de:
+```sql
+EXISTS (
+  SELECT 1 FROM alunos a 
+  WHERE a.id = produtividade_abaco.pessoa_id 
+  AND user_has_access_to_unit(a.unit_id)
+)
+OR EXISTS (
+  SELECT 1 FROM funcionarios f 
+  WHERE f.id = produtividade_abaco.pessoa_id 
+  AND user_has_access_to_unit(f.unit_id)
+)
+```
+
+---
+
+## Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `MIGRACAO_MULTI_UNIDADES.md` | Atualizar status das Fases 1 e 2 para "Concluída" |
+
+## Migração SQL
+
+| Tabela | Comando |
+|--------|---------|
+| `produtividade_ah` | `ALTER TABLE produtividade_ah ENABLE ROW LEVEL SECURITY;` |
 
