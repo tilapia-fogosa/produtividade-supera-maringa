@@ -44,6 +44,17 @@ export function useSalvarDadosCadastrais() {
           telefone: input.telefone || null,
           email: input.email || null,
           whatapp_contato: input.telefone || null,
+          // Documentos
+          cpf: input.cpf?.replace(/\D/g, "") || null,
+          rg: input.rg || null,
+          // Endereço completo
+          endereco_cep: input.cep?.replace(/\D/g, "") || null,
+          endereco_rua: input.rua || null,
+          endereco_numero: input.numero || null,
+          endereco_complemento: input.complemento || null,
+          endereco_bairro: input.bairro || null,
+          endereco_cidade: input.cidade || null,
+          endereco_estado: input.estado || null,
         })
         .eq("id", input.alunoId);
 
