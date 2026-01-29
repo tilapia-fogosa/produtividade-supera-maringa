@@ -1785,6 +1785,371 @@ const IgnorarColetaModal = ({ unitId, ...props }: IgnorarColetaModalProps) => {
 
 ---
 
+## Fase 9: Tela Alertas de Evasão - Análise para Migração Multi-Unidades
+
+### 9.1 Visão Geral da Arquitetura
+
+A funcionalidade de Alertas de Evasão é um sistema complexo que gerencia o fluxo completo de retenção e evasão de alunos. Possui múltiplas telas, componentes e hooks interconectados.
+
+**Arquivos principais:**
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/pages/AlertasEvasao.tsx` | Página | Painel principal de evasões com tabela e filtros |
+| `src/pages/PainelPedagogico.tsx` | Página | Painel Kanban pedagógico |
+| `src/pages/Retencoes.tsx` | Página | Gestão de retenções com histórico |
+| `src/hooks/use-alertas-evasao.ts` | Hook | Criação de novos alertas |
+| `src/hooks/use-alertas-evasao-lista.ts` | Hook | Listagem de alertas com filtros |
+| `src/hooks/use-atividades-alerta-evasao.ts` | Hook | Gerenciamento de atividades do fluxo |
+| `src/hooks/use-atividades-evasao-home.ts` | Hook | Atividades de evasão na Home |
+| `src/hooks/use-retencoes-historico.ts` | Hook | Histórico de retenções |
+| `src/hooks/use-kanban-cards.ts` | Hook | Cards do Kanban pedagógico |
+| `src/components/alerta-evasao/AtividadesDrawer.tsx` | Componente | Drawer de atividades de evasão |
+| `src/components/alerta-evasao/AlertaEvasaoModal.tsx` | Componente | Modal para criar alerta |
+| `src/components/pedagogical/PedagogicalKanban.tsx` | Componente | Kanban de alertas pedagógicos |
+
+---
+
+### 9.2 Status Atual - Análise do Banco de Dados
+
+#### Tabelas relacionadas a Alertas de Evasão:
+
+| Tabela | unit_id | Descrição |
+|--------|---------|-----------|
+| `alerta_evasao` | ❌ NÃO POSSUI | Tabela principal de alertas |
+| `atividades_alerta_evasao` | ❌ NÃO POSSUI | Atividades do fluxo de retenção |
+| `kanban_cards` | ❌ NÃO POSSUI | Cards do Kanban pedagógico |
+
+#### RPCs que PRECISAM de parâmetro `p_unit_id`:
+
+| RPC | Status | Ação necessária |
+|-----|--------|-----------------|
+| `get_alunos_retencoes_historico` | ❌ Não filtra | Adicionar parâmetro |
+| `get_aluno_detalhes` | ❌ Não filtra | Adicionar parâmetro |
+
+---
+
+### 9.3 Migrações de Banco de Dados Necessárias
+
+#### 9.3.1 Adicionar `unit_id` às Tabelas
+
+```sql
+-- 1. Adicionar unit_id à tabela alerta_evasao
+ALTER TABLE alerta_evasao 
+ADD COLUMN unit_id uuid REFERENCES units(id);
+
+-- 2. Adicionar unit_id à tabela atividades_alerta_evasao
+ALTER TABLE atividades_alerta_evasao 
+ADD COLUMN unit_id uuid REFERENCES units(id);
+
+-- 3. Adicionar unit_id à tabela kanban_cards
+ALTER TABLE kanban_cards 
+ADD COLUMN unit_id uuid REFERENCES units(id);
+```
+
+#### 9.3.2 Preencher `unit_id` com Base no Aluno
+
+```sql
+-- Preencher unit_id em alerta_evasao baseado no aluno
+UPDATE alerta_evasao ae
+SET unit_id = (
+  SELECT a.unit_id 
+  FROM alunos a 
+  WHERE a.id = ae.aluno_id
+)
+WHERE ae.unit_id IS NULL;
+
+-- Preencher unit_id em atividades_alerta_evasao baseado no alerta
+UPDATE atividades_alerta_evasao aae
+SET unit_id = (
+  SELECT ae.unit_id 
+  FROM alerta_evasao ae 
+  WHERE ae.id = aae.alerta_evasao_id
+)
+WHERE aae.unit_id IS NULL;
+
+-- Preencher unit_id em kanban_cards baseado no alerta
+UPDATE kanban_cards kc
+SET unit_id = (
+  SELECT ae.unit_id 
+  FROM alerta_evasao ae 
+  WHERE ae.id = kc.alerta_evasao_id
+)
+WHERE kc.unit_id IS NULL;
+
+-- Definir unidade de Maringá como padrão para registros órfãos
+UPDATE alerta_evasao 
+SET unit_id = (SELECT id FROM units WHERE nome ILIKE '%maringá%' LIMIT 1) 
+WHERE unit_id IS NULL;
+
+UPDATE atividades_alerta_evasao 
+SET unit_id = (SELECT id FROM units WHERE nome ILIKE '%maringá%' LIMIT 1) 
+WHERE unit_id IS NULL;
+
+UPDATE kanban_cards 
+SET unit_id = (SELECT id FROM units WHERE nome ILIKE '%maringá%' LIMIT 1) 
+WHERE unit_id IS NULL;
+
+-- Tornar NOT NULL após preencher
+ALTER TABLE alerta_evasao ALTER COLUMN unit_id SET NOT NULL;
+ALTER TABLE atividades_alerta_evasao ALTER COLUMN unit_id SET NOT NULL;
+ALTER TABLE kanban_cards ALTER COLUMN unit_id SET NOT NULL;
+```
+
+---
+
+### 9.4 Atualização de RPCs
+
+#### 9.4.1 `get_alunos_retencoes_historico`
+
+```sql
+CREATE OR REPLACE FUNCTION get_alunos_retencoes_historico(
+  p_search_term text DEFAULT '',
+  p_status_filter text DEFAULT 'todos',
+  p_incluir_ocultos boolean DEFAULT false,
+  p_unit_id uuid DEFAULT NULL  -- NOVO PARÂMETRO
+)
+RETURNS TABLE(...)
+LANGUAGE plpgsql
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT ...
+  FROM alunos a
+  LEFT JOIN alerta_evasao ae ON ...
+  WHERE a.active = true
+    AND (p_unit_id IS NULL OR a.unit_id = p_unit_id)  -- NOVO FILTRO
+    -- ... resto da lógica
+  ;
+END;
+$function$;
+```
+
+#### 9.4.2 `get_aluno_detalhes`
+
+```sql
+CREATE OR REPLACE FUNCTION get_aluno_detalhes(
+  p_aluno_nome text,
+  p_unit_id uuid DEFAULT NULL  -- NOVO PARÂMETRO
+)
+RETURNS TABLE(...)
+LANGUAGE plpgsql
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT ...
+  FROM alunos a
+  WHERE a.nome ILIKE '%' || p_aluno_nome || '%'
+    AND (p_unit_id IS NULL OR a.unit_id = p_unit_id)  -- NOVO FILTRO
+  ;
+END;
+$function$;
+```
+
+---
+
+### 9.5 Alterações no Frontend (Hooks)
+
+#### Hooks que precisam de `unitId`:
+
+| Hook | Arquivo | Ação |
+|------|---------|------|
+| `useAlertasEvasao` | `use-alertas-evasao.ts` | Receber `unitId`, salvar em alerta_evasao |
+| `useAlertasEvasaoLista` | `use-alertas-evasao-lista.ts` | Receber `unitId`, filtrar alertas por unidade |
+| `useAtividadesAlertaEvasao` | `use-atividades-alerta-evasao.ts` | Receber `unitId`, salvar em atividades |
+| `useAtividadesEvasaoHome` | `use-atividades-evasao-home.ts` | Receber `unitId`, filtrar atividades |
+| `useRetencoesHistorico` | `use-retencoes-historico.ts` | Receber `unitId`, passar para RPC |
+| `useKanbanCards` | `use-kanban-cards.ts` | Receber `unitId`, filtrar cards |
+
+#### Exemplo de atualização - `use-alertas-evasao-lista.ts`:
+
+```typescript
+interface FiltrosAlertasEvasao {
+  // ... filtros existentes
+  unitId?: string;  // NOVO
+}
+
+export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
+  return useQuery({
+    queryKey: ['alertas-evasao-lista', filtros],
+    queryFn: async () => {
+      let query = supabase
+        .from('alerta_evasao')
+        .select(`...`)
+        .eq('aluno.active', true);
+      
+      // NOVO: Filtrar por unidade
+      if (filtros?.unitId) {
+        query = query.eq('unit_id', filtros.unitId);
+      }
+      
+      // ... resto da query
+    }
+  });
+};
+```
+
+#### Exemplo de atualização - `use-alertas-evasao.ts` (criação):
+
+```typescript
+export function useAlertasEvasao(unitId?: string) {
+  // ... código existente
+  
+  const handleSubmit = async (onClose: () => void) => {
+    // ...
+    
+    const dadosAlerta = {
+      aluno_id: alunoSelecionado,
+      data_alerta: dataAlertaFormatada,
+      origem_alerta: origemAlerta!,
+      descritivo: descritivo,
+      responsavel: profileId,
+      status: 'pendente' as const,
+      kanban_status: 'todo',
+      funcionario_registro_id: funcionarioId || null,
+      unit_id: unitId  // NOVO
+    };
+    
+    // ... inserir alerta
+  };
+}
+```
+
+---
+
+### 9.6 Alterações no Frontend (Páginas e Componentes)
+
+#### Páginas que precisam usar `useActiveUnit()`:
+
+| Página | Ação |
+|--------|------|
+| `AlertasEvasao.tsx` | Importar `useActiveUnit()`, passar para hooks e componentes |
+| `PainelPedagogico.tsx` | Importar `useActiveUnit()`, passar para `PedagogicalKanban` |
+| `Retencoes.tsx` | Importar `useActiveUnit()`, passar para `useRetencoesHistorico` |
+
+#### Componentes que precisam receber `unitId` via props:
+
+| Componente | Ação |
+|------------|------|
+| `AlertaEvasaoModal.tsx` | Receber `unitId`, passar para `useAlertasEvasao` |
+| `AtividadesDrawer.tsx` | Receber `unitId`, passar para hooks de atividades |
+| `PedagogicalKanban.tsx` | Receber `unitId`, passar para `useKanbanCards` |
+
+---
+
+### 9.7 Checklist de Tarefas
+
+#### Banco de Dados (Migrações)
+- [ ] Adicionar `unit_id` à tabela `alerta_evasao`
+- [ ] Adicionar `unit_id` à tabela `atividades_alerta_evasao`
+- [ ] Adicionar `unit_id` à tabela `kanban_cards`
+- [ ] Migrar dados existentes (preencher unit_id baseado no aluno)
+- [ ] Definir colunas como NOT NULL após migração
+
+#### Banco de Dados (RPCs)
+- [ ] Atualizar RPC `get_alunos_retencoes_historico`:
+  - [ ] Adicionar parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro por unidade na query
+
+- [ ] Atualizar RPC `get_aluno_detalhes`:
+  - [ ] Adicionar parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [ ] Adicionar filtro por unidade na query
+
+#### Frontend (Hooks)
+- [ ] Atualizar `use-alertas-evasao.ts`:
+  - [ ] Receber `unitId` como parâmetro
+  - [ ] Incluir `unit_id` ao inserir novo alerta
+
+- [ ] Atualizar `use-alertas-evasao-lista.ts`:
+  - [ ] Adicionar `unitId` aos filtros
+  - [ ] Filtrar por `unit_id`
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-atividades-alerta-evasao.ts`:
+  - [ ] Receber `unitId` como parâmetro
+  - [ ] Incluir `unit_id` ao criar atividades
+
+- [ ] Atualizar `use-atividades-evasao-home.ts`:
+  - [ ] Receber `unitId` como parâmetro
+  - [ ] Filtrar atividades por unidade
+  - [ ] Incluir `unitId` na queryKey
+
+- [ ] Atualizar `use-retencoes-historico.ts`:
+  - [ ] Receber `unitId` como parâmetro
+  - [ ] Passar `p_unit_id` para RPC
+  - [ ] Incluir `unitId` nas dependências
+
+- [ ] Atualizar `use-kanban-cards.ts`:
+  - [ ] Receber `unitId` como parâmetro
+  - [ ] Filtrar cards por `unit_id`
+  - [ ] Incluir `unitId` na queryKey
+
+#### Frontend (Páginas)
+- [ ] Atualizar `AlertasEvasao.tsx`:
+  - [ ] Importar e usar `useActiveUnit()`
+  - [ ] Passar `activeUnit?.id` para `useAlertasEvasaoLista`
+  - [ ] Passar `activeUnit?.id` para `AtividadesDrawer`
+
+- [ ] Atualizar `PainelPedagogico.tsx`:
+  - [ ] Importar e usar `useActiveUnit()`
+  - [ ] Passar `activeUnit?.id` para `PedagogicalKanban`
+
+- [ ] Atualizar `Retencoes.tsx`:
+  - [ ] Importar e usar `useActiveUnit()`
+  - [ ] Passar `activeUnit?.id` para `useRetencoesHistorico`
+
+#### Frontend (Componentes)
+- [ ] Atualizar `AlertaEvasaoModal.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar para `useAlertasEvasao`
+
+- [ ] Atualizar `AtividadesDrawer.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar para `useAtividadesAlertaEvasao`
+
+- [ ] Atualizar `PedagogicalKanban.tsx`:
+  - [ ] Adicionar prop `unitId?: string`
+  - [ ] Passar para hooks
+
+#### Considerações Especiais
+- [ ] Verificar trigger `trigger_criar_atividade_acolhimento`:
+  - [ ] Garantir que atividades automáticas recebam `unit_id` do alerta pai
+
+- [ ] Webhooks externos (n8n, Make):
+  - [ ] Considerar incluir `unit_id` nos payloads se necessário
+
+#### Testes
+- [ ] Verificar que alertas são filtrados por unidade na listagem
+- [ ] Verificar que novos alertas salvam com unit_id correto
+- [ ] Verificar que atividades são filtradas por unidade
+- [ ] Verificar que cards do Kanban são filtrados por unidade
+- [ ] Verificar que histórico de retenções filtra por unidade
+- [ ] Verificar que atividades na Home filtram por unidade
+- [ ] Testar troca de unidade e verificar atualização dos dados
+
+---
+
+### 9.8 Observações Importantes
+
+1. **Complexidade alta** - Esta é uma das funcionalidades mais complexas do sistema, com muitos hooks e componentes interconectados.
+
+2. **Migração de dados é crítica** - As 3 tabelas principais (`alerta_evasao`, `atividades_alerta_evasao`, `kanban_cards`) precisam de `unit_id` preenchido via relacionamento com aluno.
+
+3. **Webhooks externos** - Os alertas enviam dados para webhooks n8n e Make. Considerar incluir `unit_id` nos payloads se necessário.
+
+4. **Trigger de banco** - Existe uma trigger `trigger_criar_atividade_acolhimento` que cria atividades automaticamente. Verificar se precisa de ajuste para incluir `unit_id`.
+
+5. **Integração com Home** - O hook `use-atividades-evasao-home.ts` já está documentado na Fase 5 (Home) como precisando de atualização.
+
+6. **Ordem de implementação sugerida**:
+   - 1º: Migração do banco (adicionar colunas, preencher dados, definir NOT NULL)
+   - 2º: Atualizar RPCs
+   - 3º: Atualizar trigger de criação de atividade (se necessário)
+   - 4º: Atualizar hooks
+   - 5º: Atualizar páginas e componentes
+
+---
+
 ## Próximos Passos
 
 1. ✅ **Criar este documento de plano**
@@ -1792,9 +2157,10 @@ const IgnorarColetaModal = ({ unitId, ...props }: IgnorarColetaModalProps) => {
 3. ✅ **Documentar análise da tela Sincronizar Turmas (Fase 6)**
 4. ✅ **Documentar análise da tela Calendário de Aulas (Fase 7)**
 5. ✅ **Documentar análise da tela Abrindo Horizontes (Fase 8)**
-6. ⏳ **Executar migrations** para adicionar colunas `unit_id`
-7. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
-8. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
+6. ✅ **Documentar análise da tela Alertas de Evasão (Fase 9)**
+7. ⏳ **Executar migrations** para adicionar colunas `unit_id`
+8. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
+9. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
 
 ---
 
@@ -1807,3 +2173,4 @@ const IgnorarColetaModal = ({ unitId, ...props }: IgnorarColetaModalProps) => {
 | 2025-01-29 | Adicionada análise detalhada da tela Sincronizar Turmas (Fase 6) |
 | 2025-01-29 | Adicionada análise detalhada da tela Calendário de Aulas (Fase 7) |
 | 2025-01-29 | Adicionada análise detalhada da tela Abrindo Horizontes (Fase 8) |
+| 2025-01-29 | Adicionada análise detalhada da tela Alertas de Evasão (Fase 9) |
