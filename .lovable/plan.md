@@ -1,76 +1,30 @@
 
 
-# Plano: Corrigir Erro ao Salvar Dados Iniciais
+## Criar Arquivo de Plano de Migração Multi-Unidades
 
-## Problema Identificado
-O erro ao salvar os "Dados Iniciais" é causado pelo uso de `Buffer.from()` no código do cliente. Esta é uma API exclusiva do Node.js que não existe no navegador, causando um erro de JavaScript quando o usuário tenta salvar com uma foto capturada.
+### Objetivo
+Criar o arquivo `MIGRACAO_MULTI_UNIDADES.md` na raiz do projeto documentando todo o plano de migração do sistema para suportar múltiplas unidades.
 
-## Causa Raiz
-No arquivo `DadosFinaisForm.tsx`, linha 140, o código utiliza:
-```typescript
-Buffer.from(base64Data, 'base64')
-```
+### Arquivo a ser Criado
 
-Esta função não está disponível no ambiente do navegador e causa um `ReferenceError: Buffer is not defined`.
+**`MIGRACAO_MULTI_UNIDADES.md`**
 
-## Solução
-Substituir `Buffer.from()` por uma função compatível com navegador que converte base64 para Blob usando APIs nativas do browser.
+O arquivo conterá:
 
-## Alterações Necessárias
+1. **Visão Geral** - Descrição do objetivo da migração
+2. **Análise do Estado Atual** - Tabelas que já possuem `unit_id` vs as que faltam
+3. **Fase 1: Tabelas de Produtividade** - SQL para adicionar `unit_id` em `produtividade_abaco` e `produtividade_ah`
+4. **Fase 2: Atualização de Código** - Hooks e Edge Functions que precisam ser modificados
+5. **Fase 3: Verificação** - Confirmação das tabelas `alunos` e `professores`
+6. **Fase 4: Tabelas Futuras** - Outras tabelas que precisarão de revisão
+7. **Checklist de Tarefas** - Lista completa de tarefas para execução
+8. **Detalhes Técnicos** - Estrutura atual das tabelas de produtividade
 
-### Arquivo: `src/components/painel-administrativo/DadosFinaisForm.tsx`
+### Conteúdo Técnico
 
-**Mudança 1:** Adicionar função auxiliar para converter base64 para Blob
-```typescript
-// Função para converter base64 em Blob (compatível com navegador)
-function base64ToBlob(base64: string, contentType: string): Blob {
-  const byteCharacters = atob(base64);
-  const byteArrays = [];
-  
-  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-    const slice = byteCharacters.slice(offset, offset + 512);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
-  }
-  
-  return new Blob(byteArrays, { type: contentType });
-}
-```
-
-**Mudança 2:** Substituir o uso de `Buffer.from()` pela nova função
-```typescript
-// De:
-const { error: uploadError } = await supabase.storage
-  .from('alunos-fotos')
-  .upload(fileName, Buffer.from(base64Data, 'base64'), {
-    contentType: 'image/jpeg',
-    upsert: true
-  });
-
-// Para:
-const blob = base64ToBlob(base64Data, 'image/jpeg');
-const { error: uploadError } = await supabase.storage
-  .from('alunos-fotos')
-  .upload(fileName, blob, {
-    contentType: 'image/jpeg',
-    upsert: true
-  });
-```
-
-## Resumo das Alterações
-
-| Arquivo | Tipo de Alteração |
-|---------|-------------------|
-| `src/components/painel-administrativo/DadosFinaisForm.tsx` | Adicionar função `base64ToBlob` e substituir `Buffer.from()` |
-
-## Resultado Esperado
-Após a correção, o usuário poderá:
-- Capturar foto com a webcam
-- Marcar todos os checkboxes
-- Vincular um aluno
-- Salvar os dados sem erro
+O documento incluirá os scripts SQL necessários para:
+- Adicionar coluna `unit_id` nas tabelas de produtividade
+- Popular dados existentes baseado no `pessoa_id` vinculado
+- Criar índices de performance
+- Tornar a coluna NOT NULL após migração de dados
 
