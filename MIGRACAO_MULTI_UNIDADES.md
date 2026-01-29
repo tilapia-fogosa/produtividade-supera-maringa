@@ -410,13 +410,283 @@ ON public.atividades_alerta_evasao(unit_id);
 
 ---
 
+## Fase 6: Tela Sincronizar Turmas - Análise Detalhada
+
+### 6.1 Visão Geral da Arquitetura
+
+A tela de Sincronizar Turmas é responsável por importar dados de turmas, professores e alunos via arquivo Excel. Atualmente usa unit_id fixo de Maringá em toda a lógica de sincronização.
+
+**Arquivos principais:**
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/pages/SincronizarTurmas.tsx` | Frontend | Página principal da sincronização |
+| `src/components/sync/XlsUploadComponent.tsx` | Frontend | Componente de upload e processamento |
+| `src/hooks/use-ultima-sincronizacao.ts` | Hook | Busca histórico de sincronizações |
+| `supabase/functions/sync-turmas-xls/index.ts` | Edge Function | Processa dados e salva no banco |
+
+---
+
+### 6.2 Problema Atual
+
+| Componente | Problema | Impacto |
+|------------|----------|---------|
+| Edge Function | Unit ID fixo (`0df79a04-444e-46ee-b218-59e4b1835f4a`) | Todos os dados sincronizam apenas para Maringá |
+| XlsUploadComponent | Não envia `unit_id` para backend | Impossibilita sincronizar para outras unidades |
+| use-ultima-sincronizacao | Não filtra por unidade | Histórico mostra sincronizações de todas as unidades |
+
+**Código problemático na Edge Function:**
+```typescript
+// supabase/functions/sync-turmas-xls/index.ts (linha ~42)
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+```
+
+---
+
+### 6.3 Solução Proposta
+
+**Regra de Negócio:**
+- Usuário com 1 unidade: sincroniza automaticamente para ela
+- Usuário com múltiplas unidades: escolhe para qual unidade sincronizar
+
+**Fluxo proposto:**
+```
+[Usuário abre tela] → [Sistema detecta unidades do usuário]
+                              ↓
+              [1 unidade] → Exibe nome da unidade no cabeçalho
+              [N unidades] → Exibe seletor de unidade
+                              ↓
+[Upload do arquivo] → [Envia unitId para Edge Function]
+                              ↓
+[Edge Function] → Valida unitId → Processa dados para unidade correta
+```
+
+---
+
+### 6.4 Alterações no Frontend
+
+#### 6.4.1 Arquivo: `src/components/sync/XlsUploadComponent.tsx`
+
+**Alterações necessárias:**
+- [ ] Importar `useActiveUnit` do contexto
+- [ ] Exibir nome da unidade ativa no cabeçalho do card
+- [ ] Passar `unitId` no body da chamada da Edge Function
+- [ ] Atualizar texto do botão para incluir nome da unidade
+
+**Código atual:**
+```typescript
+const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
+  body: { xlsData: parsedData, fileName: file.name }
+});
+```
+
+**Código novo:**
+```typescript
+const { activeUnit } = useActiveUnit();
+
+const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
+  body: { 
+    xlsData: parsedData, 
+    fileName: file.name,
+    unitId: activeUnit?.id  // Adicionar unitId
+  }
+});
+```
+
+**Interface proposta:**
+```
++-------------------------------------------+
+|  Importar Excel                           |
+|  Sincronizando para: Maringá              |
++-------------------------------------------+
+|  [Selecionar Excel]  [Baixar Template]    |
+|                                           |
+|  Arquivo: turmas-2024.xlsx                |
+|  +-------+  +-------+  +-------+          |
+|  |Turmas |  |Profs  |  |Alunos |          |
+|  |  15   |  |   8   |  |  120  |          |
+|  +-------+  +-------+  +-------+          |
+|                                           |
+|  [    Sincronizar para Maringá    ]       |
++-------------------------------------------+
+```
+
+#### 6.4.2 Arquivo: `src/pages/SincronizarTurmas.tsx`
+
+**Alterações necessárias:**
+- [ ] Exibir unidade ativa no cabeçalho da página
+- [ ] Passar `unitId` para o hook de histórico
+
+#### 6.4.3 Arquivo: `src/hooks/use-ultima-sincronizacao.ts`
+
+**Alterações necessárias:**
+- [ ] Adicionar parâmetro `unitId`
+- [ ] Filtrar por `unit_id` na query
+- [ ] Atualizar `queryKey` para incluir unitId
+
+**Código atual:**
+```typescript
+export const useUltimaSincronizacao = () => {
+  return useQuery({
+    queryKey: ["ultimas-sincronizacoes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('data_imports')
+        .select('*')
+        .eq('import_type', 'turmas-xls')
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      // ...
+    },
+  });
+};
+```
+
+**Código novo:**
+```typescript
+export const useUltimaSincronizacao = (unitId?: string) => {
+  return useQuery({
+    queryKey: ["ultimas-sincronizacoes", unitId],
+    queryFn: async () => {
+      let query = supabase
+        .from('data_imports')
+        .select('*')
+        .eq('import_type', 'turmas-xls')
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (unitId) {
+        query = query.eq('unit_id', unitId);
+      }
+      
+      const { data, error } = await query;
+      // ...
+    },
+    enabled: !!unitId, // Só executa se tiver unitId
+  });
+};
+```
+
+---
+
+### 6.5 Alterações na Edge Function
+
+#### Arquivo: `supabase/functions/sync-turmas-xls/index.ts`
+
+**Alterações necessárias:**
+- [ ] Remover constante `MARINGA_UNIT_ID` fixa
+- [ ] Receber `unitId` do body da requisição
+- [ ] Validar presença do `unitId` (campo obrigatório)
+- [ ] Substituir todas ocorrências de `MARINGA_UNIT_ID` por `unitId`
+
+**Código atual (linha ~39-42):**
+```typescript
+const { xlsData, fileName }: { xlsData: XlsData; fileName: string } = await req.json();
+
+// Unit ID fixo da unidade de Maringá
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+```
+
+**Código novo:**
+```typescript
+const { xlsData, fileName, unitId }: { 
+  xlsData: XlsData; 
+  fileName: string; 
+  unitId: string;
+} = await req.json();
+
+// Validar unitId obrigatório
+if (!unitId) {
+  return new Response(
+    JSON.stringify({ error: 'unitId é obrigatório' }),
+    { headers: corsHeaders, status: 400 }
+  );
+}
+
+console.log(`Sincronizando para unidade: ${unitId}`);
+```
+
+**Locais onde MARINGA_UNIT_ID é usado (trocar por unitId):**
+- Linha 42: Definição da constante
+- Linha 57: Inserção no `data_imports`
+- Linha 107: Desativar professores
+- Linha 117: Desativar turmas
+- Linha 127: Desativar alunos
+- Linha 163: Buscar professor existente na unidade
+- Linha 185-191: Mover/atualizar professor
+- Linha 229: Criar novo professor
+- Linha 271-272: Buscar professor por nome na unidade
+- Linha 314-315: Buscar turma existente
+- Linha 354: Criar nova turma
+- Linha 398-400: Buscar turma para aluno
+- Linha 423-425: Buscar aluno existente
+- Linha 473: Criar novo aluno
+- Linha 521: Buscar alunos ativos para webhook
+
+---
+
+### 6.6 Banco de Dados
+
+A tabela `data_imports` já possui a coluna `unit_id` (NOT NULL), portanto **não é necessária migração de banco de dados** para esta funcionalidade.
+
+**Estrutura atual da tabela `data_imports`:**
+| Coluna | Tipo | Nullable | Observação |
+|--------|------|----------|------------|
+| id | uuid | NOT NULL | PK |
+| import_type | text | NOT NULL | Tipo de importação |
+| file_name | text | YES | Nome do arquivo |
+| status | text | NOT NULL | processing, completed, failed |
+| **unit_id** | **uuid** | **NOT NULL** | ✅ Já existe |
+| total_rows | integer | YES | Total de registros |
+| processed_rows | integer | YES | Registros processados |
+| error_log | jsonb | YES | Log de erros |
+| created_at | timestamptz | NOT NULL | Data criação |
+
+---
+
+### 6.7 Checklist de Tarefas - Tela Sincronizar Turmas
+
+#### Frontend
+- [ ] Atualizar `XlsUploadComponent.tsx`:
+  - [ ] Importar `useActiveUnit`
+  - [ ] Exibir unidade ativa no cabeçalho do card
+  - [ ] Passar `unitId` no body do `supabase.functions.invoke`
+  - [ ] Atualizar texto do botão com nome da unidade
+
+- [ ] Atualizar `SincronizarTurmas.tsx`:
+  - [ ] Exibir unidade ativa no cabeçalho da página
+  - [ ] Passar `unitId` para hook de histórico
+
+- [ ] Atualizar `use-ultima-sincronizacao.ts`:
+  - [ ] Adicionar parâmetro `unitId`
+  - [ ] Filtrar por `unit_id` na query
+  - [ ] Atualizar `queryKey` com unitId
+
+#### Backend (Edge Function)
+- [ ] Atualizar `sync-turmas-xls/index.ts`:
+  - [ ] Remover constante `MARINGA_UNIT_ID`
+  - [ ] Receber `unitId` do body
+  - [ ] Validar presença do `unitId`
+  - [ ] Substituir todas 15+ ocorrências de `MARINGA_UNIT_ID` por `unitId`
+
+#### Testes
+- [ ] Testar sincronização com usuário de 1 unidade
+- [ ] Testar sincronização com usuário de múltiplas unidades
+- [ ] Verificar que histórico filtra por unidade correta
+- [ ] Verificar que dados são salvos com unit_id correto
+- [ ] Verificar que webhook envia alunos da unidade correta
+
+---
+
 ## Próximos Passos
 
 1. ✅ **Criar este documento de plano**
-2. ✅ **Documentar análise da tela Home**
-3. ⏳ **Executar migrations** para adicionar colunas `unit_id`
-4. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
-5. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
+2. ✅ **Documentar análise da tela Home (Fase 5)**
+3. ✅ **Documentar análise da tela Sincronizar Turmas (Fase 6)**
+4. ⏳ **Executar migrations** para adicionar colunas `unit_id`
+5. ⏳ **Atualizar código frontend e backend** para usar `unit_id`
+6. ⏳ **Testar em ambiente de desenvolvimento** antes de produção
 
 ---
 
@@ -426,3 +696,4 @@ ON public.atividades_alerta_evasao(unit_id);
 |------|-----------|
 | 2025-01-29 | Documento criado com plano inicial |
 | 2025-01-29 | Adicionada análise detalhada da tela Home (Fase 5) |
+| 2025-01-29 | Adicionada análise detalhada da tela Sincronizar Turmas (Fase 6) |
