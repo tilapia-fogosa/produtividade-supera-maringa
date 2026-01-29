@@ -4,17 +4,20 @@ import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { WebcamCaptureModal } from "./WebcamCaptureModal";
 
-interface WebcamCaptureProps {
+export interface WebcamCaptureProps {
   onCapture: (imageData: string) => void;
   capturedImage: string | null;
+  existingImageUrl?: string | null;
   onClear: () => void;
 }
 
-export function WebcamCapture({ onCapture, capturedImage, onClear }: WebcamCaptureProps) {
+export function WebcamCapture({ onCapture, capturedImage, existingImageUrl, onClear }: WebcamCaptureProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Se já tem foto capturada, mostrar preview
-  if (capturedImage) {
+  const displayImage = capturedImage || existingImageUrl;
+
+  // Se já tem foto capturada ou existente, mostrar preview
+  if (displayImage) {
     return (
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -24,7 +27,7 @@ export function WebcamCapture({ onCapture, capturedImage, onClear }: WebcamCaptu
           <div className="w-32 rounded-lg overflow-hidden border">
             <AspectRatio ratio={1}>
               <img 
-                src={capturedImage} 
+                src={displayImage} 
                 alt="Foto capturada" 
                 className="w-full h-full object-cover"
               />

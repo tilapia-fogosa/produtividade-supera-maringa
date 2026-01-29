@@ -10,9 +10,10 @@ import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { DadosCadastraisForm } from "./DadosCadastraisForm";
 import { DadosComercaisForm } from "./DadosComercaisForm";
 import { DadosPedagogicosForm } from "./DadosPedagogicosForm";
-import { DollarSign, User, GraduationCap } from "lucide-react";
+import { DadosFinaisForm } from "./DadosFinaisForm";
+import { DollarSign, User, GraduationCap, CheckSquare } from "lucide-react";
 
-export type DrawerType = "cadastrais" | "comerciais" | "pedagogicos";
+export type DrawerType = "iniciais" | "cadastrais" | "comerciais" | "pedagogicos";
 
 interface PosMatriculaDrawerProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface PosMatriculaDrawerProps {
 }
 
 const drawerConfig: Record<DrawerType, { title: string; icon: React.ReactNode }> = {
+  iniciais: { title: "Dados Iniciais", icon: <CheckSquare className="h-5 w-5" /> },
   cadastrais: { title: "Dados Cadastrais", icon: <User className="h-5 w-5" /> },
   comerciais: { title: "Dados Comerciais", icon: <DollarSign className="h-5 w-5" /> },
   pedagogicos: { title: "Dados Pedagógicos", icon: <GraduationCap className="h-5 w-5" /> },
@@ -51,6 +53,9 @@ export function PosMatriculaDrawer({
 
         <ScrollArea className="flex-1 px-6 pb-6">
           <div className="mt-4">
+            {tipo === "iniciais" && (
+              <DadosFinaisForm cliente={cliente} onCancel={handleClose} />
+            )}
             {tipo === "cadastrais" && (
               <DadosCadastraisForm cliente={cliente} onCancel={handleClose} />
             )}

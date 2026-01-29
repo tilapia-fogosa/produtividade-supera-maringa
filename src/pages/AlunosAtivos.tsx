@@ -19,7 +19,21 @@ export default function AlunosAtivos() {
     error, 
     atualizarWhatsApp, 
     atualizarResponsavel,
-    atualizarDataNascimento 
+    atualizarDataNascimento,
+    atualizarFoto,
+    atualizarEmail,
+    atualizarTelefone,
+    atualizarCoordenadorResponsavel,
+    atualizarValorMensalidade,
+    atualizarVencimentoContrato,
+    atualizarMotivoProcura,
+    atualizarPercepcaoCoordenador,
+    atualizarPontosAtencao,
+    atualizarDataOnboarding,
+    atualizarValorMatricula,
+    atualizarValorMaterial,
+    atualizarKitSugerido,
+    atualizarDataPrimeiraMensalidade,
   } = useAlunosAtivos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState<string[]>([]);
@@ -38,6 +52,12 @@ export default function AlunosAtivos() {
   const [editandoDataNascimento, setEditandoDataNascimento] = useState<string | null>(null);
   const [dataNascimentoTemp, setDataNascimentoTemp] = useState('');
   const [salvandoDataNascimento, setSalvandoDataNascimento] = useState<string | null>(null);
+
+  // Sincronizar alunoExpandido com a lista de alunos atualizada
+  const alunoExpandidoSincronizado = useMemo(() => {
+    if (!alunoExpandido) return null;
+    return alunos.find(a => a.id === alunoExpandido.id) || null;
+  }, [alunos, alunoExpandido]);
 
   // Extrair valores únicos para os filtros
   const turmasUnicas = useMemo(() => {
@@ -581,8 +601,24 @@ export default function AlunosAtivos() {
 
       {/* Card expandido do aluno */}
       <ExpandableAlunoCard 
-        aluno={alunoExpandido} 
-        onClose={() => setAlunoExpandido(null)} 
+        aluno={alunoExpandidoSincronizado} 
+        onClose={() => setAlunoExpandido(null)}
+        updateFunctions={{
+          atualizarFoto,
+          atualizarEmail,
+          atualizarTelefone,
+          atualizarCoordenadorResponsavel,
+          atualizarValorMensalidade,
+          atualizarVencimentoContrato,
+          atualizarMotivoProcura,
+          atualizarPercepcaoCoordenador,
+          atualizarPontosAtencao,
+          atualizarDataOnboarding,
+          atualizarValorMatricula,
+          atualizarValorMaterial,
+          atualizarKitSugerido,
+          atualizarDataPrimeiraMensalidade,
+        }}
       />
     </div>;
 }

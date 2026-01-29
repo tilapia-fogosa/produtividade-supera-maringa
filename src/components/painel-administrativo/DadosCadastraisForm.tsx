@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,8 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
+import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { useSalvarDadosCadastrais } from "@/hooks/use-salvar-dados-cadastrais";
-import { WebcamCapture } from "./WebcamCapture";
+import { 
+  useDadosPosVenda, 
+  formatDateToBR, 
+  formatCPFDisplay, 
+  formatCEPDisplay, 
+  formatPhoneDisplay 
+} from "@/hooks/use-dados-pos-venda";
+
 const ESTADOS_BRASILEIROS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 const dadosCadastraisSchema = z.object({
   nome: z.string().min(2, "Nome obrigatório"),
@@ -53,19 +61,21 @@ const formatPhone = (value: string) => {
   }
   return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
 };
+
 export function DadosCadastraisForm({
   cliente,
   onCancel
 }: DadosCadastraisFormProps) {
-  const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   
   const salvarDados = useSalvarDadosCadastrais();
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
   
   const form = useForm<DadosCadastraisFormData>({
     resolver: zodResolver(dadosCadastraisSchema),
     defaultValues: {
-      nome: cliente.name || "",
+      nome: "",
       data_nascimento: "",
       cpf: "",
       rg: "",
@@ -81,11 +91,37 @@ export function DadosCadastraisForm({
     }
   });
 
+  // Carregar dados salvos quando disponíveis
+  useEffect(() => {
+    if (alunoVinculado?.nome) {
+      form.setValue("nome", alunoVinculado.nome);
+    }
+    
+    if (dadosSalvos) {
+      form.setValue("data_nascimento", formatDateToBR(dadosSalvos.birth_date));
+      form.setValue("cpf", formatCPFDisplay(dadosSalvos.cpf));
+      form.setValue("rg", dadosSalvos.rg || "");
+      form.setValue("telefone", formatPhoneDisplay(dadosSalvos.whatsapp_contato));
+      form.setValue("cep", formatCEPDisplay(dadosSalvos.address_postal_code));
+      form.setValue("rua", dadosSalvos.address_street || "");
+      form.setValue("numero", dadosSalvos.address_number || "");
+      form.setValue("complemento", dadosSalvos.address_complement || "");
+      form.setValue("bairro", dadosSalvos.address_neighborhood || "");
+      form.setValue("cidade", dadosSalvos.address_city || "");
+      form.setValue("estado", dadosSalvos.address_state || "");
+    }
+  }, [alunoVinculado, dadosSalvos, form]);
+
   const onSubmit = async (data: DadosCadastraisFormData) => {
+    if (!alunoVinculado?.id) {
+      console.error("Nenhum aluno vinculado encontrado");
+      return;
+    }
+
     try {
       await salvarDados.mutateAsync({
         clientId: cliente.id,
-        nome: data.nome,
+        alunoId: alunoVinculado.id,
         dataNascimento: data.data_nascimento,
         cpf: data.cpf,
         rg: data.rg,
@@ -98,7 +134,6 @@ export function DadosCadastraisForm({
         bairro: data.bairro,
         cidade: data.cidade,
         estado: data.estado,
-        fotoBase64: fotoCapturada,
       });
       
       setSalvoComSucesso(true);
@@ -121,9 +156,14 @@ export function DadosCadastraisForm({
             <FormField control={form.control} name="nome" render={({
             field
           }) => <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel>Nome do Aluno</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome completo" {...field} />
+                    <Input 
+                      placeholder="Nome completo" 
+                      {...field} 
+                      disabled 
+                      className="bg-muted cursor-not-allowed"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
@@ -281,13 +321,6 @@ export function DadosCadastraisForm({
                 </FormItem>} />
           </div>
         </div>
-
-        {/* Seção: Foto do Aluno */}
-        <WebcamCapture
-          capturedImage={fotoCapturada}
-          onCapture={setFotoCapturada}
-          onClear={() => setFotoCapturada(null)}
-        />
 
         {/* Botões */}
         <div className="flex justify-end gap-3 pt-4 border-t">

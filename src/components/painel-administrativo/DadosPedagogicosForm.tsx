@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,9 @@ import {
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useSalvarDadosPedagogicos } from "@/hooks/use-salvar-dados-pedagogicos";
+import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { AulaInauguralSelector } from "./AulaInauguralSelector";
+import { useDadosPosVenda, formatPhoneDisplay } from "@/hooks/use-dados-pos-venda";
 
 interface DadosPedagogicosFormProps {
   cliente: ClienteMatriculado;
@@ -29,6 +31,8 @@ interface DadosPedagogicosFormProps {
 export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosFormProps) {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const salvarDados = useSalvarDadosPedagogicos();
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
 
   const [turmaId, setTurmaId] = useState<string>("");
   const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("O próprio");
@@ -39,6 +43,30 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
   const [professorSelecionado, setProfessorSelecionado] = useState<{ id: string; nome: string; prioridade: number } | null>(null);
   const [salaSelecionada, setSalaSelecionada] = useState<{ id: string; nome: string } | null>(null);
+
+  // Carregar dados salvos quando disponíveis
+  useEffect(() => {
+    if (dadosSalvos) {
+      if (dadosSalvos.turma_id) {
+        setTurmaId(dadosSalvos.turma_id);
+      }
+      if (dadosSalvos.responsavel) {
+        setResponsavelPedagogico(dadosSalvos.responsavel);
+      }
+      if (dadosSalvos.whatsapp_contato) {
+        setTelefoneResponsavel(formatPhoneDisplay(dadosSalvos.whatsapp_contato));
+      }
+      if (dadosSalvos.data_aula_inaugural) {
+        const dataHora = new Date(dadosSalvos.data_aula_inaugural);
+        setDataAulaInaugural(dataHora);
+        const horas = dataHora.getHours().toString().padStart(2, '0');
+        const minutos = dataHora.getMinutes().toString().padStart(2, '0');
+        if (horas !== '00' || minutos !== '00') {
+          setHorarioSelecionado(`${horas}:${minutos}`);
+        }
+      }
+    }
+  }, [dadosSalvos]);
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -57,13 +85,18 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   const handleSave = async () => {
     await salvarDados.mutateAsync({
       clientId: cliente.id,
+      alunoId: alunoVinculado?.id,
       turmaId: turmaId || undefined,
+      // Para salvar no banco, mantém a lógica de não salvar "O próprio"
       responsavel: responsavelPedagogico !== "O próprio" ? responsavelPedagogico : undefined,
       whatsappContato: telefoneResponsavel || undefined,
       dataAulaInaugural: dataAulaInaugural,
       horarioAulaInaugural: horarioSelecionado || undefined,
       professorId: professorSelecionado?.id,
       salaId: salaSelecionada?.id,
+      // Valores para o webhook - sempre enviar os valores atuais do formulário
+      responsavelWebhook: responsavelPedagogico,
+      telefoneResponsavelWebhook: telefoneResponsavel,
     });
     
     onCancel();

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format, startOfWeek, endOfWeek, addWeeks, isToday, isSameWeek, parseISO, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { useTarefasPessoais, TarefaPessoal } from '@/hooks/use-tarefas-pessoais';
@@ -13,13 +14,15 @@ import { useCamisetas } from '@/hooks/use-camisetas';
 import { useApostilasRecolhidas } from '@/hooks/use-apostilas-recolhidas';
 import { useAniversariantes } from '@/hooks/use-aniversariantes';
 import { useAtividadesEvasaoHome } from '@/hooks/use-atividades-evasao-home';
+import { useAulasInauguraisProfessor } from '@/hooks/use-aulas-inaugurais-professor';
+import { usePosMatriculasIncompletas } from '@/hooks/use-pos-matriculas-incompletas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,6 +30,7 @@ import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueMo
 import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
 import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
+import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioModal';
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
 // Interface para eventos com dados extras
@@ -48,11 +52,16 @@ interface Evento {
   alerta_evasao_id?: string;
   atividade_evasao_id?: string;
   tipo_atividade_evasao?: string;
+  // Campos para pós-matrícula incompleta
+  pos_matricula_client_id?: string;
+  // Campos para aniversário
+  aniversario_mes_dia?: string;
 }
 
 export default function Home() {
   const { profile } = useAuth();
   const { activeUnit } = useActiveUnit();
+  const navigate = useNavigate();
   const hoje = new Date();
   
   // Datas para os períodos
@@ -77,9 +86,13 @@ export default function Home() {
     camisetasPendentes,
     apostilasAHProntas,
     coletasAHPendentes,
+    botomPendentes,
     isDiaHoje,
     isDiaSemana,
   } = useProfessorAtividades();
+
+  // Buscar aulas inaugurais do professor
+  const { aulasInaugurais } = useAulasInauguraisProfessor();
 
   // Buscar coletas AH pendentes (para admins)
   const { data: todasColetasAH = [], isLoading: loadingColetasAH } = useProximasColetasAH();
@@ -115,13 +128,23 @@ export default function Home() {
   const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
   
   // Buscar aniversariantes
-  const { data: aniversariantes } = useAniversariantes(activeUnit?.id);
+  const { data: aniversariantes, refetch: refetchAniversariantes } = useAniversariantes(activeUnit?.id);
   
+  // Estado para modal de aniversário
+  const [aniversarioModalOpen, setAniversarioModalOpen] = useState(false);
+  const [aniversariantesSelecionado, setAniversariantesSelecionado] = useState<{
+    id: string;
+    nome: string;
+    aniversario_mes_dia: string;
+  } | null>(null);
   // Buscar atividades de alerta de evasão pendentes
   const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao, refetch: refetchAtividadesEvasao } = useAtividadesEvasaoHome();
   
   // Permissões do usuário
-  const { isAdmin, isManagement } = useUserPermissions();
+  const { isAdmin, isManagement, isAdministrativo } = useUserPermissions();
+  
+  // Buscar pós-matrículas incompletas (para admins e administrativo)
+  const { data: posMatriculasIncompletas = [], isLoading: loadingPosMatriculas } = usePosMatriculasIncompletas();
   
   // Filtrar coletas com mais de 90 dias para admins
   const coletasAHAdmins = todasColetasAH.filter(c => 
@@ -178,10 +201,16 @@ export default function Home() {
     eventosSemana: Evento[],
     eventosProximaSemana: Evento[]
   ) => {
+    // Validar que data_referencia existe antes de processar
+    if (!atividade.data_referencia) {
+      console.warn('Atividade de evasão sem data_referencia:', atividade.id);
+      return;
+    }
+
     const evento: Evento = {
       tipo: 'alerta_evasao',
       titulo: `${getTipoAtividadeLabel(atividade.tipo_atividade)}: ${atividade.aluno_nome}`,
-      data: atividade.data_agendada || '',
+      data: atividade.data_referencia,
       subtitulo: atividade.turma_nome || 'Sem turma',
       aluno_id: atividade.aluno_id,
       aluno_nome: atividade.aluno_nome,
@@ -190,22 +219,18 @@ export default function Home() {
       tipo_atividade_evasao: atividade.tipo_atividade,
     };
 
-    if (!atividade.data_agendada) {
-      // Sem data agendada = atrasado (prioridade alta)
+    // Usar data_referencia (que é data_agendada ou created_at)
+    const dataReferencia = parseISO(atividade.data_referencia);
+    const hojeInicio = startOfDay(hoje);
+    
+    if (isBefore(dataReferencia, hojeInicio)) {
       eventosAtrasados.push(evento);
-    } else {
-      const dataAgendada = parseISO(atividade.data_agendada);
-      const hojeInicio = startOfDay(hoje);
-      
-      if (isBefore(dataAgendada, hojeInicio)) {
-        eventosAtrasados.push(evento);
-      } else if (atividade.data_agendada === hojeStr) {
-        eventosHoje.push(evento);
-      } else if (isSameWeek(dataAgendada, hoje, { weekStartsOn: 0 })) {
-        eventosSemana.push(evento);
-      } else if (isSameWeek(dataAgendada, inicioProximaSemana, { weekStartsOn: 0 })) {
-        eventosProximaSemana.push(evento);
-      }
+    } else if (atividade.data_referencia === hojeStr) {
+      eventosHoje.push(evento);
+    } else if (isSameWeek(dataReferencia, hoje, { weekStartsOn: 0 })) {
+      eventosSemana.push(evento);
+    } else if (isSameWeek(dataReferencia, inicioProximaSemana, { weekStartsOn: 0 })) {
+      eventosProximaSemana.push(evento);
     }
   };
 
@@ -262,6 +287,22 @@ export default function Home() {
           pessoa_nome: a.pessoa_nome,
         });
       });
+      
+      // Pós-matrículas incompletas (para admins e administrativo)
+      posMatriculasIncompletas.forEach(pm => {
+        const pendentes: string[] = [];
+        if (!pm.cadastrais_completo) pendentes.push('Cadastrais');
+        if (!pm.comerciais_completo) pendentes.push('Comerciais');
+        if (!pm.pedagogicos_completo) pendentes.push('Pedagógicos');
+        
+        eventosAtrasados.push({
+          tipo: 'pos_matricula',
+          titulo: `Pós-Matrícula: ${pm.client_name}`,
+          data: pm.data_matricula,
+          subtitulo: `Faltam: ${pendentes.join(', ')}`,
+          pos_matricula_client_id: pm.client_id,
+        });
+      });
 
       // Aulas experimentais
       aulasExperimentais.forEach(ae => {
@@ -312,6 +353,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -322,6 +366,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -338,6 +385,26 @@ export default function Home() {
       // === ATIVIDADES DE ALERTA DE EVASÃO DO PROFESSOR ===
       atividadesEvasao.forEach(atividade => {
         categorizarEventoEvasao(atividade, eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana);
+      });
+
+      // === AULAS INAUGURAIS DO PROFESSOR ===
+      aulasInaugurais.forEach(ai => {
+        const evento: Evento = {
+          tipo: 'aula_inaugural',
+          titulo: `Aula Inaugural`,
+          data: ai.data,
+          subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
+        };
+        if (ai.data === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataAi = parseISO(ai.data);
+          if (isSameWeek(dataAi, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          } else if (isSameWeek(dataAi, inicioProximaSemana, { weekStartsOn: 0 })) {
+            eventosProximaSemana.push(evento);
+          }
+        }
       });
 
       // Reposições do professor
@@ -396,6 +463,18 @@ export default function Home() {
         });
       });
 
+      // Botom pendentes -> atrasadas
+      botomPendentes.forEach(b => {
+        eventosAtrasados.push({
+          tipo: 'botom_pendente',
+          titulo: `Botom: ${b.aluno_nome}`,
+          data: '',
+          subtitulo: `Avançou para ${b.apostila_nova}`,
+          aluno_id: b.aluno_id,
+          aluno_nome: b.aluno_nome,
+        });
+      });
+
       // Aniversariantes de hoje (professor)
       aniversariantes?.aniversariantesHoje?.forEach(a => {
         eventosHoje.push({
@@ -403,6 +482,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
@@ -412,11 +494,63 @@ export default function Home() {
           tipo: 'aniversario',
           titulo: a.nome,
           data: '',
-          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         });
       });
 
-      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana: [] };
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
+    } else if (isAdministrativo) {
+      // Para setor administrativo: mostrar pós-matrículas incompletas
+      const eventosAtrasados: Evento[] = [];
+      const eventosHoje: Evento[] = [];
+      const eventosSemana: Evento[] = [];
+      const eventosProximaSemana: Evento[] = [];
+
+      // Pós-matrículas incompletas
+      posMatriculasIncompletas.forEach(pm => {
+        const pendentes: string[] = [];
+        if (!pm.cadastrais_completo) pendentes.push('Cadastrais');
+        if (!pm.comerciais_completo) pendentes.push('Comerciais');
+        if (!pm.pedagogicos_completo) pendentes.push('Pedagógicos');
+        
+        eventosAtrasados.push({
+          tipo: 'pos_matricula',
+          titulo: `Pós-Matrícula: ${pm.client_name}`,
+          data: pm.data_matricula,
+          subtitulo: `Faltam: ${pendentes.join(', ')}`,
+          pos_matricula_client_id: pm.client_id,
+        });
+      });
+
+      // Aniversariantes
+      aniversariantes?.aniversariantesHoje?.forEach(a => {
+        eventosHoje.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
+        });
+      });
+
+      aniversariantes?.aniversariantesSemana?.forEach(a => {
+        eventosSemana.push({
+          tipo: 'aniversario',
+          titulo: a.nome,
+          data: '',
+          subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
+        });
+      });
+
+      return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     } else {
       // Para não-professores: comportamento original
       const eventosHoje: Evento[] = [
@@ -490,6 +624,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: 'Aniversário hoje! 🎉',
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         })),
       ];
 
@@ -500,6 +637,9 @@ export default function Home() {
           titulo: a.nome,
           data: '',
           subtitulo: `Aniversário: ${a.aniversario_mes_dia}`,
+          aluno_id: a.id,
+          aluno_nome: a.nome,
+          aniversario_mes_dia: a.aniversario_mes_dia,
         })),
       ];
 
@@ -588,6 +728,10 @@ export default function Home() {
         return <Cake className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" />;
       case 'alerta_evasao':
         return <UserX className="h-3.5 w-3.5 text-destructive flex-shrink-0" />;
+      case 'aula_inaugural':
+        return <GraduationCap className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />;
+      case 'pos_matricula':
+        return <FileText className="h-3.5 w-3.5 text-cyan-600 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -619,6 +763,10 @@ export default function Home() {
         };
         const color = badgeColors[tipoAtividade || ''] || 'bg-destructive';
         return <Badge className={`text-[10px] px-1.5 py-0 ${color} text-white`}>Evasão</Badge>;
+      case 'aula_inaugural':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-emerald-600 text-white">Inaugural</Badge>;
+      case 'pos_matricula':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-cyan-600 text-white">Pós-Mat.</Badge>;
       default:
         return null;
     }
@@ -675,6 +823,17 @@ export default function Home() {
     }
   };
 
+  const handleAniversarioClick = (evento: Evento) => {
+    if (evento.aluno_id && evento.aluno_nome && evento.aniversario_mes_dia) {
+      setAniversariantesSelecionado({
+        id: evento.aluno_id,
+        nome: evento.aluno_nome,
+        aniversario_mes_dia: evento.aniversario_mes_dia,
+      });
+      setAniversarioModalOpen(true);
+    }
+  };
+
   const handleSalvarCamiseta = async (dados: { 
     alunoId: string; 
     tamanho_camiseta: string; 
@@ -694,7 +853,9 @@ export default function Home() {
     const isColetaAHClicavel = evento.tipo === 'coleta_ah' && evento.pessoa_id;
     const isAHProntaClicavel = evento.tipo === 'apostila_ah' && evento.apostila_recolhida_id;
     const isAlertaEvasaoClicavel = evento.tipo === 'alerta_evasao' && evento.alerta_evasao_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel;
+    const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
+    const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -705,6 +866,10 @@ export default function Home() {
         handleAHProntaClick(evento);
       } else if (isAlertaEvasaoClicavel) {
         handleAlertaEvasaoClick(evento);
+      } else if (isPosMatriculaClicavel) {
+        navigate('/painel-administrativo');
+      } else if (isAniversarioClicavel) {
+        handleAniversarioClick(evento);
       }
     };
     
@@ -769,7 +934,7 @@ export default function Home() {
     </Card>
   );
 
-  const isLoading = loadingTarefas || loadingProfessor || loadingAtividadesEvasao || (isAdmin && loadingColetasAH);
+  const isLoading = loadingTarefas || loadingProfessor || loadingAtividadesEvasao || (isAdmin && loadingColetasAH) || (isAdministrativo && loadingPosMatriculas);
 
   return (
     <div className="w-full space-y-3 px-4">
@@ -942,6 +1107,17 @@ export default function Home() {
         }}
         alerta={alertaSelecionado}
         onActivityCompleted={refetchAtividadesEvasao}
+      />
+
+      {/* Modal de Concluir Aniversário */}
+      <ConcluirAniversarioModal
+        open={aniversarioModalOpen}
+        onOpenChange={setAniversarioModalOpen}
+        aluno={aniversariantesSelecionado}
+        onSuccess={() => {
+          refetchAniversariantes();
+          setAniversariantesSelecionado(null);
+        }}
       />
     </div>
   );

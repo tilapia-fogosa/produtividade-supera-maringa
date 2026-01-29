@@ -10,6 +10,7 @@ export interface AtividadeEvasaoHome {
   descricao: string;
   status: string;
   data_agendada: string | null;
+  data_referencia: string; // data_agendada ou created_at (para categorização)
   created_at: string;
   aluno_nome: string;
   aluno_id: string;
@@ -51,7 +52,7 @@ export function useAtividadesEvasaoHome() {
           )
         `)
         .eq('status', 'pendente')
-        .eq('alerta_evasao.status', 'pendente')
+        .in('alerta_evasao.status', ['pendente', 'evadido'])
         .eq('alerta_evasao.aluno.active', true);
       
       // Filtrar baseado no perfil do usuário
@@ -74,20 +75,27 @@ export function useAtividadesEvasaoHome() {
       }
 
       // Transformar dados para o formato esperado
-      const atividades: AtividadeEvasaoHome[] = (data || []).map((item: any) => ({
-        id: item.id,
-        alerta_evasao_id: item.alerta_evasao_id,
-        tipo_atividade: item.tipo_atividade,
-        descricao: item.descricao,
-        status: item.status,
-        data_agendada: item.data_agendada,
-        created_at: item.created_at,
-        aluno_nome: item.alerta_evasao?.aluno?.nome || 'Nome não encontrado',
-        aluno_id: item.alerta_evasao?.aluno_id,
-        turma_nome: item.alerta_evasao?.aluno?.turma?.nome || null,
-        professor_responsavel_id: item.professor_responsavel_id,
-        departamento_responsavel: item.departamento_responsavel,
-      }));
+      const atividades: AtividadeEvasaoHome[] = (data || []).map((item: any) => {
+        // Se não tem data_agendada, usar created_at como referência (apenas a parte da data)
+        const hoje = new Date().toISOString().split('T')[0];
+        const dataReferencia = item.data_agendada || (item.created_at ? item.created_at.split('T')[0] : hoje);
+        
+        return {
+          id: item.id,
+          alerta_evasao_id: item.alerta_evasao_id,
+          tipo_atividade: item.tipo_atividade,
+          descricao: item.descricao,
+          status: item.status,
+          data_agendada: item.data_agendada,
+          data_referencia: dataReferencia,
+          created_at: item.created_at,
+          aluno_nome: item.alerta_evasao?.aluno?.nome || 'Nome não encontrado',
+          aluno_id: item.alerta_evasao?.aluno_id,
+          turma_nome: item.alerta_evasao?.aluno?.turma?.nome || null,
+          professor_responsavel_id: item.professor_responsavel_id,
+          departamento_responsavel: item.departamento_responsavel,
+        };
+      });
 
       return atividades;
     },

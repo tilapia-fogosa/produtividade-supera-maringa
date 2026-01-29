@@ -17,6 +17,8 @@ export interface ReposicaoHoje {
   niveldesafio?: string | null;
   foto_url?: string | null;
   faltas_consecutivas?: number;
+  // Flag de produtividade registrada
+  produtividadeRegistrada?: boolean;
 }
 
 export function useReposicoesHoje(turmaId: string | undefined) {
@@ -156,6 +158,22 @@ export function useReposicoesHoje(turmaId: string | undefined) {
             }
           }
         }
+      }
+
+      // Buscar produtividade registrada para todas as pessoas de reposição
+      if (resultados.length > 0) {
+        const pessoaIds = resultados.map(r => r.pessoa_id);
+        const { data: produtividades } = await supabase
+          .from('produtividade_abaco')
+          .select('pessoa_id')
+          .in('pessoa_id', pessoaIds)
+          .eq('data_aula', hoje);
+
+        const idsComProdutividade = new Set(produtividades?.map(p => p.pessoa_id) || []);
+        
+        resultados.forEach(r => {
+          r.produtividadeRegistrada = idsComProdutividade.has(r.pessoa_id);
+        });
       }
 
       setReposicoes(resultados);

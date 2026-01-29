@@ -37,14 +37,17 @@ export interface AlunoAtivo {
   ultima_correcao_ah: string | null;
   is_funcionario: boolean | null;
   valor_mensalidade: number | null;
+  valor_matricula: number | null;
+  valor_material: number | null;
+  kit_sugerido: string | null;
+  data_primeira_mensalidade: string | null;
   foto_url: string | null;
   foto_devolutiva_url: string | null;
   pdf_devolutiva_url: string | null;
   data_nascimento: string | null;
-  aniversario_mes_dia: string | null; // Formato 'DD/MM' calculado automaticamente
-  // Campos específicos para identificar origem
+  aniversario_mes_dia: string | null;
   tipo_pessoa: 'aluno' | 'funcionario';
-  cargo?: string | null; // Específico para funcionários
+  cargo?: string | null;
 }
 
 export function useAlunosAtivos() {
@@ -232,11 +235,6 @@ export function useAlunosAtivos() {
           : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "WhatsApp atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar WhatsApp:', error);
@@ -270,11 +268,6 @@ export function useAlunosAtivos() {
           ? { ...aluno, responsavel: responsavel }
           : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Responsável atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -323,11 +316,6 @@ export function useAlunosAtivos() {
 
       console.log('Estado local atualizado');
 
-      toast({
-        title: "Sucesso",
-        description: fotoUrl ? "Foto atualizada com sucesso." : "Foto removida com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar foto:', error);
@@ -359,11 +347,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, data_nascimento: dataNascimento } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Data de nascimento atualizada com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar data de nascimento:', error);
@@ -393,11 +376,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, email } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Email atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -429,11 +407,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, telefone } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Telefone atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar telefone:', error);
@@ -463,11 +436,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, coordenador_responsavel: coordenador } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Coordenador responsável atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -499,11 +467,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, valor_mensalidade: valor } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Valor da mensalidade atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar valor da mensalidade:', error);
@@ -533,11 +496,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, vencimento_contrato: vencimento } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Vencimento do contrato atualizado com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -569,11 +527,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, motivo_procura: motivo } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Motivo da procura atualizado com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar motivo da procura:', error);
@@ -603,11 +556,6 @@ export function useAlunosAtivos() {
       setAlunos(prev => prev.map(aluno =>
         aluno.id === alunoId ? { ...aluno, percepcao_coordenador: percepcao } : aluno
       ));
-
-      toast({
-        title: "Sucesso",
-        description: "Percepção do coordenador atualizada com sucesso.",
-      });
 
       return true;
     } catch (error) {
@@ -639,11 +587,6 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, pontos_atencao: pontos } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Pontos de atenção atualizados com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar pontos de atenção:', error);
@@ -674,17 +617,133 @@ export function useAlunosAtivos() {
         aluno.id === alunoId ? { ...aluno, data_onboarding: dataOnboarding } : aluno
       ));
 
-      toast({
-        title: "Sucesso",
-        description: "Data de onboarding atualizada com sucesso.",
-      });
-
       return true;
     } catch (error) {
       console.error('Erro ao atualizar data de onboarding:', error);
       toast({
         title: "Erro",
         description: "Não foi possível atualizar a data de onboarding.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarValorMatricula = async (alunoId: string, valor: number): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ valor_matricula: valor } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, valor_matricula: valor } : aluno
+      ));
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar valor da matrícula:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o valor da matrícula.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarValorMaterial = async (alunoId: string, valor: number): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ valor_material: valor } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, valor_material: valor } : aluno
+      ));
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar valor do material:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o valor do material.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarKitSugerido = async (alunoId: string, kit: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      const tabela = pessoa.tipo_pessoa === 'funcionario' ? 'funcionarios' : 'alunos';
+      
+      const { error } = await supabase
+        .from(tabela)
+        .update({ kit_sugerido: kit } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, kit_sugerido: kit } : aluno
+      ));
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar kit inicial:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o kit inicial.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const atualizarDataPrimeiraMensalidade = async (alunoId: string, data: string): Promise<boolean> => {
+    try {
+      const pessoa = alunos.find(a => a.id === alunoId);
+      if (!pessoa) throw new Error('Pessoa não encontrada');
+
+      // Apenas para alunos, não funcionários
+      if (pessoa.tipo_pessoa === 'funcionario') return false;
+
+      const { error } = await supabase
+        .from('alunos')
+        .update({ data_primeira_mensalidade: data } as any)
+        .eq('id', alunoId);
+
+      if (error) throw error;
+
+      setAlunos(prev => prev.map(aluno =>
+        aluno.id === alunoId ? { ...aluno, data_primeira_mensalidade: data } as any : aluno
+      ));
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar data da primeira mensalidade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a data da primeira mensalidade.",
         variant: "destructive"
       });
       return false;
@@ -709,5 +768,9 @@ export function useAlunosAtivos() {
     atualizarPercepcaoCoordenador,
     atualizarPontosAtencao,
     atualizarDataOnboarding,
+    atualizarValorMatricula,
+    atualizarValorMaterial,
+    atualizarKitSugerido,
+    atualizarDataPrimeiraMensalidade,
   };
 }

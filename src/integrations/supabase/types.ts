@@ -213,6 +213,7 @@ export type Database = {
           id: string
           kanban_status: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
+          rescisao_digitalizada_url: string | null
           responsavel: string | null
           status: Database["public"]["Enums"]["status_alerta"]
           updated_at: string
@@ -227,6 +228,7 @@ export type Database = {
           id?: string
           kanban_status?: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
+          rescisao_digitalizada_url?: string | null
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
           updated_at?: string
@@ -241,6 +243,7 @@ export type Database = {
           id?: string
           kanban_status?: string
           origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
+          rescisao_digitalizada_url?: string | null
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
           updated_at?: string
@@ -467,15 +470,25 @@ export type Database = {
           aniversario_mes_dia: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
+          client_id: string | null
           codigo: string | null
           coordenador_responsavel: string | null
+          cpf: string | null
           created_at: string
           curso: string | null
           data_nascimento: string | null
           data_onboarding: string | null
+          data_primeira_mensalidade: string | null
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_estado: string | null
+          endereco_numero: string | null
+          endereco_rua: string | null
           faltas_consecutivas: number
           foto_devolutiva_url: string | null
           foto_url: string | null
@@ -495,6 +508,7 @@ export type Database = {
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
+          rg: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -515,15 +529,25 @@ export type Database = {
           aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
+          client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
+          cpf?: string | null
           created_at?: string
           curso?: string | null
           data_nascimento?: string | null
           data_onboarding?: string | null
+          data_primeira_mensalidade?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
           faltas_consecutivas?: number
           foto_devolutiva_url?: string | null
           foto_url?: string | null
@@ -543,6 +567,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          rg?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -563,15 +588,25 @@ export type Database = {
           aniversario_mes_dia?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
+          client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
+          cpf?: string | null
           created_at?: string
           curso?: string | null
           data_nascimento?: string | null
           data_onboarding?: string | null
+          data_primeira_mensalidade?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
           faltas_consecutivas?: number
           foto_devolutiva_url?: string | null
           foto_url?: string | null
@@ -591,6 +626,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          rg?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -607,6 +643,20 @@ export type Database = {
           whatapp_contato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "alunos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_alunos_turma_id"
             columns: ["turma_id"]
@@ -1012,6 +1062,61 @@ export type Database = {
         }
         Relationships: []
       }
+      aniversarios_concluidos: {
+        Row: {
+          aluno_id: string
+          ano: number
+          created_at: string
+          data_conclusao: string
+          funcionario_registro_id: string | null
+          id: string
+          observacoes: string | null
+          responsavel_nome: string | null
+        }
+        Insert: {
+          aluno_id: string
+          ano: number
+          created_at?: string
+          data_conclusao?: string
+          funcionario_registro_id?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_nome?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          ano?: number
+          created_at?: string
+          data_conclusao?: string
+          funcionario_registro_id?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aniversarios_concluidos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aniversarios_concluidos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aniversarios_concluidos_funcionario_registro_id_fkey"
+            columns: ["funcionario_registro_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apostilas: {
         Row: {
           created_at: string
@@ -1071,6 +1176,12 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           birth_date: string | null
+          check_assinar_contrato: boolean | null
+          check_cadastrar_pagamento: boolean | null
+          check_entregar_kit: boolean | null
+          check_grupo_whatsapp: boolean | null
+          check_lancar_sgs: boolean | null
+          check_sincronizar_sgs: boolean | null
           client_activity_id: string
           client_id: string
           client_name: string
@@ -1122,6 +1233,12 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           birth_date?: string | null
+          check_assinar_contrato?: boolean | null
+          check_cadastrar_pagamento?: boolean | null
+          check_entregar_kit?: boolean | null
+          check_grupo_whatsapp?: boolean | null
+          check_lancar_sgs?: boolean | null
+          check_sincronizar_sgs?: boolean | null
           client_activity_id: string
           client_id: string
           client_name: string
@@ -1173,6 +1290,12 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           birth_date?: string | null
+          check_assinar_contrato?: boolean | null
+          check_cadastrar_pagamento?: boolean | null
+          check_entregar_kit?: boolean | null
+          check_grupo_whatsapp?: boolean | null
+          check_lancar_sgs?: boolean | null
+          check_sincronizar_sgs?: boolean | null
           client_activity_id?: string
           client_id?: string
           client_name?: string
@@ -4387,6 +4510,71 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      pendencias_botom: {
+        Row: {
+          aluno_id: string
+          apostila_anterior: string | null
+          apostila_nova: string
+          data_criacao: string
+          data_entrega: string | null
+          funcionario_registro_id: string | null
+          id: string
+          professor_responsavel_id: string | null
+          status: string
+        }
+        Insert: {
+          aluno_id: string
+          apostila_anterior?: string | null
+          apostila_nova: string
+          data_criacao?: string
+          data_entrega?: string | null
+          funcionario_registro_id?: string | null
+          id?: string
+          professor_responsavel_id?: string | null
+          status?: string
+        }
+        Update: {
+          aluno_id?: string
+          apostila_anterior?: string | null
+          apostila_nova?: string
+          data_criacao?: string
+          data_entrega?: string | null
+          funcionario_registro_id?: string | null
+          id?: string
+          professor_responsavel_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pendencias_botom_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pendencias_botom_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pendencias_botom_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pendencias_botom_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
           },
         ]
       }
@@ -7958,6 +8146,10 @@ export type Database = {
         | "corrigir_valores_sgs"
         | "corrigir_valores_assinatura"
         | "contato_financeiro"
+        | "criar_ficha_rescisao"
+        | "lancar_multa_sgs"
+        | "envio_agradecimento_nps"
+        | "digitalizar_rescisao"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8191,6 +8383,10 @@ export const Constants = {
         "corrigir_valores_sgs",
         "corrigir_valores_assinatura",
         "contato_financeiro",
+        "criar_ficha_rescisao",
+        "lancar_multa_sgs",
+        "envio_agradecimento_nps",
+        "digitalizar_rescisao",
       ],
       tipo_evento_sala: [
         "manutencao",
