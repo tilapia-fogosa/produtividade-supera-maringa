@@ -87,12 +87,16 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
       clientId: cliente.id,
       alunoId: alunoVinculado?.id,
       turmaId: turmaId || undefined,
+      // Para salvar no banco, mantém a lógica de não salvar "O próprio"
       responsavel: responsavelPedagogico !== "O próprio" ? responsavelPedagogico : undefined,
       whatsappContato: telefoneResponsavel || undefined,
       dataAulaInaugural: dataAulaInaugural,
       horarioAulaInaugural: horarioSelecionado || undefined,
       professorId: professorSelecionado?.id,
       salaId: salaSelecionada?.id,
+      // Valores para o webhook - sempre enviar os valores atuais do formulário
+      responsavelWebhook: responsavelPedagogico,
+      telefoneResponsavelWebhook: telefoneResponsavel,
     });
     
     onCancel();
