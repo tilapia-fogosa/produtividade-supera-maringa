@@ -16,11 +16,16 @@ Este documento descreve as tarefas necessárias para migrar o sistema SUPERA par
 | `funcionarios` | ✅ OK | Possui `unit_id` NOT NULL (FK para units) |
 | `turmas` | ✅ OK | Possui `unit_id` NOT NULL |
 
-### ❌ Tabelas que NÃO possuem `unit_id` (problema identificado):
-| Tabela | Status | Ação Necessária |
-|--------|--------|-----------------|
-| `produtividade_abaco` | ❌ Faltando | Adicionar `unit_id` |
-| `produtividade_ah` | ❌ Faltando | Adicionar `unit_id` |
+### ✅ Tabelas de Produtividade - Isolamento Herdado (Implementado por Design):
+| Tabela | Status | Observações |
+|--------|--------|-------------|
+| `produtividade_abaco` | ✅ OK | Herda `unit_id` via `pessoa_id` → `alunos/funcionarios` |
+| `produtividade_ah` | ✅ OK | Herda `unit_id` via `pessoa_id` → `alunos/funcionarios` |
+
+**Justificativa Técnica:**
+- Ambas as tabelas herdam o isolamento multi-unidades através do vínculo com `pessoa_id`
+- As políticas RLS já fazem JOIN para verificar acesso via `user_has_access_to_unit(unit_id)`
+- Não é necessário adicionar coluna `unit_id` diretamente nestas tabelas
 
 ### Contexto de Unidades:
 - Sistema já possui `ActiveUnitContext` para gerenciar unidade ativa
@@ -30,111 +35,84 @@ Este documento descreve as tarefas necessárias para migrar o sistema SUPERA par
 
 ---
 
-## Fase 1: Tabelas de Produtividade (Prioridade Alta)
+## Fase 1: Tabelas de Produtividade - ✅ CONCLUÍDA (Implementada por Design)
 
-### 1.1 Adicionar `unit_id` na tabela `produtividade_abaco`
+**Data de Conclusão:** 29/01/2026
 
-**Problema**: A tabela não possui referência à unidade, impossibilitando filtrar dados por unidade.
+### Status: ✅ Implementada por Design
 
-**Solução SQL**:
-```sql
--- Passo 1: Adicionar coluna (nullable inicialmente)
-ALTER TABLE public.produtividade_abaco 
-ADD COLUMN IF NOT EXISTS unit_id UUID REFERENCES public.units(id);
+**Análise Realizada:**
+Após análise detalhada da arquitetura, foi determinado que as tabelas de produtividade (`produtividade_abaco` e `produtividade_ah`) **NÃO necessitam** de coluna `unit_id` direta.
 
--- Passo 2: Preencher unit_id baseado no aluno/funcionário vinculado
-UPDATE public.produtividade_abaco pa
-SET unit_id = (
-  SELECT COALESCE(
-    (SELECT unit_id FROM public.alunos WHERE id = pa.pessoa_id),
-    (SELECT unit_id FROM public.funcionarios WHERE id = pa.pessoa_id)
-  )
-)
-WHERE pa.unit_id IS NULL;
+### Justificativa Técnica:
 
--- Passo 3: Verificar se todos os registros foram preenchidos
-SELECT COUNT(*) as registros_sem_unit_id 
-FROM public.produtividade_abaco 
-WHERE unit_id IS NULL;
+1. **Herança de Isolamento:** Ambas as tabelas vinculam registros a um `pessoa_id` (aluno ou funcionário), que já possui `unit_id` obrigatório.
 
--- Passo 4: Após confirmação de dados preenchidos, tornar NOT NULL
-ALTER TABLE public.produtividade_abaco 
-ALTER COLUMN unit_id SET NOT NULL;
-
--- Passo 5: Criar índice para performance
-CREATE INDEX IF NOT EXISTS idx_produtividade_abaco_unit_id 
-ON public.produtividade_abaco(unit_id);
+2. **Arquitetura de Isolamento:**
+```
+produtividade_abaco/ah
+        │
+        └── pessoa_id ──► alunos/funcionarios
+                                │
+                                └── unit_id ──► units
 ```
 
-### 1.2 Adicionar `unit_id` na tabela `produtividade_ah`
-
-**Solução SQL**:
+3. **Políticas RLS Existentes:** As políticas já verificam o acesso através de JOIN:
 ```sql
--- Passo 1: Adicionar coluna (nullable inicialmente)
-ALTER TABLE public.produtividade_ah 
-ADD COLUMN IF NOT EXISTS unit_id UUID REFERENCES public.units(id);
-
--- Passo 2: Preencher unit_id baseado no aluno/funcionário vinculado
-UPDATE public.produtividade_ah pa
-SET unit_id = (
-  SELECT COALESCE(
-    (SELECT unit_id FROM public.alunos WHERE id = pa.pessoa_id),
-    (SELECT unit_id FROM public.funcionarios WHERE id = pa.pessoa_id)
-  )
+EXISTS (
+  SELECT 1 FROM alunos a 
+  WHERE a.id = produtividade_abaco.pessoa_id 
+  AND user_has_access_to_unit(a.unit_id)
 )
-WHERE pa.unit_id IS NULL;
-
--- Passo 3: Verificar se todos os registros foram preenchidos
-SELECT COUNT(*) as registros_sem_unit_id 
-FROM public.produtividade_ah 
-WHERE unit_id IS NULL;
-
--- Passo 4: Após confirmação de dados preenchidos, tornar NOT NULL
-ALTER TABLE public.produtividade_ah 
-ALTER COLUMN unit_id SET NOT NULL;
-
--- Passo 5: Criar índice para performance
-CREATE INDEX IF NOT EXISTS idx_produtividade_ah_unit_id 
-ON public.produtividade_ah(unit_id);
+OR EXISTS (
+  SELECT 1 FROM funcionarios f 
+  WHERE f.id = produtividade_abaco.pessoa_id 
+  AND user_has_access_to_unit(f.unit_id)
+)
 ```
+
+4. **RLS Habilitado:** 
+   - `produtividade_abaco`: RLS habilitado ✅
+   - `produtividade_ah`: RLS habilitado em 29/01/2026 ✅
+
+### Ações Realizadas:
+- [x] Análise de arquitetura para validar herança de isolamento
+- [x] Confirmação de políticas RLS existentes
+- [x] Habilitação de RLS na tabela `produtividade_ah` (estava desabilitado)
+
+### Benefícios desta Abordagem:
+- Evita duplicação de dados (`unit_id` em múltiplas tabelas)
+- Mantém consistência automática (se aluno mudar de unidade, histórico segue)
+- Reduz complexidade de migrations e manutenção
+- Políticas RLS já implementadas corretamente
 
 ---
 
-## Fase 2: Atualização de Código (Frontend/Backend)
+## Fase 2: Atualização de Código (Produtividade) - ✅ CONCLUÍDA (Desnecessária)
 
-### 2.1 Hook `use-produtividade.ts`
-- [ ] Modificar funções para incluir `unit_id` ao inserir registros
-- [ ] Adicionar filtro por `unit_id` nas queries de busca
-- [ ] Usar `activeUnit` do contexto
+**Data de Conclusão:** 29/01/2026
 
-### 2.2 Edge Function `register-productivity`
-- [ ] Receber `unit_id` nos dados de entrada (via `types.ts`)
-- [ ] Incluir `unit_id` ao salvar em `produtividade_abaco` (via `database-service.ts`)
-- [ ] Buscar `unit_id` do aluno/funcionário se não fornecido
+### Status: ✅ Desnecessária - Isolamento já funcional
 
-**Arquivo**: `supabase/functions/register-productivity/types.ts`
-```typescript
-export interface ProdutividadeData {
-  // ... campos existentes ...
-  unit_id?: string; // Adicionar este campo
-}
-```
+**Análise Realizada:**
+Com a confirmação de que as tabelas de produtividade herdam isolamento via `pessoa_id`, as alterações de código propostas **não são necessárias** para CRUD de produtividade.
 
-**Arquivo**: `supabase/functions/register-productivity/database-service.ts`
-```typescript
-// Na função registrarProdutividade, adicionar:
-const produtividadeData = {
-  // ... campos existentes ...
-  unit_id: data.unit_id || pessoa.unit_id, // Usar unit_id do request ou do aluno
-};
-```
+### Por que não precisa alterar:
 
-### 2.3 Modal `ProdutividadeModal.tsx`
-- [ ] Passar `unit_id` da turma ou aluno ao registrar produtividade
+| Componente | Situação Atual | Necessita Alteração? |
+|------------|----------------|---------------------|
+| `use-produtividade.ts` | Filtra por `pessoa_id` | ❌ Não - RLS já protege |
+| Edge Function `register-productivity` | Recebe `pessoa_id` | ❌ Não - Pessoa já tem unit_id |
+| `ProdutividadeModal.tsx` | Usa aluno selecionado | ❌ Não - Aluno já tem unit_id |
+| `use-aluno-progresso.ts` | Busca por `pessoa_id` | ❌ Não - RLS já filtra |
 
-### 2.4 Hooks de consulta de produtividade
-- [ ] `use-aluno-progresso.ts`: Filtrar por unidade ativa
-- [ ] `use-devolutivas.ts`: Filtrar por unidade ativa
+### Comportamento Atual (já correto):
+1. Usuário seleciona aluno/turma (já filtrado por unidade via RLS)
+2. Registra produtividade vinculada ao `pessoa_id`
+3. Consultas subsequentes são protegidas por RLS via JOIN com alunos/funcionarios
+
+### Observação:
+Caso no futuro seja necessário **relatórios agregados de produtividade por unidade** (sem passar pelo aluno), pode-se considerar adicionar `unit_id` para otimização de queries. Por ora, não há necessidade.
 
 ---
 
