@@ -11,6 +11,9 @@ export type SalvarDadosPedagogicosParams = {
   horarioAulaInaugural?: string;
   professorId?: string;
   salaId?: string;
+  // Valores para webhook - sempre os valores atuais do formulário
+  responsavelWebhook?: string;
+  telefoneResponsavelWebhook?: string;
 };
 
 export const useSalvarDadosPedagogicos = () => {
@@ -130,8 +133,8 @@ export const useSalvarDadosPedagogicos = () => {
           nome_aluno: nomeAluno,
           telefone_aluno: telefoneAluno,
           turma: nomeTurma,
-          responsavel: params.responsavel || '',
-          telefone_responsavel: params.whatsappContato || ''
+          responsavel: params.responsavelWebhook || '',
+          telefone_responsavel: params.telefoneResponsavelWebhook || ''
         };
 
         console.log('[Webhook Contatos Google] Enviando payload:', webhookPayload);
