@@ -38,6 +38,15 @@ export interface ApostilaAHPronta {
   dia_semana: string;
 }
 
+export interface ApostilaAHParaCorrigir {
+  id: number;
+  pessoa_id: string;
+  pessoa_nome: string;
+  apostila: string;
+  turma_nome: string;
+  dia_semana: string;
+}
+
 export interface ColetaAHPendente {
   pessoa_id: string;
   pessoa_nome: string;
@@ -63,6 +72,15 @@ export function useProfessorAtividades() {
     queryFn: async () => {
       if (!professorId) return null;
 
+      // 0. Buscar pessoas ignoradas para AH
+      const { data: pessoasIgnoradas } = await supabase
+        .from('ah_ignorar_coleta')
+        .select('pessoa_id')
+        .eq('active', true)
+        .gte('data_fim', new Date().toISOString());
+
+      const idsIgnorados = new Set(pessoasIgnoradas?.map(p => p.pessoa_id) || []);
+
       // 1. Buscar turmas do professor
       const { data: turmas, error: turmasError } = await supabase
         .from('turmas')
@@ -78,6 +96,7 @@ export function useProfessorAtividades() {
           reposicoes: [],
           camisetasPendentes: [],
           apostilasAHProntas: [],
+          apostilasAHParaCorrigir: [],
           coletasAHPendentes: [],
           botomPendentes: [],
         };
@@ -138,19 +157,23 @@ export function useProfessorAtividades() {
           });
       }
 
-      // 5. Buscar apostilas AH prontas para entregar (corrigidas e não entregues)
+      // 5. Buscar apostilas AH prontas para entregar (corrigidas e não entregues) e para corrigir
       let apostilasAHProntas: ApostilaAHPronta[] = [];
+      let apostilasAHParaCorrigir: ApostilaAHParaCorrigir[] = [];
       if (alunoIds.length > 0) {
         const { data: ahRecolhidas, error: ahError } = await supabase
           .from('ah_recolhidas')
-          .select('id, pessoa_id, apostila, data_entrega_real')
+          .select('id, pessoa_id, apostila, data_entrega_real, correcao_iniciada')
           .in('pessoa_id', alunoIds)
           .is('data_entrega_real', null); // Não foi entregue ainda
 
         if (ahError) throw ahError;
 
-        // Para cada apostila recolhida, verificar se tem correções
+        // Para cada apostila recolhida, verificar se tem correções e se a pessoa não está ignorada
         for (const ah of ahRecolhidas || []) {
+          // Filtrar pessoas ignoradas
+          if (idsIgnorados.has(ah.pessoa_id)) continue;
+
           const { data: correcoes, error: correcoesError } = await supabase
             .from('produtividade_ah')
             .select('id')
@@ -159,11 +182,22 @@ export function useProfessorAtividades() {
 
           if (correcoesError) throw correcoesError;
 
+          const aluno = alunos?.find(a => a.id === ah.pessoa_id);
+          const turma = turmas?.find(t => t.id === aluno?.turma_id);
+
           if (correcoes && correcoes.length > 0) {
-            const aluno = alunos?.find(a => a.id === ah.pessoa_id);
-            const turma = turmas?.find(t => t.id === aluno?.turma_id);
-            
+            // Apostila tem correções -> pronta para entregar
             apostilasAHProntas.push({
+              id: ah.id,
+              pessoa_id: ah.pessoa_id,
+              pessoa_nome: aluno?.nome || 'Nome não encontrado',
+              apostila: ah.apostila,
+              turma_nome: turma?.nome || 'Turma não encontrada',
+              dia_semana: turma?.dia_semana || '',
+            });
+          } else if (!ah.correcao_iniciada) {
+            // Apostila recolhida mas sem correção iniciada -> precisa corrigir
+            apostilasAHParaCorrigir.push({
               id: ah.id,
               pessoa_id: ah.pessoa_id,
               pessoa_nome: aluno?.nome || 'Nome não encontrado',
@@ -175,9 +209,11 @@ export function useProfessorAtividades() {
         }
       }
 
-      // 6. Buscar coletas AH pendentes (alunos com mais de 90 dias sem correção)
+      // 6. Buscar coletas AH pendentes (alunos com mais de 90 dias sem correção) - filtrando ignorados
       const coletasAHPendentes: ColetaAHPendente[] = (alunos || [])
         .filter(aluno => {
+          // Filtrar pessoas ignoradas
+          if (idsIgnorados.has(aluno.id)) return false;
           if (!aluno.ultima_correcao_ah) return false;
           const diasSemCorrecao = Math.floor(
             (Date.now() - new Date(aluno.ultima_correcao_ah).getTime()) / (1000 * 60 * 60 * 24)
@@ -225,6 +261,7 @@ export function useProfessorAtividades() {
         reposicoes: reposicoesFiltradas,
         camisetasPendentes,
         apostilasAHProntas,
+        apostilasAHParaCorrigir,
         coletasAHPendentes,
         botomPendentes,
       };
@@ -252,6 +289,7 @@ export function useProfessorAtividades() {
     reposicoes: data?.reposicoes || [],
     camisetasPendentes: data?.camisetasPendentes || [],
     apostilasAHProntas: data?.apostilasAHProntas || [],
+    apostilasAHParaCorrigir: data?.apostilasAHParaCorrigir || [],
     coletasAHPendentes: data?.coletasAHPendentes || [],
     botomPendentes: data?.botomPendentes || [],
     isDiaHoje,
