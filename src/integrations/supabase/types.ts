@@ -473,6 +473,7 @@ export type Database = {
           client_id: string | null
           codigo: string | null
           coordenador_responsavel: string | null
+          cpf: string | null
           created_at: string
           curso: string | null
           data_nascimento: string | null
@@ -481,6 +482,13 @@ export type Database = {
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_estado: string | null
+          endereco_numero: string | null
+          endereco_rua: string | null
           faltas_consecutivas: number
           foto_devolutiva_url: string | null
           foto_url: string | null
@@ -500,6 +508,7 @@ export type Database = {
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
+          rg: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -523,6 +532,7 @@ export type Database = {
           client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
+          cpf?: string | null
           created_at?: string
           curso?: string | null
           data_nascimento?: string | null
@@ -531,6 +541,13 @@ export type Database = {
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
           faltas_consecutivas?: number
           foto_devolutiva_url?: string | null
           foto_url?: string | null
@@ -550,6 +567,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          rg?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -573,6 +591,7 @@ export type Database = {
           client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
+          cpf?: string | null
           created_at?: string
           curso?: string | null
           data_nascimento?: string | null
@@ -581,6 +600,13 @@ export type Database = {
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
           faltas_consecutivas?: number
           foto_devolutiva_url?: string | null
           foto_url?: string | null
@@ -600,6 +626,7 @@ export type Database = {
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
+          rg?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
