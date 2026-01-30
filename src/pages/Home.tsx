@@ -16,6 +16,7 @@ import { useAniversariantes } from '@/hooks/use-aniversariantes';
 import { useAtividadesEvasaoHome } from '@/hooks/use-atividades-evasao-home';
 import { useAulasInauguraisProfessor } from '@/hooks/use-aulas-inaugurais-professor';
 import { usePosMatriculasIncompletas } from '@/hooks/use-pos-matriculas-incompletas';
+import { useAlunosIgnoradosAH } from '@/hooks/use-alunos-ignorados-ah';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,6 +86,7 @@ export default function Home() {
     reposicoes: reposicoesProfessor,
     camisetasPendentes,
     apostilasAHProntas,
+    apostilasAHParaCorrigir,
     coletasAHPendentes,
     botomPendentes,
     isDiaHoje,
@@ -146,9 +148,15 @@ export default function Home() {
   // Buscar pós-matrículas incompletas (para admins e administrativo)
   const { data: posMatriculasIncompletas = [], isLoading: loadingPosMatriculas } = usePosMatriculasIncompletas();
   
-  // Filtrar coletas com mais de 90 dias para admins
+  // Buscar pessoas ignoradas para filtrar atividades AH
+  const { data: pessoasIgnoradas = [] } = useAlunosIgnoradosAH();
+  const idsIgnorados = new Set(pessoasIgnoradas.map(p => p.pessoa_id));
+  
+  // Filtrar coletas com mais de 90 dias para admins (excluindo ignorados)
   const coletasAHAdmins = todasColetasAH.filter(c => 
-    c.dias_desde_ultima_correcao !== null && c.dias_desde_ultima_correcao >= 90
+    c.dias_desde_ultima_correcao !== null && 
+    c.dias_desde_ultima_correcao >= 90 &&
+    !idsIgnorados.has(c.id)
   );
   
   // Filtrar camisetas pendentes (>60 dias e não entregues) para admins
@@ -156,8 +164,13 @@ export default function Home() {
     !c.camiseta_entregue && !c.nao_tem_tamanho && (c.dias_supera || 0) >= 60
   );
   
-  // Filtrar apostilas prontas (não entregues) para admins
-  const apostilasProntasAdmins = todasApostilasRecolhidas.filter(a => !a.foi_entregue);
+  // Filtrar apostilas prontas para entregar (com correções) e para corrigir (sem correções) para admins (excluindo ignorados)
+  const apostilasProntasAdmins = todasApostilasRecolhidas.filter(a => 
+    !a.foi_entregue && a.total_correcoes > 0 && !idsIgnorados.has(a.pessoa_id)
+  );
+  const apostilasParaCorrigirAdmins = todasApostilasRecolhidas.filter(a => 
+    !a.foi_entregue && !a.correcao_iniciada && !idsIgnorados.has(a.pessoa_id)
+  );
 
   // Estado para nova tarefa
   const [novaTarefaOpen, setNovaTarefaOpen] = useState(false);
@@ -275,11 +288,24 @@ export default function Home() {
         });
       });
       
-      // Apostilas AH prontas (não entregues)
+      // Apostilas AH prontas para entregar (corrigidas e não entregues)
       apostilasProntasAdmins.forEach(a => {
         eventosAtrasados.push({
-          tipo: 'apostila_ah',
-          titulo: `AH Pronta: ${a.pessoa_nome}`,
+          tipo: 'entrega_ah',
+          titulo: `Entregar AH: ${a.pessoa_nome}`,
+          data: '',
+          subtitulo: `${a.apostila} - ${a.professor_nome || 'Sem professor'}`,
+          apostila_recolhida_id: a.id,
+          apostila_nome: a.apostila,
+          pessoa_nome: a.pessoa_nome,
+        });
+      });
+      
+      // Apostilas AH para corrigir (recolhidas sem correção iniciada)
+      apostilasParaCorrigirAdmins.forEach(a => {
+        eventosAtrasados.push({
+          tipo: 'corrigir_ah',
+          titulo: `Corrigir AH: ${a.pessoa_nome}`,
           data: '',
           subtitulo: `${a.apostila} - ${a.professor_nome || 'Sem professor'}`,
           apostila_recolhida_id: a.id,
@@ -437,13 +463,26 @@ export default function Home() {
         });
       });
 
-      // Apostilas AH prontas -> atrasadas
+      // Apostilas AH prontas para entregar -> atrasadas
       apostilasAHProntas.forEach(a => {
         eventosAtrasados.push({
-          tipo: 'apostila_ah',
-          titulo: `AH: ${a.pessoa_nome}`,
+          tipo: 'entrega_ah',
+          titulo: `Entregar AH: ${a.pessoa_nome}`,
           data: '',
           subtitulo: `${a.apostila} - Pronta para entregar`,
+          apostila_recolhida_id: a.id.toString(),
+          apostila_nome: a.apostila,
+          pessoa_nome: a.pessoa_nome,
+        });
+      });
+
+      // Apostilas AH para corrigir -> atrasadas
+      apostilasAHParaCorrigir.forEach(a => {
+        eventosAtrasados.push({
+          tipo: 'corrigir_ah',
+          titulo: `Corrigir AH: ${a.pessoa_nome}`,
+          data: '',
+          subtitulo: `${a.apostila} - Aguarda correção`,
           apostila_recolhida_id: a.id.toString(),
           apostila_nome: a.apostila,
           pessoa_nome: a.pessoa_nome,
@@ -720,8 +759,10 @@ export default function Home() {
         return <RefreshCw className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />;
       case 'camiseta':
         return <Shirt className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />;
-      case 'apostila_ah':
+      case 'entrega_ah':
         return <BookOpen className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />;
+      case 'corrigir_ah':
+        return <BookOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />;
       case 'coleta_ah':
         return <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />;
       case 'aniversario':
@@ -745,10 +786,12 @@ export default function Home() {
         return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Repos.</Badge>;
       case 'camiseta':
         return <Badge className="text-[10px] px-1.5 py-0 bg-purple-500 text-white">Camiseta</Badge>;
-      case 'apostila_ah':
-        return <Badge className="text-[10px] px-1.5 py-0 bg-green-500 text-white">AH</Badge>;
+      case 'entrega_ah':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-green-500 text-white">Entregar</Badge>;
+      case 'corrigir_ah':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-blue-500 text-white">Corrigir</Badge>;
       case 'coleta_ah':
-        return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white">Coleta</Badge>;
+        return <Badge className="text-[10px] px-1.5 py-0 bg-red-500 text-white">Coletar</Badge>;
       case 'aniversario':
         return <Badge className="text-[10px] px-1.5 py-0 bg-pink-500 text-white">Aniver.</Badge>;
       case 'alerta_evasao':
@@ -851,7 +894,7 @@ export default function Home() {
   const renderEvento = (evento: Evento, index: number) => {
     const isCamisetaClicavel = evento.tipo === 'camiseta' && evento.aluno_id;
     const isColetaAHClicavel = evento.tipo === 'coleta_ah' && evento.pessoa_id;
-    const isAHProntaClicavel = evento.tipo === 'apostila_ah' && evento.apostila_recolhida_id;
+    const isAHProntaClicavel = (evento.tipo === 'entrega_ah' || evento.tipo === 'corrigir_ah') && evento.apostila_recolhida_id;
     const isAlertaEvasaoClicavel = evento.tipo === 'alerta_evasao' && evento.alerta_evasao_id;
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
