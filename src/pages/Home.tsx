@@ -1101,7 +1101,7 @@ export default function Home() {
             )}
           </div>
 
-          {(isAdmin || isManagement || !isProfessor) && renderSecaoAtividades(
+          {renderSecaoAtividades(
             'Atividades da Próxima Semana',
             `${format(inicioProximaSemana, "dd/MM")} - ${format(fimProximaSemana, "dd/MM")}`,
             tarefasProximaSemana,
