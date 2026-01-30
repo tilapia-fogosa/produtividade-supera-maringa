@@ -122,8 +122,8 @@ export function useLembretesAlunos(alunoIds: string[]) {
         const camiseta = camisetasMap.get(aluno.id);
         const diasSupera = aluno.dias_supera || 0;
         
-        // Camiseta pendente: 60+ dias, não entregue, e não marcado como "não tem tamanho"
-        const camisetaPendente = diasSupera >= 60 && 
+        // Camiseta pendente: 90+ dias, não entregue, e não marcado como "não tem tamanho"
+        const camisetaPendente = diasSupera >= 90 && 
           (!camiseta || (!camiseta.camiseta_entregue && !camiseta.nao_tem_tamanho));
 
         // Aniversário hoje
