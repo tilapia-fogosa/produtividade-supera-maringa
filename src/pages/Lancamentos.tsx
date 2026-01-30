@@ -12,7 +12,7 @@ const Lancamentos = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const handleProdutividadeClick = () => {
-    navigate('/dias-lancamento', { state: { serviceType: 'produtividade' } });
+    navigate('/sala/dias-lancamento');
   };
 
   const handleAula0Click = () => {

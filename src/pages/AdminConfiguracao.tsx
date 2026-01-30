@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Database, FileSpreadsheet, Users } from "lucide-react";
-import AdminDadosImportantesForm from '@/components/AdminDadosImportantesForm';
-import XlsUploadComponent from '@/components/sync/XlsUploadComponent';
-import XlsSyncStatus from '@/components/sync/XlsSyncStatus';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Users } from "lucide-react";
 import { VincularProfessorModal } from '@/components/admin/VincularProfessorModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 interface UsuarioSemVinculo {
   id: string;
@@ -116,125 +112,87 @@ const AdminConfiguracao = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-azul-500">Configurações do Sistema</h1>
+      <div className="flex items-center gap-2 mb-6">
+        <Users className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold text-foreground">Vínculos Professor</h1>
+      </div>
       
-      <Tabs defaultValue="dados">
-        <TabsList className="mb-4 flex-wrap">
-          <TabsTrigger value="dados" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            <span>Dados Importantes</span>
-          </TabsTrigger>
-          <TabsTrigger value="vinculos" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>Vínculos Professor</span>
-          </TabsTrigger>
-          <TabsTrigger value="sync-xls" className="flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            <span>Sincronização XLS</span>
-          </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span>Configurações Gerais</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="dados">
-          <AdminDadosImportantesForm />
-        </TabsContent>
-
-        <TabsContent value="vinculos">
-          <div className="space-y-6">
-            {/* Usuários sem vínculo */}
-            <Card className="p-4">
-              <h3 className="text-lg font-medium mb-4">
-                Usuários sem Professor Vinculado
-                {usuariosSemVinculo.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">{usuariosSemVinculo.length}</Badge>
-                )}
-              </h3>
-              
-              {isLoading ? (
-                <p className="text-muted-foreground">Carregando...</p>
-              ) : usuariosSemVinculo.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Todos os usuários estão vinculados.</p>
-              ) : (
-                <div className="space-y-2">
-                  {usuariosSemVinculo.map((usuario) => (
-                    <div
-                      key={usuario.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{usuario.full_name || 'Sem nome'}</p>
-                        <p className="text-sm text-muted-foreground">{usuario.email}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleVincular(usuario)}
-                      >
-                        Vincular
-                      </Button>
-                    </div>
-                  ))}
+      <div className="space-y-6">
+        {/* Usuários sem vínculo */}
+        <Card className="p-4">
+          <h3 className="text-lg font-medium mb-4">
+            Usuários sem Professor Vinculado
+            {usuariosSemVinculo.length > 0 && (
+              <Badge variant="secondary" className="ml-2">{usuariosSemVinculo.length}</Badge>
+            )}
+          </h3>
+          
+          {isLoading ? (
+            <p className="text-muted-foreground">Carregando...</p>
+          ) : usuariosSemVinculo.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Todos os usuários estão vinculados.</p>
+          ) : (
+            <div className="space-y-2">
+              {usuariosSemVinculo.map((usuario) => (
+                <div
+                  key={usuario.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">{usuario.full_name || 'Sem nome'}</p>
+                    <p className="text-sm text-muted-foreground">{usuario.email}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handleVincular(usuario)}
+                  >
+                    Vincular
+                  </Button>
                 </div>
-              )}
-            </Card>
+              ))}
+            </div>
+          )}
+        </Card>
 
-            {/* Usuários com vínculo */}
-            <Card className="p-4">
-              <h3 className="text-lg font-medium mb-4">
-                Usuários Vinculados
-                {usuariosComVinculo.length > 0 && (
-                  <Badge variant="default" className="ml-2">{usuariosComVinculo.length}</Badge>
-                )}
-              </h3>
-              
-              {isLoading ? (
-                <p className="text-muted-foreground">Carregando...</p>
-              ) : usuariosComVinculo.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Nenhum usuário vinculado.</p>
-              ) : (
-                <div className="space-y-2">
-                  {usuariosComVinculo.map((usuario) => (
-                    <div
-                      key={usuario.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{usuario.full_name || 'Sem nome'}</p>
-                        <p className="text-sm text-muted-foreground">{usuario.email}</p>
-                        <p className="text-sm text-primary">Professor: {usuario.professor_nome}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDesvincular(usuario.id)}
-                        disabled={desvincularMutation.isPending}
-                      >
-                        Desvincular
-                      </Button>
-                    </div>
-                  ))}
+        {/* Usuários com vínculo */}
+        <Card className="p-4">
+          <h3 className="text-lg font-medium mb-4">
+            Usuários Vinculados
+            {usuariosComVinculo.length > 0 && (
+              <Badge variant="default" className="ml-2">{usuariosComVinculo.length}</Badge>
+            )}
+          </h3>
+          
+          {isLoading ? (
+            <p className="text-muted-foreground">Carregando...</p>
+          ) : usuariosComVinculo.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Nenhum usuário vinculado.</p>
+          ) : (
+            <div className="space-y-2">
+              {usuariosComVinculo.map((usuario) => (
+                <div
+                  key={usuario.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">{usuario.full_name || 'Sem nome'}</p>
+                    <p className="text-sm text-muted-foreground">{usuario.email}</p>
+                    <p className="text-sm text-primary">Professor: {usuario.professor_nome}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDesvincular(usuario.id)}
+                    disabled={desvincularMutation.isPending}
+                  >
+                    Desvincular
+                  </Button>
                 </div>
-              )}
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="sync-xls">
-          <div className="space-y-6">
-            <XlsUploadComponent />
-            <XlsSyncStatus />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="config">
-          <Card className="p-6">
-            <h3 className="text-lg font-medium">Configurações Gerais</h3>
-            <p className="text-muted-foreground">Funcionalidade em desenvolvimento.</p>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
 
       {selectedUser && (
         <VincularProfessorModal
