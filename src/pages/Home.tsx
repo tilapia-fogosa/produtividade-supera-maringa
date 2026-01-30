@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,6 +31,8 @@ import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueMo
 import { RecolherApostilaUnicaModal } from '@/components/abrindo-horizontes/RecolherApostilaUnicaModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
 import { AtividadesDrawer } from '@/components/alerta-evasao/AtividadesDrawer';
+import { EntregaBotomModal } from '@/components/botom/EntregaBotomModal';
+import { usePendenciasBotom } from '@/hooks/use-pendencias-botom';
 import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioModal';
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,6 +59,9 @@ interface Evento {
   pos_matricula_client_id?: string;
   // Campos para aniversário
   aniversario_mes_dia?: string;
+  // Campos para entrega de botom
+  pendencia_botom_id?: string;
+  apostila_nova?: string;
 }
 
 export default function Home() {
@@ -139,6 +144,18 @@ export default function Home() {
     nome: string;
     aniversario_mes_dia: string;
   } | null>(null);
+
+  // Estado para modal de entrega de botom
+  const [botomModalOpen, setBotomModalOpen] = useState(false);
+  const [botomSelecionado, setBotomSelecionado] = useState<{
+    pendenciaId: string;
+    alunoNome: string;
+    apostilaNova: string;
+  } | null>(null);
+
+  // Buscar pendências de botom (para admins e professores)
+  const { pendencias: pendenciasBotom = [], refetch: refetchBotom } = usePendenciasBotom();
+  
   // Buscar atividades de alerta de evasão pendentes
   const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao, refetch: refetchAtividadesEvasao } = useAtividadesEvasaoHome();
   
@@ -311,6 +328,20 @@ export default function Home() {
           apostila_recolhida_id: a.id,
           apostila_nome: a.apostila,
           pessoa_nome: a.pessoa_nome,
+        });
+      });
+      
+      // Pendências de botom (entregas pendentes)
+      pendenciasBotom.forEach(b => {
+        eventosAtrasados.push({
+          tipo: 'botom_pendente',
+          titulo: `Botom: ${b.aluno_nome}`,
+          data: b.data_criacao,
+          subtitulo: `Avançou para ${b.apostila_nova} - ${b.professor_nome || 'Sem professor'}`,
+          aluno_id: b.aluno_id,
+          aluno_nome: b.aluno_nome,
+          pendencia_botom_id: b.id,
+          apostila_nova: b.apostila_nova,
         });
       });
       
@@ -511,6 +542,8 @@ export default function Home() {
           subtitulo: `Avançou para ${b.apostila_nova}`,
           aluno_id: b.aluno_id,
           aluno_nome: b.aluno_nome,
+          pendencia_botom_id: b.pendencia_id,
+          apostila_nova: b.apostila_nova,
         });
       });
 
@@ -773,6 +806,8 @@ export default function Home() {
         return <GraduationCap className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />;
       case 'pos_matricula':
         return <FileText className="h-3.5 w-3.5 text-cyan-600 flex-shrink-0" />;
+      case 'botom_pendente':
+        return <Award className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />;
       default:
         return <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
     }
@@ -810,6 +845,8 @@ export default function Home() {
         return <Badge className="text-[10px] px-1.5 py-0 bg-emerald-600 text-white">Inaugural</Badge>;
       case 'pos_matricula':
         return <Badge className="text-[10px] px-1.5 py-0 bg-cyan-600 text-white">Pós-Mat.</Badge>;
+      case 'botom_pendente':
+        return <Badge className="text-[10px] px-1.5 py-0 bg-amber-500 text-white">Botom</Badge>;
       default:
         return null;
     }
@@ -877,6 +914,17 @@ export default function Home() {
     }
   };
 
+  const handleBotomClick = (evento: Evento) => {
+    if (evento.pendencia_botom_id && evento.aluno_nome && evento.apostila_nova) {
+      setBotomSelecionado({
+        pendenciaId: evento.pendencia_botom_id,
+        alunoNome: evento.aluno_nome,
+        apostilaNova: evento.apostila_nova,
+      });
+      setBotomModalOpen(true);
+    }
+  };
+
   const handleSalvarCamiseta = async (dados: { 
     alunoId: string; 
     tamanho_camiseta: string; 
@@ -898,7 +946,8 @@ export default function Home() {
     const isAlertaEvasaoClicavel = evento.tipo === 'alerta_evasao' && evento.alerta_evasao_id;
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel;
+    const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -913,6 +962,8 @@ export default function Home() {
         navigate('/painel-administrativo');
       } else if (isAniversarioClicavel) {
         handleAniversarioClick(evento);
+      } else if (isBotomClicavel) {
+        handleBotomClick(evento);
       }
     };
     
@@ -1160,6 +1211,19 @@ export default function Home() {
         onSuccess={() => {
           refetchAniversariantes();
           setAniversariantesSelecionado(null);
+        }}
+      />
+
+      {/* Modal de Entrega de Botom */}
+      <EntregaBotomModal
+        open={botomModalOpen}
+        onOpenChange={setBotomModalOpen}
+        pendenciaId={botomSelecionado?.pendenciaId || ''}
+        alunoNome={botomSelecionado?.alunoNome || ''}
+        apostilaNova={botomSelecionado?.apostilaNova || ''}
+        onSuccess={() => {
+          refetchBotom();
+          setBotomSelecionado(null);
         }}
       />
     </div>
