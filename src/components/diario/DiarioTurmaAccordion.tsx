@@ -8,7 +8,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from '@/integrations/supabase/client';
 import DiarioTabela from '@/components/turmas/turma-detail/diario/DiarioTabela';
+import DiarioReposicoesTabela, { ReposicaoRegistro } from '@/components/diario/DiarioReposicoesTabela';
 import { Turma } from '@/hooks/use-professor-turmas';
+import { RefreshCw } from 'lucide-react';
 
 // Tipo estendido para incluir horários
 interface TurmaComHorario extends Turma {
@@ -27,6 +29,9 @@ interface DiarioTurmaAccordionProps {
   turmas: TurmaComHorario[];
   dataSelecionada: Date;
   carregandoTurmas: boolean;
+  reposicoes?: ReposicaoRegistro[];
+  carregandoReposicoes?: boolean;
+  onRefreshReposicoes?: () => void;
 }
 
 interface TurmaComRegistros extends TurmaComHorario {
@@ -39,7 +44,10 @@ interface TurmaComRegistros extends TurmaComHorario {
 const DiarioTurmaAccordion: React.FC<DiarioTurmaAccordionProps> = ({
   turmas,
   dataSelecionada,
-  carregandoTurmas
+  carregandoTurmas,
+  reposicoes = [],
+  carregandoReposicoes = false,
+  onRefreshReposicoes
 }) => {
   const [turmasExpandidas, setTurmasExpandidas] = useState<string[]>([]);
   const [turmasComDados, setTurmasComDados] = useState<Map<string, TurmaComRegistros>>(new Map());
@@ -229,6 +237,35 @@ const DiarioTurmaAccordion: React.FC<DiarioTurmaAccordionProps> = ({
           </AccordionItem>
         );
       })}
+
+      {/* Accordion de Reposições */}
+      {(reposicoes.length > 0 || carregandoReposicoes) && (
+        <AccordionItem 
+          value="reposicoes"
+          className="border rounded-lg bg-card px-4 border-blue-200"
+        >
+          <AccordionTrigger className="hover:no-underline py-3">
+            <div className="flex items-center gap-3 text-left">
+              <RefreshCw className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-blue-700">Reposições</span>
+              <Badge 
+                variant={reposicoes.length > 0 ? "default" : "secondary"}
+                className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200"
+              >
+                {carregandoReposicoes ? "..." : `${reposicoes.length} registro${reposicoes.length !== 1 ? 's' : ''}`}
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <DiarioReposicoesTabela
+              registros={reposicoes}
+              carregando={carregandoReposicoes}
+              onRefresh={onRefreshReposicoes || (() => {})}
+              dataSelecionada={dataSelecionada}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      )}
     </Accordion>
   );
 };
