@@ -6,6 +6,7 @@ import DiarioTurmaAccordion from '@/components/diario/DiarioTurmaAccordion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Turma } from '@/hooks/use-professor-turmas';
+import { ReposicaoRegistro } from '@/components/diario/DiarioReposicoesTabela';
 
 type DiaSemanaEnum = 'domingo' | 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado';
 
@@ -25,6 +26,8 @@ const DiarioPage = () => {
   const [dataSelecionada, setDataSelecionada] = useState<Date>(new Date());
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [carregandoTurmas, setCarregandoTurmas] = useState(false);
+  const [reposicoes, setReposicoes] = useState<ReposicaoRegistro[]>([]);
+  const [carregandoReposicoes, setCarregandoReposicoes] = useState(false);
 
   // Buscar turmas quando a data muda
   useEffect(() => {
@@ -60,6 +63,114 @@ const DiarioPage = () => {
     };
 
     buscarTurmasDoDia();
+  }, [dataSelecionada]);
+
+  // Buscar reposições do dia
+  const buscarReposicoesDoDia = async () => {
+    if (!dataSelecionada) return;
+
+    setCarregandoReposicoes(true);
+    try {
+      const dataFormatada = dataSelecionada.toISOString().split('T')[0];
+      console.log('Buscando reposições para:', dataFormatada);
+
+      // Buscar registros de produtividade onde is_reposicao = true
+      const { data: prodData, error: prodError } = await supabase
+        .from('produtividade_abaco')
+        .select('*')
+        .eq('data_aula', dataFormatada)
+        .eq('is_reposicao', true);
+
+      if (prodError) {
+        console.error('Erro ao buscar reposições:', prodError);
+        setReposicoes([]);
+        return;
+      }
+
+      if (!prodData || prodData.length === 0) {
+        console.log('Nenhuma reposição encontrada');
+        setReposicoes([]);
+        return;
+      }
+
+      // Buscar informações das pessoas
+      const pessoasIds = [...new Set(prodData.map(p => p.pessoa_id))];
+
+      // Buscar alunos
+      const { data: alunosData } = await supabase
+        .from('alunos')
+        .select('id, nome, foto_url, turma_id')
+        .in('id', pessoasIds);
+
+      // Buscar funcionários
+      const { data: funcionariosData } = await supabase
+        .from('funcionarios')
+        .select('id, nome, foto_url, turma_id')
+        .in('id', pessoasIds);
+
+      // Criar mapa de pessoas
+      const pessoasMap = new Map<string, { nome: string; foto_url?: string | null; turma_id?: string | null; origem: 'aluno' | 'funcionario' }>();
+      
+      (alunosData || []).forEach(a => {
+        pessoasMap.set(a.id, { nome: a.nome, foto_url: a.foto_url, turma_id: a.turma_id, origem: 'aluno' });
+      });
+      
+      (funcionariosData || []).forEach(f => {
+        pessoasMap.set(f.id, { nome: f.nome, foto_url: f.foto_url, turma_id: f.turma_id, origem: 'funcionario' });
+      });
+
+      // Buscar nomes das turmas originais
+      const turmasIds = [...new Set(
+        [...(alunosData || []), ...(funcionariosData || [])]
+          .map(p => p.turma_id)
+          .filter(Boolean)
+      )] as string[];
+
+      const { data: turmasData } = await supabase
+        .from('turmas')
+        .select('id, nome')
+        .in('id', turmasIds);
+
+      const turmasMap = new Map<string, string>();
+      (turmasData || []).forEach(t => {
+        turmasMap.set(t.id, t.nome);
+      });
+
+      // Montar registros de reposição
+      const reposicoesFormatadas: ReposicaoRegistro[] = prodData.map(registro => {
+        const pessoa = pessoasMap.get(registro.pessoa_id);
+        const turmaOriginalNome = pessoa?.turma_id ? turmasMap.get(pessoa.turma_id) : null;
+
+        return {
+          id: registro.id,
+          pessoa_id: registro.pessoa_id,
+          pessoa_nome: pessoa?.nome || 'Não encontrado',
+          pessoa_foto: pessoa?.foto_url,
+          turma_original_id: pessoa?.turma_id,
+          turma_original_nome: turmaOriginalNome,
+          origem: pessoa?.origem || 'aluno',
+          presente: registro.presente ?? false,
+          apostila: registro.apostila,
+          pagina: registro.pagina,
+          exercicios: registro.exercicios,
+          erros: registro.erros,
+          comentario: registro.comentario,
+          data_aula: registro.data_aula
+        };
+      });
+
+      console.log('Reposições encontradas:', reposicoesFormatadas.length);
+      setReposicoes(reposicoesFormatadas);
+    } catch (error) {
+      console.error('Erro ao buscar reposições:', error);
+      setReposicoes([]);
+    } finally {
+      setCarregandoReposicoes(false);
+    }
+  };
+
+  useEffect(() => {
+    buscarReposicoesDoDia();
   }, [dataSelecionada]);
 
   return (
@@ -102,6 +213,9 @@ const DiarioPage = () => {
               turmas={turmas}
               dataSelecionada={dataSelecionada}
               carregandoTurmas={carregandoTurmas}
+              reposicoes={reposicoes}
+              carregandoReposicoes={carregandoReposicoes}
+              onRefreshReposicoes={buscarReposicoesDoDia}
             />
           </Card>
         </div>
