@@ -21,7 +21,7 @@ export interface ReposicaoHoje {
   produtividadeRegistrada?: boolean;
 }
 
-export function useReposicoesHoje(turmaId: string | undefined) {
+export function useReposicoesHoje(turmaId: string | undefined, data?: Date) {
   const [reposicoes, setReposicoes] = useState<ReposicaoHoje[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -30,14 +30,14 @@ export function useReposicoesHoje(turmaId: string | undefined) {
 
     setLoading(true);
     try {
-      const hoje = format(new Date(), 'yyyy-MM-dd');
+      const dataConsulta = data ? format(data, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
       // Buscar reposições do dia para essa turma
       const { data: reposicoesData, error: reposicoesError } = await supabase
         .from('reposicoes')
         .select('id, pessoa_id, pessoa_tipo, data_reposicao')
         .eq('turma_id', turmaId)
-        .eq('data_reposicao', hoje);
+        .eq('data_reposicao', dataConsulta);
 
       if (reposicoesError) {
         console.error('[Reposições Hoje] Erro ao buscar reposições:', reposicoesError);
@@ -167,7 +167,7 @@ export function useReposicoesHoje(turmaId: string | undefined) {
           .from('produtividade_abaco')
           .select('pessoa_id')
           .in('pessoa_id', pessoaIds)
-          .eq('data_aula', hoje);
+          .eq('data_aula', dataConsulta);
 
         const idsComProdutividade = new Set(produtividades?.map(p => p.pessoa_id) || []);
         
@@ -182,7 +182,7 @@ export function useReposicoesHoje(turmaId: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [turmaId]);
+  }, [turmaId, data]);
 
   useEffect(() => {
     buscarReposicoes();
