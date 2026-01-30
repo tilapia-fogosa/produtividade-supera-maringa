@@ -29,7 +29,7 @@ export function useSalaPessoasTurma() {
     setDataAtual(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
-  const buscarPessoasPorTurma = useCallback(async (turmaId: string) => {
+  const buscarPessoasPorTurma = useCallback(async (turmaId: string, data?: Date) => {
     if (!turmaId) return;
     
     setLoading(true);
@@ -69,8 +69,8 @@ export function useSalaPessoasTurma() {
         ...(funcionarios || []).map(f => ({ ...f, origem: 'funcionario' as const, ultima_pagina: null, ultimo_nivel: null, dias_supera: null, foto_url: null }))
       ];
 
-      // Buscar produtividade registrada para hoje
-      const hoje = format(new Date(), 'yyyy-MM-dd');
+      // Usar a data fornecida ou hoje
+      const dataConsulta = data ? format(data, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
       const pessoaIds = pessoas.map(p => p.id);
       
       if (pessoaIds.length > 0) {
@@ -78,7 +78,7 @@ export function useSalaPessoasTurma() {
           .from('produtividade_abaco')
           .select('pessoa_id')
           .in('pessoa_id', pessoaIds)
-          .eq('data_aula', hoje);
+          .eq('data_aula', dataConsulta);
 
         const idsComProdutividade = new Set(produtividades?.map(p => p.pessoa_id) || []);
         

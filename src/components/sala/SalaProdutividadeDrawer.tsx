@@ -24,6 +24,7 @@ interface SalaProdutividadeDrawerProps {
   onError: (error: string) => void;
   presencaInicial?: boolean;
   modoReposicao?: boolean;
+  dataInicial?: Date;
 }
 
 const niveisDesafio = [
@@ -45,7 +46,8 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
   onSuccess,
   onError,
   presencaInicial = true,
-  modoReposicao = false
+  modoReposicao = false,
+  dataInicial
 }) => {
   const { apostilas } = useApostilas();
   const { data: pessoasReposicao = [], isLoading: loadingPessoas } = usePessoasReposicao(turma?.id || null);
@@ -97,7 +99,9 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setDataAula(format(new Date(), 'yyyy-MM-dd'));
+      // Usar a data inicial se fornecida, senão usa hoje
+      const dataParaUsar = dataInicial ? format(dataInicial, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+      setDataAula(dataParaUsar);
       setPresente(presencaInicial);
       setPessoaSelecionadaId('');
       setFiltroPessoa('');
@@ -115,7 +119,7 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
         setPaginaAbaco('');
       }
     }
-  }, [isOpen, pessoa, presencaInicial, modoReposicao]);
+  }, [isOpen, pessoa, presencaInicial, modoReposicao, dataInicial]);
 
   // Atualizar apostila quando selecionar pessoa em reposição
   useEffect(() => {

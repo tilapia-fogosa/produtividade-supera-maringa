@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
 import { useSalaPessoasTurma, SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useLembretesAlunos } from '@/hooks/sala/use-lembretes-alunos';
 import { useReposicoesHoje } from '@/hooks/sala/use-reposicoes-hoje';
+import { calcularUltimaAula } from '@/utils/calcularUltimaAula';
 import SalaProdutividadeScreen from '@/components/sala/SalaProdutividadeScreen';
 import SalaProdutividadeDrawer from '@/components/sala/SalaProdutividadeDrawer';
 import {
@@ -33,6 +34,9 @@ const SalaProdutividadeTurma = () => {
   const [excluindo, setExcluindo] = useState(false);
   const [presencaInicial, setPresencaInicial] = useState(true);
   const [modoReposicao, setModoReposicao] = useState(false);
+  
+  // Estado da data selecionada - inicializada como undefined até a turma carregar
+  const [dataSelecionada, setDataSelecionada] = useState<Date | undefined>(undefined);
 
   const {
     pessoasTurma,
@@ -43,7 +47,7 @@ const SalaProdutividadeTurma = () => {
   } = useSalaPessoasTurma();
 
   // Buscar reposições do dia para esta turma
-  const { reposicoes: reposicoesHoje, refetch: refetchReposicoes } = useReposicoesHoje(turmaId);
+  const { reposicoes: reposicoesHoje, refetch: refetchReposicoes } = useReposicoesHoje(turmaId, dataSelecionada);
 
   // IDs dos alunos para buscar lembretes (incluindo reposições)
   const alunoIds = useMemo(() => {
@@ -58,6 +62,11 @@ const SalaProdutividadeTurma = () => {
   const handleLembreteConcluido = () => {
     refetchLembretes();
   };
+
+  // Callback para mudança de data
+  const handleDataChange = useCallback((novaData: Date) => {
+    setDataSelecionada(novaData);
+  }, []);
 
   // Buscar dados da turma
   useEffect(() => {
@@ -77,6 +86,10 @@ const SalaProdutividadeTurma = () => {
         }
 
         setTurma(data);
+        
+        // Calcular a última aula baseado no dia da semana da turma
+        const ultimaAula = calcularUltimaAula(data.dia_semana);
+        setDataSelecionada(ultimaAula);
       } catch (error) {
         console.error('[Sala] Erro ao buscar turma:', error);
       } finally {
@@ -87,29 +100,29 @@ const SalaProdutividadeTurma = () => {
     fetchTurma();
   }, [turmaId]);
 
-  // Buscar pessoas da turma
+  // Buscar pessoas da turma quando a data mudar
   useEffect(() => {
-    if (turmaId) {
-      buscarPessoasPorTurma(turmaId);
+    if (turmaId && dataSelecionada) {
+      buscarPessoasPorTurma(turmaId, dataSelecionada);
     }
-  }, [turmaId, buscarPessoasPorTurma]);
+  }, [turmaId, dataSelecionada, buscarPessoasPorTurma]);
 
   // Refresh automático a cada 60 segundos
   const REFRESH_INTERVAL = 60 * 1000;
   
   useEffect(() => {
-    if (!turmaId) return;
+    if (!turmaId || !dataSelecionada) return;
 
     const intervalId = setInterval(() => {
       console.log('[Sala] Refresh automático - recarregando dados...');
-      buscarPessoasPorTurma(turmaId);
+      buscarPessoasPorTurma(turmaId, dataSelecionada);
       refetchReposicoes();
     }, REFRESH_INTERVAL);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [turmaId, buscarPessoasPorTurma, refetchReposicoes]);
+  }, [turmaId, dataSelecionada, buscarPessoasPorTurma, refetchReposicoes]);
 
   const diasParaState: Record<string, string> = {
     'Segunda-feira': 'segunda',
@@ -153,6 +166,11 @@ const SalaProdutividadeTurma = () => {
     if (pessoaSelecionada) {
       atualizarProdutividadeRegistrada(pessoaSelecionada.id, true);
     }
+    // Recarregar dados após sucesso
+    if (turmaId && dataSelecionada) {
+      buscarPessoasPorTurma(turmaId, dataSelecionada);
+      refetchReposicoes();
+    }
   };
 
   const handleErro = (error: string) => {
@@ -165,17 +183,17 @@ const SalaProdutividadeTurma = () => {
   };
 
   const handleConfirmarExclusao = async () => {
-    if (!pessoaParaExcluir) return;
+    if (!pessoaParaExcluir || !dataSelecionada) return;
 
     setExcluindo(true);
     try {
-      const hoje = format(new Date(), 'yyyy-MM-dd');
+      const dataExclusao = format(dataSelecionada, 'yyyy-MM-dd');
       
       const { error } = await supabase
         .from('produtividade_abaco')
         .delete()
         .eq('pessoa_id', pessoaParaExcluir.id)
-        .eq('data_aula', hoje);
+        .eq('data_aula', dataExclusao);
 
       if (error) {
         throw error;
@@ -223,6 +241,8 @@ const SalaProdutividadeTurma = () => {
         lembretes={lembretes}
         reposicoesHoje={reposicoesHoje}
         onLembreteConcluido={handleLembreteConcluido}
+        dataSelecionada={dataSelecionada}
+        onDataChange={handleDataChange}
       />
 
       <SalaProdutividadeDrawer
@@ -234,6 +254,7 @@ const SalaProdutividadeTurma = () => {
         onError={handleErro}
         presencaInicial={presencaInicial}
         modoReposicao={modoReposicao}
+        dataInicial={dataSelecionada}
       />
 
       <AlertDialog open={confirmacaoExclusao} onOpenChange={setConfirmacaoExclusao}>
