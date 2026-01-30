@@ -20,13 +20,17 @@ export interface AtividadeEvasaoHome {
 }
 
 export function useAtividadesEvasaoHome() {
-  const { professorId, isProfessor } = useCurrentProfessor();
+  const { professorId, isProfessor, isLoading: isProfessorLoading } = useCurrentProfessor();
   const { isAdmin, isManagement, isFinanceiro } = useUserPermissions();
   
   const isAdministrativo = isAdmin || isManagement || isFinanceiro;
+  
+  // Para professores, só executa a query quando o professorId estiver carregado
+  // Para admins/gestores, pode executar imediatamente
+  const shouldFetch = isAdministrativo || (isProfessor && !!professorId && !isProfessorLoading);
 
   return useQuery({
-    queryKey: ['atividades-evasao-home', professorId, isAdministrativo],
+    queryKey: ['atividades-evasao-home', professorId, isAdministrativo, isProfessor],
     queryFn: async () => {
       // Buscar atividades pendentes de alertas que ainda estão pendentes
       let query = supabase
@@ -63,7 +67,8 @@ export function useAtividadesEvasaoHome() {
         // Administrativo vê atividades do departamento + todas se for admin
         // Não adiciona filtro extra para admins - mostra tudo
       } else {
-        // Outros usuários não veem nada
+        // Este caso só ocorre se a query foi habilitada incorretamente
+        console.warn('useAtividadesEvasaoHome: Query executada sem perfil válido');
         return [];
       }
 
@@ -99,6 +104,6 @@ export function useAtividadesEvasaoHome() {
 
       return atividades;
     },
-    enabled: isProfessor || isAdministrativo,
+    enabled: shouldFetch,
   });
 }
