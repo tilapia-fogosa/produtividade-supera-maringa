@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfWeek, endOfWeek, addWeeks, isToday, isSameWeek, parseISO, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award, Filter, ChevronDown, Check } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -152,6 +153,48 @@ export default function Home() {
     alunoNome: string;
     apostilaNova: string;
   } | null>(null);
+
+  // Tipos de atividades disponíveis para filtro
+  const tiposAtividades = useMemo(() => [
+    { key: 'aniversario', label: 'Aniversários', icon: Cake, color: 'text-pink-500' },
+    { key: 'pos_matricula', label: 'Pós-Matrícula', icon: FileText, color: 'text-cyan-600' },
+    { key: 'aula_inaugural', label: 'Aulas Inaugurais', icon: GraduationCap, color: 'text-emerald-600' },
+    { key: 'alerta_evasao', label: 'Evasão', icon: UserX, color: 'text-destructive' },
+    { key: 'botom_pendente', label: 'Botom', icon: Award, color: 'text-amber-500' },
+    { key: 'coleta_ah', label: 'AH - Coletar', icon: AlertTriangle, color: 'text-red-500' },
+    { key: 'corrigir_ah', label: 'AH - Corrigir', icon: BookOpen, color: 'text-blue-500' },
+    { key: 'entrega_ah', label: 'AH - Entregar', icon: BookOpen, color: 'text-green-500' },
+    { key: 'camiseta', label: 'Camisetas', icon: Shirt, color: 'text-purple-500' },
+    { key: 'reposicao', label: 'Reposições', icon: RefreshCw, color: 'text-orange-500' },
+    { key: 'aula_experimental', label: 'Aulas Experimentais', icon: Users, color: 'text-blue-500' },
+  ], []);
+
+  // Estado para filtros de tipos selecionados (todos selecionados por padrão)
+  const [tiposSelecionados, setTiposSelecionados] = useState<Set<string>>(
+    new Set(tiposAtividades.map(t => t.key))
+  );
+
+  // Toggle de tipo de atividade
+  const toggleTipo = (tipo: string) => {
+    setTiposSelecionados(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(tipo)) {
+        newSet.delete(tipo);
+      } else {
+        newSet.add(tipo);
+      }
+      return newSet;
+    });
+  };
+
+  // Selecionar/deselecionar todos
+  const toggleTodos = () => {
+    if (tiposSelecionados.size === tiposAtividades.length) {
+      setTiposSelecionados(new Set());
+    } else {
+      setTiposSelecionados(new Set(tiposAtividades.map(t => t.key)));
+    }
+  };
 
   // Buscar pendências de botom (para admins e professores)
   const { pendencias: pendenciasBotom = [], refetch: refetchBotom } = usePendenciasBotom();
@@ -719,7 +762,14 @@ export default function Home() {
     }
   };
 
-  const { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana } = montarEventos();
+  const { eventosAtrasados: eventosAtrasadosRaw, eventosHoje: eventosHojeRaw, eventosSemana: eventosSemanaRaw, eventosProximaSemana: eventosProximaSemanaRaw } = montarEventos();
+
+  // Aplicar filtro de tipos de atividades
+  const filtrarEventos = (eventos: Evento[]) => eventos.filter(e => tiposSelecionados.has(e.tipo));
+  const eventosAtrasados = filtrarEventos(eventosAtrasadosRaw);
+  const eventosHoje = filtrarEventos(eventosHojeRaw);
+  const eventosSemana = filtrarEventos(eventosSemanaRaw);
+  const eventosProximaSemana = filtrarEventos(eventosProximaSemanaRaw);
 
   const handleCriarTarefa = async () => {
     if (!novaTarefa.titulo.trim()) return;
@@ -1043,14 +1093,68 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Botão Nova Tarefa */}
-        <Dialog open={novaTarefaOpen} onOpenChange={setNovaTarefaOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="h-7 text-xs gap-1 px-2">
-              <Plus className="h-3.5 w-3.5" />
-              Nova
-            </Button>
-          </DialogTrigger>
+        {/* Botões de ações */}
+        <div className="flex items-center gap-2">
+          {/* Filtro de Tipos */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 px-2">
+                <Filter className="h-3.5 w-3.5" />
+                Filtrar
+                {tiposSelecionados.size < tiposAtividades.length && (
+                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                    {tiposSelecionados.size}
+                  </Badge>
+                )}
+                <ChevronDown className="h-3 w-3 ml-0.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="end">
+              <div className="space-y-1">
+                {/* Toggle todos */}
+                <div
+                  className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer border-b pb-2 mb-1"
+                  onClick={toggleTodos}
+                >
+                  <Checkbox
+                    checked={tiposSelecionados.size === tiposAtividades.length}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-xs font-medium">
+                    {tiposSelecionados.size === tiposAtividades.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                  </span>
+                </div>
+                
+                {/* Lista de tipos */}
+                {tiposAtividades.map(tipo => {
+                  const Icon = tipo.icon;
+                  return (
+                    <div
+                      key={tipo.key}
+                      className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer"
+                      onClick={() => toggleTipo(tipo.key)}
+                    >
+                      <Checkbox
+                        checked={tiposSelecionados.has(tipo.key)}
+                        className="h-3.5 w-3.5"
+                      />
+                      <Icon className={`h-3.5 w-3.5 ${tipo.color}`} />
+                      <span className="text-xs">{tipo.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Botão Nova Tarefa */}
+          <Dialog open={novaTarefaOpen} onOpenChange={setNovaTarefaOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="h-7 text-xs gap-1 px-2">
+                <Plus className="h-3.5 w-3.5" />
+                Nova
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-[90vw] rounded-lg">
             <DialogHeader>
               <DialogTitle className="text-base">Nova Tarefa</DialogTitle>
@@ -1119,6 +1223,7 @@ export default function Home() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Seções de Atividades */}
