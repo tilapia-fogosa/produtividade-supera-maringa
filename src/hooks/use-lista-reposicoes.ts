@@ -18,7 +18,7 @@ export type ListaReposicaoData = {
   pessoa_tipo: 'aluno' | 'funcionario';
 };
 
-export const useListaReposicoes = () => {
+export const useListaReposicoes = (incluirAnteriores: boolean = false) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -28,9 +28,11 @@ export const useListaReposicoes = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ["lista-reposicoes"],
+    queryKey: ["lista-reposicoes", incluirAnteriores],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_lista_completa_reposicoes");
+      const { data, error } = await supabase.rpc("get_lista_completa_reposicoes", {
+        p_incluir_anteriores: incluirAnteriores
+      });
       
       if (error) throw error;
       
