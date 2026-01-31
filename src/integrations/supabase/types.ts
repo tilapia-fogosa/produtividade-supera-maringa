@@ -7596,24 +7596,43 @@ export type Database = {
           unit_id: string
         }[]
       }
-      get_lista_completa_reposicoes: {
-        Args: never
-        Returns: {
-          aluno_id: string
-          aluno_nome: string
-          data_falta: string
-          data_reposicao: string
-          observacoes: string
-          pessoa_tipo: string
-          reposicao_id: string
-          turma_original_id: string
-          turma_original_nome: string
-          turma_reposicao_id: string
-          turma_reposicao_nome: string
-          turma_reposicao_professor: string
-          unit_id: string
-        }[]
-      }
+      get_lista_completa_reposicoes:
+        | {
+            Args: never
+            Returns: {
+              aluno_id: string
+              aluno_nome: string
+              data_falta: string
+              data_reposicao: string
+              observacoes: string
+              pessoa_tipo: string
+              reposicao_id: string
+              turma_original_id: string
+              turma_original_nome: string
+              turma_reposicao_id: string
+              turma_reposicao_nome: string
+              turma_reposicao_professor: string
+              unit_id: string
+            }[]
+          }
+        | {
+            Args: { p_incluir_anteriores?: boolean }
+            Returns: {
+              aluno_id: string
+              aluno_nome: string
+              data_falta: string
+              data_reposicao: string
+              observacoes: string
+              pessoa_tipo: string
+              reposicao_id: string
+              turma_original_id: string
+              turma_original_nome: string
+              turma_reposicao_id: string
+              turma_reposicao_nome: string
+              turma_reposicao_professor: string
+              unit_id: string
+            }[]
+          }
       get_loss_reasons_report: {
         Args: {
           p_created_by_ids?: string[]
