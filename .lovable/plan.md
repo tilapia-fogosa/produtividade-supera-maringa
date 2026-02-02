@@ -1,29 +1,71 @@
 
-## Plano: Adicionar Seletor de Data no Cabeçalho da Produtividade
+## Plano: Corrigir RPC de Reposições e Otimizar Performance
 
-### Contexto do Problema
-Atualmente, a página de produtividade da sala sempre usa a data de "hoje" para buscar e registrar produtividade. Porém, se hoje é sexta-feira (30/01) e a turma tem aula na quinta-feira, a última aula foi ontem (29/01). O professor precisa poder selecionar a data correta para lançar a produtividade.
+### Problema Identificado
 
-### Solução Proposta
-Adicionar um **seletor de data** no cabeçalho que:
-1. Calcula automaticamente a **última aula da turma** baseado no dia da semana
-2. Permite ao professor **alterar a data** se necessário (ex: lançar aula de semanas anteriores)
-3. Atualiza todos os dados (pessoas e produtividade registrada) com base na data selecionada
-
-### Lógica de Cálculo da Última Aula
-
+**Erro principal**: Conflito de function overloading no banco de dados
 ```
-Exemplo: Hoje é Sexta-feira 30/01/2026
-Turma: Quinta-feira
-
-1. Dia da turma = Quinta (índice 4)
-2. Hoje = Sexta (índice 5)
-3. Diferença = 5 - 4 = 1 dia
-4. Última aula = 30/01 - 1 = 29/01/2026
+"Could not choose the best candidate function between: 
+public.get_lista_completa_reposicoes(), 
+public.get_lista_completa_reposicoes(p_incluir_anteriores => boolean)"
 ```
 
-Se a diferença for 0 (hoje É o dia da turma), usa hoje.
-Se a diferença for negativa, ajusta para a semana anterior.
+A migração anterior **criou** uma nova versão da função com parâmetro, mas **não removeu** a versão antiga sem parâmetro.
+
+**Problema secundário**: Performance ruim devido a múltiplas queries N+1 no hook `use-professor-atividades.ts` (uma query por apostila AH).
+
+---
+
+### Solução
+
+#### 1. Remover Função Duplicada (Migração SQL)
+
+Preciso dropar a versão antiga da função que não tem parâmetro:
+
+```sql
+-- Remover a versão antiga sem parâmetro
+DROP FUNCTION IF EXISTS public.get_lista_completa_reposicoes();
+```
+
+Isso deixará apenas a versão nova com o parâmetro `p_incluir_anteriores`.
+
+#### 2. Otimizar Performance do Hook (Opcional)
+
+O problema de performance está neste trecho:
+
+```typescript
+// Para CADA apostila recolhida, faz uma query individual
+for (const ah of ahRecolhidas || []) {
+  const { data: correcoes } = await supabase
+    .from('produtividade_ah')
+    .select('id')
+    .eq('ah_recolhida_id', ah.id)  // Query individual
+    .limit(1);
+}
+```
+
+A otimização seria buscar todas as correções de uma vez:
+
+```typescript
+// Buscar TODAS as correções de uma vez só
+const ahIds = ahRecolhidas?.map(ah => ah.id) || [];
+const { data: todasCorrecoes } = await supabase
+  .from('produtividade_ah')
+  .select('ah_recolhida_id')
+  .in('ah_recolhida_id', ahIds);
+
+// Criar um Set para lookup O(1)
+const ahComCorrecao = new Set(todasCorrecoes?.map(c => c.ah_recolhida_id));
+
+// Usar o Set para classificar
+for (const ah of ahRecolhidas || []) {
+  if (ahComCorrecao.has(ah.id)) {
+    // pronta para entregar
+  } else if (!ah.correcao_iniciada) {
+    // precisa corrigir
+  }
+}
+```
 
 ---
 
@@ -31,114 +73,86 @@ Se a diferença for negativa, ajusta para a semana anterior.
 
 | Arquivo | Ação |
 |---------|------|
-| `src/pages/sala/SalaProdutividadeTurma.tsx` | Adicionar estado de data selecionada e lógica de cálculo |
-| `src/components/sala/SalaProdutividadeScreen.tsx` | Adicionar DatePicker no cabeçalho |
-| `src/hooks/sala/use-sala-pessoas-turma.ts` | Aceitar data como parâmetro na busca |
-| `src/hooks/sala/use-reposicoes-hoje.ts` | Aceitar data como parâmetro (renomear para `use-reposicoes-data`) |
-| `src/components/sala/SalaProdutividadeDrawer.tsx` | Receber data selecionada como prop |
+| **Migração SQL** | Dropar função `get_lista_completa_reposicoes()` sem parâmetro |
+| `src/hooks/use-professor-atividades.ts` | Otimizar queries N+1 para apostilas AH |
+
+---
+
+### Ordem de Execução
+
+1. Executar migração SQL para remover função duplicada
+2. Otimizar hook de atividades do professor
+3. Testar carregamento da home do professor
 
 ---
 
 ### Detalhes Técnicos
 
-#### 1. Função para Calcular Última Aula
+#### Migração SQL Completa
+
+```sql
+-- Remove a função antiga sem parâmetro que está causando conflito
+DROP FUNCTION IF EXISTS public.get_lista_completa_reposicoes();
+```
+
+#### Hook Otimizado (Trecho Principal)
 
 ```typescript
-// Mapear dia da semana para índice (0 = Domingo, 1 = Segunda, etc.)
-const diasSemanaMap: Record<string, number> = {
-  'Domingo': 0,
-  'Segunda-feira': 1,
-  'Terça-feira': 2,
-  'Quarta-feira': 3,
-  'Quinta-feira': 4,
-  'Sexta-feira': 5,
-  'Sábado': 6,
-};
+// 5. Buscar apostilas AH prontas e para corrigir - OTIMIZADO
+let apostilasAHProntas: ApostilaAHPronta[] = [];
+let apostilasAHParaCorrigir: ApostilaAHParaCorrigir[] = [];
 
-function calcularUltimaAula(diaSemana: string): Date {
-  const hoje = new Date();
-  const diaHoje = hoje.getDay(); // 0-6
-  const diaTurma = diasSemanaMap[diaSemana];
+if (alunoIds.length > 0) {
+  const { data: ahRecolhidas, error: ahError } = await supabase
+    .from('ah_recolhidas')
+    .select('id, pessoa_id, apostila, data_entrega_real, correcao_iniciada')
+    .in('pessoa_id', alunoIds)
+    .is('data_entrega_real', null);
+
+  if (ahError) throw ahError;
+
+  // Buscar todas as correções de uma vez (ao invés de N queries)
+  const ahIds = ahRecolhidas?.map(ah => ah.id) || [];
+  let ahComCorrecao = new Set<number>();
   
-  let diferenca = diaHoje - diaTurma;
-  if (diferenca < 0) {
-    diferenca += 7; // Ajusta para semana anterior
+  if (ahIds.length > 0) {
+    const { data: correcoes, error: correcoesError } = await supabase
+      .from('produtividade_ah')
+      .select('ah_recolhida_id')
+      .in('ah_recolhida_id', ahIds);
+
+    if (correcoesError) throw correcoesError;
+    ahComCorrecao = new Set(correcoes?.map(c => c.ah_recolhida_id));
   }
-  
-  const ultimaAula = new Date(hoje);
-  ultimaAula.setDate(hoje.getDate() - diferenca);
-  return ultimaAula;
+
+  // Processar sem queries adicionais
+  for (const ah of ahRecolhidas || []) {
+    if (idsIgnorados.has(ah.pessoa_id)) continue;
+
+    const aluno = alunos?.find(a => a.id === ah.pessoa_id);
+    const turma = turmas?.find(t => t.id === aluno?.turma_id);
+
+    if (ahComCorrecao.has(ah.id)) {
+      apostilasAHProntas.push({
+        id: ah.id,
+        pessoa_id: ah.pessoa_id,
+        pessoa_nome: aluno?.nome || 'Nome não encontrado',
+        apostila: ah.apostila,
+        turma_nome: turma?.nome || 'Turma não encontrada',
+        dia_semana: turma?.dia_semana || '',
+      });
+    } else if (!ah.correcao_iniciada) {
+      apostilasAHParaCorrigir.push({
+        id: ah.id,
+        pessoa_id: ah.pessoa_id,
+        pessoa_nome: aluno?.nome || 'Nome não encontrado',
+        apostila: ah.apostila,
+        turma_nome: turma?.nome || 'Turma não encontrada',
+        dia_semana: turma?.dia_semana || '',
+      });
+    }
+  }
 }
 ```
 
-#### 2. Alterações no Cabeçalho (SalaProdutividadeScreen)
-
-O cabeçalho atual:
-```
-[←] Turma Nome
-    Quinta-feira • Sala 3
-```
-
-Novo layout:
-```
-[←] Turma Nome                    [📅 29/01/2026 ▼]
-    Quinta-feira • Sala 3
-```
-
-- DatePicker usando Popover + Calendar (padrão Shadcn)
-- Mostra a data formatada "dd/MM/yyyy"
-- Alinhado à direita do cabeçalho
-
-#### 3. Fluxo de Dados com Data Selecionada
-
-```
-SalaProdutividadeTurma (página)
-├── dataSelecionada (state) ← calculada ao carregar turma
-├── setDataSelecionada ← callback para o DatePicker
-│
-├── useSalaPessoasTurma(turmaId, dataSelecionada)
-│   └── Busca produtividade para a data selecionada
-│
-├── useReposicoesHoje(turmaId, dataSelecionada) 
-│   └── Busca reposições para a data selecionada
-│
-└── SalaProdutividadeDrawer
-    └── dataAula ← inicializa com dataSelecionada
-```
-
----
-
-### Fluxo de Implementação
-
-1. **Criar função utilitária** `calcularUltimaAula(diaSemana: string): Date`
-
-2. **Atualizar SalaProdutividadeTurma.tsx**
-   - Adicionar estado `dataSelecionada`
-   - Calcular data inicial quando turma for carregada
-   - Passar data para hooks e componentes
-   - Atualizar lógica de exclusão para usar data selecionada
-
-3. **Atualizar SalaProdutividadeScreen.tsx**
-   - Receber props `dataSelecionada` e `onDataChange`
-   - Adicionar DatePicker no cabeçalho (Popover + Calendar)
-
-4. **Atualizar use-sala-pessoas-turma.ts**
-   - Modificar `buscarPessoasPorTurma(turmaId, data)` para aceitar data
-   - Usar a data recebida ao invés de `new Date()`
-
-5. **Atualizar use-reposicoes-hoje.ts**
-   - Adicionar parâmetro `data` no hook
-   - Usar a data recebida na query
-
-6. **Atualizar SalaProdutividadeDrawer.tsx**
-   - Receber `dataInicial` como prop
-   - Inicializar `dataAula` com a prop recebida
-
----
-
-### Considerações
-
-1. **Performance**: O DatePicker não deve causar re-fetches desnecessários (usar useCallback/useMemo)
-2. **Validação**: Não permitir selecionar datas futuras
-3. **UX**: Mostrar indicador visual quando a data não é "hoje" (ex: badge "Data retroativa")
-4. **Consistência**: Ao mudar a data, os cards devem refletir a produtividade daquele dia
+Esta otimização reduz de **N queries** (uma por apostila) para **1 query** (busca todas as correções de uma vez).
