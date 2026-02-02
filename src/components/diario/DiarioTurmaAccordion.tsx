@@ -99,12 +99,13 @@ const DiarioTurmaAccordion: React.FC<DiarioTurmaAccordionProps> = ({
 
       const pessoasIds = pessoasTurma.map(p => p.id);
 
-      // Buscar registros de produtividade
+      // Buscar registros de produtividade (excluindo reposições)
       const { data: produtividadeData, error: produtividadeError } = await supabase
         .from('produtividade_abaco')
         .select('*')
         .eq('data_aula', dataFormatada)
-        .in('pessoa_id', pessoasIds);
+        .in('pessoa_id', pessoasIds)
+        .or('is_reposicao.is.null,is_reposicao.eq.false');
 
       if (produtividadeError) throw produtividadeError;
 
