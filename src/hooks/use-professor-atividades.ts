@@ -157,7 +157,7 @@ export function useProfessorAtividades() {
           });
       }
 
-      // 5. Buscar apostilas AH prontas para entregar (corrigidas e não entregues) e para corrigir
+      // 5. Buscar apostilas AH prontas para entregar (corrigidas e não entregues) e para corrigir - OTIMIZADO
       let apostilasAHProntas: ApostilaAHPronta[] = [];
       let apostilasAHParaCorrigir: ApostilaAHParaCorrigir[] = [];
       if (alunoIds.length > 0) {
@@ -169,23 +169,29 @@ export function useProfessorAtividades() {
 
         if (ahError) throw ahError;
 
-        // Para cada apostila recolhida, verificar se tem correções e se a pessoa não está ignorada
+        // Buscar todas as correções de uma vez (ao invés de N queries individuais)
+        const ahIds = ahRecolhidas?.map(ah => ah.id) || [];
+        let ahComCorrecao = new Set<number>();
+        
+        if (ahIds.length > 0) {
+          const { data: correcoes, error: correcoesError } = await supabase
+            .from('produtividade_ah')
+            .select('ah_recolhida_id')
+            .in('ah_recolhida_id', ahIds);
+
+          if (correcoesError) throw correcoesError;
+          ahComCorrecao = new Set(correcoes?.map(c => c.ah_recolhida_id));
+        }
+
+        // Processar sem queries adicionais
         for (const ah of ahRecolhidas || []) {
           // Filtrar pessoas ignoradas
           if (idsIgnorados.has(ah.pessoa_id)) continue;
 
-          const { data: correcoes, error: correcoesError } = await supabase
-            .from('produtividade_ah')
-            .select('id')
-            .eq('ah_recolhida_id', ah.id)
-            .limit(1);
-
-          if (correcoesError) throw correcoesError;
-
           const aluno = alunos?.find(a => a.id === ah.pessoa_id);
           const turma = turmas?.find(t => t.id === aluno?.turma_id);
 
-          if (correcoes && correcoes.length > 0) {
+          if (ahComCorrecao.has(ah.id)) {
             // Apostila tem correções -> pronta para entregar
             apostilasAHProntas.push({
               id: ah.id,
