@@ -51,11 +51,11 @@ const DiarioTurmaScreen: React.FC<DiarioTurmaScreenProps> = ({
       
       console.log(`Registros encontrados (total): ${produtividadeData?.length || 0}`);
       
-      // Filtrar registros por alunos da turma
+      // Filtrar registros por alunos da turma e excluir reposições
       const pessoasIds = alunos.map(pessoa => pessoa.id);
       
       const registrosFiltrados = produtividadeData?.filter(registro => 
-        pessoasIds.includes(registro.pessoa_id)
+        pessoasIds.includes(registro.pessoa_id) && registro.is_reposicao !== true
       ) || [];
       
       // Adicionar informações da pessoa (aluno ou funcionário) aos registros
