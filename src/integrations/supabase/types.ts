@@ -7597,7 +7597,7 @@ export type Database = {
         }[]
       }
       get_lista_completa_reposicoes: {
-        Args: never
+        Args: { p_incluir_anteriores?: boolean }
         Returns: {
           aluno_id: string
           aluno_nome: string

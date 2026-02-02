@@ -40,14 +40,15 @@ interface ListaReposicoesModalProps {
 }
 
 export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModalProps) {
-  const { reposicoes: todasReposicoes, isLoading, error, deletarReposicao, isDeletingReposicao, refetch } = useListaReposicoes();
+  const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
+  const [filtroNome, setFiltroNome] = useState("");
+  
+  const { reposicoes: todasReposicoes, isLoading, error, deletarReposicao, isDeletingReposicao, refetch } = useListaReposicoes(mostrarAnteriores);
   const [selectedObservacoes, setSelectedObservacoes] = useState<{
     observacoes: string;
     alunoNome: string;
     dataReposicao: string;
   } | null>(null);
-  const [mostrarAnteriores, setMostrarAnteriores] = useState(false);
-  const [filtroNome, setFiltroNome] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -55,23 +56,11 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
     }
   }, [open, refetch]);
 
-  // Filtrar reposições baseado no estado do toggle e filtro de nome
+  // Filtrar reposições apenas por nome (a filtragem por data agora é feita no backend)
   const reposicoes = useMemo(() => {
     if (!todasReposicoes) return [];
     
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    
     let reposicoesFiltradas = todasReposicoes;
-    
-    // Filtrar por data
-    if (!mostrarAnteriores) {
-      reposicoesFiltradas = reposicoesFiltradas.filter(reposicao => {
-        const dataReposicao = parseISO(reposicao.data_reposicao);
-        dataReposicao.setHours(0, 0, 0, 0);
-        return dataReposicao >= hoje; // Incluir reposições de hoje e futuras
-      });
-    }
     
     // Filtrar por nome do aluno
     if (filtroNome.trim()) {
@@ -81,7 +70,7 @@ export function ListaReposicoesModal({ open, onOpenChange }: ListaReposicoesModa
     }
     
     return reposicoesFiltradas;
-  }, [todasReposicoes, mostrarAnteriores, filtroNome]);
+  }, [todasReposicoes, filtroNome]);
 
   const handleDeleteReposicao = (reposicaoId: string) => {
     deletarReposicao(reposicaoId);

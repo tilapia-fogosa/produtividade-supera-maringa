@@ -14,6 +14,7 @@ import { Turma } from '@/hooks/use-professor-turmas';
 import { useApostilas } from '@/hooks/use-apostilas';
 import { usePessoasReposicao } from '@/hooks/use-alunos-reposicao';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 
 interface SalaProdutividadeDrawerProps {
   isOpen: boolean;
@@ -51,6 +52,7 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
 }) => {
   const { apostilas } = useApostilas();
   const { data: pessoasReposicao = [], isLoading: loadingPessoas } = usePessoasReposicao(turma?.id || null);
+  const { funcionarioId } = useCurrentFuncionario();
   
   const [loading, setLoading] = useState(false);
   const [dataAula, setDataAula] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -152,6 +154,7 @@ const SalaProdutividadeDrawer: React.FC<SalaProdutividadeDrawerProps> = ({
         apostila_atual: apostilaAbaco || null,
         ultima_pagina: paginaAbaco || null,
         is_reposicao: modoReposicao,
+        funcionario_registro_id: funcionarioId || null,
       };
 
       console.log('[Sala] Enviando produtividade:', payload);
