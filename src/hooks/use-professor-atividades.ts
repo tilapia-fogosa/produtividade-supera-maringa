@@ -113,9 +113,9 @@ export function useProfessorAtividades() {
 
       const alunoIds = alunos?.map(a => a.id) || [];
 
-      // 3. Buscar reposições para as turmas do professor
+      // 3. Buscar reposições para as turmas do professor (incluindo futuras apenas)
       const { data: reposicoes, error: reposicoesError } = await supabase
-        .rpc('get_lista_completa_reposicoes');
+        .rpc('get_lista_completa_reposicoes', { p_incluir_anteriores: false });
 
       if (reposicoesError) throw reposicoesError;
 
