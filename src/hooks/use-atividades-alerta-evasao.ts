@@ -115,6 +115,18 @@ async function buscarUsuariosDoDepartamento(departamento: string): Promise<Array
   }
 }
 
+// Interface para atividades criadas em sequência
+interface AtividadeCriada {
+  id: string;
+  tipo_atividade: TipoAtividadeEvasao;
+  tipo_label: string;
+  descricao: string;
+  responsavel_nome: string | null;
+  status: string;
+  data_agendada?: string | null;
+  departamento_responsavel?: string | null;
+}
+
 // Função para enviar atividade criada para o webhook
 async function enviarAtividadeParaWebhook(atividade: {
   id: string;
@@ -213,6 +225,104 @@ async function enviarAtividadeParaWebhook(atividade: {
   }
 }
 
+// Função para enviar conclusão de atividade com as novas atividades criadas
+async function enviarConclusaoParaWebhook(
+  atividadeConcluida: {
+    id: string;
+    alerta_evasao_id: string;
+    tipo_atividade: TipoAtividadeEvasao;
+    descricao: string;
+    responsavel_nome: string | null;
+    concluido_por_nome: string | null;
+  },
+  atividadesCriadas: AtividadeCriada[],
+  contexto?: string
+) {
+  try {
+    // Buscar dados adicionais do alerta (aluno, turma, professor)
+    const { data: alertaData } = await supabase
+      .from('alerta_evasao')
+      .select(`
+        id,
+        data_alerta,
+        origem_alerta,
+        descritivo,
+        status,
+        alunos!inner(
+          id,
+          nome,
+          turma_id,
+          turmas(
+            id,
+            nome,
+            professor_id,
+            professores(id, nome, slack_username)
+          )
+        )
+      `)
+      .eq('id', atividadeConcluida.alerta_evasao_id)
+      .single();
+
+    const aluno = alertaData?.alunos as any;
+    const turma = aluno?.turmas;
+    const professor = turma?.professores;
+
+    const payload = {
+      evento: 'atividade_concluida',
+      atividade_concluida: {
+        id: atividadeConcluida.id,
+        tipo_atividade: atividadeConcluida.tipo_atividade,
+        tipo_label: TIPOS_ATIVIDADE.find(t => t.value === atividadeConcluida.tipo_atividade)?.label || atividadeConcluida.tipo_atividade,
+        descricao: atividadeConcluida.descricao,
+        responsavel_nome: atividadeConcluida.responsavel_nome,
+        concluido_por_nome: atividadeConcluida.concluido_por_nome
+      },
+      atividades_criadas: atividadesCriadas,
+      contexto: contexto || null,
+      alerta: {
+        id: alertaData?.id,
+        data_alerta: alertaData?.data_alerta,
+        origem_alerta: alertaData?.origem_alerta,
+        descritivo: alertaData?.descritivo,
+        status: alertaData?.status
+      },
+      aluno: {
+        id: aluno?.id,
+        nome: aluno?.nome
+      },
+      turma: {
+        id: turma?.id,
+        nome: turma?.nome
+      },
+      professor: {
+        id: professor?.id,
+        nome: professor?.nome,
+        slack_username: professor?.slack_username
+      },
+      concluido_em: new Date().toISOString()
+    };
+
+    console.log('Enviando conclusão de atividade para webhook:', payload);
+
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      console.error('Erro ao enviar conclusão para webhook:', response.status, response.statusText);
+    } else {
+      console.log('Conclusão de atividade enviada para webhook com sucesso');
+    }
+  } catch (error) {
+    console.error('Erro ao enviar conclusão para webhook:', error);
+    // Não lança erro para não interromper o fluxo principal
+  }
+}
+
 // Busca professor da turma do aluno associado ao alerta
 async function buscarProfessorDaTurma(alertaId: string): Promise<{ id: string; nome: string } | null> {
   const { data, error } = await supabase
@@ -284,8 +394,20 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Se tem atividade anterior, marca ela como concluída e registra quem concluiu
+      // Variável para armazenar dados da atividade anterior (para enviar ao webhook de conclusão)
+      let atividadeAnteriorData: any = null;
+      
+      // Se tem atividade anterior, busca dados e marca como concluída
       if (atividadeAnteriorId) {
+        // Buscar dados da atividade anterior antes de atualizar
+        const { data: atividadeAnterior } = await supabase
+          .from('atividades_alerta_evasao')
+          .select('*')
+          .eq('id', atividadeAnteriorId)
+          .single();
+        
+        atividadeAnteriorData = atividadeAnterior;
+        
         const { error: updateError } = await supabase
           .from('atividades_alerta_evasao')
           .update({ 
@@ -339,6 +461,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           { tipo: 'remover_sgs' as TipoAtividadeEvasao, descricao: 'Remover aluno do sistema SGS' }
         ];
         
+        const atividadesCriadas: AtividadeCriada[] = [];
+        
         for (const tarefa of tarefasEvasao) {
           const tarefaData = {
             alerta_evasao_id: alertaEvasaoId,
@@ -358,8 +482,19 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           
           if (insertError) throw insertError;
           
-          // Envia para o webhook
+          // Adicionar à lista de atividades criadas
           if (insertedTarefa) {
+            atividadesCriadas.push({
+              id: insertedTarefa.id,
+              tipo_atividade: tarefa.tipo,
+              tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tarefa.tipo)?.label || tarefa.tipo,
+              descricao: tarefa.descricao,
+              responsavel_nome: 'Administrativo',
+              status: 'pendente',
+              departamento_responsavel: 'administrativo'
+            });
+            
+            // Envia para o webhook (nova atividade individual)
             enviarAtividadeParaWebhook({
               id: insertedTarefa.id,
               alerta_evasao_id: alertaEvasaoId,
@@ -372,8 +507,22 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           }
         }
         
-        // Marcar atividade anterior como concluída se houver
-        // (já foi feito no início, retorna sem criar atividade de evasão)
+        // Enviar webhook de conclusão com as atividades criadas
+        if (atividadeAnteriorData) {
+          enviarConclusaoParaWebhook(
+            {
+              id: atividadeAnteriorData.id,
+              alerta_evasao_id: alertaEvasaoId,
+              tipo_atividade: atividadeAnteriorData.tipo_atividade,
+              descricao: atividadeAnteriorData.descricao,
+              responsavel_nome: atividadeAnteriorData.responsavel_nome,
+              concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+            },
+            atividadesCriadas,
+            'evasao_iniciada'
+          );
+        }
+        
         return { id: 'tarefas_criadas', tipo_atividade: 'evasao' };
       }
       
@@ -464,6 +613,17 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       // Envia a atividade criada para o webhook
       if (data) {
+        const atividadeCriada: AtividadeCriada = {
+          id: data.id,
+          tipo_atividade,
+          tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tipo_atividade)?.label || tipo_atividade,
+          descricao,
+          responsavel_nome,
+          status: isTerminalRetencao ? 'concluida' : 'pendente',
+          data_agendada: dataAgendadaFinal,
+          departamento_responsavel
+        };
+        
         enviarAtividadeParaWebhook({
           id: data.id,
           alerta_evasao_id: alertaEvasaoId,
@@ -474,6 +634,22 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           data_agendada,
           departamento_responsavel
         });
+        
+        // Enviar webhook de conclusão se havia atividade anterior
+        if (atividadeAnteriorData) {
+          enviarConclusaoParaWebhook(
+            {
+              id: atividadeAnteriorData.id,
+              alerta_evasao_id: alertaEvasaoId,
+              tipo_atividade: atividadeAnteriorData.tipo_atividade,
+              descricao: atividadeAnteriorData.descricao,
+              responsavel_nome: atividadeAnteriorData.responsavel_nome,
+              concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+            },
+            [atividadeCriada],
+            isTerminalRetencao ? 'retencao' : 'transicao_atividade'
+          );
+        }
       }
       
       return data;
@@ -501,6 +677,13 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Buscar dados da atividade anterior antes de atualizar
+      const { data: atividadeAnteriorData } = await supabase
+        .from('atividades_alerta_evasao')
+        .select('*')
+        .eq('id', atividadeAnteriorId)
+        .single();
+      
       // Marca a negociação financeira como concluída com observações
       const updateData: any = { 
         status: 'concluida',
@@ -510,15 +693,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       // Atualiza a descrição da atividade com as observações se fornecidas
       if (observacoes) {
-        // Busca a descrição original para concatenar
-        const { data: atividadeOriginal } = await supabase
-          .from('atividades_alerta_evasao')
-          .select('descricao')
-          .eq('id', atividadeAnteriorId)
-          .single();
-        
-        if (atividadeOriginal) {
-          updateData.descricao = `${atividadeOriginal.descricao}\n\nObservações: ${observacoes}`;
+        if (atividadeAnteriorData) {
+          updateData.descricao = `${atividadeAnteriorData.descricao}\n\nObservações: ${observacoes}`;
         }
       }
       
@@ -538,6 +714,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       let tarefas: TarefaAdmin[] = [];
       let deveResolverAlerta = false;
+      const atividadesCriadas: AtividadeCriada[] = [];
       
       if (resultado === 'evasao') {
         // Evasão: 7 tarefas administrativas
@@ -601,8 +778,17 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         
         if (retencaoError) throw retencaoError;
         
-        // Envia para o webhook
+        // Adiciona à lista de atividades criadas
         if (retencaoInserted) {
+          atividadesCriadas.push({
+            id: retencaoInserted.id,
+            tipo_atividade: 'retencao',
+            tipo_label: 'Retenção',
+            descricao: retencaoData.descricao,
+            responsavel_nome: retencaoData.responsavel_nome,
+            status: 'concluida'
+          });
+          
           enviarAtividadeParaWebhook({
             id: retencaoInserted.id,
             alerta_evasao_id: alertaEvasaoId,
@@ -637,8 +823,19 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         
         if (insertError) throw insertError;
         
-        // Envia para o webhook
+        // Adiciona à lista de atividades criadas e envia para webhook
         if (insertedTarefa) {
+          atividadesCriadas.push({
+            id: insertedTarefa.id,
+            tipo_atividade: tarefa.tipo,
+            tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tarefa.tipo)?.label || tarefa.tipo,
+            descricao: tarefa.descricao,
+            responsavel_nome: 'Administrativo',
+            status: 'pendente',
+            data_agendada: tarefa.data_agendada,
+            departamento_responsavel: 'administrativo'
+          });
+          
           enviarAtividadeParaWebhook({
             id: insertedTarefa.id,
             alerta_evasao_id: alertaEvasaoId,
@@ -650,6 +847,22 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             departamento_responsavel: 'administrativo'
           });
         }
+      }
+      
+      // Enviar webhook de conclusão com todas as atividades criadas
+      if (atividadeAnteriorData && atividadesCriadas.length > 0) {
+        enviarConclusaoParaWebhook(
+          {
+            id: atividadeAnteriorData.id,
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade: atividadeAnteriorData.tipo_atividade,
+            descricao: updateData.descricao || atividadeAnteriorData.descricao,
+            responsavel_nome: atividadeAnteriorData.responsavel_nome,
+            concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+          },
+          atividadesCriadas,
+          resultado // 'evasao', 'ajuste_temporario', 'ajuste_definitivo'
+        );
       }
       
       // Se for ajuste definitivo, marca o alerta como retido
@@ -679,6 +892,13 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // Buscar dados da atividade antes de atualizar
+      const { data: atividadeData } = await supabase
+        .from('atividades_alerta_evasao')
+        .select('*')
+        .eq('id', atividadeId)
+        .single();
       
       // Marca a atividade como concluída
       const { error: updateError } = await supabase
@@ -731,16 +951,40 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           
           if (evasaoError) throw evasaoError;
           
-          // Envia para o webhook
-          if (evasaoInserted) {
-            enviarAtividadeParaWebhook({
-              id: evasaoInserted.id,
-              alerta_evasao_id: alertaEvasaoId,
-              tipo_atividade: 'evasao',
-              descricao: evasaoData.descricao,
-              responsavel_nome: evasaoData.responsavel_nome,
-              status: 'concluida'
-            });
+          // Cria objeto da atividade de evasão criada
+          const atividadeEvasaoCriada: AtividadeCriada = {
+            id: evasaoInserted.id,
+            tipo_atividade: 'evasao',
+            tipo_label: 'Evasão',
+            descricao: evasaoData.descricao,
+            responsavel_nome: evasaoData.responsavel_nome,
+            status: 'concluida'
+          };
+          
+          // Envia para o webhook (nova atividade)
+          enviarAtividadeParaWebhook({
+            id: evasaoInserted.id,
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade: 'evasao',
+            descricao: evasaoData.descricao,
+            responsavel_nome: evasaoData.responsavel_nome,
+            status: 'concluida'
+          });
+          
+          // Enviar webhook de conclusão (última tarefa concluída gerou a atividade de evasão)
+          if (atividadeData) {
+            enviarConclusaoParaWebhook(
+              {
+                id: atividadeData.id,
+                alerta_evasao_id: alertaEvasaoId,
+                tipo_atividade: atividadeData.tipo_atividade,
+                descricao: atividadeData.descricao,
+                responsavel_nome: atividadeData.responsavel_nome,
+                concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+              },
+              [atividadeEvasaoCriada],
+              'processo_evasao_finalizado'
+            );
           }
           
           // Marca o alerta como evadido
@@ -753,6 +997,38 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             .eq('id', alertaEvasaoId);
           
           if (alertaError) throw alertaError;
+        } else {
+          // Tarefa concluída mas processo não finalizado - envia conclusão simples
+          if (atividadeData) {
+            enviarConclusaoParaWebhook(
+              {
+                id: atividadeData.id,
+                alerta_evasao_id: alertaEvasaoId,
+                tipo_atividade: atividadeData.tipo_atividade,
+                descricao: atividadeData.descricao,
+                responsavel_nome: atividadeData.responsavel_nome,
+                concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+              },
+              [], // Nenhuma atividade nova criada
+              'tarefa_administrativa_concluida'
+            );
+          }
+        }
+      } else {
+        // Conclusão de tarefa simples (sem contexto de evasão)
+        if (atividadeData) {
+          enviarConclusaoParaWebhook(
+            {
+              id: atividadeData.id,
+              alerta_evasao_id: alertaEvasaoId,
+              tipo_atividade: atividadeData.tipo_atividade,
+              descricao: atividadeData.descricao,
+              responsavel_nome: atividadeData.responsavel_nome,
+              concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+            },
+            [],
+            'tarefa_concluida'
+          );
         }
       }
       
