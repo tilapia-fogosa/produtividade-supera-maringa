@@ -1,26 +1,27 @@
 
-## Plano: Filtrar Registros de Reposição na Página Diário
-
-### Problema Identificado
-
-A página `/diario` usa o componente `DiarioTurmaAccordion.tsx`, que busca registros de produtividade sem filtrar reposições. O filtro que adicionei anteriormente estava no arquivo **errado** (`DiarioTurmaScreen.tsx`), que é usado apenas na rota `/diario-turma/:turmaId`.
+## Plano: Incluir ID do Alerta de Evasão no Webhook de Criação
 
 ### Situação Atual
 
-Quando uma turma é expandida no accordion, a função `buscarDadosTurma` busca todos os registros sem filtrar:
+O webhook do n8n é chamado **antes** de inserir o registro no banco de dados:
 
-```typescript
-const { data: produtividadeData } = await supabase
-  .from('produtividade_abaco')
-  .select('*')
-  .eq('data_aula', dataFormatada)
-  .in('pessoa_id', pessoasIds);
-// ❌ Sem filtro de is_reposicao
+```text
+Fluxo Atual:
+1. Envia para n8n ❌ (sem ID)
+2. Insere no banco → Obtém ID
+3. Envia para Make ❌ (sem ID)
 ```
 
 ### Solução
 
-Adicionar o filtro `.eq('is_reposicao', false)` na query do `DiarioTurmaAccordion.tsx` para excluir registros de reposição da lista de turmas regulares.
+Reorganizar a ordem das operações para primeiro inserir no banco e depois enviar aos webhooks:
+
+```text
+Fluxo Proposto:
+1. Insere no banco → Obtém ID ✅
+2. Envia para n8n ✅ (com ID)
+3. Envia para Make ✅ (com ID)
+```
 
 ---
 
@@ -28,45 +29,48 @@ Adicionar o filtro `.eq('is_reposicao', false)` na query do `DiarioTurmaAccordio
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/diario/DiarioTurmaAccordion.tsx` | Adicionar filtro `is_reposicao = false` na query |
+| `src/hooks/use-alertas-evasao.ts` | Reordenar operações e incluir `alerta_id` nos payloads |
 
 ---
 
 ### Detalhes Técnicos
 
-**Linha 103-107** - Alterar a query para incluir o filtro:
+**Mudanças no `handleSubmit`:**
 
+1. Mover a inserção no banco (linhas 242-266) para **antes** das chamadas aos webhooks
+
+2. Adicionar o `alerta_id` no payload do webhook n8n:
 ```typescript
-// ANTES
-const { data: produtividadeData, error: produtividadeError } = await supabase
-  .from('produtividade_abaco')
-  .select('*')
-  .eq('data_aula', dataFormatada)
-  .in('pessoa_id', pessoasIds);
-
-// DEPOIS
-const { data: produtividadeData, error: produtividadeError } = await supabase
-  .from('produtividade_abaco')
-  .select('*')
-  .eq('data_aula', dataFormatada)
-  .in('pessoa_id', pessoasIds)
-  .or('is_reposicao.is.null,is_reposicao.eq.false');
+body: JSON.stringify({
+  alerta_id: alertaData.id,  // ← Novo campo
+  aluno_id: alunoSelecionado,
+  turma_id: aluno?.turma_id || null,
+  professor_id: professorId,
+  data_aviso: dataAlerta,
+  responsavel_id: profileId,
+  descricao: descritivo,
+  origem: origemAlerta
+})
 ```
 
-**Nota**: Uso `.or('is_reposicao.is.null,is_reposicao.eq.false')` para incluir registros onde:
-- `is_reposicao` é `null` (registros antigos que não têm esse campo preenchido)
-- `is_reposicao` é `false` (aulas regulares)
-
-Isso garante compatibilidade com registros antigos enquanto exclui as reposições (`is_reposicao = true`).
+3. Adicionar o `alerta_id` no payload do webhook Make:
+```typescript
+body: JSON.stringify({
+  aluno: { ... },
+  alerta: {
+    id: alertaData.id,  // ← Novo campo
+    data: dataAlertaFormatada,
+    origem: origemAlerta,
+    ...
+  }
+})
+```
 
 ---
 
 ### Resultado Esperado
 
-- **Turmas regulares**: Mostrarão apenas 1 registro por aluna (onde `is_reposicao = false` ou `null`)
-- **Accordion de Reposições**: Continuará mostrando os registros onde `is_reposicao = true` (já funciona corretamente)
-
-No caso específico do dia 24/01/2026:
-- Maria Julia Oliveira Silva → 1 registro (aula regular)
-- Anna Helena Bukow Natal → 1 registro (aula regular)
-- As reposições aparecerão no accordion "Reposições" no final
+Ambos os webhooks (n8n e Make) receberão o `alerta_id` do registro criado, permitindo:
+- Rastreabilidade completa do alerta
+- Links diretos para o registro no sistema
+- Atualizações futuras baseadas no ID
