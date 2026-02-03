@@ -404,7 +404,8 @@ export default function AlunosAtivos() {
       {/* Lista de alunos */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-w-full">
+            <div className="min-w-[1200px]">
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -595,6 +596,7 @@ export default function AlunosAtivos() {
             {alunosFiltrados.length === 0 && <div className="text-center py-8 text-gray-500">
                 <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
               </div>}
+            </div>
           </div>
         </CardContent>
       </Card>
