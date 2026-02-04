@@ -1,35 +1,7 @@
-
-## Plano: Corrigir Erro de Tipo no RPC do Calendário
-
-### Problema Identificado
-
-A função `get_calendario_eventos_unificados` declara que retorna campos `horario_inicio` e `horario_fim` do tipo `time without time zone`, mas a view `vw_calendario_eventos_unificados` converte esses campos para `text`.
-
-**Erro retornado:**
-```
-code: 42804
-details: Returned type text does not match expected type time without time zone in column 5.
-message: structure of query does not match function result type
-```
-
----
-
-### Solução
-
-Recriar a função RPC `get_calendario_eventos_unificados` alterando a declaração de retorno dos campos `horario_inicio` e `horario_fim` de `time` para `text`.
-
----
-
-### Detalhes Técnicos
-
-| Arquivo/Objeto | Mudança |
-|----------------|---------|
-| `get_calendario_eventos_unificados` (RPC) | Alterar tipo de `horario_inicio` e `horario_fim` de `time` para `text` |
-
-**SQL da migração:**
-```sql
+-- Primeiro excluir a função existente para poder recriar com novos parâmetros de retorno
 DROP FUNCTION IF EXISTS public.get_calendario_eventos_unificados(date, date, uuid);
 
+-- Recriar a função com cálculo dinâmico de reposições, aulas experimentais e faltas futuras
 CREATE OR REPLACE FUNCTION public.get_calendario_eventos_unificados(
   p_data_inicio date, 
   p_data_fim date, 
@@ -40,8 +12,8 @@ RETURNS TABLE(
   tipo_evento text,
   unit_id uuid,
   dia_semana text,
-  horario_inicio text,  -- Alterado de time para text
-  horario_fim text,     -- Alterado de time para text
+  horario_inicio time,
+  horario_fim time,
   sala_id uuid,
   sala_nome text,
   sala_cor text,
@@ -67,6 +39,7 @@ BEGIN
     SELECT r.turma_id, COUNT(*)::integer as total
     FROM reposicoes r
     WHERE r.data_reposicao BETWEEN p_data_inicio AND p_data_fim
+      AND r.active = true
     GROUP BY r.turma_id
   ),
   aulas_experimentais_por_turma AS (
@@ -115,13 +88,3 @@ BEGIN
   WHERE (p_unit_id IS NULL OR vce.unit_id = p_unit_id);
 END;
 $$;
-```
-
----
-
-### Resultado Esperado
-
-Após aplicar a migração:
-1. O tipo de retorno da função será compatível com os dados da view
-2. O calendário de aulas carregará corretamente
-3. As vagas serão calculadas dinamicamente com reposições, aulas experimentais e faltas futuras
