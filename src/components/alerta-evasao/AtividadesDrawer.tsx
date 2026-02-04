@@ -407,10 +407,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     }
     
     try {
-      // Primeiro concluir o acolhimento atual com as observações
-      await concluirTarefa(atividadeAcolhimento.id);
-      
       // Montar descrição com data opcional para novo acolhimento
+      // Nota: A conclusão do acolhimento é feita automaticamente pelo criarAtividade via atividadeAnteriorId
       let descricao = observacoesAcolhimento.trim();
       if (tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento) {
         descricao += ` | Agendado para ${format(dataNovoAcolhimento, 'dd/MM/yyyy')}`;
@@ -465,10 +463,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     if (!atividadeAcolhimento || !observacoesAcolhimento.trim()) return;
     
     try {
-      // Primeiro concluir o acolhimento
-      await concluirTarefa(atividadeAcolhimento.id);
-      
       // Montar descrição usando as observações do acolhimento + agendamento opcional
+      // Nota: A conclusão do acolhimento é feita automaticamente pelo criarAtividade via atividadeAnteriorId
       let descricaoCompleta = observacoesAcolhimento.trim();
       if (dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro) {
         descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`;
