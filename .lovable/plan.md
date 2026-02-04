@@ -1,71 +1,52 @@
 
 
-## Plano: Remover Chamadas Duplicadas de Conclusão
+## Plano: Corrigir Payload do Webhook de Conclusão
 
 ### Problema Identificado
 
-O código está chamando **duas funções que concluem a mesma atividade**:
-
-1. `concluirTarefa(atividadeAcolhimento.id)` - Conclui e dispara webhook com `atividades_criadas: []`
-2. `criarAtividade({ atividadeAnteriorId: atividadeAcolhimento.id })` - Também conclui a atividade anterior internamente e dispara webhook com a nova atividade
-
-**Resultado:** Dois webhooks são disparados para a mesma conclusão.
+1. **Descritivo da atividade concluída** estava vindo da atividade salva no banco (antes de atualizar), não do descritivo que o usuário preencheu ao concluir
+2. **Próximas atividades** estavam recebendo o descritivo das observações, quando na verdade não devem ter descritivo (ainda não foram realizadas)
 
 ---
 
-### Solução
+### Solução Implementada
 
-Remover as chamadas de `concluirTarefa()` que precedem `criarAtividade()` quando já passamos `atividadeAnteriorId`, pois a função `criarAtividadeMutation` já faz a conclusão da atividade anterior internamente.
+1. Adicionado parâmetro `observacoesAtividadeAnterior` no mutation `criarAtividadeMutation`
+2. Ao concluir uma atividade, atualizamos o banco com o descritivo fornecido pelo usuário
+3. O webhook envia o descritivo correto da atividade concluída
+4. Removido `descricao` da interface `AtividadeCriada` (próximas atividades não têm descritivo)
 
 ---
 
-### Arquivo a Modificar
+### Arquivos Modificados
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/alerta-evasao/AtividadesDrawer.tsx` | Remover chamadas redundantes de `concluirTarefa` |
+| `src/hooks/use-atividades-alerta-evasao.ts` | Adicionado parâmetro e lógica para separar descritivos |
+| `src/components/alerta-evasao/AtividadesDrawer.tsx` | Atualizado para passar `observacoesAtividadeAnterior` |
 
 ---
 
-### Mudanças Específicas
-
-**1. Função `handleProsseguirAcolhimento` (linhas 409-411):**
-```text
-Remover: await concluirTarefa(atividadeAcolhimento.id);
-Motivo: criarAtividade já conclui a atividade anterior via atividadeAnteriorId
-```
-
-**2. Função `handleConfirmarAtendimentoFinanceiro` (linhas 467-469):**
-```text
-Remover: await concluirTarefa(atividadeAcolhimento.id);
-Motivo: criarAtividade já conclui a atividade anterior via atividadeAnteriorId
-```
-
----
-
-### Fluxo Corrigido
-
-```text
-ANTES (bug):
-1. concluirTarefa() → webhook com atividades_criadas: []
-2. criarAtividade() → webhook com atividades_criadas: [nova]
-
-DEPOIS (correto):
-1. criarAtividade({ atividadeAnteriorId }) → webhook único com atividades_criadas: [nova]
-```
-
----
-
-### Resultado Esperado
-
-Apenas **um webhook** será disparado quando uma atividade é concluída e gera uma nova, contendo:
+### Payload Corrigido
 
 ```json
 {
   "evento": "atividade_concluida",
-  "atividade_concluida": { ... },
-  "atividades_criadas": [{ ... }],
-  "contexto": "transicao_atividade"
+  "atividade_concluida": {
+    "id": "...",
+    "tipo_atividade": "acolhimento",
+    "descricao": "Observações preenchidas pelo usuário ao concluir"
+  },
+  "atividades_criadas": [
+    {
+      "id": "...",
+      "tipo_atividade": "atendimento_financeiro",
+      "tipo_label": "Atendimento Financeiro",
+      "responsavel_nome": "Administrativo",
+      "status": "pendente",
+      "data_agendada": "2026-02-10"
+      // Sem descricao - ainda não foi realizada
+    }
+  ]
 }
 ```
-
