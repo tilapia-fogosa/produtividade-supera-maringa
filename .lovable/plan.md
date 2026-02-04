@@ -1,69 +1,83 @@
 
-
-## Plano: Corrigir Cálculo de Vagas no Calendário de Aulas
+## Plano: Corrigir Erro de Tipo no RPC do Calendário
 
 ### Problema Identificado
 
-**Cálculo Atual (incorreto):**
-```typescript
-vagasDisponiveis = 12 - total_alunos_ativos - total_funcionarios_ativos
+A função `get_calendario_eventos_unificados` declara que retorna campos `horario_inicio` e `horario_fim` do tipo `time without time zone`, mas a view `vw_calendario_eventos_unificados` converte esses campos para `text`.
+
+**Erro retornado:**
 ```
-
-**Cálculo Correto:**
+code: 42804
+details: Returned type text does not match expected type time without time zone in column 5.
+message: structure of query does not match function result type
 ```
-Vagas = 12 - (alunos ativos) - (funcionários ativos) - (reposições no dia) - (aulas experimentais no dia) + (faltas futuras no dia)
-```
-
-### Análise Técnica
-
-Existem **dois problemas**:
-
-1. **Frontend** - O cálculo de vagas não inclui reposições, aulas experimentais e faltas futuras
-
-2. **Backend (RPC)** - A função `get_calendario_eventos_unificados` lê de uma view que retorna valores **fixos (0)** para reposições, aulas experimentais e faltas futuras
-
-| Componente | Status |
-|------------|--------|
-| `vw_calendario_eventos_unificados` | ❌ Retorna 0 fixo para reposições/experimentais/faltas |
-| `get_calendario_eventos_unificados` | ❌ Não recebe parâmetros de data para cálculo dinâmico |
-| `get_calendario_turmas_semana_com_reposicoes` | ✅ Calcula corretamente por período |
-| Frontend (cálculo vagas) | ❌ Não usa todos os campos na fórmula |
 
 ---
 
 ### Solução
 
-#### Parte 1: Atualizar a RPC do Banco de Dados
+Recriar a função RPC `get_calendario_eventos_unificados` alterando a declaração de retorno dos campos `horario_inicio` e `horario_fim` de `time` para `text`.
 
-Modificar `get_calendario_eventos_unificados` para calcular dinamicamente os valores de reposições, aulas experimentais e faltas futuras usando os parâmetros `p_data_inicio` e `p_data_fim` que já recebe mas não utiliza.
+---
 
-**SQL para atualizar:**
+### Detalhes Técnicos
+
+| Arquivo/Objeto | Mudança |
+|----------------|---------|
+| `get_calendario_eventos_unificados` (RPC) | Alterar tipo de `horario_inicio` e `horario_fim` de `time` para `text` |
+
+**SQL da migração:**
 ```sql
+DROP FUNCTION IF EXISTS public.get_calendario_eventos_unificados(date, date, uuid);
+
 CREATE OR REPLACE FUNCTION public.get_calendario_eventos_unificados(
   p_data_inicio date, 
   p_data_fim date, 
   p_unit_id uuid DEFAULT NULL::uuid
 )
-RETURNS TABLE(...)
+RETURNS TABLE(
+  evento_id text,
+  tipo_evento text,
+  unit_id uuid,
+  dia_semana text,
+  horario_inicio text,  -- Alterado de time para text
+  horario_fim text,     -- Alterado de time para text
+  sala_id uuid,
+  sala_nome text,
+  sala_cor text,
+  titulo text,
+  descricao text,
+  professor_id uuid,
+  professor_nome text,
+  professor_slack text,
+  perfil text,
+  data_especifica date,
+  total_alunos_ativos integer,
+  total_funcionarios_ativos integer,
+  total_reposicoes integer,
+  total_aulas_experimentais integer,
+  total_faltas_futuras integer,
+  created_at timestamp with time zone
+)
 LANGUAGE plpgsql
 AS $$
 BEGIN
   RETURN QUERY
   WITH reposicoes_por_turma AS (
-    SELECT turma_id, COUNT(*) as total
-    FROM reposicoes
-    WHERE data_reposicao BETWEEN p_data_inicio AND p_data_fim
-    GROUP BY turma_id
+    SELECT r.turma_id, COUNT(*)::integer as total
+    FROM reposicoes r
+    WHERE r.data_reposicao BETWEEN p_data_inicio AND p_data_fim
+    GROUP BY r.turma_id
   ),
   aulas_experimentais_por_turma AS (
-    SELECT turma_id, COUNT(*) as total
-    FROM aulas_experimentais
-    WHERE data_aula_experimental BETWEEN p_data_inicio AND p_data_fim
-      AND active = true
-    GROUP BY turma_id
+    SELECT ae.turma_id, COUNT(*)::integer as total
+    FROM aulas_experimentais ae
+    WHERE ae.data_aula_experimental BETWEEN p_data_inicio AND p_data_fim
+      AND ae.active = true
+    GROUP BY ae.turma_id
   ),
   faltas_futuras_por_turma AS (
-    SELECT a.turma_id, COUNT(*) as total
+    SELECT a.turma_id, COUNT(*)::integer as total
     FROM faltas_antecipadas fa
     JOIN alunos a ON fa.aluno_id = a.id
     WHERE fa.data_falta BETWEEN p_data_inicio AND p_data_fim
@@ -105,49 +119,9 @@ $$;
 
 ---
 
-#### Parte 2: Atualizar Cálculo no Frontend
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/CalendarioAulas.tsx` | Atualizar fórmula de vagas em `BlocoTurma` |
-
-**De:**
-```typescript
-const vagasDisponiveis = Math.max(0, 
-  capacidadeMaxima - evento.total_alunos_ativos - evento.total_funcionarios_ativos
-);
-```
-
-**Para:**
-```typescript
-const vagasDisponiveis = Math.max(0, 
-  capacidadeMaxima 
-  - evento.total_alunos_ativos 
-  - evento.total_funcionarios_ativos 
-  - evento.total_reposicoes 
-  - evento.total_aulas_experimentais 
-  + evento.total_faltas_futuras
-);
-```
-
----
-
-### Lógica do Cálculo
-
-| Fator | Operação | Motivo |
-|-------|----------|--------|
-| Alunos ativos | `-` | Ocupam vagas fixas |
-| Funcionários ativos | `-` | Ocupam vagas fixas |
-| Reposições no dia | `-` | Aluno de outra turma vem ocupar vaga |
-| Aulas experimentais | `-` | Cliente potencial vem experimentar |
-| Faltas futuras | `+` | Aluno avisou que não vai, libera vaga |
-
----
-
 ### Resultado Esperado
 
-Após a implementação, o calendário mostrará vagas considerando a situação real de cada turma no dia específico, contabilizando:
-- Alunos extras por reposição
-- Clientes em aula experimental  
-- Vagas liberadas por faltas avisadas antecipadamente
-
+Após aplicar a migração:
+1. O tipo de retorno da função será compatível com os dados da view
+2. O calendário de aulas carregará corretamente
+3. As vagas serão calculadas dinamicamente com reposições, aulas experimentais e faltas futuras
