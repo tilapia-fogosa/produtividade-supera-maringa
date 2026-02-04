@@ -493,17 +493,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
               status: 'pendente',
               departamento_responsavel: 'administrativo'
             });
-            
-            // Envia para o webhook (nova atividade individual)
-            enviarAtividadeParaWebhook({
-              id: insertedTarefa.id,
-              alerta_evasao_id: alertaEvasaoId,
-              tipo_atividade: tarefa.tipo,
-              descricao: tarefa.descricao,
-              responsavel_nome: 'Administrativo',
-              status: 'pendente',
-              departamento_responsavel: 'administrativo'
-            });
           }
         }
         
@@ -611,7 +600,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         }
       }
       
-      // Envia a atividade criada para o webhook
+      // Envia o webhook unificado
       if (data) {
         const atividadeCriada: AtividadeCriada = {
           id: data.id,
@@ -624,18 +613,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           departamento_responsavel
         };
         
-        enviarAtividadeParaWebhook({
-          id: data.id,
-          alerta_evasao_id: alertaEvasaoId,
-          tipo_atividade,
-          descricao,
-          responsavel_nome,
-          status: isTerminalRetencao ? 'concluida' : 'pendente',
-          data_agendada,
-          departamento_responsavel
-        });
-        
-        // Enviar webhook de conclusão se havia atividade anterior
+        // Se havia atividade anterior, envia webhook de conclusão com a nova atividade
+        // Caso contrário, envia webhook da primeira atividade criada
         if (atividadeAnteriorData) {
           enviarConclusaoParaWebhook(
             {
@@ -649,6 +628,18 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             [atividadeCriada],
             isTerminalRetencao ? 'retencao' : 'transicao_atividade'
           );
+        } else {
+          // Primeira atividade do alerta - envia formato de criação inicial
+          enviarAtividadeParaWebhook({
+            id: data.id,
+            alerta_evasao_id: alertaEvasaoId,
+            tipo_atividade,
+            descricao,
+            responsavel_nome,
+            status: isTerminalRetencao ? 'concluida' : 'pendente',
+            data_agendada: dataAgendadaFinal,
+            departamento_responsavel
+          });
         }
       }
       
@@ -788,15 +779,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             responsavel_nome: retencaoData.responsavel_nome,
             status: 'concluida'
           });
-          
-          enviarAtividadeParaWebhook({
-            id: retencaoInserted.id,
-            alerta_evasao_id: alertaEvasaoId,
-            tipo_atividade: 'retencao',
-            descricao: retencaoData.descricao,
-            responsavel_nome: retencaoData.responsavel_nome,
-            status: 'concluida'
-          });
         }
         
         deveResolverAlerta = true;
@@ -823,23 +805,12 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         
         if (insertError) throw insertError;
         
-        // Adiciona à lista de atividades criadas e envia para webhook
+        // Adiciona à lista de atividades criadas
         if (insertedTarefa) {
           atividadesCriadas.push({
             id: insertedTarefa.id,
             tipo_atividade: tarefa.tipo,
             tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tarefa.tipo)?.label || tarefa.tipo,
-            descricao: tarefa.descricao,
-            responsavel_nome: 'Administrativo',
-            status: 'pendente',
-            data_agendada: tarefa.data_agendada,
-            departamento_responsavel: 'administrativo'
-          });
-          
-          enviarAtividadeParaWebhook({
-            id: insertedTarefa.id,
-            alerta_evasao_id: alertaEvasaoId,
-            tipo_atividade: tarefa.tipo,
             descricao: tarefa.descricao,
             responsavel_nome: 'Administrativo',
             status: 'pendente',
@@ -960,16 +931,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             responsavel_nome: evasaoData.responsavel_nome,
             status: 'concluida'
           };
-          
-          // Envia para o webhook (nova atividade)
-          enviarAtividadeParaWebhook({
-            id: evasaoInserted.id,
-            alerta_evasao_id: alertaEvasaoId,
-            tipo_atividade: 'evasao',
-            descricao: evasaoData.descricao,
-            responsavel_nome: evasaoData.responsavel_nome,
-            status: 'concluida'
-          });
           
           // Enviar webhook de conclusão (última tarefa concluída gerou a atividade de evasão)
           if (atividadeData) {
