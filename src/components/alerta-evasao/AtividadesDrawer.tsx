@@ -407,18 +407,19 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     }
     
     try {
-      // Montar descrição com data opcional para novo acolhimento
-      // Nota: A conclusão do acolhimento é feita automaticamente pelo criarAtividade via atividadeAnteriorId
-      let descricao = observacoesAcolhimento.trim();
+      // Montar descrição da PRÓXIMA atividade (data de agendamento se houver)
+      // Nota: observacoesAtividadeAnterior é o descritivo da atividade que está sendo concluída
+      let descricaoProxima = '';
       if (tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento) {
-        descricao += ` | Agendado para ${format(dataNovoAcolhimento, 'dd/MM/yyyy')}`;
+        descricaoProxima = `Agendado para ${format(dataNovoAcolhimento, 'dd/MM/yyyy')}`;
       }
       
-      // Usar as observações do acolhimento como descrição da próxima atividade
+      // Criar próxima atividade passando as observações para a atividade anterior
       await criarAtividade({
         tipo_atividade: tipoProximaAtividade,
-        descricao,
+        descricao: descricaoProxima,
         atividadeAnteriorId: atividadeAcolhimento.id,
+        observacoesAtividadeAnterior: observacoesAcolhimento.trim(),
         data_agendada: tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento 
           ? format(dataNovoAcolhimento, 'yyyy-MM-dd') 
           : undefined
@@ -463,20 +464,21 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     if (!atividadeAcolhimento || !observacoesAcolhimento.trim()) return;
     
     try {
-      // Montar descrição usando as observações do acolhimento + agendamento opcional
-      // Nota: A conclusão do acolhimento é feita automaticamente pelo criarAtividade via atividadeAnteriorId
-      let descricaoCompleta = observacoesAcolhimento.trim();
+      // Montar descrição da PRÓXIMA atividade (atendimento financeiro)
+      // Nota: observacoesAtividadeAnterior é o descritivo da atividade que está sendo concluída
+      let descricaoProxima = '';
       if (dataAtendimentoFinanceiro && horarioAtendimentoFinanceiro) {
-        descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`;
+        descricaoProxima = `Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')} às ${horarioAtendimentoFinanceiro}`;
       } else if (dataAtendimentoFinanceiro) {
-        descricaoCompleta += ` | Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')}`;
+        descricaoProxima = `Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')}`;
       }
       
-      // Criar o atendimento financeiro
+      // Criar o atendimento financeiro passando as observações para a atividade anterior
       await criarAtividade({
         tipo_atividade: 'atendimento_financeiro',
-        descricao: descricaoCompleta,
+        descricao: descricaoProxima,
         atividadeAnteriorId: atividadeAcolhimento.id,
+        observacoesAtividadeAnterior: observacoesAcolhimento.trim(),
         data_agendada: dataAtendimentoFinanceiro ? format(dataAtendimentoFinanceiro, 'yyyy-MM-dd') : undefined
       });
       
@@ -496,12 +498,13 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     
     try {
       const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
-      const descricaoAutomatica = `Atendimento pedagógico agendado para ${format(dataPedagogico, 'dd/MM/yyyy')} às ${horarioPedagogico}${professorInfo ? ` com ${professorInfo.nome}` : ''}`;
+      const descricaoProxima = `Agendado para ${format(dataPedagogico, 'dd/MM/yyyy')} às ${horarioPedagogico}${professorInfo ? ` com ${professorInfo.nome}` : ''}`;
       
       await criarAtividade({
         tipo_atividade: 'atendimento_pedagogico',
-        descricao: descricaoAutomatica,
+        descricao: descricaoProxima,
         atividadeAnteriorId: atividadeAcolhimento.id,
+        observacoesAtividadeAnterior: observacoesAcolhimento.trim(),
         data_agendada: dataFormatada,
         horario_agendado: horarioPedagogico,
         professor_id_agendamento: professorInfo?.id
@@ -525,8 +528,9 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       if (resultadoPedagogico === 'retencao') {
         await criarAtividade({
           tipo_atividade: 'retencao',
-          descricao: observacoesPedagogico.trim(),
-          atividadeAnteriorId: atividadePedagogicoParaConcluir.id
+          descricao: '',
+          atividadeAnteriorId: atividadePedagogicoParaConcluir.id,
+          observacoesAtividadeAnterior: observacoesPedagogico.trim()
         });
         fecharPainelConclusaoPedagogico();
         onActivityCompleted?.();
@@ -535,17 +539,18 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       
       // Se for atendimento financeiro, cria atividade de atendimento financeiro
       if (resultadoPedagogico === 'atendimento_financeiro') {
-        let descricaoCompleta = observacoesPedagogico.trim();
+        let descricaoProxima = '';
         if (dataFinanceiroPedagogico && horarioFinanceiroPedagogico) {
-          descricaoCompleta += ` | Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')} às ${horarioFinanceiroPedagogico}`;
+          descricaoProxima = `Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')} às ${horarioFinanceiroPedagogico}`;
         } else if (dataFinanceiroPedagogico) {
-          descricaoCompleta += ` | Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')}`;
+          descricaoProxima = `Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')}`;
         }
         
         await criarAtividade({
           tipo_atividade: 'atendimento_financeiro',
-          descricao: descricaoCompleta,
+          descricao: descricaoProxima,
           atividadeAnteriorId: atividadePedagogicoParaConcluir.id,
+          observacoesAtividadeAnterior: observacoesPedagogico.trim(),
           data_agendada: dataFinanceiroPedagogico ? format(dataFinanceiroPedagogico, 'yyyy-MM-dd') : undefined
         });
         fecharPainelConclusaoPedagogico();

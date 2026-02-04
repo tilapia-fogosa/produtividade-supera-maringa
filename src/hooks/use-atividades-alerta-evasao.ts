@@ -116,11 +116,11 @@ async function buscarUsuariosDoDepartamento(departamento: string): Promise<Array
 }
 
 // Interface para atividades criadas em sequência
+// Nota: descricao é opcional porque atividades recém-criadas ainda não foram realizadas
 interface AtividadeCriada {
   id: string;
   tipo_atividade: TipoAtividadeEvasao;
   tipo_label: string;
-  descricao: string;
   responsavel_nome: string | null;
   status: string;
   data_agendada?: string | null;
@@ -379,6 +379,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       tipo_atividade, 
       descricao,
       atividadeAnteriorId,
+      observacoesAtividadeAnterior,
       data_agendada,
       horario_agendado,
       professor_id_agendamento
@@ -386,6 +387,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       tipo_atividade: TipoAtividadeEvasao; 
       descricao: string;
       atividadeAnteriorId?: string;
+      observacoesAtividadeAnterior?: string;
       data_agendada?: string;
       horario_agendado?: string;
       professor_id_agendamento?: string;
@@ -396,6 +398,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       
       // Variável para armazenar dados da atividade anterior (para enviar ao webhook de conclusão)
       let atividadeAnteriorData: any = null;
+      // Descritivo que será enviado no webhook (o que o usuário preencheu ao concluir)
+      let descritivoAtividadeConcluida: string = '';
       
       // Se tem atividade anterior, busca dados e marca como concluída
       if (atividadeAnteriorId) {
@@ -407,11 +411,15 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           .single();
         
         atividadeAnteriorData = atividadeAnterior;
+        // O descritivo da conclusão é o que o usuário preencheu agora
+        descritivoAtividadeConcluida = observacoesAtividadeAnterior || '';
         
+        // Atualizar status E o descritivo com as observações preenchidas
         const { error: updateError } = await supabase
           .from('atividades_alerta_evasao')
           .update({ 
             status: 'concluida',
+            descricao: descritivoAtividadeConcluida,
             concluido_por_id: user?.id || null,
             concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
           })
@@ -488,7 +496,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
               id: insertedTarefa.id,
               tipo_atividade: tarefa.tipo,
               tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tarefa.tipo)?.label || tarefa.tipo,
-              descricao: tarefa.descricao,
               responsavel_nome: 'Administrativo',
               status: 'pendente',
               departamento_responsavel: 'administrativo'
@@ -503,7 +510,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
               id: atividadeAnteriorData.id,
               alerta_evasao_id: alertaEvasaoId,
               tipo_atividade: atividadeAnteriorData.tipo_atividade,
-              descricao: atividadeAnteriorData.descricao,
+              descricao: descritivoAtividadeConcluida,
               responsavel_nome: atividadeAnteriorData.responsavel_nome,
               concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
             },
@@ -606,7 +613,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           id: data.id,
           tipo_atividade,
           tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tipo_atividade)?.label || tipo_atividade,
-          descricao,
           responsavel_nome,
           status: isTerminalRetencao ? 'concluida' : 'pendente',
           data_agendada: dataAgendadaFinal,
@@ -621,7 +627,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
               id: atividadeAnteriorData.id,
               alerta_evasao_id: alertaEvasaoId,
               tipo_atividade: atividadeAnteriorData.tipo_atividade,
-              descricao: atividadeAnteriorData.descricao,
+              descricao: descritivoAtividadeConcluida,
               responsavel_nome: atividadeAnteriorData.responsavel_nome,
               concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
             },
@@ -775,7 +781,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             id: retencaoInserted.id,
             tipo_atividade: 'retencao',
             tipo_label: 'Retenção',
-            descricao: retencaoData.descricao,
             responsavel_nome: retencaoData.responsavel_nome,
             status: 'concluida'
           });
@@ -811,7 +816,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             id: insertedTarefa.id,
             tipo_atividade: tarefa.tipo,
             tipo_label: TIPOS_ATIVIDADE.find(t => t.value === tarefa.tipo)?.label || tarefa.tipo,
-            descricao: tarefa.descricao,
             responsavel_nome: 'Administrativo',
             status: 'pendente',
             data_agendada: tarefa.data_agendada,
@@ -927,7 +931,6 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             id: evasaoInserted.id,
             tipo_atividade: 'evasao',
             tipo_label: 'Evasão',
-            descricao: evasaoData.descricao,
             responsavel_nome: evasaoData.responsavel_nome,
             status: 'concluida'
           };
