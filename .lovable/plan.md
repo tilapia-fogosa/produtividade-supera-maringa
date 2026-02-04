@@ -1,72 +1,52 @@
 
-## Plano: Filtrar Registros de Reposição na Página Diário
+
+## Plano: Corrigir Payload do Webhook de Conclusão
 
 ### Problema Identificado
 
-A página `/diario` usa o componente `DiarioTurmaAccordion.tsx`, que busca registros de produtividade sem filtrar reposições. O filtro que adicionei anteriormente estava no arquivo **errado** (`DiarioTurmaScreen.tsx`), que é usado apenas na rota `/diario-turma/:turmaId`.
-
-### Situação Atual
-
-Quando uma turma é expandida no accordion, a função `buscarDadosTurma` busca todos os registros sem filtrar:
-
-```typescript
-const { data: produtividadeData } = await supabase
-  .from('produtividade_abaco')
-  .select('*')
-  .eq('data_aula', dataFormatada)
-  .in('pessoa_id', pessoasIds);
-// ❌ Sem filtro de is_reposicao
-```
-
-### Solução
-
-Adicionar o filtro `.eq('is_reposicao', false)` na query do `DiarioTurmaAccordion.tsx` para excluir registros de reposição da lista de turmas regulares.
+1. **Descritivo da atividade concluída** estava vindo da atividade salva no banco (antes de atualizar), não do descritivo que o usuário preencheu ao concluir
+2. **Próximas atividades** estavam recebendo o descritivo das observações, quando na verdade não devem ter descritivo (ainda não foram realizadas)
 
 ---
 
-### Arquivo a Modificar
+### Solução Implementada
+
+1. Adicionado parâmetro `observacoesAtividadeAnterior` no mutation `criarAtividadeMutation`
+2. Ao concluir uma atividade, atualizamos o banco com o descritivo fornecido pelo usuário
+3. O webhook envia o descritivo correto da atividade concluída
+4. Removido `descricao` da interface `AtividadeCriada` (próximas atividades não têm descritivo)
+
+---
+
+### Arquivos Modificados
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/diario/DiarioTurmaAccordion.tsx` | Adicionar filtro `is_reposicao = false` na query |
+| `src/hooks/use-atividades-alerta-evasao.ts` | Adicionado parâmetro e lógica para separar descritivos |
+| `src/components/alerta-evasao/AtividadesDrawer.tsx` | Atualizado para passar `observacoesAtividadeAnterior` |
 
 ---
 
-### Detalhes Técnicos
+### Payload Corrigido
 
-**Linha 103-107** - Alterar a query para incluir o filtro:
-
-```typescript
-// ANTES
-const { data: produtividadeData, error: produtividadeError } = await supabase
-  .from('produtividade_abaco')
-  .select('*')
-  .eq('data_aula', dataFormatada)
-  .in('pessoa_id', pessoasIds);
-
-// DEPOIS
-const { data: produtividadeData, error: produtividadeError } = await supabase
-  .from('produtividade_abaco')
-  .select('*')
-  .eq('data_aula', dataFormatada)
-  .in('pessoa_id', pessoasIds)
-  .or('is_reposicao.is.null,is_reposicao.eq.false');
+```json
+{
+  "evento": "atividade_concluida",
+  "atividade_concluida": {
+    "id": "...",
+    "tipo_atividade": "acolhimento",
+    "descricao": "Observações preenchidas pelo usuário ao concluir"
+  },
+  "atividades_criadas": [
+    {
+      "id": "...",
+      "tipo_atividade": "atendimento_financeiro",
+      "tipo_label": "Atendimento Financeiro",
+      "responsavel_nome": "Administrativo",
+      "status": "pendente",
+      "data_agendada": "2026-02-10"
+      // Sem descricao - ainda não foi realizada
+    }
+  ]
+}
 ```
-
-**Nota**: Uso `.or('is_reposicao.is.null,is_reposicao.eq.false')` para incluir registros onde:
-- `is_reposicao` é `null` (registros antigos que não têm esse campo preenchido)
-- `is_reposicao` é `false` (aulas regulares)
-
-Isso garante compatibilidade com registros antigos enquanto exclui as reposições (`is_reposicao = true`).
-
----
-
-### Resultado Esperado
-
-- **Turmas regulares**: Mostrarão apenas 1 registro por aluna (onde `is_reposicao = false` ou `null`)
-- **Accordion de Reposições**: Continuará mostrando os registros onde `is_reposicao = true` (já funciona corretamente)
-
-No caso específico do dia 24/01/2026:
-- Maria Julia Oliveira Silva → 1 registro (aula regular)
-- Anna Helena Bukow Natal → 1 registro (aula regular)
-- As reposições aparecerão no accordion "Reposições" no final

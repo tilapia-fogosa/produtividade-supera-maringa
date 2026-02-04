@@ -191,54 +191,13 @@ export function useAlertasEvasao() {
       const { data: { user } } = await supabase.auth.getUser();
       const profileId = user?.id || null;
 
-      // Enviar dados para webhook n8n (notificação Slack gerenciada pelo n8n)
-      try {
-        console.log('Enviando alerta para webhook n8n...');
-        
-        // Buscar o professor_id da turma
-        let professorId = null;
-        if (aluno?.turma_id) {
-          const { data: turmaData } = await supabase
-            .from('turmas')
-            .select('professor_id')
-            .eq('id', aluno.turma_id)
-            .single();
-          
-          professorId = turmaData?.professor_id || null;
-        }
-        
-        const n8nResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/alerta-evasao', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            aluno_id: alunoSelecionado,
-            turma_id: aluno?.turma_id || null,
-            professor_id: professorId,
-            data_aviso: dataAlerta,
-            responsavel_id: profileId,
-            descricao: descritivo,
-            origem: origemAlerta
-          })
-        });
-
-        if (!n8nResponse.ok) {
-          console.error('Erro ao enviar para webhook n8n:', await n8nResponse.text());
-        } else {
-          console.log('Alerta enviado para n8n com sucesso');
-        }
-      } catch (n8nError) {
-        console.error('Erro ao enviar para webhook n8n:', n8nError);
-      }
-
       // Construir o histórico completo com dados da aula zero se disponíveis
       const historicoCompleto = construirHistoricoCompleto();
       
       // Formatar a data do alerta para ser apenas a data, sem hora
       const dataAlertaFormatada = dataAlerta ? new Date(dataAlerta).toISOString().split('T')[0] : null;
 
-      // Inserir dados na tabela alerta_evasao
+      // 1. PRIMEIRO: Inserir dados na tabela alerta_evasao para obter o ID
       const dadosAlerta = {
         aluno_id: alunoSelecionado,
         data_alerta: dataAlertaFormatada,
@@ -265,7 +224,49 @@ export function useAlertasEvasao() {
 
       console.log('Alerta salvo com sucesso:', alertaData);
 
-      // Sempre envia para o webhook geral de alertas
+      // 2. DEPOIS: Enviar dados para webhook n8n (com alerta_id)
+      try {
+        console.log('Enviando alerta para webhook n8n...');
+        
+        // Buscar o professor_id da turma
+        let professorId = null;
+        if (aluno?.turma_id) {
+          const { data: turmaData } = await supabase
+            .from('turmas')
+            .select('professor_id')
+            .eq('id', aluno.turma_id)
+            .single();
+          
+          professorId = turmaData?.professor_id || null;
+        }
+        
+        const n8nResponse = await fetch('https://webhookn8n.agenciakadin.com.br/webhook/alerta-evasao', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            alerta_id: alertaData.id,
+            aluno_id: alunoSelecionado,
+            turma_id: aluno?.turma_id || null,
+            professor_id: professorId,
+            data_aviso: dataAlerta,
+            responsavel_id: profileId,
+            descricao: descritivo,
+            origem: origemAlerta
+          })
+        });
+
+        if (!n8nResponse.ok) {
+          console.error('Erro ao enviar para webhook n8n:', await n8nResponse.text());
+        } else {
+          console.log('Alerta enviado para n8n com sucesso');
+        }
+      } catch (n8nError) {
+        console.error('Erro ao enviar para webhook n8n:', n8nError);
+      }
+
+      // 3. DEPOIS: Enviar para webhook Make (com alerta_id)
       const webhookUrl = 'https://hook.us1.make.com/v8b7u98lehutsqqk9tox27b2bn7x1mmx';
       
       try {
@@ -283,6 +284,7 @@ export function useAlertasEvasao() {
               telefone: aluno?.telefone
             },
             alerta: {
+              id: alertaData.id,
               data: dataAlertaFormatada,
               origem: origemAlerta,
               descritivo,

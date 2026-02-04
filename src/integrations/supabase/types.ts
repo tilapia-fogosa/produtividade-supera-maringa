@@ -211,6 +211,7 @@ export type Database = {
           descritivo: string | null
           funcionario_registro_id: string | null
           id: string
+          id_slack: string | null
           kanban_status: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
           rescisao_digitalizada_url: string | null
@@ -226,6 +227,7 @@ export type Database = {
           descritivo?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          id_slack?: string | null
           kanban_status?: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
           rescisao_digitalizada_url?: string | null
@@ -241,6 +243,7 @@ export type Database = {
           descritivo?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          id_slack?: string | null
           kanban_status?: string
           origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
           rescisao_digitalizada_url?: string | null
