@@ -1,27 +1,21 @@
 
-## Plano: Incluir ID do Alerta de Evasão no Webhook de Criação
 
-### Situação Atual
+## Plano: Unificar Webhook para Apenas Um Formato
 
-O webhook do n8n é chamado **antes** de inserir o registro no banco de dados:
+### Problema Identificado
 
-```text
-Fluxo Atual:
-1. Envia para n8n ❌ (sem ID)
-2. Insere no banco → Obtém ID
-3. Envia para Make ❌ (sem ID)
-```
+O código atual envia **dois webhooks separados** quando uma atividade é concluída e gera novas atividades:
+
+1. `enviarAtividadeParaWebhook` - Chamado para cada nova atividade individual (formato `atividade:`)
+2. `enviarConclusaoParaWebhook` - Chamado após conclusão (formato `atividade_concluida:` + `atividades_criadas:`)
+
+O payload que você está recebendo (`atividade:`) vem da primeira função, não do formato unificado.
+
+---
 
 ### Solução
 
-Reorganizar a ordem das operações para primeiro inserir no banco e depois enviar aos webhooks:
-
-```text
-Fluxo Proposto:
-1. Insere no banco → Obtém ID ✅
-2. Envia para n8n ✅ (com ID)
-3. Envia para Make ✅ (com ID)
-```
+Remover todas as chamadas de `enviarAtividadeParaWebhook` quando há uma atividade sendo concluída e manter **apenas** a chamada de `enviarConclusaoParaWebhook` com o formato unificado.
 
 ---
 
@@ -29,48 +23,70 @@ Fluxo Proposto:
 
 | Arquivo | Ação |
 |---------|------|
-| `src/hooks/use-alertas-evasao.ts` | Reordenar operações e incluir `alerta_id` nos payloads |
+| `src/hooks/use-atividades-alerta-evasao.ts` | Remover chamadas duplicadas de `enviarAtividadeParaWebhook` |
 
 ---
 
-### Detalhes Técnicos
+### Mudanças Específicas
 
-**Mudanças no `handleSubmit`:**
+**1. No `criarAtividadeMutation` (quando é evasão com tarefas - linhas 498-506):**
+- Remover a chamada `enviarAtividadeParaWebhook` dentro do loop de tarefas de evasão
+- Manter apenas `enviarConclusaoParaWebhook` que já envia todas as atividades criadas
 
-1. Mover a inserção no banco (linhas 242-266) para **antes** das chamadas aos webhooks
+**2. No `criarAtividadeMutation` (criação normal - linhas 627-636):**
+- Remover a chamada `enviarAtividadeParaWebhook` para a atividade criada
+- Manter apenas `enviarConclusaoParaWebhook` quando há atividade anterior
 
-2. Adicionar o `alerta_id` no payload do webhook n8n:
-```typescript
-body: JSON.stringify({
-  alerta_id: alertaData.id,  // ← Novo campo
-  aluno_id: alunoSelecionado,
-  turma_id: aluno?.turma_id || null,
-  professor_id: professorId,
-  data_aviso: dataAlerta,
-  responsavel_id: profileId,
-  descricao: descritivo,
-  origem: origemAlerta
-})
-```
+**3. No `processarNegociacaoMutation` (linhas 792-799 e similares):**
+- Remover chamadas `enviarAtividadeParaWebhook` individuais
+- Garantir que todas as atividades criadas sejam incluídas no array `atividadesCriadas`
+- Enviar apenas o webhook unificado de conclusão
 
-3. Adicionar o `alerta_id` no payload do webhook Make:
-```typescript
-body: JSON.stringify({
-  aluno: { ... },
-  alerta: {
-    id: alertaData.id,  // ← Novo campo
-    data: dataAlertaFormatada,
-    origem: origemAlerta,
-    ...
-  }
-})
-```
+**4. No `concluirTarefaMutation`:**
+- Verificar se há chamadas `enviarAtividadeParaWebhook` e remover
+- Manter formato unificado
 
 ---
 
 ### Resultado Esperado
 
-Ambos os webhooks (n8n e Make) receberão o `alerta_id` do registro criado, permitindo:
-- Rastreabilidade completa do alerta
-- Links diretos para o registro no sistema
-- Atualizações futuras baseadas no ID
+Quando uma atividade é concluída e gera novas atividades, será enviado **apenas um webhook** com o seguinte formato:
+
+```json
+{
+  "evento": "atividade_concluida",
+  "atividade_concluida": {
+    "id": "...",
+    "tipo_atividade": "acolhimento",
+    "tipo_label": "Acolhimento",
+    "descricao": "...",
+    "responsavel_nome": "André do Valle",
+    "concluido_por_nome": "André do Valle"
+  },
+  "atividades_criadas": [
+    {
+      "id": "...",
+      "tipo_atividade": "contato_financeiro",
+      "tipo_label": "Contato Financeiro",
+      "descricao": "...",
+      "responsavel_nome": "Administrativo",
+      "status": "pendente",
+      "data_agendada": "2026-02-25",
+      "departamento_responsavel": "administrativo"
+    }
+  ],
+  "contexto": "transicao_atividade",
+  "alerta": { ... },
+  "aluno": { ... },
+  "turma": { ... },
+  "professor": { ... },
+  "concluido_em": "2026-02-04T11:54:05.654Z"
+}
+```
+
+---
+
+### Caso Especial: Criação Inicial de Atividade
+
+Quando uma atividade é criada **sem** concluir uma anterior (primeira atividade do alerta), continuaremos usando `enviarAtividadeParaWebhook` pois não há contexto de conclusão.
+
