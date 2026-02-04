@@ -1,21 +1,21 @@
 
 
-## Plano: Unificar Webhook para Apenas Um Formato
+## Plano: Remover Chamadas Duplicadas de Conclusão
 
 ### Problema Identificado
 
-O código atual envia **dois webhooks separados** quando uma atividade é concluída e gera novas atividades:
+O código está chamando **duas funções que concluem a mesma atividade**:
 
-1. `enviarAtividadeParaWebhook` - Chamado para cada nova atividade individual (formato `atividade:`)
-2. `enviarConclusaoParaWebhook` - Chamado após conclusão (formato `atividade_concluida:` + `atividades_criadas:`)
+1. `concluirTarefa(atividadeAcolhimento.id)` - Conclui e dispara webhook com `atividades_criadas: []`
+2. `criarAtividade({ atividadeAnteriorId: atividadeAcolhimento.id })` - Também conclui a atividade anterior internamente e dispara webhook com a nova atividade
 
-O payload que você está recebendo (`atividade:`) vem da primeira função, não do formato unificado.
+**Resultado:** Dois webhooks são disparados para a mesma conclusão.
 
 ---
 
 ### Solução
 
-Remover todas as chamadas de `enviarAtividadeParaWebhook` quando há uma atividade sendo concluída e manter **apenas** a chamada de `enviarConclusaoParaWebhook` com o formato unificado.
+Remover as chamadas de `concluirTarefa()` que precedem `criarAtividade()` quando já passamos `atividadeAnteriorId`, pois a função `criarAtividadeMutation` já faz a conclusão da atividade anterior internamente.
 
 ---
 
@@ -23,70 +23,49 @@ Remover todas as chamadas de `enviarAtividadeParaWebhook` quando há uma ativida
 
 | Arquivo | Ação |
 |---------|------|
-| `src/hooks/use-atividades-alerta-evasao.ts` | Remover chamadas duplicadas de `enviarAtividadeParaWebhook` |
+| `src/components/alerta-evasao/AtividadesDrawer.tsx` | Remover chamadas redundantes de `concluirTarefa` |
 
 ---
 
 ### Mudanças Específicas
 
-**1. No `criarAtividadeMutation` (quando é evasão com tarefas - linhas 498-506):**
-- Remover a chamada `enviarAtividadeParaWebhook` dentro do loop de tarefas de evasão
-- Manter apenas `enviarConclusaoParaWebhook` que já envia todas as atividades criadas
+**1. Função `handleProsseguirAcolhimento` (linhas 409-411):**
+```text
+Remover: await concluirTarefa(atividadeAcolhimento.id);
+Motivo: criarAtividade já conclui a atividade anterior via atividadeAnteriorId
+```
 
-**2. No `criarAtividadeMutation` (criação normal - linhas 627-636):**
-- Remover a chamada `enviarAtividadeParaWebhook` para a atividade criada
-- Manter apenas `enviarConclusaoParaWebhook` quando há atividade anterior
+**2. Função `handleConfirmarAtendimentoFinanceiro` (linhas 467-469):**
+```text
+Remover: await concluirTarefa(atividadeAcolhimento.id);
+Motivo: criarAtividade já conclui a atividade anterior via atividadeAnteriorId
+```
 
-**3. No `processarNegociacaoMutation` (linhas 792-799 e similares):**
-- Remover chamadas `enviarAtividadeParaWebhook` individuais
-- Garantir que todas as atividades criadas sejam incluídas no array `atividadesCriadas`
-- Enviar apenas o webhook unificado de conclusão
+---
 
-**4. No `concluirTarefaMutation`:**
-- Verificar se há chamadas `enviarAtividadeParaWebhook` e remover
-- Manter formato unificado
+### Fluxo Corrigido
+
+```text
+ANTES (bug):
+1. concluirTarefa() → webhook com atividades_criadas: []
+2. criarAtividade() → webhook com atividades_criadas: [nova]
+
+DEPOIS (correto):
+1. criarAtividade({ atividadeAnteriorId }) → webhook único com atividades_criadas: [nova]
+```
 
 ---
 
 ### Resultado Esperado
 
-Quando uma atividade é concluída e gera novas atividades, será enviado **apenas um webhook** com o seguinte formato:
+Apenas **um webhook** será disparado quando uma atividade é concluída e gera uma nova, contendo:
 
 ```json
 {
   "evento": "atividade_concluida",
-  "atividade_concluida": {
-    "id": "...",
-    "tipo_atividade": "acolhimento",
-    "tipo_label": "Acolhimento",
-    "descricao": "...",
-    "responsavel_nome": "André do Valle",
-    "concluido_por_nome": "André do Valle"
-  },
-  "atividades_criadas": [
-    {
-      "id": "...",
-      "tipo_atividade": "contato_financeiro",
-      "tipo_label": "Contato Financeiro",
-      "descricao": "...",
-      "responsavel_nome": "Administrativo",
-      "status": "pendente",
-      "data_agendada": "2026-02-25",
-      "departamento_responsavel": "administrativo"
-    }
-  ],
-  "contexto": "transicao_atividade",
-  "alerta": { ... },
-  "aluno": { ... },
-  "turma": { ... },
-  "professor": { ... },
-  "concluido_em": "2026-02-04T11:54:05.654Z"
+  "atividade_concluida": { ... },
+  "atividades_criadas": [{ ... }],
+  "contexto": "transicao_atividade"
 }
 ```
-
----
-
-### Caso Especial: Criação Inicial de Atividade
-
-Quando uma atividade é criada **sem** concluir uma anterior (primeira atividade do alerta), continuaremos usando `enviarAtividadeParaWebhook` pois não há contexto de conclusão.
 
