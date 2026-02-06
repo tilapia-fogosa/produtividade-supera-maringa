@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,15 +6,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Check, Loader2, FileText, Award, Shirt, BookOpen } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { ExpandableAlunoCard } from '@/components/alunos/ExpandableAlunoCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
 type SortDirection = 'asc' | 'desc';
 
-const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
+const ITEMS_PER_LOAD = 30;
 
 export default function AlunosAtivos() {
   const navigate = useNavigate();
@@ -58,9 +57,10 @@ export default function AlunosAtivos() {
   const [dataNascimentoTemp, setDataNascimentoTemp] = useState('');
   const [salvandoDataNascimento, setSalvandoDataNascimento] = useState<string | null>(null);
 
-  // Estado para paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
+  // Estado para infinite scroll
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_LOAD);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   // Sincronizar alunoExpandido com a lista de alunos atualizada
   const alunoExpandidoSincronizado = useMemo(() => {
@@ -128,16 +128,45 @@ export default function AlunosAtivos() {
     return resultado;
   }, [alunos, searchTerm, filterTurma, filterProfessor, filterApostila, sortField, sortDirection]);
 
-  // Paginação
-  const totalPages = Math.ceil(alunosFiltrados.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const alunosPaginados = alunosFiltrados.slice(startIndex, endIndex);
+  // Infinite scroll - alunos visíveis
+  const alunosVisiveis = useMemo(() => {
+    return alunosFiltrados.slice(0, visibleCount);
+  }, [alunosFiltrados, visibleCount]);
 
-  // Resetar para primeira página quando filtros mudarem
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterTurma, filterProfessor, filterApostila, itemsPerPage]);
+  const hasMore = visibleCount < alunosFiltrados.length;
+
+  // Resetar contagem quando filtros mudarem
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_LOAD);
+  }, [searchTerm, filterTurma, filterProfessor, filterApostila, sortField, sortDirection]);
+
+  // Carregar mais ao scrollar
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(prev => Math.min(prev + ITEMS_PER_LOAD, alunosFiltrados.length));
+      setIsLoadingMore(false);
+    }, 100);
+  }, [isLoadingMore, hasMore, alunosFiltrados.length]);
+
+  // IntersectionObserver para detectar scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loadMore, hasMore]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -481,7 +510,7 @@ export default function AlunosAtivos() {
                 </tr>
               </thead>
               <tbody>
-                {alunosPaginados.map(aluno => <tr 
+                {alunosVisiveis.map(aluno => <tr 
                   key={aluno.id} 
                   className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
                   onClick={(e) => {
@@ -615,73 +644,33 @@ export default function AlunosAtivos() {
               </tbody>
             </table>
 
-            {alunosPaginados.length === 0 && <div className="text-center py-8 text-muted-foreground">
+            {alunosVisiveis.length === 0 && <div className="text-center py-8 text-muted-foreground">
                 <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
               </div>}
+            
+            {/* Loader para infinite scroll */}
+            {hasMore && (
+              <div 
+                ref={loaderRef} 
+                className="flex items-center justify-center py-4 text-muted-foreground"
+              >
+                {isLoadingMore ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-xs">Carregando mais...</span>
+                  </div>
+                ) : (
+                  <span className="text-xs">Role para carregar mais</span>
+                )}
+              </div>
+            )}
             </div>
           </div>
 
-          {/* Paginação no rodapé do Card */}
+          {/* Contador de itens */}
           {alunosFiltrados.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t bg-muted/30">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Exibindo {startIndex + 1} - {Math.min(endIndex, alunosFiltrados.length)} de {alunosFiltrados.length}</span>
-                <Select
-                  value={itemsPerPage.toString()}
-                  onValueChange={(value) => setItemsPerPage(Number(value))}
-                >
-                  <SelectTrigger className="w-[100px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option.toString()}>
-                        {option} itens
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="hidden sm:flex"
-                >
-                  Primeira
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm px-2">
-                  Página {currentPage} de {totalPages || 1}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage >= totalPages}
-                  className="hidden sm:flex"
-                >
-                  Última
-                </Button>
-              </div>
+            <div className="flex items-center justify-center gap-2 p-2 border-t bg-muted/30 text-xs text-muted-foreground">
+              <span>Exibindo {alunosVisiveis.length} de {alunosFiltrados.length}</span>
             </div>
           )}
         </CardContent>
