@@ -470,20 +470,20 @@ export default function AlunosAtivos() {
             <table className="w-full min-w-[1200px]">
               <thead className="bg-muted/50 border-b sticky top-0 z-10">
                 <tr>
-                  <th className="text-left px-2 py-1 w-[180px]">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7">
+                  <th className="text-left px-1 py-1 w-[150px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7 px-1">
                       Nome
                       {getSortIcon('nome')}
                     </Button>
                   </th>
-                  <th className="text-left px-2 py-1 w-[100px]">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7">
+                  <th className="text-left px-1 py-1 w-[80px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7 px-1">
                       Turma
                       {getSortIcon('turma')}
                     </Button>
                   </th>
-                  <th className="text-left px-2 py-1 w-[120px]">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7">
+                  <th className="text-left px-1 py-1 w-[100px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7 px-1">
                       Professor
                       {getSortIcon('professor')}
                     </Button>
@@ -525,7 +525,7 @@ export default function AlunosAtivos() {
                         setAlunoExpandido(aluno);
                       }}
                     >
-                      <td className="px-2 py-1 w-[180px]">
+                      <td className="px-1 py-1 w-[150px]">
                         <div className="flex items-center gap-1">
                           <span className="text-xs font-medium">{aluno.nome}</span>
                           {aluno.tipo_pessoa === 'funcionario' && <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
@@ -536,12 +536,12 @@ export default function AlunosAtivos() {
                             </Badge>}
                         </div>
                       </td>
-                      <td className="px-2 py-1 w-[100px]">
+                      <td className="px-1 py-1 w-[80px]">
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
                           {aluno.turma_nome || 'Sem turma'}
                         </Badge>
                       </td>
-                      <td className="px-2 py-1 text-xs w-[120px]">{aluno.professor_nome || 'Não atribuído'}</td>
+                      <td className="px-1 py-1 text-xs w-[100px]">{aluno.professor_nome || 'Não atribuído'}</td>
                       <td className="px-1 py-1 w-[70px]">
                         {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400 text-[10px] px-1 py-0">{aluno.ultima_apostila}</Badge> : <span className="text-muted-foreground text-xs">-</span>}
                       </td>
