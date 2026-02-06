@@ -488,28 +488,28 @@ export default function AlunosAtivos() {
                       {getSortIcon('professor')}
                     </Button>
                   </th>
-                  <th className="text-left px-2 py-1 w-[80px]">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7">
+                  <th className="text-left px-1 py-1 w-[70px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7 px-1">
                       Apostila
                       {getSortIcon('apostila')}
                     </Button>
                   </th>
-                  <th className="text-left px-2 py-1 w-[112px]">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
+                  <th className="text-left px-1 py-1 w-[100px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7 px-1">
                       Nascimento
                       {getSortIcon('data_nascimento')}
                     </Button>
                   </th>
-                  <th className="text-left px-2 py-1 w-[128px]">
+                  <th className="text-left px-1 py-1 w-[100px]">
                     <span className="font-semibold text-xs flex items-center gap-1">
                       <MessageCircle className="w-3 h-3" />
                       WhatsApp
                     </span>
                   </th>
-                  <th className="text-left px-2 py-1 w-[96px]">
+                  <th className="text-left px-1 py-1 w-[90px]">
                     <span className="font-semibold text-xs">Responsável</span>
                   </th>
-                  <th className="text-left px-2 py-1 w-[40px]">
+                  <th className="text-left px-1 py-1 w-[36px]">
                     <span className="font-semibold text-xs">Ações</span>
                   </th>
                 </tr>
@@ -542,10 +542,10 @@ export default function AlunosAtivos() {
                         </Badge>
                       </td>
                       <td className="px-2 py-1 text-xs w-[120px]">{aluno.professor_nome || 'Não atribuído'}</td>
-                      <td className="px-2 py-1 w-[80px]">
+                      <td className="px-1 py-1 w-[70px]">
                         {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400 text-[10px] px-1 py-0">{aluno.ultima_apostila}</Badge> : <span className="text-muted-foreground text-xs">-</span>}
                       </td>
-                      <td className="px-2 py-1 w-[112px]">
+                      <td className="px-1 py-1 w-[100px]">
                         {editandoDataNascimento === aluno.id ? (
                           <div className="flex items-center gap-1 editable-field">
                             <Input
@@ -594,7 +594,7 @@ export default function AlunosAtivos() {
                           </div>
                         )}
                       </td>
-                      <td className="px-2 py-1 w-[128px]">
+                      <td className="px-1 py-1 w-[100px]">
                         {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-1 editable-field">
                             <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-6 text-xs w-28" onKeyDown={e => {
                         if (e.key === 'Enter') {
@@ -610,7 +610,7 @@ export default function AlunosAtivos() {
                             {aluno.whatapp_contato ? <span className="text-xs">{aluno.whatapp_contato}</span> : <span className="text-muted-foreground text-xs">-</span>}
                           </div>}
                       </td>
-                      <td className="px-2 py-1 w-[96px]">
+                      <td className="px-1 py-1 w-[90px]">
                         {editandoResponsavel === aluno.id ? <div className="flex items-center gap-1 editable-field">
                             <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-6 text-xs w-24" onKeyDown={e => {
                         if (e.key === 'Enter') {
@@ -626,7 +626,7 @@ export default function AlunosAtivos() {
                             {aluno.responsavel ? <span className="text-xs">{aluno.responsavel}</span> : <span className="text-muted-foreground text-xs">-</span>}
                           </div>}
                       </td>
-                      <td className="px-2 py-1 w-[40px]">
+                      <td className="px-1 py-1 w-[36px]">
                         <Button 
                           variant="ghost" 
                           size="icon" 
