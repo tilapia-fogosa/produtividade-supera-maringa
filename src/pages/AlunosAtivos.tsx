@@ -466,8 +466,8 @@ export default function AlunosAtivos() {
       {/* Lista de alunos */}
       <Card className="flex flex-col">
         <CardContent className="p-0 flex flex-col">
-          <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full min-w-[1200px]">
+          <div>
+            <table className="w-full">
               <thead className="bg-muted/50 border-b sticky top-0 z-10">
                 <tr>
                   <th className="text-left px-1 py-1 w-[150px]">
