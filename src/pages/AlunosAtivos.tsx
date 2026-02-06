@@ -13,7 +13,7 @@ import { ExpandableAlunoCard } from '@/components/alunos/ExpandableAlunoCard';
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
 type SortDirection = 'asc' | 'desc';
 
-const ITEMS_PER_LOAD = 30;
+const ITEMS_PER_LOAD = 15;
 
 export default function AlunosAtivos() {
   const navigate = useNavigate();
@@ -452,222 +452,234 @@ export default function AlunosAtivos() {
       </Card>
 
       {/* Lista de alunos */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto max-w-full">
+      <Card className="flex flex-col">
+        <CardContent className="p-0 flex flex-col">
+          <div className="overflow-x-auto">
             <div className="min-w-[1200px]">
-            <table className="w-full">
-              <thead className="bg-muted/50 border-b">
-                <tr>
-                  <th className="text-left px-2 py-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7">
-                      Nome
-                      {getSortIcon('nome')}
-                    </Button>
-                  </th>
-                  <th className="text-left px-2 py-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7">
-                      Turma
-                      {getSortIcon('turma')}
-                    </Button>
-                  </th>
-                  <th className="text-left px-2 py-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7">
-                      Professor
-                      {getSortIcon('professor')}
-                    </Button>
-                  </th>
-                  <th className="text-left px-2 py-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7">
-                      Apostila
-                      {getSortIcon('apostila')}
-                    </Button>
-                  </th>
-                  <th className="text-left px-2 py-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('dias_supera')} className="font-semibold text-xs h-7">
-                      Dias Supera
-                      {getSortIcon('dias_supera')}
-                    </Button>
-                  </th>
-                  <th className="text-left px-2 py-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
-                      Nascimento
-                      {getSortIcon('data_nascimento')}
-                    </Button>
-                  </th>
-                   <th className="text-left px-2 py-1 w-[160px]">
-                     <span className="font-semibold text-xs flex items-center gap-1">
-                       <MessageCircle className="w-3 h-3" />
-                       WhatsApp
-                     </span>
-                   </th>
-                   <th className="text-left px-2 py-1 w-[120px]">
-                     <span className="font-semibold text-xs">Responsável</span>
-                   </th>
-                   <th className="text-left px-2 py-1 w-[50px]">
-                     <span className="font-semibold text-xs">Ações</span>
-                   </th>
-                </tr>
-              </thead>
-              <tbody>
-                {alunosVisiveis.map(aluno => <tr 
-                  key={aluno.id} 
-                  className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={(e) => {
-                    // Não expandir se clicar em campo editável
-                    const target = e.target as HTMLElement;
-                    if (target.closest('.editable-field') || target.closest('button')) return;
-                    setAlunoExpandido(aluno);
-                  }}
-                >
-                  <td className="px-2 py-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-medium">{aluno.nome}</span>
-                      {aluno.tipo_pessoa === 'funcionario' && <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
-                          Func.
-                        </Badge>}
-                      {aluno.cargo && <Badge variant="outline" className="bg-green-50 text-green-700 text-[10px] px-1 py-0">
-                          {aluno.cargo}
-                        </Badge>}
-                    </div>
-                  </td>
-                    <td className="px-2 py-1">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
-                        {aluno.turma_nome || 'Sem turma'}
-                      </Badge>
-                    </td>
-                    <td className="px-2 py-1 text-xs">{aluno.professor_nome || 'Não atribuído'}</td>
-                    <td className="px-2 py-1">
-                      {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400 text-[10px] px-1 py-0">{aluno.ultima_apostila}</Badge> : <span className="text-muted-foreground text-xs">-</span>}
-                    </td>
-                    <td className="px-2 py-1">
-                      <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={`text-[10px] px-1 py-0 ${aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}`}>
-                        {aluno.dias_supera || 0} dias
-                      </Badge>
-                    </td>
-                    <td className="px-2 py-1">
-                      {editandoDataNascimento === aluno.id ? (
-                        <div className="flex items-center gap-1 editable-field">
-                          <Input
-                            type="date"
-                            value={dataNascimentoTemp}
-                            onChange={(e) => setDataNascimentoTemp(e.target.value)}
-                            className="h-6 text-xs w-32"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleSalvarDataNascimento(aluno.id);
-                              } else if (e.key === 'Escape') {
-                                handleCancelarEdicaoDataNascimento();
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleSalvarDataNascimento(aluno.id)}
-                            disabled={salvandoDataNascimento === aluno.id}
-                          >
-                            {salvandoDataNascimento === aluno.id ? (
-                              <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            ) : (
-                              <Check className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center gap-1 cursor-pointer" onClick={() => handleEditarDataNascimento(aluno)}>
-                          <span className="text-xs">
-                            {aluno.data_nascimento ? (
-                              <>
-                                {formatarDataBr(aluno.data_nascimento)}
-                                {calcularIdade(aluno.data_nascimento) && ` (${calcularIdade(aluno.data_nascimento)})`}
-                              </>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </span>
-                          {ehAniversarioHoje(aluno.data_nascimento) && (
-                            <span className="text-sm" title="Aniversário hoje! 🎉">🎂</span>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-2 py-1">
-                      {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-1 editable-field">
-                          <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-6 text-xs w-28" onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        handleSalvarWhatsApp(aluno.id);
-                      } else if (e.key === 'Escape') {
-                        handleCancelarEdicao();
-                      }
-                    }} autoFocus />
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleSalvarWhatsApp(aluno.id)} disabled={salvandoWhatsApp === aluno.id}>
-                            {salvandoWhatsApp === aluno.id ? <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-3 h-3" />}
-                          </Button>
-                        </div> : <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center cursor-pointer" onClick={() => handleEditarWhatsApp(aluno)}>
-                          {aluno.whatapp_contato ? <span className="text-xs">{aluno.whatapp_contato}</span> : <span className="text-muted-foreground text-xs">-</span>}
-                        </div>}
-                     </td>
-                     <td className="px-2 py-1">
-                       {editandoResponsavel === aluno.id ? <div className="flex items-center gap-1 editable-field">
-                           <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-6 text-xs w-24" onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        handleSalvarResponsavel(aluno.id);
-                      } else if (e.key === 'Escape') {
-                        handleCancelarEdicaoResponsavel();
-                      }
-                    }} autoFocus />
-                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleSalvarResponsavel(aluno.id)} disabled={salvandoResponsavel === aluno.id}>
-                             {salvandoResponsavel === aluno.id ? <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-3 h-3" />}
-                           </Button>
-                         </div> : <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center cursor-pointer" onClick={() => handleEditarResponsavel(aluno)}>
-                           {aluno.responsavel ? <span className="text-xs">{aluno.responsavel}</span> : <span className="text-muted-foreground text-xs">-</span>}
-                         </div>}
-                     </td>
-                       <td className="px-2 py-1">
-                         <Button 
-                           variant="ghost" 
-                           size="icon" 
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             handleAbrirWhatsApp(aluno);
-                           }} 
-                           className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50" 
-                           title="Abrir WhatsApp"
-                         >
-                           <MessageCircle className="w-3 h-3" />
-                         </Button>
-                       </td>
-                  </tr>)}
-              </tbody>
-            </table>
+              {/* Cabeçalho fixo */}
+              <div className="bg-muted/50 border-b sticky top-0 z-10">
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th className="text-left px-2 py-1 w-[180px]">
+                        <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7">
+                          Nome
+                          {getSortIcon('nome')}
+                        </Button>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[100px]">
+                        <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7">
+                          Turma
+                          {getSortIcon('turma')}
+                        </Button>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[120px]">
+                        <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7">
+                          Professor
+                          {getSortIcon('professor')}
+                        </Button>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[100px]">
+                        <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7">
+                          Apostila
+                          {getSortIcon('apostila')}
+                        </Button>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[100px]">
+                        <Button variant="ghost" size="sm" onClick={() => handleSort('dias_supera')} className="font-semibold text-xs h-7">
+                          Dias Supera
+                          {getSortIcon('dias_supera')}
+                        </Button>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[140px]">
+                        <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
+                          Nascimento
+                          {getSortIcon('data_nascimento')}
+                        </Button>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[160px]">
+                        <span className="font-semibold text-xs flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3" />
+                          WhatsApp
+                        </span>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[120px]">
+                        <span className="font-semibold text-xs">Responsável</span>
+                      </th>
+                      <th className="text-left px-2 py-1 w-[50px]">
+                        <span className="font-semibold text-xs">Ações</span>
+                      </th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
 
-            {alunosVisiveis.length === 0 && <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
-              </div>}
-            
-            {/* Loader para infinite scroll */}
-            {hasMore && (
+              {/* Corpo com scroll interno - altura fixa para ~15 linhas */}
               <div 
-                ref={loaderRef} 
-                className="flex items-center justify-center py-4 text-muted-foreground"
+                className="overflow-y-auto"
+                style={{ maxHeight: '420px' }}
               >
-                {isLoadingMore ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-xs">Carregando mais...</span>
+                <table className="w-full">
+                  <tbody>
+                    {alunosVisiveis.map(aluno => <tr 
+                      key={aluno.id} 
+                      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        // Não expandir se clicar em campo editável
+                        const target = e.target as HTMLElement;
+                        if (target.closest('.editable-field') || target.closest('button')) return;
+                        setAlunoExpandido(aluno);
+                      }}
+                    >
+                      <td className="px-2 py-1 w-[180px]">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-medium">{aluno.nome}</span>
+                          {aluno.tipo_pessoa === 'funcionario' && <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
+                              Func.
+                            </Badge>}
+                          {aluno.cargo && <Badge variant="outline" className="bg-green-50 text-green-700 text-[10px] px-1 py-0">
+                              {aluno.cargo}
+                            </Badge>}
+                        </div>
+                      </td>
+                      <td className="px-2 py-1 w-[100px]">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
+                          {aluno.turma_nome || 'Sem turma'}
+                        </Badge>
+                      </td>
+                      <td className="px-2 py-1 text-xs w-[120px]">{aluno.professor_nome || 'Não atribuído'}</td>
+                      <td className="px-2 py-1 w-[100px]">
+                        {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400 text-[10px] px-1 py-0">{aluno.ultima_apostila}</Badge> : <span className="text-muted-foreground text-xs">-</span>}
+                      </td>
+                      <td className="px-2 py-1 w-[100px]">
+                        <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={`text-[10px] px-1 py-0 ${aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}`}>
+                          {aluno.dias_supera || 0} dias
+                        </Badge>
+                      </td>
+                      <td className="px-2 py-1 w-[140px]">
+                        {editandoDataNascimento === aluno.id ? (
+                          <div className="flex items-center gap-1 editable-field">
+                            <Input
+                              type="date"
+                              value={dataNascimentoTemp}
+                              onChange={(e) => setDataNascimentoTemp(e.target.value)}
+                              className="h-6 text-xs w-32"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleSalvarDataNascimento(aluno.id);
+                                } else if (e.key === 'Escape') {
+                                  handleCancelarEdicaoDataNascimento();
+                                }
+                              }}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleSalvarDataNascimento(aluno.id)}
+                              disabled={salvandoDataNascimento === aluno.id}
+                            >
+                              {salvandoDataNascimento === aluno.id ? (
+                                <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              ) : (
+                                <Check className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center gap-1 cursor-pointer" onClick={() => handleEditarDataNascimento(aluno)}>
+                            <span className="text-xs">
+                              {aluno.data_nascimento ? (
+                                <>
+                                  {formatarDataBr(aluno.data_nascimento)}
+                                  {calcularIdade(aluno.data_nascimento) && ` (${calcularIdade(aluno.data_nascimento)})`}
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </span>
+                            {ehAniversarioHoje(aluno.data_nascimento) && (
+                              <span className="text-sm" title="Aniversário hoje! 🎉">🎂</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-2 py-1 w-[160px]">
+                        {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-1 editable-field">
+                            <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-6 text-xs w-28" onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          handleSalvarWhatsApp(aluno.id);
+                        } else if (e.key === 'Escape') {
+                          handleCancelarEdicao();
+                        }
+                      }} autoFocus />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleSalvarWhatsApp(aluno.id)} disabled={salvandoWhatsApp === aluno.id}>
+                              {salvandoWhatsApp === aluno.id ? <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-3 h-3" />}
+                            </Button>
+                          </div> : <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center cursor-pointer" onClick={() => handleEditarWhatsApp(aluno)}>
+                            {aluno.whatapp_contato ? <span className="text-xs">{aluno.whatapp_contato}</span> : <span className="text-muted-foreground text-xs">-</span>}
+                          </div>}
+                      </td>
+                      <td className="px-2 py-1 w-[120px]">
+                        {editandoResponsavel === aluno.id ? <div className="flex items-center gap-1 editable-field">
+                            <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-6 text-xs w-24" onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          handleSalvarResponsavel(aluno.id);
+                        } else if (e.key === 'Escape') {
+                          handleCancelarEdicaoResponsavel();
+                        }
+                      }} autoFocus />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleSalvarResponsavel(aluno.id)} disabled={salvandoResponsavel === aluno.id}>
+                              {salvandoResponsavel === aluno.id ? <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-3 h-3" />}
+                            </Button>
+                          </div> : <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center cursor-pointer" onClick={() => handleEditarResponsavel(aluno)}>
+                            {aluno.responsavel ? <span className="text-xs">{aluno.responsavel}</span> : <span className="text-muted-foreground text-xs">-</span>}
+                          </div>}
+                      </td>
+                      <td className="px-2 py-1 w-[50px]">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAbrirWhatsApp(aluno);
+                          }} 
+                          className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50" 
+                          title="Abrir WhatsApp"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                        </Button>
+                      </td>
+                    </tr>)}
+                  </tbody>
+                </table>
+
+                {alunosVisiveis.length === 0 && <div className="text-center py-8 text-muted-foreground">
+                    <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
+                  </div>}
+                
+                {/* Loader para infinite scroll */}
+                {hasMore && (
+                  <div 
+                    ref={loaderRef} 
+                    className="flex items-center justify-center py-3 text-muted-foreground"
+                  >
+                    {isLoadingMore ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-xs">Carregando mais...</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs">Role para carregar mais</span>
+                    )}
                   </div>
-                ) : (
-                  <span className="text-xs">Role para carregar mais</span>
                 )}
               </div>
-            )}
             </div>
           </div>
 
-          {/* Contador de itens */}
+          {/* Rodapé fixo com contador */}
           {alunosFiltrados.length > 0 && (
             <div className="flex items-center justify-center gap-2 p-2 border-t bg-muted/30 text-xs text-muted-foreground">
               <span>Exibindo {alunosVisiveis.length} de {alunosFiltrados.length}</span>
