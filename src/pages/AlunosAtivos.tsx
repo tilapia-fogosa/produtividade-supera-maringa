@@ -291,80 +291,84 @@ export default function AlunosAtivos() {
         <p>Erro ao carregar alunos: {error}</p>
       </div>;
   }
-  return <div className="p-4 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Alunos Ativos</h1>
-          <Badge variant="secondary" className="text-sm bg-purple-400 mt-2">
-            {alunosFiltrados.length} de {alunos.length} pessoas
+  return <div className="p-2 space-y-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div className="flex items-center gap-2">
+          <h1 className="text-base font-bold">Alunos Ativos</h1>
+          <Badge variant="secondary" className="text-[10px] bg-purple-400 px-1.5 py-0">
+            {alunosFiltrados.length} de {alunos.length}
           </Badge>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => navigate('/trofeus-1000-dias')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-6 text-xs px-2"
           >
-            <Award className="w-4 h-4" />
+            <Award className="w-3 h-3" />
             Troféus
           </Button>
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => navigate('/camisetas')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-6 text-xs px-2"
           >
-            <Shirt className="w-4 h-4" />
+            <Shirt className="w-3 h-3" />
             Camisetas
           </Button>
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => navigate('/devolutivas')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-6 text-xs px-2"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-3 h-3" />
             Devolutivas
           </Button>
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => navigate('/fichas')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-6 text-xs px-2"
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-3 h-3" />
             Fichas
           </Button>
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => navigate('/diario')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-6 text-xs px-2"
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-3 h-3" />
             Diários
           </Button>
         </div>
       </div>
 
       {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filtros</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Busca por nome */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input placeholder="Buscar por nome..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
-          </div>
+      <Card className="py-0">
+        <CardContent className="p-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Busca por nome */}
+            <Input 
+              placeholder="Buscar por nome..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              className="w-48 h-7 text-xs"
+            />
 
-          {/* Filtros por seleção */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Filtros por seleção */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start">
-                  {filterTurma.length === 0 ? "Filtrar por turma" : `${filterTurma.length} turma(s) selecionada(s)`}
+                <Button variant="outline" size="sm" className="h-7 text-xs px-2">
+                  {filterTurma.length === 0 ? "Turma" : `${filterTurma.length} turma(s)`}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-4">
-                <div className="space-y-2">
+              <PopoverContent className="w-56 p-2">
+                <div className="space-y-1 max-h-48 overflow-y-auto">
                   {turmasUnicas.map(turma => (
                     <div key={turma} className="flex items-center space-x-2">
                       <Checkbox
@@ -377,8 +381,9 @@ export default function AlunosAtivos() {
                             setFilterTurma(filterTurma.filter(t => t !== turma));
                           }
                         }}
+                        className="h-3.5 w-3.5"
                       />
-                      <label htmlFor={`turma-${turma}`} className="text-sm cursor-pointer">
+                      <label htmlFor={`turma-${turma}`} className="text-xs cursor-pointer">
                         {turma}
                       </label>
                     </div>
@@ -389,12 +394,12 @@ export default function AlunosAtivos() {
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start">
-                  {filterProfessor.length === 0 ? "Filtrar por professor" : `${filterProfessor.length} professor(es) selecionado(s)`}
+                <Button variant="outline" size="sm" className="h-7 text-xs px-2">
+                  {filterProfessor.length === 0 ? "Professor" : `${filterProfessor.length} prof.`}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-4">
-                <div className="space-y-2">
+              <PopoverContent className="w-56 p-2">
+                <div className="space-y-1 max-h-48 overflow-y-auto">
                   {professoresUnicos.map(professor => (
                     <div key={professor} className="flex items-center space-x-2">
                       <Checkbox
@@ -407,8 +412,9 @@ export default function AlunosAtivos() {
                             setFilterProfessor(filterProfessor.filter(p => p !== professor));
                           }
                         }}
+                        className="h-3.5 w-3.5"
                       />
-                      <label htmlFor={`professor-${professor}`} className="text-sm cursor-pointer">
+                      <label htmlFor={`professor-${professor}`} className="text-xs cursor-pointer">
                         {professor}
                       </label>
                     </div>
@@ -419,12 +425,12 @@ export default function AlunosAtivos() {
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start">
-                  {filterApostila.length === 0 ? "Filtrar por apostila" : `${filterApostila.length} apostila(s) selecionada(s)`}
+                <Button variant="outline" size="sm" className="h-7 text-xs px-2">
+                  {filterApostila.length === 0 ? "Apostila" : `${filterApostila.length} apost.`}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-4">
-                <div className="space-y-2">
+              <PopoverContent className="w-56 p-2">
+                <div className="space-y-1 max-h-48 overflow-y-auto">
                   {apostilasUnicas.map(apostila => (
                     <div key={apostila} className="flex items-center space-x-2">
                       <Checkbox
@@ -437,8 +443,9 @@ export default function AlunosAtivos() {
                             setFilterApostila(filterApostila.filter(a => a !== apostila));
                           }
                         }}
+                        className="h-3.5 w-3.5"
                       />
-                      <label htmlFor={`apostila-${apostila}`} className="text-sm cursor-pointer">
+                      <label htmlFor={`apostila-${apostila}`} className="text-xs cursor-pointer">
                         {apostila}
                       </label>
                     </div>
@@ -446,11 +453,13 @@ export default function AlunosAtivos() {
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
 
-          <Button variant="outline" onClick={clearFilters} className="w-full md:w-auto">
-            Limpar Filtros
-          </Button>
+            {(filterTurma.length > 0 || filterProfessor.length > 0 || filterApostila.length > 0 || searchTerm) && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs px-2 text-muted-foreground">
+                Limpar
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
