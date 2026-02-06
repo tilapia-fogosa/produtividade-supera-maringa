@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { Upload, Download, FileSpreadsheet, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -253,33 +253,6 @@ const XlsUploadComponent = () => {
     }
   };
 
-  const downloadTemplate = () => {
-    const wb = XLSX.utils.book_new();
-    
-    const turmasData = [
-      ['nome', 'professor_nome', 'dia_semana', 'sala', 'horario_inicio', 'categoria'],
-      ['Turma Exemplo', 'João Silva', 'segunda', 'Sala 1', '14:00', 'Supera']
-    ];
-    const turmasSheet = XLSX.utils.aoa_to_sheet(turmasData);
-    XLSX.utils.book_append_sheet(wb, turmasSheet, 'Turmas');
-
-    const professoresData = [
-      ['nome', 'slack_username'],
-      ['João Silva', 'joao.silva']
-    ];
-    const professoresSheet = XLSX.utils.aoa_to_sheet(professoresData);
-    XLSX.utils.book_append_sheet(wb, professoresSheet, 'Professores');
-
-    const alunosData = [
-      ['nome', 'telefone', 'email', 'matricula', 'turma_atual', 'professor', 'idade', 'ultimo_nivel', 'dias_apostila', 'dias_supera', 'vencimento_contrato'],
-      ['Maria Santos', '(44) 99999-9999', 'maria@email.com', 'MAT001', 'Turma Exemplo', 'João Silva', '8', 'Nível 2', '30', '120', '2024-12-31']
-    ];
-    const alunosSheet = XLSX.utils.aoa_to_sheet(alunosData);
-    XLSX.utils.book_append_sheet(wb, alunosSheet, 'Alunos');
-
-    XLSX.writeFile(wb, 'template-sincronizacao-turmas.xlsx');
-  };
-
   return (
     <div className="space-y-6">
       {/* Importar Excel */}
@@ -298,10 +271,6 @@ const XlsUploadComponent = () => {
             <Button onClick={() => fileInputRef.current?.click()} variant="outline">
               <Upload className="mr-2 h-4 w-4" />
               Selecionar Excel
-            </Button>
-            <Button onClick={downloadTemplate} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Baixar Template
             </Button>
           </div>
 
