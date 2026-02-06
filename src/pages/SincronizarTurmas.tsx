@@ -1,9 +1,11 @@
 import React from 'react';
-import { FileSpreadsheet, Clock } from "lucide-react";
+import { FileSpreadsheet, Clock, Cake } from "lucide-react";
 import XlsUploadComponent from '@/components/sync/XlsUploadComponent';
+import AniversariantesUploadComponent from '@/components/sync/AniversariantesUploadComponent';
 import { useUltimaSincronizacao } from '@/hooks/use-ultima-sincronizacao';
 import { formatDateSaoPaulo } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SincronizarTurmas = () => {
   const { data: sincronizacoes, isLoading } = useUltimaSincronizacao();
@@ -18,55 +20,69 @@ const SincronizarTurmas = () => {
         </div>
       </div>
       
-      <div className="space-y-6">
-        <XlsUploadComponent />
-        
-        {/* Card com histórico das últimas sincronizações */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Clock className="h-5 w-5" />
-              Histórico de Sincronizações
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <p className="text-muted-foreground">Carregando...</p>
-            ) : sincronizacoes && sincronizacoes.length > 0 ? (
-              <div className="space-y-3">
-                {sincronizacoes.map((sync, index) => (
-                  <div key={sync.id} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">
-                          {formatDateSaoPaulo(sync.created_at, 'dd/MM/yyyy')} às {formatDateSaoPaulo(sync.created_at, 'HH:mm')}
-                        </p>
-                        {sync.file_name && (
-                          <p className="text-xs text-muted-foreground">
-                            Arquivo: {sync.file_name}
+      <Tabs defaultValue="alunos" className="w-full">
+        <TabsList>
+          <TabsTrigger value="alunos">Alunos</TabsTrigger>
+          <TabsTrigger value="aniversariantes">
+            <Cake className="h-4 w-4 mr-1" />
+            Aniversariantes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="alunos" className="space-y-6">
+          <XlsUploadComponent />
+          
+          {/* Card com histórico das últimas sincronizações */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Clock className="h-5 w-5" />
+                Histórico de Sincronizações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <p className="text-muted-foreground">Carregando...</p>
+              ) : sincronizacoes && sincronizacoes.length > 0 ? (
+                <div className="space-y-3">
+                  {sincronizacoes.map((sync, index) => (
+                    <div key={sync.id} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">
+                            {formatDateSaoPaulo(sync.created_at, 'dd/MM/yyyy')} às {formatDateSaoPaulo(sync.created_at, 'HH:mm')}
                           </p>
-                        )}
-                        {sync.processed_rows > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            {sync.processed_rows} registros processados
-                          </p>
+                          {sync.file_name && (
+                            <p className="text-xs text-muted-foreground">
+                              Arquivo: {sync.file_name}
+                            </p>
+                          )}
+                          {sync.processed_rows > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              {sync.processed_rows} registros processados
+                            </p>
+                          )}
+                        </div>
+                        {index === 0 && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            Mais recente
+                          </span>
                         )}
                       </div>
-                      {index === 0 && (
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                          Mais recente
-                        </span>
-                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">Nenhuma sincronização realizada ainda</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Nenhuma sincronização realizada ainda</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="aniversariantes" className="space-y-6">
+          <AniversariantesUploadComponent />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

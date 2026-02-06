@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,11 +6,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Pencil, Check, X, Loader2, FileText, Award, Shirt, BookOpen } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, Save, Check, Loader2, FileText, Award, Shirt, BookOpen } from "lucide-react";
 import { useAlunosAtivos, AlunoAtivo } from '@/hooks/use-alunos-ativos';
 import { ExpandableAlunoCard } from '@/components/alunos/ExpandableAlunoCard';
+
 type SortField = 'nome' | 'turma' | 'professor' | 'apostila' | 'dias_supera' | 'data_nascimento';
 type SortDirection = 'asc' | 'desc';
+
+const ITEMS_PER_LOAD = 30;
+
 export default function AlunosAtivos() {
   const navigate = useNavigate();
   const { 
@@ -52,6 +56,11 @@ export default function AlunosAtivos() {
   const [editandoDataNascimento, setEditandoDataNascimento] = useState<string | null>(null);
   const [dataNascimentoTemp, setDataNascimentoTemp] = useState('');
   const [salvandoDataNascimento, setSalvandoDataNascimento] = useState<string | null>(null);
+
+  // Estado para infinite scroll
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_LOAD);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   // Sincronizar alunoExpandido com a lista de alunos atualizada
   const alunoExpandidoSincronizado = useMemo(() => {
@@ -118,6 +127,47 @@ export default function AlunosAtivos() {
     });
     return resultado;
   }, [alunos, searchTerm, filterTurma, filterProfessor, filterApostila, sortField, sortDirection]);
+
+  // Infinite scroll - alunos visíveis
+  const alunosVisiveis = useMemo(() => {
+    return alunosFiltrados.slice(0, visibleCount);
+  }, [alunosFiltrados, visibleCount]);
+
+  const hasMore = visibleCount < alunosFiltrados.length;
+
+  // Resetar contagem quando filtros mudarem
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_LOAD);
+  }, [searchTerm, filterTurma, filterProfessor, filterApostila, sortField, sortDirection]);
+
+  // Carregar mais ao scrollar
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(prev => Math.min(prev + ITEMS_PER_LOAD, alunosFiltrados.length));
+      setIsLoadingMore(false);
+    }, 100);
+  }, [isLoadingMore, hasMore, alunosFiltrados.length]);
+
+  // IntersectionObserver para detectar scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loadMore, hasMore]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -407,60 +457,60 @@ export default function AlunosAtivos() {
           <div className="overflow-x-auto max-w-full">
             <div className="min-w-[1200px]">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left p-4">
-                    <Button variant="ghost" onClick={() => handleSort('nome')} className="font-semibold hover:bg-gray-100">
+                  <th className="text-left px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7">
                       Nome
                       {getSortIcon('nome')}
                     </Button>
                   </th>
-                  <th className="text-left p-4">
-                    <Button variant="ghost" onClick={() => handleSort('turma')} className="font-semibold hover:bg-gray-100">
+                  <th className="text-left px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7">
                       Turma
                       {getSortIcon('turma')}
                     </Button>
                   </th>
-                  <th className="text-left p-4">
-                    <Button variant="ghost" onClick={() => handleSort('professor')} className="font-semibold hover:bg-gray-100">
+                  <th className="text-left px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7">
                       Professor
                       {getSortIcon('professor')}
                     </Button>
                   </th>
-                  <th className="text-left p-4">
-                    <Button variant="ghost" onClick={() => handleSort('apostila')} className="font-semibold hover:bg-gray-100">
-                      Apostila Atual
+                  <th className="text-left px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7">
+                      Apostila
                       {getSortIcon('apostila')}
                     </Button>
                   </th>
-                  <th className="text-left p-4">
-                    <Button variant="ghost" onClick={() => handleSort('dias_supera')} className="font-semibold hover:bg-gray-100">
-                      Dias no Supera
+                  <th className="text-left px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('dias_supera')} className="font-semibold text-xs h-7">
+                      Dias Supera
                       {getSortIcon('dias_supera')}
                     </Button>
                   </th>
-                  <th className="text-left p-4">
-                    <Button variant="ghost" onClick={() => handleSort('data_nascimento')} className="font-semibold hover:bg-gray-100">
-                      Data de Nascimento
+                  <th className="text-left px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
+                      Nascimento
                       {getSortIcon('data_nascimento')}
                     </Button>
                   </th>
-                   <th className="text-left p-4 w-[180px]">
-                     <span className="font-semibold flex items-center gap-2">
-                       <MessageCircle className="w-4 h-4" />
-                       WhatsApp para contato
+                   <th className="text-left px-2 py-1 w-[160px]">
+                     <span className="font-semibold text-xs flex items-center gap-1">
+                       <MessageCircle className="w-3 h-3" />
+                       WhatsApp
                      </span>
                    </th>
-                   <th className="text-left p-4 w-[150px]">
-                     <span className="font-semibold">Responsável</span>
+                   <th className="text-left px-2 py-1 w-[120px]">
+                     <span className="font-semibold text-xs">Responsável</span>
                    </th>
-                   <th className="text-left p-4 w-[60px]">
-                     <span className="font-semibold">Ações</span>
+                   <th className="text-left px-2 py-1 w-[50px]">
+                     <span className="font-semibold text-xs">Ações</span>
                    </th>
                 </tr>
               </thead>
               <tbody>
-                {alunosFiltrados.map(aluno => <tr 
+                {alunosVisiveis.map(aluno => <tr 
                   key={aluno.id} 
                   className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
                   onClick={(e) => {
@@ -470,39 +520,39 @@ export default function AlunosAtivos() {
                     setAlunoExpandido(aluno);
                   }}
                 >
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{aluno.nome}</span>
-                      {aluno.tipo_pessoa === 'funcionario' && <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
-                          Funcionário
+                  <td className="px-2 py-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-medium">{aluno.nome}</span>
+                      {aluno.tipo_pessoa === 'funcionario' && <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
+                          Func.
                         </Badge>}
-                      {aluno.cargo && <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
+                      {aluno.cargo && <Badge variant="outline" className="bg-green-50 text-green-700 text-[10px] px-1 py-0">
                           {aluno.cargo}
                         </Badge>}
                     </div>
                   </td>
-                    <td className="p-4">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    <td className="px-2 py-1">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 text-[10px] px-1 py-0">
                         {aluno.turma_nome || 'Sem turma'}
                       </Badge>
                     </td>
-                    <td className="p-4">{aluno.professor_nome || 'Não atribuído'}</td>
-                    <td className="p-4">
-                      {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400">{aluno.ultima_apostila}</Badge> : <span className="text-gray-400">Não registrado</span>}
+                    <td className="px-2 py-1 text-xs">{aluno.professor_nome || 'Não atribuído'}</td>
+                    <td className="px-2 py-1">
+                      {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400 text-[10px] px-1 py-0">{aluno.ultima_apostila}</Badge> : <span className="text-muted-foreground text-xs">-</span>}
                     </td>
-                    <td className="p-4">
-                      <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}>
+                    <td className="px-2 py-1">
+                      <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={`text-[10px] px-1 py-0 ${aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}`}>
                         {aluno.dias_supera || 0} dias
                       </Badge>
                     </td>
-                    <td className="p-4">
+                    <td className="px-2 py-1">
                       {editandoDataNascimento === aluno.id ? (
-                        <div className="flex items-center gap-2 editable-field">
+                        <div className="flex items-center gap-1 editable-field">
                           <Input
                             type="date"
                             value={dataNascimentoTemp}
                             onChange={(e) => setDataNascimentoTemp(e.target.value)}
-                            className="h-8 text-sm w-40"
+                            className="h-6 text-xs w-32"
                             autoFocus
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
@@ -515,67 +565,68 @@ export default function AlunosAtivos() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-6 w-6 p-0"
                             onClick={() => handleSalvarDataNascimento(aluno.id)}
                             disabled={salvandoDataNascimento === aluno.id}
                           >
                             {salvandoDataNascimento === aluno.id ? (
-                              <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                             ) : (
-                              <Check className="h-4 w-4" />
+                              <Check className="h-3 w-3" />
                             )}
                           </Button>
                         </div>
                       ) : (
-                        <div className="editable-field hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center gap-2" onClick={() => handleEditarDataNascimento(aluno)}>
-                          <span className="text-sm">
+                        <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center gap-1 cursor-pointer" onClick={() => handleEditarDataNascimento(aluno)}>
+                          <span className="text-xs">
                             {aluno.data_nascimento ? (
                               <>
                                 {formatarDataBr(aluno.data_nascimento)}
-                                {calcularIdade(aluno.data_nascimento) && ` (${calcularIdade(aluno.data_nascimento)} anos)`}
+                                {calcularIdade(aluno.data_nascimento) && ` (${calcularIdade(aluno.data_nascimento)})`}
                               </>
                             ) : (
-                              <span className="text-gray-400">Clique para adicionar</span>
+                              <span className="text-muted-foreground">-</span>
                             )}
                           </span>
                           {ehAniversarioHoje(aluno.data_nascimento) && (
-                            <span className="text-xl" title="Aniversário hoje! 🎉">🎂</span>
+                            <span className="text-sm" title="Aniversário hoje! 🎉">🎂</span>
                           )}
                         </div>
                       )}
                     </td>
-                    <td className="p-4">
-                      {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-2 editable-field">
-                          <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-8 text-sm" onKeyDown={e => {
+                    <td className="px-2 py-1">
+                      {editandoWhatsApp === aluno.id ? <div className="flex items-center gap-1 editable-field">
+                          <Input value={whatsappTemp} onChange={e => setWhatsappTemp(e.target.value)} placeholder="WhatsApp" className="h-6 text-xs w-28" onKeyDown={e => {
                       if (e.key === 'Enter') {
                         handleSalvarWhatsApp(aluno.id);
                       } else if (e.key === 'Escape') {
                         handleCancelarEdicao();
                       }
                     }} autoFocus />
-                          <Button variant="ghost" size="sm" onClick={() => handleSalvarWhatsApp(aluno.id)} disabled={salvandoWhatsApp === aluno.id}>
-                            {salvandoWhatsApp === aluno.id ? <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-4 h-4" />}
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleSalvarWhatsApp(aluno.id)} disabled={salvandoWhatsApp === aluno.id}>
+                            {salvandoWhatsApp === aluno.id ? <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-3 h-3" />}
                           </Button>
-                        </div> : <div className="editable-field hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarWhatsApp(aluno)}>
-                          {aluno.whatapp_contato ? <span className="text-sm">{aluno.whatapp_contato}</span> : <span className="text-gray-400 text-sm">Clique para adicionar</span>}
+                        </div> : <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center cursor-pointer" onClick={() => handleEditarWhatsApp(aluno)}>
+                          {aluno.whatapp_contato ? <span className="text-xs">{aluno.whatapp_contato}</span> : <span className="text-muted-foreground text-xs">-</span>}
                         </div>}
                      </td>
-                     <td className="p-4">
-                       {editandoResponsavel === aluno.id ? <div className="flex items-center gap-2 editable-field">
-                           <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-8 text-sm" onKeyDown={e => {
+                     <td className="px-2 py-1">
+                       {editandoResponsavel === aluno.id ? <div className="flex items-center gap-1 editable-field">
+                           <Input value={responsavelTemp} onChange={e => setResponsavelTemp(e.target.value)} placeholder="Responsável" className="h-6 text-xs w-24" onKeyDown={e => {
                       if (e.key === 'Enter') {
                         handleSalvarResponsavel(aluno.id);
                       } else if (e.key === 'Escape') {
                         handleCancelarEdicaoResponsavel();
                       }
                     }} autoFocus />
-                           <Button variant="ghost" size="sm" onClick={() => handleSalvarResponsavel(aluno.id)} disabled={salvandoResponsavel === aluno.id}>
-                             {salvandoResponsavel === aluno.id ? <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-4 h-4" />}
+                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleSalvarResponsavel(aluno.id)} disabled={salvandoResponsavel === aluno.id}>
+                             {salvandoResponsavel === aluno.id ? <div className="w-3 h-3 animate-spin rounded-full border-2 border-primary border-t-transparent" /> : <Save className="w-3 h-3" />}
                            </Button>
-                         </div> : <div className="editable-field hover:bg-gray-100 p-2 rounded min-h-[32px] flex items-center" onClick={() => handleEditarResponsavel(aluno)}>
-                           {aluno.responsavel ? <span className="text-sm">{aluno.responsavel}</span> : <span className="text-gray-400 text-sm">Clique para adicionar</span>}
+                         </div> : <div className="editable-field hover:bg-muted px-1 py-0.5 rounded flex items-center cursor-pointer" onClick={() => handleEditarResponsavel(aluno)}>
+                           {aluno.responsavel ? <span className="text-xs">{aluno.responsavel}</span> : <span className="text-muted-foreground text-xs">-</span>}
                          </div>}
                      </td>
-                       <td className="p-4">
+                       <td className="px-2 py-1">
                          <Button 
                            variant="ghost" 
                            size="icon" 
@@ -583,21 +634,45 @@ export default function AlunosAtivos() {
                              e.stopPropagation();
                              handleAbrirWhatsApp(aluno);
                            }} 
-                           className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" 
+                           className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50" 
                            title="Abrir WhatsApp"
                          >
-                           <MessageCircle className="w-4 h-4" />
+                           <MessageCircle className="w-3 h-3" />
                          </Button>
                        </td>
                   </tr>)}
               </tbody>
             </table>
 
-            {alunosFiltrados.length === 0 && <div className="text-center py-8 text-gray-500">
+            {alunosVisiveis.length === 0 && <div className="text-center py-8 text-muted-foreground">
                 <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
               </div>}
+            
+            {/* Loader para infinite scroll */}
+            {hasMore && (
+              <div 
+                ref={loaderRef} 
+                className="flex items-center justify-center py-4 text-muted-foreground"
+              >
+                {isLoadingMore ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-xs">Carregando mais...</span>
+                  </div>
+                ) : (
+                  <span className="text-xs">Role para carregar mais</span>
+                )}
+              </div>
+            )}
             </div>
           </div>
+
+          {/* Contador de itens */}
+          {alunosFiltrados.length > 0 && (
+            <div className="flex items-center justify-center gap-2 p-2 border-t bg-muted/30 text-xs text-muted-foreground">
+              <span>Exibindo {alunosVisiveis.length} de {alunosFiltrados.length}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
