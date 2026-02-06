@@ -152,21 +152,24 @@ export default function AlunosAtivos() {
 
   // IntersectionObserver para detectar scroll
   useEffect(() => {
+    const currentLoader = loaderRef.current;
+    if (!currentLoader || !hasMore) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
+        if (entries[0].isIntersecting) {
           loadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '100px' }
     );
 
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
-    }
+    observer.observe(currentLoader);
 
-    return () => observer.disconnect();
-  }, [loadMore, hasMore]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMore, hasMore, alunosVisiveis.length]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
