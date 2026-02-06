@@ -467,69 +467,60 @@ export default function AlunosAtivos() {
       <Card className="flex flex-col">
         <CardContent className="p-0 flex flex-col">
           <div className="overflow-x-auto">
-            <div className="min-w-[1200px]">
-              {/* Cabeçalho fixo */}
-              <div className="bg-muted/50 border-b sticky top-0 z-10">
-                <table className="w-full">
-                  <thead>
-                    <tr>
-                      <th className="text-left px-2 py-1 w-[180px]">
-                        <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7">
-                          Nome
-                          {getSortIcon('nome')}
-                        </Button>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[100px]">
-                        <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7">
-                          Turma
-                          {getSortIcon('turma')}
-                        </Button>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[120px]">
-                        <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7">
-                          Professor
-                          {getSortIcon('professor')}
-                        </Button>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[100px]">
-                        <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7">
-                          Apostila
-                          {getSortIcon('apostila')}
-                        </Button>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[100px]">
-                        <Button variant="ghost" size="sm" onClick={() => handleSort('dias_supera')} className="font-semibold text-xs h-7">
-                          Dias Supera
-                          {getSortIcon('dias_supera')}
-                        </Button>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[140px]">
-                        <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
-                          Nascimento
-                          {getSortIcon('data_nascimento')}
-                        </Button>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[160px]">
-                        <span className="font-semibold text-xs flex items-center gap-1">
-                          <MessageCircle className="w-3 h-3" />
-                          WhatsApp
-                        </span>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[120px]">
-                        <span className="font-semibold text-xs">Responsável</span>
-                      </th>
-                      <th className="text-left px-2 py-1 w-[50px]">
-                        <span className="font-semibold text-xs">Ações</span>
-                      </th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-
-              {/* Corpo com scroll interno */}
-              <div className="overflow-y-auto">
-                <table className="w-full">
-                  <tbody>
+            <table className="w-full min-w-[1200px]">
+              <thead className="bg-muted/50 border-b sticky top-0 z-10">
+                <tr>
+                  <th className="text-left px-2 py-1 w-[180px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('nome')} className="font-semibold text-xs h-7">
+                      Nome
+                      {getSortIcon('nome')}
+                    </Button>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[100px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('turma')} className="font-semibold text-xs h-7">
+                      Turma
+                      {getSortIcon('turma')}
+                    </Button>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[120px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('professor')} className="font-semibold text-xs h-7">
+                      Professor
+                      {getSortIcon('professor')}
+                    </Button>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[100px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('apostila')} className="font-semibold text-xs h-7">
+                      Apostila
+                      {getSortIcon('apostila')}
+                    </Button>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[100px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('dias_supera')} className="font-semibold text-xs h-7">
+                      Dias Supera
+                      {getSortIcon('dias_supera')}
+                    </Button>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[140px]">
+                    <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
+                      Nascimento
+                      {getSortIcon('data_nascimento')}
+                    </Button>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[160px]">
+                    <span className="font-semibold text-xs flex items-center gap-1">
+                      <MessageCircle className="w-3 h-3" />
+                      WhatsApp
+                    </span>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[120px]">
+                    <span className="font-semibold text-xs">Responsável</span>
+                  </th>
+                  <th className="text-left px-2 py-1 w-[50px]">
+                    <span className="font-semibold text-xs">Ações</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                     {alunosVisiveis.map(aluno => <tr 
                       key={aluno.id} 
                       className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
@@ -667,29 +658,26 @@ export default function AlunosAtivos() {
                 {alunosVisiveis.length === 0 && <div className="text-center py-8 text-muted-foreground">
                     <p>Nenhuma pessoa encontrada com os filtros aplicados.</p>
                   </div>}
-                
-                {/* Loader para infinite scroll */}
-                {hasMore && (
-                  <div 
-                    ref={loaderRef} 
-                    className="flex items-center justify-center py-3 text-muted-foreground"
-                  >
-                    {isLoadingMore ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-xs">Carregando mais...</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs">Role para carregar mais</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
-
         </CardContent>
       </Card>
+
+      {/* Loader para infinite scroll - fora do container de overflow */}
+      {hasMore && (
+        <div 
+          ref={loaderRef} 
+          className="flex items-center justify-center py-3 text-muted-foreground"
+        >
+          {isLoadingMore ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-xs">Carregando mais...</span>
+            </div>
+          ) : (
+            <span className="text-xs">Role para carregar mais</span>
+          )}
+        </div>
+      )}
 
       {/* Card expandido do aluno */}
       <ExpandableAlunoCard 
