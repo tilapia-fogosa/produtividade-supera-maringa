@@ -104,16 +104,16 @@ const AniversariantesUploadComponent = () => {
 
       for (const row of jsonData as any[]) {
         const nome = row['NOME']?.toString().trim();
-        const dataNascStr = row['DATA_NASC']?.toString().trim();
+        const dataNasc = row['DATA_NASC'];
 
-        if (!nome || !dataNascStr) {
+        if (!nome || dataNasc === undefined || dataNasc === null) {
           resultados.erros.push(`Linha inválida: NOME ou DATA_NASC vazio`);
           continue;
         }
 
-        const dataNascimento = parseDate(dataNascStr);
+        const dataNascimento = parseDate(dataNasc);
         if (!dataNascimento) {
-          resultados.erros.push(`Data inválida para ${nome}: ${dataNascStr}`);
+          resultados.erros.push(`Data inválida para ${nome}: ${dataNasc}`);
           continue;
         }
 
