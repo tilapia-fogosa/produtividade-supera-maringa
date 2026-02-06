@@ -11,6 +11,8 @@ export interface AtividadePosVenda {
   comerciais_completo: boolean;
   pedagogicos_completo: boolean;
   finais_completo: boolean;
+  // Status manual que sobrescreve o cálculo dinâmico
+  status_manual: string | null;
 }
 
 export interface AtividadesPosVendaFilters {
@@ -44,7 +46,8 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
           check_entregar_kit,
           check_cadastrar_pagamento,
           check_sincronizar_sgs,
-          check_grupo_whatsapp
+          check_grupo_whatsapp,
+          status_manual
         `)
         .eq("active", true)
         .order("created_at", { ascending: false });
@@ -87,21 +90,24 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
 
       // Montar resultado
       let result: AtividadePosVenda[] = data.map((pv) => {
-        // Verificar completude de cada seção
-        const cadastrais_completo = !!(
+        // Se tem status_manual = 'Concluido', considera todas as seções como completas
+        const isManualCompleto = pv.status_manual === 'Concluido';
+
+        // Verificar completude de cada seção (ou sobrescrever se status_manual)
+        const cadastrais_completo = isManualCompleto || !!(
           pv.full_name &&
           pv.cpf &&
           pv.birth_date &&
           pv.address_street
         );
 
-        const comerciais_completo = !!(
+        const comerciais_completo = isManualCompleto || !!(
           pv.kit_type &&
           pv.enrollment_amount !== null &&
           pv.monthly_fee_amount !== null
         );
 
-        const pedagogicos_completo = !!(
+        const pedagogicos_completo = isManualCompleto || !!(
           pv.turma_id &&
           pv.data_aula_inaugural
         );
@@ -109,7 +115,7 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
         // Verificar se tem aluno vinculado
         const temAlunoVinculado = alunosMap.has(pv.client_id);
 
-        const finais_completo = !!(
+        const finais_completo = isManualCompleto || !!(
           pv.check_lancar_sgs &&
           pv.check_assinar_contrato &&
           pv.check_entregar_kit &&
@@ -128,6 +134,7 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
           comerciais_completo,
           pedagogicos_completo,
           finais_completo,
+          status_manual: pv.status_manual,
         };
       });
 
