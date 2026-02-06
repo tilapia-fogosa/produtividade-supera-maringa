@@ -665,7 +665,7 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       dataFimAjuste,
       observacoes
     }: { 
-      resultado: 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo';
+      resultado: 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo' | 'novo_atendimento_financeiro';
       atividadeAnteriorId: string;
       dataFimAjuste?: Date;
       observacoes?: string;
@@ -787,6 +787,16 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         }
         
         deveResolverAlerta = true;
+      } else if (resultado === 'novo_atendimento_financeiro' && dataFimAjuste) {
+        // Novo atendimento financeiro: apenas agenda um novo atendimento
+        const dataFormatada = dataFimAjuste.toISOString().split('T')[0];
+        tarefas = [
+          { 
+            tipo: 'atendimento_financeiro', 
+            descricao: `Novo atendimento financeiro agendado para ${new Date(dataFimAjuste).toLocaleDateString('pt-BR')}`,
+            data_agendada: dataFormatada
+          }
+        ];
       }
       
       // Criar todas as tarefas

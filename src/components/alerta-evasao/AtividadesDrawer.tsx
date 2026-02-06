@@ -30,7 +30,7 @@ import type { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { useAgendaProfessores } from '@/hooks/use-agenda-professores';
 import { HORARIOS_FUNCIONAMENTO, type DiaSemana } from '@/constants/horariosFuncionamento';
 
-type ResultadoNegociacao = 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo';
+type ResultadoNegociacao = 'evasao' | 'ajuste_temporario' | 'ajuste_definitivo' | 'novo_atendimento_financeiro';
 
 interface AtividadesDrawerProps {
   open: boolean;
@@ -318,13 +318,13 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   const handleConfirmarResultado = async () => {
     if (!resultadoSelecionado || !atividadeNegociacao) return;
     
-    if (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) return;
+    if ((resultadoSelecionado === 'ajuste_temporario' || resultadoSelecionado === 'novo_atendimento_financeiro') && !dataFimAjuste) return;
     
     try {
       await processarNegociacao({
         resultado: resultadoSelecionado,
         atividadeAnteriorId: atividadeNegociacao.id,
-        dataFimAjuste: resultadoSelecionado === 'ajuste_temporario' ? new Date(dataFimAjuste) : undefined,
+        dataFimAjuste: (resultadoSelecionado === 'ajuste_temporario' || resultadoSelecionado === 'novo_atendimento_financeiro') ? new Date(dataFimAjuste) : undefined,
         observacoes: observacoesNegociacao.trim() || undefined
       });
       
@@ -1066,6 +1066,90 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                       </div>
                     </button>
 
+                    {/* Opção: Novo Atendimento Financeiro */}
+                    <button
+                      type="button"
+                      onClick={() => setResultadoSelecionado('novo_atendimento_financeiro')}
+                      className={`w-full p-2 rounded border text-left transition-all ${
+                        resultadoSelecionado === 'novo_atendimento_financeiro'
+                          ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
+                          : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded ${resultadoSelecionado === 'novo_atendimento_financeiro' ? 'bg-purple-500' : 'bg-purple-100'}`}>
+                          <DollarSign className={`h-3 w-3 ${resultadoSelecionado === 'novo_atendimento_financeiro' ? 'text-white' : 'text-purple-600'}`} />
+                        </div>
+                        <div>
+                          <p className={`text-xs font-medium ${resultadoSelecionado === 'novo_atendimento_financeiro' ? 'text-purple-700' : ''}`}>
+                            Novo Atendimento Financeiro
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Agendar outro atendimento
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Campo de data para novo atendimento financeiro */}
+                    {resultadoSelecionado === 'novo_atendimento_financeiro' && (
+                      <div className="pl-6 space-y-1">
+                        <Label className="text-[10px]">Data do atendimento *</Label>
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            placeholder="dd/mm/aaaa"
+                            value={dataFimAjuste ? format(new Date(dataFimAjuste), "dd/MM/yyyy", { locale: ptBR }) : ''}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              let formatted = '';
+                              if (value.length >= 1) formatted = value.substring(0, 2);
+                              if (value.length >= 3) formatted += '/' + value.substring(2, 4);
+                              if (value.length >= 5) formatted += '/' + value.substring(4, 8);
+                              e.target.value = formatted;
+                              
+                              // Se tiver 8 dígitos, tentar converter para data
+                              if (value.length === 8) {
+                                const day = parseInt(value.substring(0, 2), 10);
+                                const month = parseInt(value.substring(2, 4), 10) - 1;
+                                const year = parseInt(value.substring(4, 8), 10);
+                                const date = new Date(year, month, day);
+                                
+                                // Validar se a data é válida e não é passada
+                                if (!isNaN(date.getTime()) && date >= new Date(new Date().setHours(0,0,0,0))) {
+                                  setDataFimAjuste(date.toISOString().split('T')[0]);
+                                }
+                              } else if (value.length === 0) {
+                                setDataFimAjuste('');
+                              }
+                            }}
+                            className="flex-1 h-7 px-2 text-xs rounded-md border border-input bg-background"
+                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 shrink-0"
+                              >
+                                <CalendarIcon className="h-3 w-3" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={dataFimAjuste ? new Date(dataFimAjuste) : undefined}
+                                onSelect={(date) => setDataFimAjuste(date ? date.toISOString().split('T')[0] : '')}
+                                disabled={(date) => date < new Date()}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Botão de confirmação */}
                     <div className="pt-2">
                       <Button
@@ -1074,6 +1158,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                         disabled={
                           !resultadoSelecionado || 
                           (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) ||
+                          (resultadoSelecionado === 'novo_atendimento_financeiro' && !dataFimAjuste) ||
                           isProcessandoNegociacao
                         }
                         onClick={handleConfirmarResultado}
