@@ -1,127 +1,64 @@
 
-## Plano: Corrigir Erro de Tipo no RPC do Calendário
 
-### Problema Identificado
+## Plano: Adicionar coluna `status_manual` na tabela `atividade_pos_venda`
 
-A função `get_calendario_eventos_unificados` declara que retorna campos `horario_inicio` e `horario_fim` do tipo `time without time zone`, mas a view `vw_calendario_eventos_unificados` converte esses campos para `text`.
-
-**Erro retornado:**
-```
-code: 42804
-details: Returned type text does not match expected type time without time zone in column 5.
-message: structure of query does not match function result type
-```
+### Objetivo
+Criar uma coluna `status_manual` que permite forçar o status de conclusão de um registro, independente do preenchimento dos formulários. Todos os registros de 2025 ou antes serão marcados como "Concluido".
 
 ---
 
-### Solução
+### Etapas de Implementação
 
-Recriar a função RPC `get_calendario_eventos_unificados` alterando a declaração de retorno dos campos `horario_inicio` e `horario_fim` de `time` para `text`.
+#### 1. Criar Migration para Adicionar a Coluna
+Adicionar a coluna `status_manual` do tipo TEXT (nullable) na tabela `atividade_pos_venda`.
+
+```sql
+ALTER TABLE atividade_pos_venda 
+ADD COLUMN status_manual TEXT;
+```
+
+#### 2. Atualizar Registros Antigos
+Executar UPDATE para marcar todos os registros com `created_at` em 2025 ou antes:
+
+```sql
+UPDATE atividade_pos_venda 
+SET status_manual = 'Concluido' 
+WHERE created_at < '2026-01-01';
+```
+
+#### 3. Atualizar Hook `use-atividades-pos-venda.ts`
+Modificar a lógica de status para considerar o campo `status_manual`:
+
+- Incluir `status_manual` no SELECT da query
+- Na função que determina se a atividade está completa, verificar primeiro se `status_manual === 'Concluido'`
+- Se `status_manual` estiver preenchido, usar esse valor; caso contrário, calcular dinamicamente como hoje
+
+**Lógica atualizada:**
+```typescript
+// Se tem status_manual definido, usa ele
+if (pv.status_manual === 'Concluido') {
+  // Considera todas as seções como completas
+  return { ...atividade, isCompleta: true };
+}
+// Caso contrário, calcula dinamicamente
+```
 
 ---
 
 ### Detalhes Técnicos
 
-| Arquivo/Objeto | Mudança |
-|----------------|---------|
-| `get_calendario_eventos_unificados` (RPC) | Alterar tipo de `horario_inicio` e `horario_fim` de `time` para `text` |
-
-**SQL da migração:**
-```sql
-DROP FUNCTION IF EXISTS public.get_calendario_eventos_unificados(date, date, uuid);
-
-CREATE OR REPLACE FUNCTION public.get_calendario_eventos_unificados(
-  p_data_inicio date, 
-  p_data_fim date, 
-  p_unit_id uuid DEFAULT NULL::uuid
-)
-RETURNS TABLE(
-  evento_id text,
-  tipo_evento text,
-  unit_id uuid,
-  dia_semana text,
-  horario_inicio text,  -- Alterado de time para text
-  horario_fim text,     -- Alterado de time para text
-  sala_id uuid,
-  sala_nome text,
-  sala_cor text,
-  titulo text,
-  descricao text,
-  professor_id uuid,
-  professor_nome text,
-  professor_slack text,
-  perfil text,
-  data_especifica date,
-  total_alunos_ativos integer,
-  total_funcionarios_ativos integer,
-  total_reposicoes integer,
-  total_aulas_experimentais integer,
-  total_faltas_futuras integer,
-  created_at timestamp with time zone
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  RETURN QUERY
-  WITH reposicoes_por_turma AS (
-    SELECT r.turma_id, COUNT(*)::integer as total
-    FROM reposicoes r
-    WHERE r.data_reposicao BETWEEN p_data_inicio AND p_data_fim
-    GROUP BY r.turma_id
-  ),
-  aulas_experimentais_por_turma AS (
-    SELECT ae.turma_id, COUNT(*)::integer as total
-    FROM aulas_experimentais ae
-    WHERE ae.data_aula_experimental BETWEEN p_data_inicio AND p_data_fim
-      AND ae.active = true
-    GROUP BY ae.turma_id
-  ),
-  faltas_futuras_por_turma AS (
-    SELECT a.turma_id, COUNT(*)::integer as total
-    FROM faltas_antecipadas fa
-    JOIN alunos a ON fa.aluno_id = a.id
-    WHERE fa.data_falta BETWEEN p_data_inicio AND p_data_fim
-      AND fa.active = true
-      AND a.active = true
-    GROUP BY a.turma_id
-  )
-  SELECT 
-    vce.evento_id,
-    vce.tipo_evento,
-    vce.unit_id,
-    vce.dia_semana,
-    vce.horario_inicio,
-    vce.horario_fim,
-    vce.sala_id,
-    vce.sala_nome,
-    vce.sala_cor,
-    vce.titulo,
-    vce.descricao,
-    vce.professor_id,
-    vce.professor_nome,
-    vce.professor_slack,
-    vce.perfil,
-    vce.data_especifica,
-    vce.total_alunos_ativos,
-    vce.total_funcionarios_ativos,
-    COALESCE(rpt.total, 0)::integer as total_reposicoes,
-    COALESCE(aept.total, 0)::integer as total_aulas_experimentais,
-    COALESCE(ffpt.total, 0)::integer as total_faltas_futuras,
-    vce.created_at
-  FROM vw_calendario_eventos_unificados vce
-  LEFT JOIN reposicoes_por_turma rpt ON rpt.turma_id = vce.evento_id::uuid
-  LEFT JOIN aulas_experimentais_por_turma aept ON aept.turma_id = vce.evento_id::uuid
-  LEFT JOIN faltas_futuras_por_turma ffpt ON ffpt.turma_id = vce.evento_id::uuid
-  WHERE (p_unit_id IS NULL OR vce.unit_id = p_unit_id);
-END;
-$$;
-```
+| Item | Descrição |
+|------|-----------|
+| Tabela afetada | `atividade_pos_venda` |
+| Nova coluna | `status_manual` (TEXT, nullable) |
+| Valores possíveis | `'Concluido'` ou `NULL` |
+| Registros afetados | Todos com `created_at < 2026-01-01` |
+| Arquivos a modificar | `src/hooks/use-atividades-pos-venda.ts` |
 
 ---
 
 ### Resultado Esperado
+- Registros de dezembro de 2025 ou antes aparecerão com status "Concluído" na aba Atividades Pós-Venda
+- Novos registros (2026 em diante) continuarão usando a lógica dinâmica baseada no preenchimento dos formulários
+- O campo `status_manual` poderá ser usado futuramente para forçar status em casos específicos
 
-Após aplicar a migração:
-1. O tipo de retorno da função será compatível com os dados da view
-2. O calendário de aulas carregará corretamente
-3. As vagas serão calculadas dinamicamente com reposições, aulas experimentais e faltas futuras

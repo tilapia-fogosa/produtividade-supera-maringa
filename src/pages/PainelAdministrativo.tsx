@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { usePosMatricula, ClienteMatriculado, PosMatriculaFilters } from "@/hooks/use-pos-matricula";
 import { PosMatriculaDrawer, DrawerType } from "@/components/painel-administrativo/PosMatriculaDrawer";
 import { FichasRescisaoTab } from "@/components/painel-administrativo/FichasRescisaoTab";
+import { AtividadesPosVendaTab } from "@/components/painel-administrativo/AtividadesPosVendaTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -78,9 +79,11 @@ export default function PainelAdministrativo() {
         </div>
       </div>
 
-      <Tabs defaultValue="pos-matricula" className="w-full">
+      <Tabs defaultValue="atividades-pos-venda" className="w-full">
         <TabsList>
-          <TabsTrigger value="pos-matricula">Pós-Matrícula</TabsTrigger>
+          {/* Aba Pós-Matrícula ocultada temporariamente para testes */}
+          {/* <TabsTrigger value="pos-matricula">Pós-Matrícula</TabsTrigger> */}
+          <TabsTrigger value="atividades-pos-venda">Atividades Pós-Venda</TabsTrigger>
           <TabsTrigger value="fichas-rescisao">Fichas de Rescisão</TabsTrigger>
         </TabsList>
 
@@ -273,6 +276,10 @@ export default function PainelAdministrativo() {
               Total: {clientes.length} matrícula(s)
             </p>
           )}
+        </TabsContent>
+
+        <TabsContent value="atividades-pos-venda" className="mt-4">
+          <AtividadesPosVendaTab />
         </TabsContent>
 
         <TabsContent value="fichas-rescisao" className="mt-4">
