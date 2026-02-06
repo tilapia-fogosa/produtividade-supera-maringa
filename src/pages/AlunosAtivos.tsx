@@ -526,11 +526,8 @@ export default function AlunosAtivos() {
                 </table>
               </div>
 
-              {/* Corpo com scroll interno - altura fixa para ~15 linhas */}
-              <div 
-                className="overflow-y-auto"
-                style={{ maxHeight: '420px' }}
-              >
+              {/* Corpo com scroll interno */}
+              <div className="overflow-y-auto">
                 <table className="w-full">
                   <tbody>
                     {alunosVisiveis.map(aluno => <tr 
@@ -691,12 +688,6 @@ export default function AlunosAtivos() {
             </div>
           </div>
 
-          {/* Rodapé fixo com contador */}
-          {alunosFiltrados.length > 0 && (
-            <div className="flex items-center justify-center gap-2 p-2 border-t bg-muted/30 text-xs text-muted-foreground">
-              <span>Exibindo {alunosVisiveis.length} de {alunosFiltrados.length}</span>
-            </div>
-          )}
         </CardContent>
       </Card>
 
