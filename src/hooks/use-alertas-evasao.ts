@@ -150,14 +150,43 @@ export function useAlertasEvasao() {
     setDadosAulaZero(null);
   };
 
-  const handleSubmit = async (onClose: () => void) => {
+  // Função para verificar se existe alerta pendente para o aluno
+  const verificarAlertaPendente = async (): Promise<{ existe: boolean; alertas: any[] }> => {
+    if (!alunoSelecionado) return { existe: false, alertas: [] };
+
+    const { data: alertasPendentes, error } = await supabase
+      .from('alerta_evasao')
+      .select('*')
+      .eq('aluno_id', alunoSelecionado)
+      .eq('status', 'pendente');
+
+    if (error) {
+      console.error('Erro ao verificar alertas pendentes:', error);
+      return { existe: false, alertas: [] };
+    }
+
+    return { 
+      existe: alertasPendentes && alertasPendentes.length > 0, 
+      alertas: alertasPendentes || [] 
+    };
+  };
+
+  const handleSubmit = async (onClose: () => void, forcarCriacao: boolean = false) => {
     if (!alunoSelecionado || !origemAlerta || !dataAlerta) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
         variant: "destructive",
       });
-      return;
+      return { sucesso: false, alertaPendenteExistente: false, alertasPendentes: [] };
+    }
+
+    // Verificar se existe alerta pendente (se não for criação forçada)
+    if (!forcarCriacao) {
+      const { existe, alertas } = await verificarAlertaPendente();
+      if (existe) {
+        return { sucesso: false, alertaPendenteExistente: true, alertasPendentes: alertas };
+      }
     }
 
     try {
@@ -308,6 +337,7 @@ export function useAlertasEvasao() {
       
       resetForm();
       onClose();
+      return { sucesso: true, alertaPendenteExistente: false, alertasPendentes: [] };
     } catch (error) {
       console.error('Erro ao processar alerta:', error);
       toast({
@@ -315,6 +345,7 @@ export function useAlertasEvasao() {
         description: "Não foi possível processar o alerta de evasão.",
         variant: "destructive",
       });
+      return { sucesso: false, alertaPendenteExistente: false, alertasPendentes: [] };
     } finally {
       setIsSubmitting(false);
     }
