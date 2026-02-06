@@ -25,28 +25,60 @@ const AniversariantesUploadComponent = () => {
     }
   };
 
-  const parseDate = (dateStr: string): string | null => {
-    // Formato esperado: "3/2/66" (mês/dia/ano de 2 dígitos)
-    if (!dateStr) return null;
+  const parseDate = (dateValue: any): string | null => {
+    if (!dateValue) return null;
     
+    // Se for um número, é um serial de data do Excel
+    if (typeof dateValue === 'number') {
+      // Excel usa 1/1/1900 como dia 1 (com bug do ano bissexto 1900)
+      // Ajuste: subtrair 1 porque Excel conta a partir de 1, não 0
+      // E subtrair mais 1 para corrigir o bug do Excel (considera 1900 bissexto)
+      const excelEpoch = new Date(1899, 11, 30); // 30/12/1899
+      const date = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
+      
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      
+      return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    }
+    
+    // Se for string, tentar parse no formato "M/D/YY" ou "DD/MM/YYYY"
+    const dateStr = dateValue.toString().trim();
     const parts = dateStr.split('/');
     if (parts.length !== 3) return null;
     
-    const month = parseInt(parts[0], 10);
-    const day = parseInt(parts[1], 10);
-    let year = parseInt(parts[2], 10);
+    let day: number, month: number, year: number;
+    
+    // Detectar formato: se o primeiro número > 12, assume DD/MM/YYYY
+    const first = parseInt(parts[0], 10);
+    const second = parseInt(parts[1], 10);
+    
+    if (first > 12) {
+      // Formato DD/MM/YYYY
+      day = first;
+      month = second;
+      year = parseInt(parts[2], 10);
+    } else if (second > 12) {
+      // Formato MM/DD/YYYY
+      month = first;
+      day = second;
+      year = parseInt(parts[2], 10);
+    } else {
+      // Ambíguo - assumir DD/MM/YYYY (padrão brasileiro)
+      day = first;
+      month = second;
+      year = parseInt(parts[2], 10);
+    }
     
     // Converter ano de 2 dígitos para 4 dígitos
-    // Se ano >= 30, assume 1900s, senão assume 2000s
     if (year >= 0 && year <= 29) {
       year += 2000;
     } else if (year >= 30 && year <= 99) {
       year += 1900;
     }
     
-    // Formatar para YYYY-MM-DD
-    const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    return formattedDate;
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   };
 
   const handleUpload = async () => {
