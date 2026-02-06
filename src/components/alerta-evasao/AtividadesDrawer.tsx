@@ -318,13 +318,13 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   const handleConfirmarResultado = async () => {
     if (!resultadoSelecionado || !atividadeNegociacao) return;
     
-    if (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) return;
+    if ((resultadoSelecionado === 'ajuste_temporario' || resultadoSelecionado === 'novo_atendimento_financeiro') && !dataFimAjuste) return;
     
     try {
       await processarNegociacao({
         resultado: resultadoSelecionado,
         atividadeAnteriorId: atividadeNegociacao.id,
-        dataFimAjuste: resultadoSelecionado === 'ajuste_temporario' ? new Date(dataFimAjuste) : undefined,
+        dataFimAjuste: (resultadoSelecionado === 'ajuste_temporario' || resultadoSelecionado === 'novo_atendimento_financeiro') ? new Date(dataFimAjuste) : undefined,
         observacoes: observacoesNegociacao.trim() || undefined
       });
       
