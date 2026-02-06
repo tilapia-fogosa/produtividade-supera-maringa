@@ -23,7 +23,7 @@ export function AtividadesPosVendaTab() {
   // Filtros
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined);
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined);
-  const [statusConclusao, setStatusConclusao] = useState<'todos' | 'concluido' | 'pendente'>('todos');
+  const [statusConclusao, setStatusConclusao] = useState<'todos' | 'concluido' | 'pendente'>('pendente');
 
   const filters: AtividadesPosVendaFilters = {
     dataInicio,
