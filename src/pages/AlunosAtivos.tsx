@@ -494,12 +494,6 @@ export default function AlunosAtivos() {
                       {getSortIcon('apostila')}
                     </Button>
                   </th>
-                  <th className="text-left px-2 py-1 w-[100px]">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort('dias_supera')} className="font-semibold text-xs h-7">
-                      Dias Supera
-                      {getSortIcon('dias_supera')}
-                    </Button>
-                  </th>
                   <th className="text-left px-2 py-1 w-[140px]">
                     <Button variant="ghost" size="sm" onClick={() => handleSort('data_nascimento')} className="font-semibold text-xs h-7">
                       Nascimento
@@ -550,11 +544,6 @@ export default function AlunosAtivos() {
                       <td className="px-2 py-1 text-xs w-[120px]">{aluno.professor_nome || 'Não atribuído'}</td>
                       <td className="px-2 py-1 w-[100px]">
                         {aluno.ultima_apostila ? <Badge variant="secondary" className="bg-violet-400 text-[10px] px-1 py-0">{aluno.ultima_apostila}</Badge> : <span className="text-muted-foreground text-xs">-</span>}
-                      </td>
-                      <td className="px-2 py-1 w-[100px]">
-                        <Badge variant={aluno.dias_supera && aluno.dias_supera > 30 ? "default" : "secondary"} className={`text-[10px] px-1 py-0 ${aluno.dias_supera && aluno.dias_supera < 90 ? "bg-orange-200 text-orange-800 border-orange-300" : aluno.dias_supera && aluno.dias_supera > 30 ? "bg-green-100 text-green-800" : ""}`}>
-                          {aluno.dias_supera || 0} dias
-                        </Badge>
                       </td>
                       <td className="px-2 py-1 w-[140px]">
                         {editandoDataNascimento === aluno.id ? (
