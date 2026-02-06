@@ -79,9 +79,10 @@ export default function PainelAdministrativo() {
         </div>
       </div>
 
-      <Tabs defaultValue="pos-matricula" className="w-full">
+      <Tabs defaultValue="atividades-pos-venda" className="w-full">
         <TabsList>
-          <TabsTrigger value="pos-matricula">Pós-Matrícula</TabsTrigger>
+          {/* Aba Pós-Matrícula ocultada temporariamente para testes */}
+          {/* <TabsTrigger value="pos-matricula">Pós-Matrícula</TabsTrigger> */}
           <TabsTrigger value="atividades-pos-venda">Atividades Pós-Venda</TabsTrigger>
           <TabsTrigger value="fichas-rescisao">Fichas de Rescisão</TabsTrigger>
         </TabsList>
