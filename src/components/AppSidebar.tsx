@@ -225,13 +225,13 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        {adminItems.length > 0 && (
+        {(isAdmin || isAdministrativo) && administrativoItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
-              Gestão
+              Administrativo
             </SidebarGroupLabel>
             <SidebarMenu>
-              {adminItems.map((item) => (
+              {administrativoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
@@ -250,13 +250,13 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {(isAdmin || isAdministrativo) && administrativoItems.length > 0 && (
+        {adminItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
-              Administrativo
+              Gestão
             </SidebarGroupLabel>
             <SidebarMenu>
-              {administrativoItems.map((item) => (
+              {adminItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
