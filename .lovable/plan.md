@@ -1,34 +1,21 @@
 
 
-## Exibir `full_name` ao inves de `client_name` na aba Atividades Pos-Venda
+## Reorganizar Barra Lateral em 3 Grupos
 
-Atualmente a coluna "Nome" na tabela de Atividades Pos-Venda exibe o campo `client_name`. A alteracao fara com que o sistema priorize o campo `full_name` e use `client_name` apenas como fallback.
+### Objetivo
+Transformar os 2 grupos atuais do sidebar em 3 grupos:
 
----
+1. **Menu Principal** -- permanece como está (visivel para todos)
+2. **Gestão** -- o grupo atual "Administração" renomeado, continua visivel apenas para admins, com os itens: Funcionários, Alertas de Falta, Alertas de Evasão, Configurações, Controle de Ponto, Registro de Ponto
+3. **Administrativo** -- novo grupo, visivel para perfis `admin` e `administrativo`, com o item: Painel Administrativo
 
-### Alteracoes necessarias
+### Alterações Técnicas
 
-**1. Hook `src/hooks/use-atividades-pos-venda.ts`**
+**Arquivo:** `src/components/AppSidebar.tsx`
 
-- Adicionar `full_name` a interface `AtividadePosVenda` (campo opcional: `full_name?: string | null`)
-- No mapeamento dos resultados, definir `client_name` com a logica: `pv.full_name || pv.client_name || "Sem nome"`
-- O campo `full_name` ja esta sendo buscado no select da query, entao nao precisa alterar a consulta
-
-**2. Nenhuma alteracao no componente `AtividadesPosVendaTab.tsx`**
-
-- O componente ja exibe `atividade.client_name`, que passara a conter o valor correto apos a mudanca no hook
-
----
-
-### Resumo tecnico
-
-Apenas uma linha precisa ser alterada no hook, na linha onde o `client_name` e atribuido no `return` do `.map()`:
-
-```
-// De:
-client_name: pv.client_name || "Sem nome",
-
-// Para:
-client_name: pv.full_name || pv.client_name || "Sem nome",
-```
+- Renomear o label do grupo "Administração" para "Gestão"
+- Remover "Painel Administrativo" do array `additionalItems`
+- Criar um novo array `administrativoItems` contendo apenas "Painel Administrativo"
+- Renderizar o novo grupo "Administrativo" condicionalmente: visivel quando o perfil for `admin` ou `administrativo`
+- Utilizar o hook `useUserPermissions` já existente (propriedade `isAdministrativo`) para a verificação de acesso
 
