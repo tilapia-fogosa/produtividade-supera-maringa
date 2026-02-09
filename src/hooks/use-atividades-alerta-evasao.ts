@@ -748,6 +748,17 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             data_agendada: dataFormatada
           }
         ];
+        
+        // Marca o alerta como retido temporariamente (volta a pendente 40 dias antes da data agendada)
+        const { error: alertaRetidoError } = await supabase
+          .from('alerta_evasao')
+          .update({ 
+            status: 'retido',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', alertaEvasaoId);
+        
+        if (alertaRetidoError) throw alertaRetidoError;
       } else if (resultado === 'ajuste_definitivo') {
         // Ajuste definitivo: 2 tarefas + resolve o alerta
         tarefas = [

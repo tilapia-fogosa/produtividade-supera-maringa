@@ -136,11 +136,56 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         }
       }
 
+      // Para alertas retidos com ajuste temporário, verificar se deve voltar a pendente
+      // (40 dias antes da data_agendada da próxima atividade financeira pendente)
+      // Buscar atividades pendentes de atendimento financeiro para alertas retidos
+      const alertasRetidosIds = (data || [])
+        .filter(a => a.status === 'retido')
+        .map(a => a.id);
+      
+      let alertasQueDevemVoltarPendente: Set<string> = new Set();
+      
+      if (alertasRetidosIds.length > 0) {
+        const { data: atividadesFinanceiras } = await supabase
+          .from('atividades_alerta_evasao')
+          .select('alerta_evasao_id, data_agendada')
+          .in('alerta_evasao_id', alertasRetidosIds)
+          .eq('tipo_atividade', 'atendimento_financeiro')
+          .eq('status', 'pendente')
+          .not('data_agendada', 'is', null);
+        
+        if (atividadesFinanceiras) {
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          
+          for (const af of atividadesFinanceiras) {
+            if (af.data_agendada) {
+              const dataAgendada = new Date(af.data_agendada + 'T00:00:00');
+              const diffMs = dataAgendada.getTime() - hoje.getTime();
+              const diffDias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+              
+              // Se faltam 40 dias ou menos, volta a pendente
+              if (diffDias <= 40) {
+                alertasQueDevemVoltarPendente.add(af.alerta_evasao_id);
+              }
+            }
+          }
+        }
+      }
+
       // Aplicar filtro de nome do aluno no lado do cliente e adicionar última atividade
-      let alertasFiltrados = (data as AlertaEvasao[]).map(alerta => ({
-        ...alerta,
-        ultima_atividade: atividadesMap[alerta.id] || null
-      }));
+      let alertasFiltrados = (data as AlertaEvasao[]).map(alerta => {
+        // Se o alerta é retido mas deve voltar a pendente (ajuste temporário com prazo próximo)
+        const statusExibido = (alerta.status === 'retido' && alertasQueDevemVoltarPendente.has(alerta.id))
+          ? 'pendente'
+          : alerta.status;
+        
+        return {
+          ...alerta,
+          status: statusExibido,
+          ultima_atividade: atividadesMap[alerta.id] || null
+        };
+      });
       
       if (filtros?.nome_aluno) {
         alertasFiltrados = alertasFiltrados.filter(alerta => 
