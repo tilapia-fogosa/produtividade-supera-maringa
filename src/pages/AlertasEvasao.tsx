@@ -19,7 +19,7 @@ const AlertasEvasao = () => {
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [processouUrlParam, setProcessouUrlParam] = useState(false);
   const [filtros, setFiltros] = useState({
-    status: 'todos',
+    status: 'pendente',
     origem_alerta: 'todos',
     data_inicio: '',
     data_fim: '',
@@ -211,8 +211,8 @@ const AlertasEvasao = () => {
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={() => handleFiltroChange({ 
-                status: 'todos',
+            onClick={() => handleFiltroChange({ 
+                status: 'pendente',
                 origem_alerta: 'todos',
                 data_inicio: '', 
                 data_fim: '', 
