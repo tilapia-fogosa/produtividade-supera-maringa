@@ -148,17 +148,19 @@ const additionalItems = [
     icon: Clock,
     requiresAdmin: true,
   },
+];
+
+const administrativoItems = [
   {
     title: "Painel Administrativo",
     url: "/painel-administrativo",
     icon: LayoutDashboard,
-    requiresAdmin: true,
   },
 ];
 
 export function AppSidebar() {
   const { user } = useAuth();
-  const { isAdmin, userRole } = useUserPermissions();
+  const { isAdmin, isAdministrativo, userRole } = useUserPermissions();
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -226,10 +228,35 @@ export function AppSidebar() {
         {adminItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
-              Administração
+              Gestão
             </SidebarGroupLabel>
             <SidebarMenu>
               {adminItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={location.pathname === item.url}
+                    className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    onClick={() => navigate(item.url)}
+                  >
+                    <button className="flex items-center space-x-3 w-full p-2 rounded-md transition-colors">
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="font-medium">{item.title}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
+
+        {(isAdmin || isAdministrativo) && administrativoItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
+              Administrativo
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {administrativoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
