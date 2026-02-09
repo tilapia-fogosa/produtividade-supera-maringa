@@ -128,7 +128,7 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
         return {
           id: pv.id,
           client_id: pv.client_id,
-          client_name: pv.client_name || "Sem nome",
+          client_name: pv.full_name || pv.client_name || "Sem nome",
           created_at: pv.created_at,
           cadastrais_completo,
           comerciais_completo,
