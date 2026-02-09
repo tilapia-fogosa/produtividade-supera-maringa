@@ -74,19 +74,9 @@ const items = [
     icon: MapPin,
   },
   {
-    title: "Eventos",
-    url: "/eventos",
-    icon: Calendar,
-  },
-  {
     title: "Alunos Ativos",
     url: "/alunos-ativos",
     icon: Users,
-  },
-  {
-    title: "Sincronizar Turmas",
-    url: "/sincronizar-turmas",
-    icon: FileSpreadsheet,
   },
   {
     title: "Correções AH",
@@ -155,6 +145,16 @@ const administrativoItems = [
     title: "Painel Administrativo",
     url: "/painel-administrativo",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Eventos",
+    url: "/eventos",
+    icon: Calendar,
+  },
+  {
+    title: "Sincronizar Turmas",
+    url: "/sincronizar-turmas",
+    icon: FileSpreadsheet,
   },
 ];
 
