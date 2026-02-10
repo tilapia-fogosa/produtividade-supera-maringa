@@ -1,69 +1,35 @@
 
 
-## Adicionar opcao "Adicionar Comentario" no modal de alerta duplicado
+## Correcao do RLS - Isolamento por Unidade (Alunos e Professores)
 
-### Resumo
-Quando o usuario tenta criar um alerta de evasao e ja existe um pendente, o modal de confirmacao ganhara um terceiro botao: "Adicionar Comentario". Ao clicar, o modal expande verticalmente revelando um campo de texto e um botao de enviar. O comentario sera salvo como uma atividade do tipo `comentario` com status `concluida`, vinculada ao primeiro alerta pendente.
+### Problema
 
-### Alteracoes
+A tabela `alunos` possui **duas** policies de SELECT conflitantes:
 
-**1. Adicionar novo tipo de atividade `comentario`**
+1. `alunos_select` -- usa `user_has_access_to_unit(unit_id)` (correta)
+2. `authenticated_read_alunos` -- usa apenas `(active = true)` (problematica)
 
-Arquivo: `src/hooks/use-atividades-alerta-evasao.ts`
-- Adicionar `'comentario'` ao type `TipoAtividadeEvasao`
-- Adicionar entrada no array `TIPOS_ATIVIDADE` com label "Comentario" e uma cor (ex: `bg-gray-500`)
+Como ambas sao PERMISSIVE, o Postgres aplica OR entre elas. Isso significa que **qualquer usuario autenticado ve todos os alunos ativos**, independente da unidade. A policy correta (`alunos_select`) acaba sendo ignorada na pratica.
 
-**2. Atualizar o tipo no Supabase**
+A tabela `professores` esta OK -- possui apenas a policy `professores_select` com filtro de unidade.
 
-- Criar migration para adicionar `'comentario'` ao enum `tipo_atividade_evasao` no banco de dados (se existir enum, senao apenas inserir diretamente)
+### Solucao
 
-**3. Modificar o modal de confirmacao de duplicidade**
-
-Arquivo: `src/components/alerta-evasao/AlertaEvasaoModal.tsx`
-- Adicionar estados: `showComentarioForm` (boolean) e `comentarioTexto` (string)
-- Adicionar terceiro botao "Adicionar Comentario" no footer do AlertDialog
-- Quando clicado, expandir o modal mostrando:
-  - Um `Textarea` para digitar o comentario
-  - Um botao "Enviar" que insere a atividade na tabela `atividades_alerta_evasao`
-- Ao enviar:
-  - Inserir registro na tabela `atividades_alerta_evasao` com:
-    - `alerta_evasao_id`: ID do primeiro alerta pendente (`alertasPendentes[0].id`)
-    - `tipo_atividade`: `'comentario'`
-    - `descricao`: texto digitado pelo usuario
-    - `status`: `'concluida'`
-    - `responsavel_nome`: nome do funcionario logado
-    - `concluido_por_nome`: nome do funcionario logado
-  - Fechar o modal e resetar o formulario
+Remover a policy `authenticated_read_alunos` da tabela `alunos`. A policy `alunos_select` ja cobre corretamente o acesso via `user_has_access_to_unit(unit_id)`.
 
 ### Secao Tecnica
 
-```text
-Modal atual:
-+----------------------------------+
-| Alerta ja existente              |
-| [lista de alertas pendentes]     |
-|                                  |
-| [Cancelar] [Criar mesmo assim]  |
-+----------------------------------+
+**Migration SQL:**
 
-Modal apos clicar "Adicionar Comentario":
-+----------------------------------+
-| Alerta ja existente              |
-| [lista de alertas pendentes]     |
-|                                  |
-| +------------------------------+|
-| | Textarea (comentario)        ||
-| |                              ||
-| +------------------------------+|
-| [Enviar]                         |
-|                                  |
-| [Cancelar] [Adicionar Coment.]  |
-|            [Criar mesmo assim]  |
-+----------------------------------+
+```sql
+DROP POLICY IF EXISTS "authenticated_read_alunos" ON public.alunos;
 ```
 
-Arquivos modificados:
-- `src/hooks/use-atividades-alerta-evasao.ts` (adicionar tipo)
-- `src/components/alerta-evasao/AlertaEvasaoModal.tsx` (UI e logica de insercao)
-- Migration SQL (adicionar valor ao enum)
+Apenas isso. As demais policies (`alunos_select`, `alunos_insert`, `alunos_update`, `alunos_delete`) ja estao corretas e usam `user_has_access_to_unit(unit_id)`.
+
+**Funcao existente `user_has_access_to_unit`** -- ja trata o caso de admin (acesso global) e verifica vinculo ativo na `unit_users`. Nenhuma alteracao necessaria.
+
+**Impacto:** Apos a remocao, usuarios so verao alunos das unidades vinculadas a eles na tabela `unit_users`. Admins continuam vendo tudo.
+
+**Risco:** Se algum usuario nao estiver vinculado a nenhuma unidade na `unit_users`, ele deixara de ver qualquer aluno. Isso e o comportamento esperado.
 
