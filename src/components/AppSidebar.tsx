@@ -159,7 +159,7 @@ const administrativoItems = [
 ];
 
 export function AppSidebar() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isAdmin, isAdministrativo, userRole } = useUserPermissions();
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
@@ -284,12 +284,12 @@ export function AppSidebar() {
           >
             <Avatar className="h-8 w-8 border-2 border-primary/20">
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
+                {(profile?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 text-left">
-              <span className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.email || 'Usuário'}
+              <span className="text-sm font-medium text-sidebar-foreground break-words line-clamp-2 leading-tight">
+                {profile?.full_name || 'Usuário'}
               </span>
               <span className="text-xs text-sidebar-foreground/70">
                 {isAdmin ? 'Administrador' : isTeacher ? 'Professor' : isFuncionario ? 'Funcionário' : 'Usuário'}
