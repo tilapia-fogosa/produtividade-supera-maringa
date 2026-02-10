@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "authenticated_read_alunos" ON public.alunos;
