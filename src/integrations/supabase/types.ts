@@ -8159,6 +8159,7 @@ export type Database = {
         | "lancar_multa_sgs"
         | "envio_agradecimento_nps"
         | "digitalizar_rescisao"
+        | "comentario"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8396,6 +8397,7 @@ export const Constants = {
         "lancar_multa_sgs",
         "envio_agradecimento_nps",
         "digitalizar_rescisao",
+        "comentario",
       ],
       tipo_evento_sala: [
         "manutencao",
