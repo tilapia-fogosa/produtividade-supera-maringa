@@ -8,31 +8,19 @@ export const useUltimaSincronizacao = () => {
   return useQuery({
     queryKey: ["ultimas-sincronizacoes", activeUnit?.id],
     queryFn: async () => {
-      console.log('🔄 Buscando últimas sincronizações de turmas');
-      
-      let query = supabase
+      const { data, error } = await supabase
         .from('data_imports')
         .select('*')
         .eq('import_type', 'turmas-xls')
         .eq('status', 'completed')
+        .eq('unit_id', activeUnit!.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (activeUnit?.id) {
-        query = query.eq('unit_id', activeUnit.id);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('❌ Erro ao buscar sincronizações:', error);
-        throw error;
-      }
-      
-      console.log('✅ Sincronizações encontradas:', data);
-      
+      if (error) throw error;
       return data || [];
     },
+    enabled: !!activeUnit?.id,
     refetchInterval: 30000,
   });
 };
