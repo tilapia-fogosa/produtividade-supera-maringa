@@ -19,7 +19,8 @@ export type TipoAtividadeEvasao =
   | 'criar_ficha_rescisao'
   | 'lancar_multa_sgs'
   | 'envio_agradecimento_nps'
-  | 'digitalizar_rescisao';
+  | 'digitalizar_rescisao'
+  | 'comentario';
 
 export type StatusAtividade = 'pendente' | 'concluida';
 
@@ -64,6 +65,7 @@ export const TIPOS_ATIVIDADE: { value: TipoAtividadeEvasao; label: string; color
   { value: 'digitalizar_rescisao', label: 'Digitalizar Rescisão', color: 'bg-red-400' },
   { value: 'corrigir_valores_sgs', label: 'Corrigir SGS', color: 'bg-yellow-500' },
   { value: 'corrigir_valores_assinatura', label: 'Corrigir Assinatura', color: 'bg-yellow-500' },
+  { value: 'comentario', label: 'Comentário', color: 'bg-gray-500' },
 ];
 
 const WEBHOOK_URL = 'https://webhookn8n.agenciakadin.com.br/webhook/alertas-evasao-slack';
