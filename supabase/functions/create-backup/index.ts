@@ -112,7 +112,7 @@ serve(async (req) => {
     // Seleciona apenas colunas que existem em turmas_backup1/2
     const { data: turmas, error: turmasError } = await supabase
       .from('turmas')
-      .select('id, nome, horario_inicio, horario_fim, dia_semana, sala, categoria, professor_id, unit_id, created_at, total_alunos, ultima_sincronizacao');
+      .select('id, nome, horario_inicio, horario_fim, dia_semana, sala, professor_id, unit_id, created_at, total_alunos, ultima_sincronizacao');
 
     if (turmasError) {
       console.error('Erro ao buscar turmas:', turmasError);
