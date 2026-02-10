@@ -218,14 +218,6 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
                       onChange={(e) => setComentarioTexto(e.target.value)}
                       className="min-h-[80px] text-sm"
                     />
-                    <Button
-                      size="sm"
-                      onClick={handleEnviarComentario}
-                      disabled={!comentarioTexto.trim() || enviandoComentario}
-                      className="w-full"
-                    >
-                      {enviandoComentario ? 'Enviando...' : 'Enviar Comentário'}
-                    </Button>
                   </div>
                 )}
                 
@@ -237,14 +229,23 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            {!showComentarioForm && (
-              <Button variant="outline" onClick={handleAdicionarComentario}>
-                Adicionar Comentário
+            {!showComentarioForm ? (
+              <>
+                <Button variant="outline" onClick={handleAdicionarComentario}>
+                  Adicionar Comentário
+                </Button>
+                <Button onClick={handleConfirmCriacao}>
+                  Criar mesmo assim
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={handleEnviarComentario}
+                disabled={!comentarioTexto.trim() || enviandoComentario}
+              >
+                {enviandoComentario ? 'Enviando...' : 'Enviar Comentário'}
               </Button>
             )}
-            <Button onClick={handleConfirmCriacao}>
-              Criar mesmo assim
-            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
