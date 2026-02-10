@@ -1,72 +1,117 @@
 
 
-## Correção da Função `user_has_access_to_unit` - Renomear Parâmetro
+# Fase 6: Sincronizar Turmas - Suporte Multi-Unidade
 
-### Problema
+## Objetivo
+Remover o `MARINGA_UNIT_ID` hardcoded da sincronizacao de turmas e passar a usar a unidade ativa do usuario, garantindo que cada unidade sincronize apenas seus proprios dados.
 
-A função `user_has_access_to_unit(unit_id uuid)` possui um bug de ambiguidade: o parâmetro `unit_id` tem o mesmo nome da coluna `unit_id` na tabela `unit_users`. O Postgres resolve essa ambiguidade usando a coluna, fazendo com que a comparação `uu.unit_id = unit_id` seja sempre verdadeira (`uu.unit_id = uu.unit_id`). Isso anula o filtro por unidade em **todas** as tabelas que usam essa função via RLS.
+---
 
-### Tabelas afetadas
+## Mudancas Necessarias
 
-- `alunos` (SELECT, INSERT, UPDATE, DELETE)
-- `turmas` (SELECT, INSERT, UPDATE, DELETE)
-- `professores` (SELECT, INSERT, UPDATE, DELETE)
-- `funcionarios` (SELECT, INSERT, UPDATE, DELETE)
-- `produtividade_abaco` (SELECT, INSERT, UPDATE, DELETE)
+### 1. Frontend - `XlsUploadComponent.tsx`
+- Importar `useActiveUnit` do contexto
+- Enviar o `unit_id` da unidade ativa no body da chamada da edge function `sync-turmas-xls`
+- Se nenhuma unidade estiver ativa, bloquear o upload
 
-### Solução
+### 2. Edge Function - `sync-turmas-xls/index.ts`
+- Remover a constante `MARINGA_UNIT_ID` hardcoded (linha 42)
+- Receber o `unitId` do body da requisicao (`req.json()`)
+- Validar que o `unitId` foi enviado (retornar erro 400 se ausente)
+- Substituir todas as ~20 ocorrencias de `MARINGA_UNIT_ID` por `unitId` recebido
 
-Renomear o parâmetro de `unit_id` para `_unit_id` na função. As policies RLS não precisam ser alteradas pois chamam `user_has_access_to_unit(unit_id)` passando a **coluna** da tabela como argumento -- isso continuará funcionando corretamente.
+### 3. Hook - `use-ultima-sincronizacao.ts`
+- Importar `useActiveUnit`
+- Filtrar o historico de sincronizacoes pela unidade ativa usando `.eq('unit_id', activeUnit?.id)`
+- Incluir `activeUnit?.id` na queryKey
 
-### Plano de rollback
+### 4. Pagina - `SincronizarTurmas.tsx`
+- Nenhuma alteracao necessaria (ja consome o hook que sera atualizado)
 
-Caso a correção cause algum problema inesperado (ex: usuários deixam de ver dados que deveriam ver), basta reverter o parâmetro ao nome original. A migration incluirá o SQL de rollback comentado para referência rápida.
+---
 
-### Seção Técnica
+## Detalhes Tecnicos
 
-**Migration SQL:**
+### Alteracoes no `XlsUploadComponent.tsx`
+```typescript
+// Adicionar import
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
-```sql
-CREATE OR REPLACE FUNCTION public.user_has_access_to_unit(_unit_id uuid)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.unit_users uu
-    WHERE uu.user_id = auth.uid()
-      AND (uu.unit_id = _unit_id OR uu.role = 'admin')
-      AND uu.active = true
-  );
-END;
-$$;
+// Dentro do componente
+const { activeUnit } = useActiveUnit();
+
+// Na chamada da edge function (linha 206-211)
+const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
+  body: {
+    xlsData: previewData,
+    fileName: selectedFile?.name || 'arquivo.xlsx',
+    unitId: activeUnit?.id  // NOVO
+  }
+});
+
+// Desabilitar botao se nao houver unidade ativa
+disabled={isUploading || !previewData || !activeUnit?.id}
 ```
 
-**SQL de rollback (caso necessário, executar manualmente no SQL Editor):**
+### Alteracoes na Edge Function `sync-turmas-xls/index.ts`
+```typescript
+// Linha 39: extrair unitId do body
+const { xlsData, fileName, unitId }: { xlsData: XlsData; fileName: string; unitId: string } = await req.json();
 
-```sql
-CREATE OR REPLACE FUNCTION public.user_has_access_to_unit(unit_id uuid)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.unit_users uu
-    WHERE uu.user_id = auth.uid()
-      AND (uu.unit_id = user_has_access_to_unit.unit_id OR uu.role = 'admin')
-      AND uu.active = true
+// Remover linha 42 (MARINGA_UNIT_ID hardcoded)
+
+// Validacao
+if (!unitId) {
+  return new Response(
+    JSON.stringify({ error: 'unitId é obrigatório' }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
   );
-END;
-$$;
+}
+
+// Substituir TODAS as ocorrencias de MARINGA_UNIT_ID por unitId
+// (aprox. 20 ocorrencias nas linhas 57, 107, 117, 127, 163, 164, 188, 229, 271, 314, 353, 398, 424, 473, 521, 534)
 ```
 
-> No rollback, usamos `user_has_access_to_unit.unit_id` para qualificar explicitamente o parâmetro e evitar a ambiguidade original. Isso é uma melhoria em relação ao código atual, mas a versão com `_unit_id` é mais limpa.
+### Alteracoes no `use-ultima-sincronizacao.ts`
+```typescript
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
-**Impacto:** Após a correção, todas as 5 tabelas listadas passarão a filtrar dados corretamente por unidade. Admins continuam com acesso global.
+export const useUltimaSincronizacao = () => {
+  const { activeUnit } = useActiveUnit();
+  
+  return useQuery({
+    queryKey: ["ultimas-sincronizacoes", activeUnit?.id],
+    queryFn: async () => {
+      let query = supabase
+        .from('data_imports')
+        .select('*')
+        .eq('import_type', 'turmas-xls')
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-**Risco:** Usuários que não estiverem vinculados a nenhuma unidade na `unit_users` deixarão de ver qualquer dado dessas tabelas. Isso é o comportamento esperado.
+      if (activeUnit?.id) {
+        query = query.eq('unit_id', activeUnit.id);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
+};
+```
+
+---
+
+## Resumo de Impacto
+
+| Arquivo | Tipo de Alteracao |
+|---|---|
+| `src/components/sync/XlsUploadComponent.tsx` | Enviar `unitId` para edge function |
+| `supabase/functions/sync-turmas-xls/index.ts` | Receber `unitId` dinamico, remover hardcode |
+| `src/hooks/use-ultima-sincronizacao.ts` | Filtrar historico por unidade |
+
+Nenhuma migracao de banco necessaria - a tabela `data_imports` ja possui coluna `unit_id`.
 
