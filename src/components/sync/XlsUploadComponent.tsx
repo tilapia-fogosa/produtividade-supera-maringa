@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 interface XlsData {
   turmas: any[];
@@ -17,6 +18,7 @@ const XlsUploadComponent = () => {
   const [previewData, setPreviewData] = useState<XlsData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { activeUnit } = useActiveUnit();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -206,7 +208,8 @@ const XlsUploadComponent = () => {
       const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
         body: {
           xlsData: previewData,
-          fileName: selectedFile?.name || 'arquivo.xlsx'
+          fileName: selectedFile?.name || 'arquivo.xlsx',
+          unitId: activeUnit?.id
         }
       });
 
@@ -332,7 +335,7 @@ const XlsUploadComponent = () => {
 
               <Button 
                 onClick={handleUpload} 
-                disabled={isUploading || !previewData}
+                disabled={isUploading || !previewData || !activeUnit?.id}
                 className="w-full"
               >
                 {isUploading ? (
