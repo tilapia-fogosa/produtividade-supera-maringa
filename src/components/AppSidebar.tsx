@@ -250,7 +250,7 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        {(isAdmin || isAdministrativo) && filteredAdministrativoItems.length > 0 && (
+        {(isAdmin || isAdministrativo || isFranqueado) && filteredAdministrativoItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
               Administrativo
