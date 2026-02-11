@@ -258,7 +258,7 @@ serve(async (req) => {
           if (horarioMatch) {
             horarioInicio = horarioMatch[1];
             const [horas, minutos] = horarioInicio.split(':').map(Number);
-            const fimHoras = horas + 1;
+            const fimHoras = horas + 2;
             horarioFim = `${String(fimHoras).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
           }
 
