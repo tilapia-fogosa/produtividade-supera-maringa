@@ -6936,39 +6936,74 @@ export type Database = {
         }[]
       }
       get_leads_stats: { Args: { p_unit_ids: string[] }; Returns: Json }
-      get_lista_aulas_experimentais: {
-        Args: never
-        Returns: {
-          aula_experimental_id: string
-          cliente_nome: string
-          data_aula_experimental: string
-          descricao_cliente: string
-          responsavel_id: string
-          responsavel_nome: string
-          responsavel_tipo: string
-          turma_id: string
-          turma_nome: string
-          unit_id: string
-        }[]
-      }
-      get_lista_completa_reposicoes: {
-        Args: { p_incluir_anteriores?: boolean }
-        Returns: {
-          aluno_id: string
-          aluno_nome: string
-          data_falta: string
-          data_reposicao: string
-          observacoes: string
-          pessoa_tipo: string
-          reposicao_id: string
-          turma_original_id: string
-          turma_original_nome: string
-          turma_reposicao_id: string
-          turma_reposicao_nome: string
-          turma_reposicao_professor: string
-          unit_id: string
-        }[]
-      }
+      get_lista_aulas_experimentais:
+        | {
+            Args: never
+            Returns: {
+              aula_experimental_id: string
+              cliente_nome: string
+              data_aula_experimental: string
+              descricao_cliente: string
+              responsavel_id: string
+              responsavel_nome: string
+              responsavel_tipo: string
+              turma_id: string
+              turma_nome: string
+              unit_id: string
+            }[]
+          }
+        | {
+            Args: { p_unit_id?: string }
+            Returns: {
+              aula_experimental_id: string
+              cliente_nome: string
+              data_aula_experimental: string
+              descricao_cliente: string
+              responsavel_id: string
+              responsavel_nome: string
+              responsavel_tipo: string
+              turma_id: string
+              turma_nome: string
+              unit_id: string
+            }[]
+          }
+      get_lista_completa_reposicoes:
+        | {
+            Args: { p_incluir_anteriores?: boolean }
+            Returns: {
+              aluno_id: string
+              aluno_nome: string
+              data_falta: string
+              data_reposicao: string
+              observacoes: string
+              pessoa_tipo: string
+              reposicao_id: string
+              turma_original_id: string
+              turma_original_nome: string
+              turma_reposicao_id: string
+              turma_reposicao_nome: string
+              turma_reposicao_professor: string
+              unit_id: string
+            }[]
+          }
+        | {
+            Args: { p_incluir_anteriores?: boolean; p_unit_id?: string }
+            Returns: {
+              aluno_id: string
+              aluno_nome: string
+              data_falta: string
+              data_reposicao: string
+              observacoes: string
+              pessoa_tipo: string
+              reposicao_id: string
+              turma_original_id: string
+              turma_original_nome: string
+              turma_reposicao_id: string
+              turma_reposicao_nome: string
+              turma_reposicao_professor: string
+              unit_id: string
+            }[]
+          }
       get_loss_reasons_report: {
         Args: {
           p_created_by_ids?: string[]

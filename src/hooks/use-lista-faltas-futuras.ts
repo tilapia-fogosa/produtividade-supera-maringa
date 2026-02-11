@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export type FaltaFutura = {
   id: string;
@@ -14,12 +15,14 @@ export type FaltaFutura = {
 };
 
 export const useListaFaltasFuturas = () => {
+  const { activeUnit } = useActiveUnit();
+
   return useQuery({
-    queryKey: ["lista-faltas-futuras"],
+    queryKey: ["lista-faltas-futuras", activeUnit?.id],
     queryFn: async () => {
       console.log('🗓️ useListaFaltasFuturas - Buscando faltas futuras');
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('faltas_antecipadas')
         .select(`
           id,
@@ -33,7 +36,13 @@ export const useListaFaltasFuturas = () => {
           turma_id
         `)
         .eq('active', true)
-        .order('data_falta', { ascending: true }); // Ordenar por data da falta (mais antiga primeiro)
+        .order('data_falta', { ascending: true });
+
+      if (activeUnit?.id) {
+        query = query.eq('unit_id', activeUnit.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('❌ Erro ao buscar faltas futuras:', error);
