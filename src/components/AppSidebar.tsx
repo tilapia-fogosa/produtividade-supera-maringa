@@ -198,8 +198,10 @@ export function AppSidebar() {
     return true;
   });
 
+  const isFranqueado = userRole === 'franqueado';
+
   const adminItems = additionalItems.filter(item => {
-    if (!isAdmin) return false;
+    if (!isAdmin && !isFranqueado) return false;
     if (item.maringaOnly && !isMaringa) return false;
     return true;
   });
