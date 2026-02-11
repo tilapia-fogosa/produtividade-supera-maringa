@@ -203,6 +203,7 @@ export function AppSidebar() {
   const adminItems = additionalItems.filter(item => {
     if (!isAdmin && !isFranqueado) return false;
     if (item.maringaOnly && !isMaringa) return false;
+    // Franqueado não precisa de requiresAdmin, já tem acesso
     return true;
   });
 
