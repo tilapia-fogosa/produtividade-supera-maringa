@@ -22,6 +22,7 @@ import { AlertaEvasaoForm } from './AlertaEvasaoForm';
 import { AulaZeroSidePanelView } from './AulaZeroSidePanelView';
 import { useAlertasEvasao } from '@/hooks/use-alertas-evasao';
 import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -37,6 +38,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
   const [showComentarioForm, setShowComentarioForm] = useState(false);
   const [comentarioTexto, setComentarioTexto] = useState('');
   const [enviandoComentario, setEnviandoComentario] = useState(false);
+  const { activeUnit } = useActiveUnit();
   
   const { funcionarioNome } = useCurrentFuncionario();
   
@@ -102,6 +104,7 @@ export function AlertaEvasaoModal({ isOpen, onClose }: AlertaEvasaoModalProps) {
           responsavel_nome: nomeResponsavel,
           concluido_por_id: user?.id || null,
           concluido_por_nome: nomeResponsavel,
+          unit_id: activeUnit?.id || alertasPendentes[0].unit_id || '0df79a04-444e-46ee-b218-59e4b1835f4a',
         });
       
       setShowConfirmDialog(false);

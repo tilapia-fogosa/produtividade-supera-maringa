@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 export interface AtividadeAlerta {
   id: string;
@@ -50,11 +51,13 @@ interface FiltrosAlertasEvasao {
 }
 
 export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
+  const { activeUnit } = useActiveUnit();
   const page = filtros?.page || 1;
   const pageSize = filtros?.pageSize || 100;
 
   return useQuery({
-    queryKey: ['alertas-evasao-lista', filtros],
+    queryKey: ['alertas-evasao-lista', filtros, activeUnit?.id],
+    enabled: !!activeUnit?.id,
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -76,6 +79,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
           )
         `, { count: 'exact' })
         .eq('aluno.active', true)
+        .eq('unit_id', activeUnit!.id)
         .order('data_alerta', { ascending: false })
         .range(from, to);
       
@@ -197,7 +201,8 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
       let countQuery = supabase
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
-        .eq('alunos.active', true);
+        .eq('alunos.active', true)
+        .eq('unit_id', activeUnit!.id);
       
       if (filtros?.status) {
         countQuery = countQuery.eq('status', filtros.status as any);
@@ -224,6 +229,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
+        .eq('unit_id', activeUnit!.id)
         .eq('status', 'pendente');
       
       if (filtros?.data_inicio) {
@@ -243,6 +249,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
+        .eq('unit_id', activeUnit!.id)
         .eq('status', 'retido');
       
       if (filtros?.data_inicio) {
@@ -262,6 +269,7 @@ export const useAlertasEvasaoLista = (filtros?: FiltrosAlertasEvasao) => {
         .from('alerta_evasao')
         .select('*, alunos!inner(active)', { count: 'exact', head: true })
         .eq('alunos.active', true)
+        .eq('unit_id', activeUnit!.id)
         .eq('status', 'evadido');
       
       if (filtros?.data_inicio) {

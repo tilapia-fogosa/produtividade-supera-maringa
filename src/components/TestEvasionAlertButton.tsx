@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SendIcon, LoaderCircle } from 'lucide-react';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 interface TestEvasionAlertButtonProps {
   alunoId?: string;
@@ -12,6 +13,7 @@ interface TestEvasionAlertButtonProps {
 const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
+  const { activeUnit } = useActiveUnit();
 
   const handleCreateEvasionAlert = async () => {
     try {
@@ -83,8 +85,9 @@ const TestEvasionAlertButton = ({ alunoId }: TestEvasionAlertButtonProps) => {
         .insert({
           aluno_id: aluno_id,
           descritivo: 'Este é um alerta de teste enviado para o Slack',
-          origem_alerta: 'outro', // Valor válido do enum
-          responsavel: 'Sistema de Teste'
+          origem_alerta: 'outro',
+          responsavel: 'Sistema de Teste',
+          unit_id: activeUnit?.id || '0df79a04-444e-46ee-b218-59e4b1835f4a'
         })
         .select('id')
         .single();
