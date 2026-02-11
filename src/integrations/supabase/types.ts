@@ -7519,6 +7519,14 @@ export type Database = {
       unpublish_update: { Args: { p_update_id: string }; Returns: boolean }
       update_existing_kanban_cards_history: { Args: never; Returns: undefined }
       user_has_access_to_unit: { Args: { unit_id: string }; Returns: boolean }
+      user_has_role_in_unit: {
+        Args: {
+          p_roles: Database["public"]["Enums"]["user_role"][]
+          p_unit_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       user_has_unit_access: { Args: { p_unit_id: string }; Returns: boolean }
       verificar_conflito_sala: {
         Args: {
