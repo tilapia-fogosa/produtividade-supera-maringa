@@ -93,7 +93,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro ao deslogar:', error);
+    }
+    // Limpar estado local mesmo se a API falhar (sessão expirada)
+    setUser(null);
+    setSession(null);
+    setProfile(null);
   };
 
   useEffect(() => {
