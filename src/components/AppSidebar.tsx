@@ -174,11 +174,10 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('Erro ao deslogar:', error);
     }
-    // Forçar limpeza local caso a sessão já tenha expirado
     window.location.href = '/auth/login';
   };
 
