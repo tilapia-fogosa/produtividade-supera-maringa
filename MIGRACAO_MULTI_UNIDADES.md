@@ -657,7 +657,10 @@ A tabela `data_imports` já possui a coluna `unit_id` (NOT NULL), portanto **nã
 
 ---
 
-## Fase 7: Tela Calendário de Aulas - Análise Detalhada
+## Fase 7: Tela Calendário de Aulas - ✅ CONCLUÍDA
+
+> **Data de conclusão:** 11/02/2026
+> **Nota:** Os hooks usam `useActiveUnit` internamente ao invés de receber `unitId` como prop nos modais.
 
 ### 7.1 Visão Geral da Arquitetura
 
@@ -996,56 +999,44 @@ export const ListaFaltasFuturasModal = ({ open, onOpenChange, unitId }: ListaFal
 ### 7.6 Checklist de Tarefas - Tela Calendário de Aulas
 
 #### Banco de Dados (RPCs)
-- [ ] Atualizar RPC `get_lista_completa_reposicoes`:
-  - [ ] Dropar função existente
-  - [ ] Criar nova com parâmetro `p_unit_id uuid DEFAULT NULL`
-  - [ ] Adicionar filtro `(p_unit_id IS NULL OR r.unit_id = p_unit_id)`
+- [x] Atualizar RPC `get_lista_completa_reposicoes`:
+  - [x] Dropar função existente
+  - [x] Criar nova com parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [x] Adicionar filtro `(p_unit_id IS NULL OR r.unit_id = p_unit_id)`
 
-- [ ] Atualizar RPC `get_lista_aulas_experimentais`:
-  - [ ] Dropar função existente
-  - [ ] Criar nova com parâmetro `p_unit_id uuid DEFAULT NULL`
-  - [ ] Adicionar filtro `(p_unit_id IS NULL OR ae.unit_id = p_unit_id)`
+- [x] Atualizar RPC `get_lista_aulas_experimentais`:
+  - [x] Dropar função existente
+  - [x] Criar nova com parâmetro `p_unit_id uuid DEFAULT NULL`
+  - [x] Adicionar filtro `(p_unit_id IS NULL OR ae.unit_id = p_unit_id)`
 
-#### Frontend (Hooks)
-- [ ] Atualizar `use-lista-reposicoes.ts`:
-  - [ ] Adicionar parâmetro `unitId?: string`
-  - [ ] Passar `p_unit_id` para RPC
-  - [ ] Incluir `unitId` na queryKey
+#### Frontend (Hooks) — Usam `useActiveUnit` internamente
+- [x] Atualizar `use-lista-reposicoes.ts`:
+  - [x] Usar `useActiveUnit` internamente
+  - [x] Passar `p_unit_id` para RPC
+  - [x] Incluir `unitId` na queryKey
 
-- [ ] Atualizar `use-lista-aulas-experimentais.ts`:
-  - [ ] Adicionar parâmetro `unitId?: string`
-  - [ ] Passar `p_unit_id` para RPC
-  - [ ] Incluir `unitId` na queryKey
+- [x] Atualizar `use-lista-aulas-experimentais.ts`:
+  - [x] Usar `useActiveUnit` internamente
+  - [x] Passar `p_unit_id` para RPC
+  - [x] Incluir `unitId` na queryKey
 
-- [ ] Atualizar `use-lista-faltas-futuras.ts`:
-  - [ ] Adicionar parâmetro `unitId?: string`
-  - [ ] Adicionar `.eq('unit_id', unitId)` quando unitId existir
-  - [ ] Incluir `unitId` na queryKey
+- [x] Atualizar `use-lista-faltas-futuras.ts`:
+  - [x] Usar `useActiveUnit` internamente
+  - [x] Adicionar `.eq('unit_id', unitId)` quando unitId existir
+  - [x] Incluir `unitId` na queryKey
 
-#### Frontend (Modais)
-- [ ] Atualizar `ListaReposicoesModal.tsx`:
-  - [ ] Adicionar prop `unitId?: string`
-  - [ ] Passar `unitId` para o hook
-
-- [ ] Atualizar `ListaAulasExperimentaisModal.tsx`:
-  - [ ] Adicionar prop `unitId?: string`
-  - [ ] Passar `unitId` para o hook
-
-- [ ] Atualizar `ListaFaltasFuturasModal.tsx`:
-  - [ ] Adicionar prop `unitId?: string`
-  - [ ] Passar `unitId` para o hook
-
-- [ ] Atualizar `CalendarioAulas.tsx`:
-  - [ ] Passar `activeUnit?.id` para `ListaReposicoesModal`
-  - [ ] Passar `activeUnit?.id` para `ListaAulasExperimentaisModal`
-  - [ ] Passar `activeUnit?.id` para `ListaFaltasFuturasModal`
+#### Frontend (Modais) — Não precisam de prop `unitId` (hooks usam `useActiveUnit`)
+- [x] `ListaReposicoesModal.tsx` — hook já filtra internamente
+- [x] `ListaAulasExperimentaisModal.tsx` — hook já filtra internamente
+- [x] `ListaFaltasFuturasModal.tsx` — hook já filtra internamente
+- [x] `CalendarioAulas.tsx` — não precisa passar `unitId` aos modais
 
 #### Testes
-- [ ] Verificar que o calendário principal já filtra por unidade (deve funcionar)
-- [ ] Testar modal de reposições filtrando por unidade
-- [ ] Testar modal de aulas experimentais filtrando por unidade
-- [ ] Testar modal de faltas futuras filtrando por unidade
-- [ ] Testar troca de unidade e verificar atualização dos dados
+- [x] Verificar que o calendário principal já filtra por unidade
+- [x] Testar modal de reposições filtrando por unidade
+- [x] Testar modal de aulas experimentais filtrando por unidade
+- [x] Testar modal de faltas futuras filtrando por unidade
+- [x] Testar troca de unidade e verificar atualização dos dados
 
 ---
 
