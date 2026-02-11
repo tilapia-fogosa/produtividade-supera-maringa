@@ -1,80 +1,58 @@
 
 
-## Fase 5: Ajustar Dashboard Home para Multi-Unidades
+## Diferenciar Sidebar por Unidade (Maringá vs Outras)
 
 ### Resumo
 
-Tres hooks usados na Home precisam de filtragem por unidade ativa para evitar que admins vejam dados de todas as unidades misturados.
+Adicionar uma flag `maringaOnly` aos itens do menu lateral que devem aparecer apenas quando a unidade ativa for Maringá. Os demais itens continuam visíveis para todas as unidades.
 
 ---
 
-### Alteracao 1 - `use-camisetas.ts`
+### Itens exclusivos de Maringá
 
-**Problema:** Busca todos os alunos ativos com 60+ dias sem filtrar por unidade.
-
-**Solucao:** Adicionar `useActiveUnit()` e filtrar a query de alunos com `.eq('unit_id', activeUnit.id)`. Tambem adicionar `activeUnit?.id` como dependencia para re-executar ao trocar unidade.
-
-Como a tabela `camisetas` nao tem `unit_id`, o filtro e aplicado na tabela `alunos` (que ja possui a coluna).
-
----
-
-### Alteracao 2 - `use-pendencias-botom.ts`
-
-**Problema:** Busca todas as pendencias de botom sem filtrar por unidade. As queries de enriquecimento (buscar nome do aluno, turma) tambem nao filtram.
-
-**Solucao:** Adicionar `useActiveUnit()` e, ao enriquecer os dados, usar um JOIN ou filtro baseado no `alunos.unit_id`. A abordagem mais simples: buscar os alunos da unidade ativa primeiro, depois filtrar as pendencias pelos IDs desses alunos. Ou usar a relacao `aluno_id` para fazer um JOIN na query principal.
+| Menu | Grupo atual |
+|------|-------------|
+| Projeto São Rafael | Menu Principal |
+| Galeria de Fotos | Menu Principal |
+| Avisos | Menu Principal |
+| Painel Administrativo | Administrativo |
+| Funcionários | Gestão |
+| Controle de Ponto | Gestão |
+| Registro de Ponto | Gestão |
 
 ---
 
-### Alteracao 3 - `use-professor-atividades.ts`
+### Implementação
 
-**Problema:** A chamada a RPC `get_lista_completa_reposicoes` na linha 118 nao passa o parametro `p_unit_id`, podendo retornar reposicoes de outras unidades.
+**Arquivo:** `src/components/AppSidebar.tsx`
 
-**Solucao:** Importar `useActiveUnit()` e passar `p_unit_id: activeUnit?.id || null` na chamada da RPC.
+1. Importar `useActiveUnit` do contexto.
+2. Adicionar a propriedade `maringaOnly: true` nos objetos dos 7 itens listados acima.
+3. Criar uma constante com o UUID de Maringá (`0df79a04-444e-46ee-b218-59e4b1835f4a`), que já é utilizado em outros pontos do sistema.
+4. Nos filtros de cada grupo (Menu Principal, Administrativo, Gestão), adicionar a verificação: se o item tem `maringaOnly` e a unidade ativa não é Maringá, o item é ocultado.
 
----
+### Detalhes Técnicos
 
-### Detalhes Tecnicos
-
-**use-camisetas.ts:**
 ```typescript
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
+
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+
+// Nos arrays de itens, adicionar maringaOnly: true nos 7 itens listados
+// Exemplo:
+{ title: "Projeto São Rafael", url: "/projeto-sao-rafael", icon: Target, maringaOnly: true }
+
+// No componente, obter a unidade ativa:
 const { activeUnit } = useActiveUnit();
+const isMaringa = activeUnit?.id === MARINGA_UNIT_ID;
 
-// Na query de alunos, adicionar:
-.eq('unit_id', activeUnit!.id)
-
-// Re-executar ao trocar unidade:
-useEffect(() => { buscarDadosCamisetas(); }, [activeUnit?.id]);
+// No filtro de itens:
+const filteredItems = items.filter(item => {
+  if (item.maringaOnly && !isMaringa) return false;
+  if (item.requiresTeacher && !isTeacher) return false;
+  return true;
+});
 ```
 
-**use-pendencias-botom.ts:**
-```typescript
-import { useActiveUnit } from '@/contexts/ActiveUnitContext';
-const { activeUnit } = useActiveUnit();
-
-// queryKey inclui activeUnit?.id
-// Usar JOIN com alunos para filtrar:
-.select(`..., aluno:alunos!inner(nome, turma_id, unit_id)`)
-.eq('aluno.unit_id', activeUnit!.id)
-```
-
-**use-professor-atividades.ts:**
-```typescript
-import { useActiveUnit } from '@/contexts/ActiveUnitContext';
-const { activeUnit } = useActiveUnit();
-
-// Passar unit_id na RPC:
-const { data: reposicoes } = await supabase
-  .rpc('get_lista_completa_reposicoes', {
-    p_incluir_anteriores: false,
-    p_unit_id: activeUnit?.id || null
-  });
-```
-
----
-
-### Impacto
-
-Essas 3 alteracoes completam a Fase 5 do roadmap de migracao multi-unidades, garantindo que o Dashboard Home exiba apenas dados da unidade ativa selecionada.
+A mesma lógica será aplicada nos arrays `administrativoItems` e `additionalItems`.
 
