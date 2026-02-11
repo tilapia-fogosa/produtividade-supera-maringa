@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export type ListaReposicaoData = {
   reposicao_id: string;
@@ -21,6 +22,7 @@ export type ListaReposicaoData = {
 export const useListaReposicoes = (incluirAnteriores: boolean = false) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { activeUnit } = useActiveUnit();
 
   const {
     data: reposicoes = [],
@@ -28,10 +30,11 @@ export const useListaReposicoes = (incluirAnteriores: boolean = false) => {
     error,
     refetch
   } = useQuery({
-    queryKey: ["lista-reposicoes", incluirAnteriores],
+    queryKey: ["lista-reposicoes", incluirAnteriores, activeUnit?.id],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_lista_completa_reposicoes", {
-        p_incluir_anteriores: incluirAnteriores
+        p_incluir_anteriores: incluirAnteriores,
+        p_unit_id: activeUnit?.id || null
       });
       
       if (error) throw error;

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export type AulaExperimentalLista = {
   aula_experimental_id: string;
@@ -17,11 +18,14 @@ export type AulaExperimentalLista = {
 
 export const useListaAulasExperimentais = () => {
   const queryClient = useQueryClient();
+  const { activeUnit } = useActiveUnit();
 
   const { data: aulasExperimentais, isLoading, error, refetch } = useQuery({
-    queryKey: ["lista-aulas-experimentais"],
+    queryKey: ["lista-aulas-experimentais", activeUnit?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_lista_aulas_experimentais");
+      const { data, error } = await supabase.rpc("get_lista_aulas_experimentais", {
+        p_unit_id: activeUnit?.id || null
+      });
       
       if (error) throw error;
       
