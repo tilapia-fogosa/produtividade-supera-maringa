@@ -1,43 +1,74 @@
 
 
-## Alterar lógica de sincronização de professores
+## Extrair horário do nome da turma durante a sincronização
 
-### Problema atual
-Quando um professor com o mesmo nome existe em outra unidade, a função move ele para a unidade atual, removendo-o da unidade original.
+### Problema
+As turmas são criadas/atualizadas sem `horario_inicio` e `horario_fim`, mesmo tendo o horário no nome (ex: `"5ª (10:00 60+)"`, `"4ª (16:00 - Adultos)"`). Sem esses campos, o calendário não consegue posicionar as turmas no grid.
 
-### Nova lógica
-Cada professor será um registro independente por unidade. A busca passa a ser filtrada por `unit_id`:
+### Solução
+Adicionar extração de horário via regex na Edge Function `sync-turmas-xls`, na Etapa 3 (Processar Turmas), logo após a extração do dia da semana.
 
-- Se o professor já existe **na mesma unidade** -> reativa (status = true)
-- Se o professor **não existe na unidade** -> cria um novo registro, independente de existir em outra unidade
-- Remove toda a lógica de mover professor entre unidades
-- Remove a lógica de remoção de duplicatas entre unidades
+### Padrão dos nomes
+Exemplos reais da base:
+- `5ª (10:00 60+)`
+- `4ª (16:00 - Adultos)`
+- `2ª (16:00 - 60+)`
+- `5ª (14:00 - Júnior)`
+- `Sábado (10:00 - Júnior)`
+- `5ª (09:01 - Adolescente)`
 
-### Alteração técnica
+O horário sempre aparece entre parênteses no formato `HH:MM`.
+
+### Detalhes técnicos
 
 **Arquivo:** `supabase/functions/sync-turmas-xls/index.ts`
 
-Na Etapa 2 (Processar Professores), substituir a busca global (`ilike` sem filtro de unidade) por uma busca filtrada:
+Após a extração do `diaSemana` (linha ~254), adicionar:
 
 ```typescript
-// ANTES: busca global por nome em todas as unidades
-const { data: existingProfs } = await supabase
-  .from('professores')
-  .select('id, unit_id, status')
-  .ilike('nome', nome);
-
-// DEPOIS: busca apenas na unidade atual
-const { data: existingProf } = await supabase
-  .from('professores')
-  .select('id')
-  .ilike('nome', nome)
-  .eq('unit_id', unitId)
-  .maybeSingle();
+// Extrair horário do nome da turma (ex: "5ª (10:00 60+)" -> "10:00")
+let horarioInicio: string | null = null;
+let horarioFim: string | null = null;
+const horarioMatch = nome.match(/\((\d{1,2}:\d{2})/);
+if (horarioMatch) {
+  horarioInicio = horarioMatch[1];
+  // Calcular horário fim como +1 hora
+  const [horas, minutos] = horarioInicio.split(':').map(Number);
+  const fimHoras = horas + 1;
+  horarioFim = `${String(fimHoras).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+}
 ```
 
-A lógica simplificada fica:
-- Se encontrou na unidade -> reativa
-- Se não encontrou -> cria novo registro com o `unit_id` atual
+Depois, incluir `horario_inicio` e `horario_fim` nos objetos de `update` e `insert` da turma:
 
-Toda a lógica de "mover entre unidades" e "remover duplicatas" será removida.
+```typescript
+// No update (turma existente):
+.update({
+  professor_id: professor.id,
+  dia_semana: diaSemana,
+  horario_inicio: horarioInicio,
+  horario_fim: horarioFim,
+  sala: turmaData.sala || null,
+  active: true,
+  ultima_sincronizacao: new Date().toISOString()
+})
 
+// No insert (turma nova):
+.insert({
+  nome,
+  professor_id: professor.id,
+  dia_semana: diaSemana,
+  horario_inicio: horarioInicio,
+  horario_fim: horarioFim,
+  sala: turmaData.sala || null,
+  unit_id: unitId,
+  active: true,
+  ultima_sincronizacao: new Date().toISOString()
+})
+```
+
+### Sobre a sala (sala_id)
+As turmas de Londrina continuarão sem `sala_id`. O calendário precisará de um ajuste separado para exibir turmas sem sala definida (possivelmente em uma seção "Turmas sem sala"). Esse ajuste **não faz parte deste plano** — aqui o foco é garantir que o horário seja preenchido automaticamente.
+
+### Resultado esperado
+Após re-sincronizar o XLS de Londrina, as turmas terão `horario_inicio` e `horario_fim` preenchidos automaticamente a partir do nome.
