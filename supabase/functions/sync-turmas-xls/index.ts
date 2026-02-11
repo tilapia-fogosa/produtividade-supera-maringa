@@ -142,10 +142,12 @@ serve(async (req) => {
         }
 
         try {
-          const { data: existingProfs, error: searchError } = await supabase
+          const { data: existingProf, error: searchError } = await supabase
             .from('professores')
-            .select('id, unit_id, status')
-            .ilike('nome', nome);
+            .select('id')
+            .ilike('nome', nome)
+            .eq('unit_id', unitId)
+            .maybeSingle();
 
           if (searchError) {
             result.errors.push(`Erro ao buscar professor ${nome}: ${searchError.message}`);
@@ -153,69 +155,22 @@ serve(async (req) => {
             continue;
           }
 
-          console.log(`Buscando professor: ${nome}, encontrados: ${existingProfs?.length || 0}`);
+          if (existingProf) {
+            const { error: updateError } = await supabase
+              .from('professores')
+              .update({ 
+                status: true, 
+                ultima_sincronizacao: new Date().toISOString()
+              })
+              .eq('id', existingProf.id);
 
-          let professorProcessado = false;
-
-          if (existingProfs && existingProfs.length > 0) {
-            const profNaUnidadeAtual = existingProfs.find(p => p.unit_id === unitId);
-            const profEmOutraUnidade = existingProfs.find(p => p.unit_id !== unitId);
-            
-            if (profNaUnidadeAtual) {
-              const { error: updateError } = await supabase
-                .from('professores')
-                .update({ 
-                  status: true, 
-                  ultima_sincronizacao: new Date().toISOString()
-                })
-                .eq('id', profNaUnidadeAtual.id);
-
-              if (updateError) {
-                result.errors.push(`Erro ao reativar professor ${nome}: ${updateError.message}`);
-              } else {
-                result.professores_reativados++;
-                console.log(`Professor reativado: ${nome}`);
-              }
-              professorProcessado = true;
-            } else if (profEmOutraUnidade) {
-              const { error: updateError } = await supabase
-                .from('professores')
-                .update({ 
-                  unit_id: unitId,
-                  status: true, 
-                  ultima_sincronizacao: new Date().toISOString()
-                })
-                .eq('id', profEmOutraUnidade.id);
-
-              if (updateError) {
-                result.errors.push(`Erro ao mover professor ${nome}: ${updateError.message}`);
-              } else {
-                result.professores_reativados++;
-                console.log(`Professor movido para unidade atual: ${nome}`);
-              }
-              professorProcessado = true;
+            if (updateError) {
+              result.errors.push(`Erro ao reativar professor ${nome}: ${updateError.message}`);
+            } else {
+              result.professores_reativados++;
+              console.log(`Professor reativado: ${nome}`);
             }
-            
-            if (existingProfs.length > 1) {
-              const profParaManter = profNaUnidadeAtual || profEmOutraUnidade;
-              const profsParaRemover = existingProfs.filter(p => p.id !== profParaManter.id);
-              
-              for (const profDuplicado of profsParaRemover) {
-                const { error: deleteError } = await supabase
-                  .from('professores')
-                  .delete()
-                  .eq('id', profDuplicado.id);
-                
-                if (deleteError) {
-                  console.error('Erro ao remover duplicata:', deleteError);
-                } else {
-                  console.log(`Professor duplicado removido: ${nome} (ID: ${profDuplicado.id})`);
-                }
-              }
-            }
-          }
-
-          if (!professorProcessado) {
+          } else {
             const { error: insertError } = await supabase
               .from('professores')
               .insert({
