@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 // Custom debounce hook para otimizar pesquisa
 function useDebounce(value: string, delay: number) {
@@ -47,6 +48,7 @@ interface Totals {
 }
 
 export function useRetencoesHistorico({ searchTerm, statusFilter, incluirOcultos = false }: RetencoesHistoricoParams) {
+  const { activeUnit } = useActiveUnit();
   const [alunos, setAlunos] = useState<AlunoRetencao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +72,8 @@ export function useRetencoesHistorico({ searchTerm, statusFilter, incluirOcultos
         .rpc('get_alunos_retencoes_historico', {
           p_search_term: debouncedSearchTerm || '',
           p_status_filter: statusFilter,
-          p_incluir_ocultos: incluirOcultos
+          p_incluir_ocultos: incluirOcultos,
+          p_unit_id: activeUnit?.id || null
         });
 
       if (queryError) {
@@ -197,8 +200,10 @@ export function useRetencoesHistorico({ searchTerm, statusFilter, incluirOcultos
   };
 
   useEffect(() => {
-    fetchAlunosComHistorico();
-  }, [debouncedSearchTerm, statusFilter, incluirOcultos]);
+    if (activeUnit?.id) {
+      fetchAlunosComHistorico();
+    }
+  }, [debouncedSearchTerm, statusFilter, incluirOcultos, activeUnit?.id]);
 
   return {
     alunos,

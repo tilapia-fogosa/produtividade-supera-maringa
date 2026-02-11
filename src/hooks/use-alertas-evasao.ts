@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useResponsaveis, Responsavel } from '@/hooks/use-responsaveis';
 import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 type OrigemAlerta = 'conversa_indireta' | 'aviso_recepcao' | 'aviso_professor_coordenador' | 'aviso_whatsapp' | 'inadimplencia' | 'outro';
 
@@ -20,6 +21,7 @@ export function useAlertasEvasao() {
   const { todosAlunos } = useAlunos();
   const { responsaveis, isLoading: carregandoResponsaveis } = useResponsaveis();
   const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
+  const { activeUnit } = useActiveUnit();
   const [filtroAluno, setFiltroAluno] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null);
   const [dataAlerta, setDataAlerta] = useState('');
@@ -235,7 +237,8 @@ export function useAlertasEvasao() {
         responsavel: profileId,
         status: 'pendente' as const,
         kanban_status: 'todo',
-        funcionario_registro_id: funcionarioId || null
+        funcionario_registro_id: funcionarioId || null,
+        unit_id: activeUnit!.id
       };
       
       console.log('Dados para inserir no banco:', dadosAlerta);

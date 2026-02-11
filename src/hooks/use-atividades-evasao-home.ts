@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentProfessor } from './use-current-professor';
 import { useUserPermissions } from './useUserPermissions';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 export interface AtividadeEvasaoHome {
   id: string;
@@ -22,15 +23,16 @@ export interface AtividadeEvasaoHome {
 export function useAtividadesEvasaoHome() {
   const { professorId, isProfessor, isLoading: isProfessorLoading } = useCurrentProfessor();
   const { isAdmin, isManagement, isFinanceiro } = useUserPermissions();
+  const { activeUnit } = useActiveUnit();
   
   const isAdministrativo = isAdmin || isManagement || isFinanceiro;
   
   // Para professores, só executa a query quando o professorId estiver carregado
   // Para admins/gestores, pode executar imediatamente
-  const shouldFetch = isAdministrativo || (isProfessor && !!professorId && !isProfessorLoading);
+  const shouldFetch = !!activeUnit?.id && (isAdministrativo || (isProfessor && !!professorId && !isProfessorLoading));
 
   return useQuery({
-    queryKey: ['atividades-evasao-home', professorId, isAdministrativo, isProfessor],
+    queryKey: ['atividades-evasao-home', professorId, isAdministrativo, isProfessor, activeUnit?.id],
     queryFn: async () => {
       // Buscar atividades pendentes de alertas que ainda estão pendentes
       let query = supabase
@@ -56,6 +58,7 @@ export function useAtividadesEvasaoHome() {
           )
         `)
         .eq('status', 'pendente')
+        .eq('unit_id', activeUnit!.id)
         .in('alerta_evasao.status', ['pendente', 'evadido'])
         .eq('alerta_evasao.aluno.active', true);
       

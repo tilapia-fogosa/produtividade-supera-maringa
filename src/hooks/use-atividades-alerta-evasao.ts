@@ -397,6 +397,14 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
       const { data: { user } } = await supabase.auth.getUser();
+
+      // Buscar unit_id do alerta pai
+      const { data: alertaInfo } = await supabase
+        .from('alerta_evasao')
+        .select('unit_id')
+        .eq('id', alertaEvasaoId)
+        .single();
+      const alertaUnitId = alertaInfo?.unit_id || '0df79a04-444e-46ee-b218-59e4b1835f4a';
       
       // Variável para armazenar dados da atividade anterior (para enviar ao webhook de conclusão)
       let atividadeAnteriorData: any = null;
@@ -481,7 +489,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             responsavel_id: user?.id || null,
             responsavel_nome: 'Administrativo',
             status: 'pendente',
-            departamento_responsavel: 'administrativo'
+            departamento_responsavel: 'administrativo',
+            unit_id: alertaUnitId
           };
           
           const { data: insertedTarefa, error: insertError } = await supabase
@@ -538,9 +547,9 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
         departamento_responsavel,
         professor_responsavel_id,
         data_agendada: dataAgendadaFinal,
-        // Se for retenção, já marca quem concluiu
         concluido_por_id: isTerminalRetencao ? (user?.id || null) : null,
-        concluido_por_nome: isTerminalRetencao ? (funcionarioNome || user?.email || 'Usuário') : null
+        concluido_por_nome: isTerminalRetencao ? (funcionarioNome || user?.email || 'Usuário') : null,
+        unit_id: alertaUnitId
       };
       
       const { data, error } = await supabase
@@ -675,6 +684,14 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
       const { data: { user } } = await supabase.auth.getUser();
+
+      // Buscar unit_id do alerta pai
+      const { data: alertaInfoFin } = await supabase
+        .from('alerta_evasao')
+        .select('unit_id')
+        .eq('id', alertaEvasaoId)
+        .single();
+      const alertaUnitId = alertaInfoFin?.unit_id || '0df79a04-444e-46ee-b218-59e4b1835f4a';
       
       // Buscar dados da atividade anterior antes de atualizar
       const { data: atividadeAnteriorData } = await supabase
@@ -777,7 +794,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           responsavel_nome: funcionarioNome || user?.email || 'Usuário',
           status: 'concluida',
           concluido_por_id: user?.id || null,
-          concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+          concluido_por_nome: funcionarioNome || user?.email || 'Usuário',
+          unit_id: alertaUnitId
         };
         
         const { data: retencaoInserted, error: retencaoError } = await supabase
@@ -822,7 +840,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
           responsavel_nome: 'Administrativo',
           status: 'pendente',
           departamento_responsavel: 'administrativo',
-          data_agendada: tarefa.data_agendada || null
+          data_agendada: tarefa.data_agendada || null,
+          unit_id: alertaUnitId
         };
         
         const { data: insertedTarefa, error: insertError } = await supabase
@@ -890,6 +909,14 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
       if (!alertaEvasaoId) throw new Error('Alerta ID não fornecido');
       
       const { data: { user } } = await supabase.auth.getUser();
+
+      // Buscar unit_id do alerta pai
+      const { data: alertaInfoAdmin } = await supabase
+        .from('alerta_evasao')
+        .select('unit_id')
+        .eq('id', alertaEvasaoId)
+        .single();
+      const alertaUnitId = alertaInfoAdmin?.unit_id || '0df79a04-444e-46ee-b218-59e4b1835f4a';
       
       // Buscar dados da atividade antes de atualizar
       const { data: atividadeData } = await supabase
@@ -938,7 +965,8 @@ export function useAtividadesAlertaEvasao(alertaEvasaoId: string | null) {
             responsavel_nome: funcionarioNome || user?.email || 'Usuário',
             status: 'concluida',
             concluido_por_id: user?.id || null,
-            concluido_por_nome: funcionarioNome || user?.email || 'Usuário'
+            concluido_por_nome: funcionarioNome || user?.email || 'Usuário',
+            unit_id: alertaUnitId
           };
           
           const { data: evasaoInserted, error: evasaoError } = await supabase

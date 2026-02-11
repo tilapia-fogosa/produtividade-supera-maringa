@@ -217,6 +217,7 @@ export type Database = {
           rescisao_digitalizada_url: string | null
           responsavel: string | null
           status: Database["public"]["Enums"]["status_alerta"]
+          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -233,6 +234,7 @@ export type Database = {
           rescisao_digitalizada_url?: string | null
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
+          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -249,6 +251,7 @@ export type Database = {
           rescisao_digitalizada_url?: string | null
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
+          unit_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -271,6 +274,13 @@ export type Database = {
             columns: ["funcionario_registro_id"]
             isOneToOne: false
             referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerta_evasao_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1035,6 +1045,7 @@ export type Database = {
           responsavel_nome: string | null
           status: string
           tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
+          unit_id: string
         }
         Insert: {
           alerta_evasao_id: string
@@ -1050,6 +1061,7 @@ export type Database = {
           responsavel_nome?: string | null
           status?: string
           tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
+          unit_id: string
         }
         Update: {
           alerta_evasao_id?: string
@@ -1065,6 +1077,7 @@ export type Database = {
           responsavel_nome?: string | null
           status?: string
           tipo_atividade?: Database["public"]["Enums"]["tipo_atividade_evasao"]
+          unit_id?: string
         }
         Relationships: [
           {
@@ -1087,6 +1100,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["professor_id"]
+          },
+          {
+            foreignKeyName: "atividades_alerta_evasao_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3765,6 +3785,7 @@ export type Database = {
           tags: string[] | null
           title: string
           turma: string | null
+          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -3798,6 +3819,7 @@ export type Database = {
           tags?: string[] | null
           title: string
           turma?: string | null
+          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -3831,9 +3853,18 @@ export type Database = {
           tags?: string[] | null
           title?: string
           turma?: string | null
+          unit_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kanban_cards_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kit_versions: {
         Row: {
@@ -6618,15 +6649,25 @@ export type Database = {
         }
         Returns: Json
       }
-      get_aluno_detalhes: {
-        Args: { p_aluno_nome: string }
-        Returns: {
-          aluno_id: string
-          educador: string
-          faltas_recorrentes: boolean
-          turma: string
-        }[]
-      }
+      get_aluno_detalhes:
+        | {
+            Args: { p_aluno_nome: string }
+            Returns: {
+              aluno_id: string
+              educador: string
+              faltas_recorrentes: boolean
+              turma: string
+            }[]
+          }
+        | {
+            Args: { p_aluno_nome: string; p_unit_id?: string }
+            Returns: {
+              aluno_id: string
+              educador: string
+              faltas_recorrentes: boolean
+              turma: string
+            }[]
+          }
       get_alunos_retencoes_historico:
         | {
             Args: { p_search_term?: string; p_status_filter?: string }
@@ -6648,6 +6689,27 @@ export type Database = {
               p_incluir_ocultos?: boolean
               p_search_term?: string
               p_status_filter?: string
+            }
+            Returns: {
+              alertas_ativos: number
+              educador: string
+              id: string
+              nome: string
+              oculto_retencoes: boolean
+              status: string
+              total_alertas: number
+              total_retencoes: number
+              turma: string
+              ultima_retencao: string
+              ultimo_alerta: string
+            }[]
+          }
+        | {
+            Args: {
+              p_incluir_ocultos?: boolean
+              p_search_term?: string
+              p_status_filter?: string
+              p_unit_id?: string
             }
             Returns: {
               alertas_ativos: number

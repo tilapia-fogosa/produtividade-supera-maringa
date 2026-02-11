@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { startOfMonth, startOfYear, subMonths, subYears, format } from 'date-fns';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 interface KanbanCard {
   id: string;
@@ -73,13 +74,16 @@ interface ResultadoPeriodo {
 
 export const useKanbanCards = (showHibernating: boolean = false) => {
   const queryClient = useQueryClient();
+  const { activeUnit } = useActiveUnit();
 
   const { data: cards = [], isLoading } = useQuery({
-    queryKey: ['kanban-cards', { showHibernating }],
+    queryKey: ['kanban-cards', { showHibernating }, activeUnit?.id],
+    enabled: !!activeUnit?.id,
     queryFn: async () => {
       let query = supabase
         .from('kanban_cards')
-        .select('*');
+        .select('*')
+        .eq('unit_id', activeUnit!.id);
 
       if (showHibernating) {
         query = query.eq('column_id', 'hibernating');
@@ -452,7 +456,8 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
   // Nova função para obter estatísticas de resultados por períodos
   const useResultadosEvasao = () => {
     return useQuery({
-      queryKey: ['resultados-evasao'],
+      queryKey: ['resultados-evasao', activeUnit?.id],
+      enabled: !!activeUnit?.id,
       queryFn: async () => {
         const agora = new Date();
         
@@ -477,6 +482,7 @@ export const useKanbanCards = (showHibernating: boolean = false) => {
         const { data: todosCards, error } = await supabase
           .from('kanban_cards')
           .select('*')
+          .eq('unit_id', activeUnit!.id)
           .not('resultado', 'is', null);
           
         if (error) {
