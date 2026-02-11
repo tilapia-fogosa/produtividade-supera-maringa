@@ -6600,7 +6600,7 @@ export type Database = {
         }[]
       }
       get_ah_tempo_stats: {
-        Args: never
+        Args: { p_unit_id?: string }
         Returns: {
           tempo_medio_coleta_correcao: number
           tempo_medio_coleta_entrega: number

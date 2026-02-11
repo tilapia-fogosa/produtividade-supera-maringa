@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export interface ProximaColetaAH {
   id: string;
@@ -14,12 +15,13 @@ export interface ProximaColetaAH {
 }
 
 export const useProximasColetasAH = () => {
+  const { activeUnit } = useActiveUnit();
+
   return useQuery({
-    queryKey: ['proximas-coletas-ah'],
+    queryKey: ['proximas-coletas-ah', activeUnit?.id],
     queryFn: async () => {
       const dataAtual = new Date().toISOString();
       
-      // Buscar alunos ativos com suas turmas
       const { data: alunos, error: errorAlunos } = await supabase
         .from('alunos')
         .select(`
@@ -37,6 +39,7 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', activeUnit!.id)
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorAlunos) throw errorAlunos;
@@ -58,6 +61,7 @@ export const useProximasColetasAH = () => {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', activeUnit!.id)
         .order('ultima_correcao_ah', { ascending: true, nullsFirst: false });
 
       if (errorFuncionarios) throw errorFuncionarios;
@@ -71,18 +75,15 @@ export const useProximasColetasAH = () => {
 
       if (errorIgnorar) throw errorIgnorar;
 
-      // Criar um Set com os IDs das pessoas que devem ser ignoradas
       const pessoasIgnoradas = new Set(
         (ignorarColetas || []).map(registro => registro.pessoa_id)
       );
 
-      // Combinar e formatar os dados, filtrando turmas com projeto = true
-      // e pessoas que estão sendo ignoradas
       const todasPessoas: ProximaColetaAH[] = [
         ...(alunos || [])
           .filter(aluno => 
-            !aluno.turmas?.projeto && // Exclui turmas com projeto = true
-            !pessoasIgnoradas.has(aluno.id) // Exclui alunos ignorados
+            !aluno.turmas?.projeto &&
+            !pessoasIgnoradas.has(aluno.id)
           )
           .map((aluno: any) => ({
             id: aluno.id,
@@ -99,8 +100,8 @@ export const useProximasColetasAH = () => {
           })),
         ...(funcionarios || [])
           .filter(func => 
-            !func.turmas?.projeto && // Exclui turmas com projeto = true
-            !pessoasIgnoradas.has(func.id) // Exclui funcionários ignorados
+            !func.turmas?.projeto &&
+            !pessoasIgnoradas.has(func.id)
           )
           .map((func: any) => ({
             id: func.id,
@@ -117,8 +118,6 @@ export const useProximasColetasAH = () => {
           }))
       ];
 
-      // Ordenar por dias desde última correção (do maior para o menor)
-      // Pessoas sem correção (null) aparecem por último
       const ordenadas = todasPessoas.sort((a, b) => {
         if (a.dias_desde_ultima_correcao === null && b.dias_desde_ultima_correcao === null) return 0;
         if (a.dias_desde_ultima_correcao === null) return 1;
@@ -126,8 +125,8 @@ export const useProximasColetasAH = () => {
         return b.dias_desde_ultima_correcao - a.dias_desde_ultima_correcao;
       });
 
-      // Retornar todos os resultados
       return ordenadas;
     },
+    enabled: !!activeUnit?.id,
   });
 };
