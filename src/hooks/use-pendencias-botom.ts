@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentProfessor } from './use-current-professor';
 import { useUserPermissions } from './useUserPermissions';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 export interface PendenciaBotom {
   id: string;
@@ -21,11 +22,12 @@ export interface PendenciaBotom {
 export function usePendenciasBotom() {
   const { professorId, isProfessor } = useCurrentProfessor();
   const { isAdmin, isManagement } = useUserPermissions();
+  const { activeUnit } = useActiveUnit();
   const queryClient = useQueryClient();
 
   // Buscar pendências
   const { data: pendencias = [], isLoading, refetch } = useQuery({
-    queryKey: ['pendencias-botom', professorId, isProfessor, isAdmin, isManagement],
+    queryKey: ['pendencias-botom', professorId, isProfessor, isAdmin, isManagement, activeUnit?.id],
     queryFn: async () => {
       let query = supabase
         .from('pendencias_botom')
@@ -53,12 +55,15 @@ export function usePendenciasBotom() {
       // Enriquecer com dados do aluno e professor
       const enrichedData: PendenciaBotom[] = [];
       for (const p of data || []) {
-        // Buscar nome do aluno
+        // Buscar nome do aluno (filtrando por unidade)
         const { data: aluno } = await supabase
           .from('alunos')
-          .select('nome, turma_id')
+          .select('nome, turma_id, unit_id')
           .eq('id', p.aluno_id)
           .maybeSingle();
+
+        // Filtrar por unidade ativa
+        if (activeUnit?.id && aluno?.unit_id !== activeUnit.id) continue;
 
         // Buscar nome do professor
         let professorNome = '';
