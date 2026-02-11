@@ -1,105 +1,80 @@
 
 
-## Fase 9: Migrar Alertas de Evasao para Multi-Unidades
+## Fase 5: Ajustar Dashboard Home para Multi-Unidades
 
 ### Resumo
 
-Adicionar `unit_id` as 3 tabelas principais do sistema de evasao (`alerta_evasao`, `atividades_alerta_evasao`, `kanban_cards`), migrar dados existentes, atualizar RPCs, trigger automatica, e filtrar todos os hooks/paginas pela unidade ativa.
+Tres hooks usados na Home precisam de filtragem por unidade ativa para evitar que admins vejam dados de todas as unidades misturados.
 
 ---
 
-### Etapa 1 - Migracao de Banco de Dados
+### Alteracao 1 - `use-camisetas.ts`
 
-Uma unica migracao SQL que:
+**Problema:** Busca todos os alunos ativos com 60+ dias sem filtrar por unidade.
 
-1. **Adiciona `unit_id`** (nullable inicialmente) nas 3 tabelas
-2. **Preenche dados existentes**:
-   - `alerta_evasao.unit_id` = `alunos.unit_id` (via `aluno_id`)
-   - `atividades_alerta_evasao.unit_id` = `alerta_evasao.unit_id` (via `alerta_evasao_id`)
-   - `kanban_cards.unit_id` = `alerta_evasao.unit_id` (via `alerta_evasao_id`)
-   - Registros orfaos recebem a unidade de Maringa como fallback
-3. **Torna NOT NULL** apos preenchimento
-4. **Cria indices** de performance
+**Solucao:** Adicionar `useActiveUnit()` e filtrar a query de alunos com `.eq('unit_id', activeUnit.id)`. Tambem adicionar `activeUnit?.id` como dependencia para re-executar ao trocar unidade.
+
+Como a tabela `camisetas` nao tem `unit_id`, o filtro e aplicado na tabela `alunos` (que ja possui a coluna).
 
 ---
 
-### Etapa 2 - Atualizar Trigger Automatica
+### Alteracao 2 - `use-pendencias-botom.ts`
 
-Recriar a funcao `criar_atividade_acolhimento_automatica` para copiar o `unit_id` do alerta pai para a atividade de acolhimento criada automaticamente.
+**Problema:** Busca todas as pendencias de botom sem filtrar por unidade. As queries de enriquecimento (buscar nome do aluno, turma) tambem nao filtram.
 
----
-
-### Etapa 3 - Atualizar RPCs
-
-**`get_alunos_retencoes_historico`:**
-- Adicionar parametro `p_unit_id uuid DEFAULT NULL`
-- Filtrar por `a.unit_id = p_unit_id` quando informado
-
-**`get_aluno_detalhes`:**
-- Adicionar parametro `p_unit_id uuid DEFAULT NULL`
-- Filtrar por `a.unit_id = p_unit_id` quando informado
+**Solucao:** Adicionar `useActiveUnit()` e, ao enriquecer os dados, usar um JOIN ou filtro baseado no `alunos.unit_id`. A abordagem mais simples: buscar os alunos da unidade ativa primeiro, depois filtrar as pendencias pelos IDs desses alunos. Ou usar a relacao `aluno_id` para fazer um JOIN na query principal.
 
 ---
 
-### Etapa 4 - Atualizar Hooks (leitura/filtragem)
+### Alteracao 3 - `use-professor-atividades.ts`
 
-Todos os hooks abaixo recebem `useActiveUnit()` e filtram por `unit_id`:
+**Problema:** A chamada a RPC `get_lista_completa_reposicoes` na linha 118 nao passa o parametro `p_unit_id`, podendo retornar reposicoes de outras unidades.
 
-| Hook | Alteracao |
-|------|-----------|
-| `use-alertas-evasao-lista.ts` | Filtrar `.eq('unit_id', activeUnit.id)`, adicionar na queryKey |
-| `use-kanban-cards.ts` | Filtrar `.eq('unit_id', activeUnit.id)`, adicionar na queryKey |
-| `use-atividades-evasao-home.ts` | Filtrar via JOIN (aluno.unit_id) ou direto, adicionar na queryKey |
-| `use-retencoes-historico.ts` | Passar `p_unit_id` para RPC |
-
----
-
-### Etapa 5 - Atualizar Hooks (escrita/criacao)
-
-| Hook | Alteracao |
-|------|-----------|
-| `use-alertas-evasao.ts` | Incluir `unit_id: activeUnit.id` ao inserir novo alerta |
-| `use-atividades-alerta-evasao.ts` | Incluir `unit_id` ao criar atividades (buscar do alerta pai) |
-
----
-
-### Etapa 6 - Atualizar Paginas e Componentes
-
-As paginas importam `useActiveUnit()` e passam o ID para os hooks:
-- `AlertasEvasao.tsx`
-- `PainelPedagogico.tsx`
-- `Retencoes.tsx`
+**Solucao:** Importar `useActiveUnit()` e passar `p_unit_id: activeUnit?.id || null` na chamada da RPC.
 
 ---
 
 ### Detalhes Tecnicos
 
-**Padrao nos hooks:**
+**use-camisetas.ts:**
 ```typescript
-import { useActiveUnit } from "@/contexts/ActiveUnitContext";
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
+const { activeUnit } = useActiveUnit();
+
+// Na query de alunos, adicionar:
+.eq('unit_id', activeUnit!.id)
+
+// Re-executar ao trocar unidade:
+useEffect(() => { buscarDadosCamisetas(); }, [activeUnit?.id]);
+```
+
+**use-pendencias-botom.ts:**
+```typescript
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 const { activeUnit } = useActiveUnit();
 
 // queryKey inclui activeUnit?.id
-// enabled inclui !!activeUnit?.id
-// queries usam .eq('unit_id', activeUnit.id)
+// Usar JOIN com alunos para filtrar:
+.select(`..., aluno:alunos!inner(nome, turma_id, unit_id)`)
+.eq('aluno.unit_id', activeUnit!.id)
 ```
 
-**Trigger atualizada:**
-```sql
-INSERT INTO atividades_alerta_evasao (
-  alerta_evasao_id, tipo_atividade, descricao,
-  responsavel_id, responsavel_nome,
-  unit_id  -- NOVO: herda do alerta
-) VALUES (
-  NEW.id, 'acolhimento', v_descricao,
-  NULL, COALESCE(v_professor_nome, 'Sistema'),
-  NEW.unit_id  -- copia do alerta pai
-);
+**use-professor-atividades.ts:**
+```typescript
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
+const { activeUnit } = useActiveUnit();
+
+// Passar unit_id na RPC:
+const { data: reposicoes } = await supabase
+  .rpc('get_lista_completa_reposicoes', {
+    p_incluir_anteriores: false,
+    p_unit_id: activeUnit?.id || null
+  });
 ```
 
-**Migracao de dados (fallback Maringa):**
-Registros que nao conseguirem resolver o `unit_id` via relacionamento (aluno deletado, etc) receberao a unidade de Maringa como padrao, garantindo que a coluna possa ser NOT NULL.
+---
 
-**Webhooks n8n/Make:**
-Os payloads existentes ja enviam dados do aluno/turma. Nao ha necessidade imediata de incluir `unit_id` nos webhooks, mas o campo estara disponivel no banco caso necessario no futuro.
+### Impacto
+
+Essas 3 alteracoes completam a Fase 5 do roadmap de migracao multi-unidades, garantindo que o Dashboard Home exiba apenas dados da unidade ativa selecionada.
 
