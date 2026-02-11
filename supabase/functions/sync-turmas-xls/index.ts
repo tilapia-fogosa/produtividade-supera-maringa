@@ -251,7 +251,18 @@ serve(async (req) => {
             diaSemana = 'sabado';
           }
 
-          console.log(`Dia da semana extraído para turma ${nome}: ${diaSemana}`);
+          // Extrair horário do nome da turma (ex: "5ª (10:00 60+)" -> "10:00")
+          let horarioInicio: string | null = null;
+          let horarioFim: string | null = null;
+          const horarioMatch = nome.match(/\((\d{1,2}:\d{2})/);
+          if (horarioMatch) {
+            horarioInicio = horarioMatch[1];
+            const [horas, minutos] = horarioInicio.split(':').map(Number);
+            const fimHoras = horas + 1;
+            horarioFim = `${String(fimHoras).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+          }
+
+          console.log(`Dia da semana: ${diaSemana}, Horário: ${horarioInicio}-${horarioFim} para turma ${nome}`);
 
           const { data: existingTurma, error: turmaSearchError } = await supabase
             .from('turmas')
@@ -274,6 +285,8 @@ serve(async (req) => {
               .update({
                 professor_id: professor.id,
                 dia_semana: diaSemana as any,
+                horario_inicio: horarioInicio,
+                horario_fim: horarioFim,
                 sala: turmaData.sala || null,
                 active: true,
                 ultima_sincronizacao: new Date().toISOString()
@@ -293,6 +306,8 @@ serve(async (req) => {
                 nome,
                 professor_id: professor.id,
                 dia_semana: diaSemana as any,
+                horario_inicio: horarioInicio,
+                horario_fim: horarioFim,
                 sala: turmaData.sala || null,
                 unit_id: unitId,
                 active: true,
