@@ -6663,6 +6663,31 @@ export type Database = {
               ultimo_alerta: string
             }[]
           }
+      get_apostilas_recolhidas_por_unidade: {
+        Args: { p_unit_id: string }
+        Returns: {
+          apostila: string
+          correcao_iniciada: boolean
+          data_entrega: string
+          data_entrega_real: string
+          data_inicio_correcao: string
+          data_recolhida: string
+          erros: number
+          exercicios_corrigidos: number
+          foi_entregue: boolean
+          id: string
+          origem: string
+          pessoa_id: string
+          pessoa_nome: string
+          professor_id: string
+          professor_nome: string
+          responsavel_correcao_nome: string
+          responsavel_correcao_tipo: string
+          responsavel_entrega_nome: string
+          total_correcoes: number
+          turma_nome: string
+        }[]
+      }
       get_attendance_rate_stats: {
         Args: {
           p_end_date: string
