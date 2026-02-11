@@ -1,75 +1,105 @@
 
 
-## Filtrar dados do Abrindo Horizontes por unidade ativa
+## Fase 9: Migrar Alertas de Evasao para Multi-Unidades
 
-### Contexto
-As tabelas `ah_recolhidas` e `ah_ignorar_coleta` nao possuem coluna `unit_id`. Os alunos e funcionarios ja possuem `unit_id`. Precisamos filtrar 4 hooks.
+### Resumo
 
-### Estrategia
-Seguindo o padrao ja usado no projeto (isolamento por heranca), vamos filtrar no frontend usando o `unit_id` da pessoa associada (aluno ou funcionario), ja que as queries desses hooks fazem JOINs com essas tabelas. Para a RPC `get_ah_tempo_stats`, vamos adicionar um parametro `p_unit_id` e filtrar via JOIN.
+Adicionar `unit_id` as 3 tabelas principais do sistema de evasao (`alerta_evasao`, `atividades_alerta_evasao`, `kanban_cards`), migrar dados existentes, atualizar RPCs, trigger automatica, e filtrar todos os hooks/paginas pela unidade ativa.
 
 ---
 
-### Alteracoes
+### Etapa 1 - Migracao de Banco de Dados
 
-#### 1. Banco de Dados - Atualizar RPC `get_ah_tempo_stats`
-- Dropar a funcao existente
-- Recriar com parametro `p_unit_id uuid DEFAULT NULL`
-- Adicionar JOIN com `alunos` e `funcionarios` para filtrar por `unit_id` quando informado
-- Logica: verificar se `pessoa_id` pertence a um aluno ou funcionario da unidade
+Uma unica migracao SQL que:
 
-#### 2. Hook `use-apostilas-recolhidas.ts`
-- Importar `useActiveUnit`
-- Adicionar `activeUnit.id` na queryKey
-- Apos buscar os detalhes de cada apostila, filtrar apenas os que pertencem a alunos/funcionarios com `unit_id` compativel
-- Alternativa mais performatica: adicionar filtro `.eq('unit_id', activeUnit.id)` nas queries de alunos e funcionarios internas (so retorna match se o aluno pertence a unidade)
-
-#### 3. Hook `use-proximas-coletas-ah.ts`
-- Importar `useActiveUnit`
-- Adicionar `activeUnit.id` na queryKey
-- Adicionar `.eq('unit_id', activeUnit.id)` nas queries de alunos e funcionarios
-- Desabilitar query enquanto `activeUnit` nao estiver carregado
-
-#### 4. Hook `use-alunos-ignorados-ah.ts`
-- Importar `useActiveUnit`
-- Adicionar `activeUnit.id` na queryKey
-- Nas sub-queries de alunos e funcionarios, adicionar `.eq('unit_id', activeUnit.id)` para filtrar
-- Se a pessoa nao pertence a unidade ativa, excluir do resultado
-
-#### 5. Hook `use-ah-tempo-stats.ts`
-- Importar `useActiveUnit`
-- Adicionar `activeUnit.id` na queryKey
-- Passar `p_unit_id` para a RPC
-- Desabilitar query enquanto `activeUnit` nao estiver carregado
+1. **Adiciona `unit_id`** (nullable inicialmente) nas 3 tabelas
+2. **Preenche dados existentes**:
+   - `alerta_evasao.unit_id` = `alunos.unit_id` (via `aluno_id`)
+   - `atividades_alerta_evasao.unit_id` = `alerta_evasao.unit_id` (via `alerta_evasao_id`)
+   - `kanban_cards.unit_id` = `alerta_evasao.unit_id` (via `alerta_evasao_id`)
+   - Registros orfaos recebem a unidade de Maringa como fallback
+3. **Torna NOT NULL** apos preenchimento
+4. **Cria indices** de performance
 
 ---
 
-### Detalhes tecnicos
+### Etapa 2 - Atualizar Trigger Automatica
 
-**Migracao SQL para `get_ah_tempo_stats`:**
-```sql
-DROP FUNCTION IF EXISTS get_ah_tempo_stats();
+Recriar a funcao `criar_atividade_acolhimento_automatica` para copiar o `unit_id` do alerta pai para a atividade de acolhimento criada automaticamente.
 
-CREATE OR REPLACE FUNCTION get_ah_tempo_stats(p_unit_id uuid DEFAULT NULL)
-RETURNS TABLE(...) -- mesmos campos
--- Adicionar filtro WHERE na CTE apostilas_com_dados:
--- WHERE (p_unit_id IS NULL OR EXISTS (
---   SELECT 1 FROM alunos a WHERE a.id = ar.pessoa_id AND a.unit_id = p_unit_id
---   UNION ALL
---   SELECT 1 FROM funcionarios f WHERE f.id = ar.pessoa_id AND f.unit_id = p_unit_id
--- ))
-```
+---
 
-**Padrao nos hooks frontend:**
+### Etapa 3 - Atualizar RPCs
+
+**`get_alunos_retencoes_historico`:**
+- Adicionar parametro `p_unit_id uuid DEFAULT NULL`
+- Filtrar por `a.unit_id = p_unit_id` quando informado
+
+**`get_aluno_detalhes`:**
+- Adicionar parametro `p_unit_id uuid DEFAULT NULL`
+- Filtrar por `a.unit_id = p_unit_id` quando informado
+
+---
+
+### Etapa 4 - Atualizar Hooks (leitura/filtragem)
+
+Todos os hooks abaixo recebem `useActiveUnit()` e filtram por `unit_id`:
+
+| Hook | Alteracao |
+|------|-----------|
+| `use-alertas-evasao-lista.ts` | Filtrar `.eq('unit_id', activeUnit.id)`, adicionar na queryKey |
+| `use-kanban-cards.ts` | Filtrar `.eq('unit_id', activeUnit.id)`, adicionar na queryKey |
+| `use-atividades-evasao-home.ts` | Filtrar via JOIN (aluno.unit_id) ou direto, adicionar na queryKey |
+| `use-retencoes-historico.ts` | Passar `p_unit_id` para RPC |
+
+---
+
+### Etapa 5 - Atualizar Hooks (escrita/criacao)
+
+| Hook | Alteracao |
+|------|-----------|
+| `use-alertas-evasao.ts` | Incluir `unit_id: activeUnit.id` ao inserir novo alerta |
+| `use-atividades-alerta-evasao.ts` | Incluir `unit_id` ao criar atividades (buscar do alerta pai) |
+
+---
+
+### Etapa 6 - Atualizar Paginas e Componentes
+
+As paginas importam `useActiveUnit()` e passam o ID para os hooks:
+- `AlertasEvasao.tsx`
+- `PainelPedagogico.tsx`
+- `Retencoes.tsx`
+
+---
+
+### Detalhes Tecnicos
+
+**Padrao nos hooks:**
 ```typescript
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
-
 const { activeUnit } = useActiveUnit();
 
-// Na queryKey:
-queryKey: ['nome-query', activeUnit?.id],
-
-// Desabilitar ate carregar:
-enabled: !!activeUnit?.id,
+// queryKey inclui activeUnit?.id
+// enabled inclui !!activeUnit?.id
+// queries usam .eq('unit_id', activeUnit.id)
 ```
+
+**Trigger atualizada:**
+```sql
+INSERT INTO atividades_alerta_evasao (
+  alerta_evasao_id, tipo_atividade, descricao,
+  responsavel_id, responsavel_nome,
+  unit_id  -- NOVO: herda do alerta
+) VALUES (
+  NEW.id, 'acolhimento', v_descricao,
+  NULL, COALESCE(v_professor_nome, 'Sistema'),
+  NEW.unit_id  -- copia do alerta pai
+);
+```
+
+**Migracao de dados (fallback Maringa):**
+Registros que nao conseguirem resolver o `unit_id` via relacionamento (aluno deletado, etc) receberao a unidade de Maringa como padrao, garantindo que a coluna possa ser NOT NULL.
+
+**Webhooks n8n/Make:**
+Os payloads existentes ja enviam dados do aluno/turma. Nao ha necessidade imediata de incluir `unit_id` nos webhooks, mas o campo estara disponivel no banco caso necessario no futuro.
 
