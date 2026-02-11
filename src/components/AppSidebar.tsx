@@ -173,7 +173,13 @@ export function AppSidebar() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro ao deslogar:', error);
+    }
+    // Forçar limpeza local caso a sessão já tenha expirado
+    window.location.href = '/auth/login';
   };
 
   const isTeacher = userRole === 'educador';
