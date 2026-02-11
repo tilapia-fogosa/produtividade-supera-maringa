@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 export interface TodosAlunosItem {
   id: string;
@@ -22,51 +23,61 @@ export const useTodosAlunos = () => {
   const [alunos, setAlunos] = useState<TodosAlunosItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
+  const { activeUnit } = useActiveUnit();
 
   useEffect(() => {
+    if (!activeUnit?.id) return;
+
     const buscarTodosAlunos = async () => {
       try {
         setLoading(true);
-        console.log('Buscando todas as pessoas usando função SQL...');
 
-        // Usar a função SQL get_todas_pessoas que já combina alunos e funcionários ativos
-        const { data: pessoasData, error } = await supabase
-          .rpc('get_todas_pessoas');
+        const [{ data: alunosData, error: errAlunos }, { data: funcsData, error: errFuncs }] = await Promise.all([
+          supabase
+            .from('alunos')
+            .select('id, nome, email, telefone, turma_id, ultima_correcao_ah, turmas(nome)')
+            .eq('active', true)
+            .eq('unit_id', activeUnit.id)
+            .order('nome'),
+          supabase
+            .from('funcionarios')
+            .select('id, nome, email, telefone, turma_id, ultima_correcao_ah, cargo, turmas(nome)')
+            .eq('active', true)
+            .eq('unit_id', activeUnit.id)
+            .order('nome'),
+        ]);
 
-        if (error) {
-          console.error('Erro ao buscar pessoas:', error);
-          throw error;
-        }
+        if (errAlunos) throw errAlunos;
+        if (errFuncs) throw errFuncs;
 
-        // Formatar os dados para o formato esperado
-        const todosPessoas = pessoasData?.map(pessoa => ({
-          id: pessoa.id,
-          nome: pessoa.nome,
-          turma_nome: pessoa.turma_nome || 'Sem turma',
-          turma_id: pessoa.turma_id,
-          unit_id: null, // A função não retorna unit_id atualmente
-          active: true, // A view já filtra por active = true
-          ultima_correcao_ah: pessoa.ultima_correcao_ah,
-          origem: pessoa.origem as 'aluno' | 'funcionario',
-          codigo: null, // Não disponível na função atual
-          email: pessoa.email,
-          telefone: pessoa.telefone,
-          ultimo_nivel: null, // Não disponível na função atual
-          ultima_pagina: null, // Não disponível na função atual
-          niveldesafio: null // Não disponível na função atual
-        })) || [];
+        const todosPessoas: TodosAlunosItem[] = [
+          ...(alunosData || []).map((a: any) => ({
+            id: a.id,
+            nome: a.nome,
+            turma_nome: a.turmas?.nome || 'Sem turma',
+            turma_id: a.turma_id,
+            unit_id: activeUnit.id,
+            active: true,
+            ultima_correcao_ah: a.ultima_correcao_ah,
+            origem: 'aluno' as const,
+            email: a.email,
+            telefone: a.telefone,
+          })),
+          ...(funcsData || []).map((f: any) => ({
+            id: f.id,
+            nome: f.nome,
+            turma_nome: f.turmas?.nome || 'Sem turma',
+            turma_id: f.turma_id,
+            unit_id: activeUnit.id,
+            active: true,
+            ultima_correcao_ah: f.ultima_correcao_ah,
+            origem: 'funcionario' as const,
+            email: f.email,
+            telefone: f.telefone,
+          })),
+        ];
 
-        console.log('Pessoas carregadas da função SQL:', {
-          total: todosPessoas.length,
-          porOrigem: todosPessoas.reduce((acc, p) => {
-            acc[p.origem] = (acc[p.origem] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>)
-        });
-
-        // Ordenar por nome
         todosPessoas.sort((a, b) => a.nome.localeCompare(b.nome));
-
         setAlunos(todosPessoas);
       } catch (error) {
         console.error('Erro ao buscar todos os alunos:', error);
@@ -76,9 +87,8 @@ export const useTodosAlunos = () => {
     };
 
     buscarTodosAlunos();
-  }, []);
+  }, [activeUnit?.id]);
 
-  // Filtrar alunos baseado no texto
   const alunosFiltrados = useMemo(() => {
     if (!filtro.trim()) return alunos;
     
