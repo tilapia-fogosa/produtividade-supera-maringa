@@ -1,42 +1,43 @@
 
 
-## Correção: Filtrar histórico de sincronizações pela unidade ativa
+## Alterar lógica de sincronização de professores
 
-### Problema
-O hook `useUltimaSincronizacao` aplica o filtro `unit_id` de forma condicional (`if (activeUnit?.id)`). Quando a unidade ativa ainda não carregou, a query retorna dados de todas as unidades, fazendo com que Londrina veja sincronizações de Maringá.
+### Problema atual
+Quando um professor com o mesmo nome existe em outra unidade, a função move ele para a unidade atual, removendo-o da unidade original.
 
-### Solução
-Modificar o hook para:
-1. **Desabilitar a query** enquanto `activeUnit` não estiver definido (usando `enabled`)
-2. **Sempre aplicar** o filtro `unit_id` (removendo o `if`)
+### Nova lógica
+Cada professor será um registro independente por unidade. A busca passa a ser filtrada por `unit_id`:
 
-### Arquivo a alterar
+- Se o professor já existe **na mesma unidade** -> reativa (status = true)
+- Se o professor **não existe na unidade** -> cria um novo registro, independente de existir em outra unidade
+- Remove toda a lógica de mover professor entre unidades
+- Remove a lógica de remoção de duplicatas entre unidades
 
-**`src/hooks/use-ultima-sincronizacao.ts`**
-- Adicionar `enabled: !!activeUnit?.id` nas opções da query para não executar sem unidade
-- Remover o `if` condicional e sempre aplicar `.eq('unit_id', activeUnit.id)`
+### Alteração técnica
 
-### Detalhes técnicos
+**Arquivo:** `supabase/functions/sync-turmas-xls/index.ts`
+
+Na Etapa 2 (Processar Professores), substituir a busca global (`ilike` sem filtro de unidade) por uma busca filtrada:
 
 ```typescript
-return useQuery({
-  queryKey: ["ultimas-sincronizacoes", activeUnit?.id],
-  queryFn: async () => {
-    let query = supabase
-      .from('data_imports')
-      .select('*')
-      .eq('import_type', 'turmas-xls')
-      .eq('status', 'completed')
-      .eq('unit_id', activeUnit!.id)  // sempre filtra
-      .order('created_at', { ascending: false })
-      .limit(10);
+// ANTES: busca global por nome em todas as unidades
+const { data: existingProfs } = await supabase
+  .from('professores')
+  .select('id, unit_id, status')
+  .ilike('nome', nome);
 
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
-  },
-  enabled: !!activeUnit?.id,  // só executa com unidade definida
-  refetchInterval: 30000,
-});
+// DEPOIS: busca apenas na unidade atual
+const { data: existingProf } = await supabase
+  .from('professores')
+  .select('id')
+  .ilike('nome', nome)
+  .eq('unit_id', unitId)
+  .maybeSingle();
 ```
+
+A lógica simplificada fica:
+- Se encontrou na unidade -> reativa
+- Se não encontrou -> cria novo registro com o `unit_id` atual
+
+Toda a lógica de "mover entre unidades" e "remover duplicatas" será removida.
 
