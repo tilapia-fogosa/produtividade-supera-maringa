@@ -93,15 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('Erro ao deslogar:', error);
-      // Forçar limpeza mesmo se falhar
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-    }
+    await supabase.auth.signOut();
   };
 
   useEffect(() => {

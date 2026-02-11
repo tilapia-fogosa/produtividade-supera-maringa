@@ -173,12 +173,7 @@ export function AppSidebar() {
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('Erro ao deslogar:', error);
-    }
-    window.location.href = '/auth/login';
+    await supabase.auth.signOut();
   };
 
   const isTeacher = userRole === 'educador';
