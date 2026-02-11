@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 export interface CamisetaAlunoData {
   id: string;
@@ -25,10 +26,13 @@ export function useCamisetas() {
   const [filtroNome, setFiltroNome] = useState('');
   const [filtroTurma, setFiltroTurma] = useState('');
   const [filtroProfessor, setFiltroProfessor] = useState('');
+  const { activeUnit } = useActiveUnit();
 
   useEffect(() => {
-    buscarDadosCamisetas();
-  }, []);
+    if (activeUnit?.id) {
+      buscarDadosCamisetas();
+    }
+  }, [activeUnit?.id]);
 
   const buscarDadosCamisetas = async () => {
     try {
@@ -56,6 +60,7 @@ export function useCamisetas() {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', activeUnit!.id)
         .not('dias_supera', 'is', null)
         .gte('dias_supera', 60) // Alunos com 60+ dias (2 meses)
         .order('dias_supera', { ascending: false });

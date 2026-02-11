@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export interface AHTempoStats {
   tempo_medio_coleta_correcao: number | null;
@@ -11,19 +12,21 @@ export interface AHTempoStats {
 }
 
 export const useAHTempoStats = () => {
+  const { activeUnit } = useActiveUnit();
+
   return useQuery({
-    queryKey: ['ah-tempo-stats'],
+    queryKey: ['ah-tempo-stats', activeUnit?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('get_ah_tempo_stats');
+        .rpc('get_ah_tempo_stats', { p_unit_id: activeUnit!.id });
 
       if (error) {
         console.error('Erro ao buscar estatísticas de tempo AH:', error);
         throw error;
       }
 
-      // A função retorna um array com um único objeto
       return data && data.length > 0 ? data[0] as AHTempoStats : null;
     },
+    enabled: !!activeUnit?.id,
   });
 };

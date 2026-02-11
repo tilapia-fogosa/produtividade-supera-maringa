@@ -1,29 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export const useUltimaSincronizacao = () => {
+  const { activeUnit } = useActiveUnit();
+
   return useQuery({
-    queryKey: ["ultimas-sincronizacoes"],
+    queryKey: ["ultimas-sincronizacoes", activeUnit?.id],
     queryFn: async () => {
-      console.log('🔄 Buscando últimas sincronizações de turmas');
-      
       const { data, error } = await supabase
         .from('data_imports')
         .select('*')
         .eq('import_type', 'turmas-xls')
         .eq('status', 'completed')
+        .eq('unit_id', activeUnit!.id)
         .order('created_at', { ascending: false })
         .limit(10);
-      
-      if (error) {
-        console.error('❌ Erro ao buscar sincronizações:', error);
-        throw error;
-      }
-      
-      console.log('✅ Sincronizações encontradas:', data);
-      
+
+      if (error) throw error;
       return data || [];
     },
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
+    enabled: !!activeUnit?.id,
+    refetchInterval: 30000,
   });
 };

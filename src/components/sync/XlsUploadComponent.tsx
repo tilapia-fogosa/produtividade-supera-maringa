@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 interface XlsData {
   turmas: any[];
@@ -17,6 +18,7 @@ const XlsUploadComponent = () => {
   const [previewData, setPreviewData] = useState<XlsData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { activeUnit } = useActiveUnit();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -155,49 +157,6 @@ const XlsUploadComponent = () => {
 
     setIsUploading(true);
 
-    // Criar backup automático obrigatório
-    try {
-      toast.info("Criando backup automático antes da sincronização...");
-      console.log('Iniciando backup automático no slot 1');
-      
-      const { data: backupData, error: backupError } = await supabase.functions.invoke('create-backup', {
-        body: {
-          slotNumber: 1,
-          backupName: `Auto-backup ${new Date().toLocaleString('pt-BR')}`,
-          description: `Backup automático criado antes da sincronização do arquivo ${selectedFile?.name}`
-        }
-      });
-
-      console.log('Resultado do backup:', { backupData, backupError });
-
-      if (backupError) {
-        console.error('Erro na função de backup:', backupError);
-        toast.error("Erro ao criar backup automático: " + backupError.message);
-        const continueWithoutBackup = confirm('Erro ao criar backup automático. Deseja continuar com a sincronização mesmo assim?');
-        if (!continueWithoutBackup) {
-          setIsUploading(false);
-          return;
-        }
-      } else if (!backupData?.success) {
-        console.error('Backup falhou:', backupData);
-        toast.error("Erro ao criar backup automático: " + (backupData?.error || 'Erro desconhecido'));
-        const continueWithoutBackup = confirm('Erro ao criar backup automático. Deseja continuar com a sincronização mesmo assim?');
-        if (!continueWithoutBackup) {
-          setIsUploading(false);
-          return;
-        }
-      } else {
-        toast.success(`Backup automático criado no slot 1 com ${backupData.statistics?.totalAlunos || 0} alunos, ${backupData.statistics?.totalProfessores || 0} professores, ${backupData.statistics?.totalTurmas || 0} turmas`);
-      }
-    } catch (error) {
-      console.error('Erro inesperado no backup automático:', error);
-      toast.error("Erro inesperado ao criar backup automático");
-      const continueWithoutBackup = confirm('Erro inesperado ao criar backup automático. Deseja continuar com a sincronização mesmo assim?');
-      if (!continueWithoutBackup) {
-        setIsUploading(false);
-        return;
-      }
-    }
 
     // Proceder com a sincronização
     try {
@@ -206,7 +165,8 @@ const XlsUploadComponent = () => {
       const { data, error } = await supabase.functions.invoke('sync-turmas-xls', {
         body: {
           xlsData: previewData,
-          fileName: selectedFile?.name || 'arquivo.xlsx'
+          fileName: selectedFile?.name || 'arquivo.xlsx',
+          unitId: activeUnit?.id
         }
       });
 
@@ -332,7 +292,7 @@ const XlsUploadComponent = () => {
 
               <Button 
                 onClick={handleUpload} 
-                disabled={isUploading || !previewData}
+                disabled={isUploading || !previewData || !activeUnit?.id}
                 className="w-full"
               >
                 {isUploading ? (

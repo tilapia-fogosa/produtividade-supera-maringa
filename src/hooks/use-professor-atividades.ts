@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentProfessor } from './use-current-professor';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 import { getDay } from 'date-fns';
 
 // Mapeia o dia da semana do JS para o formato do banco
@@ -66,9 +67,10 @@ export interface BotomPendenteProfessor {
 
 export function useProfessorAtividades() {
   const { professorId, isProfessor } = useCurrentProfessor();
+  const { activeUnit } = useActiveUnit();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['professor-atividades', professorId],
+    queryKey: ['professor-atividades', professorId, activeUnit?.id],
     queryFn: async () => {
       if (!professorId) return null;
 
@@ -115,7 +117,7 @@ export function useProfessorAtividades() {
 
       // 3. Buscar reposições para as turmas do professor (incluindo futuras apenas)
       const { data: reposicoes, error: reposicoesError } = await supabase
-        .rpc('get_lista_completa_reposicoes', { p_incluir_anteriores: false });
+        .rpc('get_lista_completa_reposicoes', { p_incluir_anteriores: false, p_unit_id: activeUnit?.id || null });
 
       if (reposicoesError) throw reposicoesError;
 
