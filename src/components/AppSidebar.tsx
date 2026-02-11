@@ -40,7 +40,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { supabase } from "@/integrations/supabase/client";
+
+const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
 
 const items = [
   {
@@ -88,16 +91,19 @@ const items = [
     title: "Projeto São Rafael",
     url: "/projeto-sao-rafael",
     icon: Target,
+    maringaOnly: true,
   },
   {
     title: "Galeria de Fotos",
     url: "/galeria-fotos",
     icon: Image,
+    maringaOnly: true,
   },
   {
     title: "Avisos",
     url: "/avisos",
     icon: Bell,
+    maringaOnly: true,
   },
 ];
 
@@ -107,6 +113,7 @@ const additionalItems = [
     url: "/funcionarios",
     icon: User,
     requiresAdmin: true,
+    maringaOnly: true,
   },
   {
     title: "Alertas de Falta",
@@ -131,12 +138,14 @@ const additionalItems = [
     url: "/controle-ponto",
     icon: Clock,
     requiresAdmin: true,
+    maringaOnly: true,
   },
   {
     title: "Registro de Ponto",
     url: "/registro-ponto",
     icon: Clock,
     requiresAdmin: true,
+    maringaOnly: true,
   },
 ];
 
@@ -145,6 +154,7 @@ const administrativoItems = [
     title: "Painel Administrativo",
     url: "/painel-administrativo",
     icon: LayoutDashboard,
+    maringaOnly: true,
   },
   {
     title: "Eventos",
@@ -161,6 +171,8 @@ const administrativoItems = [
 export function AppSidebar() {
   const { user, profile } = useAuth();
   const { isAdmin, isAdministrativo, userRole } = useUserPermissions();
+  const { activeUnit } = useActiveUnit();
+  const isMaringa = activeUnit?.id === MARINGA_UNIT_ID;
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -180,11 +192,21 @@ export function AppSidebar() {
   const isFuncionario = ['gestor_pedagogico', 'franqueado'].includes(userRole);
 
   const filteredItems = items.filter(item => {
+    if (item.maringaOnly && !isMaringa) return false;
     if (item.requiresTeacher && !isTeacher) return false;
     return true;
   });
 
-  const adminItems = additionalItems.filter(item => isAdmin);
+  const adminItems = additionalItems.filter(item => {
+    if (!isAdmin) return false;
+    if (item.maringaOnly && !isMaringa) return false;
+    return true;
+  });
+
+  const filteredAdministrativoItems = administrativoItems.filter(item => {
+    if (item.maringaOnly && !isMaringa) return false;
+    return true;
+  });
 
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
@@ -225,13 +247,13 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        {(isAdmin || isAdministrativo) && administrativoItems.length > 0 && (
+        {(isAdmin || isAdministrativo) && filteredAdministrativoItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
               Administrativo
             </SidebarGroupLabel>
             <SidebarMenu>
-              {administrativoItems.map((item) => (
+              {filteredAdministrativoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
