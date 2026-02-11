@@ -75,6 +75,7 @@ const items = [
     title: "Reservas de Sala",
     url: "/reservas-sala",
     icon: MapPin,
+    maringaOnly: true,
   },
   {
     title: "Alunos Ativos",
