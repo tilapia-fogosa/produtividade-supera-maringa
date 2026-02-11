@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export interface AlunoIgnorado {
   id: string;
@@ -16,12 +17,13 @@ export interface AlunoIgnorado {
 }
 
 export const useAlunosIgnoradosAH = () => {
+  const { activeUnit } = useActiveUnit();
+
   return useQuery({
-    queryKey: ['alunos-ignorados-ah'],
+    queryKey: ['alunos-ignorados-ah', activeUnit?.id],
     queryFn: async () => {
       const dataAtual = new Date().toISOString();
       
-      // Buscar registros ativos de ignorar coleta que ainda não expiraram
       const { data, error } = await supabase
         .from('ah_ignorar_coleta')
         .select('*')
@@ -31,43 +33,42 @@ export const useAlunosIgnoradosAH = () => {
 
       if (error) throw error;
 
-      // Para cada registro, buscar informações da pessoa (aluno ou funcionário)
       const registrosComNomes = await Promise.all(
         (data || []).map(async (registro) => {
           let nomePessoa = 'Desconhecido';
           let turmaNome = null;
+          let pertenceUnidade = false;
 
           if (registro.pessoa_tipo === 'aluno') {
             const { data: aluno } = await supabase
               .from('alunos')
-              .select(`
-                nome,
-                turmas (nome)
-              `)
+              .select(`nome, turmas (nome)`)
               .eq('id', registro.pessoa_id)
+              .eq('unit_id', activeUnit!.id)
               .single();
             
             if (aluno) {
               nomePessoa = aluno.nome;
               turmaNome = aluno.turmas?.nome || null;
+              pertenceUnidade = true;
             }
           } else if (registro.pessoa_tipo === 'funcionario') {
             const { data: funcionario } = await supabase
               .from('funcionarios')
-              .select(`
-                nome,
-                turmas (nome)
-              `)
+              .select(`nome, turmas (nome)`)
               .eq('id', registro.pessoa_id)
+              .eq('unit_id', activeUnit!.id)
               .single();
             
             if (funcionario) {
               nomePessoa = funcionario.nome;
               turmaNome = funcionario.turmas?.nome || null;
+              pertenceUnidade = true;
             }
           }
 
-          // Calcular dias restantes
+          if (!pertenceUnidade) return null;
+
           const diasRestantes = Math.ceil(
             (new Date(registro.data_fim).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
           );
@@ -88,7 +89,8 @@ export const useAlunosIgnoradosAH = () => {
         })
       );
 
-      return registrosComNomes;
+      return registrosComNomes.filter(Boolean) as AlunoIgnorado[];
     },
+    enabled: !!activeUnit?.id,
   });
 };
