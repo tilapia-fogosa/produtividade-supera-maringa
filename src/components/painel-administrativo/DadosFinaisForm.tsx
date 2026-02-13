@@ -261,6 +261,13 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         const totalMinutos = hora * 60 + minuto + 60;
         const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
 
+        // Remover evento anterior de aula inaugural deste cliente
+        await supabase
+          .from('eventos_professor')
+          .delete()
+          .eq('client_id', cliente.id)
+          .eq('tipo_evento', 'aula_zero');
+
         const eventoData = {
           professor_id: professorSelecionado.id,
           tipo_evento: 'aula_zero',
@@ -271,6 +278,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           horario_fim: horarioFim,
           recorrente: false,
           created_by: userId,
+          client_id: cliente.id,
         };
 
         const { error: eventoError } = await supabase
