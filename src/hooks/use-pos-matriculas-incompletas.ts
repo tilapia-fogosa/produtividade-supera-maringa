@@ -8,7 +8,6 @@ export interface PosMatriculaIncompleta {
   client_name: string;
   data_matricula: string;
   vendedor_nome: string | null;
-  // Status de cada seção
   cadastrais_completo: boolean;
   comerciais_completo: boolean;
   pedagogicos_completo: boolean;
@@ -20,46 +19,16 @@ export function usePosMatriculasIncompletas() {
   return useQuery({
     queryKey: ["pos-matriculas-incompletas", activeUnit?.id],
     queryFn: async (): Promise<PosMatriculaIncompleta[]> => {
-      // Buscar atividades de matrícula após 01/01/2026
-      let query = supabase
-        .from("client_activities")
-        .select(`
-          id,
-          created_at,
-          created_by,
-          client_id,
-          clients!client_activities_client_id_fkey (
-            id,
-            name
-          )
-        `)
-        .eq("tipo_atividade", "Matrícula")
-        .gte("created_at", "2026-01-01T00:00:00")
-        .order("created_at", { ascending: false });
-
-      // Filtra por unidade se selecionada
-      if (activeUnit?.id) {
-        query = query.eq("unit_id", activeUnit.id);
-      }
-
-      const { data: activities, error } = await query;
-
-      if (error) throw error;
-      if (!activities?.length) return [];
-
-      // Mapear client_ids únicos
-      const clientIds = [...new Set(activities.map((a: any) => a.client_id).filter(Boolean))] as string[];
-      
-      if (clientIds.length === 0) return [];
-
-      // Buscar atividade_pos_venda para verificar completude
-      const { data: posVendaData } = await supabase
+      // Buscar direto da atividade_pos_venda (apenas registros que realmente existem)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase
         .from("atividade_pos_venda")
         .select(`
           id,
           client_id,
           client_name,
           created_at,
+          created_by,
           full_name,
           cpf,
           birth_date,
@@ -68,13 +37,30 @@ export function usePosMatriculasIncompletas() {
           enrollment_amount,
           monthly_fee_amount,
           turma_id,
-          data_aula_inaugural
-        `)
-        .in("client_id", clientIds);
+          data_aula_inaugural,
+          check_lancar_sgs,
+          check_assinar_contrato,
+          check_entregar_kit,
+          check_cadastrar_pagamento,
+          check_sincronizar_sgs,
+          check_grupo_whatsapp,
+          status_manual
+        `) as any)
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+
+      if (activeUnit?.id) {
+        query = query.eq("unit_id", activeUnit.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      if (!data?.length) return [];
 
       // Buscar nomes dos vendedores
       const createdByIds = [...new Set(
-        activities.map((a: any) => a.created_by).filter(Boolean)
+        data.map((a: any) => a.created_by).filter(Boolean)
       )] as string[];
 
       let profilesMap = new Map<string, string>();
@@ -89,47 +75,38 @@ export function usePosMatriculasIncompletas() {
         });
       }
 
-      // Mapear pos_venda por client_id
-      const posVendaMap = new Map<string, any>();
-      posVendaData?.forEach((pv: any) => {
-        posVendaMap.set(pv.client_id, pv);
-      });
-
       // Montar resultado verificando completude
-      const clientesMap = new Map<string, any>();
-      activities.forEach((activity: any) => {
-        const clientId = activity.clients?.id;
-        if (!clientId || clientesMap.has(clientId)) return;
-        
-        const posVenda = posVendaMap.get(clientId);
-        
-        // Verificar completude de cada seção
-        const cadastrais_completo = posVenda && !!(
-          posVenda.full_name &&
-          posVenda.cpf &&
-          posVenda.birth_date &&
-          posVenda.address_street
+      const result: PosMatriculaIncompleta[] = [];
+
+      data.forEach((pv: any) => {
+        const isManualCompleto = pv.status_manual === 'Concluido';
+
+        const cadastrais_completo = isManualCompleto || !!(
+          pv.full_name &&
+          pv.cpf &&
+          pv.birth_date &&
+          pv.address_street
         );
-        
-        const comerciais_completo = posVenda && !!(
-          posVenda.kit_type &&
-          posVenda.enrollment_amount !== null &&
-          posVenda.monthly_fee_amount !== null
+
+        const comerciais_completo = isManualCompleto || !!(
+          pv.kit_type &&
+          pv.enrollment_amount !== null &&
+          pv.monthly_fee_amount !== null
         );
-        
-        const pedagogicos_completo = posVenda && !!(
-          posVenda.turma_id &&
-          posVenda.data_aula_inaugural
+
+        const pedagogicos_completo = isManualCompleto || !!(
+          pv.turma_id &&
+          pv.data_aula_inaugural
         );
 
         // Só adicionar se alguma seção estiver incompleta
         if (!cadastrais_completo || !comerciais_completo || !pedagogicos_completo) {
-          clientesMap.set(clientId, {
-            id: posVenda?.id || activity.id,
-            client_id: clientId,
-            client_name: activity.clients.name || "Sem nome",
-            data_matricula: activity.created_at,
-            vendedor_nome: activity.created_by ? profilesMap.get(activity.created_by) || null : null,
+          result.push({
+            id: pv.id,
+            client_id: pv.client_id,
+            client_name: pv.full_name || pv.client_name || "Sem nome",
+            data_matricula: pv.created_at,
+            vendedor_nome: pv.created_by ? profilesMap.get(pv.created_by) || null : null,
             cadastrais_completo,
             comerciais_completo,
             pedagogicos_completo,
@@ -137,8 +114,8 @@ export function usePosMatriculasIncompletas() {
         }
       });
 
-      return Array.from(clientesMap.values());
+      return result;
     },
-    enabled: true,
+    enabled: !!activeUnit?.id,
   });
 }
