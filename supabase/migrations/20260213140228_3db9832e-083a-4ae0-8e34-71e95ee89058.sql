@@ -1,0 +1,1 @@
+TRUNCATE TABLE public.atividade_pos_venda CASCADE;
