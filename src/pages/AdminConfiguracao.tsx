@@ -6,6 +6,7 @@ import { Users } from "lucide-react";
 import { VincularProfessorModal } from '@/components/admin/VincularProfessorModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 interface UsuarioSemVinculo {
   id: string;
@@ -19,16 +20,30 @@ const AdminConfiguracao = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UsuarioSemVinculo | null>(null);
   const queryClient = useQueryClient();
+  const { activeUnit } = useActiveUnit();
 
-  // ID da unidade de Maringá
-  const MARINGA_UNIT_ID = '0df79a04-444e-46ee-b218-59e4b1835f4a';
+  const unitId = activeUnit?.id;
 
-  // Buscar usuários de Maringá (via unit_users) ou sem nenhuma unidade
+  // Buscar usuários da unidade ativa
   const { data: usuarios, isLoading } = useQuery({
-    queryKey: ['usuarios-vinculos-professor', MARINGA_UNIT_ID],
+    queryKey: ['usuarios-vinculos-professor', unitId],
     queryFn: async () => {
-      // 1. Buscar todos os usuários ativos com seus vínculos
-      const { data: allProfiles, error: profilesError } = await supabase
+      if (!unitId) return [];
+
+      // 1. Buscar usuários que pertencem à unidade ativa via unit_users
+      const { data: unitUsersData, error: unitUsersError } = await supabase
+        .from('unit_users')
+        .select('user_id')
+        .eq('unit_id', unitId)
+        .eq('active', true);
+
+      if (unitUsersError) throw unitUsersError;
+
+      const userIds = unitUsersData?.map(u => u.user_id) || [];
+      if (userIds.length === 0) return [];
+
+      // 2. Buscar perfis desses usuários
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -40,40 +55,13 @@ const AdminConfiguracao = () => {
             nome
           )
         `)
+        .in('id', userIds)
         .or('access_blocked.is.null,access_blocked.eq.false')
         .order('full_name');
 
       if (profilesError) throw profilesError;
 
-      // 2. Buscar usuários que pertencem a Maringá via unit_users
-      const { data: unitUsersMaringa, error: unitUsersError } = await supabase
-        .from('unit_users')
-        .select('user_id')
-        .eq('unit_id', MARINGA_UNIT_ID)
-        .eq('active', true);
-
-      if (unitUsersError) throw unitUsersError;
-
-      const userIdsMaringa = new Set(unitUsersMaringa?.map(u => u.user_id) || []);
-
-      // 3. Buscar todos os user_ids que têm alguma unidade
-      const { data: allUnitUsers, error: allUnitUsersError } = await supabase
-        .from('unit_users')
-        .select('user_id')
-        .eq('active', true);
-
-      if (allUnitUsersError) throw allUnitUsersError;
-
-      const userIdsComUnidade = new Set(allUnitUsers?.map(u => u.user_id) || []);
-
-      // 4. Filtrar: usuários de Maringá OU sem nenhuma unidade
-      const usuariosFiltrados = allProfiles?.filter(u => {
-        const pertenceMaringa = userIdsMaringa.has(u.id);
-        const semUnidade = !userIdsComUnidade.has(u.id);
-        return pertenceMaringa || semUnidade;
-      });
-
-      return usuariosFiltrados?.map(u => ({
+      return profiles?.map(u => ({
         id: u.id,
         full_name: u.full_name,
         email: u.email,
@@ -81,6 +69,7 @@ const AdminConfiguracao = () => {
         professor_nome: u.professores?.nome || null
       })) as UsuarioSemVinculo[];
     },
+    enabled: !!unitId,
   });
 
   // Mutation para desvincular professor
