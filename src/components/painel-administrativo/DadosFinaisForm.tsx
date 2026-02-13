@@ -148,12 +148,23 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             setDescritivoComercial((data as any).informacoes_onboarding);
           }
           if (data.data_aula_inaugural) {
-            const dataHora = new Date(data.data_aula_inaugural);
-            setDataAulaInaugural(dataHora);
-            const horas = dataHora.getHours().toString().padStart(2, '0');
-            const minutos = dataHora.getMinutes().toString().padStart(2, '0');
-            if (horas !== '00' || minutos !== '00') {
-              setHorarioSelecionado(`${horas}:${minutos}`);
+            const dateStr = String(data.data_aula_inaugural);
+            // Parse como data local para evitar shift de timezone
+            const tIndex = dateStr.indexOf('T');
+            if (tIndex !== -1) {
+              const datePart = dateStr.substring(0, tIndex);
+              const timePart = dateStr.substring(tIndex + 1);
+              const [year, month, day] = datePart.split('-').map(Number);
+              setDataAulaInaugural(new Date(year, month - 1, day));
+              // Extrair horário com segundos para match com o select
+              const timeClean = timePart.replace(/[+-]\d{2}:\d{2}$/, '').replace('Z', '');
+              const horario = timeClean.length >= 8 ? timeClean.substring(0, 8) : `${timeClean.substring(0, 5)}:00`;
+              if (horario !== '00:00:00') {
+                setHorarioSelecionado(horario);
+              }
+            } else {
+              const [year, month, day] = dateStr.split('-').map(Number);
+              setDataAulaInaugural(new Date(year, month - 1, day));
             }
           }
         }
