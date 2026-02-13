@@ -1,28 +1,54 @@
 
+# Evitar Duplicacao de Eventos de Aula Inaugural
 
-# Mover Campo "Aula Inaugural" para Dados Iniciais
+## Problema
+Atualmente, toda vez que o formulario de "Dados Iniciais" e salvo, um novo evento `aula_zero` e inserido na tabela `eventos_professor`, sem verificar se ja existe um evento para aquele cliente. Isso causa duplicatas se o formulario for salvo mais de uma vez.
 
-## O que sera feito
+## Solucao
 
-O campo "Data da Aula Inaugural" (com selecao de data, horario, professor e sala) sera removido do formulario de **Dados Pedagogicos** e adicionado como **primeiro campo** do formulario de **Dados Iniciais**.
+### 1. Migracao de Banco de Dados
+Adicionar coluna `client_id` na tabela `eventos_professor` para rastrear qual cliente originou o evento de aula inaugural:
 
-## Alteracoes
+```sql
+ALTER TABLE public.eventos_professor 
+ADD COLUMN client_id UUID REFERENCES public.clients(id);
+```
 
-### 1. `src/components/painel-administrativo/DadosFinaisForm.tsx` (Dados Iniciais)
-- Importar o componente `AulaInauguralSelector`
-- Adicionar estados para data, horario, professor e sala
-- Renderizar o `AulaInauguralSelector` como primeiro elemento do formulario (antes da foto/webcam)
-- Salvar os dados da aula inaugural junto com o submit do formulario (gravar `data_aula_inaugural` na tabela `atividade_pos_venda` e criar evento na `eventos_professor`)
-- Carregar dados salvos existentes de `data_aula_inaugural` no useEffect inicial
+### 2. Alteracao no DadosFinaisForm.tsx
+Modificar a logica de criacao do evento na `mutationFn`:
 
-### 2. `src/components/painel-administrativo/DadosPedagogicosForm.tsx`
-- Remover toda a secao "Aula Inaugural" do accordion (AccordionItem value="aula")
-- Remover os estados relacionados: `dataAulaInaugural`, `horarioSelecionado`, `professorSelecionado`, `salaSelecionada`
-- Remover o import do `AulaInauguralSelector`
-- Remover os parametros de aula inaugural do `handleSave` (`dataAulaInaugural`, `horarioAulaInaugural`, `professorId`, `salaId`)
-- Remover o carregamento de dados salvos de `data_aula_inaugural` no useEffect
+- **Antes de inserir** um novo evento, buscar e **deletar** eventos existentes do tipo `aula_zero` vinculados ao mesmo `client_id`
+- Ao inserir o novo evento, incluir o `client_id` do cliente no registro
 
-### 3. Logica de salvamento
-- A logica de criar evento na agenda do professor (que hoje esta no hook `use-salvar-dados-pedagogicos.ts`) sera replicada diretamente na mutation do `DadosFinaisForm.tsx`, pois o salvamento ja e feito inline nesse componente
-- A gravacao de `data_aula_inaugural` na `atividade_pos_venda` sera feita junto com os demais campos do checklist
+Fluxo atualizado:
+1. Deletar qualquer evento existente: `DELETE FROM eventos_professor WHERE client_id = X AND tipo_evento = 'aula_zero'`
+2. Inserir o novo evento com o `client_id` preenchido
 
+### Detalhes Tecnicos
+
+**Migracao SQL:**
+```sql
+ALTER TABLE public.eventos_professor 
+ADD COLUMN client_id UUID REFERENCES public.clients(id);
+```
+
+**Logica no DadosFinaisForm.tsx (linhas 255-281):**
+Substituir o bloco atual de criacao de evento por:
+```typescript
+// Remover evento anterior de aula inaugural deste cliente
+await supabase
+  .from('eventos_professor')
+  .delete()
+  .eq('client_id', cliente.id)
+  .eq('tipo_evento', 'aula_zero');
+
+// Criar novo evento
+const { error: eventoError } = await supabase
+  .from('eventos_professor')
+  .insert({
+    ...eventoData,
+    client_id: cliente.id,
+  });
+```
+
+Isso garante que sempre existira no maximo 1 evento de aula inaugural por cliente.
