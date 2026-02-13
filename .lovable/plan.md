@@ -1,46 +1,28 @@
 
 
-# Otimizacao de Performance - Painel Administrativo
+# Mover Campo "Aula Inaugural" para Dados Iniciais
 
-## Problemas Identificados
+## O que sera feito
 
-1. **Aba Atividades Pos-Venda**: O hook `use-atividades-pos-venda.ts` nao filtra por unidade ativa, trazendo registros de todas as unidades. Faz 2 queries sequenciais (atividade_pos_venda + alunos).
+O campo "Data da Aula Inaugural" (com selecao de data, horario, professor e sala) sera removido do formulario de **Dados Pedagogicos** e adicionado como **primeiro campo** do formulario de **Dados Iniciais**.
 
-2. **Aba Fichas de Rescisao**: O hook `use-fichas-rescisao.ts` busca TODAS as fichas do banco e filtra por unidade no frontend (JavaScript), desperdicando banda e processamento. Filtros de nome e data tambem sao aplicados no frontend em vez de no banco.
+## Alteracoes
 
-3. **Aba Pos-Matricula** (oculta, mas carrega no hook da pagina pai): Faz 4 queries sequenciais ao banco (client_activities, atividade_pos_venda, alunos, profiles).
+### 1. `src/components/painel-administrativo/DadosFinaisForm.tsx` (Dados Iniciais)
+- Importar o componente `AulaInauguralSelector`
+- Adicionar estados para data, horario, professor e sala
+- Renderizar o `AulaInauguralSelector` como primeiro elemento do formulario (antes da foto/webcam)
+- Salvar os dados da aula inaugural junto com o submit do formulario (gravar `data_aula_inaugural` na tabela `atividade_pos_venda` e criar evento na `eventos_professor`)
+- Carregar dados salvos existentes de `data_aula_inaugural` no useEffect inicial
 
-4. **Requests N+1 vistos nas network logs**: Dezenas de chamadas individuais para `alunos`, `professores` e `turmas` - o mesmo professor sendo buscado repetidamente para cada registro.
+### 2. `src/components/painel-administrativo/DadosPedagogicosForm.tsx`
+- Remover toda a secao "Aula Inaugural" do accordion (AccordionItem value="aula")
+- Remover os estados relacionados: `dataAulaInaugural`, `horarioSelecionado`, `professorSelecionado`, `salaSelecionada`
+- Remover o import do `AulaInauguralSelector`
+- Remover os parametros de aula inaugural do `handleSave` (`dataAulaInaugural`, `horarioAulaInaugural`, `professorId`, `salaId`)
+- Remover o carregamento de dados salvos de `data_aula_inaugural` no useEffect
 
-## Plano de Otimizacao
-
-### 1. Hook `use-atividades-pos-venda.ts`
-- Adicionar filtro por `unit_id` da unidade ativa usando o contexto `useActiveUnit`
-- A tabela `atividade_pos_venda` ja possui coluna `unit_id`, basta adicionar `.eq("unit_id", activeUnit.id)` na query
-- Desabilitar a query quando `activeUnit` nao estiver disponivel (`enabled: !!activeUnit?.id`)
-
-### 2. Hook `use-fichas-rescisao.ts`
-- Mover filtro de unidade para o banco: adicionar `.eq("alerta_evasao.alunos.unit_id", activeUnit.id)` na query Supabase
-- Mover filtro de data para o banco com `.gte` e `.lte` em `created_at`
-- Mover filtro de nome para o banco com `.ilike("alerta_evasao.alunos.nome", "%nome%")`
-- Isso reduz drasticamente o volume de dados transferidos
-
-### 3. Remover queries desnecessarias da pagina pai
-- O `PainelAdministrativo.tsx` instancia `usePosMatricula()` no nivel da pagina, mas a aba Pos-Matricula esta oculta. Remover essa chamada para evitar queries ao banco que nao sao utilizadas.
-
-### 4. Eliminar requests N+1 nas Fichas de Rescisao
-- A query de fichas de rescisao ja usa JOINs aninhados (`alunos -> turmas -> professores`), entao os dados ja vem na resposta. Se houver componentes filhos fazendo buscas individuais, corrigir para usar os dados ja carregados.
-
-## Secao Tecnica
-
-### Arquivos modificados:
-- `src/hooks/use-atividades-pos-venda.ts` - Adicionar filtro por unidade ativa
-- `src/hooks/use-fichas-rescisao.ts` - Mover filtros para o banco de dados
-- `src/pages/PainelAdministrativo.tsx` - Remover hook e imports nao utilizados da aba oculta
-
-### Resultado esperado:
-- Reducao significativa no numero de registros buscados (apenas da unidade ativa)
-- Eliminacao de filtragem no frontend que deveria ocorrer no banco
-- Remocao de queries desnecessarias da aba oculta
-- Carregamento mais rapido da tela
+### 3. Logica de salvamento
+- A logica de criar evento na agenda do professor (que hoje esta no hook `use-salvar-dados-pedagogicos.ts`) sera replicada diretamente na mutation do `DadosFinaisForm.tsx`, pois o salvamento ja e feito inline nesse componente
+- A gravacao de `data_aula_inaugural` na `atividade_pos_venda` sera feita junto com os demais campos do checklist
 
