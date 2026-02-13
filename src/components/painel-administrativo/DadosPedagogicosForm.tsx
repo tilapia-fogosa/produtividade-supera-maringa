@@ -20,7 +20,6 @@ import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useTodasTurmas } from "@/hooks/use-todas-turmas";
 import { useSalvarDadosPedagogicos } from "@/hooks/use-salvar-dados-pedagogicos";
 import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
-import { AulaInauguralSelector } from "./AulaInauguralSelector";
 import { useDadosPosVenda, formatPhoneDisplay } from "@/hooks/use-dados-pos-venda";
 
 interface DadosPedagogicosFormProps {
@@ -37,12 +36,6 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   const [turmaId, setTurmaId] = useState<string>("");
   const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("O próprio");
   const [telefoneResponsavel, setTelefoneResponsavel] = useState<string>("");
-  
-  // Estados da aula inaugural
-  const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
-  const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
-  const [professorSelecionado, setProfessorSelecionado] = useState<{ id: string; nome: string; prioridade: number } | null>(null);
-  const [salaSelecionada, setSalaSelecionada] = useState<{ id: string; nome: string } | null>(null);
 
   // Carregar dados salvos quando disponíveis
   useEffect(() => {
@@ -55,15 +48,6 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
       }
       if (dadosSalvos.whatsapp_contato) {
         setTelefoneResponsavel(formatPhoneDisplay(dadosSalvos.whatsapp_contato));
-      }
-      if (dadosSalvos.data_aula_inaugural) {
-        const dataHora = new Date(dadosSalvos.data_aula_inaugural);
-        setDataAulaInaugural(dataHora);
-        const horas = dataHora.getHours().toString().padStart(2, '0');
-        const minutos = dataHora.getMinutes().toString().padStart(2, '0');
-        if (horas !== '00' || minutos !== '00') {
-          setHorarioSelecionado(`${horas}:${minutos}`);
-        }
       }
     }
   }, [dadosSalvos]);
@@ -87,14 +71,8 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
       clientId: cliente.id,
       alunoId: alunoVinculado?.id,
       turmaId: turmaId || undefined,
-      // Para salvar no banco, mantém a lógica de não salvar "O próprio"
       responsavel: responsavelPedagogico !== "O próprio" ? responsavelPedagogico : undefined,
       whatsappContato: telefoneResponsavel || undefined,
-      dataAulaInaugural: dataAulaInaugural,
-      horarioAulaInaugural: horarioSelecionado || undefined,
-      professorId: professorSelecionado?.id,
-      salaId: salaSelecionada?.id,
-      // Valores para o webhook - sempre enviar os valores atuais do formulário
       responsavelWebhook: responsavelPedagogico,
       telefoneResponsavelWebhook: telefoneResponsavel,
     });
@@ -106,7 +84,7 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
 
   return (
     <div className="space-y-4">
-      <Accordion type="multiple" defaultValue={["turma", "responsavel", "aula"]} className="w-full">
+      <Accordion type="multiple" defaultValue={["turma", "responsavel"]} className="w-full">
         {/* Seção Turma */}
         <AccordionItem value="turma">
           <AccordionTrigger className="text-sm font-medium">
@@ -162,27 +140,6 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
             </div>
           </AccordionContent>
         </AccordionItem>
-
-        {/* Seção Aula Inaugural */}
-        <AccordionItem value="aula">
-          <AccordionTrigger className="text-sm font-medium">
-            Aula Inaugural
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="pt-2">
-              <AulaInauguralSelector
-                dataAulaInaugural={dataAulaInaugural}
-                setDataAulaInaugural={setDataAulaInaugural}
-                horarioSelecionado={horarioSelecionado}
-                setHorarioSelecionado={setHorarioSelecionado}
-                professorSelecionado={professorSelecionado}
-                setProfessorSelecionado={setProfessorSelecionado}
-                salaSelecionada={salaSelecionada}
-                setSalaSelecionada={setSalaSelecionada}
-              />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
       </Accordion>
 
       {/* Botões de ação */}
@@ -203,4 +160,3 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
     </div>
   );
 }
-

@@ -26,6 +26,7 @@ import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useAlunosSemVinculo, useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { WebcamCapture } from "./WebcamCapture";
+import { AulaInauguralSelector } from "./AulaInauguralSelector";
 import {
   Popover,
   PopoverContent,
@@ -77,6 +78,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
   const [fotoUrlExistente, setFotoUrlExistente] = useState<string | null>(null);
 
+  // Estados da aula inaugural
+  const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
+  const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
+  const [professorSelecionado, setProfessorSelecionado] = useState<{ id: string; nome: string; prioridade: number } | null>(null);
+  const [salaSelecionada, setSalaSelecionada] = useState<{ id: string; nome: string } | null>(null);
+
   // Hooks para alunos
   const { data: alunosDisponiveis = [], isLoading: isLoadingAlunos } = useAlunosSemVinculo(cliente.id);
   const { data: alunoVinculado, isLoading: isLoadingVinculado } = useAlunoVinculado(cliente.id);
@@ -116,7 +123,8 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_cadastrar_pagamento,
             check_sincronizar_sgs,
             check_grupo_whatsapp,
-            photo_url
+            photo_url,
+            data_aula_inaugural
           `)
           .eq("client_id", cliente.id)
           .maybeSingle();
@@ -132,6 +140,15 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           });
           if (data.photo_url) {
             setFotoUrlExistente(data.photo_url);
+          }
+          if (data.data_aula_inaugural) {
+            const dataHora = new Date(data.data_aula_inaugural);
+            setDataAulaInaugural(dataHora);
+            const horas = dataHora.getHours().toString().padStart(2, '0');
+            const minutos = dataHora.getMinutes().toString().padStart(2, '0');
+            if (horas !== '00' || minutos !== '00') {
+              setHorarioSelecionado(`${horas}:${minutos}`);
+            }
           }
         }
       } catch (error) {
@@ -170,10 +187,16 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         photoUrl = urlData.publicUrl;
       }
 
-      // Atualizar checklist e foto na atividade_pos_venda
+      // Atualizar checklist, foto e aula inaugural na atividade_pos_venda
       const updateData: Record<string, any> = { ...data.checklist };
       if (photoUrl) {
         updateData.photo_url = photoUrl;
+      }
+
+      // Salvar data da aula inaugural
+      if (dataAulaInaugural && horarioSelecionado) {
+        const dataStr = dataAulaInaugural.toISOString().split('T')[0];
+        updateData.data_aula_inaugural = `${dataStr}T${horarioSelecionado}:00`;
       }
 
       const { error: checklistError } = await supabase
@@ -197,19 +220,57 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
         // Adicionar vínculo ao novo aluno (se selecionado)
         if (data.alunoId) {
+          const updateAluno: Record<string, any> = { client_id: cliente.id, foto_url: photoUrl };
+          if (dataAulaInaugural) {
+            updateAluno.data_onboarding = dataAulaInaugural.toISOString().split('T')[0];
+          }
           const { error: addError } = await supabase
             .from("alunos")
-            .update({ client_id: cliente.id, foto_url: photoUrl })
+            .update(updateAluno)
             .eq("id", data.alunoId);
 
           if (addError) throw addError;
         }
-      } else if (data.alunoId && photoUrl) {
-        // Atualizar foto do aluno vinculado existente
-        await supabase
-          .from("alunos")
-          .update({ foto_url: photoUrl })
-          .eq("id", data.alunoId);
+      } else if (data.alunoId) {
+        // Atualizar foto e data_onboarding do aluno vinculado existente
+        const updateAluno: Record<string, any> = {};
+        if (photoUrl) updateAluno.foto_url = photoUrl;
+        if (dataAulaInaugural) updateAluno.data_onboarding = dataAulaInaugural.toISOString().split('T')[0];
+        
+        if (Object.keys(updateAluno).length > 0) {
+          await supabase
+            .from("alunos")
+            .update(updateAluno)
+            .eq("id", data.alunoId);
+        }
+      }
+
+      // Criar evento na agenda do professor (se aula inaugural preenchida)
+      if (dataAulaInaugural && horarioSelecionado && professorSelecionado) {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id ?? null;
+
+        const [hora, minuto] = horarioSelecionado.split(':').map(Number);
+        const totalMinutos = hora * 60 + minuto + 60;
+        const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
+
+        const eventoData = {
+          professor_id: professorSelecionado.id,
+          tipo_evento: 'aula_zero',
+          titulo: 'Aula Inaugural',
+          descricao: 'Aula inaugural agendada via painel administrativo',
+          data: dataAulaInaugural.toISOString().split('T')[0],
+          horario_inicio: horarioSelecionado,
+          horario_fim: horarioFim,
+          recorrente: false,
+          created_by: userId,
+        };
+
+        const { error: eventoError } = await supabase
+          .from('eventos_professor')
+          .insert(eventoData);
+
+        if (eventoError) throw eventoError;
       }
     },
     onSuccess: () => {
@@ -217,6 +278,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       queryClient.invalidateQueries({ queryKey: ["pos-matriculas-incompletas"] });
       queryClient.invalidateQueries({ queryKey: ["alunos-sem-vinculo"] });
       queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
       setTimeout(() => onCancel(), 1500);
     },
   });
@@ -247,6 +309,21 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Seção: Aula Inaugural (primeiro campo) */}
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold">Aula Inaugural</Label>
+        <AulaInauguralSelector
+          dataAulaInaugural={dataAulaInaugural}
+          setDataAulaInaugural={setDataAulaInaugural}
+          horarioSelecionado={horarioSelecionado}
+          setHorarioSelecionado={setHorarioSelecionado}
+          professorSelecionado={professorSelecionado}
+          setProfessorSelecionado={setProfessorSelecionado}
+          salaSelecionada={salaSelecionada}
+          setSalaSelecionada={setSalaSelecionada}
+        />
+      </div>
+
       {/* Seção: Foto do Aluno */}
       <WebcamCapture
         capturedImage={fotoCapturada}
