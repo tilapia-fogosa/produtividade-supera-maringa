@@ -859,6 +859,7 @@ export type Database = {
           status_manual: string | null
           status_sincronizacao: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id: string | null
+          unit_id: string
           updated_at: string
           whatsapp_contato: string | null
         }
@@ -917,6 +918,7 @@ export type Database = {
           status_manual?: string | null
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
+          unit_id: string
           updated_at?: string
           whatsapp_contato?: string | null
         }
@@ -975,6 +977,7 @@ export type Database = {
           status_manual?: string | null
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
+          unit_id?: string
           updated_at?: string
           whatsapp_contato?: string | null
         }
@@ -999,6 +1002,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "atividade_pos_venda_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
