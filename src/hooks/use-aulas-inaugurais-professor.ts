@@ -16,6 +16,25 @@ export interface AulaInaugural {
   client_id?: string;
 }
 
+async function getActiveClientIds(clientIds: string[]): Promise<Set<string>> {
+  const active = new Set<string>();
+  if (clientIds.length === 0) return active;
+
+  const { data: alunos } = await supabase
+    .from('alunos')
+    .select('client_id')
+    .in('client_id', clientIds)
+    .eq('active', true);
+
+  if (alunos) {
+    alunos.forEach(a => {
+      if (a.client_id) active.add(a.client_id);
+    });
+  }
+
+  return active;
+}
+
 async function getCompletedClientIds(clientIds: string[]): Promise<Set<string>> {
   const completed = new Set<string>();
   if (clientIds.length === 0) return completed;
@@ -23,7 +42,8 @@ async function getCompletedClientIds(clientIds: string[]): Promise<Set<string>> 
   const { data: alunos } = await supabase
     .from('alunos')
     .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-    .in('client_id', clientIds);
+    .in('client_id', clientIds)
+    .eq('active', true);
 
   if (alunos) {
     alunos.forEach(a => {
@@ -87,8 +107,11 @@ export function useAulasInauguraisProfessor() {
           }
         }
 
-        // Filtrar aulas com todos os 5 campos preenchidos
-        const completedClientIds = await getCompletedClientIds(clientIds);
+        // Filtrar: só mostrar se tem aluno ativo vinculado, e remover se aula zero concluída
+        const [activeClientIds, completedClientIds] = await Promise.all([
+          getActiveClientIds(clientIds),
+          getCompletedClientIds(clientIds),
+        ]);
 
         return (eventos || []).map(e => ({
           id: e.id,
@@ -100,7 +123,12 @@ export function useAulasInauguraisProfessor() {
           cliente_nome: clienteNomes[(e as any).client_id] || undefined,
           professor_nome: (e as any).professores?.nome || undefined,
           client_id: (e as any).client_id || undefined,
-        })).filter(e => !e.client_id || !completedClientIds.has(e.client_id)) as AulaInaugural[];
+        })).filter(e => {
+          if (!e.client_id) return false;
+          if (!activeClientIds.has(e.client_id)) return false;
+          if (completedClientIds.has(e.client_id)) return false;
+          return true;
+        }) as AulaInaugural[];
       }
 
       if (isProfessor && professorId) {
@@ -131,8 +159,11 @@ export function useAulasInauguraisProfessor() {
           }
         }
 
-        // Filtrar aulas com todos os 5 campos preenchidos
-        const completedClientIds = await getCompletedClientIds(clientIds);
+        // Filtrar: só mostrar se tem aluno ativo vinculado, e remover se aula zero concluída
+        const [activeClientIds, completedClientIds] = await Promise.all([
+          getActiveClientIds(clientIds),
+          getCompletedClientIds(clientIds),
+        ]);
 
         return (eventos || []).map(e => ({
           id: e.id,
@@ -143,7 +174,12 @@ export function useAulasInauguraisProfessor() {
           descricao: e.descricao,
           cliente_nome: clienteNomes[(e as any).client_id] || undefined,
           client_id: (e as any).client_id || undefined,
-        })).filter(e => !e.client_id || !completedClientIds.has(e.client_id)) as AulaInaugural[];
+        })).filter(e => {
+          if (!e.client_id) return false;
+          if (!activeClientIds.has(e.client_id)) return false;
+          if (completedClientIds.has(e.client_id)) return false;
+          return true;
+        }) as AulaInaugural[];
       }
 
       return [];
