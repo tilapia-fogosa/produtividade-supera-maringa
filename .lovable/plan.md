@@ -1,54 +1,52 @@
 
-# Evitar Duplicacao de Eventos de Aula Inaugural
+## Gaveta de Aula Zero ao clicar na Aula Inaugural (Home)
 
-## Problema
-Atualmente, toda vez que o formulario de "Dados Iniciais" e salvo, um novo evento `aula_zero` e inserido na tabela `eventos_professor`, sem verificar se ja existe um evento para aquele cliente. Isso causa duplicatas se o formulario for salvo mais de uma vez.
+### Objetivo
+Ao clicar em uma atividade do tipo "Aula Inaugural" na tela Home, abrir uma gaveta lateral (Sheet 480px) com o formulario de Aula Zero. O nome do aluno ja estara preenchido automaticamente com base no `client_id` do evento.
 
-## Solucao
+### Mudancas necessarias
 
-### 1. Migracao de Banco de Dados
-Adicionar coluna `client_id` na tabela `eventos_professor` para rastrear qual cliente originou o evento de aula inaugural:
+#### 1. Novo componente: `src/components/aula-zero/AulaZeroDrawer.tsx`
+- Gaveta lateral (Sheet) com largura de 480px, seguindo o padrao do projeto
+- Contem os mesmos campos do formulario da pagina `/aula-zero`:
+  - Percepcao do Coordenador (textarea)
+  - Motivo da Procura (textarea)
+  - Avaliacao no Abaco (textarea)
+  - Avaliacao no Abrindo Horizontes (textarea)
+  - Pontos de Atencao (textarea)
+- O campo "Aluno" nao sera um seletor -- sera exibido como texto fixo (nome do aluno ja preenchido)
+- Botao "Salvar" que:
+  - Atualiza os campos na tabela `alunos` (mesmo comportamento da pagina AulaZero)
+  - Envia para o webhook (mesmo comportamento)
+  - Fecha a gaveta ao concluir
 
-```sql
-ALTER TABLE public.eventos_professor 
-ADD COLUMN client_id UUID REFERENCES public.clients(id);
+#### 2. Alteracao no hook: `src/hooks/use-aulas-inaugurais-professor.ts`
+- Adicionar `client_id` na interface `AulaInaugural`
+- Retornar o `client_id` nos dados mapeados (ja esta sendo buscado, so nao esta sendo retornado)
+
+#### 3. Alteracao na interface Evento: `src/pages/Home.tsx`
+- Adicionar campo opcional `client_id` na interface `Evento`
+- Ao montar eventos de `aula_inaugural`, incluir o `client_id` do evento
+- Adicionar estado para controlar abertura da gaveta (`aulaZeroDrawerAberto`)
+- Adicionar estado para dados do aluno selecionado (`aulaZeroAluno`)
+- No `renderEvento`, tornar `aula_inaugural` clicavel
+- No `handleClick`, ao clicar em `aula_inaugural`:
+  - Buscar o `aluno` na tabela `alunos` pelo `client_id` do evento
+  - Abrir a gaveta com o nome do aluno preenchido
+- Renderizar o componente `AulaZeroDrawer` no JSX da Home
+
+### Detalhes tecnicos
+
+**Fluxo de dados:**
+```text
+Evento (aula_inaugural) -> client_id -> busca alunos.client_id -> aluno_id + aluno_nome -> AulaZeroDrawer
 ```
 
-### 2. Alteracao no DadosFinaisForm.tsx
-Modificar a logica de criacao do evento na `mutationFn`:
+**AulaZeroDrawer props:**
+- `open: boolean`
+- `onOpenChange: (open: boolean) => void`
+- `alunoId: string`
+- `alunoNome: string`
+- `onSalvo?: () => void` (callback apos salvar)
 
-- **Antes de inserir** um novo evento, buscar e **deletar** eventos existentes do tipo `aula_zero` vinculados ao mesmo `client_id`
-- Ao inserir o novo evento, incluir o `client_id` do cliente no registro
-
-Fluxo atualizado:
-1. Deletar qualquer evento existente: `DELETE FROM eventos_professor WHERE client_id = X AND tipo_evento = 'aula_zero'`
-2. Inserir o novo evento com o `client_id` preenchido
-
-### Detalhes Tecnicos
-
-**Migracao SQL:**
-```sql
-ALTER TABLE public.eventos_professor 
-ADD COLUMN client_id UUID REFERENCES public.clients(id);
-```
-
-**Logica no DadosFinaisForm.tsx (linhas 255-281):**
-Substituir o bloco atual de criacao de evento por:
-```typescript
-// Remover evento anterior de aula inaugural deste cliente
-await supabase
-  .from('eventos_professor')
-  .delete()
-  .eq('client_id', cliente.id)
-  .eq('tipo_evento', 'aula_zero');
-
-// Criar novo evento
-const { error: eventoError } = await supabase
-  .from('eventos_professor')
-  .insert({
-    ...eventoData,
-    client_id: cliente.id,
-  });
-```
-
-Isso garante que sempre existira no maximo 1 evento de aula inaugural por cliente.
+**Salvamento:** Reutiliza a mesma logica da pagina AulaZero -- update na tabela `alunos` e envio ao webhook buscando a URL de `dados_importantes`.
