@@ -37,6 +37,7 @@ import { usePendenciasBotom } from '@/hooks/use-pendencias-botom';
 import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioModal';
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
+import { AulaZeroDrawer } from '@/components/aula-zero/AulaZeroDrawer';
 // Interface para eventos com dados extras
 interface Evento {
   tipo: string;
@@ -63,6 +64,8 @@ interface Evento {
   // Campos para entrega de botom
   pendencia_botom_id?: string;
   apostila_nova?: string;
+  // Campos para aula inaugural
+  aula_inaugural_client_id?: string;
 }
 
 export default function Home() {
@@ -153,6 +156,10 @@ export default function Home() {
     alunoNome: string;
     apostilaNova: string;
   } | null>(null);
+
+  // Estado para gaveta de Aula Zero
+  const [aulaZeroDrawerAberto, setAulaZeroDrawerAberto] = useState(false);
+  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ id: string; nome: string } | null>(null);
 
   // Tipos de atividades disponíveis para filtro
   const tiposAtividades = useMemo(() => [
@@ -411,6 +418,7 @@ export default function Home() {
           titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}${ai.professor_nome ? ` • ${ai.professor_nome}` : ''}`,
+          aula_inaugural_client_id: ai.client_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -514,6 +522,7 @@ export default function Home() {
           titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
+          aula_inaugural_client_id: ai.client_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -995,7 +1004,22 @@ export default function Home() {
     }
   };
 
-  const handleSalvarCamiseta = async (dados: { 
+  const handleAulaInauguralClick = async (evento: Evento) => {
+    if (evento.aula_inaugural_client_id) {
+      const { data: aluno } = await supabase
+        .from('alunos')
+        .select('id, nome')
+        .eq('client_id', evento.aula_inaugural_client_id)
+        .single();
+
+      if (aluno) {
+        setAulaZeroAluno({ id: aluno.id, nome: aluno.nome });
+        setAulaZeroDrawerAberto(true);
+      }
+    }
+  };
+
+  const handleSalvarCamiseta = async (dados: {
     alunoId: string; 
     tamanho_camiseta: string; 
     data_entrega: Date; 
@@ -1017,7 +1041,8 @@ export default function Home() {
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
     const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel;
+    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_client_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel || isAulaInauguralClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -1034,6 +1059,8 @@ export default function Home() {
         handleAniversarioClick(evento);
       } else if (isBotomClicavel) {
         handleBotomClick(evento);
+      } else if (isAulaInauguralClicavel) {
+        handleAulaInauguralClick(evento);
       }
     };
     
@@ -1350,6 +1377,17 @@ export default function Home() {
           refetchBotom();
           setBotomSelecionado(null);
         }}
+      />
+
+      {/* Gaveta de Aula Zero */}
+      <AulaZeroDrawer
+        open={aulaZeroDrawerAberto}
+        onOpenChange={(open) => {
+          setAulaZeroDrawerAberto(open);
+          if (!open) setAulaZeroAluno(null);
+        }}
+        alunoId={aulaZeroAluno?.id || ''}
+        alunoNome={aulaZeroAluno?.nome || ''}
       />
     </div>
   );
