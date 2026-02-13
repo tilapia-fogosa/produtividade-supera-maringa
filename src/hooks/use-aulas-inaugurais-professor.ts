@@ -16,6 +16,33 @@ export interface AulaInaugural {
   client_id?: string;
 }
 
+async function getCompletedClientIds(clientIds: string[]): Promise<Set<string>> {
+  const completed = new Set<string>();
+  if (clientIds.length === 0) return completed;
+
+  const { data: alunos } = await supabase
+    .from('alunos')
+    .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
+    .in('client_id', clientIds);
+
+  if (alunos) {
+    alunos.forEach(a => {
+      if (
+        a.client_id &&
+        a.percepcao_coordenador && a.percepcao_coordenador.trim() !== '' &&
+        a.motivo_procura && a.motivo_procura.trim() !== '' &&
+        a.avaliacao_abaco && a.avaliacao_abaco.trim() !== '' &&
+        a.avaliacao_ah && a.avaliacao_ah.trim() !== '' &&
+        a.pontos_atencao && a.pontos_atencao.trim() !== ''
+      ) {
+        completed.add(a.client_id);
+      }
+    });
+  }
+
+  return completed;
+}
+
 export function useAulasInauguraisProfessor() {
   const { professorId, isProfessor } = useCurrentProfessor();
   const { isAdmin, isManagement } = useUserPermissions();
@@ -60,6 +87,9 @@ export function useAulasInauguraisProfessor() {
           }
         }
 
+        // Filtrar aulas com todos os 5 campos preenchidos
+        const completedClientIds = await getCompletedClientIds(clientIds);
+
         return (eventos || []).map(e => ({
           id: e.id,
           titulo: e.titulo || 'Aula Inaugural',
@@ -70,7 +100,7 @@ export function useAulasInauguraisProfessor() {
           cliente_nome: clienteNomes[(e as any).client_id] || undefined,
           professor_nome: (e as any).professores?.nome || undefined,
           client_id: (e as any).client_id || undefined,
-        })) as AulaInaugural[];
+        })).filter(e => !e.client_id || !completedClientIds.has(e.client_id)) as AulaInaugural[];
       }
 
       if (isProfessor && professorId) {
@@ -101,6 +131,9 @@ export function useAulasInauguraisProfessor() {
           }
         }
 
+        // Filtrar aulas com todos os 5 campos preenchidos
+        const completedClientIds = await getCompletedClientIds(clientIds);
+
         return (eventos || []).map(e => ({
           id: e.id,
           titulo: e.titulo || 'Aula Inaugural',
@@ -110,7 +143,7 @@ export function useAulasInauguraisProfessor() {
           descricao: e.descricao,
           cliente_nome: clienteNomes[(e as any).client_id] || undefined,
           client_id: (e as any).client_id || undefined,
-        })) as AulaInaugural[];
+        })).filter(e => !e.client_id || !completedClientIds.has(e.client_id)) as AulaInaugural[];
       }
 
       return [];
