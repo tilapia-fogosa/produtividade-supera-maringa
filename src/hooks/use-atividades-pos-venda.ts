@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export interface AtividadePosVenda {
   id: string;
@@ -22,10 +23,13 @@ export interface AtividadesPosVendaFilters {
 }
 
 export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
+  const { activeUnit } = useActiveUnit();
+
   return useQuery({
-    queryKey: ["atividades-pos-venda", filters],
+    queryKey: ["atividades-pos-venda", activeUnit?.id, filters],
     queryFn: async (): Promise<AtividadePosVenda[]> => {
-      let query = supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase
         .from("atividade_pos_venda")
         .select(`
           id,
@@ -48,8 +52,9 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
           check_sincronizar_sgs,
           check_grupo_whatsapp,
           status_manual
-        `)
+        `) as any)
         .eq("active", true)
+        .eq("unit_id", activeUnit!.id)
         .order("created_at", { ascending: false });
 
       // Filtro de data início
@@ -157,6 +162,6 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
 
       return result;
     },
-    enabled: true,
+    enabled: !!activeUnit?.id,
   });
 }

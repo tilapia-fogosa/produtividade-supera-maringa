@@ -28,7 +28,7 @@ export function useFichasRescisao(filters: FichasRescisaoFilters = {}) {
     queryKey: ["fichas-rescisao", activeUnit?.id, filters.nome, filters.dataInicio?.toISOString(), filters.dataFim?.toISOString()],
     queryFn: async (): Promise<{ pendentes: FichaRescisao[]; concluidas: FichaRescisao[] }> => {
       // Buscar atividades do tipo 'criar_ficha_rescisao'
-      const { data: atividades, error } = await supabase
+      let query = supabase
         .from("atividades_alerta_evasao")
         .select(`
           id,
@@ -59,11 +59,29 @@ export function useFichasRescisao(filters: FichasRescisaoFilters = {}) {
         .eq("tipo_atividade", "criar_ficha_rescisao")
         .order("created_at", { ascending: false });
 
+      // Filtros no banco
+      if (activeUnit?.id) {
+        query = query.eq("alerta_evasao.alunos.unit_id", activeUnit.id);
+      }
+      if (filters.nome) {
+        query = query.ilike("alerta_evasao.alunos.nome", `%${filters.nome}%`);
+      }
+      if (filters.dataInicio) {
+        query = query.gte("created_at", filters.dataInicio.toISOString());
+      }
+      if (filters.dataFim) {
+        const dataFimAjustada = new Date(filters.dataFim);
+        dataFimAjustada.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", dataFimAjustada.toISOString());
+      }
+
+      const { data: atividades, error } = await query;
+
       if (error) throw error;
       if (!atividades?.length) return { pendentes: [], concluidas: [] };
 
-      // Mapear e filtrar dados
-      let fichas: FichaRescisao[] = atividades.map((atividade: any) => {
+      // Mapear dados (filtros já aplicados no banco)
+      const fichas: FichaRescisao[] = atividades.map((atividade: any) => {
         const alerta = atividade.alerta_evasao;
         const aluno = alerta?.alunos;
         const turma = aluno?.turmas;
@@ -80,32 +98,8 @@ export function useFichasRescisao(filters: FichasRescisaoFilters = {}) {
           status: atividade.status as 'pendente' | 'concluida',
           concluido_por_nome: atividade.concluido_por_nome,
           valor_mensalidade: aluno?.valor_mensalidade || null,
-          unit_id: aluno?.unit_id
         };
       });
-
-      // Filtrar por unidade
-      if (activeUnit?.id) {
-        fichas = fichas.filter((f: any) => f.unit_id === activeUnit.id);
-      }
-
-      // Filtrar por nome
-      if (filters.nome) {
-        const nomeLower = filters.nome.toLowerCase();
-        fichas = fichas.filter(f => f.aluno_nome.toLowerCase().includes(nomeLower));
-      }
-
-      // Filtrar por data início
-      if (filters.dataInicio) {
-        fichas = fichas.filter(f => new Date(f.data_criacao) >= filters.dataInicio!);
-      }
-
-      // Filtrar por data fim
-      if (filters.dataFim) {
-        const dataFimAjustada = new Date(filters.dataFim);
-        dataFimAjustada.setHours(23, 59, 59, 999);
-        fichas = fichas.filter(f => new Date(f.data_criacao) <= dataFimAjustada);
-      }
 
       // Separar por status
       const pendentes = fichas.filter(f => f.status === 'pendente');
@@ -113,6 +107,6 @@ export function useFichasRescisao(filters: FichasRescisaoFilters = {}) {
 
       return { pendentes, concluidas };
     },
-    enabled: true,
+    enabled: !!activeUnit?.id,
   });
 }
