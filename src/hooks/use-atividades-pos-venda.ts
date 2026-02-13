@@ -54,7 +54,6 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
           status_manual
         `) as any)
         .eq("active", true)
-        .eq("unit_id", activeUnit!.id)
         .order("created_at", { ascending: false });
 
       // Filtro de data início
