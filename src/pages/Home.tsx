@@ -404,6 +404,26 @@ export default function Home() {
         });
       });
 
+      // === AULAS INAUGURAIS (admin) ===
+      aulasInaugurais.forEach(ai => {
+        const evento: Evento = {
+          tipo: 'aula_inaugural',
+          titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
+          data: ai.data,
+          subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}${ai.professor_nome ? ` • ${ai.professor_nome}` : ''}`,
+        };
+        if (ai.data === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataAi = parseISO(ai.data);
+          if (isSameWeek(dataAi, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          } else if (isSameWeek(dataAi, inicioProximaSemana, { weekStartsOn: 0 })) {
+            eventosProximaSemana.push(evento);
+          }
+        }
+      });
+
       // Aulas experimentais
       aulasExperimentais.forEach(ae => {
         const evento: Evento = {
@@ -491,7 +511,7 @@ export default function Home() {
       aulasInaugurais.forEach(ai => {
         const evento: Evento = {
           tipo: 'aula_inaugural',
-          titulo: `Aula Inaugural`,
+          titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
         };
