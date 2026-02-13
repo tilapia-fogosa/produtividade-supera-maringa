@@ -60,7 +60,7 @@ export const useUserPermissions = () => {
   const isAdmin = profile?.role === 'admin';
   const isManagement = profile?.role && (['franqueado', 'gestor_pedagogico', 'admin'] as const).includes(profile.role as any);
   const isFinanceiro = profile?.role === 'financeiro';
-  const isAdministrativo = profile?.role === 'administrativo';
+  const isAdministrativo = profile?.role === 'administrativo' || profile?.role === 'consultor';
   const isEstagiario = profile?.role === 'estagiario';
   const isSala = profile?.role === 'sala';
 
