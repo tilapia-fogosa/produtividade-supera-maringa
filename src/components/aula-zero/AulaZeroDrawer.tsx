@@ -144,98 +144,100 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[480px] sm:max-w-[480px] overflow-y-auto">
-        <SheetHeader className="mb-4">
-          <SheetTitle>Lançamento de Aula Zero</SheetTitle>
-          <SheetDescription>
+      <SheetContent side="right" className="sm:max-w-[480px] w-full p-6 flex flex-col">
+        <SheetHeader className="mb-3">
+          <SheetTitle className="text-sm font-semibold">Lançamento de Aula Zero</SheetTitle>
+          <SheetDescription className="text-xs">
             Aluno: <span className="font-semibold text-foreground">{alunoNome}</span>
           </SheetDescription>
         </SheetHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="percepcao_coordenador"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Percepção do Coordenador</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Descreva a percepção do coordenador..." {...field} className="min-h-[80px]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="motivo_procura"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Motivo da Procura</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Descreva o motivo da procura..." {...field} className="min-h-[80px]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="avaliacao_abaco"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avaliação no Ábaco</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Como o aluno se saiu no Ábaco..." {...field} className="min-h-[80px]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="avaliacao_ah"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avaliação no Abrindo Horizontes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Como o aluno se saiu no Abrindo Horizontes..." {...field} className="min-h-[80px]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="pontos_atencao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pontos de Atenção</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Destaque pontos importantes a serem observados..." {...field} className="min-h-[80px]" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
+        <div className="flex-1 overflow-y-auto pr-1">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+              <FormField
+                control={form.control}
+                name="percepcao_coordenador"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Percepção do Coordenador</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Descreva a percepção do coordenador..." {...field} className="min-h-[60px] text-xs" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-                {isSaving ? 'Salvando...' : 'Salvar'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              />
+
+              <FormField
+                control={form.control}
+                name="motivo_procura"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Motivo da Procura</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Descreva o motivo da procura..." {...field} className="min-h-[60px] text-xs" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="avaliacao_abaco"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Avaliação no Ábaco</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Como o aluno se saiu no Ábaco..." {...field} className="min-h-[60px] text-xs" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="avaliacao_ah"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Avaliação no Abrindo Horizontes</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Como o aluno se saiu no Abrindo Horizontes..." {...field} className="min-h-[60px] text-xs" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pontos_atencao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Pontos de Atenção</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Destaque pontos importantes a serem observados..." {...field} className="min-h-[60px] text-xs" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" disabled={isSaving} size="sm" className="h-8 text-xs">
+                  {isSaving ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </SheetContent>
     </Sheet>
   );
