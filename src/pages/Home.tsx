@@ -37,6 +37,7 @@ import { usePendenciasBotom } from '@/hooks/use-pendencias-botom';
 import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioModal';
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
+import { AulaZeroDrawer } from '@/components/aula-zero/AulaZeroDrawer';
 // Interface para eventos com dados extras
 interface Evento {
   tipo: string;
@@ -63,6 +64,8 @@ interface Evento {
   // Campos para entrega de botom
   pendencia_botom_id?: string;
   apostila_nova?: string;
+  // Campos para aula inaugural
+  aula_inaugural_client_id?: string;
 }
 
 export default function Home() {
@@ -153,6 +156,10 @@ export default function Home() {
     alunoNome: string;
     apostilaNova: string;
   } | null>(null);
+
+  // Estado para gaveta de Aula Zero
+  const [aulaZeroDrawerAberto, setAulaZeroDrawerAberto] = useState(false);
+  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ id: string; nome: string } | null>(null);
 
   // Tipos de atividades disponíveis para filtro
   const tiposAtividades = useMemo(() => [
@@ -404,6 +411,27 @@ export default function Home() {
         });
       });
 
+      // === AULAS INAUGURAIS (admin) ===
+      aulasInaugurais.forEach(ai => {
+        const evento: Evento = {
+          tipo: 'aula_inaugural',
+          titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
+          data: ai.data,
+          subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}${ai.professor_nome ? ` • ${ai.professor_nome}` : ''}`,
+          aula_inaugural_client_id: ai.client_id,
+        };
+        if (ai.data === hojeStr) {
+          eventosHoje.push(evento);
+        } else {
+          const dataAi = parseISO(ai.data);
+          if (isSameWeek(dataAi, hoje, { weekStartsOn: 0 })) {
+            eventosSemana.push(evento);
+          } else if (isSameWeek(dataAi, inicioProximaSemana, { weekStartsOn: 0 })) {
+            eventosProximaSemana.push(evento);
+          }
+        }
+      });
+
       // Aulas experimentais
       aulasExperimentais.forEach(ae => {
         const evento: Evento = {
@@ -491,9 +519,10 @@ export default function Home() {
       aulasInaugurais.forEach(ai => {
         const evento: Evento = {
           tipo: 'aula_inaugural',
-          titulo: `Aula Inaugural`,
+          titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
+          aula_inaugural_client_id: ai.client_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -975,7 +1004,50 @@ export default function Home() {
     }
   };
 
-  const handleSalvarCamiseta = async (dados: { 
+  const handleAulaInauguralClick = async (evento: Evento) => {
+    if (evento.aula_inaugural_client_id) {
+      // Primeiro tenta encontrar o aluno vinculado pelo client_id
+      const { data: aluno } = await supabase
+        .from('alunos')
+        .select('id, nome')
+        .eq('client_id', evento.aula_inaugural_client_id)
+        .maybeSingle();
+
+      if (aluno) {
+        setAulaZeroAluno({ id: aluno.id, nome: aluno.nome });
+        setAulaZeroDrawerAberto(true);
+      } else {
+        // Se não encontrou aluno, buscar na atividade_pos_venda pelo client_id
+        const { data: posVenda } = await supabase
+          .from('atividade_pos_venda')
+          .select('full_name, client_name')
+          .eq('client_id', evento.aula_inaugural_client_id)
+          .maybeSingle();
+
+        if (posVenda) {
+          // Buscar aluno pelo nome (full_name ou client_name)
+          const nomeCliente = posVenda.full_name || posVenda.client_name;
+          const { data: alunoByNome } = await supabase
+            .from('alunos')
+            .select('id, nome')
+            .ilike('nome', `%${nomeCliente}%`)
+            .limit(1)
+            .maybeSingle();
+
+          if (alunoByNome) {
+            setAulaZeroAluno({ id: alunoByNome.id, nome: alunoByNome.nome });
+            setAulaZeroDrawerAberto(true);
+          } else {
+            // Aluno ainda não foi cadastrado — abrir gaveta sem ID (somente visualização do nome)
+            setAulaZeroAluno({ id: '', nome: nomeCliente });
+            setAulaZeroDrawerAberto(true);
+          }
+        }
+      }
+    }
+  };
+
+  const handleSalvarCamiseta = async (dados: {
     alunoId: string; 
     tamanho_camiseta: string; 
     data_entrega: Date; 
@@ -997,7 +1069,8 @@ export default function Home() {
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
     const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
-    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel;
+    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_client_id;
+    const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel || isAulaInauguralClicavel;
     
     const handleClick = () => {
       if (isCamisetaClicavel) {
@@ -1014,6 +1087,8 @@ export default function Home() {
         handleAniversarioClick(evento);
       } else if (isBotomClicavel) {
         handleBotomClick(evento);
+      } else if (isAulaInauguralClicavel) {
+        handleAulaInauguralClick(evento);
       }
     };
     
@@ -1330,6 +1405,17 @@ export default function Home() {
           refetchBotom();
           setBotomSelecionado(null);
         }}
+      />
+
+      {/* Gaveta de Aula Zero */}
+      <AulaZeroDrawer
+        open={aulaZeroDrawerAberto}
+        onOpenChange={(open) => {
+          setAulaZeroDrawerAberto(open);
+          if (!open) setAulaZeroAluno(null);
+        }}
+        alunoId={aulaZeroAluno?.id || ''}
+        alunoNome={aulaZeroAluno?.nome || ''}
       />
     </div>
   );

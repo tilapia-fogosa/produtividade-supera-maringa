@@ -148,12 +148,23 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             setDescritivoComercial((data as any).informacoes_onboarding);
           }
           if (data.data_aula_inaugural) {
-            const dataHora = new Date(data.data_aula_inaugural);
-            setDataAulaInaugural(dataHora);
-            const horas = dataHora.getHours().toString().padStart(2, '0');
-            const minutos = dataHora.getMinutes().toString().padStart(2, '0');
-            if (horas !== '00' || minutos !== '00') {
-              setHorarioSelecionado(`${horas}:${minutos}`);
+            const dateStr = String(data.data_aula_inaugural);
+            // Parse como data local para evitar shift de timezone
+            const tIndex = dateStr.indexOf('T');
+            if (tIndex !== -1) {
+              const datePart = dateStr.substring(0, tIndex);
+              const timePart = dateStr.substring(tIndex + 1);
+              const [year, month, day] = datePart.split('-').map(Number);
+              setDataAulaInaugural(new Date(year, month - 1, day));
+              // Extrair horário com segundos para match com o select
+              const timeClean = timePart.replace(/[+-]\d{2}:\d{2}$/, '').replace('Z', '');
+              const horario = timeClean.length >= 8 ? timeClean.substring(0, 8) : `${timeClean.substring(0, 5)}:00`;
+              if (horario !== '00:00:00') {
+                setHorarioSelecionado(horario);
+              }
+            } else {
+              const [year, month, day] = dateStr.split('-').map(Number);
+              setDataAulaInaugural(new Date(year, month - 1, day));
             }
           }
         }
@@ -202,8 +213,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
       // Salvar data da aula inaugural
       if (dataAulaInaugural && horarioSelecionado) {
-        const dataStr = dataAulaInaugural.toISOString().split('T')[0];
-        updateData.data_aula_inaugural = `${dataStr}T${horarioSelecionado}:00`;
+        const year = dataAulaInaugural.getFullYear();
+        const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
+        const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
+        const dataStr = `${year}-${month}-${day}`;
+        const horarioLimpo = horarioSelecionado.length === 8 ? horarioSelecionado : `${horarioSelecionado}:00`;
+        updateData.data_aula_inaugural = `${dataStr}T${horarioLimpo}`;
       }
 
       const { error: checklistError } = await supabase
@@ -229,7 +244,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         if (data.alunoId) {
           const updateAluno: Record<string, any> = { client_id: cliente.id, foto_url: photoUrl };
           if (dataAulaInaugural) {
-            updateAluno.data_onboarding = dataAulaInaugural.toISOString().split('T')[0];
+            updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
           }
           const { error: addError } = await supabase
             .from("alunos")
@@ -242,7 +257,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         // Atualizar foto e data_onboarding do aluno vinculado existente
         const updateAluno: Record<string, any> = {};
         if (photoUrl) updateAluno.foto_url = photoUrl;
-        if (dataAulaInaugural) updateAluno.data_onboarding = dataAulaInaugural.toISOString().split('T')[0];
+        if (dataAulaInaugural) updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
         
         if (Object.keys(updateAluno).length > 0) {
           await supabase
@@ -273,7 +288,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           tipo_evento: 'aula_zero',
           titulo: 'Aula Inaugural',
           descricao: 'Aula inaugural agendada via painel administrativo',
-          data: dataAulaInaugural.toISOString().split('T')[0],
+          data: `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`,
           horario_inicio: horarioSelecionado,
           horario_fim: horarioFim,
           recorrente: false,
