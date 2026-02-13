@@ -45,6 +45,8 @@ export function AulaInauguralSelector({
   salaSelecionada,
   setSalaSelecionada,
 }: AulaInauguralSelectorProps) {
+  const [mostrarSeletorProfessor, setMostrarSeletorProfessor] = React.useState(false);
+
   // Buscar horários disponíveis (salas livres)
   const { data: horariosDisponiveis = [], isLoading: loadingHorarios } = useHorariosDisponiveisSalas(
     dataAulaInaugural || null,
@@ -94,6 +96,7 @@ export function AulaInauguralSelector({
     setHorarioSelecionado("");
     setProfessorSelecionado(null);
     setSalaSelecionada(null);
+    setMostrarSeletorProfessor(false);
   };
 
   const temDisponibilidade = professorSelecionado && salaSelecionada;
@@ -195,6 +198,48 @@ export function AulaInauguralSelector({
                   <strong>Data:</strong> {format(dataAulaInaugural!, "dd/MM/yyyy", { locale: ptBR })} às {horarioSelecionado.slice(0, 5)}
                 </span>
               </div>
+
+              {/* Botão para alterar professor */}
+              {!mostrarSeletorProfessor ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 w-full"
+                  onClick={() => setMostrarSeletorProfessor(true)}
+                >
+                  Alterar Professor
+                </Button>
+              ) : (
+                <div className="mt-1 space-y-1.5">
+                  <Label className="text-xs">Selecionar outro professor</Label>
+                  <Select
+                    value={professorSelecionado.id}
+                    onValueChange={(value) => {
+                      const prof = professoresDisponiveis.find(p => p.professor_id === value);
+                      if (prof) {
+                        setProfessorSelecionado({
+                          id: prof.professor_id,
+                          nome: prof.professor_nome,
+                          prioridade: prof.prioridade,
+                        });
+                      }
+                      setMostrarSeletorProfessor(false);
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecione um professor" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[9999]">
+                      {professoresDisponiveis.map((prof) => (
+                        <SelectItem key={prof.professor_id} value={prof.professor_id}>
+                          {prof.professor_nome} (prioridade {prof.prioridade})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2 text-sm text-amber-700">
