@@ -148,8 +148,8 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
       <SheetContent side="right" className="sm:max-w-[480px] w-full p-6 flex flex-col">
         <SheetHeader className="mb-3">
           <SheetTitle className="text-sm font-semibold">Lançamento de Aula Zero</SheetTitle>
-          <SheetDescription className="text-xs">
-            Aluno: <span className="font-semibold text-foreground">{alunoNome}</span>
+          <SheetDescription className="text-sm">
+            Aluno: <span className="font-semibold text-foreground text-base">{alunoNome}</span>
           </SheetDescription>
         </SheetHeader>
 
