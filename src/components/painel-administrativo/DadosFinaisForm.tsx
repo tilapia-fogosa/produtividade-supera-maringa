@@ -83,6 +83,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   // Estados da aula inaugural
   const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
   const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
+  const [eventoExistente, setEventoExistente] = useState<{ horario_inicio: string; horario_fim: string; professor_nome: string } | null>(null);
   const [professorSelecionado, setProfessorSelecionado] = useState<{ id: string; nome: string; prioridade: number } | null>(null);
   const [salaSelecionada, setSalaSelecionada] = useState<{ id: string; nome: string } | null>(null);
 
@@ -167,6 +168,24 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               setDataAulaInaugural(new Date(year, month - 1, day));
             }
           }
+        }
+
+        // Buscar evento aula_zero existente para mostrar horário e professor
+        const { data: evento } = await supabase
+          .from('eventos_professor')
+          .select('horario_inicio, horario_fim, professores:professor_id(nome)')
+          .eq('client_id', cliente.id)
+          .eq('tipo_evento', 'aula_zero')
+          .order('data', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (evento) {
+          setEventoExistente({
+            horario_inicio: evento.horario_inicio,
+            horario_fim: evento.horario_fim,
+            professor_nome: (evento as any).professores?.nome || 'Não definido',
+          });
         }
       } catch (error) {
         console.error("Erro ao carregar dados finais:", error);
@@ -352,6 +371,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           salaSelecionada={salaSelecionada}
           setSalaSelecionada={setSalaSelecionada}
         />
+        {eventoExistente && (
+          <div className="mt-2 p-3 rounded-md bg-muted text-sm space-y-1">
+            <p><span className="font-medium text-foreground">Horário:</span> {eventoExistente.horario_inicio.substring(0, 5)} - {eventoExistente.horario_fim.substring(0, 5)}</p>
+            <p><span className="font-medium text-foreground">Professor:</span> {eventoExistente.professor_nome}</p>
+          </div>
+        )}
       </div>
 
       {/* Seção: Descritivo Comercial */}
