@@ -75,6 +75,7 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
   }, [open, alunoId]);
 
   const onSubmit = async (data: AulaZeroFormData) => {
+    if (!alunoId) return;
     setIsSaving(true);
     try {
       // Buscar dados completos do aluno para o webhook

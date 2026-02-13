@@ -1006,15 +1006,43 @@ export default function Home() {
 
   const handleAulaInauguralClick = async (evento: Evento) => {
     if (evento.aula_inaugural_client_id) {
+      // Primeiro tenta encontrar o aluno vinculado pelo client_id
       const { data: aluno } = await supabase
         .from('alunos')
         .select('id, nome')
         .eq('client_id', evento.aula_inaugural_client_id)
-        .single();
+        .maybeSingle();
 
       if (aluno) {
         setAulaZeroAluno({ id: aluno.id, nome: aluno.nome });
         setAulaZeroDrawerAberto(true);
+      } else {
+        // Se não encontrou aluno, buscar na atividade_pos_venda pelo client_id
+        const { data: posVenda } = await supabase
+          .from('atividade_pos_venda')
+          .select('full_name, client_name')
+          .eq('client_id', evento.aula_inaugural_client_id)
+          .maybeSingle();
+
+        if (posVenda) {
+          // Buscar aluno pelo nome (full_name ou client_name)
+          const nomeCliente = posVenda.full_name || posVenda.client_name;
+          const { data: alunoByNome } = await supabase
+            .from('alunos')
+            .select('id, nome')
+            .ilike('nome', `%${nomeCliente}%`)
+            .limit(1)
+            .maybeSingle();
+
+          if (alunoByNome) {
+            setAulaZeroAluno({ id: alunoByNome.id, nome: alunoByNome.nome });
+            setAulaZeroDrawerAberto(true);
+          } else {
+            // Aluno ainda não foi cadastrado — abrir gaveta sem ID (somente visualização do nome)
+            setAulaZeroAluno({ id: '', nome: nomeCliente });
+            setAulaZeroDrawerAberto(true);
+          }
+        }
       }
     }
   };
