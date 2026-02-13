@@ -13,6 +13,7 @@ export interface AulaInaugural {
   descricao: string | null;
   cliente_nome?: string;
   professor_nome?: string;
+  client_id?: string;
 }
 
 export function useAulasInauguraisProfessor() {
@@ -68,6 +69,7 @@ export function useAulasInauguraisProfessor() {
           descricao: e.descricao,
           cliente_nome: clienteNomes[(e as any).client_id] || undefined,
           professor_nome: (e as any).professores?.nome || undefined,
+          client_id: (e as any).client_id || undefined,
         })) as AulaInaugural[];
       }
 
@@ -107,6 +109,7 @@ export function useAulasInauguraisProfessor() {
           horario_fim: e.horario_fim,
           descricao: e.descricao,
           cliente_nome: clienteNomes[(e as any).client_id] || undefined,
+          client_id: (e as any).client_id || undefined,
         })) as AulaInaugural[];
       }
 
