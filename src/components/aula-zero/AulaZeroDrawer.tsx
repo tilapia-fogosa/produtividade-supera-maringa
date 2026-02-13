@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
+import { AudioTranscribeButton } from '@/components/ui/audio-transcribe-button';
 
 interface AulaZeroDrawerProps {
   open: boolean;
@@ -160,7 +161,10 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 name="percepcao_coordenador"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium">Percepção do Coordenador</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-medium">Percepção do Coordenador</FormLabel>
+                      <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
+                    </div>
                     <FormControl>
                       <Textarea placeholder="Descreva a percepção do coordenador..." {...field} className="min-h-[60px] text-xs" />
                     </FormControl>
@@ -174,7 +178,10 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 name="motivo_procura"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium">Motivo da Procura</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-medium">Motivo da Procura</FormLabel>
+                      <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
+                    </div>
                     <FormControl>
                       <Textarea placeholder="Descreva o motivo da procura..." {...field} className="min-h-[60px] text-xs" />
                     </FormControl>
@@ -188,7 +195,10 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 name="avaliacao_abaco"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium">Avaliação no Ábaco</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-medium">Avaliação no Ábaco</FormLabel>
+                      <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
+                    </div>
                     <FormControl>
                       <Textarea placeholder="Como o aluno se saiu no Ábaco..." {...field} className="min-h-[60px] text-xs" />
                     </FormControl>
@@ -202,7 +212,10 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 name="avaliacao_ah"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium">Avaliação no Abrindo Horizontes</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-medium">Avaliação no Abrindo Horizontes</FormLabel>
+                      <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
+                    </div>
                     <FormControl>
                       <Textarea placeholder="Como o aluno se saiu no Abrindo Horizontes..." {...field} className="min-h-[60px] text-xs" />
                     </FormControl>
@@ -216,7 +229,10 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 name="pontos_atencao"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium">Pontos de Atenção</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-medium">Pontos de Atenção</FormLabel>
+                      <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
+                    </div>
                     <FormControl>
                       <Textarea placeholder="Destaque pontos importantes a serem observados..." {...field} className="min-h-[60px] text-xs" />
                     </FormControl>
