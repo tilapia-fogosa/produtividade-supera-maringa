@@ -27,6 +27,7 @@ import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useAlunosSemVinculo, useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { WebcamCapture } from "./WebcamCapture";
 import { AulaInauguralSelector } from "./AulaInauguralSelector";
+import { DescritivoComercialField } from "./DescritivoComercialField";
 import {
   Popover,
   PopoverContent,
@@ -77,6 +78,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   const [searchFilter, setSearchFilter] = useState("");
   const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
   const [fotoUrlExistente, setFotoUrlExistente] = useState<string | null>(null);
+  const [descritivoComercial, setDescritivoComercial] = useState("");
 
   // Estados da aula inaugural
   const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
@@ -124,7 +126,8 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_sincronizar_sgs,
             check_grupo_whatsapp,
             photo_url,
-            data_aula_inaugural
+            data_aula_inaugural,
+            informacoes_onboarding
           `)
           .eq("client_id", cliente.id)
           .maybeSingle();
@@ -140,6 +143,9 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           });
           if (data.photo_url) {
             setFotoUrlExistente(data.photo_url);
+          }
+          if ((data as any).informacoes_onboarding) {
+            setDescritivoComercial((data as any).informacoes_onboarding);
           }
           if (data.data_aula_inaugural) {
             const dataHora = new Date(data.data_aula_inaugural);
@@ -192,6 +198,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       if (photoUrl) {
         updateData.photo_url = photoUrl;
       }
+      updateData.informacoes_onboarding = descritivoComercial || null;
 
       // Salvar data da aula inaugural
       if (dataAulaInaugural && horarioSelecionado) {
@@ -323,6 +330,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           setSalaSelecionada={setSalaSelecionada}
         />
       </div>
+
+      {/* Seção: Descritivo Comercial */}
+      <DescritivoComercialField
+        value={descritivoComercial}
+        onChange={setDescritivoComercial}
+      />
 
       {/* Seção: Foto do Aluno */}
       <WebcamCapture
