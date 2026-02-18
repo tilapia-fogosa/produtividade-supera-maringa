@@ -2136,6 +2136,41 @@ export type Database = {
           },
         ]
       }
+      comissao_config: {
+        Row: {
+          created_at: string
+          formula_display: string
+          formula_json: Json
+          id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          formula_display?: string
+          formula_json?: Json
+          id?: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          formula_display?: string
+          formula_json?: Json
+          id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissao_config_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: true
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_calculations: {
         Row: {
           consolidated_at: string | null
