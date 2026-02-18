@@ -36,7 +36,7 @@ const DEFAULT_FORMULA: FormulaBlock[] = [
   { id: "df10", type: "variable", value: "matricula" },
   { id: "df11", type: "operator", value: ")" },
   { id: "df12", type: "operator", value: "*" },
-  { id: "df13", type: "number", value: 0.2 },
+  { id: "df13", type: "number", value: 0.02 },
 ];
 
 export function useComissaoConfig() {
@@ -59,7 +59,7 @@ export function useComissaoConfig() {
           id: "",
           unit_id: activeUnit!.id,
           formula_json: DEFAULT_FORMULA,
-          formula_display: "((18 * mensalidade) + material + matricula) * 0.2",
+          formula_display: "((18 * mensalidade) + material + matricula) * 0.02",
           aceleradores: [],
         };
       }
