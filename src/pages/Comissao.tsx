@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useComissoes } from "@/hooks/use-comissoes";
-import { useComissaoConfig, evaluateFormula } from "@/hooks/use-comissao-config";
+import { useComissaoConfig, evaluateFormula, findAcelerador } from "@/hooks/use-comissao-config";
+import { useComissaoMetas } from "@/hooks/use-comissao-metas";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import FormulaBuilder from "@/components/comissao/FormulaBuilder";
 import MetasTab from "@/components/comissao/MetasTab";
 import ComissaoHeader from "@/components/comissao/ComissaoHeader";
@@ -29,17 +31,19 @@ const Comissao = () => {
   const [ano, setAno] = useState(currentYear);
   const { data: comissoes, isLoading } = useComissoes(mes, ano);
   const { config } = useComissaoConfig();
+  const { metas } = useComissaoMetas();
 
   const canSeeConfig = profile?.role === "franqueado" || profile?.role === "admin";
   const canSeeMetas = profile?.role === "franqueado" || profile?.role === "admin";
   const formulaBlocks = config?.formula_json || [];
+  const aceleradores = config?.aceleradores || [];
   const hasFormula = formulaBlocks.length > 0;
 
   const calcContrato = (item: { valor_mensalidade: number | null; valor_material: number | null; valor_matricula: number | null }) => {
     return 18 * (item.valor_mensalidade || 0) + (item.valor_material || 0) + (item.valor_matricula || 0);
   };
 
-  const calcComissao = (item: { valor_material: number | null; valor_mensalidade: number | null; valor_matricula: number | null }) => {
+  const calcComissaoBase = (item: { valor_material: number | null; valor_mensalidade: number | null; valor_matricula: number | null }) => {
     if (!hasFormula) return null;
     return evaluateFormula(formulaBlocks, {
       material: item.valor_material || 0,
@@ -52,13 +56,34 @@ const Comissao = () => {
   const totalMaterial = comissoes?.reduce((sum, c) => sum + (c.valor_material || 0), 0) ?? 0;
   const totalMatricula = comissoes?.reduce((sum, c) => sum + (c.valor_matricula || 0), 0) ?? 0;
   const totalContrato = comissoes?.reduce((sum, c) => sum + calcContrato(c), 0) ?? 0;
+
+  // Calcular multiplicador baseado no % da meta de faturamento
+  const metaDoMes = metas.find((m) => m.mes === mes && m.ano === ano);
+  const metaFaturamento = metaDoMes?.valor_meta ?? 0;
+  const percentualMeta = metaFaturamento > 0 ? (totalContrato / metaFaturamento) * 100 : 0;
+  const aceleradorAtivo = findAcelerador(percentualMeta, aceleradores);
+  const multiplicador = aceleradorAtivo?.multiplicador ?? 1;
+
+  const calcComissao = (item: { valor_material: number | null; valor_mensalidade: number | null; valor_matricula: number | null }) => {
+    const base = calcComissaoBase(item);
+    if (base === null) return null;
+    return base * multiplicador;
+  };
+
   const totalComissao = hasFormula
     ? comissoes?.reduce((sum, c) => sum + (calcComissao(c) || 0), 0) ?? 0
     : null;
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold text-foreground mb-4">Comissão</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+        Comissão
+        {aceleradores.length > 0 && multiplicador !== 1 && (
+          <Badge variant="secondary" className="text-sm">
+            Acelerador: {multiplicador}x
+          </Badge>
+        )}
+      </h1>
 
       <Tabs defaultValue="comissoes">
         <TabsList>

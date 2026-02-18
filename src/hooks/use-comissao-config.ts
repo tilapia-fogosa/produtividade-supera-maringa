@@ -144,6 +144,26 @@ export function useComissaoConfig() {
   return { config: query.data, isLoading: query.isLoading, saveFormula, saveAceleradores };
 }
 
+// Encontrar o acelerador correspondente ao percentual da meta atingido
+export function findAcelerador(percentual: number, aceleradores: Acelerador[]): Acelerador | null {
+  if (!aceleradores.length) return null;
+
+  // Ordenar: primeiro os que têm limite (crescente), depois o sem limite (null)
+  const sorted = [...aceleradores].sort((a, b) => {
+    if (a.ate_percentual === null) return 1;
+    if (b.ate_percentual === null) return -1;
+    return a.ate_percentual - b.ate_percentual;
+  });
+
+  for (const acc of sorted) {
+    if (acc.ate_percentual === null || percentual <= acc.ate_percentual) {
+      return acc;
+    }
+  }
+
+  return sorted[sorted.length - 1];
+}
+
 // Avaliar fórmula para um item
 export function evaluateFormula(
   blocks: FormulaBlock[],
