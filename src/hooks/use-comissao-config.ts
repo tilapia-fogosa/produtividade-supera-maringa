@@ -85,7 +85,7 @@ export function useComissaoConfig() {
 
       const existing = query.data;
 
-      if (existing) {
+      if (existing?.id) {
         const { error } = await (supabase
           .from("comissao_config")
           .update({
@@ -115,7 +115,7 @@ export function useComissaoConfig() {
     mutationFn: async (aceleradores: Acelerador[]) => {
       const existing = query.data;
 
-      if (existing) {
+      if (existing?.id) {
         const { error } = await (supabase
           .from("comissao_config")
           .update({
