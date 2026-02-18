@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useComissoes } from "@/hooks/use-comissoes";
 import { useComissaoConfig, evaluateFormula, findAcelerador } from "@/hooks/use-comissao-config";
 import { useComissaoMetas } from "@/hooks/use-comissao-metas";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import FormulaBuilder from "@/components/comissao/FormulaBuilder";
 import MetasTab from "@/components/comissao/MetasTab";
 import ComissaoHeader from "@/components/comissao/ComissaoHeader";
+import MetaBatidaModal from "@/components/comissao/MetaBatidaModal";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -63,6 +64,18 @@ const Comissao = () => {
   const percentualMeta = metaFaturamento > 0 ? (totalContrato / metaFaturamento) * 100 : 0;
   const aceleradorAtivo = findAcelerador(percentualMeta, aceleradores);
   const multiplicador = aceleradorAtivo?.multiplicador ?? 1;
+
+  const [showMetaModal, setShowMetaModal] = useState(false);
+
+  useEffect(() => {
+    if (metaFaturamento > 0 && totalContrato >= metaFaturamento && !isLoading) {
+      const key = `comissao-meta-batida-${mes}-${ano}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        setShowMetaModal(true);
+      }
+    }
+  }, [metaFaturamento, totalContrato, mes, ano, isLoading]);
 
   const calcComissao = (item: { valor_material: number | null; valor_mensalidade: number | null; valor_matricula: number | null }) => {
     const base = calcComissaoBase(item);
@@ -195,6 +208,13 @@ const Comissao = () => {
           </TabsContent>
         )}
       </Tabs>
+
+      <MetaBatidaModal
+        open={showMetaModal}
+        onClose={() => setShowMetaModal(false)}
+        valorAtingido={totalContrato}
+        valorMeta={metaFaturamento}
+      />
     </div>
   );
 };
