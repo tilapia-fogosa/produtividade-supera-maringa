@@ -196,10 +196,11 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
+    localStorage.removeItem('sb-hkvjdxxndapxpslovrlc-auth-token');
     window.location.href = '/auth/login';
   };
 
