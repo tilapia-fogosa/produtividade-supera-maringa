@@ -331,6 +331,9 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
       setTimeout(() => onCancel(), 1500);
     },
+    onError: (error) => {
+      console.error("Erro detalhado ao salvar dados iniciais:", error);
+    },
   });
 
   const handleToggle = (field: string) => {
