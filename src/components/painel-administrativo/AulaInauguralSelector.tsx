@@ -20,9 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useHorariosDisponiveisSalas } from "@/hooks/use-horarios-disponiveis-salas";
 import { useProfessoresDisponiveis } from "@/hooks/use-professores-disponiveis";
-
-// UUID fixo de Maringá
-const MARINGA_UNIT_ID = "0df79a04-444e-46ee-b218-59e4b1835f4a";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 interface AulaInauguralSelectorProps {
   dataAulaInaugural: Date | undefined;
@@ -46,11 +44,12 @@ export function AulaInauguralSelector({
   setSalaSelecionada,
 }: AulaInauguralSelectorProps) {
   const [mostrarSeletorProfessor, setMostrarSeletorProfessor] = React.useState(false);
+  const { activeUnit } = useActiveUnit();
 
   // Buscar horários disponíveis (salas livres)
   const { data: horariosDisponiveis = [], isLoading: loadingHorarios } = useHorariosDisponiveisSalas(
     dataAulaInaugural || null,
-    MARINGA_UNIT_ID
+    activeUnit?.id
   );
 
   // Buscar professores disponíveis
@@ -58,7 +57,7 @@ export function AulaInauguralSelector({
     dataAulaInaugural || null,
     horarioSelecionado || null,
     60, // Duração de 1 hora
-    MARINGA_UNIT_ID
+    activeUnit?.id
   );
 
   // Quando selecionar um horário, auto-selecionar professor e sala
