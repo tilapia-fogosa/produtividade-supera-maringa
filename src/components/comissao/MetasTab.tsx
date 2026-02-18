@@ -20,14 +20,18 @@ const MetasTab = () => {
   const [mes, setMes] = useState(new Date().getMonth());
   const [ano, setAno] = useState(currentYear);
   const [valor, setValor] = useState("");
+  const [numMatriculas, setNumMatriculas] = useState("");
 
   const handleAdd = () => {
     const valorNum = parseFloat(valor.replace(",", "."));
+    const matriculasNum = parseInt(numMatriculas, 10);
     if (isNaN(valorNum) || valorNum <= 0) return;
-    addMeta.mutate({ mes, ano, valor_meta: valorNum }, {
+    if (isNaN(matriculasNum) || matriculasNum <= 0) return;
+    addMeta.mutate({ mes, ano, valor_meta: valorNum, numero_matriculas: matriculasNum }, {
       onSuccess: () => {
         setOpen(false);
         setValor("");
+        setNumMatriculas("");
       },
     });
   };
@@ -82,13 +86,24 @@ const MetasTab = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">
-                  Valor da Meta (soma dos contratos)
+                  Meta de Faturamento (soma dos contratos)
                 </label>
                 <Input
                   type="text"
                   placeholder="Ex: 50000"
                   value={valor}
                   onChange={(e) => setValor(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1 block">
+                  Meta de Matrículas
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Ex: 10"
+                  value={numMatriculas}
+                  onChange={(e) => setNumMatriculas(e.target.value)}
                 />
               </div>
               <Button onClick={handleAdd} disabled={addMeta.isPending} className="w-full">
@@ -107,7 +122,8 @@ const MetasTab = () => {
             <TableRow>
               <TableHead>Mês</TableHead>
               <TableHead>Ano</TableHead>
-              <TableHead className="text-right">Valor da Meta</TableHead>
+              <TableHead className="text-right">Meta de Matrículas</TableHead>
+              <TableHead className="text-right">Meta de Faturamento</TableHead>
               <TableHead className="w-[60px]" />
             </TableRow>
           </TableHeader>
@@ -116,6 +132,7 @@ const MetasTab = () => {
               <TableRow key={meta.id}>
                 <TableCell>{MESES[meta.mes]}</TableCell>
                 <TableCell>{meta.ano}</TableCell>
+                <TableCell className="text-right font-medium">{meta.numero_matriculas}</TableCell>
                 <TableCell className="text-right font-medium">{formatCurrency(meta.valor_meta)}</TableCell>
                 <TableCell>
                   <button

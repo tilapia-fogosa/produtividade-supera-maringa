@@ -8,6 +8,7 @@ export interface ComissaoMeta {
   mes: number;
   ano: number;
   valor_meta: number;
+  numero_matriculas: number;
 }
 
 const MESES = [
@@ -35,13 +36,14 @@ export function useComissaoMetas() {
       return (data || []).map((d: any) => ({
         ...d,
         valor_meta: Number(d.valor_meta),
+        numero_matriculas: Number(d.numero_matriculas || 0),
       }));
     },
     enabled: !!activeUnit?.id,
   });
 
   const addMeta = useMutation({
-    mutationFn: async (meta: { mes: number; ano: number; valor_meta: number }) => {
+    mutationFn: async (meta: { mes: number; ano: number; valor_meta: number; numero_matriculas: number }) => {
       const { error } = await (supabase
         .from("comissao_metas")
         .upsert({
@@ -49,6 +51,7 @@ export function useComissaoMetas() {
           mes: meta.mes,
           ano: meta.ano,
           valor_meta: meta.valor_meta,
+          numero_matriculas: meta.numero_matriculas,
           updated_at: new Date().toISOString(),
         }, { onConflict: "unit_id,mes,ano" }) as any);
       if (error) throw error;
