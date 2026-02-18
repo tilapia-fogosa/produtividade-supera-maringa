@@ -159,12 +159,11 @@ const comercialItems = [
   },
 ];
 
-const administrativoItems = [
+const administrativoItems: Array<{ title: string; url: string; icon: any; maringaOnly?: boolean }> = [
   {
     title: "Painel Administrativo",
     url: "/painel-administrativo",
     icon: LayoutDashboard,
-    maringaOnly: true,
   },
   {
     title: "Eventos",
