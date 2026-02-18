@@ -189,7 +189,7 @@ const Comissao = () => {
                   </TableCell>
                   <TableCell>
                     {hasFormula && aceleradores.length > 0 && multiplicador !== 1 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs text-primary-foreground bg-primary">
                         {multiplicador}x
                       </Badge>
                     )}
