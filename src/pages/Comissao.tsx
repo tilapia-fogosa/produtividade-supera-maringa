@@ -32,7 +32,11 @@ const Comissao = () => {
   const formulaBlocks = config?.formula_json || [];
   const hasFormula = formulaBlocks.length > 0;
 
-  const calcComissao = (item: typeof comissoes extends (infer T)[] | undefined ? T : never) => {
+  const calcContrato = (item: { valor_mensalidade: number | null; valor_material: number | null; valor_matricula: number | null }) => {
+    return 18 * (item.valor_mensalidade || 0) + (item.valor_material || 0) + (item.valor_matricula || 0);
+  };
+
+  const calcComissao = (item: { valor_material: number | null; valor_mensalidade: number | null; valor_matricula: number | null }) => {
     if (!hasFormula) return null;
     return evaluateFormula(formulaBlocks, {
       material: item.valor_material || 0,
@@ -44,6 +48,7 @@ const Comissao = () => {
   const totalMensalidade = comissoes?.reduce((sum, c) => sum + (c.valor_mensalidade || 0), 0) ?? 0;
   const totalMaterial = comissoes?.reduce((sum, c) => sum + (c.valor_material || 0), 0) ?? 0;
   const totalMatricula = comissoes?.reduce((sum, c) => sum + (c.valor_matricula || 0), 0) ?? 0;
+  const totalContrato = comissoes?.reduce((sum, c) => sum + calcContrato(c), 0) ?? 0;
   const totalComissao = hasFormula
     ? comissoes?.reduce((sum, c) => sum + (calcComissao(c) || 0), 0) ?? 0
     : null;
@@ -93,13 +98,14 @@ const Comissao = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[22%]">Nome do Aluno</TableHead>
-                  <TableHead className="w-[16%]">Vendedor</TableHead>
-                  <TableHead className="w-[13%] text-right">Mensalidade</TableHead>
-                  <TableHead className="w-[13%] text-right">Material</TableHead>
-                  <TableHead className="w-[13%] text-right">Matrícula</TableHead>
-                  {hasFormula && <TableHead className="w-[13%] text-right">Comissão</TableHead>}
-                  <TableHead className="w-[10%]">Status</TableHead>
+                  <TableHead>Nome do Aluno</TableHead>
+                  <TableHead>Vendedor</TableHead>
+                  <TableHead className="text-right">Mensalidade</TableHead>
+                  <TableHead className="text-right">Material</TableHead>
+                  <TableHead className="text-right">Matrícula</TableHead>
+                  <TableHead className="text-right">Contrato</TableHead>
+                  <TableHead className="text-right">Comissão</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,11 +116,10 @@ const Comissao = () => {
                     <TableCell className="text-right">{formatCurrency(c.valor_mensalidade)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(c.valor_material)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(c.valor_matricula)}</TableCell>
-                    {hasFormula && (
-                      <TableCell className="text-right font-semibold text-primary">
-                        {formatCurrency(calcComissao(c))}
-                      </TableCell>
-                    )}
+                    <TableCell className="text-right">{formatCurrency(calcContrato(c))}</TableCell>
+                    <TableCell className="text-right font-semibold text-primary">
+                      {hasFormula ? formatCurrency(calcComissao(c)) : "—"}
+                    </TableCell>
                     <TableCell>{c.status || "—"}</TableCell>
                   </TableRow>
                 ))}
@@ -125,11 +130,10 @@ const Comissao = () => {
                   <TableCell className="text-right font-bold">{formatCurrency(totalMensalidade)}</TableCell>
                   <TableCell className="text-right font-bold">{formatCurrency(totalMaterial)}</TableCell>
                   <TableCell className="text-right font-bold">{formatCurrency(totalMatricula)}</TableCell>
-                  {hasFormula && (
-                    <TableCell className="text-right font-bold text-primary">
-                      {formatCurrency(totalComissao)}
-                    </TableCell>
-                  )}
+                  <TableCell className="text-right font-bold">{formatCurrency(totalContrato)}</TableCell>
+                  <TableCell className="text-right font-bold text-primary">
+                    {hasFormula ? formatCurrency(totalComissao) : "—"}
+                  </TableCell>
                   <TableCell />
                 </TableRow>
               </TableFooter>
