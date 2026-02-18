@@ -15,6 +15,8 @@ const OPERATORS = [
   { value: "+", label: "+" },
   { value: "-", label: "−" },
   { value: "*", label: "×" },
+  { value: "(", label: "(" },
+  { value: ")", label: ")" },
 ];
 
 let blockIdCounter = 0;
