@@ -1,0 +1,1 @@
+ALTER TABLE public.comissao_metas ADD COLUMN numero_matriculas integer NOT NULL DEFAULT 0;

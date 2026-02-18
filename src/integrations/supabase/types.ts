@@ -2180,6 +2180,7 @@ export type Database = {
           created_at: string
           id: string
           mes: number
+          numero_matriculas: number
           unit_id: string
           updated_at: string
           valor_meta: number
@@ -2189,6 +2190,7 @@ export type Database = {
           created_at?: string
           id?: string
           mes: number
+          numero_matriculas?: number
           unit_id: string
           updated_at?: string
           valor_meta?: number
@@ -2198,6 +2200,7 @@ export type Database = {
           created_at?: string
           id?: string
           mes?: number
+          numero_matriculas?: number
           unit_id?: string
           updated_at?: string
           valor_meta?: number
