@@ -159,6 +159,7 @@ export const useSalvarDadosPedagogicos = () => {
       queryClient.invalidateQueries({ queryKey: ["pos-matricula"] });
       queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
       queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
+      queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
     }
   });
 };

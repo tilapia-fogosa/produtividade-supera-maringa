@@ -328,6 +328,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       queryClient.invalidateQueries({ queryKey: ["alunos-sem-vinculo"] });
       queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
       queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
+      queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
       setTimeout(() => onCancel(), 1500);
     },
   });
