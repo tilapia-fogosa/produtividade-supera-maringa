@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Plus, Save } from "lucide-react";
 import { FormulaBlock, useComissaoConfig } from "@/hooks/use-comissao-config";
+import AceleradoresEditor from "./AceleradoresEditor";
 
 const VARIABLES = [
   { value: "material", label: "Material" },
@@ -177,6 +178,11 @@ const FormulaBuilder = () => {
         <Save className="h-4 w-4 mr-2" />
         {saveFormula.isPending ? "Salvando..." : "Salvar Fórmula"}
       </Button>
+
+      {/* Separador */}
+      <div className="border-t border-border pt-6 mt-6">
+        <AceleradoresEditor />
+      </div>
     </div>
   );
 };
