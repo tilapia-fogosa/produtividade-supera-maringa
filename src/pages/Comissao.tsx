@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useComissoes } from "@/hooks/use-comissoes";
+import { useComissaoConfig, evaluateFormula } from "@/hooks/use-comissao-config";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import FormulaBuilder from "@/components/comissao/FormulaBuilder";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -24,12 +26,27 @@ const Comissao = () => {
   const [mes, setMes] = useState(currentDate.getMonth());
   const [ano, setAno] = useState(currentYear);
   const { data: comissoes, isLoading } = useComissoes(mes, ano);
+  const { config } = useComissaoConfig();
 
-  const isFranqueado = profile?.role === "franqueado";
+  const canSeeConfig = profile?.role === "franqueado" || profile?.role === "admin";
+  const formulaBlocks = config?.formula_json || [];
+  const hasFormula = formulaBlocks.length > 0;
+
+  const calcComissao = (item: typeof comissoes extends (infer T)[] | undefined ? T : never) => {
+    if (!hasFormula) return null;
+    return evaluateFormula(formulaBlocks, {
+      material: item.valor_material || 0,
+      mensalidade: item.valor_mensalidade || 0,
+      matricula: item.valor_matricula || 0,
+    });
+  };
 
   const totalMensalidade = comissoes?.reduce((sum, c) => sum + (c.valor_mensalidade || 0), 0) ?? 0;
   const totalMaterial = comissoes?.reduce((sum, c) => sum + (c.valor_material || 0), 0) ?? 0;
   const totalMatricula = comissoes?.reduce((sum, c) => sum + (c.valor_matricula || 0), 0) ?? 0;
+  const totalComissao = hasFormula
+    ? comissoes?.reduce((sum, c) => sum + (calcComissao(c) || 0), 0) ?? 0
+    : null;
 
   return (
     <div className="container mx-auto p-6">
@@ -38,7 +55,7 @@ const Comissao = () => {
       <Tabs defaultValue="comissoes">
         <TabsList>
           <TabsTrigger value="comissoes">Comissões</TabsTrigger>
-          {isFranqueado && <TabsTrigger value="configuracoes">Configurações</TabsTrigger>}
+          {canSeeConfig && <TabsTrigger value="configuracoes">Configurações</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="comissoes">
@@ -76,11 +93,12 @@ const Comissao = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[25%]">Nome do Aluno</TableHead>
-                  <TableHead className="w-[20%]">Vendedor</TableHead>
-                  <TableHead className="w-[15%] text-right">Mensalidade</TableHead>
-                  <TableHead className="w-[15%] text-right">Material</TableHead>
-                  <TableHead className="w-[15%] text-right">Matrícula</TableHead>
+                  <TableHead className="w-[22%]">Nome do Aluno</TableHead>
+                  <TableHead className="w-[16%]">Vendedor</TableHead>
+                  <TableHead className="w-[13%] text-right">Mensalidade</TableHead>
+                  <TableHead className="w-[13%] text-right">Material</TableHead>
+                  <TableHead className="w-[13%] text-right">Matrícula</TableHead>
+                  {hasFormula && <TableHead className="w-[13%] text-right">Comissão</TableHead>}
                   <TableHead className="w-[10%]">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -92,6 +110,11 @@ const Comissao = () => {
                     <TableCell className="text-right">{formatCurrency(c.valor_mensalidade)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(c.valor_material)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(c.valor_matricula)}</TableCell>
+                    {hasFormula && (
+                      <TableCell className="text-right font-semibold text-primary">
+                        {formatCurrency(calcComissao(c))}
+                      </TableCell>
+                    )}
                     <TableCell>{c.status || "—"}</TableCell>
                   </TableRow>
                 ))}
@@ -102,6 +125,11 @@ const Comissao = () => {
                   <TableCell className="text-right font-bold">{formatCurrency(totalMensalidade)}</TableCell>
                   <TableCell className="text-right font-bold">{formatCurrency(totalMaterial)}</TableCell>
                   <TableCell className="text-right font-bold">{formatCurrency(totalMatricula)}</TableCell>
+                  {hasFormula && (
+                    <TableCell className="text-right font-bold text-primary">
+                      {formatCurrency(totalComissao)}
+                    </TableCell>
+                  )}
                   <TableCell />
                 </TableRow>
               </TableFooter>
@@ -109,9 +137,11 @@ const Comissao = () => {
           )}
         </TabsContent>
 
-        {isFranqueado && (
+        {canSeeConfig && (
           <TabsContent value="configuracoes">
-            <p className="text-muted-foreground mt-4">Em breve.</p>
+            <div className="mt-4 max-w-2xl">
+              <FormulaBuilder />
+            </div>
           </TabsContent>
         )}
       </Tabs>
