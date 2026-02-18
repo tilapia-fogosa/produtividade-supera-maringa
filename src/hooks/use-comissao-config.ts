@@ -8,11 +8,19 @@ export interface FormulaBlock {
   value: string | number;
 }
 
+export interface Acelerador {
+  id: string;
+  ate_percentual: number | null; // null = sem limite superior (ex: "171%+")
+  multiplicador: number;
+  label: string;
+}
+
 export interface ComissaoConfig {
   id: string;
   unit_id: string;
   formula_json: FormulaBlock[];
   formula_display: string;
+  aceleradores: Acelerador[];
 }
 
 export function useComissaoConfig() {
@@ -24,7 +32,7 @@ export function useComissaoConfig() {
     queryFn: async (): Promise<ComissaoConfig | null> => {
       const { data, error } = await (supabase
         .from("comissao_config")
-        .select("id, unit_id, formula_json, formula_display")
+        .select("id, unit_id, formula_json, formula_display, aceleradores")
         .eq("unit_id", activeUnit!.id)
         .maybeSingle() as any);
 
@@ -34,6 +42,7 @@ export function useComissaoConfig() {
       return {
         ...data,
         formula_json: (data.formula_json || []) as FormulaBlock[],
+        aceleradores: (data.aceleradores || []) as Acelerador[],
       };
     },
     enabled: !!activeUnit?.id,
@@ -77,7 +86,37 @@ export function useComissaoConfig() {
     },
   });
 
-  return { config: query.data, isLoading: query.isLoading, saveFormula };
+  const saveAceleradores = useMutation({
+    mutationFn: async (aceleradores: Acelerador[]) => {
+      const existing = query.data;
+
+      if (existing) {
+        const { error } = await (supabase
+          .from("comissao_config")
+          .update({
+            aceleradores: aceleradores as any,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id) as any);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase
+          .from("comissao_config")
+          .insert({
+            unit_id: activeUnit!.id,
+            formula_json: [] as any,
+            formula_display: "",
+            aceleradores: aceleradores as any,
+          }) as any);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comissao-config", activeUnit?.id] });
+    },
+  });
+
+  return { config: query.data, isLoading: query.isLoading, saveFormula, saveAceleradores };
 }
 
 // Avaliar fórmula para um item

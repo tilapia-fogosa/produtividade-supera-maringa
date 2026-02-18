@@ -2138,6 +2138,7 @@ export type Database = {
       }
       comissao_config: {
         Row: {
+          aceleradores: Json
           created_at: string
           formula_display: string
           formula_json: Json
@@ -2146,6 +2147,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aceleradores?: Json
           created_at?: string
           formula_display?: string
           formula_json?: Json
@@ -2154,6 +2156,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aceleradores?: Json
           created_at?: string
           formula_display?: string
           formula_json?: Json
