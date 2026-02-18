@@ -103,7 +103,6 @@ const FormulaBuilder = () => {
                 size="sm"
                 onClick={() => addBlock("operator", o.value)}
               >
-                <Plus className="h-3 w-3 mr-1" />
                 {o.label}
               </Button>
             ))}
