@@ -1,21 +1,24 @@
 
-## Corrigir Filtro de Unidade no Agendamento de Aula Inaugural
+
+## Corrigir Salvamento de Aceleradores para Novas Unidades
 
 ### Problema
-O componente `AulaInauguralSelector.tsx` usa um UUID fixo de Maringa (hardcoded) para buscar horarios e professores disponiveis. Isso faz com que usuarios de outras unidades (ex: Londrina) vejam dados de Maringa.
+O hook `useComissaoConfig` retorna um config padrao com `id: ""` quando nao existe registro no banco para a unidade ativa. As funcoes `saveFormula` e `saveAceleradores` verificam `if (existing)`, mas como `existing` e sempre um objeto (nunca null), elas sempre tentam fazer UPDATE com `.eq("id", "")`, que nao encontra nenhuma linha e falha silenciosamente.
 
 ### Solucao
-Substituir o UUID fixo pelo ID da unidade ativa do contexto (`useActiveUnit`).
+Corrigir a logica de decisao entre INSERT e UPDATE no hook `use-comissao-config.ts`, verificando se `existing.id` tem valor (nao e string vazia) ao inves de apenas verificar se `existing` existe.
 
 ### Alteracoes
 
-**Arquivo: `src/components/painel-administrativo/AulaInauguralSelector.tsx`**
+**Arquivo: `src/hooks/use-comissao-config.ts`**
 
-1. Importar `useActiveUnit` de `@/contexts/ActiveUnitContext`
-2. Remover a constante `MARINGA_UNIT_ID`
-3. Obter `activeUnit` via hook: `const { activeUnit } = useActiveUnit()`
-4. Substituir todas as referencias a `MARINGA_UNIT_ID` por `activeUnit?.id`
+1. Na mutacao `saveFormula` (linha ~87): trocar `if (existing)` por `if (existing?.id)`
+2. Na mutacao `saveAceleradores` (linha ~118): trocar `if (existing)` por `if (existing?.id)`
 
-Sao apenas 2 pontos onde o UUID e usado:
-- Na chamada de `useHorariosDisponiveisSalas` (linha ~56)
-- Na chamada de `useProfessoresDisponiveis` (linha ~62)
+Isso garante que:
+- Se ja existe um registro no banco (id preenchido), faz UPDATE
+- Se nao existe registro (id vazio), faz INSERT com o `activeUnit.id`
+
+### Detalhes Tecnicos
+
+A mudanca e minima - apenas duas linhas de condicao. A logica de RLS ja esta correta (permite INSERT e UPDATE para franqueados e admins de unidades vinculadas). O problema era puramente no frontend.
