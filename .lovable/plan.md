@@ -1,56 +1,40 @@
 
 
-## Implementar Página de Comissões
+## Correção do Logout - Sessão persistindo no localStorage
 
-### Resumo
-Construir a pagina de Comissoes com duas abas (Comissoes e Configuracoes), filtro por mes/ano, tabela de matriculas e totalizador.
+### Problema identificado
 
-### Estrutura da Pagina
+O `signOut()` do Supabase falha no servidor (sessão já expirada), mas o cliente Supabase nao limpa os tokens do localStorage quando recebe erro 403. Ao recarregar a página, o `AuthProvider` chama `getSession()`, encontra o token antigo no localStorage, faz refresh automático, e re-autentica o usuário.
 
-A pagina tera:
-- Duas abas no topo: **Comissoes** e **Configuracoes**
-- A aba Configuracoes so aparece para perfil `franqueado`
-- Na aba Comissoes:
-  - Seletor de mes/ano (padrao: mes atual)
-  - Tabela com as colunas: Nome do Aluno, Vendedor, Valor Mensalidade, Valor Material, Valor Matricula, Status
-  - Totalizador na parte inferior somando os valores
+### Solução
 
-### Dados
-Os dados vem da tabela `atividade_pos_venda` (ja existente), filtrando por `unit_id` e pelo mes/ano selecionado no campo `created_at`. O nome do vendedor sera buscado na tabela `profiles` usando o campo `created_by`.
+Duas alteracoes para garantir que o logout funcione em todos os cenarios:
 
-### Mapeamento de Campos
+1. **AppSidebar.tsx** - Limpar manualmente o localStorage do Supabase antes de redirecionar, como fallback caso o `signOut()` falhe:
 
-| Coluna na Tela | Campo no Banco |
-|---|---|
-| Nome do Aluno | `full_name` ou `client_name` |
-| Vendedor | `created_by` -> `profiles.full_name` |
-| Valor Mensalidade | `monthly_fee_amount` |
-| Valor Material | `material_amount` |
-| Valor Matricula | `enrollment_amount` |
-| Status | `status_manual` |
+```typescript
+const handleLogout = async () => {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+  }
+  // Limpar manualmente como fallback
+  localStorage.removeItem('sb-hkvjdxxndapxpslovrlc-auth-token');
+  window.location.href = '/auth/login';
+};
+```
 
-### Detalhes Tecnicos
+2. **AuthContext.tsx** - Atualizar a funcao `signOut` do contexto com a mesma logica, para que qualquer componente que use `signOut()` do contexto tambem funcione corretamente.
 
-**Arquivos a criar/editar:**
+### Detalhes tecnicos
 
-1. **`src/hooks/use-comissoes.ts`** (novo) - Hook para buscar dados de comissoes filtrados por mes/ano da unidade ativa. Busca na `atividade_pos_venda` e faz join com `profiles` para o nome do vendedor.
+- `scope: 'local'` garante que o signOut limpa a sessao local sem depender do servidor
+- A remocao manual do item `sb-hkvjdxxndapxpslovrlc-auth-token` do localStorage e um fallback de seguranca
+- O `window.location.href` forca reload completo, limpando todo estado React em memoria
 
-2. **`src/pages/Comissao.tsx`** (editar) - Substituir placeholder pela implementacao completa:
-   - Componente `Tabs` com duas abas
-   - Filtro de mes/ano usando `Select` (mes) + `Select` (ano)
-   - Tabela HTML com as colunas definidas
-   - Totalizador com soma de Valor Mensalidade, Valor Material e Valor Matricula
-   - Controle de visibilidade da aba Configuracoes baseado no perfil do usuario (`useAuth`)
+### Arquivos modificados
 
-3. **Nenhuma alteracao no banco de dados** - Todos os campos necessarios ja existem na tabela `atividade_pos_venda`.
-
-### Filtro de Mes/Ano
-- Dois selects lado a lado: um para mes (Janeiro-Dezembro) e outro para ano
-- Padrao: mes e ano atuais
-- Ao mudar, refaz a consulta filtrando `created_at` pelo primeiro e ultimo dia do mes selecionado
-
-### Totalizador
-- Linha fixa no rodape da tabela
-- Soma total de: Valor Mensalidade, Valor Material, Valor Matricula
-- Valores formatados em R$ (moeda brasileira)
+- `src/components/AppSidebar.tsx` - funcao `handleLogout`
+- `src/contexts/AuthContext.tsx` - funcao `signOut`
 
