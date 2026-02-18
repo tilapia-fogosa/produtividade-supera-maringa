@@ -23,6 +23,22 @@ export interface ComissaoConfig {
   aceleradores: Acelerador[];
 }
 
+const DEFAULT_FORMULA: FormulaBlock[] = [
+  { id: "df1", type: "operator", value: "(" },
+  { id: "df2", type: "operator", value: "(" },
+  { id: "df3", type: "number", value: 18 },
+  { id: "df4", type: "operator", value: "*" },
+  { id: "df5", type: "variable", value: "mensalidade" },
+  { id: "df6", type: "operator", value: ")" },
+  { id: "df7", type: "operator", value: "+" },
+  { id: "df8", type: "variable", value: "material" },
+  { id: "df9", type: "operator", value: "+" },
+  { id: "df10", type: "variable", value: "matricula" },
+  { id: "df11", type: "operator", value: ")" },
+  { id: "df12", type: "operator", value: "*" },
+  { id: "df13", type: "number", value: 0.2 },
+];
+
 export function useComissaoConfig() {
   const { activeUnit } = useActiveUnit();
   const queryClient = useQueryClient();
@@ -37,11 +53,20 @@ export function useComissaoConfig() {
         .maybeSingle() as any);
 
       if (error) throw error;
-      if (!data) return null;
+      if (!data) {
+        // Retorna config padrão quando não existe
+        return {
+          id: "",
+          unit_id: activeUnit!.id,
+          formula_json: DEFAULT_FORMULA,
+          formula_display: "((18 * mensalidade) + material + matricula) * 0.2",
+          aceleradores: [],
+        };
+      }
 
       return {
         ...data,
-        formula_json: (data.formula_json || []) as FormulaBlock[],
+        formula_json: (data.formula_json?.length ? data.formula_json : DEFAULT_FORMULA) as FormulaBlock[],
         aceleradores: (data.aceleradores || []) as Acelerador[],
       };
     },
