@@ -195,7 +195,13 @@ export function AppSidebar() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    } finally {
+      navigate('/auth/login');
+    }
   };
 
   const isTeacher = userRole === 'educador';
