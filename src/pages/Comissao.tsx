@@ -96,7 +96,7 @@ const Comissao = () => {
           <ComissaoHeader
             mes={mes}
             ano={ano}
-            totalMatriculas={comissoes?.length ?? 0}
+            totalMatriculas={comissoes?.filter(c => c.status === "Concluído").length ?? 0}
             totalFaturamento={totalContrato}
           />
 
@@ -131,7 +131,11 @@ const Comissao = () => {
                     <TableCell className="text-right font-semibold text-primary">
                       {hasFormula ? formatCurrency(calcComissao(c)) : "—"}
                     </TableCell>
-                    <TableCell>{c.status || "—"}</TableCell>
+                    <TableCell>
+                      <span className={c.status === "Concluído" ? "text-green-600 font-medium" : c.status === "Pendente" ? "text-red-500 font-medium" : ""}>
+                        {c.status || "—"}
+                      </span>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
