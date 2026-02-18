@@ -92,7 +92,7 @@ const Comissao = () => {
       <h1 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
         Comissão
         {aceleradores.length > 0 && multiplicador !== 1 && (
-          <Badge variant="secondary" className="text-sm">
+          <Badge variant="secondary" className="text-sm text-primary-foreground bg-primary">
             Acelerador: {multiplicador}x
           </Badge>
         )}
