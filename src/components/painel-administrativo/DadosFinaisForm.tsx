@@ -287,39 +287,46 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       }
 
       // Criar evento na agenda do professor (se aula inaugural preenchida)
+      // Separado do fluxo principal para não bloquear o salvamento dos demais dados
       if (dataAulaInaugural && horarioSelecionado && professorSelecionado) {
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData.user?.id ?? null;
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          const userId = userData.user?.id ?? null;
 
-        const [hora, minuto] = horarioSelecionado.split(':').map(Number);
-        const totalMinutos = hora * 60 + minuto + 60;
-        const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
+          const [hora, minuto] = horarioSelecionado.split(':').map(Number);
+          const totalMinutos = hora * 60 + minuto + 60;
+          const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
 
-        // Remover evento anterior de aula inaugural deste cliente
-        await supabase
-          .from('eventos_professor')
-          .delete()
-          .eq('client_id', cliente.id)
-          .eq('tipo_evento', 'aula_zero');
+          // Remover evento anterior de aula inaugural deste cliente
+          await supabase
+            .from('eventos_professor')
+            .delete()
+            .eq('client_id', cliente.id)
+            .eq('tipo_evento', 'aula_zero');
 
-        const eventoData = {
-          professor_id: professorSelecionado.id,
-          tipo_evento: 'aula_zero',
-          titulo: 'Aula Inaugural',
-          descricao: 'Aula inaugural agendada via painel administrativo',
-          data: `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`,
-          horario_inicio: horarioSelecionado,
-          horario_fim: horarioFim,
-          recorrente: false,
-          created_by: userId,
-          client_id: cliente.id,
-        };
+          const eventoData = {
+            professor_id: professorSelecionado.id,
+            tipo_evento: 'aula_zero',
+            titulo: 'Aula Inaugural',
+            descricao: 'Aula inaugural agendada via painel administrativo',
+            data: `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`,
+            horario_inicio: horarioSelecionado,
+            horario_fim: horarioFim,
+            recorrente: false,
+            created_by: userId,
+            client_id: cliente.id,
+          };
 
-        const { error: eventoError } = await supabase
-          .from('eventos_professor')
-          .insert(eventoData);
+          const { error: eventoError } = await supabase
+            .from('eventos_professor')
+            .insert(eventoData);
 
-        if (eventoError) throw eventoError;
+          if (eventoError) {
+            console.error("Erro ao criar evento de aula inaugural (RLS):", eventoError);
+          }
+        } catch (eventoErr) {
+          console.error("Erro ao criar evento de aula inaugural:", eventoErr);
+        }
       }
     },
     onSuccess: () => {
