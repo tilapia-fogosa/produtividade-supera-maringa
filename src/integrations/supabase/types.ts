@@ -2174,6 +2174,44 @@ export type Database = {
           },
         ]
       }
+      comissao_metas: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          mes: number
+          unit_id: string
+          updated_at: string
+          valor_meta: number
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          mes: number
+          unit_id: string
+          updated_at?: string
+          valor_meta?: number
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          mes?: number
+          unit_id?: string
+          updated_at?: string
+          valor_meta?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissao_metas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_calculations: {
         Row: {
           consolidated_at: string | null

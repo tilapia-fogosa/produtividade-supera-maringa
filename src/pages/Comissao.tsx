@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import FormulaBuilder from "@/components/comissao/FormulaBuilder";
+import MetasTab from "@/components/comissao/MetasTab";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -29,6 +30,7 @@ const Comissao = () => {
   const { config } = useComissaoConfig();
 
   const canSeeConfig = profile?.role === "franqueado" || profile?.role === "admin";
+  const canSeeMetas = profile?.role === "franqueado" || profile?.role === "admin";
   const formulaBlocks = config?.formula_json || [];
   const hasFormula = formulaBlocks.length > 0;
 
@@ -61,6 +63,7 @@ const Comissao = () => {
         <TabsList>
           <TabsTrigger value="comissoes">Comissões</TabsTrigger>
           {canSeeConfig && <TabsTrigger value="configuracoes">Configurações</TabsTrigger>}
+          {canSeeMetas && <TabsTrigger value="metas">Metas</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="comissoes">
@@ -146,6 +149,12 @@ const Comissao = () => {
             <div className="mt-4 max-w-2xl">
               <FormulaBuilder />
             </div>
+          </TabsContent>
+        )}
+
+        {canSeeMetas && (
+          <TabsContent value="metas">
+            <MetasTab />
           </TabsContent>
         )}
       </Tabs>
