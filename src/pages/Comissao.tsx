@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import FormulaBuilder from "@/components/comissao/FormulaBuilder";
 import MetasTab from "@/components/comissao/MetasTab";
+import ComissaoHeader from "@/components/comissao/ComissaoHeader";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -91,6 +92,13 @@ const Comissao = () => {
               </SelectContent>
             </Select>
           </div>
+
+          <ComissaoHeader
+            mes={mes}
+            ano={ano}
+            totalMatriculas={comissoes?.length ?? 0}
+            totalFaturamento={totalContrato}
+          />
 
           {/* Tabela */}
           {isLoading ? (
