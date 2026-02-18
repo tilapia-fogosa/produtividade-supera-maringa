@@ -98,17 +98,17 @@ const Comissao = () => {
           ) : !comissoes?.length ? (
             <p className="text-muted-foreground">Nenhuma matrícula encontrada no período.</p>
           ) : (
-            <Table>
+            <Table className="table-auto">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome do Aluno</TableHead>
-                  <TableHead>Vendedor</TableHead>
-                  <TableHead className="text-right">Mensalidade</TableHead>
-                  <TableHead className="text-right">Material</TableHead>
-                  <TableHead className="text-right">Matrícula</TableHead>
-                  <TableHead className="text-right">Contrato</TableHead>
-                  <TableHead className="text-right">Comissão</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[20%]">Nome do Aluno</TableHead>
+                  <TableHead className="w-[14%]">Vendedor</TableHead>
+                  <TableHead className="w-[11%] text-right">Mensalidade</TableHead>
+                  <TableHead className="w-[11%] text-right">Material</TableHead>
+                  <TableHead className="w-[11%] text-right">Matrícula</TableHead>
+                  <TableHead className="w-[11%] text-right">Contrato</TableHead>
+                  <TableHead className="w-[11%] text-right">Comissão</TableHead>
+                  <TableHead className="w-[11%]">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
