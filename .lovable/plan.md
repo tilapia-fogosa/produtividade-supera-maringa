@@ -1,40 +1,55 @@
 
 
-## Correção do Logout - Sessão persistindo no localStorage
+## Aplicar Aceleradores no Calculo de Comissao
 
-### Problema identificado
+### Objetivo
 
-O `signOut()` do Supabase falha no servidor (sessão já expirada), mas o cliente Supabase nao limpa os tokens do localStorage quando recebe erro 403. Ao recarregar a página, o `AuthProvider` chama `getSession()`, encontra o token antigo no localStorage, faz refresh automático, e re-autentica o usuário.
+Integrar os aceleradores configurados ao calculo real de comissao, usando o percentual da meta de faturamento atingido para determinar o multiplicador aplicado.
 
-### Solução
+### Logica
 
-Duas alteracoes para garantir que o logout funcione em todos os cenarios:
+1. Calcular o **% da meta de faturamento atingido**: `(totalFaturamento / metaFaturamento) * 100`
+2. Encontrar o acelerador correspondente a essa faixa de percentual
+3. Multiplicar a comissao base de cada linha pelo multiplicador encontrado
+4. Se nenhum acelerador estiver configurado, a comissao permanece sem multiplicador (1x)
 
-1. **AppSidebar.tsx** - Limpar manualmente o localStorage do Supabase antes de redirecionar, como fallback caso o `signOut()` falhe:
+### Alteracoes
 
-```typescript
-const handleLogout = async () => {
-  try {
-    await supabase.auth.signOut({ scope: 'local' });
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error);
-  }
-  // Limpar manualmente como fallback
-  localStorage.removeItem('sb-hkvjdxxndapxpslovrlc-auth-token');
-  window.location.href = '/auth/login';
-};
-```
+**Arquivo: `src/pages/Comissao.tsx`**
 
-2. **AuthContext.tsx** - Atualizar a funcao `signOut` do contexto com a mesma logica, para que qualquer componente que use `signOut()` do contexto tambem funcione corretamente.
+- Importar `useComissaoMetas` para obter a meta de faturamento do mes selecionado
+- Criar funcao `getMultiplicador(percentualMeta, aceleradores)` que percorre os aceleradores ordenados e retorna o multiplicador da faixa correspondente
+- Calcular o percentual atingido da meta: `totalFaturamento / metaFaturamento * 100`
+- Aplicar o multiplicador no `calcComissao`, multiplicando o resultado da formula pelo acelerador encontrado
+- Atualizar o total de comissao para tambem considerar o multiplicador
+- Exibir na tabela uma indicacao do multiplicador ativo (ex: "x1.2") ao lado do total ou no header
+
+**Arquivo: `src/hooks/use-comissao-config.ts`**
+
+- Exportar uma funcao utilitaria `findAcelerador(percentual, aceleradores)` que retorna o acelerador correspondente ao percentual informado, para reutilizacao
 
 ### Detalhes tecnicos
 
-- `scope: 'local'` garante que o signOut limpa a sessao local sem depender do servidor
-- A remocao manual do item `sb-hkvjdxxndapxpslovrlc-auth-token` do localStorage e um fallback de seguranca
-- O `window.location.href` forca reload completo, limpando todo estado React em memoria
+A funcao `findAcelerador` ordena os aceleradores por `ate_percentual` (crescente) e retorna o primeiro cuja faixa contem o percentual informado. Se o percentual exceder todos os limites, retorna o ultimo acelerador (aquele com `ate_percentual === null`, representando "sem limite").
 
-### Arquivos modificados
+```text
+Exemplo com aceleradores configurados:
+  - ate 100%: multiplicador 1.0x
+  - ate 130%: multiplicador 1.1x
+  - 131%+:    multiplicador 1.2x
 
-- `src/components/AppSidebar.tsx` - funcao `handleLogout`
-- `src/contexts/AuthContext.tsx` - funcao `signOut`
+Se totalFaturamento = R$80.000 e metaFaturamento = R$100.000
+  -> 80% da meta -> multiplicador 1.0x
+  -> Comissao final = comissao_base * 1.0
+
+Se totalFaturamento = R$120.000 e metaFaturamento = R$100.000
+  -> 120% da meta -> multiplicador 1.1x
+  -> Comissao final = comissao_base * 1.1
+```
+
+### Comportamento visual
+
+- Na coluna "Comissao" da tabela, o valor exibido ja sera o valor final (com acelerador aplicado)
+- No rodape da tabela, o total tambem refletira o multiplicador
+- Se houver acelerador ativo diferente de 1x, exibir um badge discreto no header indicando o multiplicador atual (ex: "Acelerador: 1.2x")
 
