@@ -185,16 +185,15 @@ const Comissao = () => {
                   <TableCell className="text-right font-bold">{formatCurrency(totalMatricula)}</TableCell>
                   <TableCell className="text-right font-bold">{formatCurrency(totalContrato)}</TableCell>
                   <TableCell className="text-right font-bold text-primary">
-                    <div className="flex items-center justify-end gap-2">
-                      {hasFormula ? formatCurrency(totalComissao) : "—"}
-                      {hasFormula && aceleradores.length > 0 && multiplicador !== 1 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {multiplicador}x
-                        </Badge>
-                      )}
-                    </div>
+                    {hasFormula ? formatCurrency(totalComissao) : "—"}
                   </TableCell>
-                  <TableCell />
+                  <TableCell>
+                    {hasFormula && aceleradores.length > 0 && multiplicador !== 1 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {multiplicador}x
+                      </Badge>
+                    )}
+                  </TableCell>
                 </TableRow>
               </TableFooter>
             </Table>
