@@ -101,6 +101,7 @@ import VisualizadorImagens from "./pages/VisualizadorImagens";
 import WhatsAppPage from "./pages/whatsapp";
 import Avisos from "./pages/Avisos";
 import PainelAdministrativo from "./pages/PainelAdministrativo";
+import Comissao from "./pages/Comissao";
 
 // Páginas do fluxo Sala
 import SalaLancamentos from "./pages/sala/SalaLancamentos";
@@ -182,6 +183,7 @@ function ProtectedLayout() {
               <Route path="/galeria-fotos" element={<GaleriaFotos />} />
               <Route path="/avisos" element={<Avisos />} />
               <Route path="/painel-administrativo" element={<PainelAdministrativo />} />
+              <Route path="/comissao" element={<Comissao />} />
               <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/whatsapp" element={<WhatsAppPage />} />

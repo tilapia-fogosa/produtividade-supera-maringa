@@ -7693,6 +7693,7 @@ export type Database = {
         | "administrativo"
         | "estagiario"
         | "sala"
+        | "sdr"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
       Vinculo_aluno:
         | "Pai do aluno"
@@ -7934,6 +7935,7 @@ export const Constants = {
         "administrativo",
         "estagiario",
         "sala",
+        "sdr",
       ],
       user_role_old: ["consultor", "franqueado", "gestor_comercial"],
       Vinculo_aluno: [
