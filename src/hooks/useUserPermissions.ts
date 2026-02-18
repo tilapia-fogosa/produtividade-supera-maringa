@@ -22,6 +22,7 @@ const PAGE_PERMISSIONS = {
   '/correcoes-ah': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
   '/aula-zero': ['consultor', 'franqueado', 'gestor_pedagogico', 'educador', 'admin', 'sala'],
   '/admin/configuracao': ['admin'], // Só admin tem acesso
+  '/comissao': ['consultor', 'franqueado', 'sdr', 'admin'],
 } as const;
 
 export const useUserPermissions = () => {
@@ -63,6 +64,7 @@ export const useUserPermissions = () => {
   const isAdministrativo = profile?.role === 'administrativo' || profile?.role === 'consultor';
   const isEstagiario = profile?.role === 'estagiario';
   const isSala = profile?.role === 'sala';
+  const isSdr = profile?.role === 'sdr';
 
   return {
     hasPageAccess,
@@ -73,6 +75,7 @@ export const useUserPermissions = () => {
     isAdministrativo,
     isEstagiario,
     isSala,
+    isSdr,
     userRole: profile?.role,
     loading
   };
