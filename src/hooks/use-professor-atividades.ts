@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentProfessor } from './use-current-professor';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
+import { useUserPermissions } from './useUserPermissions';
 import { getDay } from 'date-fns';
 
 // Mapeia o dia da semana do JS para o formato do banco
@@ -74,16 +75,22 @@ export interface AulaInauguralProfessor {
   descricao: string | null;
   cliente_nome?: string;
   client_id?: string;
+  professor_nome?: string;
 }
 
 export function useProfessorAtividades() {
   const { professorId, isProfessor } = useCurrentProfessor();
   const { activeUnit } = useActiveUnit();
+  const { isAdmin, isManagement } = useUserPermissions();
+
+  const isAdminOrManagement = isAdmin || isManagement;
 
   const { data, isLoading } = useQuery({
-    queryKey: ['professor-atividades', professorId, activeUnit?.id],
+    queryKey: ['professor-atividades', professorId, activeUnit?.id, isAdminOrManagement],
     queryFn: async () => {
-      if (!professorId) return null;
+      // Para professor precisa do professorId, para admin precisa da unidade
+      if (!isAdminOrManagement && !professorId) return null;
+      if (isAdminOrManagement && !activeUnit?.id) return null;
 
       // 0. Buscar pessoas ignoradas para AH
       const { data: pessoasIgnoradas } = await supabase
@@ -94,12 +101,19 @@ export function useProfessorAtividades() {
 
       const idsIgnorados = new Set(pessoasIgnoradas?.map(p => p.pessoa_id) || []);
 
-      // 1. Buscar turmas do professor
-      const { data: turmas, error: turmasError } = await supabase
+      // 1. Buscar turmas (todas da unidade para admin, ou do professor)
+      let turmasQuery = supabase
         .from('turmas')
         .select('id, nome, dia_semana')
-        .eq('professor_id', professorId)
         .eq('active', true);
+
+      if (isAdminOrManagement && activeUnit?.id) {
+        turmasQuery = turmasQuery.eq('unit_id', activeUnit.id);
+      } else if (professorId) {
+        turmasQuery = turmasQuery.eq('professor_id', professorId);
+      }
+
+      const { data: turmas, error: turmasError } = await turmasQuery;
 
       if (turmasError) throw turmasError;
 
@@ -112,6 +126,7 @@ export function useProfessorAtividades() {
           apostilasAHParaCorrigir: [],
           coletasAHPendentes: [],
           botomPendentes: [],
+          aulasInaugurais: [],
         };
       }
 
@@ -254,37 +269,55 @@ export function useProfessorAtividades() {
         })
         .sort((a, b) => b.dias_sem_correcao - a.dias_sem_correcao);
 
-      // 7. Buscar pendências de botom do professor
-      const { data: botomData, error: botomError } = await supabase
+      // 7. Buscar pendências de botom
+      let botomQuery = supabase
         .from('pendencias_botom')
         .select('id, aluno_id, apostila_nova')
-        .eq('professor_responsavel_id', professorId)
         .eq('status', 'pendente');
+
+      if (!isAdminOrManagement && professorId) {
+        botomQuery = botomQuery.eq('professor_responsavel_id', professorId);
+      }
+
+      const { data: botomData, error: botomError } = await botomQuery;
 
       if (botomError) throw botomError;
 
-      const botomPendentes: BotomPendenteProfessor[] = (botomData || []).map(b => {
-        const aluno = alunos?.find(a => a.id === b.aluno_id);
-        const turma = turmas?.find(t => t.id === aluno?.turma_id);
-        return {
-          pendencia_id: b.id,
-          aluno_id: b.aluno_id,
-          aluno_nome: aluno?.nome || 'Aluno não encontrado',
-          apostila_nova: b.apostila_nova,
-          turma_nome: turma?.nome || 'Turma não encontrada',
-          dia_semana: turma?.dia_semana || '',
-        };
-      });
+      // Para admin, filtrar botom apenas dos alunos das turmas da unidade
+      const botomPendentes: BotomPendenteProfessor[] = (botomData || [])
+        .filter(b => {
+          if (isAdminOrManagement) {
+            return alunos?.some(a => a.id === b.aluno_id);
+          }
+          return true;
+        })
+        .map(b => {
+          const aluno = alunos?.find(a => a.id === b.aluno_id);
+          const turma = turmas?.find(t => t.id === aluno?.turma_id);
+          return {
+            pendencia_id: b.id,
+            aluno_id: b.aluno_id,
+            aluno_nome: aluno?.nome || 'Aluno não encontrado',
+            apostila_nova: b.apostila_nova,
+            turma_nome: turma?.nome || 'Turma não encontrada',
+            dia_semana: turma?.dia_semana || '',
+          };
+        });
 
-      // 8. Buscar aulas inaugurais do professor
+      // 8. Buscar aulas inaugurais
       const hojeStr = new Date().toISOString().split('T')[0];
-      const { data: eventosAulaZero, error: eventosError } = await supabase
+      let eventosQuery = supabase
         .from('eventos_professor')
-        .select('id, titulo, data, horario_inicio, horario_fim, descricao, client_id')
-        .eq('professor_id', professorId)
+        .select('id, titulo, data, horario_inicio, horario_fim, descricao, client_id, professores:professor_id(nome)')
         .eq('tipo_evento', 'aula_zero')
         .gte('data', hojeStr)
         .order('data', { ascending: true });
+
+      if (!isAdminOrManagement && professorId) {
+        eventosQuery = eventosQuery.eq('professor_id', professorId);
+      }
+
+      const { data: eventosAulaZero, error: eventosError } = await eventosQuery;
 
       if (eventosError) throw eventosError;
 
@@ -293,10 +326,16 @@ export function useProfessorAtividades() {
 
       if (clientIdsAI.length > 0) {
         // Buscar nomes dos clientes
-        const { data: clientes } = await supabase
+        let clientesQuery = supabase
           .from('atividade_pos_venda')
           .select('client_id, client_name, full_name')
           .in('client_id', clientIdsAI);
+
+        if (isAdminOrManagement && activeUnit?.id) {
+          clientesQuery = clientesQuery.eq('unit_id', activeUnit.id);
+        }
+
+        const { data: clientes } = await clientesQuery;
 
         const clienteNomes: Record<string, string> = {};
         if (clientes) {
@@ -344,6 +383,7 @@ export function useProfessorAtividades() {
             descricao: e.descricao,
             cliente_nome: clienteNomes[(e as any).client_id] || undefined,
             client_id: (e as any).client_id || undefined,
+            professor_nome: (e as any).professores?.nome || undefined,
           }))
           .filter(e => {
             if (!e.client_id) return false;
@@ -363,7 +403,7 @@ export function useProfessorAtividades() {
         aulasInaugurais,
       };
     },
-    enabled: isProfessor && !!professorId,
+    enabled: (isProfessor && !!professorId) || (isAdminOrManagement && !!activeUnit?.id),
   });
 
   // Função para verificar se um dia_semana corresponde ao dia atual
@@ -382,6 +422,7 @@ export function useProfessorAtividades() {
 
   return {
     isProfessor,
+    isAdminOrManagement,
     isLoading,
     reposicoes: data?.reposicoes || [],
     camisetasPendentes: data?.camisetasPendentes || [],
