@@ -1,40 +1,22 @@
 
+# Enviar professor_id no webhook da Aula Zero
 
-# Otimizacao do Salvamento do Drawer de Aula Zero
+## O que muda
 
-## Problema Identificado
+No arquivo `src/components/aula-zero/AulaZeroDrawer.tsx`:
 
-O salvamento esta lento porque 3 operacoes sao executadas **sequencialmente** (uma esperando a outra terminar):
-1. UPDATE em `atividade_pos_venda`
-2. SELECT + UPDATE em `alunos`  
-3. Chamada a edge function `webhook-aula-inaugural` (que espera resposta do webhook externo)
-
-A etapa 3 e a mais lenta, pois envolve uma chamada HTTP externa e o codigo espera (`await`) a resposta completa antes de fechar o drawer.
-
-## Solucao Proposta
-
-Reorganizar o fluxo para que o webhook **nao bloqueie** o fechamento do drawer:
-
-1. **Etapas 1 e 2 em paralelo**: Executar o update em `atividade_pos_venda` e a busca/update em `alunos` simultaneamente usando `Promise.all`
-2. **Webhook sem await**: Disparar a chamada ao webhook **sem esperar** a resposta (fire-and-forget). O drawer fecha imediatamente apos salvar no banco.
+1. Substituir `useCurrentFuncionario` por `useAuth` (que ja tem `profile.professor_id` e `profile.full_name`)
+2. No payload do webhook, adicionar o campo `professor_id` vindo de `profile.professor_id`
+3. Usar `profile.full_name` como valor de `registrado_por` (resolve tambem o problema do campo vazio)
+4. No campo `coordenador_responsavel` da tabela `alunos`, usar `profile.full_name` como fallback
 
 ## Detalhes Tecnicos
 
 **Arquivo:** `src/components/aula-zero/AulaZeroDrawer.tsx`
 
-Alterar o `onSubmit` para:
-
-```text
-1. Promise.all([
-     - update atividade_pos_venda
-     - buscar aluno + update alunos (se existir)
-   ])
-2. Fechar drawer e resetar form
-3. supabase.functions.invoke('webhook-aula-inaugural', ...) 
-   // SEM await - dispara e esquece
-```
-
-Isso reduzira o tempo de salvamento significativamente, pois:
-- As 2 operacoes de banco rodam em paralelo (ao inves de sequenciais)
-- O webhook nao bloqueia mais o fechamento do drawer
-
+- Remover import de `useCurrentFuncionario`
+- Importar `useAuth` de `@/contexts/AuthContext`
+- Extrair `profile` do hook `useAuth`
+- No payload do webhook: `professor_id: profile?.professor_id || null`
+- No campo `registrado_por`: `profile?.full_name || profile?.email || 'Desconhecido'`
+- No `coordenador_responsavel` da tabela alunos: `profile?.full_name || undefined`
