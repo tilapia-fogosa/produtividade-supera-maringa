@@ -2942,6 +2942,7 @@ export type Database = {
       eventos_professor: {
         Row: {
           active: boolean | null
+          atividade_pos_venda_id: string | null
           client_id: string | null
           created_at: string | null
           created_by: string | null
@@ -2965,6 +2966,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          atividade_pos_venda_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -2988,6 +2990,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          atividade_pos_venda_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -3010,6 +3013,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_professor_atividade_pos_venda_id_fkey"
+            columns: ["atividade_pos_venda_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_professor_client_id_fkey"
             columns: ["client_id"]
