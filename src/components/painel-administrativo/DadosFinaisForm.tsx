@@ -150,7 +150,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             informacoes_onboarding,
             kit_type
           `)
-          .eq("client_id", cliente.id)
+          .eq("id", cliente.atividade_pos_venda_id)
           .maybeSingle();
 
         if (data) {
@@ -197,7 +197,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         const { data: evento } = await supabase
           .from('eventos_professor')
           .select('horario_inicio, horario_fim, professores:professor_id(nome)')
-          .eq('client_id', cliente.id)
+          .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id)
           .eq('tipo_evento', 'aula_zero')
           .order('data', { ascending: false })
           .limit(1)
@@ -218,7 +218,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
     };
 
     fetchData();
-  }, [cliente.id]);
+  }, [cliente.atividade_pos_venda_id]);
 
   const mutation = useMutation({
     mutationFn: async (data: { checklist: Record<string, boolean>; alunoId: string | null; fotoBase64: string | null }) => {
@@ -267,7 +267,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       const { error: checklistError } = await supabase
         .from("atividade_pos_venda")
         .update(updateData)
-        .eq("client_id", cliente.id);
+        .eq("id", cliente.atividade_pos_venda_id);
 
       if (checklistError) throw checklistError;
 
@@ -326,22 +326,13 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           await supabase
             .from('eventos_professor')
             .delete()
-            .eq('client_id', cliente.id)
+            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id)
             .eq('tipo_evento', 'aula_zero');
 
           const year = dataAulaInaugural.getFullYear();
           const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
           const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
           const dataStr = `${year}-${month}-${day}`;
-
-          // Buscar o id da atividade_pos_venda para vincular ao evento
-          const { data: atividadePV } = await supabase
-            .from('atividade_pos_venda')
-            .select('id')
-            .eq('client_id', cliente.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
 
           const eventoData = {
             professor_id: professorSelecionado.id,
@@ -354,7 +345,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             recorrente: false,
             created_by: userId,
             client_id: cliente.id,
-            atividade_pos_venda_id: atividadePV?.id || null,
+            atividade_pos_venda_id: cliente.atividade_pos_venda_id,
           };
 
           const { error: eventoError } = await supabase
@@ -378,12 +369,10 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               if (alunoData?.nome) nomeAluno = alunoData.nome;
             }
 
-            // Buscar unit_id da atividade
             const { data: atividadeData } = await supabase
               .from('atividade_pos_venda')
               .select('unit_id')
-              .eq('client_id', cliente.id)
-              .limit(1)
+              .eq('id', cliente.atividade_pos_venda_id)
               .maybeSingle();
 
             const horarioFormatado = horarioSelecionado.substring(0, 5);

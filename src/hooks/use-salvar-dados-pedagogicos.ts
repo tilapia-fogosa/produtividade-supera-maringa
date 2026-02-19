@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type SalvarDadosPedagogicosParams = {
   clientId: string;
+  atividadePosVendaId: string; // ID da atividade_pos_venda
   alunoId?: string; // ID do aluno vinculado
   turmaId?: string;
   responsavel?: string;
@@ -41,7 +42,7 @@ export const useSalvarDadosPedagogicos = () => {
         const { error: updateError } = await supabase
           .from('atividade_pos_venda')
           .update(updateData)
-          .eq('client_id', params.clientId);
+          .eq('id', params.atividadePosVendaId);
 
         if (updateError) throw updateError;
       }

@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export interface ClienteMatriculado {
-  id: string;
+  id: string; // client_id (mantido para compatibilidade)
+  atividade_pos_venda_id: string; // ID da atividade_pos_venda específica
   name: string;
   data_matricula: string;
   created_by: string | null;
@@ -173,8 +174,11 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
           temAlunoVinculado
         );
 
+        const posVendaId = posVenda?.id || '';
+
         clientesMap.set(clientId, {
           id: clientId,
+          atividade_pos_venda_id: posVendaId,
           name: activity.clients.name || "Sem nome",
           data_matricula: activity.created_at,
           created_by: activity.created_by,

@@ -48,6 +48,7 @@ export function AtividadesPosVendaTab() {
     // Converter AtividadePosVenda para ClienteMatriculado para compatibilidade com o drawer
     const clienteParaDrawer: ClienteMatriculado = {
       id: atividade.client_id,
+      atividade_pos_venda_id: atividade.id,
       name: atividade.client_name,
       data_matricula: atividade.created_at,
       created_by: null,
