@@ -383,6 +383,9 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               data_aula: dataStr,
               horario_aula: horarioFormatado,
               unit_id: atividadeData?.unit_id || null,
+              kit_entregue: data.checklist.check_entregar_kit || false,
+              tipo_kit: kitType || null,
+              descritivo_comercial: descritivoComercial || null,
             };
 
             console.log('[Webhook Aula Inaugural] Enviando via edge function:', webhookPayload);
