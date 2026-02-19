@@ -66,6 +66,7 @@ interface Evento {
   apostila_nova?: string;
   // Campos para aula inaugural
   aula_inaugural_client_id?: string;
+  aula_inaugural_atividade_id?: string;
 }
 
 export default function Home() {
@@ -159,7 +160,7 @@ export default function Home() {
 
   // Estado para gaveta de Aula Zero
   const [aulaZeroDrawerAberto, setAulaZeroDrawerAberto] = useState(false);
-  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ clientId: string; nome: string } | null>(null);
+  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ atividadePosVendaId: string; nome: string } | null>(null);
 
   // Tipos de atividades disponíveis para filtro
   const tiposAtividades = useMemo(() => [
@@ -419,6 +420,7 @@ export default function Home() {
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}${ai.professor_nome ? ` • ${ai.professor_nome}` : ''}`,
           aula_inaugural_client_id: ai.client_id,
+          aula_inaugural_atividade_id: ai.atividade_pos_venda_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -523,6 +525,7 @@ export default function Home() {
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
           aula_inaugural_client_id: ai.client_id,
+          aula_inaugural_atividade_id: ai.atividade_pos_venda_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -1005,18 +1008,18 @@ export default function Home() {
   };
 
   const handleAulaInauguralClick = async (evento: Evento) => {
-    if (evento.aula_inaugural_client_id) {
-      const clientId = evento.aula_inaugural_client_id;
+    if (evento.aula_inaugural_atividade_id) {
+      const atividadeId = evento.aula_inaugural_atividade_id;
       
-      // Buscar nome do aluno/cliente
+      // Buscar nome do aluno/cliente pela atividade específica
       const { data: posVenda } = await supabase
         .from('atividade_pos_venda')
         .select('full_name, client_name')
-        .eq('client_id', clientId)
+        .eq('id', atividadeId)
         .maybeSingle();
 
       const nome = posVenda?.full_name || posVenda?.client_name || evento.titulo || '';
-      setAulaZeroAluno({ clientId, nome });
+      setAulaZeroAluno({ atividadePosVendaId: atividadeId, nome });
       setAulaZeroDrawerAberto(true);
     }
   };
@@ -1043,7 +1046,7 @@ export default function Home() {
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
     const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
-    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_client_id;
+    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_atividade_id;
     const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel || isAulaInauguralClicavel;
     
     const handleClick = () => {
@@ -1388,7 +1391,7 @@ export default function Home() {
           setAulaZeroDrawerAberto(open);
           if (!open) setAulaZeroAluno(null);
         }}
-        clientId={aulaZeroAluno?.clientId || ''}
+        atividadePosVendaId={aulaZeroAluno?.atividadePosVendaId || ''}
         alunoNome={aulaZeroAluno?.nome || ''}
       />
     </div>

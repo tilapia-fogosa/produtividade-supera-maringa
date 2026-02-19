@@ -26,7 +26,7 @@ import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 interface AulaZeroDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clientId: string;
+  atividadePosVendaId: string;
   alunoNome: string;
   onSalvo?: () => void;
 }
@@ -39,7 +39,7 @@ interface AulaZeroFormData {
   pontos_atencao: string;
 }
 
-export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
+export function AulaZeroDrawer({ open, onOpenChange, atividadePosVendaId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
   const { profile } = useAuth();
   const { activeUnit } = useActiveUnit();
   const [isSaving, setIsSaving] = useState(false);
@@ -56,12 +56,12 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
 
   // Carregar dados existentes da atividade_pos_venda ao abrir
   useEffect(() => {
-    if (open && clientId) {
+    if (open && atividadePosVendaId) {
       (async () => {
         const { data } = await supabase
           .from('atividade_pos_venda')
           .select('percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-          .eq('client_id', clientId)
+          .eq('id', atividadePosVendaId)
           .maybeSingle();
 
         if (data) {
@@ -83,10 +83,10 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
         }
       })();
     }
-  }, [open, clientId]);
+  }, [open, atividadePosVendaId]);
 
   const onSubmit = async (data: AulaZeroFormData) => {
-    if (!clientId) return;
+    if (!atividadePosVendaId) return;
     setIsSaving(true);
     try {
       const fields = {
@@ -97,25 +97,34 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
         pontos_atencao: data.pontos_atencao,
       };
 
-      // Etapas 1 e 2 em paralelo
-      const [updateResult] = await Promise.all([
-        supabase.from('atividade_pos_venda').update(fields).eq('client_id', clientId),
-        (async () => {
-          const { data: aluno } = await supabase
-            .from('alunos')
-            .select('id')
-            .eq('client_id', clientId)
-            .maybeSingle();
-          if (aluno) {
-            await supabase.from('alunos').update({
-              ...fields,
-              coordenador_responsavel: profile?.full_name || undefined,
-            }).eq('id', aluno.id);
-          }
-        })(),
-      ]);
+      // Atualizar atividade_pos_venda pelo ID específico
+      const updateResult = await supabase
+        .from('atividade_pos_venda')
+        .update(fields)
+        .eq('id', atividadePosVendaId);
 
       if (updateResult.error) throw updateResult.error;
+
+      // Buscar client_id da atividade para sincronizar com aluno
+      const { data: atividade } = await supabase
+        .from('atividade_pos_venda')
+        .select('client_id')
+        .eq('id', atividadePosVendaId)
+        .maybeSingle();
+
+      if (atividade?.client_id) {
+        const { data: aluno } = await supabase
+          .from('alunos')
+          .select('id')
+          .eq('client_id', atividade.client_id)
+          .maybeSingle();
+        if (aluno) {
+          await supabase.from('alunos').update({
+            ...fields,
+            coordenador_responsavel: profile?.full_name || undefined,
+          }).eq('id', aluno.id);
+        }
+      }
 
       // Fechar drawer imediatamente
       form.reset();
@@ -125,7 +134,7 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
       // Webhook fire-and-forget (sem await)
       supabase.functions.invoke('webhook-aula-inaugural', {
         body: {
-          client_id: clientId,
+          atividade_pos_venda_id: atividadePosVendaId,
           client_name: alunoNome,
           unit_id: activeUnit?.id || null,
           registrado_por: profile?.full_name || profile?.email || 'Desconhecido',
