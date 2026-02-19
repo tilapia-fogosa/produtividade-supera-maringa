@@ -32,7 +32,6 @@ import { useDadosPosVenda, formatDateToBR, formatNumberToCurrency } from "@/hook
 import { Loader2, CheckCircle, CalendarCheck } from "lucide-react";
 
 const formSchema = z.object({
-  kitType: z.string().optional(),
   enrollmentAmount: z.string().optional(),
   enrollmentPaymentDate: z.string().optional(),
   enrollmentPaymentMethod: z.string().optional(),
@@ -54,17 +53,6 @@ interface DadosComercaisFormProps {
   cliente: ClienteMatriculado;
   onCancel: () => void;
 }
-
-const KIT_OPTIONS = [
-  { value: "kit_1", label: "Kit 1" },
-  { value: "kit_2", label: "Kit 2" },
-  { value: "kit_3", label: "Kit 3" },
-  { value: "kit_4", label: "Kit 4" },
-  { value: "kit_5", label: "Kit 5" },
-  { value: "kit_6", label: "Kit 6" },
-  { value: "kit_7", label: "Kit 7" },
-  { value: "kit_8", label: "Kit 8" },
-];
 
 const PAYMENT_METHODS = [
   { value: "pix", label: "Pix" },
@@ -111,7 +99,6 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      kitType: "",
       enrollmentAmount: "R$ 0,00",
       enrollmentPaymentDate: "",
       enrollmentPaymentMethod: "",
@@ -131,7 +118,6 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
   // Carregar dados salvos quando disponíveis
   useEffect(() => {
     if (dadosSalvos) {
-      form.setValue("kitType", dadosSalvos.kit_type || "");
       form.setValue("enrollmentAmount", formatNumberToCurrency(dadosSalvos.enrollment_amount));
       form.setValue("enrollmentPaymentDate", formatDateToBR(dadosSalvos.enrollment_payment_date));
       form.setValue("enrollmentPaymentMethod", dadosSalvos.enrollment_payment_method || "");
@@ -176,7 +162,6 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
       {
         clientId: cliente.id,
         alunoId: alunoVinculado?.id,
-        kitType: data.kitType || undefined,
         enrollmentAmount: parseCurrency(data.enrollmentAmount || "") || undefined,
         enrollmentPaymentDate: data.enrollmentPaymentDate || undefined,
         enrollmentPaymentMethod: data.enrollmentPaymentMethod || undefined,
@@ -213,41 +198,9 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <Accordion type="multiple" defaultValue={["kit"]} className="w-full">
-          {/* TIPO DE KIT */}
-          <AccordionItem value="kit" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline py-4">
-              <span className="text-sm font-medium">Tipo de Kit</span>
-            </AccordionTrigger>
-            <AccordionContent className="pb-4">
-              <FormField
-                control={form.control}
-                name="kitType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Selecione o Kit</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o kit" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {KIT_OPTIONS.map((kit) => (
-                          <SelectItem key={kit.value} value={kit.value}>
-                            {kit.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
+        <Accordion type="multiple" defaultValue={["matricula"]} className="w-full">
           {/* MATRÍCULA */}
-          <AccordionItem value="matricula" className="border rounded-lg px-4 mt-2">
+          <AccordionItem value="matricula" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <span className="text-sm font-medium">Matrícula</span>
             </AccordionTrigger>
