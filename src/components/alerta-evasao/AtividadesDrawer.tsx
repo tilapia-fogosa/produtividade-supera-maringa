@@ -164,6 +164,22 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     return TIPOS_ATIVIDADE.find(t => t.value === tipo) || { label: tipo, color: 'bg-gray-500' };
   };
 
+  const getOrigemLabel = (origem: string) => {
+    const labels: Record<string, string> = {
+      'conversa_indireta': 'Conversa Indireta',
+      'aviso_recepcao': 'Aviso na Recepção',
+      'aviso_professor_coordenador': 'Aviso ao Professor/Coordenador',
+      'aviso_whatsapp': 'Aviso no WhatsApp',
+      'inadimplencia': 'Inadimplência',
+      'outro': 'Outro'
+    };
+    return labels[origem] || origem;
+  };
+
+  // Separar atividades realizadas e pendentes
+  const atividadesRealizadas = useMemo(() => atividades.filter(a => a.status === 'concluida'), [atividades]);
+  const atividadesPendentes = useMemo(() => atividades.filter(a => a.status === 'pendente'), [atividades]);
+
   const formatarData = (data: string) => {
     try {
       return format(new Date(data), "dd/MM 'às' HH:mm", { locale: ptBR });
@@ -709,6 +725,107 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     );
   };
 
+  // Função para renderizar card de atividade
+  const renderAtividadeCard = (atividade: AtividadeAlertaEvasao) => {
+    const tipoConfig = getTipoConfig(atividade.tipo_atividade);
+    const isPendente = atividade.status === 'pendente';
+    const isTerminal = ['retencao', 'evasao'].includes(atividade.tipo_atividade);
+    const isTarefaAdmin = TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade);
+    const isNegociacaoFinanceira = atividade.tipo_atividade === 'atendimento_financeiro';
+    const isAcolhimento = atividade.tipo_atividade === 'acolhimento';
+    const isNegociacaoAtiva = mostrarResultadoNegociacao && atividadeNegociacao?.id === atividade.id;
+    const isAcolhimentoAtivo = mostrarPainelAcolhimento && atividadeAcolhimento?.id === atividade.id;
+    const isTarefaAdminAtiva = mostrarPainelTarefaAdmin && atividadeTarefaAdmin?.id === atividade.id;
+    const isPainelAtivo = isNegociacaoAtiva || isAcolhimentoAtivo || isTarefaAdminAtiva;
+    
+    return (
+      <Card 
+        key={atividade.id} 
+        className={`overflow-hidden transition-all ${
+          isPendente ? 'cursor-pointer hover:shadow-sm' : ''
+        } ${!isPendente ? 'opacity-70' : ''} ${isPainelAtivo ? 'ring-2 ring-primary' : ''}`}
+        onClick={() => handleExpandirAtividade(atividade)}
+      >
+        <div className={`h-1 ${tipoConfig.color}`} />
+        <CardContent className="p-2 space-y-1">
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1 flex-wrap">
+              <Badge className={`${tipoConfig.color} text-white text-[10px] px-1.5 py-0`}>
+                {tipoConfig.label}
+              </Badge>
+              {!isPendente && !isTerminal && (
+                <Check className="h-3 w-3 text-green-600" />
+              )}
+              {isTerminal && renderTerminalBadge(atividade)}
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">
+                {formatarData(atividade.created_at)}
+              </span>
+              {isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
+                atividadeExpandida === atividade.id 
+                  ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
+                  : <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              )}
+            </div>
+          </div>
+          <p className="text-xs leading-tight">{atividade.descricao}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {renderResponsavelInfo(atividade)}
+            {renderDataAgendada(atividade)}
+          </div>
+          
+          {/* Formulário para criar nova atividade (expandido) */}
+          {atividadeExpandida === atividade.id && isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
+            <div 
+              className="mt-2 pt-2 border-t space-y-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-[10px] font-medium">Nova atividade:</p>
+              
+              <div className="flex flex-wrap gap-1">
+                {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
+                  const config = getTipoConfig(tipo);
+                  const isSelected = tipoSelecionado === tipo;
+                  return (
+                    <Badge
+                      key={tipo}
+                      className={`cursor-pointer transition-all text-[10px] px-1.5 py-0 ${
+                        isSelected 
+                          ? `${config.color} text-white ring-1 ring-offset-1` 
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                      onClick={() => setTipoSelecionado(tipo)}
+                    >
+                      {config.label}
+                    </Badge>
+                  );
+                })}
+              </div>
+              
+              <Textarea
+                placeholder="Descrição..."
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                rows={2}
+                className="text-xs min-h-[50px]"
+              />
+              
+              <Button
+                size="sm"
+                disabled={!tipoSelecionado || !descricao.trim() || isCriando}
+                onClick={() => handleCriarAtividade(atividade.id)}
+                className="w-full h-6 text-[10px]"
+              >
+                {isCriando ? 'Salvando...' : 'Registrar'}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   if (!alerta) return null;
 
   // Largura do drawer: normal ou expandido
@@ -755,107 +872,44 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <p className="text-xs">Nenhuma atividade</p>
                   </div>
                 ) : (
-                  atividades.map((atividade) => {
-                    const tipoConfig = getTipoConfig(atividade.tipo_atividade);
-                    const isPendente = atividade.status === 'pendente';
-                    const isExpanded = atividadeExpandida === atividade.id;
-                    const isTerminal = ['retencao', 'evasao'].includes(atividade.tipo_atividade);
-                    const isTarefaAdmin = TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade);
-                    const isNegociacaoFinanceira = atividade.tipo_atividade === 'atendimento_financeiro';
-                    const isAcolhimento = atividade.tipo_atividade === 'acolhimento';
-                    const isNegociacaoAtiva = mostrarResultadoNegociacao && atividadeNegociacao?.id === atividade.id;
-                    const isAcolhimentoAtivo = mostrarPainelAcolhimento && atividadeAcolhimento?.id === atividade.id;
-                    const isTarefaAdminAtiva = mostrarPainelTarefaAdmin && atividadeTarefaAdmin?.id === atividade.id;
-                    const isPainelAtivo = isNegociacaoAtiva || isAcolhimentoAtivo || isTarefaAdminAtiva;
-                    
-                    return (
-                      <Card 
-                        key={atividade.id} 
-                        className={`overflow-hidden transition-all ${
-                          isPendente ? 'cursor-pointer hover:shadow-sm' : ''
-                        } ${!isPendente ? 'opacity-70' : ''} ${isPainelAtivo ? 'ring-2 ring-primary' : ''}`}
-                        onClick={() => handleExpandirAtividade(atividade)}
-                      >
-                        <div className={`h-1 ${tipoConfig.color}`} />
-                        <CardContent className="p-2 space-y-1">
-                          <div className="flex items-center justify-between gap-1">
-                            <div className="flex items-center gap-1 flex-wrap">
-                              <Badge className={`${tipoConfig.color} text-white text-[10px] px-1.5 py-0`}>
-                                {tipoConfig.label}
-                              </Badge>
-                              {!isPendente && !isTerminal && (
-                                <Check className="h-3 w-3 text-green-600" />
-                              )}
-                              {isTerminal && renderTerminalBadge(atividade)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-muted-foreground">
-                                {formatarData(atividade.created_at)}
-                              </span>
-                              {isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
-                                atividadeExpandida === atividade.id 
-                                  ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
-                                  : <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                              )}
-                            </div>
+                  <>
+                    {/* Card do Alerta Criado */}
+                    <Card className="overflow-hidden opacity-70">
+                      <div className="h-1 bg-amber-500" />
+                      <CardContent className="p-2 space-y-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1">
+                            <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">
+                              Alerta Criado
+                            </Badge>
+                            <Check className="h-3 w-3 text-green-600" />
                           </div>
-                          <p className="text-xs leading-tight">{atividade.descricao}</p>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {renderResponsavelInfo(atividade)}
-                            {renderDataAgendada(atividade)}
-                          </div>
-                          
-                          
-                          {/* Formulário para criar nova atividade (expandido) */}
-                          {atividadeExpandida === atividade.id && isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
-                            <div 
-                              className="mt-2 pt-2 border-t space-y-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <p className="text-[10px] font-medium">Nova atividade:</p>
-                              
-                              <div className="flex flex-wrap gap-1">
-                                {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
-                                  const config = getTipoConfig(tipo);
-                                  const isSelected = tipoSelecionado === tipo;
-                                  return (
-                                    <Badge
-                                      key={tipo}
-                                      className={`cursor-pointer transition-all text-[10px] px-1.5 py-0 ${
-                                        isSelected 
-                                          ? `${config.color} text-white ring-1 ring-offset-1` 
-                                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                                      }`}
-                                      onClick={() => setTipoSelecionado(tipo)}
-                                    >
-                                      {config.label}
-                                    </Badge>
-                                  );
-                                })}
-                              </div>
-                              
-                              <Textarea
-                                placeholder="Descrição..."
-                                value={descricao}
-                                onChange={(e) => setDescricao(e.target.value)}
-                                rows={2}
-                                className="text-xs min-h-[50px]"
-                              />
-                              
-                              <Button
-                                size="sm"
-                                disabled={!tipoSelecionado || !descricao.trim() || isCriando}
-                                onClick={() => handleCriarAtividade(atividade.id)}
-                                className="w-full h-6 text-[10px]"
-                              >
-                                {isCriando ? 'Salvando...' : 'Registrar'}
-                              </Button>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })
+                          <span className="text-[10px] text-muted-foreground">
+                            {formatarData(alerta.data_alerta)}
+                          </span>
+                        </div>
+                        <p className="text-xs leading-tight">{alerta.descritivo || 'Sem descritivo'}</p>
+                        <span className="text-[10px] text-muted-foreground">
+                          Origem: {getOrigemLabel(alerta.origem_alerta)}
+                        </span>
+                      </CardContent>
+                    </Card>
+
+                    {/* Atividades realizadas */}
+                    {atividadesRealizadas.map((atividade) => renderAtividadeCard(atividade))}
+
+                    {/* Separador entre realizadas e pendentes */}
+                    {atividadesPendentes.length > 0 && (
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[10px] text-muted-foreground font-medium">Próximas etapas</span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                    )}
+
+                    {/* Atividades pendentes */}
+                    {atividadesPendentes.map((atividade) => renderAtividadeCard(atividade))}
+                  </>
                 )}
               </div>
             </ScrollArea>
