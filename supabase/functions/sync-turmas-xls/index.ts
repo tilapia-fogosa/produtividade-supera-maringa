@@ -445,6 +445,43 @@ serve(async (req) => {
       }
     }
 
+    // ETAPA 4.5: Desativar turmas sem alunos ativos
+    console.log('Etapa 4.5: Desativando turmas sem alunos ativos...');
+    
+    // Buscar todas as turmas ativas da unidade
+    const { data: turmasAtivas } = await supabase
+      .from('turmas')
+      .select('id')
+      .eq('unit_id', unitId)
+      .eq('active', true);
+
+    if (turmasAtivas && turmasAtivas.length > 0) {
+      const turmaIdsAtivas = turmasAtivas.map(t => t.id);
+
+      // Buscar turma_ids que possuem pelo menos um aluno ativo
+      const { data: turmasComAlunos } = await supabase
+        .from('alunos')
+        .select('turma_id')
+        .in('turma_id', turmaIdsAtivas)
+        .eq('active', true);
+
+      const turmasComAlunosSet = new Set((turmasComAlunos || []).map(a => a.turma_id));
+      const turmasSemAlunos = turmaIdsAtivas.filter(id => !turmasComAlunosSet.has(id));
+
+      if (turmasSemAlunos.length > 0) {
+        const { error: deactivateError } = await supabase
+          .from('turmas')
+          .update({ active: false })
+          .in('id', turmasSemAlunos);
+
+        if (deactivateError) {
+          result.errors.push(`Erro ao desativar turmas sem alunos: ${deactivateError.message}`);
+        } else {
+          console.log(`Turmas desativadas por não terem alunos ativos: ${turmasSemAlunos.length}`);
+        }
+      }
+    }
+
     console.log('Sincronização completa finalizada:', result);
 
     // ETAPA 5: Enviar alunos ativos para webhook (fire-and-forget)
