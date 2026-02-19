@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
+import { useAuth } from '@/contexts/AuthContext';
 import { AudioTranscribeButton } from '@/components/ui/audio-transcribe-button';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
@@ -40,7 +40,7 @@ interface AulaZeroFormData {
 }
 
 export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
-  const { funcionarioNome } = useCurrentFuncionario();
+  const { profile } = useAuth();
   const { activeUnit } = useActiveUnit();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -109,7 +109,7 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
           if (aluno) {
             await supabase.from('alunos').update({
               ...fields,
-              coordenador_responsavel: funcionarioNome || undefined,
+              coordenador_responsavel: profile?.full_name || undefined,
             }).eq('id', aluno.id);
           }
         })(),
@@ -128,7 +128,8 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
           client_id: clientId,
           client_name: alunoNome,
           unit_id: activeUnit?.id || null,
-          registrado_por: funcionarioNome || 'Desconhecido',
+          registrado_por: profile?.full_name || profile?.email || 'Desconhecido',
+          professor_id: profile?.professor_id || null,
           ...fields,
           data_registro: new Date().toISOString(),
           tipo: 'lancamento_aula_zero',
