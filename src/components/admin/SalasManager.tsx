@@ -209,7 +209,7 @@ const SalasManager = () => {
                   <div className="flex items-center gap-3">
                     <span className="font-medium text-foreground">{sala.nome}</span>
                     {sala.capacidade && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs text-white">
                         {sala.capacidade} lugares
                       </Badge>
                     )}
