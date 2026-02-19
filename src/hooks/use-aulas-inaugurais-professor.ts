@@ -68,9 +68,10 @@ export function useAulasInauguraisProfessor() {
 
         if (error) throw error;
 
-        // Buscar nomes dos clientes vinculados
+        // Buscar atividades da unidade ativa para filtrar eventos e obter nomes
         const atividadeIds = (eventos || []).map(e => (e as any).atividade_pos_venda_id).filter(Boolean);
         let clienteNomes: Record<string, string> = {};
+        const atividadesDaUnidade = new Set<string>();
         if (atividadeIds.length > 0) {
           const { data: atividades } = await supabase
             .from('atividade_pos_venda')
@@ -81,6 +82,7 @@ export function useAulasInauguraisProfessor() {
           if (atividades) {
             atividades.forEach(a => {
               clienteNomes[a.id] = a.full_name || a.client_name;
+              atividadesDaUnidade.add(a.id);
             });
           }
         }
@@ -98,8 +100,10 @@ export function useAulasInauguraisProfessor() {
           client_id: (e as any).client_id || undefined,
           atividade_pos_venda_id: (e as any).atividade_pos_venda_id || undefined,
         })).filter(e => {
-          if (!e.atividade_pos_venda_id) return true; // Sem vínculo, manter visível
-          if (completedAtividadeIds.has(e.atividade_pos_venda_id)) return false;
+          // Filtrar apenas eventos vinculados a atividades da unidade ativa
+          if (!e.atividade_pos_venda_id) return false; // Sem vínculo, não exibir (não há como validar unidade)
+          if (!atividadesDaUnidade.has(e.atividade_pos_venda_id)) return false; // Outra unidade
+          if (completedAtividadeIds.has(e.atividade_pos_venda_id)) return false; // Já concluída
           return true;
         }) as AulaInaugural[];
       }
