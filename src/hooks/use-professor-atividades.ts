@@ -344,15 +344,14 @@ export function useProfessorAtividades() {
           });
         }
 
-        // Filtrar: remover se aula zero já foi concluída (todos os campos preenchidos)
-        const { data: alunosCompletos } = await supabase
-          .from('alunos')
+        // Filtrar: remover se aula zero já foi concluída (todos os campos preenchidos na atividade_pos_venda)
+        const { data: atividadesCompletas } = await supabase
+          .from('atividade_pos_venda')
           .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-          .in('client_id', clientIdsAI)
-          .eq('active', true);
+          .in('client_id', clientIdsAI);
 
         const completedClientIdsAI = new Set<string>();
-        alunosCompletos?.forEach(a => {
+        atividadesCompletas?.forEach(a => {
           if (
             a.client_id &&
             a.percepcao_coordenador?.trim() &&
