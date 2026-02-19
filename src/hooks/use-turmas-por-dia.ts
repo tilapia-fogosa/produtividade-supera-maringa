@@ -29,22 +29,32 @@ export function useTurmasPorDia(diaParam?: string | null) {
           .from('turmas')
           .select('*')
           .eq('dia_semana', dia)
-          .order('nome', { ascending: true }); // Ordenar pelo nome alfabeticamente
+          .order('nome', { ascending: true });
 
         if (error) {
           console.error('Erro ao buscar turmas:', error);
           return;
         }
 
-        console.log('Turmas encontradas:', turmasData);
-        
-        // Adicionar a propriedade sala com valor vazio se não existir
-        const turmasComSala = turmasData?.map(turma => ({
-          ...turma,
-          sala: turma.sala || ''
-        })) || [];
-        
-        setTurmas(turmasComSala);
+        // Buscar turma_ids que possuem alunos ativos
+        const turmaIds = (turmasData || []).map(t => t.id);
+        const { data: alunosAtivos } = await supabase
+          .from('alunos')
+          .select('turma_id')
+          .in('turma_id', turmaIds)
+          .eq('active', true);
+
+        const turmasComAlunosAtivos = new Set((alunosAtivos || []).map(a => a.turma_id));
+
+        const turmasFiltradas = (turmasData || [])
+          .filter(turma => turmasComAlunosAtivos.has(turma.id))
+          .map(turma => ({
+            ...turma,
+            sala: turma.sala || ''
+          }));
+
+        console.log('Turmas com alunos ativos:', turmasFiltradas.length);
+        setTurmas(turmasFiltradas);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
       } finally {
