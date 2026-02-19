@@ -1155,7 +1155,7 @@ export default function Home() {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1 px-2"
+            className="h-7 text-xs gap-1 px-2 border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900"
             onClick={() => navigate('/sala/dias-lancamento')}
           >
             <TrendingUp className="h-3.5 w-3.5" />
@@ -1166,7 +1166,7 @@ export default function Home() {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1 px-2"
+            className="h-7 text-xs gap-1 px-2 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
             onClick={() => setShowAlertaEvasaoModal(true)}
           >
             <AlertTriangle className="h-3.5 w-3.5" />
