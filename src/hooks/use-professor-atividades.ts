@@ -322,25 +322,25 @@ export function useProfessorAtividades() {
       if (eventosError) throw eventosError;
 
       let aulasInaugurais: AulaInauguralProfessor[] = [];
-      const clientIdsAI = (eventosAulaZero || []).map(e => (e as any).client_id).filter(Boolean);
+      const atividadeIdsAI = (eventosAulaZero || []).map(e => (e as any).atividade_pos_venda_id).filter(Boolean);
 
-      if (clientIdsAI.length > 0) {
-        // Buscar nomes dos clientes
-        let clientesQuery = supabase
+      if (atividadeIdsAI.length > 0) {
+        // Buscar nomes dos clientes por atividade_pos_venda_id
+        let atividadesQuery = supabase
           .from('atividade_pos_venda')
-          .select('client_id, client_name, full_name')
-          .in('client_id', clientIdsAI);
+          .select('id, client_name, full_name')
+          .in('id', atividadeIdsAI);
 
         if (isAdminOrManagement && activeUnit?.id) {
-          clientesQuery = clientesQuery.eq('unit_id', activeUnit.id);
+          atividadesQuery = atividadesQuery.eq('unit_id', activeUnit.id);
         }
 
-        const { data: clientes } = await clientesQuery;
+        const { data: atividades } = await atividadesQuery;
 
         const clienteNomes: Record<string, string> = {};
-        if (clientes) {
-          clientes.forEach(c => {
-            clienteNomes[c.client_id] = c.full_name || c.client_name;
+        if (atividades) {
+          atividades.forEach(a => {
+            clienteNomes[a.id] = a.full_name || a.client_name;
           });
         }
 
@@ -375,7 +375,7 @@ export function useProfessorAtividades() {
             horario_inicio: e.horario_inicio,
             horario_fim: e.horario_fim,
             descricao: e.descricao,
-            cliente_nome: clienteNomes[(e as any).client_id] || undefined,
+            cliente_nome: clienteNomes[(e as any).atividade_pos_venda_id] || undefined,
             client_id: (e as any).client_id || undefined,
             professor_nome: (e as any).professores?.nome || undefined,
           }))
