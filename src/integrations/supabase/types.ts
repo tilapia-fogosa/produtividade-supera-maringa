@@ -5055,7 +5055,7 @@ export type Database = {
           capacidade?: number | null
           cor_calendario?: string | null
           created_at?: string | null
-          id: string
+          id?: string
           nome: string
           recursos?: string[] | null
           unit_id: string
