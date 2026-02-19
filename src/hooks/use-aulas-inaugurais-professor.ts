@@ -39,14 +39,13 @@ async function getCompletedClientIds(clientIds: string[]): Promise<Set<string>> 
   const completed = new Set<string>();
   if (clientIds.length === 0) return completed;
 
-  const { data: alunos } = await supabase
-    .from('alunos')
+  const { data: atividades } = await supabase
+    .from('atividade_pos_venda')
     .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-    .in('client_id', clientIds)
-    .eq('active', true);
+    .in('client_id', clientIds);
 
-  if (alunos) {
-    alunos.forEach(a => {
+  if (atividades) {
+    atividades.forEach(a => {
       if (
         a.client_id &&
         a.percepcao_coordenador && a.percepcao_coordenador.trim() !== '' &&
