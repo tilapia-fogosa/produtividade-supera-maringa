@@ -813,6 +813,8 @@ export type Database = {
           address_postal_code: string | null
           address_state: string | null
           address_street: string | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           birth_date: string | null
           check_assinar_contrato: boolean | null
           check_cadastrar_pagamento: boolean | null
@@ -851,8 +853,11 @@ export type Database = {
           monthly_fee_payment_method:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura: string | null
+          percepcao_coordenador: string | null
           photo_thumbnail_url: string | null
           photo_url: string | null
+          pontos_atencao: string | null
           responsavel: string
           rg: string | null
           sincronizar_agenda_google: boolean
@@ -872,6 +877,8 @@ export type Database = {
           address_postal_code?: string | null
           address_state?: string | null
           address_street?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           birth_date?: string | null
           check_assinar_contrato?: boolean | null
           check_cadastrar_pagamento?: boolean | null
@@ -910,8 +917,11 @@ export type Database = {
           monthly_fee_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          pontos_atencao?: string | null
           responsavel?: string
           rg?: string | null
           sincronizar_agenda_google?: boolean
@@ -931,6 +941,8 @@ export type Database = {
           address_postal_code?: string | null
           address_state?: string | null
           address_street?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           birth_date?: string | null
           check_assinar_contrato?: boolean | null
           check_cadastrar_pagamento?: boolean | null
@@ -969,8 +981,11 @@ export type Database = {
           monthly_fee_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          pontos_atencao?: string | null
           responsavel?: string
           rg?: string | null
           sincronizar_agenda_google?: boolean
