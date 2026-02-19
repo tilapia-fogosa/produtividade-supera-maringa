@@ -1,20 +1,39 @@
 
-# Correção: Salvar salas na aba de configurações
+# Correção: Exibir todos os alunos no Diário de Turma (incluindo ausentes)
 
-## Problema identificado
+## Problema
+Atualmente, o Diário de Turma só exibe alunos que possuem um registro na tabela `produtividade_abaco` para aquela data. Alunos que faltaram e não tiveram nenhum registro criado simplesmente não aparecem na lista.
 
-A coluna `id` da tabela `salas` nao possui um valor padrão (`DEFAULT gen_random_uuid()`). Quando o codigo tenta inserir uma nova sala sem fornecer um `id`, o banco de dados rejeita a operacao porque `id` e NOT NULL e nao tem fallback.
+## Solução
+Alterar a lógica em `DiarioTurmaAccordion.tsx` para:
+1. Buscar todos os alunos/funcionarios ativos da turma (como ja faz)
+2. Buscar os registros de produtividade existentes (como ja faz)
+3. **Combinar as duas listas**: para cada pessoa da turma, se existir registro de produtividade, usar os dados dele; se nao existir, criar uma entrada "virtual" com status Ausente
 
-## Solucao
+## Detalhes Tecnicos
 
-Adicionar o valor padrão `gen_random_uuid()` na coluna `id` da tabela `salas` via migration SQL:
+### Arquivo: `src/components/diario/DiarioTurmaAccordion.tsx`
 
-```sql
-ALTER TABLE public.salas ALTER COLUMN id SET DEFAULT gen_random_uuid();
+Na funcao `buscarDadosTurma`, apos buscar os registros de produtividade (linha ~103-108), alterar a logica de montagem dos registros:
+
+**Logica atual** (linhas 112-120): Itera apenas sobre `produtividadeData`, ou seja, so mostra quem tem registro.
+
+**Nova logica**: Iterar sobre `pessoasTurma` (todos os alunos/funcionarios). Para cada pessoa, verificar se existe um registro em `produtividadeData`. Se existir, usar os dados do registro. Se nao existir, criar um registro virtual com `presente: false` e campos vazios.
+
+```text
+Para cada pessoa em pessoasTurma:
+  - Se tem registro em produtividadeData -> usar dados reais
+  - Se NAO tem registro -> criar entrada com:
+      id: "virtual-{pessoa.id}"
+      pessoa_id: pessoa.id
+      presente: false
+      apostila/pagina/exercicios/erros/comentario: null
+      pessoa: { nome, foto_url, origem }
+      origem: pessoa.origem
 ```
 
-## Detalhes tecnicos
+O `totalRegistros` tambem sera atualizado para refletir o total de pessoas (nao apenas os registros existentes).
 
-- **Arquivo afetado**: Nenhum arquivo de codigo precisa ser alterado.
-- **Alteracao**: Apenas uma migration SQL para corrigir o schema da tabela `salas`.
-- **Impacto**: Apos a correcao, o cadastro de salas funcionara normalmente pela interface, pois o UUID sera gerado automaticamente pelo banco.
+### Arquivo: `src/components/turmas/turma-detail/diario/DiarioTabela.tsx`
+
+Pequeno ajuste para nao mostrar botoes de Editar/Excluir em registros "virtuais" (que comecam com "virtual-"), ja que esses registros nao existem no banco.
