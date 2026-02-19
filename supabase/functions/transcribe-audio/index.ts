@@ -26,7 +26,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Audio file size:', audioFile.size);
+    console.log('Audio file size:', audioFile.size, 'type:', audioFile.type);
 
     if (audioFile.size < 1000) {
       console.log('Audio file too small, rejecting:', audioFile.size);
@@ -40,7 +40,8 @@ serve(async (req) => {
     whisperFormData.append('file', audioFile, 'audio.webm');
     whisperFormData.append('model', 'whisper-1');
     whisperFormData.append('language', 'pt');
-    whisperFormData.append('prompt', 'Transcrição de anotações sobre alunos, avaliações e observações pedagógicas em português brasileiro.');
+    whisperFormData.append('response_format', 'verbose_json');
+    whisperFormData.append('prompt', 'Anotação de voz sobre aluno. Observações pedagógicas e comerciais em português brasileiro.');
     whisperFormData.append('temperature', '0');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
@@ -61,8 +62,27 @@ serve(async (req) => {
     }
 
     const result = await response.json();
+    console.log('Whisper result:', JSON.stringify({
+      text: result.text,
+      duration: result.duration,
+      segments: result.segments?.map((s: any) => ({
+        text: s.text,
+        no_speech_prob: s.no_speech_prob,
+        avg_logprob: s.avg_logprob,
+      })),
+    }));
 
-    // Filtro anti-alucinação: rejeitar textos conhecidos do Whisper
+    // Filtrar segmentos com alta probabilidade de "no speech"
+    const validSegments = (result.segments || []).filter((s: any) => {
+      const noSpeech = s.no_speech_prob || 0;
+      const avgLogprob = s.avg_logprob || 0;
+      // Rejeitar segmentos com alta prob de silêncio OU baixa confiança
+      return noSpeech < 0.7 && avgLogprob > -1.5;
+    });
+
+    const filteredText = validSegments.map((s: any) => s.text).join('').trim();
+
+    // Filtro anti-alucinação em textos conhecidos
     const hallucinations = [
       'legendas pela comunidade amara.org',
       'amara.org',
@@ -72,22 +92,26 @@ serve(async (req) => {
       'subtitles by the amara.org community',
       'subscribe',
       'thank you for watching',
+      'puxa',
     ];
 
-    const textLower = (result.text || '').toLowerCase().trim();
+    const textLower = filteredText.toLowerCase().trim();
     const isHallucination = hallucinations.some(h => textLower.includes(h)) || textLower.length < 3;
 
-    if (isHallucination) {
-      console.log('Hallucination detected, rejecting:', result.text);
-      return new Response(JSON.stringify({ error: 'Transcrição inválida - tente gravar novamente com mais clareza' }), {
+    if (isHallucination || !filteredText) {
+      console.log('Hallucination or no valid speech detected. Original:', result.text, '| Filtered:', filteredText);
+      return new Response(JSON.stringify({ 
+        error: 'Não foi possível transcrever o áudio. Fale mais alto e mais perto do microfone.',
+        debug_text: result.text 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('Transcription result:', result.text);
+    console.log('Transcription result:', filteredText);
 
-    return new Response(JSON.stringify({ text: result.text }), {
+    return new Response(JSON.stringify({ text: filteredText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

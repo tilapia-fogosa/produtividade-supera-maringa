@@ -17,8 +17,22 @@ export function AudioTranscribeButton({ currentValue, onTranscribed, className }
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100,
+        }
+      });
+      
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm') 
+        ? 'audio/webm' 
+        : 'audio/mp4';
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -30,11 +44,11 @@ export function AudioTranscribeButton({ currentValue, onTranscribed, className }
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop());
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
         await transcribeAudio(audioBlob);
       };
 
-      mediaRecorder.start(1000);
+      mediaRecorder.start();
       setIsRecording(true);
     } catch (error) {
       console.error("Erro ao acessar microfone:", error);
