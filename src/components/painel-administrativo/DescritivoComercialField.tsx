@@ -49,7 +49,7 @@ export function DescritivoComercialField({ value, onChange }: DescritivoComercia
         await transcribeAudio(audioBlob);
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000);
       setIsRecording(true);
     } catch (error) {
       console.error("Erro ao acessar microfone:", error);
