@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award, Filter, ChevronDown, Check } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award, Filter, ChevronDown, Check, TrendingUp } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,7 @@ import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioM
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
 import { AulaZeroDrawer } from '@/components/aula-zero/AulaZeroDrawer';
+import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
 // Interface para eventos com dados extras
 interface Evento {
   tipo: string;
@@ -149,6 +150,9 @@ export default function Home() {
     nome: string;
     aniversario_mes_dia: string;
   } | null>(null);
+
+  // Estado para modal de alerta de evasão (lançamento)
+  const [showAlertaEvasaoModal, setShowAlertaEvasaoModal] = useState(false);
 
   // Estado para modal de entrega de botom
   const [botomModalOpen, setBotomModalOpen] = useState(false);
@@ -1147,6 +1151,28 @@ export default function Home() {
 
         {/* Botões de ações */}
         <div className="flex items-center gap-2">
+          {/* Botão Produtividade de Sala */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 px-2"
+            onClick={() => navigate('/sala/dias-lancamento')}
+          >
+            <TrendingUp className="h-3.5 w-3.5" />
+            Produtividade
+          </Button>
+
+          {/* Botão Alerta de Evasão */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 px-2"
+            onClick={() => setShowAlertaEvasaoModal(true)}
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Alerta Evasão
+          </Button>
+
           {/* Filtro de Tipos */}
           <Popover>
             <PopoverTrigger asChild>
@@ -1393,6 +1419,12 @@ export default function Home() {
         }}
         atividadePosVendaId={aulaZeroAluno?.atividadePosVendaId || ''}
         alunoNome={aulaZeroAluno?.nome || ''}
+      />
+
+      {/* Modal de Alerta de Evasão (lançamento) */}
+      <AlertaEvasaoModal 
+        isOpen={showAlertaEvasaoModal} 
+        onClose={() => setShowAlertaEvasaoModal(false)} 
       />
     </div>
   );

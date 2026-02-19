@@ -53,11 +53,6 @@ const items = [
     icon: Home,
   },
   {
-    title: "Lançamentos",
-    url: "/lancamentos",
-    icon: ClipboardList,
-  },
-  {
     title: "Abrindo Horizontes",
     url: "/abrindo-horizontes-fila",
     icon: ListChecks,
