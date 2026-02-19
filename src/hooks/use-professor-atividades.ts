@@ -65,6 +65,17 @@ export interface BotomPendenteProfessor {
   dia_semana: string;
 }
 
+export interface AulaInauguralProfessor {
+  id: string;
+  titulo: string;
+  data: string;
+  horario_inicio: string;
+  horario_fim: string;
+  descricao: string | null;
+  cliente_nome?: string;
+  client_id?: string;
+}
+
 export function useProfessorAtividades() {
   const { professorId, isProfessor } = useCurrentProfessor();
   const { activeUnit } = useActiveUnit();
@@ -265,6 +276,83 @@ export function useProfessorAtividades() {
         };
       });
 
+      // 8. Buscar aulas inaugurais do professor
+      const hojeStr = new Date().toISOString().split('T')[0];
+      const { data: eventosAulaZero, error: eventosError } = await supabase
+        .from('eventos_professor')
+        .select('id, titulo, data, horario_inicio, horario_fim, descricao, client_id')
+        .eq('professor_id', professorId)
+        .eq('tipo_evento', 'aula_zero')
+        .gte('data', hojeStr)
+        .order('data', { ascending: true });
+
+      if (eventosError) throw eventosError;
+
+      let aulasInaugurais: AulaInauguralProfessor[] = [];
+      const clientIdsAI = (eventosAulaZero || []).map(e => (e as any).client_id).filter(Boolean);
+
+      if (clientIdsAI.length > 0) {
+        // Buscar nomes dos clientes
+        const { data: clientes } = await supabase
+          .from('atividade_pos_venda')
+          .select('client_id, client_name, full_name')
+          .in('client_id', clientIdsAI);
+
+        const clienteNomes: Record<string, string> = {};
+        if (clientes) {
+          clientes.forEach(c => {
+            clienteNomes[c.client_id] = c.full_name || c.client_name;
+          });
+        }
+
+        // Filtrar: só mostrar se tem aluno ativo vinculado, e remover se aula zero concluída
+        const { data: alunosAtivos } = await supabase
+          .from('alunos')
+          .select('client_id')
+          .in('client_id', clientIdsAI)
+          .eq('active', true);
+
+        const activeClientIdsAI = new Set(alunosAtivos?.map(a => a.client_id).filter(Boolean) || []);
+
+        const { data: alunosCompletos } = await supabase
+          .from('alunos')
+          .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
+          .in('client_id', clientIdsAI)
+          .eq('active', true);
+
+        const completedClientIdsAI = new Set<string>();
+        alunosCompletos?.forEach(a => {
+          if (
+            a.client_id &&
+            a.percepcao_coordenador?.trim() &&
+            a.motivo_procura?.trim() &&
+            a.avaliacao_abaco?.trim() &&
+            a.avaliacao_ah?.trim() &&
+            a.pontos_atencao?.trim()
+          ) {
+            completedClientIdsAI.add(a.client_id);
+          }
+        });
+
+        aulasInaugurais = (eventosAulaZero || [])
+          .map(e => ({
+            id: e.id,
+            titulo: e.titulo || 'Aula Inaugural',
+            data: e.data,
+            horario_inicio: e.horario_inicio,
+            horario_fim: e.horario_fim,
+            descricao: e.descricao,
+            cliente_nome: clienteNomes[(e as any).client_id] || undefined,
+            client_id: (e as any).client_id || undefined,
+          }))
+          .filter(e => {
+            if (!e.client_id) return false;
+            if (!activeClientIdsAI.has(e.client_id)) return false;
+            if (completedClientIdsAI.has(e.client_id)) return false;
+            return true;
+          });
+      }
+
       return {
         reposicoes: reposicoesFiltradas,
         camisetasPendentes,
@@ -272,6 +360,7 @@ export function useProfessorAtividades() {
         apostilasAHParaCorrigir,
         coletasAHPendentes,
         botomPendentes,
+        aulasInaugurais,
       };
     },
     enabled: isProfessor && !!professorId,
@@ -300,6 +389,7 @@ export function useProfessorAtividades() {
     apostilasAHParaCorrigir: data?.apostilasAHParaCorrigir || [],
     coletasAHPendentes: data?.coletasAHPendentes || [],
     botomPendentes: data?.botomPendentes || [],
+    aulasInaugurais: data?.aulasInaugurais || [],
     isDiaHoje,
     isDiaSemana,
   };
