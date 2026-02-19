@@ -348,6 +348,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               .from('atividade_pos_venda')
               .select('unit_id')
               .eq('client_id', cliente.id)
+              .limit(1)
               .maybeSingle();
 
             const horarioFormatado = horarioSelecionado.substring(0, 5);
