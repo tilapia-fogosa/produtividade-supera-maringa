@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from '@/hooks/use-professor-turmas';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 export function useSalaTurmasPorDia(diaParam?: string | null) {
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const { activeUnit } = useActiveUnit();
   const dia = diaParam || location.state?.dia;
 
   useEffect(() => {
@@ -16,8 +18,8 @@ export function useSalaTurmasPorDia(diaParam?: string | null) {
         setLoading(true);
         console.log('[Sala] Buscando turmas para o dia:', dia);
         
-        if (!dia) {
-          console.error('[Sala] Dia não especificado');
+        if (!dia || !activeUnit?.id) {
+          console.error('[Sala] Dia ou unidade não especificado');
           setTurmas([]);
           setLoading(false);
           return;
@@ -27,6 +29,7 @@ export function useSalaTurmasPorDia(diaParam?: string | null) {
           .from('turmas')
           .select('*')
           .eq('dia_semana', dia)
+          .eq('unit_id', activeUnit.id)
           .order('nome', { ascending: true });
 
         if (error) {
@@ -60,13 +63,13 @@ export function useSalaTurmasPorDia(diaParam?: string | null) {
       }
     };
 
-    if (dia) {
+    if (dia && activeUnit?.id) {
       fetchTurmas();
     } else {
       setTurmas([]);
       setLoading(false);
     }
-  }, [dia]);
+  }, [dia, activeUnit?.id]);
 
   return {
     turmas,

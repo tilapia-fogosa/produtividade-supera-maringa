@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Turma } from '@/hooks/use-professor-turmas';
 import { ReposicaoRegistro } from '@/components/diario/DiarioReposicoesTabela';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 type DiaSemanaEnum = 'domingo' | 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado';
 
@@ -23,6 +24,7 @@ const getDiaSemanaDisplay = (date: Date): string => {
 };
 
 const DiarioPage = () => {
+  const { activeUnit } = useActiveUnit();
   const [dataSelecionada, setDataSelecionada] = useState<Date>(new Date());
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [carregandoTurmas, setCarregandoTurmas] = useState(false);
@@ -32,7 +34,7 @@ const DiarioPage = () => {
   // Buscar turmas quando a data muda
   useEffect(() => {
     const buscarTurmasDoDia = async () => {
-      if (!dataSelecionada) return;
+      if (!dataSelecionada || !activeUnit?.id) return;
 
       setCarregandoTurmas(true);
       try {
@@ -44,6 +46,7 @@ const DiarioPage = () => {
           .select('*, professor:professores(id, nome)')
           .eq('dia_semana', diaSemana)
           .eq('active', true)
+          .eq('unit_id', activeUnit.id)
           .order('horario_inicio', { ascending: true });
 
         if (error) {
@@ -74,7 +77,7 @@ const DiarioPage = () => {
     };
 
     buscarTurmasDoDia();
-  }, [dataSelecionada]);
+  }, [dataSelecionada, activeUnit?.id]);
 
   // Buscar reposições do dia
   const buscarReposicoesDoDia = async () => {
