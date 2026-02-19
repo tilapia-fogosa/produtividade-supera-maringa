@@ -52,8 +52,19 @@ const DiarioPage = () => {
           return;
         }
 
-        console.log('Turmas encontradas:', data?.length || 0);
-        setTurmas(data || []);
+        // Filtrar apenas turmas que possuem alunos ativos
+        const turmaIds = (data || []).map(t => t.id);
+        const { data: alunosAtivos } = await supabase
+          .from('alunos')
+          .select('turma_id')
+          .in('turma_id', turmaIds)
+          .eq('active', true);
+
+        const turmasComAlunosAtivos = new Set((alunosAtivos || []).map(a => a.turma_id));
+        const turmasFiltradas = (data || []).filter(t => turmasComAlunosAtivos.has(t.id));
+
+        console.log('Turmas com alunos ativos:', turmasFiltradas.length);
+        setTurmas(turmasFiltradas);
       } catch (error) {
         console.error('Erro ao buscar turmas:', error);
         setTurmas([]);
