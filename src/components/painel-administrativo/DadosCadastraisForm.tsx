@@ -70,7 +70,7 @@ export function DadosCadastraisForm({
   
   const salvarDados = useSalvarDadosCadastrais();
   const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
-  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.atividade_pos_venda_id);
   
   const form = useForm<DadosCadastraisFormData>({
     resolver: zodResolver(dadosCadastraisSchema),
@@ -121,6 +121,7 @@ export function DadosCadastraisForm({
     try {
       await salvarDados.mutateAsync({
         clientId: cliente.id,
+        atividadePosVendaId: cliente.atividade_pos_venda_id,
         alunoId: alunoVinculado.id,
         dataNascimento: data.data_nascimento,
         cpf: data.cpf,

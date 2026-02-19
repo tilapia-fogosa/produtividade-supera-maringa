@@ -31,7 +31,7 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const salvarDados = useSalvarDadosPedagogicos();
   const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
-  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.atividade_pos_venda_id);
 
   const [turmaId, setTurmaId] = useState<string>("");
   const [responsavelPedagogico, setResponsavelPedagogico] = useState<string>("O próprio");
@@ -69,6 +69,7 @@ export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosForm
   const handleSave = async () => {
     await salvarDados.mutateAsync({
       clientId: cliente.id,
+      atividadePosVendaId: cliente.atividade_pos_venda_id,
       alunoId: alunoVinculado?.id,
       turmaId: turmaId || undefined,
       responsavel: responsavelPedagogico !== "O próprio" ? responsavelPedagogico : undefined,

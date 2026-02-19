@@ -94,7 +94,7 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   const { mutate: salvar, isPending } = useSalvarDadosComerciais();
   const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
-  const { data: dadosSalvos } = useDadosPosVenda(cliente.id);
+  const { data: dadosSalvos } = useDadosPosVenda(cliente.atividade_pos_venda_id);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -161,6 +161,7 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
     salvar(
       {
         clientId: cliente.id,
+        atividadePosVendaId: cliente.atividade_pos_venda_id,
         alunoId: alunoVinculado?.id,
         enrollmentAmount: parseCurrency(data.enrollmentAmount || "") || undefined,
         enrollmentPaymentDate: data.enrollmentPaymentDate || undefined,

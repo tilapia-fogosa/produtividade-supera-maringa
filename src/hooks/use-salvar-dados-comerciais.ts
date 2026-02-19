@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface DadosComerciais {
   clientId: string;
+  atividadePosVendaId: string; // ID da atividade_pos_venda
   alunoId?: string; // ID do aluno vinculado
   kitType?: string;
   enrollmentAmount?: number;
@@ -52,7 +53,7 @@ export function useSalvarDadosComerciais() {
           material_installments: input.materialInstallments || null,
           material_payment_confirmed: input.materialPaymentConfirmed ?? null,
         })
-        .eq("client_id", input.clientId);
+        .eq("id", input.atividadePosVendaId);
 
       if (error) throw error;
 
