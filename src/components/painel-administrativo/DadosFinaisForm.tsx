@@ -343,6 +343,13 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               if (alunoData?.nome) nomeAluno = alunoData.nome;
             }
 
+            // Buscar unit_id da atividade
+            const { data: atividadeData } = await supabase
+              .from('atividade_pos_venda')
+              .select('unit_id')
+              .eq('client_id', cliente.id)
+              .maybeSingle();
+
             const horarioFormatado = horarioSelecionado.substring(0, 5);
 
             const webhookPayload = {
@@ -350,6 +357,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               professor_id: professorSelecionado.id,
               data_aula: dataStr,
               horario_aula: horarioFormatado,
+              unit_id: atividadeData?.unit_id || null,
             };
 
             console.log('[Webhook Aula Inaugural] Enviando via edge function:', webhookPayload);
