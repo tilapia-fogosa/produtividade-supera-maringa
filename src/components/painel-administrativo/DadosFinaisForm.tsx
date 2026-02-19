@@ -23,6 +23,13 @@ function base64ToBlob(base64: string, contentType: string): Blob {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useAlunosSemVinculo, useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { WebcamCapture } from "./WebcamCapture";
@@ -57,9 +64,19 @@ interface ChecklistItem {
 const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "lancar_sgs", label: "Lançar SGS", field: "check_lancar_sgs" },
   { id: "assinar_contrato", label: "Assinar Contrato", field: "check_assinar_contrato" },
-  { id: "entregar_kit", label: "Entregar Kit", field: "check_entregar_kit" },
   { id: "cadastrar_pagamento", label: "Cadastrar forma de pagamento", field: "check_cadastrar_pagamento" },
   { id: "sincronizar_sgs", label: "Sincronizar dados SGS", field: "check_sincronizar_sgs" },
+];
+
+const KIT_OPTIONS = [
+  { value: "kit_1", label: "Kit 1" },
+  { value: "kit_2", label: "Kit 2" },
+  { value: "kit_3", label: "Kit 3" },
+  { value: "kit_4", label: "Kit 4" },
+  { value: "kit_5", label: "Kit 5" },
+  { value: "kit_6", label: "Kit 6" },
+  { value: "kit_7", label: "Kit 7" },
+  { value: "kit_8", label: "Kit 8" },
 ];
 
 export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
@@ -79,6 +96,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
   const [fotoUrlExistente, setFotoUrlExistente] = useState<string | null>(null);
   const [descritivoComercial, setDescritivoComercial] = useState("");
+  const [kitType, setKitType] = useState<string>("");
 
   // Estados da aula inaugural
   const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
@@ -120,6 +138,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         const { data } = await supabase
           .from("atividade_pos_venda")
           .select(`
+            id,
             check_lancar_sgs,
             check_assinar_contrato,
             check_entregar_kit,
@@ -128,9 +147,10 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_grupo_whatsapp,
             photo_url,
             data_aula_inaugural,
-            informacoes_onboarding
+            informacoes_onboarding,
+            kit_type
           `)
-          .eq("client_id", cliente.id)
+          .eq("id", cliente.atividade_pos_venda_id)
           .maybeSingle();
 
         if (data) {
@@ -142,6 +162,9 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             check_sincronizar_sgs: (data as any).check_sincronizar_sgs ?? false,
             check_grupo_whatsapp: data.check_grupo_whatsapp ?? false,
           });
+          if ((data as any).kit_type) {
+            setKitType((data as any).kit_type);
+          }
           if (data.photo_url) {
             setFotoUrlExistente(data.photo_url);
           }
@@ -174,7 +197,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         const { data: evento } = await supabase
           .from('eventos_professor')
           .select('horario_inicio, horario_fim, professores:professor_id(nome)')
-          .eq('client_id', cliente.id)
+          .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id)
           .eq('tipo_evento', 'aula_zero')
           .order('data', { ascending: false })
           .limit(1)
@@ -195,7 +218,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
     };
 
     fetchData();
-  }, [cliente.id]);
+  }, [cliente.atividade_pos_venda_id]);
 
   const mutation = useMutation({
     mutationFn: async (data: { checklist: Record<string, boolean>; alunoId: string | null; fotoBase64: string | null }) => {
@@ -229,6 +252,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         updateData.photo_url = photoUrl;
       }
       updateData.informacoes_onboarding = descritivoComercial || null;
+      updateData.kit_type = kitType || null;
 
       // Salvar data da aula inaugural
       if (dataAulaInaugural && horarioSelecionado) {
@@ -243,7 +267,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       const { error: checklistError } = await supabase
         .from("atividade_pos_venda")
         .update(updateData)
-        .eq("client_id", cliente.id);
+        .eq("id", cliente.atividade_pos_venda_id);
 
       if (checklistError) throw checklistError;
 
@@ -261,7 +285,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
         // Adicionar vínculo ao novo aluno (se selecionado)
         if (data.alunoId) {
-          const updateAluno: Record<string, any> = { client_id: cliente.id, foto_url: photoUrl };
+          const updateAluno: Record<string, any> = { client_id: cliente.id, foto_url: photoUrl, kit_sugerido: kitType || null };
           if (dataAulaInaugural) {
             updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
           }
@@ -276,6 +300,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         // Atualizar foto e data_onboarding do aluno vinculado existente
         const updateAluno: Record<string, any> = {};
         if (photoUrl) updateAluno.foto_url = photoUrl;
+        if (kitType) updateAluno.kit_sugerido = kitType;
         if (dataAulaInaugural) updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
         
         if (Object.keys(updateAluno).length > 0) {
@@ -301,7 +326,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           await supabase
             .from('eventos_professor')
             .delete()
-            .eq('client_id', cliente.id)
+            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id)
             .eq('tipo_evento', 'aula_zero');
 
           const year = dataAulaInaugural.getFullYear();
@@ -311,7 +336,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
           const eventoData = {
             professor_id: professorSelecionado.id,
-            tipo_evento: 'aula_zero',
+            tipo_evento: 'aula_zero' as const,
             titulo: 'Aula Inaugural',
             descricao: 'Aula inaugural agendada via painel administrativo',
             data: dataStr,
@@ -320,6 +345,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             recorrente: false,
             created_by: userId,
             client_id: cliente.id,
+            atividade_pos_venda_id: cliente.atividade_pos_venda_id,
           };
 
           const { error: eventoError } = await supabase
@@ -343,22 +369,24 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               if (alunoData?.nome) nomeAluno = alunoData.nome;
             }
 
-            // Buscar unit_id da atividade
             const { data: atividadeData } = await supabase
               .from('atividade_pos_venda')
               .select('unit_id')
-              .eq('client_id', cliente.id)
-              .limit(1)
+              .eq('id', cliente.atividade_pos_venda_id)
               .maybeSingle();
 
             const horarioFormatado = horarioSelecionado.substring(0, 5);
 
             const webhookPayload = {
+              atividade_pos_venda_id: cliente.atividade_pos_venda_id,
               nome_aluno: nomeAluno,
               professor_id: professorSelecionado.id,
               data_aula: dataStr,
               horario_aula: horarioFormatado,
               unit_id: atividadeData?.unit_id || null,
+              kit_entregue: data.checklist.check_entregar_kit || false,
+              tipo_kit: kitType || null,
+              descritivo_comercial: descritivoComercial || null,
             };
 
             console.log('[Webhook Aula Inaugural] Enviando via edge function:', webhookPayload);
@@ -440,6 +468,40 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         value={descritivoComercial}
         onChange={setDescritivoComercial}
       />
+
+      {/* Seção: Entregar Kit */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-3">
+          <Checkbox
+            id="entregar_kit"
+            checked={checklist.check_entregar_kit}
+            onCheckedChange={() => handleToggle("check_entregar_kit")}
+          />
+          <Label
+            htmlFor="entregar_kit"
+            className="text-sm font-medium leading-none cursor-pointer"
+          >
+            Entregar Kit
+          </Label>
+        </div>
+        {checklist.check_entregar_kit && (
+          <div className="pl-7">
+            <Label className="text-sm mb-1.5 block">Tipo de Kit</Label>
+            <Select value={kitType} onValueChange={setKitType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o kit" />
+              </SelectTrigger>
+              <SelectContent>
+                {KIT_OPTIONS.map((kit) => (
+                  <SelectItem key={kit.value} value={kit.value}>
+                    {kit.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
 
       {/* Seção: Foto do Aluno */}
       <WebcamCapture

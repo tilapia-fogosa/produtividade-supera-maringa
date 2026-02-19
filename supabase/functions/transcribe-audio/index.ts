@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OpenAI Whisper');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI Whisper secret is not configured');
+      throw new Error('OPENAI_API_KEY secret is not configured');
     }
 
     const formData = await req.formData();
@@ -26,10 +26,23 @@ serve(async (req) => {
       });
     }
 
+    console.log('Audio file size:', audioFile.size, 'type:', audioFile.type);
+
+    if (audioFile.size < 1000) {
+      console.log('Audio file too small, rejecting:', audioFile.size);
+      return new Response(JSON.stringify({ error: 'Audio too short or empty' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const whisperFormData = new FormData();
     whisperFormData.append('file', audioFile, 'audio.webm');
     whisperFormData.append('model', 'whisper-1');
     whisperFormData.append('language', 'pt');
+    whisperFormData.append('response_format', 'verbose_json');
+    whisperFormData.append('prompt', 'Anotação de voz sobre aluno. Observações pedagógicas e comerciais em português brasileiro.');
+    whisperFormData.append('temperature', '0');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -49,8 +62,56 @@ serve(async (req) => {
     }
 
     const result = await response.json();
+    console.log('Whisper result:', JSON.stringify({
+      text: result.text,
+      duration: result.duration,
+      segments: result.segments?.map((s: any) => ({
+        text: s.text,
+        no_speech_prob: s.no_speech_prob,
+        avg_logprob: s.avg_logprob,
+      })),
+    }));
 
-    return new Response(JSON.stringify({ text: result.text }), {
+    // Filtrar segmentos com alta probabilidade de "no speech"
+    const validSegments = (result.segments || []).filter((s: any) => {
+      const noSpeech = s.no_speech_prob || 0;
+      const avgLogprob = s.avg_logprob || 0;
+      // Rejeitar segmentos com alta prob de silêncio OU baixa confiança
+      return noSpeech < 0.7 && avgLogprob > -1.5;
+    });
+
+    const filteredText = validSegments.map((s: any) => s.text).join('').trim();
+
+    // Filtro anti-alucinação em textos conhecidos
+    const hallucinations = [
+      'legendas pela comunidade amara.org',
+      'amara.org',
+      'inscreva-se',
+      'obrigado por assistir',
+      'thanks for watching',
+      'subtitles by the amara.org community',
+      'subscribe',
+      'thank you for watching',
+      'puxa',
+    ];
+
+    const textLower = filteredText.toLowerCase().trim();
+    const isHallucination = hallucinations.some(h => textLower.includes(h)) || textLower.length < 3;
+
+    if (isHallucination || !filteredText) {
+      console.log('Hallucination or no valid speech detected. Original:', result.text, '| Filtered:', filteredText);
+      return new Response(JSON.stringify({ 
+        error: 'Não foi possível transcrever o áudio. Fale mais alto e mais perto do microfone.',
+        debug_text: result.text 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Transcription result:', filteredText);
+
+    return new Response(JSON.stringify({ text: filteredText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

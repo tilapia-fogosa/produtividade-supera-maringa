@@ -79,11 +79,11 @@ export function formatPhoneDisplay(phone: string | null): string {
   return digits.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
 }
 
-export function useDadosPosVenda(clientId?: string) {
+export function useDadosPosVenda(atividadePosVendaId?: string) {
   return useQuery({
-    queryKey: ["dados-pos-venda", clientId],
+    queryKey: ["dados-pos-venda", atividadePosVendaId],
     queryFn: async (): Promise<DadosPosVenda | null> => {
-      if (!clientId) return null;
+      if (!atividadePosVendaId) return null;
 
       const { data, error } = await supabase
         .from("atividade_pos_venda")
@@ -117,7 +117,7 @@ export function useDadosPosVenda(clientId?: string) {
           responsavel,
           data_aula_inaugural
         `)
-        .eq("client_id", clientId)
+        .eq("id", atividadePosVendaId)
         .maybeSingle();
 
       if (error) {
@@ -127,6 +127,6 @@ export function useDadosPosVenda(clientId?: string) {
 
       return data;
     },
-    enabled: !!clientId,
+    enabled: !!atividadePosVendaId,
   });
 }

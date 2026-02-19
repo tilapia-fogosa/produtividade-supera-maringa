@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface DadosCadastraisInput {
   clientId: string;
+  atividadePosVendaId: string; // ID da atividade_pos_venda
   alunoId: string; // ID do aluno vinculado
   dataNascimento?: string;
   cpf?: string;
@@ -79,7 +80,7 @@ export function useSalvarDadosCadastrais() {
           address_city: input.cidade || null,
           address_state: input.estado || null,
         })
-        .eq("client_id", input.clientId);
+        .eq("id", input.atividadePosVendaId);
 
       if (atividadeError) {
         console.error("Erro ao atualizar atividade_pos_venda:", atividadeError);

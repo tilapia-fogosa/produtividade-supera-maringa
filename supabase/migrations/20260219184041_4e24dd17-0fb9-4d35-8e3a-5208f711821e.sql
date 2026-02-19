@@ -1,0 +1,12 @@
+UPDATE atividade_pos_venda 
+SET percepcao_coordenador = NULL, 
+    motivo_procura = NULL, 
+    avaliacao_abaco = NULL, 
+    avaliacao_ah = NULL, 
+    pontos_atencao = NULL 
+WHERE id IN (
+  'a31505c2-757c-454e-99c8-04bc9d1b26e5',
+  'def31ced-6d67-46ff-9afe-d0ba05bd73c3',
+  'b30f5e41-f038-43e3-af4e-8a030f012bda',
+  '7cfbb1ba-2b73-4873-a063-fa1ea2342047'
+);

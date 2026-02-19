@@ -813,6 +813,8 @@ export type Database = {
           address_postal_code: string | null
           address_state: string | null
           address_street: string | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           birth_date: string | null
           check_assinar_contrato: boolean | null
           check_cadastrar_pagamento: boolean | null
@@ -851,8 +853,11 @@ export type Database = {
           monthly_fee_payment_method:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura: string | null
+          percepcao_coordenador: string | null
           photo_thumbnail_url: string | null
           photo_url: string | null
+          pontos_atencao: string | null
           responsavel: string
           rg: string | null
           sincronizar_agenda_google: boolean
@@ -872,6 +877,8 @@ export type Database = {
           address_postal_code?: string | null
           address_state?: string | null
           address_street?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           birth_date?: string | null
           check_assinar_contrato?: boolean | null
           check_cadastrar_pagamento?: boolean | null
@@ -910,8 +917,11 @@ export type Database = {
           monthly_fee_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          pontos_atencao?: string | null
           responsavel?: string
           rg?: string | null
           sincronizar_agenda_google?: boolean
@@ -931,6 +941,8 @@ export type Database = {
           address_postal_code?: string | null
           address_state?: string | null
           address_street?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           birth_date?: string | null
           check_assinar_contrato?: boolean | null
           check_cadastrar_pagamento?: boolean | null
@@ -969,8 +981,11 @@ export type Database = {
           monthly_fee_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          pontos_atencao?: string | null
           responsavel?: string
           rg?: string | null
           sincronizar_agenda_google?: boolean
@@ -2927,6 +2942,7 @@ export type Database = {
       eventos_professor: {
         Row: {
           active: boolean | null
+          atividade_pos_venda_id: string | null
           client_id: string | null
           created_at: string | null
           created_by: string | null
@@ -2950,6 +2966,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          atividade_pos_venda_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -2973,6 +2990,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          atividade_pos_venda_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -2995,6 +3013,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_professor_atividade_pos_venda_id_fkey"
+            columns: ["atividade_pos_venda_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_professor_client_id_fkey"
             columns: ["client_id"]

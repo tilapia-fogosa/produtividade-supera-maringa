@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award, Filter, ChevronDown, Check } from 'lucide-react';
+import { Plus, Calendar, ClipboardList, Users, RefreshCw, Trash2, Loader2, Shirt, BookOpen, AlertTriangle, Cake, UserX, GraduationCap, FileText, Award, Filter, ChevronDown, Check, TrendingUp } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,7 @@ import { ConcluirAniversarioModal } from '@/components/home/ConcluirAniversarioM
 import { AlertaEvasao } from '@/hooks/use-alertas-evasao-lista';
 import { supabase } from '@/integrations/supabase/client';
 import { AulaZeroDrawer } from '@/components/aula-zero/AulaZeroDrawer';
+import { AlertaEvasaoModal } from '@/components/alerta-evasao/AlertaEvasaoModal';
 // Interface para eventos com dados extras
 interface Evento {
   tipo: string;
@@ -66,6 +67,7 @@ interface Evento {
   apostila_nova?: string;
   // Campos para aula inaugural
   aula_inaugural_client_id?: string;
+  aula_inaugural_atividade_id?: string;
 }
 
 export default function Home() {
@@ -149,6 +151,9 @@ export default function Home() {
     aniversario_mes_dia: string;
   } | null>(null);
 
+  // Estado para modal de alerta de evasão (lançamento)
+  const [showAlertaEvasaoModal, setShowAlertaEvasaoModal] = useState(false);
+
   // Estado para modal de entrega de botom
   const [botomModalOpen, setBotomModalOpen] = useState(false);
   const [botomSelecionado, setBotomSelecionado] = useState<{
@@ -159,7 +164,7 @@ export default function Home() {
 
   // Estado para gaveta de Aula Zero
   const [aulaZeroDrawerAberto, setAulaZeroDrawerAberto] = useState(false);
-  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ id: string; nome: string } | null>(null);
+  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ atividadePosVendaId: string; nome: string } | null>(null);
 
   // Tipos de atividades disponíveis para filtro
   const tiposAtividades = useMemo(() => [
@@ -419,6 +424,7 @@ export default function Home() {
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}${ai.professor_nome ? ` • ${ai.professor_nome}` : ''}`,
           aula_inaugural_client_id: ai.client_id,
+          aula_inaugural_atividade_id: ai.atividade_pos_venda_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -523,6 +529,7 @@ export default function Home() {
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
           aula_inaugural_client_id: ai.client_id,
+          aula_inaugural_atividade_id: ai.atividade_pos_venda_id,
         };
         if (ai.data === hojeStr) {
           eventosHoje.push(evento);
@@ -1005,45 +1012,19 @@ export default function Home() {
   };
 
   const handleAulaInauguralClick = async (evento: Evento) => {
-    if (evento.aula_inaugural_client_id) {
-      // Primeiro tenta encontrar o aluno vinculado pelo client_id
-      const { data: aluno } = await supabase
-        .from('alunos')
-        .select('id, nome')
-        .eq('client_id', evento.aula_inaugural_client_id)
+    if (evento.aula_inaugural_atividade_id) {
+      const atividadeId = evento.aula_inaugural_atividade_id;
+      
+      // Buscar nome do aluno/cliente pela atividade específica
+      const { data: posVenda } = await supabase
+        .from('atividade_pos_venda')
+        .select('full_name, client_name')
+        .eq('id', atividadeId)
         .maybeSingle();
 
-      if (aluno) {
-        setAulaZeroAluno({ id: aluno.id, nome: aluno.nome });
-        setAulaZeroDrawerAberto(true);
-      } else {
-        // Se não encontrou aluno, buscar na atividade_pos_venda pelo client_id
-        const { data: posVenda } = await supabase
-          .from('atividade_pos_venda')
-          .select('full_name, client_name')
-          .eq('client_id', evento.aula_inaugural_client_id)
-          .maybeSingle();
-
-        if (posVenda) {
-          // Buscar aluno pelo nome (full_name ou client_name)
-          const nomeCliente = posVenda.full_name || posVenda.client_name;
-          const { data: alunoByNome } = await supabase
-            .from('alunos')
-            .select('id, nome')
-            .ilike('nome', `%${nomeCliente}%`)
-            .limit(1)
-            .maybeSingle();
-
-          if (alunoByNome) {
-            setAulaZeroAluno({ id: alunoByNome.id, nome: alunoByNome.nome });
-            setAulaZeroDrawerAberto(true);
-          } else {
-            // Aluno ainda não foi cadastrado — abrir gaveta sem ID (somente visualização do nome)
-            setAulaZeroAluno({ id: '', nome: nomeCliente });
-            setAulaZeroDrawerAberto(true);
-          }
-        }
-      }
+      const nome = posVenda?.full_name || posVenda?.client_name || evento.titulo || '';
+      setAulaZeroAluno({ atividadePosVendaId: atividadeId, nome });
+      setAulaZeroDrawerAberto(true);
     }
   };
 
@@ -1069,7 +1050,7 @@ export default function Home() {
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
     const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
-    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_client_id;
+    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_atividade_id;
     const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel || isAulaInauguralClicavel;
     
     const handleClick = () => {
@@ -1170,6 +1151,28 @@ export default function Home() {
 
         {/* Botões de ações */}
         <div className="flex items-center gap-2">
+          {/* Botão Produtividade de Sala */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 px-2 border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900"
+            onClick={() => navigate('/sala/dias-lancamento')}
+          >
+            <TrendingUp className="h-3.5 w-3.5" />
+            Produtividade
+          </Button>
+
+          {/* Botão Alerta de Evasão */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1 px-2 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
+            onClick={() => setShowAlertaEvasaoModal(true)}
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Alerta Evasão
+          </Button>
+
           {/* Filtro de Tipos */}
           <Popover>
             <PopoverTrigger asChild>
@@ -1414,8 +1417,14 @@ export default function Home() {
           setAulaZeroDrawerAberto(open);
           if (!open) setAulaZeroAluno(null);
         }}
-        alunoId={aulaZeroAluno?.id || ''}
+        atividadePosVendaId={aulaZeroAluno?.atividadePosVendaId || ''}
         alunoNome={aulaZeroAluno?.nome || ''}
+      />
+
+      {/* Modal de Alerta de Evasão (lançamento) */}
+      <AlertaEvasaoModal 
+        isOpen={showAlertaEvasaoModal} 
+        onClose={() => setShowAlertaEvasaoModal(false)} 
       />
     </div>
   );
