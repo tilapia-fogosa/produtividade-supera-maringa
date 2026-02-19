@@ -378,6 +378,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             const horarioFormatado = horarioSelecionado.substring(0, 5);
 
             const webhookPayload = {
+              atividade_pos_venda_id: cliente.atividade_pos_venda_id,
               nome_aluno: nomeAluno,
               professor_id: professorSelecionado.id,
               data_aula: dataStr,
