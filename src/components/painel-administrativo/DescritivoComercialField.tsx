@@ -35,7 +35,7 @@ export function DescritivoComercialField({ value, onChange }: DescritivoComercia
         await transcribeAudio(audioBlob);
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000);
       setIsRecording(true);
     } catch (error) {
       console.error("Erro ao acessar microfone:", error);
@@ -50,6 +50,13 @@ export function DescritivoComercialField({ value, onChange }: DescritivoComercia
   };
 
   const transcribeAudio = async (audioBlob: Blob) => {
+    console.log('DescritivoComercial: tamanho do áudio:', audioBlob.size, 'bytes');
+    
+    if (audioBlob.size < 1000) {
+      console.log('DescritivoComercial: áudio muito pequeno, ignorando');
+      return;
+    }
+
     setIsTranscribing(true);
     try {
       const formData = new FormData();
