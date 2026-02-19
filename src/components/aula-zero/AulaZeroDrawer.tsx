@@ -89,65 +89,51 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
     if (!clientId) return;
     setIsSaving(true);
     try {
-      // Salvar na tabela atividade_pos_venda
-      const { error } = await supabase
-        .from('atividade_pos_venda')
-        .update({
-          percepcao_coordenador: data.percepcao_coordenador,
-          motivo_procura: data.motivo_procura,
-          avaliacao_abaco: data.avaliacao_abaco,
-          avaliacao_ah: data.avaliacao_ah,
-          pontos_atencao: data.pontos_atencao,
-        })
-        .eq('client_id', clientId);
+      const fields = {
+        percepcao_coordenador: data.percepcao_coordenador,
+        motivo_procura: data.motivo_procura,
+        avaliacao_abaco: data.avaliacao_abaco,
+        avaliacao_ah: data.avaliacao_ah,
+        pontos_atencao: data.pontos_atencao,
+      };
 
-      if (error) throw error;
+      // Etapas 1 e 2 em paralelo
+      const [updateResult] = await Promise.all([
+        supabase.from('atividade_pos_venda').update(fields).eq('client_id', clientId),
+        (async () => {
+          const { data: aluno } = await supabase
+            .from('alunos')
+            .select('id')
+            .eq('client_id', clientId)
+            .maybeSingle();
+          if (aluno) {
+            await supabase.from('alunos').update({
+              ...fields,
+              coordenador_responsavel: funcionarioNome || undefined,
+            }).eq('id', aluno.id);
+          }
+        })(),
+      ]);
 
-      // Também salvar na tabela alunos se existir vínculo
-      const { data: aluno } = await supabase
-        .from('alunos')
-        .select('id')
-        .eq('client_id', clientId)
-        .maybeSingle();
+      if (updateResult.error) throw updateResult.error;
 
-      if (aluno) {
-        await supabase
-          .from('alunos')
-          .update({
-            percepcao_coordenador: data.percepcao_coordenador,
-            motivo_procura: data.motivo_procura,
-            avaliacao_abaco: data.avaliacao_abaco,
-            avaliacao_ah: data.avaliacao_ah,
-            pontos_atencao: data.pontos_atencao,
-            coordenador_responsavel: funcionarioNome || undefined,
-          })
-          .eq('id', aluno.id);
-      }
-
-      // Enviar para webhook via edge function
-      try {
-        await supabase.functions.invoke('webhook-aula-inaugural', {
-          body: {
-            client_id: clientId,
-            client_name: alunoNome,
-            unit_id: activeUnit?.id || null,
-            registrado_por: funcionarioNome || 'Desconhecido',
-            percepcao_coordenador: data.percepcao_coordenador,
-            motivo_procura: data.motivo_procura,
-            avaliacao_abaco: data.avaliacao_abaco,
-            avaliacao_ah: data.avaliacao_ah,
-            pontos_atencao: data.pontos_atencao,
-            data_registro: new Date().toISOString(),
-            tipo: 'lancamento_aula_zero',
-          },
-        });
-      } catch (webhookErr) {
-        console.error('Erro ao enviar webhook:', webhookErr);
-      }
-
+      // Fechar drawer imediatamente
       form.reset();
       onOpenChange(false);
       onSalvo?.();
+
+      // Webhook fire-and-forget (sem await)
+      supabase.functions.invoke('webhook-aula-inaugural', {
+        body: {
+          client_id: clientId,
+          client_name: alunoNome,
+          unit_id: activeUnit?.id || null,
+          registrado_por: funcionarioNome || 'Desconhecido',
+          ...fields,
+          data_registro: new Date().toISOString(),
+          tipo: 'lancamento_aula_zero',
+        },
+      }).catch(err => console.error('Erro ao enviar webhook:', err));
     } catch (error) {
       console.error('Erro ao salvar dados da Aula Zero:', error);
     } finally {
