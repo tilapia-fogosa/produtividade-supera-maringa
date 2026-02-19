@@ -1,35 +1,29 @@
 
-# Correção: unit_id null no webhook da Aula Inaugural
+# Correção: Transcrição de áudio não funciona
 
-## Causa
-A query que busca o `unit_id` da tabela `atividade_pos_venda` usa `.maybeSingle()`, mas existem multiplos registros para o mesmo `client_id`. Quando `.maybeSingle()` encontra mais de uma linha, ele retorna `null` em vez dos dados.
+## Problema
+A edge function `transcribe-audio` tenta ler a secret com o nome `'OpenAI Whisper'`, mas a secret configurada no projeto se chama `OPENAI_API_KEY`. Isso faz com que a chave da API seja `undefined` e a transcrição falhe.
 
-## Solucao
-Adicionar `.limit(1)` na query para garantir que apenas um registro seja retornado antes do `.maybeSingle()`.
+## Solução
+Alterar uma única linha na edge function para usar o nome correto da secret.
 
 ## Detalhes Tecnicos
 
-### Arquivo: `src/components/painel-administrativo/DadosFinaisForm.tsx`
+### Arquivo: `supabase/functions/transcribe-audio/index.ts`
 
-Alterar a query de busca do `unit_id` (por volta da linha 348-352):
-
-**De:**
+**Linha 14 - De:**
 ```typescript
-const { data: atividadeData } = await supabase
-  .from('atividade_pos_venda')
-  .select('unit_id')
-  .eq('client_id', cliente.id)
-  .maybeSingle();
+const OPENAI_API_KEY = Deno.env.get('OpenAI Whisper');
 ```
 
 **Para:**
 ```typescript
-const { data: atividadeData } = await supabase
-  .from('atividade_pos_venda')
-  .select('unit_id')
-  .eq('client_id', cliente.id)
-  .limit(1)
-  .maybeSingle();
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 ```
 
-Alteracao de uma unica linha - apenas adicionar `.limit(1)` antes do `.maybeSingle()`.
+**Linha 16 - Atualizar mensagem de erro (opcional):**
+```typescript
+throw new Error('OPENAI_API_KEY secret is not configured');
+```
+
+Apos a alteracao, a edge function sera reimplantada automaticamente.
