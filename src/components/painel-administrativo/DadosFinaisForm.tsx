@@ -304,12 +304,17 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             .eq('client_id', cliente.id)
             .eq('tipo_evento', 'aula_zero');
 
+          const year = dataAulaInaugural.getFullYear();
+          const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
+          const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
+          const dataStr = `${year}-${month}-${day}`;
+
           const eventoData = {
             professor_id: professorSelecionado.id,
             tipo_evento: 'aula_zero',
             titulo: 'Aula Inaugural',
             descricao: 'Aula inaugural agendada via painel administrativo',
-            data: `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`,
+            data: dataStr,
             horario_inicio: horarioSelecionado,
             horario_fim: horarioFim,
             recorrente: false,
@@ -323,6 +328,37 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
           if (eventoError) {
             console.error("Erro ao criar evento de aula inaugural (RLS):", eventoError);
+          }
+
+          // Enviar webhook com dados da aula inaugural
+          try {
+            // Buscar nome do aluno vinculado
+            let nomeAluno = cliente.name;
+            if (data.alunoId) {
+              const { data: alunoData } = await supabase
+                .from('alunos')
+                .select('nome')
+                .eq('id', data.alunoId)
+                .maybeSingle();
+              if (alunoData?.nome) nomeAluno = alunoData.nome;
+            }
+
+            const horarioFormatado = horarioSelecionado.substring(0, 5);
+
+            const webhookPayload = {
+              nome_aluno: nomeAluno,
+              professor_id: professorSelecionado.id,
+              data_aula: dataStr,
+              horario_aula: horarioFormatado,
+            };
+
+            console.log('[Webhook Aula Inaugural] Enviando via edge function:', webhookPayload);
+
+            await supabase.functions.invoke('webhook-aula-inaugural', {
+              body: webhookPayload,
+            });
+          } catch (webhookErr) {
+            console.error('[Webhook Aula Inaugural] Erro ao enviar:', webhookErr);
           }
         } catch (eventoErr) {
           console.error("Erro ao criar evento de aula inaugural:", eventoErr);
