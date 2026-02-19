@@ -338,13 +338,15 @@ export function useProfessorAtividades() {
         const { data: atividades } = await atividadesQuery;
 
         const clienteNomes: Record<string, string> = {};
+        const atividadesDaUnidade = new Set<string>();
         if (atividades) {
           atividades.forEach(a => {
             clienteNomes[a.id] = a.full_name || a.client_name;
+            atividadesDaUnidade.add(a.id);
           });
         }
 
-        // Filtrar por atividade_pos_venda_id específico (não mais por client_id)
+        // Verificar quais atividades já foram concluídas
         const atividadeIds = (eventosAulaZero || []).map(e => (e as any).atividade_pos_venda_id).filter(Boolean);
         const completedAtividadeIds = new Set<string>();
 
@@ -381,7 +383,9 @@ export function useProfessorAtividades() {
           }))
           .filter(e => {
             const apvId = (eventosAulaZero || []).find(ev => ev.id === e.id)?.atividade_pos_venda_id;
-            if (!apvId) return true; // Sem vínculo, manter visível
+            if (!apvId) return false; // Sem vínculo, não exibir
+            // Para admin, filtrar apenas atividades da unidade ativa
+            if (isAdminOrManagement && !atividadesDaUnidade.has(apvId)) return false;
             if (completedAtividadeIds.has(apvId)) return false;
             return true;
           });
