@@ -25,7 +25,7 @@ import { AudioTranscribeButton } from '@/components/ui/audio-transcribe-button';
 interface AulaZeroDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  alunoId: string;
+  clientId: string;
   alunoNome: string;
   onSalvo?: () => void;
 }
@@ -38,7 +38,7 @@ interface AulaZeroFormData {
   pontos_atencao: string;
 }
 
-export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
+export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
   const { funcionarioNome } = useCurrentFuncionario();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -52,15 +52,15 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
     },
   });
 
-  // Carregar dados existentes do aluno ao abrir
+  // Carregar dados existentes da atividade_pos_venda ao abrir
   useEffect(() => {
-    if (open && alunoId) {
+    if (open && clientId) {
       (async () => {
         const { data } = await supabase
-          .from('alunos')
+          .from('atividade_pos_venda')
           .select('percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-          .eq('id', alunoId)
-          .single();
+          .eq('client_id', clientId)
+          .maybeSingle();
 
         if (data) {
           form.reset({
@@ -70,36 +70,57 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
             avaliacao_ah: data.avaliacao_ah || '',
             pontos_atencao: data.pontos_atencao || '',
           });
+        } else {
+          form.reset({
+            percepcao_coordenador: '',
+            motivo_procura: '',
+            avaliacao_abaco: '',
+            avaliacao_ah: '',
+            pontos_atencao: '',
+          });
         }
       })();
     }
-  }, [open, alunoId]);
+  }, [open, clientId]);
 
   const onSubmit = async (data: AulaZeroFormData) => {
-    if (!alunoId) return;
+    if (!clientId) return;
     setIsSaving(true);
     try {
-      // Buscar dados completos do aluno para o webhook
-      const { data: alunoData } = await supabase
-        .from('alunos')
-        .select('id, nome, codigo, email, telefone')
-        .eq('id', alunoId)
-        .single();
-
-      // Salvar na tabela alunos
+      // Salvar na tabela atividade_pos_venda
       const { error } = await supabase
-        .from('alunos')
+        .from('atividade_pos_venda')
         .update({
           percepcao_coordenador: data.percepcao_coordenador,
           motivo_procura: data.motivo_procura,
           avaliacao_abaco: data.avaliacao_abaco,
           avaliacao_ah: data.avaliacao_ah,
           pontos_atencao: data.pontos_atencao,
-          coordenador_responsavel: funcionarioNome || undefined,
         })
-        .eq('id', alunoId);
+        .eq('client_id', clientId);
 
       if (error) throw error;
+
+      // Também salvar na tabela alunos se existir vínculo
+      const { data: aluno } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('client_id', clientId)
+        .maybeSingle();
+
+      if (aluno) {
+        await supabase
+          .from('alunos')
+          .update({
+            percepcao_coordenador: data.percepcao_coordenador,
+            motivo_procura: data.motivo_procura,
+            avaliacao_abaco: data.avaliacao_abaco,
+            avaliacao_ah: data.avaliacao_ah,
+            pontos_atencao: data.pontos_atencao,
+            coordenador_responsavel: funcionarioNome || undefined,
+          })
+          .eq('id', aluno.id);
+      }
 
       // Enviar para webhook
       const { data: webhookConfig } = await supabase
@@ -109,19 +130,14 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
         .single();
 
       const webhookUrl = webhookConfig?.data;
-      if (webhookUrl && alunoData) {
+      if (webhookUrl) {
         try {
           await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              aluno: {
-                id: alunoData.id,
-                nome: alunoData.nome,
-                codigo: alunoData.codigo || '',
-                email: alunoData.email || '',
-                telefone: alunoData.telefone || '',
-              },
+              client_id: clientId,
+              nome: alunoNome,
               aula_zero: {
                 ...data,
                 data_registro: new Date().toISOString(),
@@ -162,11 +178,11 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs font-medium">Percepção do Coordenador</FormLabel>
+                      <FormLabel className="text-xs font-medium">Percepção sobre o Aluno</FormLabel>
                       <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
                     </div>
                     <FormControl>
-                      <Textarea placeholder="Descreva a percepção do coordenador..." {...field} className="min-h-[60px] text-xs" />
+                      <Textarea placeholder="Descreva a percepção sobre o aluno..." {...field} className="min-h-[60px] text-xs" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -213,7 +229,7 @@ export function AulaZeroDrawer({ open, onOpenChange, alunoId, alunoNome, onSalvo
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs font-medium">Avaliação no Abrindo Horizontes</FormLabel>
+                      <FormLabel className="text-xs font-medium">Avaliação na Abrindo Horizontes</FormLabel>
                       <AudioTranscribeButton currentValue={field.value} onTranscribed={(v) => field.onChange(v)} />
                     </div>
                     <FormControl>
