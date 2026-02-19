@@ -135,24 +135,28 @@ const DiarioTabela: React.FC<DiarioTabelaProps> = ({
                     {registro.comentario || "-"}
                   </TableCell>
                   <TableCell className="text-right space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleEditarRegistro(registro)}
-                      className="text-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Editar</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleExcluirRegistro(registro)}
-                      className="text-red-600 hover:text-red-800 hover:bg-red-100"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Excluir</span>
-                    </Button>
+                    {!String(registro.id).startsWith('virtual-') && (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEditarRegistro(registro)}
+                          className="text-laranja-DEFAULT hover:bg-laranja-DEFAULT/10"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Editar</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleExcluirRegistro(registro)}
+                          className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Excluir</span>
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
