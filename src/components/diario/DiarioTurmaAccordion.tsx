@@ -109,13 +109,30 @@ const DiarioTurmaAccordion: React.FC<DiarioTurmaAccordionProps> = ({
 
       if (produtividadeError) throw produtividadeError;
 
-      // Adicionar informações da pessoa aos registros
-      const registrosComPessoa = (produtividadeData || []).map(registro => {
-        const pessoa = pessoasTurma.find(p => p.id === registro.pessoa_id);
+      // Combinar todas as pessoas com seus registros (ou criar virtuais para ausentes)
+      const prodMap = new Map((produtividadeData || []).map(r => [r.pessoa_id, r]));
+      const registrosComPessoa = pessoasTurma.map(pessoa => {
+        const registro = prodMap.get(pessoa.id);
+        if (registro) {
+          return {
+            ...registro,
+            pessoa,
+            origem: pessoa.origem
+          };
+        }
+        // Registro virtual para ausentes
         return {
-          ...registro,
-          pessoa: pessoa || null,
-          origem: pessoa?.origem || 'desconhecido'
+          id: `virtual-${pessoa.id}`,
+          pessoa_id: pessoa.id,
+          data_aula: dataFormatada,
+          presente: false,
+          apostila: null,
+          pagina: null,
+          exercicios: null,
+          erros: null,
+          comentario: null,
+          pessoa,
+          origem: pessoa.origem
         };
       });
 

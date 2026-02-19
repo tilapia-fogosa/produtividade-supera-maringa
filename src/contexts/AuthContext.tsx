@@ -6,7 +6,7 @@ interface UserProfile {
   id: string;
   full_name: string | null;
   email: string | null;
-  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala' | null;
+  role: 'consultor' | 'franqueado' | 'gestor_pedagogico' | 'educador' | 'admin' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala' | 'sdr' | null;
   unit_ids: string[];
   gcalendar_id: string | null;
   professor_id: string | null;
@@ -93,7 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+    localStorage.removeItem('sb-hkvjdxxndapxpslovrlc-auth-token');
+    window.location.href = '/auth/login';
   };
 
   useEffect(() => {

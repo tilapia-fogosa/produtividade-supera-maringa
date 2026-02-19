@@ -29,7 +29,7 @@ import { ClienteMatriculado } from "@/hooks/use-pos-matricula";
 import { useSalvarDadosComerciais } from "@/hooks/use-salvar-dados-comerciais";
 import { useAlunoVinculado } from "@/hooks/use-alunos-sem-vinculo";
 import { useDadosPosVenda, formatDateToBR, formatNumberToCurrency } from "@/hooks/use-dados-pos-venda";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, CalendarCheck } from "lucide-react";
 
 const formSchema = z.object({
   kitType: z.string().optional(),
@@ -274,14 +274,19 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Data de Pagamento</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="DD/MM/AAAA"
-                          maxLength={10}
-                          onChange={(e) => handleDateChange("enrollmentPaymentDate", e.target.value)}
-                        />
-                      </FormControl>
+                      <div className="flex gap-1">
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="DD/MM/AAAA"
+                            maxLength={10}
+                            onChange={(e) => handleDateChange("enrollmentPaymentDate", e.target.value)}
+                          />
+                        </FormControl>
+                        <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => form.setValue("enrollmentPaymentDate", formatDate(new Date().toLocaleDateString("pt-BR")))} title="Hoje">
+                          <CalendarCheck className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -365,14 +370,19 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>1ª Mensalidade</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="DD/MM/AAAA"
-                          maxLength={10}
-                          onChange={(e) => handleDateChange("firstMonthlyFeeDate", e.target.value)}
-                        />
-                      </FormControl>
+                      <div className="flex gap-1">
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="DD/MM/AAAA"
+                            maxLength={10}
+                            onChange={(e) => handleDateChange("firstMonthlyFeeDate", e.target.value)}
+                          />
+                        </FormControl>
+                        <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => form.setValue("firstMonthlyFeeDate", formatDate(new Date().toLocaleDateString("pt-BR")))} title="Hoje">
+                          <CalendarCheck className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -431,14 +441,19 @@ export function DadosComercaisForm({ cliente, onCancel }: DadosComercaisFormProp
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Data de Pagamento</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="DD/MM/AAAA"
-                          maxLength={10}
-                          onChange={(e) => handleDateChange("materialPaymentDate", e.target.value)}
-                        />
-                      </FormControl>
+                      <div className="flex gap-1">
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="DD/MM/AAAA"
+                            maxLength={10}
+                            onChange={(e) => handleDateChange("materialPaymentDate", e.target.value)}
+                          />
+                        </FormControl>
+                        <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => form.setValue("materialPaymentDate", formatDate(new Date().toLocaleDateString("pt-BR")))} title="Hoje">
+                          <CalendarCheck className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </FormItem>
                   )}
                 />

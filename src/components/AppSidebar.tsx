@@ -36,6 +36,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { DollarSign } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -150,12 +151,19 @@ const additionalItems = [
   },
 ];
 
-const administrativoItems = [
+const comercialItems = [
+  {
+    title: "Comissão",
+    url: "/comissao",
+    icon: DollarSign,
+  },
+];
+
+const administrativoItems: Array<{ title: string; url: string; icon: any; maringaOnly?: boolean }> = [
   {
     title: "Painel Administrativo",
     url: "/painel-administrativo",
     icon: LayoutDashboard,
-    maringaOnly: true,
   },
   {
     title: "Eventos",
@@ -186,7 +194,13 @@ export function AppSidebar() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+    localStorage.removeItem('sb-hkvjdxxndapxpslovrlc-auth-token');
+    window.location.href = '/auth/login';
   };
 
   const isTeacher = userRole === 'educador';
@@ -212,6 +226,11 @@ export function AppSidebar() {
     return true;
   });
 
+  const isSDR = userRole === 'sdr';
+  const isConsultor = userRole === 'consultor';
+  const showComercial = isAdmin || isConsultor || isFranqueado || isSDR;
+
+
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border bg-sidebar-accent/50">
@@ -230,7 +249,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
-            Menu Principal
+            Pedagógico
           </SidebarGroupLabel>
           <SidebarMenu>
             {filteredItems.map((item) => (
@@ -250,6 +269,31 @@ export function AppSidebar() {
             ))}
           </SidebarMenu>
         </SidebarGroup>
+
+        {showComercial && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
+              Comercial
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {comercialItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={location.pathname === item.url}
+                    className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    onClick={() => navigate(item.url)}
+                  >
+                    <button className="flex items-center space-x-3 w-full p-2 rounded-md transition-colors">
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="font-medium">{item.title}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
 
         {(isAdmin || isAdministrativo || isFranqueado) && filteredAdministrativoItems.length > 0 && (
           <SidebarGroup>

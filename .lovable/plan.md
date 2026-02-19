@@ -1,44 +1,35 @@
 
+# Correção: unit_id null no webhook da Aula Inaugural
 
-## Ocultar Aulas Inaugurais concluidas da Home
+## Causa
+A query que busca o `unit_id` da tabela `atividade_pos_venda` usa `.maybeSingle()`, mas existem multiplos registros para o mesmo `client_id`. Quando `.maybeSingle()` encontra mais de uma linha, ele retorna `null` em vez dos dados.
 
-### Objetivo
-Quando todos os 5 campos da Aula Zero estiverem preenchidos na tabela `alunos`, a atividade de Aula Inaugural correspondente nao deve mais aparecer na tela Home.
+## Solucao
+Adicionar `.limit(1)` na query para garantir que apenas um registro seja retornado antes do `.maybeSingle()`.
 
-### Onde os dados sao salvos
-Os dados sao salvos na tabela `alunos`, nos campos:
-- `percepcao_coordenador`
-- `motivo_procura`
-- `avaliacao_abaco`
-- `avaliacao_ah`
-- `pontos_atencao`
+## Detalhes Tecnicos
 
-### Salvamento parcial
-Sim, sera possivel salvar com apenas alguns campos preenchidos. A atividade so desaparecera da Home quando **todos os 5 campos** estiverem preenchidos.
+### Arquivo: `src/components/painel-administrativo/DadosFinaisForm.tsx`
 
-### Alteracao necessaria
+Alterar a query de busca do `unit_id` (por volta da linha 348-352):
 
-**Arquivo:** `src/hooks/use-aulas-inaugurais-professor.ts`
-
-Apos buscar as aulas inaugurais e os nomes dos clientes, adicionar uma etapa extra:
-
-1. Coletar todos os `client_id` dos eventos retornados
-2. Buscar na tabela `alunos` os registros vinculados a esses `client_id`, selecionando os 5 campos da Aula Zero
-3. Identificar quais `client_id` tem **todos os 5 campos preenchidos** (nao nulos e nao vazios)
-4. Filtrar o resultado final, removendo as aulas inaugurais cujo `client_id` tenha todos os campos completos
-
-### Logica de verificacao
-
-```text
-Para cada aluno vinculado ao client_id:
-  SE percepcao_coordenador E motivo_procura E avaliacao_abaco E avaliacao_ah E pontos_atencao
-     estao todos preenchidos (nao nulos e nao string vazia)
-  ENTAO -> remover da lista de aulas inaugurais
+**De:**
+```typescript
+const { data: atividadeData } = await supabase
+  .from('atividade_pos_venda')
+  .select('unit_id')
+  .eq('client_id', cliente.id)
+  .maybeSingle();
 ```
 
-### Impacto
-- Nenhuma alteracao no banco de dados
-- Nenhuma alteracao no componente AulaZeroDrawer
-- Apenas o hook `use-aulas-inaugurais-professor.ts` sera modificado para filtrar as atividades concluidas
-- Funciona tanto para Admin quanto para Professor
+**Para:**
+```typescript
+const { data: atividadeData } = await supabase
+  .from('atividade_pos_venda')
+  .select('unit_id')
+  .eq('client_id', cliente.id)
+  .limit(1)
+  .maybeSingle();
+```
 
+Alteracao de uma unica linha - apenas adicionar `.limit(1)` antes do `.maybeSingle()`.

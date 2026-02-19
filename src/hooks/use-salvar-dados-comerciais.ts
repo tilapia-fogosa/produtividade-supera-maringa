@@ -77,6 +77,7 @@ export function useSalvarDadosComerciais() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clientes-matriculados"] });
       queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
+      queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
     },
   });
 }
