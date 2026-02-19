@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OpenAI Whisper');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI Whisper secret is not configured');
+      throw new Error('OPENAI_API_KEY secret is not configured');
     }
 
     const formData = await req.formData();
