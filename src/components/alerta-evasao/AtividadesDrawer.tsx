@@ -873,7 +873,22 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   </div>
                 ) : (
                   <>
-                    {/* Card do Alerta Criado */}
+                    {/* Atividades pendentes (próximas etapas) em cima */}
+                    {atividadesPendentes.map((atividade) => renderAtividadeCard(atividade))}
+
+                    {/* Separador entre pendentes e realizadas */}
+                    {atividadesRealizadas.length > 0 && (
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[10px] text-muted-foreground font-medium">Realizadas</span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                    )}
+
+                    {/* Atividades realizadas */}
+                    {atividadesRealizadas.map((atividade) => renderAtividadeCard(atividade))}
+
+                    {/* Card do Alerta Criado (embaixo de tudo) */}
                     <Card className="overflow-hidden opacity-70">
                       <div className="h-1 bg-amber-500" />
                       <CardContent className="p-2 space-y-1">
@@ -894,21 +909,6 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                         </span>
                       </CardContent>
                     </Card>
-
-                    {/* Atividades realizadas */}
-                    {atividadesRealizadas.map((atividade) => renderAtividadeCard(atividade))}
-
-                    {/* Separador entre realizadas e pendentes */}
-                    {atividadesPendentes.length > 0 && (
-                      <div className="flex items-center gap-2 py-2">
-                        <div className="flex-1 h-px bg-border" />
-                        <span className="text-[10px] text-muted-foreground font-medium">Próximas etapas</span>
-                        <div className="flex-1 h-px bg-border" />
-                      </div>
-                    )}
-
-                    {/* Atividades pendentes */}
-                    {atividadesPendentes.map((atividade) => renderAtividadeCard(atividade))}
                   </>
                 )}
               </div>
