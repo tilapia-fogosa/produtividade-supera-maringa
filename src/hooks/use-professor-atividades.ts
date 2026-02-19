@@ -344,15 +344,7 @@ export function useProfessorAtividades() {
           });
         }
 
-        // Filtrar: só mostrar se tem aluno ativo vinculado, e remover se aula zero concluída
-        const { data: alunosAtivos } = await supabase
-          .from('alunos')
-          .select('client_id')
-          .in('client_id', clientIdsAI)
-          .eq('active', true);
-
-        const activeClientIdsAI = new Set(alunosAtivos?.map(a => a.client_id).filter(Boolean) || []);
-
+        // Filtrar: remover se aula zero já foi concluída (todos os campos preenchidos)
         const { data: alunosCompletos } = await supabase
           .from('alunos')
           .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
@@ -387,7 +379,6 @@ export function useProfessorAtividades() {
           }))
           .filter(e => {
             if (!e.client_id) return false;
-            if (!activeClientIdsAI.has(e.client_id)) return false;
             if (completedClientIdsAI.has(e.client_id)) return false;
             return true;
           });

@@ -107,11 +107,8 @@ export function useAulasInauguraisProfessor() {
           }
         }
 
-        // Filtrar: só mostrar se tem aluno ativo vinculado, e remover se aula zero concluída
-        const [activeClientIds, completedClientIds] = await Promise.all([
-          getActiveClientIds(clientIds),
-          getCompletedClientIds(clientIds),
-        ]);
+        // Filtrar: remover se aula zero já foi concluída
+        const completedClientIds = await getCompletedClientIds(clientIds);
 
         return (eventos || []).map(e => ({
           id: e.id,
@@ -125,7 +122,6 @@ export function useAulasInauguraisProfessor() {
           client_id: (e as any).client_id || undefined,
         })).filter(e => {
           if (!e.client_id) return false;
-          if (!activeClientIds.has(e.client_id)) return false;
           if (completedClientIds.has(e.client_id)) return false;
           return true;
         }) as AulaInaugural[];
@@ -159,11 +155,8 @@ export function useAulasInauguraisProfessor() {
           }
         }
 
-        // Filtrar: só mostrar se tem aluno ativo vinculado, e remover se aula zero concluída
-        const [activeClientIds, completedClientIds] = await Promise.all([
-          getActiveClientIds(clientIds),
-          getCompletedClientIds(clientIds),
-        ]);
+        // Filtrar: remover se aula zero já foi concluída
+        const completedClientIds = await getCompletedClientIds(clientIds);
 
         return (eventos || []).map(e => ({
           id: e.id,
@@ -176,7 +169,6 @@ export function useAulasInauguraisProfessor() {
           client_id: (e as any).client_id || undefined,
         })).filter(e => {
           if (!e.client_id) return false;
-          if (!activeClientIds.has(e.client_id)) return false;
           if (completedClientIds.has(e.client_id)) return false;
           return true;
         }) as AulaInaugural[];
