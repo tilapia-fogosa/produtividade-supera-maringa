@@ -62,6 +62,31 @@ serve(async (req) => {
 
     const result = await response.json();
 
+    // Filtro anti-alucinação: rejeitar textos conhecidos do Whisper
+    const hallucinations = [
+      'legendas pela comunidade amara.org',
+      'amara.org',
+      'inscreva-se',
+      'obrigado por assistir',
+      'thanks for watching',
+      'subtitles by the amara.org community',
+      'subscribe',
+      'thank you for watching',
+    ];
+
+    const textLower = (result.text || '').toLowerCase().trim();
+    const isHallucination = hallucinations.some(h => textLower.includes(h)) || textLower.length < 3;
+
+    if (isHallucination) {
+      console.log('Hallucination detected, rejecting:', result.text);
+      return new Response(JSON.stringify({ error: 'Transcrição inválida - tente gravar novamente com mais clareza' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Transcription result:', result.text);
+
     return new Response(JSON.stringify({ text: result.text }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
