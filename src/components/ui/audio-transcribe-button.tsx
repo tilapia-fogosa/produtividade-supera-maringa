@@ -34,7 +34,7 @@ export function AudioTranscribeButton({ currentValue, onTranscribed, className }
         await transcribeAudio(audioBlob);
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000);
       setIsRecording(true);
     } catch (error) {
       console.error("Erro ao acessar microfone:", error);
@@ -49,6 +49,13 @@ export function AudioTranscribeButton({ currentValue, onTranscribed, className }
   };
 
   const transcribeAudio = async (audioBlob: Blob) => {
+    console.log('AudioTranscribeButton: tamanho do áudio capturado:', audioBlob.size, 'bytes');
+    
+    if (audioBlob.size < 1000) {
+      console.log('AudioTranscribeButton: áudio muito pequeno, ignorando');
+      return;
+    }
+
     setIsTranscribing(true);
     try {
       const formData = new FormData();

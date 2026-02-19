@@ -26,10 +26,22 @@ serve(async (req) => {
       });
     }
 
+    console.log('Audio file size:', audioFile.size);
+
+    if (audioFile.size < 1000) {
+      console.log('Audio file too small, rejecting:', audioFile.size);
+      return new Response(JSON.stringify({ error: 'Audio too short or empty' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const whisperFormData = new FormData();
     whisperFormData.append('file', audioFile, 'audio.webm');
     whisperFormData.append('model', 'whisper-1');
     whisperFormData.append('language', 'pt');
+    whisperFormData.append('prompt', 'Transcrição de anotações sobre alunos, avaliações e observações pedagógicas em português brasileiro.');
+    whisperFormData.append('temperature', '0');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
