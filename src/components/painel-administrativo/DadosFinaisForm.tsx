@@ -138,6 +138,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         const { data } = await supabase
           .from("atividade_pos_venda")
           .select(`
+            id,
             check_lancar_sgs,
             check_assinar_contrato,
             check_entregar_kit,
@@ -333,9 +334,18 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
           const dataStr = `${year}-${month}-${day}`;
 
+          // Buscar o id da atividade_pos_venda para vincular ao evento
+          const { data: atividadePV } = await supabase
+            .from('atividade_pos_venda')
+            .select('id')
+            .eq('client_id', cliente.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
           const eventoData = {
             professor_id: professorSelecionado.id,
-            tipo_evento: 'aula_zero',
+            tipo_evento: 'aula_zero' as const,
             titulo: 'Aula Inaugural',
             descricao: 'Aula inaugural agendada via painel administrativo',
             data: dataStr,
@@ -344,6 +354,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             recorrente: false,
             created_by: userId,
             client_id: cliente.id,
+            atividade_pos_venda_id: atividadePV?.id || null,
           };
 
           const { error: eventoError } = await supabase

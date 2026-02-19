@@ -308,7 +308,7 @@ export function useProfessorAtividades() {
       const hojeStr = new Date().toISOString().split('T')[0];
       let eventosQuery = supabase
         .from('eventos_professor')
-        .select('id, titulo, data, horario_inicio, horario_fim, descricao, client_id, professores:professor_id(nome)')
+        .select('id, titulo, data, horario_inicio, horario_fim, descricao, client_id, atividade_pos_venda_id, professores:professor_id(nome)')
         .eq('tipo_evento', 'aula_zero')
         .gte('data', hojeStr)
         .order('data', { ascending: true });
@@ -344,25 +344,28 @@ export function useProfessorAtividades() {
           });
         }
 
-        // Filtrar: remover se aula zero já foi concluída (todos os campos preenchidos na atividade_pos_venda)
-        const { data: atividadesCompletas } = await supabase
-          .from('atividade_pos_venda')
-          .select('client_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-          .in('client_id', clientIdsAI);
+        // Filtrar por atividade_pos_venda_id específico (não mais por client_id)
+        const atividadeIds = (eventosAulaZero || []).map(e => (e as any).atividade_pos_venda_id).filter(Boolean);
+        const completedAtividadeIds = new Set<string>();
 
-        const completedClientIdsAI = new Set<string>();
-        atividadesCompletas?.forEach(a => {
-          if (
-            a.client_id &&
-            a.percepcao_coordenador?.trim() &&
-            a.motivo_procura?.trim() &&
-            a.avaliacao_abaco?.trim() &&
-            a.avaliacao_ah?.trim() &&
-            a.pontos_atencao?.trim()
-          ) {
-            completedClientIdsAI.add(a.client_id);
-          }
-        });
+        if (atividadeIds.length > 0) {
+          const { data: atividadesCompletas } = await supabase
+            .from('atividade_pos_venda')
+            .select('id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
+            .in('id', atividadeIds);
+
+          atividadesCompletas?.forEach(a => {
+            if (
+              a.percepcao_coordenador?.trim() &&
+              a.motivo_procura?.trim() &&
+              a.avaliacao_abaco?.trim() &&
+              a.avaliacao_ah?.trim() &&
+              a.pontos_atencao?.trim()
+            ) {
+              completedAtividadeIds.add(a.id);
+            }
+          });
+        }
 
         aulasInaugurais = (eventosAulaZero || [])
           .map(e => ({
@@ -377,8 +380,9 @@ export function useProfessorAtividades() {
             professor_nome: (e as any).professores?.nome || undefined,
           }))
           .filter(e => {
-            if (!e.client_id) return false;
-            if (completedClientIdsAI.has(e.client_id)) return false;
+            const apvId = (eventosAulaZero || []).find(ev => ev.id === e.id)?.atividade_pos_venda_id;
+            if (!apvId) return true; // Sem vínculo, manter visível
+            if (completedAtividadeIds.has(apvId)) return false;
             return true;
           });
       }
