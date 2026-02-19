@@ -21,6 +21,7 @@ import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
 import { AudioTranscribeButton } from '@/components/ui/audio-transcribe-button';
+import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 
 interface AulaZeroDrawerProps {
   open: boolean;
@@ -40,6 +41,7 @@ interface AulaZeroFormData {
 
 export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
   const { funcionarioNome } = useCurrentFuncionario();
+  const { activeUnit } = useActiveUnit();
   const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<AulaZeroFormData>({
@@ -122,31 +124,25 @@ export function AulaZeroDrawer({ open, onOpenChange, clientId, alunoNome, onSalv
           .eq('id', aluno.id);
       }
 
-      // Enviar para webhook
-      const { data: webhookConfig } = await supabase
-        .from('dados_importantes')
-        .select('data')
-        .eq('key', 'webhook_aula_zero')
-        .single();
-
-      const webhookUrl = webhookConfig?.data;
-      if (webhookUrl) {
-        try {
-          await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              client_id: clientId,
-              nome: alunoNome,
-              aula_zero: {
-                ...data,
-                data_registro: new Date().toISOString(),
-              },
-            }),
-          });
-        } catch (webhookErr) {
-          console.error('Erro ao enviar webhook:', webhookErr);
-        }
+      // Enviar para webhook via edge function
+      try {
+        await supabase.functions.invoke('webhook-aula-inaugural', {
+          body: {
+            client_id: clientId,
+            client_name: alunoNome,
+            unit_id: activeUnit?.id || null,
+            registrado_por: funcionarioNome || 'Desconhecido',
+            percepcao_coordenador: data.percepcao_coordenador,
+            motivo_procura: data.motivo_procura,
+            avaliacao_abaco: data.avaliacao_abaco,
+            avaliacao_ah: data.avaliacao_ah,
+            pontos_atencao: data.pontos_atencao,
+            data_registro: new Date().toISOString(),
+            tipo: 'lancamento_aula_zero',
+          },
+        });
+      } catch (webhookErr) {
+        console.error('Erro ao enviar webhook:', webhookErr);
       }
 
       form.reset();
