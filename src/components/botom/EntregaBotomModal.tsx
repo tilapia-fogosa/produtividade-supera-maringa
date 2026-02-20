@@ -8,10 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Award, Loader2 } from 'lucide-react';
 import { usePendenciasBotom } from '@/hooks/use-pendencias-botom';
 import { useCurrentFuncionario } from '@/hooks/use-current-funcionario';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 interface EntregaBotomModalProps {
   open: boolean;
@@ -30,13 +32,15 @@ export const EntregaBotomModal: React.FC<EntregaBotomModalProps> = ({
   apostilaNova,
   onSuccess,
 }) => {
-  const { confirmarEntrega, isConfirmando } = usePendenciasBotom();
+  const { confirmarEntrega, isConfirmando, ignorarBotom } = usePendenciasBotom();
   const { funcionarioId } = useCurrentFuncionario();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isIgnoring, setIsIgnoring] = useState(false);
+  const [diasIgnorar, setDiasIgnorar] = useState<number>(3);
 
   const handleConfirmar = async () => {
     if (!pendenciaId) return;
-    
+
     setIsSubmitting(true);
     try {
       await confirmarEntrega({
@@ -47,6 +51,20 @@ export const EntregaBotomModal: React.FC<EntregaBotomModalProps> = ({
       onSuccess?.();
     } catch (error) {
       console.error('Erro ao confirmar entrega do botom:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleIgnorar = async () => {
+    if (!pendenciaId || !diasIgnorar || diasIgnorar < 1) return;
+
+    setIsSubmitting(true);
+    try {
+      await ignorarBotom({ pendenciaId, dias: diasIgnorar });
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erro ao ignorar botom:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,25 +95,63 @@ export const EntregaBotomModal: React.FC<EntregaBotomModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting || isConfirmando}
-          >
-            Cancelar
-          </Button>
+        <div className="flex flex-col gap-2 w-full mt-6 pt-4 border-t">
+          <div className="flex gap-2 w-full">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsIgnoring(!isIgnoring)}
+              disabled={isSubmitting || isConfirmando}
+              className="w-1/2 text-white text-xs px-2 whitespace-normal h-auto py-2"
+              style={{ backgroundColor: isIgnoring ? '#4b5563' : '#4f46e5' }}
+            >
+              {isIgnoring ? "Cancelar Ignorar" : "Ignorar Temp."}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting || isConfirmando}
+              className="w-1/2 text-sm h-auto py-2"
+            >
+              Cancelar
+            </Button>
+          </div>
+
           <Button
             onClick={handleConfirmar}
-            disabled={isSubmitting || isConfirmando}
-            className="bg-amber-600 hover:bg-amber-700"
+            disabled={isSubmitting || isConfirmando || isIgnoring}
+            className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm h-10"
           >
-            {(isSubmitting || isConfirmando) && (
+            {(isSubmitting || isConfirmando) ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Confirmar Entrega
+            ) : "Confirmar Entrega do Botom"}
           </Button>
-        </DialogFooter>
+        </div>
+
+        {isIgnoring && (
+          <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg mt-4 border border-border">
+            <div className="flex-1 space-y-2">
+              <Label className="text-xs">Dias para ocultar a tarefa</Label>
+              <Input
+                type="number"
+                min={1}
+                value={diasIgnorar}
+                onChange={(e) => setDiasIgnorar(e.target.valueAsNumber)}
+                className="w-full"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleIgnorar}
+              disabled={isSubmitting || isConfirmando || !diasIgnorar || diasIgnorar < 1}
+              className="w-full"
+            >
+              Confirmar Ocultação
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useProfessores } from "@/hooks/use-professores";
 import { useCriarEventoProfessor } from "@/hooks/use-criar-evento-professor";
 import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useTurmas } from "@/hooks/use-turmas";
 import { TIPOS_EVENTO, OPCOES_DURACAO, obterHorarioFuncionamento, calcularHorarioFim, horarioEstaNoFuncionamento } from "@/constants/horariosFuncionamento";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -23,17 +26,18 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   const { professores } = useProfessores();
   const criarEvento = useCriarEventoProfessor();
   const { funcionarioId } = useCurrentFuncionario();
+  const { data: turmas } = useTurmas();
 
   const [etapa, setEtapa] = useState(1);
   const [professoresIds, setProfessoresIds] = useState<string[]>([]);
-  const [tipoBloqueio, setTipoBloqueio] = useState<"pontual" | "periodico">("pontual");
+  const [tipoBloqueio, setTipoBloqueio] = useState<"pontual" | "periodico" | "">("");
   const [dataSelecionada, setDataSelecionada] = useState<Date>();
   const [diaSemana, setDiaSemana] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [duracao, setDuracao] = useState(60);
   const [tipoEvento, setTipoEvento] = useState("");
+  const [turmaId, setTurmaId] = useState("");
   const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
   const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState<Date>();
   const [dataFimRecorrencia, setDataFimRecorrencia] = useState<Date>();
 
@@ -49,14 +53,14 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   const resetForm = () => {
     setEtapa(1);
     setProfessoresIds([]);
-    setTipoBloqueio("pontual");
+    setTipoBloqueio("");
     setDataSelecionada(undefined);
     setDiaSemana("");
     setHorarioInicio("");
     setDuracao(60);
     setTipoEvento("");
+    setTurmaId("");
     setTitulo("");
-    setDescricao("");
     setDataInicioRecorrencia(undefined);
     setDataFimRecorrencia(undefined);
   };
@@ -70,9 +74,17 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   };
 
   const handleSalvar = async () => {
+    let tituloFinal = titulo;
+    if (tipoEvento === 'apoio_turma' && turmaId) {
+      const turma = turmas?.find(t => t.id === turmaId);
+      if (turma) {
+        tituloFinal = `${titulo} - ${turma.nome}`;
+      }
+    }
+
     console.log("Salvando bloqueio para professores:", professoresIds, {
       tipoEvento,
-      titulo,
+      titulo: tituloFinal,
       horarioInicio,
       duracao,
       tipoBloqueio
@@ -84,8 +96,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
         criarEvento.mutateAsync({
           professorId,
           tipoEvento,
-          titulo,
-          descricao,
+          titulo: tituloFinal,
           data: tipoBloqueio === "pontual" ? dataSelecionada : undefined,
           horarioInicio,
           duracaoMinutos: duracao,
@@ -113,7 +124,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
     if (tipoBloqueio === "periodico" && !diaSemana) return [];
 
     const dataRef = tipoBloqueio === "pontual" ? dataSelecionada! : new Date();
-    const horarioFuncionamento = tipoBloqueio === "periodico" 
+    const horarioFuncionamento = tipoBloqueio === "periodico"
       ? obterHorarioFuncionamento(new Date(2025, 0, diasSemana.findIndex(d => d.valor === diaSemana) + 5))
       : obterHorarioFuncionamento(dataRef);
 
@@ -122,7 +133,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
     const horarios: string[] = [];
     const [horaInicio, minInicio] = horarioFuncionamento.inicio.split(':').map(Number);
     const [horaFim, minFim] = horarioFuncionamento.fim.split(':').map(Number);
-    
+
     let minutos = horaInicio * 60 + minInicio;
     const minutosFim = horaFim * 60 + minFim;
 
@@ -142,21 +153,21 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
   // Filtrar durações válidas
   const duracoesFiltradas = OPCOES_DURACAO.filter(opcao => {
     if (!horarioInicio) return true;
-    
+
     const dataRef = tipoBloqueio === "pontual" && dataSelecionada ? dataSelecionada : new Date();
     const horarioFim = calcularHorarioFim(horarioInicio, opcao.valor);
-    const horarioFuncionamento = tipoBloqueio === "periodico" 
+    const horarioFuncionamento = tipoBloqueio === "periodico"
       ? obterHorarioFuncionamento(new Date(2025, 0, diasSemana.findIndex(d => d.valor === diaSemana) + 5))
       : obterHorarioFuncionamento(dataRef);
-    
+
     return horarioEstaNoFuncionamento(horarioInicio, horarioFim, horarioFuncionamento);
   });
 
   const professoresSelecionados = professores.filter(p => professoresIds.includes(p.id));
 
   const toggleProfessor = (professorId: string) => {
-    setProfessoresIds(prev => 
-      prev.includes(professorId) 
+    setProfessoresIds(prev =>
+      prev.includes(professorId)
         ? prev.filter(id => id !== professorId)
         : [...prev, professorId]
     );
@@ -199,45 +210,38 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
                     </Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3 bg-muted/30">
                   {professores.map((prof) => (
-                    <label key={prof.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded">
+                    <label key={prof.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded border border-transparent hover:border-border transition-colors">
                       <input
                         type="checkbox"
                         checked={professoresIds.includes(prof.id)}
                         onChange={() => toggleProfessor(prof.id)}
                         className="cursor-pointer"
                       />
-                      <span className="text-sm">{prof.nome}</span>
+                      <span className="text-sm truncate">{prof.nome}</span>
                     </label>
                   ))}
                 </div>
               </div>
-              
-              <div className="space-y-4">
+
+              <div className="space-y-2">
                 <Label>Tipo de Bloqueio</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant={tipoBloqueio === "pontual" ? "default" : "outline"}
-                    onClick={() => setTipoBloqueio("pontual")}
-                    className="h-20"
-                  >
-                    Pontual
-                    <span className="text-xs block mt-1">Data específica</span>
-                  </Button>
-                  <Button
-                    variant={tipoBloqueio === "periodico" ? "default" : "outline"}
-                    onClick={() => setTipoBloqueio("periodico")}
-                    className="h-20"
-                  >
-                    Periódico
-                    <span className="text-xs block mt-1">Recorrência semanal</span>
-                  </Button>
+                <div className="w-full md:w-[350px]">
+                  <Select value={tipoBloqueio} onValueChange={(val: "pontual" | "periodico") => setTipoBloqueio(val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de bloqueio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pontual">Pontual (Data específica)</SelectItem>
+                      <SelectItem value="periodico">Periódico (Recorrente toda semana)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              
+
               <div className="flex justify-end">
-                <Button onClick={handleProximo} disabled={professoresIds.length === 0}>
+                <Button onClick={handleProximo} disabled={professoresIds.length === 0 || !tipoBloqueio}>
                   Próximo <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -247,57 +251,109 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
           {/* Etapa 2: Data/Horário + Tipo de Evento (layout lado a lado) */}
           {etapa === 2 && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Coluna Esquerda: Data/Dia, Horário e Duração */}
                 <div className="space-y-4">
                   {tipoBloqueio === "pontual" ? (
-                    <>
+                    <div className="space-y-2">
                       <Label>Selecione a Data</Label>
-                      <Calendar
-                        mode="single"
-                        selected={dataSelecionada}
-                        onSelect={setDataSelecionada}
-                        locale={pt}
-                        className="rounded-md border w-full pointer-events-auto"
-                      />
-                    </>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !dataSelecionada && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dataSelecionada ? format(dataSelecionada, "PPP", { locale: pt }) : <span>Selecione uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 z-[100]">
+                          <Calendar
+                            mode="single"
+                            selected={dataSelecionada}
+                            onSelect={setDataSelecionada}
+                            locale={pt}
+                            className="rounded-md border pointer-events-auto [&_.rdp-day_selected]:bg-purple-600 [&_.rdp-day_selected]:text-white [&_.rdp-day_selected:hover]:bg-purple-700"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   ) : (
-                    <>
-                      <Label>Selecione o Dia da Semana</Label>
-                      <Select value={diaSemana} onValueChange={setDiaSemana}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Escolha o dia" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {diasSemana.map((dia) => (
-                            <SelectItem key={dia.valor} value={dia.valor}>
-                              {dia.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Selecione o Dia da Semana</Label>
+                        <Select value={diaSemana} onValueChange={setDiaSemana}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Escolha o dia" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {diasSemana.map((dia) => (
+                              <SelectItem key={dia.valor} value={dia.valor}>
+                                {dia.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-sm">Data Início (opcional)</Label>
-                        <Calendar
-                          mode="single"
-                          selected={dataInicioRecorrencia}
-                          onSelect={setDataInicioRecorrencia}
-                          locale={pt}
-                          className="rounded-md border text-xs pointer-events-auto"
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm">Data Início (opcional)</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal px-2 text-xs",
+                                  !dataInicioRecorrencia && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-3 w-3 shrink-0" />
+                                {dataInicioRecorrencia ? format(dataInicioRecorrencia, "dd/MM/yyyy", { locale: pt }) : <span>Início</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-[100]">
+                              <Calendar
+                                mode="single"
+                                selected={dataInicioRecorrencia}
+                                onSelect={setDataInicioRecorrencia}
+                                locale={pt}
+                                className="rounded-md border pointer-events-auto [&_.rdp-day_selected]:bg-purple-600 [&_.rdp-day_selected]:text-white [&_.rdp-day_selected:hover]:bg-purple-700"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm">Data Fim (opcional)</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal px-2 text-xs",
+                                  !dataFimRecorrencia && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-3 w-3 shrink-0" />
+                                {dataFimRecorrencia ? format(dataFimRecorrencia, "dd/MM/yyyy", { locale: pt }) : <span>Fim</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-[100]">
+                              <Calendar
+                                mode="single"
+                                selected={dataFimRecorrencia}
+                                onSelect={setDataFimRecorrencia}
+                                locale={pt}
+                                className="rounded-md border pointer-events-auto [&_.rdp-day_selected]:bg-purple-600 [&_.rdp-day_selected]:text-white [&_.rdp-day_selected:hover]:bg-purple-700"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm">Data Fim (opcional)</Label>
-                        <Calendar
-                          mode="single"
-                          selected={dataFimRecorrencia}
-                          onSelect={setDataFimRecorrencia}
-                          locale={pt}
-                          className="rounded-md border text-xs pointer-events-auto"
-                        />
-                      </div>
-                    </>
+                    </div>
                   )}
 
                   {/* Horário e Duração */}
@@ -344,7 +400,7 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
 
                 {/* Coluna Direita: Tipo de Evento, Título e Descrição */}
                 <div className="space-y-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label>Tipo de Evento</Label>
                     <Select value={tipoEvento} onValueChange={setTipoEvento}>
                       <SelectTrigger>
@@ -359,21 +415,31 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+
+                  {tipoEvento === 'apoio_turma' && (
+                    <div className="space-y-2">
+                      <Label>Turma (Apoio)</Label>
+                      <Select value={turmaId} onValueChange={setTurmaId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a turma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {turmas?.map((turma) => (
+                            <SelectItem key={turma.id} value={turma.id}>
+                              {turma.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
                     <Label>Título</Label>
                     <Input
                       value={titulo}
                       onChange={(e) => setTitulo(e.target.value)}
                       placeholder="Ex: Reunião pedagógica"
-                    />
-                  </div>
-                  <div>
-                    <Label>Descrição (opcional)</Label>
-                    <Textarea
-                      value={descricao}
-                      onChange={(e) => setDescricao(e.target.value)}
-                      placeholder="Detalhes adicionais..."
-                      rows={3}
                     />
                   </div>
                 </div>
@@ -404,13 +470,14 @@ export function BloquearHorarioProfessorModal({ open, onOpenChange }: BloquearHo
                 <Button variant="outline" onClick={handleVoltar}>
                   <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
                 </Button>
-                <Button 
+                <Button
                   onClick={handleSalvar}
                   disabled={
-                    (tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana) || 
+                    (tipoBloqueio === "pontual" ? !dataSelecionada : !diaSemana) ||
                     !horarioInicio ||
-                    !tipoEvento || 
-                    !titulo || 
+                    !tipoEvento ||
+                    (tipoEvento === 'apoio_turma' && !turmaId) ||
+                    !titulo ||
                     criarEvento.isPending
                   }
                 >

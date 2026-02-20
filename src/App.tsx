@@ -19,9 +19,9 @@ function ConditionalThemeToggle() {
 // Componente de logout flutuante para perfil sala
 function SalaLogoutButton() {
   const { profile, signOut } = useAuth();
-  
+
   if (profile?.role !== 'sala') return null;
-  
+
   return (
     <Button
       variant="destructive"
@@ -39,6 +39,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ActiveUnitProvider } from "@/contexts/ActiveUnitContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { UnitSelector } from "@/components/UnitSelector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Turmas from "./pages/Turmas";
@@ -197,13 +198,13 @@ function ProtectedLayout() {
               <Route path="/controle-ponto" element={<ControlePonto />} />
               <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="/teste-google-calendar" element={<TestGoogleCalendar />} />
-              
+
               {/* Rotas do fluxo Sala */}
               <Route path="/sala/lancamentos" element={<SalaLancamentos />} />
               <Route path="/sala/dias-lancamento" element={<SalaDiasLancamento />} />
               <Route path="/sala/turmas/dia" element={<SalaTurmas />} />
               <Route path="/sala/turma/:turmaId/produtividade" element={<SalaProdutividadeTurma />} />
-              
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
@@ -226,21 +227,23 @@ function App() {
         <Sonner />
         <AuthProvider>
           <ActiveUnitProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/access-denied" element={<AccessDenied />} />
-                <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
-                <Route path="/visualizador" element={<VisualizadorImagens />} />
-                <Route path="/*" element={
-                  <ProtectedRoute>
-                    <ProtectedLayout />
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </BrowserRouter>
+            <NotificationProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/auth/login" element={<Login />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/access-denied" element={<AccessDenied />} />
+                  <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
+                  <Route path="/visualizador" element={<VisualizadorImagens />} />
+                  <Route path="/*" element={
+                    <ProtectedRoute>
+                      <ProtectedLayout />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </BrowserRouter>
+            </NotificationProvider>
           </ActiveUnitProvider>
         </AuthProvider>
       </TooltipProvider>

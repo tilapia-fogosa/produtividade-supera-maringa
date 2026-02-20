@@ -31,6 +31,7 @@ export const TIPOS_EVENTO = [
   { valor: 'bloqueio_temporario', label: 'Bloqueio Temporário' },
   { valor: 'treinamento', label: 'Treinamento' },
   { valor: 'atendimento_individual', label: 'Atendimento Individual' },
+  { valor: 'apoio_turma', label: 'Apoio em turma' },
 ];
 
 export function obterHorarioFuncionamento(data: Date): HorarioFuncionamento {
@@ -48,8 +49,8 @@ export function calcularHorarioFim(horarioInicio: string, duracaoMinutos: number
 }
 
 export function horarioEstaNoFuncionamento(
-  horarioInicio: string, 
-  horarioFim: string, 
+  horarioInicio: string,
+  horarioFim: string,
   funcionamento: HorarioFuncionamento
 ): boolean {
   if (!funcionamento.aberto) return false;

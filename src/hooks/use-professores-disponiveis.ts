@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export type ProfessorDisponivel = {
   professor_id: string;
@@ -13,8 +14,11 @@ export const useProfessoresDisponiveis = (
   duracaoMinutos: number = 60,
   unitId?: string | null
 ) => {
+  const { activeUnit } = useActiveUnit();
+  const effectiveUnitId = unitId !== undefined ? unitId : activeUnit?.id;
+
   return useQuery({
-    queryKey: ["professores-disponiveis", data?.toISOString().split('T')[0], horarioInicio, duracaoMinutos, unitId || 'maringa'],
+    queryKey: ["professores-disponiveis", data?.toISOString().split('T')[0], horarioInicio, duracaoMinutos, effectiveUnitId],
     queryFn: async () => {
       if (!data || !horarioInicio) return [];
 
@@ -27,7 +31,7 @@ export const useProfessoresDisponiveis = (
         data: data.toISOString().split('T')[0],
         horarioInicio,
         horarioFim,
-        unitId: unitId || 'Maringá (padrão)'
+        unitId: effectiveUnitId || 'Nenhuma unidade'
       });
 
       const { data: result, error } = await supabase.rpc(
@@ -36,7 +40,7 @@ export const useProfessoresDisponiveis = (
           p_data: data.toISOString().split('T')[0],
           p_horario_inicio: horarioInicio,
           p_horario_fim: horarioFim,
-          p_unit_id: unitId || undefined,
+          p_unit_id: effectiveUnitId || undefined,
         }
       );
 

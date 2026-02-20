@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { UserPlus, Camera, Upload, Trash2, Loader2, Save } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,8 +121,8 @@ function FotoUploadComponent({ foto, onFotoChange, nomeAluno }: FotoUploadProps)
   return (
     <div className="flex flex-col items-center space-y-3">
       <Avatar className="h-32 w-32">
-        <AvatarImage 
-          src={fotoUrl || undefined} 
+        <AvatarImage
+          src={fotoUrl || undefined}
           alt={`Foto de ${nomeAluno || 'Aluno'}`}
           className="object-cover"
         />
@@ -178,6 +178,8 @@ function FotoUploadComponent({ foto, onFotoChange, nomeAluno }: FotoUploadProps)
 
 export default function CadastroNovoAluno() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefillData = location.state as { client_id?: string; nome?: string; telefone?: string; email?: string } | null;
   const { turmas, loading: turmasLoading } = useTodasTurmas();
   const [foto, setFoto] = useState<File | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -185,8 +187,8 @@ export default function CadastroNovoAluno() {
   const form = useForm<CadastroAlunoFormData>({
     resolver: zodResolver(cadastroAlunoSchema),
     defaultValues: {
-      nome: '',
-      telefone: '',
+      nome: prefillData?.nome || '',
+      telefone: prefillData?.telefone || '',
       motivo_procura: '',
       turma_id: '',
       material_entregue: false,
@@ -249,6 +251,7 @@ export default function CadastroNovoAluno() {
         active: true,
         foto_url: null, // Será atualizado após upload da foto
         ultima_correcao_ah: new Date().toISOString(), // Define data de entrada para controle de coletas AH
+        client_id: prefillData?.client_id || null,
       };
 
       const { data: novoAluno, error: insertError } = await supabase
@@ -262,11 +265,27 @@ export default function CadastroNovoAluno() {
         throw insertError;
       }
 
+      // Se veio do CRM (Kanban), atualiza o status do lead para matriculado
+      if (prefillData?.client_id) {
+        const { error: updateClientError } = await supabase
+          .from('clients')
+          .update({
+            status: 'matriculado',
+            scheduled_date: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', prefillData.client_id);
+
+        if (updateClientError) {
+          console.error('Erro ao atualizar status do lead no CRM:', updateClientError);
+        }
+      }
+
       // Upload da foto se existir
       let fotoUrl = null;
       if (foto && novoAluno?.id) {
         fotoUrl = await uploadFoto(novoAluno.id);
-        
+
         if (fotoUrl) {
           // Atualizar registro do aluno com a URL da foto
           const { error: updateError } = await supabase
