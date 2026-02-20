@@ -52,8 +52,34 @@ export const useAhEntrega = () => {
     },
   });
 
+  const ignorarEntregaAH = useMutation({
+    mutationFn: async ({ apostilaRecolhidaId, dias }: { apostilaRecolhidaId: string | number; dias: number }) => {
+      const ignorado_ate = new Date();
+      ignorado_ate.setDate(ignorado_ate.getDate() + dias);
+
+      const { error } = await supabase
+        .from("ah_recolhidas")
+        .update({
+          ignorado_ate: ignorado_ate.toISOString(),
+        } as any)
+        .eq("id", typeof apostilaRecolhidaId === 'string' ? parseInt(apostilaRecolhidaId) : apostilaRecolhidaId);
+
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      toast.success("Entrega ocultada temporariamente!");
+      queryClient.invalidateQueries({ queryKey: ["apostilas-recolhidas"] });
+    },
+    onError: (error: Error) => {
+      console.error("Erro ao ignorar entrega AH:", error);
+      toast.error(`Erro ao ocultar entrega: ${error.message}`);
+    },
+  });
+
   return {
     registrarEntregaAH,
+    ignorarEntregaAH: ignorarEntregaAH.mutateAsync,
     isLoading: registrarEntregaAH.isPending,
   };
 };

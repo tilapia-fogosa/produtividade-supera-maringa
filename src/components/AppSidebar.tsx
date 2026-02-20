@@ -148,6 +148,11 @@ const additionalItems = [
 
 const comercialItems = [
   {
+    title: "Painel do Consultor",
+    url: "/crm",
+    icon: Target, // Using Target icon for CRM/Consultor as it fits well
+  },
+  {
     title: "Comissão",
     url: "/comissao",
     icon: DollarSign,
