@@ -769,7 +769,9 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
               )}
             </div>
           </div>
-          <p className="text-xs leading-tight">{atividade.descricao}</p>
+          <p className="text-xs leading-tight">
+            {isPendente ? 'Atividade pendente' : atividade.descricao}
+          </p>
           <div className="flex items-center gap-2 flex-wrap">
             {renderResponsavelInfo(atividade)}
             {renderDataAgendada(atividade)}
