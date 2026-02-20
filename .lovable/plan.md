@@ -1,103 +1,79 @@
 
-# Corrigir filtro por client_id no AulaZeroDrawer e Home + enviar atividade_pos_venda_id no webhook
+# Reorganizar layout do drawer de atividades - Separar realizadas de pendentes
 
-## Problema
+## Objetivo
+Reorganizar a lista de atividades no `AtividadesDrawer` em duas secoes visuais separadas, com o alerta criado como primeiro item.
 
-Quando voce finaliza a aula inaugural do "teste 4.4", o sistema atualiza `atividade_pos_venda` usando `.eq('client_id', clientId)`. Como "teste 4" e "teste 4.4" compartilham o mesmo `client_id`, ambas sao atualizadas e somem do dashboard.
+## Mudancas
 
-Alem disso, o webhook nao envia o `atividade_pos_venda_id`.
+### Arquivo: `src/components/alerta-evasao/AtividadesDrawer.tsx`
 
-## Arquivos e mudancas
+**1. Adicionar card do "Alerta Criado" no topo**
+- Antes de qualquer atividade, renderizar um card com badge "Alerta Criado" (usando a cor da origem do alerta, ex: bg-amber-500)
+- Exibir o `alerta.descritivo` como conteudo do card
+- Exibir a data de criacao do alerta e a origem
+- Visual identico aos cards de atividade (mesma estrutura), mas com opacity-70 (ja realizado)
+- Incluir o icone de Check verde como nas atividades concluidas
 
-### 1. `src/pages/Home.tsx`
+**2. Separar atividades em duas secoes**
+- Calcular `atividadesRealizadas` = atividades com `status === 'concluida'`
+- Calcular `atividadesPendentes` = atividades com `status === 'pendente'`
+- Renderizar na seguinte ordem:
+  1. Card "Alerta Criado" (descritivo do alerta)
+  2. Cards das atividades realizadas (concluidas)
+  3. Separador visual (Separator com label "Pendentes" ou "Proximas etapas")
+  4. Cards das atividades pendentes
+- Se nao houver pendentes, nao exibir o separador
 
-- Adicionar campo `atividade_pos_venda_id` na interface `Evento`
-- Nos dois blocos onde se cria eventos de aula inaugural (admin e professor), mapear `ai.atividade_pos_venda_id` para o evento
-- No `handleAulaInauguralClick`, usar `atividade_pos_venda_id` em vez de `client_id` para buscar o nome e abrir o drawer
-- Passar `atividade_pos_venda_id` para o `AulaZeroDrawer` em vez de `client_id`
-- Atualizar a checagem de clicavel para usar `atividade_pos_venda_id`
-
-### 2. `src/components/aula-zero/AulaZeroDrawer.tsx`
-
-- Trocar a prop `clientId` por `atividadePosVendaId`
-- Na busca de dados existentes (useEffect), trocar `.eq('client_id', clientId)` por `.eq('id', atividadePosVendaId)`
-- No update, trocar `.eq('client_id', clientId)` por `.eq('id', atividadePosVendaId)`
-- No webhook, enviar `atividade_pos_venda_id` no payload em vez de `client_id`
-- Manter a busca do aluno por `client_id` (precisa buscar o `client_id` a partir da atividade)
-
-### 3. `src/components/painel-administrativo/DadosFinaisForm.tsx`
-
-- Adicionar `atividade_pos_venda_id` ao payload do webhook de agendamento
+**3. Separador visual**
+- Usar um divisor horizontal com texto centralizado "Pendentes" ou "Proximas etapas"
+- Estilo: linha com texto no meio, cor muted, texto pequeno (text-xs)
 
 ## Detalhes tecnicos
 
-### Interface Evento atualizada
-
+### Logica de separacao
 ```text
-interface Evento {
-  ...
-  aula_inaugural_client_id?: string;       // manter para compatibilidade
-  aula_inaugural_atividade_id?: string;     // NOVO
-}
+const atividadesRealizadas = atividades.filter(a => a.status === 'concluida');
+const atividadesPendentes = atividades.filter(a => a.status === 'pendente');
 ```
 
-### AulaZeroDrawer - prop atualizada
-
+### Card do alerta criado
 ```text
-interface AulaZeroDrawerProps {
-  ...
-  atividadePosVendaId: string;   // era clientId
-  alunoNome: string;
-  ...
-}
+<Card className="overflow-hidden opacity-70">
+  <div className="h-1 bg-amber-500" />
+  <CardContent className="p-2 space-y-1">
+    <div className="flex items-center justify-between gap-1">
+      <div className="flex items-center gap-1">
+        <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">
+          Alerta Criado
+        </Badge>
+        <Check className="h-3 w-3 text-green-600" />
+      </div>
+      <span className="text-[10px] text-muted-foreground">
+        {formatarData(alerta.data_alerta)}
+      </span>
+    </div>
+    <p className="text-xs leading-tight">{alerta.descritivo || 'Sem descritivo'}</p>
+    <span className="text-[10px] text-muted-foreground">
+      Origem: {getOrigemLabel(alerta.origem_alerta)}
+    </span>
+  </CardContent>
+</Card>
 ```
 
-### Logica de update corrigida
-
+### Separador entre secoes
 ```text
-// ANTES (atualiza TODAS as atividades do mesmo cliente)
-supabase.from('atividade_pos_venda').update(fields).eq('client_id', clientId)
-
-// DEPOIS (atualiza apenas a atividade especifica)
-supabase.from('atividade_pos_venda').update(fields).eq('id', atividadePosVendaId)
+<div className="flex items-center gap-2 py-2">
+  <div className="flex-1 h-px bg-border" />
+  <span className="text-[10px] text-muted-foreground font-medium">Proximas etapas</span>
+  <div className="flex-1 h-px bg-border" />
+</div>
 ```
 
-### Webhook payload atualizado
+### Funcao auxiliar getOrigemLabel
+Importar ou replicar a funcao `getOrigemLabel` que ja existe em `AlertasEvasao.tsx` para exibir o label amigavel da origem do alerta no card.
 
-```text
-// AulaZeroDrawer - lancamento
-{
-  atividade_pos_venda_id: atividadePosVendaId,  // NOVO
-  client_name: alunoNome,
-  ...
-  tipo: 'lancamento_aula_zero',
-}
-
-// DadosFinaisForm - agendamento
-{
-  atividade_pos_venda_id: cliente.atividade_pos_venda_id,  // NOVO
-  nome_aluno: nomeAluno,
-  ...
-}
-```
-
-### Busca do aluno vinculado
-
-O drawer precisa buscar o `client_id` a partir da `atividade_pos_venda` para depois encontrar o aluno:
-
-```text
-const { data: atividade } = await supabase
-  .from('atividade_pos_venda')
-  .select('client_id')
-  .eq('id', atividadePosVendaId)
-  .maybeSingle();
-
-if (atividade?.client_id) {
-  const { data: aluno } = await supabase
-    .from('alunos')
-    .select('id')
-    .eq('client_id', atividade.client_id)
-    .maybeSingle();
-  // atualizar aluno...
-}
-```
+## O que NAO muda
+- Toda a logica de expansao, paineis laterais e interacao com atividades permanece identica
+- O codigo dos cards de atividade existente nao muda, apenas a ordem de renderizacao
+- Nenhuma mudanca no hook ou no backend
