@@ -1,0 +1,52 @@
+project_id = "hkvjdxxndapxpslovrlc"
+
+[functions.generate-devolutiva-pdf]
+verify_jwt = false
+
+[functions.check-missing-launches]
+verify_jwt = false
+
+[calendar.check-missing-launches]
+schedule = "0 1 * * *"
+
+[functions.check-missing-attendance]
+verify_jwt = false
+
+[functions.enviar-alerta-falta-webhook]
+verify_jwt = false
+
+[functions.test-slack-message]
+verify_jwt = false
+
+[functions.enviarMensagemSlack]
+verify_jwt = false
+
+[functions.check-hibernating-cards]
+verify_jwt = false
+
+[calendar.check-hibernating-cards]
+schedule = "0 3 * * *"
+
+[functions.sync-turmas-xls]
+verify_jwt = false
+
+[functions.validate-ip]
+verify_jwt = false
+
+[functions.google-calendar]
+verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
+
+[functions.send-whatsapp-message]
+verify_jwt = false
+
+[functions.replace-message-variables]
+verify_jwt = false
+
+[functions.transcribe-audio]
+verify_jwt = false
+
+[functions.webhook-aula-inaugural]
+verify_jwt = false

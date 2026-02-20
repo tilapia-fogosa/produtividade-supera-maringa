@@ -1,0 +1,1 @@
+ALTER TYPE tipo_atividade_evasao ADD VALUE IF NOT EXISTS 'comentario';

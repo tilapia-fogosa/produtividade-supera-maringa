@@ -1,0 +1,183 @@
+import { supabase } from '@/integrations/supabase/client';
+import { compressImageIfNeeded } from './imageCompressionService';
+
+export interface DownloadAndUploadResult {
+  success: boolean;
+  publicUrl?: string;
+  error?: string;
+}
+
+export async function uploadLocalFileToSupabase(
+  file: File,
+  pessoaId: string,
+  tipoPessoa: 'aluno' | 'funcionario'
+): Promise<DownloadAndUploadResult> {
+  console.log('🚀 Iniciando uploadLocalFileToSupabase:', { fileName: file.name, pessoaId, tipoPessoa });
+  
+  try {
+    // 1. Validar tipo de arquivo (aceitar HEIC mesmo sem MIME type)
+    const isHeic = file.name.toLowerCase().endsWith('.heic') || 
+                   file.name.toLowerCase().endsWith('.heif');
+    const hasImageType = file.type?.startsWith('image/') || false;
+    
+    if (!hasImageType && !isHeic) {
+      throw new Error('Por favor, selecione um arquivo de imagem');
+    }
+
+    console.log('✅ Arquivo válido:', { size: file.size, type: file.type, name: file.name });
+
+    // 2. Comprimir e converter imagem (incluindo HEIC → JPG se necessário)
+    const processedFile = await compressImageIfNeeded(file);
+
+    // 3. Upload para Supabase Storage
+    console.log('☁️ Iniciando upload para Supabase...');
+    const timestamp = Date.now();
+    const sanitizedFileName = processedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `devolutivas/${tipoPessoa}/${pessoaId}/${timestamp}-${sanitizedFileName}`;
+    console.log('📁 Caminho no storage:', storagePath);
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('fotos-pessoas')
+      .upload(storagePath, processedFile, {
+        contentType: processedFile.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('❌ Erro no upload:', uploadError);
+      throw new Error(`Erro ao fazer upload: ${uploadError.message}`);
+    }
+    
+    console.log('✅ Upload concluído:', uploadData);
+
+    // 4. Obter URL pública
+    console.log('🔗 Obtendo URL pública...');
+    const { data: urlData } = supabase.storage
+      .from('fotos-pessoas')
+      .getPublicUrl(storagePath);
+
+    const publicUrl = urlData.publicUrl;
+    console.log('✅ URL pública gerada:', publicUrl);
+
+    // 5. Atualizar banco de dados
+    const tabela = tipoPessoa === 'aluno' ? 'alunos' : 'funcionarios';
+    console.log(`💾 Atualizando tabela ${tabela}...`);
+    
+    const { error: updateError } = await supabase
+      .from(tabela)
+      .update({ foto_devolutiva_url: publicUrl })
+      .eq('id', pessoaId);
+
+    if (updateError) {
+      console.error('❌ Erro ao atualizar banco:', updateError);
+      throw new Error(`Erro ao atualizar banco: ${updateError.message}`);
+    }
+
+    console.log('✅ Banco de dados atualizado com sucesso!');
+    return {
+      success: true,
+      publicUrl,
+    };
+  } catch (error) {
+    console.error('❌ Erro em uploadLocalFileToSupabase:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    };
+  }
+}
+
+export async function downloadAndUploadToSupabase(
+  fileId: string,
+  fileName: string,
+  pessoaId: string,
+  tipoPessoa: 'aluno' | 'funcionario',
+  accessToken: string
+): Promise<DownloadAndUploadResult> {
+  console.log('🚀 Iniciando downloadAndUploadToSupabase:', { fileId, fileName, pessoaId, tipoPessoa });
+  
+  try {
+    // 1. Download da imagem do Google Drive
+    console.log('📥 Baixando arquivo do Google Drive...');
+    const usePublic = !accessToken;
+    const downloadUrl = usePublic
+      ? `https://drive.google.com/uc?export=download&id=${fileId}`
+      : `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    console.log('🔗 URL de download:', downloadUrl, { modo: usePublic ? 'publico' : 'oauth' });
+    
+    const response = await fetch(downloadUrl, usePublic ? undefined : {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    console.log('📊 Resposta do Google Drive:', { 
+      status: response.status, 
+      statusText: response.statusText,
+      contentType: response.headers.get('content-type')
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro ao baixar arquivo: ${response.status} ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    console.log('✅ Arquivo baixado:', { size: blob.size, type: blob.type });
+
+    // 2. Upload para Supabase Storage
+    console.log('☁️ Iniciando upload para Supabase...');
+    const timestamp = Date.now();
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `devolutivas/${tipoPessoa}/${pessoaId}/${timestamp}-${sanitizedFileName}`;
+    console.log('📁 Caminho no storage:', storagePath);
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('fotos-pessoas')
+      .upload(storagePath, blob, {
+        contentType: blob.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('❌ Erro no upload:', uploadError);
+      throw new Error(`Erro ao fazer upload: ${uploadError.message}`);
+    }
+    
+    console.log('✅ Upload concluído:', uploadData);
+
+    // 3. Obter URL pública
+    console.log('🔗 Obtendo URL pública...');
+    const { data: urlData } = supabase.storage
+      .from('fotos-pessoas')
+      .getPublicUrl(storagePath);
+
+    const publicUrl = urlData.publicUrl;
+    console.log('✅ URL pública gerada:', publicUrl);
+
+    // 4. Atualizar banco de dados
+    const tabela = tipoPessoa === 'aluno' ? 'alunos' : 'funcionarios';
+    console.log(`💾 Atualizando tabela ${tabela}...`);
+    
+    const { error: updateError } = await supabase
+      .from(tabela)
+      .update({ foto_devolutiva_url: publicUrl })
+      .eq('id', pessoaId);
+
+    if (updateError) {
+      console.error('❌ Erro ao atualizar banco:', updateError);
+      throw new Error(`Erro ao atualizar banco: ${updateError.message}`);
+    }
+
+    console.log('✅ Banco de dados atualizado com sucesso!');
+    return {
+      success: true,
+      publicUrl,
+    };
+  } catch (error) {
+    console.error('❌ Erro em downloadAndUploadToSupabase:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    };
+  }
+}
