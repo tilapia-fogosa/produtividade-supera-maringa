@@ -22,6 +22,7 @@ export interface ApostilaRecolhida {
   data_inicio_correcao?: string;
   professor_id?: string;
   professor_nome?: string;
+  ignorado_ate?: string;
 }
 
 export const useApostilasRecolhidas = () => {
@@ -35,7 +36,7 @@ export const useApostilasRecolhidas = () => {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      const mappedData = (data || []).map((row: any) => ({
         id: row.id,
         pessoa_nome: row.pessoa_nome,
         turma_nome: row.turma_nome,
@@ -55,7 +56,15 @@ export const useApostilasRecolhidas = () => {
         data_inicio_correcao: row.data_inicio_correcao,
         professor_id: row.professor_id,
         professor_nome: row.professor_nome,
+        ignorado_ate: row.ignorado_ate,
       })) as ApostilaRecolhida[];
+
+      const now = new Date();
+      return mappedData.filter(item => {
+        if (!item.ignorado_ate) return true;
+        const dataIgnorado = new Date(item.ignorado_ate);
+        return dataIgnorado <= now;
+      });
     },
     enabled: !!activeUnit?.id,
   });

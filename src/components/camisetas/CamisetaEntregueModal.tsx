@@ -16,6 +16,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useEstoque } from "@/hooks/use-estoque.tsx";
 import { useCurrentFuncionario } from "@/hooks/use-current-funcionario";
+import { useCamisetas } from "@/hooks/use-camisetas";
+import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
   tamanho_camiseta: z.string().min(1, "Selecione um tamanho"),
@@ -38,16 +40,19 @@ interface CamisetaEntregueModalProps {
   onSave: (data: { alunoId: string; tamanho_camiseta: string; data_entrega: Date; observacoes?: string; funcionario_registro_id?: string; responsavel_nome?: string }) => Promise<void>;
 }
 
-export function CamisetaEntregueModal({ 
-  open, 
-  onOpenChange, 
-  alunoId, 
-  alunoNome, 
-  onSave 
+export function CamisetaEntregueModal({
+  open,
+  onOpenChange,
+  alunoId,
+  alunoNome,
+  onSave
 }: CamisetaEntregueModalProps) {
   const [loading, setLoading] = useState(false);
+  const [isIgnoring, setIsIgnoring] = useState(false);
+  const [diasIgnorar, setDiasIgnorar] = useState<number>(3);
   const { funcionarioId, funcionarioNome } = useCurrentFuncionario();
   const { estoqueItems, loading: estoqueLoading } = useEstoque();
+  const { ignorarCamiseta } = useCamisetas();
 
   // Filtrar apenas camisetas do estoque
   const camisetasEstoque = estoqueItems.filter(item => item.tipo_item === 'camiseta');
@@ -63,7 +68,7 @@ export function CamisetaEntregueModal({
   const handleSubmit = async (data: FormData) => {
     try {
       setLoading(true);
-      await onSave({ 
+      await onSave({
         alunoId,
         tamanho_camiseta: data.tamanho_camiseta,
         data_entrega: data.data_entrega,
@@ -80,31 +85,44 @@ export function CamisetaEntregueModal({
     }
   };
 
+  const handleIgnorar = async () => {
+    if (!diasIgnorar || diasIgnorar < 1) return;
+    try {
+      setLoading(true);
+      await ignorarCamiseta(alunoId, diasIgnorar);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erro ao ignorar:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shirt className="h-5 w-5 text-blue-600" />
+      <DialogContent className="sm:max-w-[400px] max-h-[90vh] overflow-y-auto w-full">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Shirt className="h-4 w-4 text-blue-600" />
             Entregar Camiseta - {alunoNome}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            
+
             {/* Tamanho da Camiseta */}
             <FormField
               control={form.control}
               name="tamanho_camiseta"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
+                  <FormLabel className="flex items-center gap-2 text-sm">
                     <Shirt className="h-4 w-4" />
                     Tamanho da Camiseta
                   </FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                     disabled={estoqueLoading}
                   >
@@ -131,11 +149,11 @@ export function CamisetaEntregueModal({
 
             {/* Responsável pela Entrega - automático */}
             <div className="space-y-2">
-              <FormLabel className="flex items-center gap-2">
+              <FormLabel className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4" />
                 Responsável pela Entrega
               </FormLabel>
-              <p className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
+              <p className="text-xs text-muted-foreground bg-muted px-3 py-2 rounded-md">
                 {funcionarioNome || 'Carregando...'}
               </p>
             </div>
@@ -146,7 +164,7 @@ export function CamisetaEntregueModal({
               name="data_entrega"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="flex items-center gap-2">
+                  <FormLabel className="flex items-center gap-2 text-sm">
                     <CalendarDays className="h-4 w-4" />
                     Data da Entrega
                   </FormLabel>
@@ -191,11 +209,11 @@ export function CamisetaEntregueModal({
               name="observacoes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observações (Opcional)</FormLabel>
+                  <FormLabel className="text-sm">Observações (Opcional)</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Observações sobre a entrega..."
-                      className="resize-none"
+                      className="resize-none text-sm"
                       maxLength={500}
                       rows={3}
                       {...field}
@@ -209,23 +227,62 @@ export function CamisetaEntregueModal({
               )}
             />
 
-            <DialogFooter className="gap-2">
+            <div className="flex flex-col gap-2 w-full mt-6 pt-4 border-t">
+              <div className="flex gap-2 w-full">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsIgnoring(!isIgnoring)}
+                  disabled={loading}
+                  className="w-1/2 text-white text-xs px-2 whitespace-normal h-auto py-2"
+                  style={{ backgroundColor: isIgnoring ? '#4b5563' : '#4f46e5' }}
+                >
+                  {isIgnoring ? "Cancelar Ignorar" : "Ignorar Temp."}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={loading}
+                  className="w-1/2 text-sm h-auto py-2"
+                >
+                  Cancelar
+                </Button>
+              </div>
+
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={loading}
+                type="submit"
+                disabled={loading || isIgnoring}
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-sm h-10"
               >
-                Cancelar
+                {loading ? "Salvando..." : "Entregar Camiseta"}
               </Button>
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {loading ? "Salvando..." : "Marcar como Entregue"}
-              </Button>
-            </DialogFooter>
+            </div>
+
+            {isIgnoring && (
+              <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg mt-4 border border-border">
+                <div className="flex-1 space-y-2">
+                  <FormLabel className="text-xs">Dias para ocultar a tarefa</FormLabel>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={diasIgnorar}
+                    onChange={(e) => setDiasIgnorar(e.target.valueAsNumber)}
+                    className="w-full"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleIgnorar}
+                  disabled={loading || !diasIgnorar || diasIgnorar < 1}
+                  className="w-full"
+                >
+                  Confirmar Ocultação
+                </Button>
+              </div>
+            )}
+
           </form>
         </Form>
       </DialogContent>

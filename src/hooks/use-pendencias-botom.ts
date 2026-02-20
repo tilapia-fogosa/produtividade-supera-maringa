@@ -17,6 +17,7 @@ export interface PendenciaBotom {
   status: 'pendente' | 'entregue';
   data_criacao: string;
   data_entrega: string | null;
+  ignorado_ate?: string | null;
 }
 
 export function usePendenciasBotom() {
@@ -39,7 +40,8 @@ export function usePendenciasBotom() {
           professor_responsavel_id,
           status,
           data_criacao,
-          data_entrega
+          data_entrega,
+          ignorado_ate
         `)
         .eq('status', 'pendente')
         .order('data_criacao', { ascending: false });
@@ -49,7 +51,7 @@ export function usePendenciasBotom() {
         query = query.eq('professor_responsavel_id', professorId);
       }
 
-      const { data, error } = await query;
+      const { data, error } = (await query) as unknown as { data: any[], error: any };
       if (error) throw error;
 
       // Enriquecer com dados do aluno e professor
@@ -96,15 +98,23 @@ export function usePendenciasBotom() {
         });
       }
 
-      return enrichedData;
+      // Filter out ignored ones from the view
+      const now = new Date();
+      const pendenciasNaoIgnoradas = enrichedData.filter(p => {
+        if (!p.ignorado_ate) return true;
+        const dataIgnorado = new Date(p.ignorado_ate);
+        return dataIgnorado <= now;
+      });
+
+      return pendenciasNaoIgnoradas;
     },
     enabled: true,
   });
 
   // Mutation para confirmar entrega
   const confirmarEntrega = useMutation({
-    mutationFn: async ({ pendenciaId, funcionarioRegistroId }: { 
-      pendenciaId: string; 
+    mutationFn: async ({ pendenciaId, funcionarioRegistroId }: {
+      pendenciaId: string;
       funcionarioRegistroId?: string;
     }) => {
       const { error } = await supabase
@@ -123,12 +133,32 @@ export function usePendenciasBotom() {
     },
   });
 
+  const ignorarBotom = useMutation({
+    mutationFn: async ({ pendenciaId, dias }: { pendenciaId: string; dias: number }) => {
+      const ignorado_ate = new Date();
+      ignorado_ate.setDate(ignorado_ate.getDate() + dias);
+
+      const { error } = await supabase
+        .from('pendencias_botom')
+        .update({
+          ignorado_ate: ignorado_ate.toISOString(),
+        } as any)
+        .eq('id', pendenciaId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendencias-botom'] });
+    },
+  });
+
   return {
     pendencias,
     isLoading,
     refetch,
     confirmarEntrega: confirmarEntrega.mutateAsync,
     isConfirmando: confirmarEntrega.isPending,
+    ignorarBotom: ignorarBotom.mutateAsync,
   };
 }
 
