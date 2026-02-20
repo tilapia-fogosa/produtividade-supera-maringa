@@ -31,17 +31,17 @@ const diasSemanaNomes: Record<string, string> = {
 const calcularDatasSemanais = (dataReferencia: Date): Date[] => {
   const diaSemana = dataReferencia.getDay();
   const diasParaVoltar = diaSemana === 0 ? 6 : diaSemana - 1;
-  
+
   const segunda = new Date(dataReferencia);
   segunda.setDate(dataReferencia.getDate() - diasParaVoltar);
-  
+
   const datasSemanais = [];
   for (let i = 0; i < 6; i++) {
     const data = new Date(segunda);
     data.setDate(segunda.getDate() + i);
     datasSemanais.push(data);
   }
-  
+
   return datasSemanais;
 };
 
@@ -85,16 +85,16 @@ const coresProfessores = [
 ];
 
 // Bloco de evento na agenda
-const BlocoEvento = ({ 
-  evento, 
-  cor, 
+const BlocoEvento = ({
+  evento,
+  cor,
   duracaoSlots,
   larguraPercent = 100,
   onEditar,
   onExcluir,
   datasSemanais
-}: { 
-  evento: AgendaProfessor; 
+}: {
+  evento: AgendaProfessor;
   cor: { bg: string; text: string; border: string };
   duracaoSlots: number;
   larguraPercent?: number;
@@ -105,7 +105,7 @@ const BlocoEvento = ({
   const alturaSlot = 80;
   const alturaTotal = duracaoSlots * alturaSlot - 4;
   const isEvento = evento.tipo === 'evento' && evento.evento_id;
-  
+
   const diasSemanaMap: Record<string, number> = {
     segunda: 0,
     terca: 1,
@@ -114,15 +114,15 @@ const BlocoEvento = ({
     sexta: 4,
     sabado: 5
   };
-  
+
   const dataEvento = evento.data || (evento.dia_semana ? datasSemanais[diasSemanaMap[evento.dia_semana]] : null);
-  
+
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger asChild>
-        <div 
+        <div
           className={`${cor.bg} ${cor.border} ${cor.text} border rounded p-2 text-sm overflow-hidden absolute top-0 left-0 group flex flex-col cursor-pointer`}
-          style={{ 
+          style={{
             height: `${alturaTotal}px`,
             width: `${larguraPercent}%`,
             zIndex: 10
@@ -139,7 +139,7 @@ const BlocoEvento = ({
               <div className="text-xs opacity-75 truncate mt-0.5">Sala: {evento.sala}</div>
             )}
           </div>
-          
+
           {/* Botões de ação no rodapé - apenas para eventos (não aulas) */}
           {isEvento && (
             <div className="flex flex-col gap-1 items-end mt-1 border-t border-white/20 pt-1">
@@ -178,34 +178,34 @@ const BlocoEvento = ({
               <span>{evento.professor_nome}</span>
             </div>
           </div>
-          
+
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
               <span>
-                {dataEvento ? format(dataEvento, "dd/MM/yyyy (EEEE)", { locale: pt }) : 
-                 evento.dia_semana ? diasSemanaNomes[evento.dia_semana] : 'N/A'}
+                {dataEvento ? format(dataEvento, "dd/MM/yyyy (EEEE)", { locale: pt }) :
+                  evento.dia_semana ? diasSemanaNomes[evento.dia_semana] : 'N/A'}
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <span>{evento.horario_inicio} - {evento.horario_fim}</span>
             </div>
-            
+
             {evento.sala && (
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
                 <span>Sala {evento.sala}</span>
               </div>
             )}
-            
+
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-muted-foreground" />
               <span className="capitalize">{evento.tipo === 'aula' ? 'Aula Regular' : 'Evento/Bloqueio'}</span>
             </div>
           </div>
-          
+
           {evento.turma_nome && (
             <div className="pt-2 border-t">
               <p className="text-sm"><strong>Turma:</strong> {evento.turma_nome}</p>
@@ -219,7 +219,7 @@ const BlocoEvento = ({
 
 export default function AgendaProfessores() {
   const { activeUnit } = useActiveUnit();
-  const { professores } = useProfessores();
+  const { professores } = useProfessores(activeUnit?.id);
   const [semanaAtual, setSemanaAtual] = useState(new Date());
   const [professoresAtivos, setProfessoresAtivos] = useState<Record<string, boolean>>({});
   const [modalBloqueio, setModalBloqueio] = useState(false);
@@ -227,7 +227,7 @@ export default function AgendaProfessores() {
   const [modalEditar, setModalEditar] = useState(false);
   const [eventoParaEditar, setEventoParaEditar] = useState<any>(null);
   const [eventoParaExcluir, setEventoParaExcluir] = useState<string | null>(null);
-  
+
   const excluirEvento = useExcluirEventoProfessor();
 
   const datasSemanais = useMemo(() => calcularDatasSemanais(semanaAtual), [semanaAtual]);
@@ -235,8 +235,8 @@ export default function AgendaProfessores() {
   const dataFim = datasSemanais[5];
 
   const { data: agendaPorProfessor, isLoading } = useAgendaProfessores(
-    dataInicio, 
-    dataFim, 
+    dataInicio,
+    dataFim,
     activeUnit?.id
   );
 
@@ -275,7 +275,7 @@ export default function AgendaProfessores() {
       [professorId]: !prev[professorId]
     }));
   };
-  
+
   const handleEditarEvento = (evento: AgendaProfessor) => {
     setEventoParaEditar({
       evento_id: evento.evento_id,
@@ -288,10 +288,10 @@ export default function AgendaProfessores() {
     });
     setModalEditar(true);
   };
-  
+
   const handleConfirmarExclusao = async () => {
     if (!eventoParaExcluir) return;
-    
+
     try {
       await excluirEvento.mutateAsync(eventoParaExcluir);
       setEventoParaExcluir(null);
@@ -346,13 +346,13 @@ export default function AgendaProfessores() {
           <Button variant="outline" size="sm" onClick={semanaAnterior}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          
+
           <div className="text-center">
             <div className="font-medium">
               {format(dataInicio, "dd/MM", { locale: pt })} - {format(dataFim, "dd/MM/yyyy", { locale: pt })}
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={semanaAtualBtn}>
               Hoje
@@ -421,7 +421,7 @@ export default function AgendaProfessores() {
                   <div className="text-xs font-medium text-muted-foreground flex items-start pt-2 sticky left-0 bg-background border-r">
                     {slot}
                   </div>
-                  
+
                   {/* Colunas dos dias */}
                   {diasSemana.map((dia) => {
                     // Coletar TODOS os eventos ativos neste slot (que começam aqui ou antes e ainda não terminaram)
@@ -431,11 +431,11 @@ export default function AgendaProfessores() {
                       duracao: number;
                       iniciaAqui: boolean;
                     }> = [];
-                    
+
                     professoresFiltrados.forEach((professor) => {
                       const agenda = agendaPorProfessor?.[professor.id];
                       if (!agenda) return;
-                      
+
                       const eventosNoDia = agenda.eventos.filter(e => {
                         if (e.dia_semana !== dia) return false;
                         const slotInicio = horarioParaSlot(e.horario_inicio);
@@ -443,16 +443,16 @@ export default function AgendaProfessores() {
                         // Evento está ativo se: começa neste slot OU (começou antes E ainda não terminou)
                         return slotIdx >= slotInicio && slotIdx < slotFim;
                       });
-                      
+
                       eventosNoDia.forEach(evento => {
                         const slotInicio = horarioParaSlot(evento.horario_inicio);
                         const duracao = calcularDuracaoSlots(
                           evento.horario_inicio,
                           evento.horario_fim
                         );
-                        eventosAtivosAqui.push({ 
-                          evento, 
-                          cor: coresPorProfessor[professor.id], 
+                        eventosAtivosAqui.push({
+                          evento,
+                          cor: coresPorProfessor[professor.id],
                           duracao,
                           iniciaAqui: slotIdx === slotInicio
                         });
@@ -486,7 +486,7 @@ export default function AgendaProfessores() {
                               />
                             );
                           }
-                          
+
                           return (
                             <div
                               key={`${evento.professor_id}-${evento.evento_id || evento.turma_id}-${slot}`}
@@ -496,7 +496,7 @@ export default function AgendaProfessores() {
                                 width: `${larguraEvento}%`,
                               }}
                             >
-                              <BlocoEvento 
+                              <BlocoEvento
                                 evento={evento}
                                 cor={cor}
                                 duracaoSlots={duracao}
@@ -528,18 +528,18 @@ export default function AgendaProfessores() {
         open={modalBloqueio}
         onOpenChange={setModalBloqueio}
       />
-      
+
       <GerenciarPrioridadeModal
         open={modalPrioridade}
         onOpenChange={setModalPrioridade}
       />
-      
+
       <EditarEventoProfessorModal
         open={modalEditar}
         onOpenChange={setModalEditar}
         evento={eventoParaEditar}
       />
-      
+
       <AlertDialog open={!!eventoParaExcluir} onOpenChange={(open) => !open && setEventoParaExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
