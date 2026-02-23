@@ -31,7 +31,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    
+
     console.log('send-whatsapp-message: Recebendo requisição', {
       hasDestinatario: !!body.destinatario,
       hasPhoneNumber: !!body.phone_number,
@@ -60,7 +60,7 @@ serve(async (req) => {
     // Determina o destinatário final
     // Se destinatario estiver presente, usa ele, senão usa phone_number formatado
     let finalDestinatario = destinatario;
-    
+
     if (!finalDestinatario && phone_number) {
       // Formata o telefone: remove caracteres não numéricos
       const cleanPhone = phone_number.replace(/\D/g, '');
@@ -87,7 +87,7 @@ serve(async (req) => {
 
     // Busca URL do webhook no secret
     const webhookUrl = Deno.env.get('WHATSAPP_WEBHOOK_URL');
-    
+
     if (!webhookUrl) {
       console.error('send-whatsapp-message: WHATSAPP_WEBHOOK_URL não configurado');
       return new Response(
@@ -138,7 +138,7 @@ serve(async (req) => {
 
     // Salva no histórico comercial se for mensagem individual (não grupo) e tiver client_id
     const isGroup = finalDestinatario.includes('@g.us');
-    
+
     if (!isGroup && client_id && mensagem) {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -149,6 +149,7 @@ serve(async (req) => {
 
         await supabase.from('historico_comercial').insert({
           client_id,
+          telefone: finalDestinatario,
           tipo_acao: 'MENSAGEM_WHATSAPP',
           descricao: mensagem.substring(0, 500),
           profile_id,
@@ -163,10 +164,10 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Mensagem enviada com sucesso',
-        webhook_response: webhookResult 
+        webhook_response: webhookResult
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

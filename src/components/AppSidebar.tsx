@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Package, 
-  CalendarDays, 
-  ClipboardList, 
-  User, 
-  Users, 
-  Calendar, 
+import {
+  Package,
+  CalendarDays,
+  ClipboardList,
+  User,
+  Users,
+  Calendar,
   LogOut,
   Settings,
   BookOpen,
@@ -23,7 +23,9 @@ import {
   Image,
   Bell,
   Clock,
-  LayoutDashboard
+  LayoutDashboard,
+  MessageCircle,
+  TrendingUp
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,7 +61,7 @@ const items = [
   },
   {
     title: "Calendário de Aulas",
-    url: "/calendario-aulas", 
+    url: "/calendario-aulas",
     icon: Calendar,
   },
   {
@@ -144,6 +146,12 @@ const additionalItems = [
     requiresAdmin: true,
     maringaOnly: true,
   },
+  {
+    title: "Indicadores Comerciais",
+    url: "/indicadores-comerciais",
+    icon: TrendingUp,
+    requiresAdmin: true,
+  },
 ];
 
 const comercialItems = [
@@ -151,6 +159,16 @@ const comercialItems = [
     title: "Painel do Consultor",
     url: "/crm",
     icon: Target, // Using Target icon for CRM/Consultor as it fits well
+  },
+  {
+    title: "WhatsApp Comercial",
+    url: "/whatsapp-comercial",
+    icon: MessageCircle,
+  },
+  {
+    title: "Whaticket (Teste)",
+    url: "/whaticket",
+    icon: MessageCircle,
   },
   {
     title: "Comissão",
@@ -234,7 +252,7 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border bg-sidebar-accent/50">
-        <button 
+        <button
           onClick={() => navigate('/home')}
           className="flex h-16 items-center px-4 hover:bg-sidebar-accent/50 transition-colors w-full"
         >
@@ -254,8 +272,8 @@ export function AppSidebar() {
           <SidebarMenu>
             {filteredItems.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
+                <SidebarMenuButton
+                  asChild
                   isActive={location.pathname === item.url}
                   className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   onClick={() => navigate(item.url)}
@@ -278,8 +296,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {comercialItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={location.pathname === item.url}
                     className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     onClick={() => navigate(item.url)}
@@ -303,8 +321,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {filteredAdministrativoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={location.pathname === item.url}
                     className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     onClick={() => navigate(item.url)}
@@ -328,8 +346,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {adminItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={location.pathname === item.url}
                     className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     onClick={() => navigate(item.url)}
@@ -348,7 +366,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border bg-sidebar-accent/50">
         <div className="flex items-center justify-between p-4">
-          <button 
+          <button
             onClick={() => navigate('/meu-perfil')}
             className="flex items-center space-x-3 hover:bg-sidebar-accent rounded-md p-1 -m-1 transition-colors"
           >
