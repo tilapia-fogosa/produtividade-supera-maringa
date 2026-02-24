@@ -1,79 +1,63 @@
 
-# Reorganizar layout do drawer de atividades - Separar realizadas de pendentes
 
-## Objetivo
-Reorganizar a lista de atividades no `AtividadesDrawer` em duas secoes visuais separadas, com o alerta criado como primeiro item.
+# Corrigir RPC: Responsável = Professor da Turma
 
-## Mudancas
+## Problema
+A RPC `get_lista_aulas_experimentais` tenta resolver o responsável pelo `responsavel_id` e `responsavel_tipo` da tabela `aulas_experimentais`. Quando o tipo é `'usuario'`, não encontra ninguém e mostra "Não identificado".
 
-### Arquivo: `src/components/alerta-evasao/AtividadesDrawer.tsx`
+## Solução
+Simplificar a RPC para sempre buscar o professor da turma via `turmas.professor_id → professores.nome`, ignorando completamente os campos `responsavel_id` e `responsavel_tipo`.
 
-**1. Adicionar card do "Alerta Criado" no topo**
-- Antes de qualquer atividade, renderizar um card com badge "Alerta Criado" (usando a cor da origem do alerta, ex: bg-amber-500)
-- Exibir o `alerta.descritivo` como conteudo do card
-- Exibir a data de criacao do alerta e a origem
-- Visual identico aos cards de atividade (mesma estrutura), mas com opacity-70 (ja realizado)
-- Incluir o icone de Check verde como nas atividades concluidas
+## Migration SQL
 
-**2. Separar atividades em duas secoes**
-- Calcular `atividadesRealizadas` = atividades com `status === 'concluida'`
-- Calcular `atividadesPendentes` = atividades com `status === 'pendente'`
-- Renderizar na seguinte ordem:
-  1. Card "Alerta Criado" (descritivo do alerta)
-  2. Cards das atividades realizadas (concluidas)
-  3. Separador visual (Separator com label "Pendentes" ou "Proximas etapas")
-  4. Cards das atividades pendentes
-- Se nao houver pendentes, nao exibir o separador
-
-**3. Separador visual**
-- Usar um divisor horizontal com texto centralizado "Pendentes" ou "Proximas etapas"
-- Estilo: linha com texto no meio, cor muted, texto pequeno (text-xs)
-
-## Detalhes tecnicos
-
-### Logica de separacao
-```text
-const atividadesRealizadas = atividades.filter(a => a.status === 'concluida');
-const atividadesPendentes = atividades.filter(a => a.status === 'pendente');
+```sql
+CREATE OR REPLACE FUNCTION get_lista_aulas_experimentais(p_unit_id uuid DEFAULT NULL)
+RETURNS TABLE(
+  aula_experimental_id uuid,
+  data_aula_experimental date,
+  cliente_nome text,
+  responsavel_nome text,
+  responsavel_tipo text,
+  descricao_cliente text,
+  turma_nome text,
+  unit_id uuid,
+  turma_id uuid,
+  responsavel_id uuid
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    ae.id as aula_experimental_id,
+    ae.data_aula_experimental,
+    ae.cliente_nome,
+    COALESCE(prof.nome, 'Não identificado') as responsavel_nome,
+    'professor'::text as responsavel_tipo,
+    ae.descricao_cliente,
+    t.nome as turma_nome,
+    ae.unit_id,
+    ae.turma_id,
+    t.professor_id as responsavel_id
+  FROM aulas_experimentais ae
+  JOIN turmas t ON ae.turma_id = t.id
+  LEFT JOIN professores prof ON t.professor_id = prof.id
+  WHERE ae.active = true
+    AND (p_unit_id IS NULL OR ae.unit_id = p_unit_id)
+  ORDER BY ae.data_aula_experimental DESC, ae.cliente_nome ASC;
+END;
+$$;
 ```
 
-### Card do alerta criado
-```text
-<Card className="overflow-hidden opacity-70">
-  <div className="h-1 bg-amber-500" />
-  <CardContent className="p-2 space-y-1">
-    <div className="flex items-center justify-between gap-1">
-      <div className="flex items-center gap-1">
-        <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">
-          Alerta Criado
-        </Badge>
-        <Check className="h-3 w-3 text-green-600" />
-      </div>
-      <span className="text-[10px] text-muted-foreground">
-        {formatarData(alerta.data_alerta)}
-      </span>
-    </div>
-    <p className="text-xs leading-tight">{alerta.descritivo || 'Sem descritivo'}</p>
-    <span className="text-[10px] text-muted-foreground">
-      Origem: {getOrigemLabel(alerta.origem_alerta)}
-    </span>
-  </CardContent>
-</Card>
-```
+### O que muda
+- Remove os LEFT JOINs com `funcionarios` e o antigo JOIN com `professores` via `responsavel_id`
+- Faz JOIN direto `turmas.professor_id → professores.id` para pegar o nome do professor da turma
+- Retorna sempre `'professor'` como `responsavel_tipo`
+- Retorna `t.professor_id` como `responsavel_id`
+- Usa `COALESCE` para fallback caso a turma não tenha professor
 
-### Separador entre secoes
-```text
-<div className="flex items-center gap-2 py-2">
-  <div className="flex-1 h-px bg-border" />
-  <span className="text-[10px] text-muted-foreground font-medium">Proximas etapas</span>
-  <div className="flex-1 h-px bg-border" />
-</div>
-```
+### O que NÃO muda
+- Nenhuma alteração no frontend
+- A assinatura da função (parâmetros e colunas retornadas) permanece idêntica
+- Nenhuma alteração na edge function de registro
 
-### Funcao auxiliar getOrigemLabel
-Importar ou replicar a funcao `getOrigemLabel` que ja existe em `AlertasEvasao.tsx` para exibir o label amigavel da origem do alerta no card.
-
-## O que NAO muda
-- Toda a logica de expansao, paineis laterais e interacao com atividades permanece identica
-- O codigo dos cards de atividade existente nao muda, apenas a ordem de renderizacao
-- Nenhuma mudanca no hook ou no backend
