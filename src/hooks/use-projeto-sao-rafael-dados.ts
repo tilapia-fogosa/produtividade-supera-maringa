@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-const PROFESSOR_GUSTAVO_ID = '4cda6590-6e4d-4359-a88f-f5e0ce59c5f4';
+
 
 interface DadosAbaco {
   ano_mes: string;
@@ -37,8 +37,7 @@ export function useProjetoSaoRafaelDados(mesAno: string) {
         const { data: turmasData, error: turmasError } = await supabase
           .from('turmas')
           .select('id, nome')
-          .eq('professor_id', PROFESSOR_GUSTAVO_ID)
-          .eq('dia_semana', 'quinta');
+          .eq('is_projeto', true);
 
         if (turmasError) {
           console.error('Erro ao buscar turmas:', turmasError);

@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Turma } from './use-professor-turmas';
 
-const PROFESSOR_GUSTAVO_ID = '4cda6590-6e4d-4359-a88f-f5e0ce59c5f4';
-
 export function useProjetoSaoRafael() {
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,13 +11,12 @@ export function useProjetoSaoRafael() {
     const fetchTurmasProjetoSaoRafael = async () => {
       try {
         setLoading(true);
-        console.log('Buscando turmas do Projeto São Rafael para o professor Gustavo');
+        console.log('Buscando turmas do Projeto São Rafael (is_projeto = true)');
         
         const { data: turmasData, error } = await supabase
           .from('turmas')
           .select('*')
-          .eq('professor_id', PROFESSOR_GUSTAVO_ID)
-          .eq('dia_semana', 'quinta')
+          .eq('is_projeto', true)
           .order('nome', { ascending: true });
 
         if (error) {
