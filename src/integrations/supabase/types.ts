@@ -1805,6 +1805,7 @@ export type Database = {
         Row: {
           active: boolean
           age_range: string | null
+          alterar_nome: boolean
           concatena: boolean | null
           concatena_tempo: string | null
           created_at: string
@@ -1841,6 +1842,7 @@ export type Database = {
         Insert: {
           active?: boolean
           age_range?: string | null
+          alterar_nome?: boolean
           concatena?: boolean | null
           concatena_tempo?: string | null
           created_at?: string
@@ -1877,6 +1879,7 @@ export type Database = {
         Update: {
           active?: boolean
           age_range?: string | null
+          alterar_nome?: boolean
           concatena?: boolean | null
           concatena_tempo?: string | null
           created_at?: string
@@ -6994,6 +6997,7 @@ export type Database = {
       get_commercial_conversations_by_phone: {
         Args: never
         Returns: {
+          alterar_nome: boolean
           nome_contato: string
           origem_nome: string
           telefone: string
@@ -7016,11 +7020,13 @@ export type Database = {
         Returns: {
           client_id: string
           created_at: string
+          created_by_name: string
           from_me: boolean
           id: number
           mensagem: string
           telefone: string
           tipo_mensagem: string
+          url_media: string
         }[]
       }
       get_commercial_unit_stats: {
@@ -7554,6 +7560,21 @@ export type Database = {
           turma_id: string
           turma_nome: string
           turma_sala: string
+        }[]
+      }
+      get_unit_clients_with_next_activity: {
+        Args: { p_unit_id: string }
+        Returns: {
+          created_at: string
+          created_by_name: string
+          id: string
+          lead_source: string
+          name: string
+          next_activity_date: string
+          next_activity_type: string
+          original_ad: string
+          phone_number: string
+          status: string
         }[]
       }
       get_unit_performance: {
