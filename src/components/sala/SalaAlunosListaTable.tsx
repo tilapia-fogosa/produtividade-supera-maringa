@@ -5,11 +5,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw, Award, CalendarX } from "lucide-react";
+import { Check, Trash2, X, BookOpen, FileText, Target, AlertTriangle, Cake, Shirt, BookMarked, RefreshCw, Award, CalendarX, GraduationCap } from "lucide-react";
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useApostilas } from '@/hooks/use-apostilas';
 import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
 import { ReposicaoHoje } from '@/hooks/sala/use-reposicoes-hoje';
+import { AulaExperimentalHoje } from '@/hooks/sala/use-aulas-experimentais-hoje';
 import { ConfettiBackground } from './ConfettiBackground';
 import { CamisetaEntregueModal } from '@/components/camisetas/CamisetaEntregueModal';
 import { EntregaAhModal } from '@/components/abrindo-horizontes/EntregaAhModal';
@@ -24,6 +25,7 @@ interface SalaAlunosListaTableProps {
   lembretes?: Record<string, LembretesAluno>;
   reposicoesHoje?: ReposicaoHoje[];
   onLembreteConcluido?: () => void;
+  aulasExperimentais?: AulaExperimentalHoje[];
 }
 
 // Tipo estendido para incluir dados de reposição
@@ -39,7 +41,8 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
   produtividadeRegistrada = {},
   lembretes = {},
   reposicoesHoje = [],
-  onLembreteConcluido
+  onLembreteConcluido,
+  aulasExperimentais = []
 }) => {
   const [fotoAmpliada, setFotoAmpliada] = useState<{ url: string; nome: string } | null>(null);
   const { getTotalPaginas } = useApostilas();
@@ -442,6 +445,40 @@ const SalaAlunosListaTable: React.FC<SalaAlunosListaTableProps> = ({
               </h3>
             </div>
             {alunosReposicao.map((aluno) => renderAlunoCard(aluno, true))}
+          </div>
+        )}
+
+        {/* Seção: Aulas Experimentais */}
+        {aulasExperimentais.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mt-4 mb-2">
+              <GraduationCap className="h-4 w-4 text-purple-500" />
+              <h3 className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                Aulas Experimentais ({aulasExperimentais.length})
+              </h3>
+            </div>
+            {aulasExperimentais.map((aula) => (
+              <div
+                key={aula.id}
+                className="flex items-center p-3 rounded-lg border bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-20 w-20 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
+                    <GraduationCap className="h-8 w-8 text-purple-500" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground">
+                        {aula.cliente_nome} <span className="text-purple-600 dark:text-purple-400">(Aula Experimental)</span>
+                      </p>
+                    </div>
+                    {aula.descricao_cliente && (
+                      <p className="text-xs text-muted-foreground">{aula.descricao_cliente}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
