@@ -183,8 +183,7 @@ async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
   const { data: alunosAbaco, error: errorAbaco } = await supabase
     .from('alunos')
     .select('id, nome')
-    .in('turma_id', turmasIds)
-    .eq('active', true);
+    .in('turma_id', turmasIds);
 
   if (errorAbaco) {
     console.error('Erro ao buscar alunos:', errorAbaco);
