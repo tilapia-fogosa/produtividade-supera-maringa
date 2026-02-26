@@ -60,7 +60,25 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
         }
 
         if (data) {
-          setApostilasAH(data.map(a => a.nome));
+          const names = data.map(a => a.nome);
+          const customOrder = [
+            "AH 1", "AH 2", "AH 3", "AH 4", "AH 4A", "AH 5", "AH 5A",
+            "AH 6", "AH 7", "AH 8", "AH 9", "AH 10", "AH 11",
+            "AH Alta Performance", "AH I Iniciar", "AH II Focar",
+            "AH III Persistir", "AH IV Avançar", "S1", "S2", "S3"
+          ];
+
+          names.sort((a, b) => {
+            const indexA = customOrder.indexOf(a);
+            const indexB = customOrder.indexOf(b);
+            // Se não estiver na lista customizada, joga pro final
+            if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+
+          setApostilasAH(names);
         }
       } catch (err) {
         console.error('Erro ao carregar apostilas AH:', err);
@@ -208,7 +226,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
             Recolher Apostilas
           </DialogTitle>
           <DialogDescription>
-            {etapa === 'selecao-pessoas' 
+            {etapa === 'selecao-pessoas'
               ? 'Selecione os alunos e funcionários para recolher as apostilas'
               : 'Selecione a apostila recolhida de cada pessoa'}
           </DialogDescription>
@@ -329,7 +347,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               <Button variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 onClick={handleAvancar}
                 disabled={pessoasSelecionadas.length === 0 || !isAuthenticated || !dataRecolhimento}
               >
@@ -345,7 +363,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
               <div className="p-4 space-y-4">
                 {pessoasSelecionadas.map((pessoa) => {
                   const apostilaAtual = apostilasRecolhidas.find(a => a.pessoaId === pessoa.id);
-                  
+
                   return (
                     <div key={pessoa.id} className="p-4 rounded-lg border bg-card">
                       <div className="mb-3">
@@ -390,7 +408,7 @@ export const RecolherApostilasModal = ({ open, onOpenChange }: RecolherApostilas
                 <Button variant="outline" onClick={handleClose}>
                   Cancelar
                 </Button>
-                <Button 
+                <Button
                   onClick={handleConfirmar}
                   disabled={!todasApostilasPreenchidas || isSubmitting || !isAuthenticated || !dataRecolhimento}
                 >

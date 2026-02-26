@@ -4,17 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Componente que oculta ThemeToggle em rotas específicas
-function ConditionalThemeToggle() {
-  const location = useLocation();
-  if (location.pathname === '/whatsapp') return null;
-  return <ThemeToggle />;
-}
+
 
 // Componente de logout flutuante para perfil sala
 function SalaLogoutButton() {
@@ -100,9 +94,12 @@ import TestGoogleCalendar from "./pages/TestGoogleCalendar";
 import GaleriaFotos from "./pages/GaleriaFotos";
 import VisualizadorImagens from "./pages/VisualizadorImagens";
 import WhatsAppPage from "./pages/whatsapp";
+import WhatsAppComercialPage from "./pages/whatsapp-comercial";
 import Avisos from "./pages/Avisos";
 import PainelAdministrativo from "./pages/PainelAdministrativo";
 import Comissao from "./pages/Comissao";
+import IndicadoresComerciais from "./pages/IndicadoresComerciais";
+import ClientesUnidade from "./pages/clientes-unidade";
 
 // Páginas do fluxo Sala
 import SalaLancamentos from "./pages/sala/SalaLancamentos";
@@ -185,9 +182,12 @@ function ProtectedLayout() {
               <Route path="/avisos" element={<Avisos />} />
               <Route path="/painel-administrativo" element={<PainelAdministrativo />} />
               <Route path="/comissao" element={<Comissao />} />
+              <Route path="/indicadores-comerciais" element={<IndicadoresComerciais />} />
+              <Route path="/clientes-unidade" element={<ClientesUnidade />} />
               <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/whatsapp" element={<WhatsAppPage />} />
+              <Route path="/whatsapp-comercial" element={<WhatsAppComercialPage />} />
               <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
               <Route path="/camisetas" element={<Camisetas />} />
               <Route path="/devolutivas/devolutiva-fim-ano" element={<DevolutivaFimAno />} />
@@ -211,9 +211,6 @@ function ProtectedLayout() {
         </main>
         {/* Botão de logout flutuante para perfil sala */}
         <SalaLogoutButton />
-      </div>
-      <div className="fixed bottom-4 right-4 print:hidden">
-        <ConditionalThemeToggle />
       </div>
     </SidebarProvider>
   );
