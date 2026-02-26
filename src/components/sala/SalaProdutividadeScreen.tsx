@@ -6,6 +6,7 @@ import { Turma } from '@/hooks/use-professor-turmas';
 import { SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { LembretesAluno } from '@/hooks/sala/use-lembretes-alunos';
 import { ReposicaoHoje } from '@/hooks/sala/use-reposicoes-hoje';
+import { AulaExperimentalHoje } from '@/hooks/sala/use-aulas-experimentais-hoje';
 import SalaAlunosListaTable from './SalaAlunosListaTable';
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -28,6 +29,7 @@ interface SalaProdutividadeScreenProps {
   onLembreteConcluido?: () => void;
   dataSelecionada?: Date;
   onDataChange?: (data: Date) => void;
+  aulasExperimentais?: AulaExperimentalHoje[];
 }
 
 const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
@@ -42,7 +44,8 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
   reposicoesHoje = [],
   onLembreteConcluido,
   dataSelecionada,
-  onDataChange
+  onDataChange,
+  aulasExperimentais = []
 }) => {
   const dataExibida = dataSelecionada || new Date();
   const ehHoje = isToday(dataExibida);
@@ -113,6 +116,7 @@ const SalaProdutividadeScreen: React.FC<SalaProdutividadeScreenProps> = ({
           lembretes={lembretes}
           reposicoesHoje={reposicoesHoje}
           onLembreteConcluido={onLembreteConcluido}
+          aulasExperimentais={aulasExperimentais}
         />
       </div>
 
