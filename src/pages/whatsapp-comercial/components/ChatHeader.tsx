@@ -17,17 +17,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mail, MailOpen } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Menu, Pencil } from "lucide-react";
 
 interface ChatHeaderProps {
   conversation: Conversation;
   onMarkAsRead?: () => void;
   onMarkAsUnread?: () => void;
+  onMenuClick?: () => void;
 }
 
-export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread }: ChatHeaderProps) {
+export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuClick }: ChatHeaderProps) {
   console.log('ChatHeader: Renderizando header para:', conversation.clientName);
 
-  const initials = conversation.primeiroNome
+  const initials = conversation.clientName
     .split(' ')
     .map(n => n[0])
     .join('')
@@ -36,33 +40,75 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread }: ChatH
 
   const hasUnread = conversation.unreadCount > 0;
 
-  return (
-    <div className="bg-primary text-primary-foreground p-4 border-b border-border flex items-center gap-3">
-      {/* Avatar */}
-      <Avatar className="h-10 w-10">
-        <AvatarFallback className="bg-primary-foreground text-primary">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+  const clientName = conversation.clientName;
+  const phoneNumber = conversation.phoneNumber || '';
+  const lastMessageTime = conversation.lastMessageTime;
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <h3 className="font-medium truncate">
-          {conversation.clientName}
-        </h3>
-        {!conversation.isGroup && (
-          <p className="text-xs opacity-90">
-            {conversation.phoneNumber}
-          </p>
-        )}
+  return (
+    <div className="bg-purple-600 text-white p-4 shadow-sm z-10 sticky top-0 flex items-center justify-between border-b border-purple-700">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden w-10 h-10 shrink-0 text-white hover:bg-purple-500/50"
+          onClick={onMenuClick}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white/20 bg-purple-500 flex items-center justify-center text-white text-lg font-bold">
+          {initials}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <h2 className="font-semibold text-lg flex items-center gap-2 group cursor-pointer">
+            {clientName}
+            {conversation.alterarNome && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-500/50 text-white"
+                onClick={() => {
+                  // TODO: trigger EditClientNameModal
+                  console.log('Edit client name clicked');
+                  const event = new CustomEvent('open-edit-client-name', { detail: { conversation: conversation } });
+                  window.dispatchEvent(event);
+                }}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+          </h2>
+          <div className="flex items-center gap-2 text-sm text-purple-100">
+            {!conversation.isGroup && (
+              <p className="text-xs opacity-90">
+                {phoneNumber}
+              </p>
+            )}
+            {conversation.status && (
+              <Badge
+                variant="outline"
+                className="flex-shrink-0 bg-secondary text-white border-secondary hover:bg-secondary/90"
+              >
+                {conversation.status}
+              </Badge>
+            )}
+            {lastMessageTime && (
+              <span className="text-xs text-purple-100">
+                {lastMessageTime}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Botão Marcar como Lida/Não Lida */}
-      {conversation.isGroup && (
+      {!conversation.isGroup && ( // Changed from conversation.isGroup to !conversation.isGroup based on common UI patterns for individual chats
         <Button
           variant="ghost"
           size="sm"
-          className="text-primary-foreground hover:bg-primary-foreground/20"
+          className="text-white hover:bg-purple-500/50"
           onClick={hasUnread ? onMarkAsRead : onMarkAsUnread}
           title={hasUnread ? 'Marcar como lida' : 'Marcar como não lida'}
         >

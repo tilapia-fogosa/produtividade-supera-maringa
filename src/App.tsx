@@ -95,11 +95,11 @@ import GaleriaFotos from "./pages/GaleriaFotos";
 import VisualizadorImagens from "./pages/VisualizadorImagens";
 import WhatsAppPage from "./pages/whatsapp";
 import WhatsAppComercialPage from "./pages/whatsapp-comercial";
-import WhaticketIntegration from "./pages/whaticket";
 import Avisos from "./pages/Avisos";
 import PainelAdministrativo from "./pages/PainelAdministrativo";
 import Comissao from "./pages/Comissao";
 import IndicadoresComerciais from "./pages/IndicadoresComerciais";
+import ClientesUnidade from "./pages/clientes-unidade";
 
 // Páginas do fluxo Sala
 import SalaLancamentos from "./pages/sala/SalaLancamentos";
@@ -183,11 +183,11 @@ function ProtectedLayout() {
               <Route path="/painel-administrativo" element={<PainelAdministrativo />} />
               <Route path="/comissao" element={<Comissao />} />
               <Route path="/indicadores-comerciais" element={<IndicadoresComerciais />} />
+              <Route path="/clientes-unidade" element={<ClientesUnidade />} />
               <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/whatsapp" element={<WhatsAppPage />} />
               <Route path="/whatsapp-comercial" element={<WhatsAppComercialPage />} />
-              <Route path="/whaticket" element={<WhaticketIntegration />} />
               <Route path="/planejador-desafios" element={<PlanejadorDesafios />} />
               <Route path="/camisetas" element={<Camisetas />} />
               <Route path="/devolutivas/devolutiva-fim-ano" element={<DevolutivaFimAno />} />

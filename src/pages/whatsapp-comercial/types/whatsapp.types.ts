@@ -34,6 +34,7 @@ export interface Conversation {
   observations?: string; // Observações do cliente
   unitName?: string; // Nome da unidade
   registrationName?: string; // Nome de registro
+  alterarNome?: boolean; // Permite alterar nome do cliente
 }
 
 // Reação de mensagem

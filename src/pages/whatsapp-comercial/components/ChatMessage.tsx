@@ -45,88 +45,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
     // Normalizar o tipo para casos como 'image' vs 'imageMessage'
     const type = message.tipoMensagem?.toLowerCase() || '';
 
-    if (type.includes('image') || type.includes('sticker')) {
-      return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <div className="relative cursor-pointer group w-32 h-32 mb-1">
-              <img
-                src={message.urlMedia}
-                alt="Imagem"
-                className="w-full h-full object-cover rounded-lg"
-              />
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                <Maximize2 className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
-            <img
-              src={message.urlMedia}
-              alt="Imagem ampliada"
-              className="max-w-full max-h-[85vh] object-contain mx-auto"
-            />
-          </DialogContent>
-        </Dialog>
-      );
-    }
-
-    if (type.includes('video')) {
-      return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <div className="relative cursor-pointer group w-32 h-32 mb-1 bg-muted rounded-lg flex items-center justify-center">
-              <video
-                src={message.urlMedia}
-                className="w-full h-full object-cover rounded-lg"
-                preload="metadata"
-                muted
-              />
-              <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-                <Play className="h-8 w-8 text-white fill-white" />
-              </div>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
-            <video
-              src={message.urlMedia}
-              controls
-              autoPlay
-              className="max-w-full max-h-[85vh] mx-auto"
-            />
-          </DialogContent>
-        </Dialog>
-      );
-    }
-
-    if (type.includes('audio') || type === 'ptt') {
-      return (
-        <audio
-          src={message.urlMedia}
-          controls
-          className="w-48 h-10 mb-1"
-          preload="metadata"
-        />
-      );
-    }
-
-    if (type.includes('document')) {
-      return (
-        <a
-          href={message.urlMedia}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 p-2 bg-muted rounded-lg mb-1 hover:bg-muted/80 transition-colors"
-        >
-          <FileText className="h-5 w-5 text-primary" />
-          <span className="text-sm">Documento</span>
-        </a>
-      );
-    }
-
-    // Se tem urlMedia mas o tipo é text ou desconhecido, cria fallback como link de anexo e tenta inferir a extensão
-    if (message.urlMedia) {
-      if (message.urlMedia.match(/\.(jpeg|jpg|gif|png)$/i)) {
+    switch (type) {
+      case 'imagemessage':
+      case 'stickermessage':
         return (
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -136,28 +57,108 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   alt="Imagem"
                   className="w-full h-full object-cover rounded-lg"
                 />
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <Maximize2 className="h-6 w-6 text-white" />
+                </div>
               </div>
             </DialogTrigger>
-            <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 border-0 bg-transparent shadow-none">
-              <img src={message.urlMedia} alt="Ampliada" className="max-w-full max-h-[85vh] object-contain mx-auto rounded-md" />
+            <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+              <img
+                src={message.urlMedia}
+                alt="Imagem ampliada"
+                className="max-w-full max-h-[85vh] object-contain mx-auto"
+              />
             </DialogContent>
           </Dialog>
         );
-      }
-      return (
-        <a
-          href={message.urlMedia}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 p-2 bg-muted rounded-lg mb-1 hover:bg-muted/80 transition-colors"
-        >
-          <FileText className="h-5 w-5 text-primary" />
-          <span className="text-sm underline">Ver anexo multimídia</span>
-        </a>
-      );
-    }
 
-    return null;
+      case 'videomessage':
+        return (
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <div className="relative cursor-pointer group w-32 h-32 mb-1 bg-muted rounded-lg flex items-center justify-center">
+                <video
+                  src={message.urlMedia}
+                  className="w-full h-full object-cover rounded-lg"
+                  preload="metadata"
+                  muted
+                />
+                <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+                  <Play className="h-8 w-8 text-white fill-white" />
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+              <video
+                src={message.urlMedia}
+                controls
+                autoPlay
+                className="max-w-full max-h-[85vh] mx-auto"
+              />
+            </DialogContent>
+          </Dialog>
+        );
+
+      case 'audiomessage':
+      case 'ptt':
+      case 'audio':
+        return (
+          <audio
+            src={message.urlMedia}
+            controls
+            className="w-48 h-10 mb-1"
+            preload="metadata"
+          />
+        );
+
+      case 'documentmessage':
+        return (
+          <a
+            href={message.urlMedia}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 p-2 bg-muted rounded-lg mb-1 hover:bg-muted/80 transition-colors"
+          >
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="text-sm">Documento</span>
+          </a>
+        );
+
+      default:
+        // Fallback for unknown types but with urlMedia
+        if (message.urlMedia) {
+          if (message.urlMedia.match(/\.(jpeg|jpg|gif|png)$/i)) {
+            return (
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger asChild>
+                  <div className="relative cursor-pointer group w-32 h-32 mb-1">
+                    <img
+                      src={message.urlMedia}
+                      alt="Imagem"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 border-0 bg-transparent shadow-none">
+                  <img src={message.urlMedia} alt="Ampliada" className="max-w-full max-h-[85vh] object-contain mx-auto rounded-md" />
+                </DialogContent>
+              </Dialog>
+            );
+          }
+          return (
+            <a
+              href={message.urlMedia}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 p-2 bg-muted rounded-lg mb-1 hover:bg-muted/80 transition-colors"
+            >
+              <FileText className="h-5 w-5 text-primary" />
+              <span className="text-sm underline">Ver anexo multimídia</span>
+            </a>
+          );
+        }
+        return null;
+    }
   };
 
   // Renderiza mensagem citada

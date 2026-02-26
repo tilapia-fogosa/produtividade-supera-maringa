@@ -44,7 +44,8 @@ export function useConversations(filter?: string) {
           isUnregistered: isUnknown,
           isGroup: false,
           leadSource: item.origem_nome || '',
-          unitName: 'Comercial'
+          unitName: 'Comercial',
+          alterarNome: item.alterar_nome || false
         };
       });
 

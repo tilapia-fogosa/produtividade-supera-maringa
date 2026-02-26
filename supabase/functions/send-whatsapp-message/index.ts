@@ -1,6 +1,6 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -139,21 +139,71 @@ serve(async (req) => {
     // Salva no histórico comercial se for mensagem individual (não grupo) e tiver client_id
     const isGroup = finalDestinatario.includes('@g.us');
 
-    if (!isGroup && client_id && mensagem) {
+    if (!isGroup && client_id && (mensagem || audio || imagem || video)) {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        console.log('send-whatsapp-message: Salvando no histórico comercial');
+        let finalMediaUrl = null;
+        let finalTipoMensagem = 'text';
+
+        // Helper function to upload base64 to storage
+        const uploadMedia = async (base64Str: string, defaultMime: string, type: string) => {
+          try {
+            // Some base64 strings come with data:image/png;base64, prefix
+            const b64Data = base64Str.includes(',') ? base64Str.split(',')[1] : base64Str;
+            const fileData = decode(b64Data);
+            const ext = defaultMime.split('/')[1] || 'bin';
+            const fileName = `${client_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+
+            // Assume bucket name is 'whatsapp-media'
+            const { data: uploadData, error: uploadError } = await supabase
+              .storage
+              .from('whatsapp-media')
+              .upload(fileName, fileData, {
+                contentType: mime_type || defaultMime,
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.error(`send-whatsapp-message: Erro no upload de ${type}:`, uploadError);
+              return null;
+            }
+
+            // URL will be constructed later in the query or returned by getPublicUrl
+            const { data: publicUrlData } = supabase.storage.from('whatsapp-media').getPublicUrl(fileName);
+            return publicUrlData.publicUrl;
+          } catch (e) {
+            console.error(`send-whatsapp-message: Erro convertendo/upando ${type}:`, e);
+            return null;
+          }
+        };
+
+        if (audio) {
+          finalMediaUrl = await uploadMedia(audio, mime_type || 'audio/ogg', 'audio');
+          finalTipoMensagem = 'audioMessage';
+        } else if (imagem) {
+          finalMediaUrl = await uploadMedia(imagem, mime_type || 'image/jpeg', 'imagem');
+          finalTipoMensagem = 'imageMessage';
+        } else if (video) {
+          finalMediaUrl = await uploadMedia(video, mime_type || 'video/mp4', 'video');
+          finalTipoMensagem = 'videoMessage';
+        }
+
+        console.log('send-whatsapp-message: Salvando no histórico comercial, media:', finalMediaUrl);
 
         await supabase.from('historico_comercial').insert({
           client_id,
           telefone: finalDestinatario,
           tipo_acao: 'MENSAGEM_WHATSAPP',
-          descricao: mensagem.substring(0, 500),
+          descricao: mensagem ? mensagem.substring(0, 500) : '[Mídia]',
+          mensagem: mensagem || null,
+          tipo_mensagem: finalTipoMensagem,
+          media_url: finalMediaUrl,
           profile_id,
           unit_id: unit_id || null,
+          from_me: true
         });
 
         console.log('send-whatsapp-message: Histórico salvo com sucesso');

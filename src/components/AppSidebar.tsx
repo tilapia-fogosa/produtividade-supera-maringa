@@ -161,13 +161,13 @@ const comercialItems = [
     icon: Target, // Using Target icon for CRM/Consultor as it fits well
   },
   {
-    title: "WhatsApp Comercial",
-    url: "/whatsapp-comercial",
-    icon: MessageCircle,
+    title: "Clientes da Unidade",
+    url: "/clientes-unidade",
+    icon: Users,
   },
   {
-    title: "Whaticket (Teste)",
-    url: "/whaticket",
+    title: "WhatsApp Comercial",
+    url: "/whatsapp-comercial",
     icon: MessageCircle,
   },
   {

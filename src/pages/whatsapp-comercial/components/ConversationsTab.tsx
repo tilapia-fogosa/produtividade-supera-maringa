@@ -19,6 +19,7 @@ import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useMessagesRealtime } from "../hooks/useMessagesRealtime";
 import { useWhatsappConnectionStatus } from "../hooks/useWhatsappConnectionStatus";
 import { WhatsappDisconnectedAlert } from "./WhatsappDisconnectedAlert";
+import { EditClientNameModal } from "./EditClientNameModal";
 import { useQueryClient } from "@tanstack/react-query";
 
 
@@ -73,6 +74,7 @@ export function ConversationsTab() {
 
   return (
     <>
+      <EditClientNameModal />
       <div className="w-full h-full relative overflow-hidden border border-border bg-background rounded-md md:rounded-lg">
         {/* Alerta de WhatsApp desconectado - Z-Index alto */}
         <div className="absolute top-0 left-0 right-0 z-50 pointer-events-none">

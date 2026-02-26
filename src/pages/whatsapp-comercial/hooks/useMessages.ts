@@ -5,6 +5,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types/whatsapp.types";
 
+// Corrige URLs de mídia para o formato público do Supabase Storage
+const fixMediaUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  // Se a URL contém /storage/v1/object/ mas não tem /public/, adiciona
+  if (url.includes('/storage/v1/object/') && !url.includes('/storage/v1/object/public/')) {
+    return url.replace('/storage/v1/object/', '/storage/v1/object/public/');
+  }
+  return url;
+};
+
 export function useMessages(clientId: string | null) {
   return useQuery({
     queryKey: ['whatsapp-individual-messages', clientId],
@@ -29,9 +39,9 @@ export function useMessages(clientId: string | null) {
         content: msg.mensagem || '',
         createdAt: msg.created_at,
         fromMe: msg.from_me || false,
-        createdByName: msg.from_me ? "Eu" : null,
+        createdByName: msg.from_me ? (msg.created_by_name || "Eu") : null,
         tipoMensagem: msg.tipo_mensagem || 'text',
-        urlMedia: msg.url_media || null
+        urlMedia: fixMediaUrl(msg.url_media) || null
       }));
     },
     enabled: !!clientId
