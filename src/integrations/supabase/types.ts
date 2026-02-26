@@ -5815,6 +5815,7 @@ export type Database = {
           horario_fim: string | null
           horario_inicio: string | null
           id: string
+          is_projeto: boolean | null
           nome: string
           perfil: string | null
           professor_id: string
@@ -5832,6 +5833,7 @@ export type Database = {
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
+          is_projeto?: boolean | null
           nome: string
           perfil?: string | null
           professor_id: string
@@ -5849,6 +5851,7 @@ export type Database = {
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
+          is_projeto?: boolean | null
           nome?: string
           perfil?: string | null
           professor_id?: string
