@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, BookOpen } from "lucide-react";
+import { GraduationCap, BookOpen, ClipboardList } from "lucide-react";
 import { AlunoSelectorModal } from '@/components/projeto-sao-rafael/AlunoSelectorModal';
 import AhLancamentoModal from '@/components/turmas/AhLancamentoModal';
 
@@ -64,6 +64,23 @@ const ProjetoSaoRafaelLancamento = () => {
             >
               <BookOpen className="mr-2 h-4 w-4" />
               Lançar AH
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="border-orange-200 bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-azul-500">Diários</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              Consulte todas as produtividades de Ábaco e AH de um aluno por período.
+            </p>
+            <Button 
+              onClick={() => navigate('/diarios-sao-rafael')}
+              className="w-full bg-azul-500 hover:bg-azul-600 text-white"
+            >
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Ver Diários
             </Button>
           </CardContent>
         </Card>
