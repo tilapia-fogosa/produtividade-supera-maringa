@@ -9,7 +9,7 @@ export interface AlunoProjetoSaoRafael {
   ultima_correcao_ah: string | null;
 }
 
-export const useAlunosProjetoSaoRafael = () => {
+export const useAlunosProjetoSaoRafael = (options?: { includeInactive?: boolean }) => {
   const [alunos, setAlunos] = useState<AlunoProjetoSaoRafael[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
@@ -18,15 +18,17 @@ export const useAlunosProjetoSaoRafael = () => {
     const fetchAlunos = async () => {
       try {
         setLoading(true);
-        
-        console.log('Buscando alunos da view alunos_projeto_sao_rafael');
 
-        // Buscar diretamente da view que já filtra os alunos corretos
-        const { data: alunosData, error } = await supabase
+        let query = supabase
           .from('alunos_projeto_sao_rafael')
           .select('*')
-          .eq('active', true)
           .order('nome', { ascending: true });
+
+        if (!options?.includeInactive) {
+          query = query.eq('active', true);
+        }
+
+        const { data: alunosData, error } = await query;
 
         if (error) {
           console.error('Erro ao buscar alunos do Projeto São Rafael:', error);

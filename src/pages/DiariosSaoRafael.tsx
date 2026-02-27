@@ -36,7 +36,7 @@ const anosOptions = [currentYear - 1, currentYear, currentYear + 1].map(y => ({
 
 const DiariosSaoRafael = () => {
   const navigate = useNavigate();
-  const { alunos, loading: loadingAlunos } = useAlunosProjetoSaoRafael();
+  const { alunos, loading: loadingAlunos } = useAlunosProjetoSaoRafael({ includeInactive: true });
 
   const [busca, setBusca] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string } | null>(null);
