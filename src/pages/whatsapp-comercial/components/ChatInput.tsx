@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAutoMessages } from "../hooks/useAutoMessages";
 import { AudioRecorder } from "./AudioRecorder";
+import { MediaAttachment } from "./MediaAttachment";
 
 interface ChatInputProps {
   conversation: Conversation;
@@ -201,6 +202,8 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
   return (
     <div className="p-3 border-t border-border bg-muted/50 flex items-end gap-2 relative">
+      {/* Media Attachment (overlay + botão) */}
+      <MediaAttachment conversation={conversation} onMessageSent={onMessageSent} />
       {/* Emoji Picker Popover */}
       {showEmojiPicker && (
         <div
