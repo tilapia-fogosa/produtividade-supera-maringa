@@ -107,6 +107,7 @@ serve(async (req) => {
     if (imagem) payload.imagem = imagem;
     if (video) payload.video = video;
     if (mime_type) payload.mime_type = mime_type;
+    if (quoted_message_id) payload.quoted_message_id = quoted_message_id;
 
     // Determinar o tipo de mensagem para o webhook global
     let tipoMensagem = 'text';
