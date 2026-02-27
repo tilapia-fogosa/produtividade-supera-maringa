@@ -171,7 +171,7 @@ serve(async (req) => {
             // Assume bucket name is 'whatsapp-media'
             const { data: uploadData, error: uploadError } = await supabase
               .storage
-              .from('whatsapp-media')
+              .from('wpp_comercial')
               .upload(fileName, fileData, {
                 contentType: mime_type || defaultMime,
                 upsert: false
@@ -182,8 +182,7 @@ serve(async (req) => {
               return null;
             }
 
-            // URL will be constructed later in the query or returned by getPublicUrl
-            const { data: publicUrlData } = supabase.storage.from('whatsapp-media').getPublicUrl(fileName);
+            const { data: publicUrlData } = supabase.storage.from('wpp_comercial').getPublicUrl(fileName);
             return publicUrlData.publicUrl;
           } catch (e) {
             console.error(`send-whatsapp-message: Erro convertendo/upando ${type}:`, e);
