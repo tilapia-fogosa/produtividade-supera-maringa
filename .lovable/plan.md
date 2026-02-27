@@ -1,57 +1,37 @@
 
 
-## Diagnóstico - WhatsApp Comercial: Envio de Mensagens
+## Diagnóstico
 
-### O que está acontecendo
-
-Existem **2 problemas reais**, e nenhum envolve dados mock (o WhatsApp Comercial já usa dados reais do banco).
-
----
-
-### Problema 1: Mensagens enviadas NÃO aparecem no chat
-
-A edge function `send-whatsapp-message` tenta salvar a mensagem na tabela `historico_comercial`, mas o **insert falha** porque está tentando gravar em **colunas que não existem** na tabela.
-
-A tabela `historico_comercial` tem estas colunas:
-```text
-id, created_at, client_id (UUID), mensagem, from_me, created_by (UUID),
-lida, lida_em, tipo_mensagem, telefone, unit_id, media_url
+O log mostra:
+```
+null value in column "unit_id" of relation "historico_comercial" violates not-null constraint
 ```
 
-Mas o código tenta inserir:
-```text
-tipo_acao       → NÃO EXISTE na tabela
-descricao       → NÃO EXISTE na tabela
-profile_id      → NÃO EXISTE (o campo correto é "created_by")
+A coluna `unit_id` tem um valor padrão no banco (`0df79a04-444e-46ee-b218-59e4b1835f4a` = Maringá), mas a edge function passa `unit_id: null` explicitamente, sobrescrevendo o default.
+
+## Plano
+
+### 1. Edge function `send-whatsapp-message` - Corrigir unit_id no insert
+
+Na linha do insert, trocar:
+```typescript
+unit_id: unit_id || null
+```
+Por: simplesmente não incluir `unit_id` quando estiver vazio, para o default do banco ser usado:
+```typescript
+...(unit_id ? { unit_id } : {})
 ```
 
-Além disso, o `client_id` é do tipo **UUID**, mas o código envia o **número de telefone** (ex: `"5544999679947"`), causando o erro:
-> `invalid input syntax for type uuid: "5544999679947"`
+### 2. ChatInput - Otimizar envio removendo query extra de profile
 
-**Resultado**: o insert falha silenciosamente, a mensagem chega pro cliente via webhook mas nunca é salva no banco, então nunca aparece no chat.
+O fluxo atual faz:
+1. `getUser()` → pega user id
+2. Query `profiles` → pega `full_name`
+3. `send-whatsapp-message` → envia
 
----
+A query ao `profiles` pode ser eliminada buscando o nome do `user_metadata` que já vem no `getUser()`. Isso remove uma chamada ao banco.
 
-### Problema 2: Delay no envio
+### 3. ChatInput - Enviar unit_id do conversation
 
-O fluxo atual é **sequencial**:
-1. Chama `replace-message-variables` (edge function) → espera resposta
-2. Depois chama `send-whatsapp-message` → espera resposta
-
-"Cold start" = quando uma edge function não é usada há um tempo, o servidor precisa "ligar" ela do zero antes de processar. Isso adiciona alguns segundos extras. Como são **duas funções em sequência**, o delay se acumula.
-
-Solução simples: se a mensagem não contém `{` (nenhuma variável), **pular** a chamada ao `replace-message-variables` e ir direto para o envio.
-
----
-
-### Plano de Correção
-
-**1. Corrigir o insert na edge function `send-whatsapp-message`**
-- Remover colunas inexistentes: `tipo_acao`, `descricao`
-- Trocar `profile_id` por `created_by`
-- Quando `client_id` não for UUID válido (ex: número de telefone), enviar `null` no `client_id` e salvar o telefone no campo `telefone`
-
-**2. Eliminar delay desnecessário no `ChatInput.tsx`**
-- Se a mensagem não contém `{`, pular a chamada ao `replace-message-variables` e usar a mensagem original direto
-- Isso elimina uma chamada de rede inteira na maioria dos envios
+O `conversation` já tem `unitId`. Garantir que está sendo passado corretamente (já está no código atual, mas se vier vazio, a edge function precisa tratar).
 
