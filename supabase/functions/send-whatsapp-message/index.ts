@@ -169,11 +169,17 @@ serve(async (req) => {
             const fileName = `${client_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
             // Assume bucket name is 'whatsapp-media'
+            // Supabase Storage não suporta audio/webm - fallback para audio/ogg
+            let cleanMime = (mime_type || defaultMime).split(';')[0].trim();
+            if (cleanMime === 'audio/webm') {
+              cleanMime = 'audio/ogg';
+            }
+
             const { data: uploadData, error: uploadError } = await supabase
               .storage
               .from('wpp_comercial')
               .upload(fileName, fileData, {
-                contentType: (mime_type || defaultMime).split(';')[0].trim(),
+                contentType: cleanMime,
                 upsert: false
               });
 

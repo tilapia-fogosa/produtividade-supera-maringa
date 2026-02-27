@@ -257,6 +257,8 @@ export function ChatInput({ conversation, onMessageSent, replyingTo, onReplySent
         conversation={conversation}
         onStateChange={handleAudioStateChange}
         onSendAudioReady={handleSendAudioReady}
+        replyingTo={replyingTo}
+        onReplySent={onReplySent}
       />
 
       {/* Textarea de texto com auto-expansão */}
