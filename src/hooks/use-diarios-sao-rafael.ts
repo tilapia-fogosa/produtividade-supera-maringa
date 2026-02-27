@@ -60,9 +60,9 @@ export function useDiariosSaoRafael(alunoId: string | null, mesAno: string) {
           .from('produtividade_ah')
           .select('id, apostila, exercicios, erros, professor_correcao, comentario, data_fim_correcao, created_at')
           .eq('pessoa_id', alunoId)
-          .gte('created_at', `${dataInicial}T00:00:00.000Z`)
-          .lte('created_at', `${dataFinal}T23:59:59.999Z`)
-          .order('created_at', { ascending: true }),
+          .gte('data_fim_correcao', `${dataInicial}T00:00:00.000Z`)
+          .lte('data_fim_correcao', `${dataFinal}T23:59:59.999Z`)
+          .order('data_fim_correcao', { ascending: true }),
       ]);
 
       setDadosAbaco(abacoRes.data || []);
