@@ -29,6 +29,7 @@ export interface ProdutividadeAHItem {
 export function useDiariosSaoRafael(alunoId: string | null, mesAno: string) {
   const [dadosAbaco, setDadosAbaco] = useState<ProdutividadeAbacoItem[]>([]);
   const [dadosAH, setDadosAH] = useState<ProdutividadeAHItem[]>([]);
+  const [professorMap, setProfessorMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -66,7 +67,22 @@ export function useDiariosSaoRafael(alunoId: string | null, mesAno: string) {
       ]);
 
       setDadosAbaco(abacoRes.data || []);
-      setDadosAH(ahRes.data || []);
+      const ahData = ahRes.data || [];
+      setDadosAH(ahData);
+
+      // Buscar nomes dos professores
+      const profIds = [...new Set(ahData.map(d => d.professor_correcao).filter(Boolean))] as string[];
+      if (profIds.length > 0) {
+        const { data: profs } = await supabase
+          .from('professores')
+          .select('id, nome')
+          .in('id', profIds);
+        const map: Record<string, string> = {};
+        profs?.forEach(p => { map[p.id] = p.nome; });
+        setProfessorMap(map);
+      } else {
+        setProfessorMap({});
+      }
     } catch (error) {
       console.error('Erro ao buscar diários:', error);
     } finally {
@@ -78,5 +94,5 @@ export function useDiariosSaoRafael(alunoId: string | null, mesAno: string) {
     fetchData();
   }, [fetchData]);
 
-  return { dadosAbaco, dadosAH, loading, refetch: fetchData };
+  return { dadosAbaco, dadosAH, professorMap, loading, refetch: fetchData };
 }
