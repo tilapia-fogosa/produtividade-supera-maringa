@@ -3714,6 +3714,7 @@ export type Database = {
           lida_em: string | null
           media_url: string | null
           mensagem: string | null
+          quoted_message_id: number | null
           telefone: string | null
           tipo_mensagem: string | null
           unit_id: string
@@ -3728,6 +3729,7 @@ export type Database = {
           lida_em?: string | null
           media_url?: string | null
           mensagem?: string | null
+          quoted_message_id?: number | null
           telefone?: string | null
           tipo_mensagem?: string | null
           unit_id?: string
@@ -3742,6 +3744,7 @@ export type Database = {
           lida_em?: string | null
           media_url?: string | null
           mensagem?: string | null
+          quoted_message_id?: number | null
           telefone?: string | null
           tipo_mensagem?: string | null
           unit_id?: string
@@ -3766,6 +3769,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_comercial_quoted_message_id_fkey"
+            columns: ["quoted_message_id"]
+            isOneToOne: false
+            referencedRelation: "historico_comercial"
             referencedColumns: ["id"]
           },
         ]
