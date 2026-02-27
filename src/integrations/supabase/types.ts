@@ -3718,6 +3718,7 @@ export type Database = {
           telefone: string | null
           tipo_mensagem: string | null
           unit_id: string
+          wpp_msg_id: string | null
         }
         Insert: {
           client_id?: string | null
@@ -3733,6 +3734,7 @@ export type Database = {
           telefone?: string | null
           tipo_mensagem?: string | null
           unit_id?: string
+          wpp_msg_id?: string | null
         }
         Update: {
           client_id?: string | null
@@ -3748,6 +3750,7 @@ export type Database = {
           telefone?: string | null
           tipo_mensagem?: string | null
           unit_id?: string
+          wpp_msg_id?: string | null
         }
         Relationships: [
           {
