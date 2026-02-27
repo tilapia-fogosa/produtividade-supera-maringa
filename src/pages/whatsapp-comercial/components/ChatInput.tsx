@@ -134,7 +134,8 @@ export function ChatInput({ conversation, onMessageSent, replyingTo, onReplySent
           mensagem: processedMessage,
           client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
           profile_id: profileId,
-          unit_id: conversation.unitId
+          unit_id: conversation.unitId,
+          quoted_message_id: replyingTo ? Number(replyingTo.id) : undefined,
         }
       });
 

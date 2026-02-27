@@ -32,16 +32,41 @@ export function useMessages(clientId: string | null) {
         throw error;
       }
 
-      const messages: Message[] = ((data as any[]) || []).map(msg => ({
-        id: msg.id,
-        clientId: msg.telefone,
-        content: msg.mensagem || '',
-        createdAt: msg.created_at,
-        fromMe: msg.from_me || false,
-        createdByName: msg.from_me ? (msg.created_by_name || "Eu") : null,
-        tipoMensagem: msg.tipo_mensagem || 'text',
-        urlMedia: fixMediaUrl(msg.url_media) || null
-      }));
+      const rawMessages = (data as any[]) || [];
+      
+      // Criar mapa de mensagens por ID para resolver quoted messages
+      const messageMap = new Map<number, any>();
+      for (const msg of rawMessages) {
+        messageMap.set(msg.id, msg);
+      }
+
+      const messages: Message[] = rawMessages.map(msg => {
+        // Resolver quoted message se existir
+        let quotedMessage: Message['quotedMessage'] = null;
+        if (msg.quoted_message_id) {
+          const quoted = messageMap.get(msg.quoted_message_id);
+          if (quoted) {
+            quotedMessage = {
+              id: String(quoted.id),
+              content: quoted.mensagem || '',
+              senderName: quoted.from_me ? (quoted.created_by_name || 'Eu') : null,
+              fromMe: quoted.from_me || false,
+            };
+          }
+        }
+
+        return {
+          id: msg.id,
+          clientId: msg.telefone,
+          content: msg.mensagem || '',
+          createdAt: msg.created_at,
+          fromMe: msg.from_me || false,
+          createdByName: msg.from_me ? (msg.created_by_name || "Eu") : null,
+          tipoMensagem: msg.tipo_mensagem || 'text',
+          urlMedia: fixMediaUrl(msg.url_media) || null,
+          quotedMessage,
+        };
+      });
 
       // Buscar reações para todas as mensagens
       if (messages.length > 0) {

@@ -114,6 +114,13 @@ export function ChatMessage({ message, onReply }: ChatMessageProps) {
     );
   };
 
+  const renderReplyLabel = () => {
+    if (!message.quotedMessage) return null;
+    return (
+      <span className="text-[10px] text-muted-foreground italic">respondendo</span>
+    );
+  };
+
   return (
     <div className={cn("flex mb-2 group items-center gap-1", message.fromMe ? "justify-end" : "justify-start")}>
       {/* Menu de ações */}
@@ -137,6 +144,7 @@ export function ChatMessage({ message, onReply }: ChatMessageProps) {
           </p>
         )}
         <div className="flex items-center justify-between mt-1 text-xs opacity-70 gap-2">
+          {renderReplyLabel()}
           {message.fromMe && message.createdByName && <span>{message.createdByName}</span>}
           <span className={!message.fromMe || !message.createdByName ? "ml-auto" : ""}>{time}</span>
         </div>

@@ -54,7 +54,8 @@ serve(async (req) => {
       user_name,
       client_id,
       profile_id,
-      unit_id
+      unit_id,
+      quoted_message_id
     } = body;
 
     // Determina o destinatário final
@@ -211,6 +212,7 @@ serve(async (req) => {
           media_url: finalMediaUrl,
           created_by: profile_id,
           ...(unit_id ? { unit_id } : {}),
+          ...(quoted_message_id ? { quoted_message_id } : {}),
           from_me: true
         });
 
