@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Drawer, 
-  DrawerContent, 
-  DrawerHeader, 
-  DrawerTitle 
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +19,8 @@ import { X, History, FileText, Check, ChevronDown, ChevronUp, Users, User, Calen
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { 
-  useAtividadesAlertaEvasao, 
+import {
+  useAtividadesAlertaEvasao,
   TIPOS_ATIVIDADE,
   TIPOS_PERMITIDOS_APOS_ACOLHIMENTO,
   type TipoAtividadeEvasao,
@@ -48,6 +48,7 @@ const TIPOS_TAREFA_ADMIN = [
   'lancar_multa_sgs',
   'envio_agradecimento_nps',
   'digitalizar_rescisao',
+  'digitalizar_contrato_remover_arquivos',
   'corrigir_valores_sgs',
   'corrigir_valores_assinatura'
 ];
@@ -57,10 +58,10 @@ function gerarSlotsHorario(inicio: string, fim: string): string[] {
   const slots: string[] = [];
   const [horaInicio, minInicio] = inicio.split(':').map(Number);
   const [horaFim, minFim] = fim.split(':').map(Number);
-  
+
   let totalMinutos = horaInicio * 60 + minInicio;
   const totalMinutosFim = horaFim * 60 + minFim;
-  
+
   // Gerar slots até 1 hora antes do fim (para caber atendimento de 1h)
   while (totalMinutos <= totalMinutosFim - 60) {
     const horas = Math.floor(totalMinutos / 60);
@@ -68,25 +69,25 @@ function gerarSlotsHorario(inicio: string, fim: string): string[] {
     slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
     totalMinutos += 30;
   }
-  
+
   return slots;
 }
 
 // Função para verificar se um slot colide com um evento
 function slotColideComEvento(
-  slotInicio: string, 
+  slotInicio: string,
   eventos: Array<{ horario_inicio: string; horario_fim: string }>
 ): boolean {
   const [slotHora, slotMin] = slotInicio.split(':').map(Number);
   const slotInicioMin = slotHora * 60 + slotMin;
   const slotFimMin = slotInicioMin + 60; // 1 hora de duração
-  
+
   return eventos.some(evento => {
     const [eventoInicioHora, eventoInicioMin] = evento.horario_inicio.split(':').map(Number);
     const [eventoFimHora, eventoFimMin] = evento.horario_fim.split(':').map(Number);
     const eventoInicioTotal = eventoInicioHora * 60 + eventoInicioMin;
     const eventoFimTotal = eventoFimHora * 60 + eventoFimMin;
-    
+
     // Verifica sobreposição
     return slotInicioMin < eventoFimTotal && slotFimMin > eventoInicioTotal;
   });
@@ -96,7 +97,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   const [atividadeExpandida, setAtividadeExpandida] = useState<string | null>(null);
   const [tipoSelecionado, setTipoSelecionado] = useState<TipoAtividadeEvasao | null>(null);
   const [descricao, setDescricao] = useState('');
-  
+
   // Estado para painel de resultado da negociação
   const [mostrarResultadoNegociacao, setMostrarResultadoNegociacao] = useState(false);
   const [atividadeNegociacao, setAtividadeNegociacao] = useState<AtividadeAlertaEvasao | null>(null);
@@ -143,8 +144,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   const [dataAtendimentoFinanceiro, setDataAtendimentoFinanceiro] = useState<Date | undefined>(undefined);
   const [horarioAtendimentoFinanceiro, setHorarioAtendimentoFinanceiro] = useState('');
 
-  const { 
-    atividades, 
+  const {
+    atividades,
     isLoading,
     criarAtividade,
     isCriando,
@@ -205,7 +206,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleExpandirAtividade = (atividade: AtividadeAlertaEvasao) => {
     if (atividade.status === 'concluida') return;
-    
+
     // Se for tarefa administrativa, expande o painel de confirmação
     if (TIPOS_TAREFA_ADMIN.includes(atividade.tipo_atividade)) {
       fecharPainelResultado();
@@ -216,7 +217,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       setObservacoesTarefaAdmin('');
       return;
     }
-    
+
     // Se for atendimento financeiro (presencial), expande o painel de resultado
     if (atividade.tipo_atividade === 'atendimento_financeiro') {
       fecharPainelAcolhimento();
@@ -255,7 +256,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       setObservacoesPedagogico('');
       return;
     }
-    
+
     if (atividadeExpandida === atividade.id) {
       setAtividadeExpandida(null);
       setTipoSelecionado(null);
@@ -269,45 +270,45 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleConcluirTarefaAdmin = async () => {
     if (!atividadeTarefaAdmin || !alerta) return;
-    
+
     try {
       // Se for digitalizar_rescisao e tiver arquivo, fazer upload primeiro
       if (atividadeTarefaAdmin.tipo_atividade === 'digitalizar_rescisao' && arquivoRescisao) {
         setUploadingRescisao(true);
-        
+
         // Criar nome único para o arquivo
         const fileExt = arquivoRescisao.name.split('.').pop();
         const fileName = `${alerta.id}_${Date.now()}.${fileExt}`;
-        
+
         // Upload para o bucket
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('rescisoes-digitalizadas')
           .upload(fileName, arquivoRescisao);
-        
+
         if (uploadError) {
           console.error('Erro ao fazer upload:', uploadError);
           setUploadingRescisao(false);
           return;
         }
-        
+
         // Obter URL pública
         const { data: urlData } = supabase.storage
           .from('rescisoes-digitalizadas')
           .getPublicUrl(fileName);
-        
+
         // Atualizar o alerta com a URL
         const { error: updateError } = await supabase
           .from('alerta_evasao')
           .update({ rescisao_digitalizada_url: urlData.publicUrl })
           .eq('id', alerta.id);
-        
+
         if (updateError) {
           console.error('Erro ao atualizar alerta:', updateError);
         }
-        
+
         setUploadingRescisao(false);
       }
-      
+
       await concluirTarefa(atividadeTarefaAdmin.id);
       fecharPainelTarefaAdmin();
       onActivityCompleted?.();
@@ -319,13 +320,13 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleCriarAtividade = async (atividadeAnteriorId: string) => {
     if (!tipoSelecionado || !descricao.trim()) return;
-    
+
     await criarAtividade({
       tipo_atividade: tipoSelecionado,
       descricao: descricao.trim(),
       atividadeAnteriorId
     });
-    
+
     setAtividadeExpandida(null);
     setTipoSelecionado(null);
     setDescricao('');
@@ -333,9 +334,9 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleConfirmarResultado = async () => {
     if (!resultadoSelecionado || !atividadeNegociacao) return;
-    
+
     if ((resultadoSelecionado === 'ajuste_temporario' || resultadoSelecionado === 'novo_atendimento_financeiro') && !dataFimAjuste) return;
-    
+
     try {
       await processarNegociacao({
         resultado: resultadoSelecionado,
@@ -343,7 +344,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         dataFimAjuste: (resultadoSelecionado === 'ajuste_temporario' || resultadoSelecionado === 'novo_atendimento_financeiro') ? new Date(dataFimAjuste) : undefined,
         observacoes: observacoesNegociacao.trim() || undefined
       });
-      
+
       setMostrarResultadoNegociacao(false);
       setAtividadeNegociacao(null);
       setResultadoSelecionado(null);
@@ -401,7 +402,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleConfirmarAcolhimento = async () => {
     if (!tipoProximaAtividade || !atividadeAcolhimento || !observacoesAcolhimento.trim()) return;
-    
+
     // Se for atendimento pedagógico, abrir painel de agendamento
     if (tipoProximaAtividade === 'atendimento_pedagogico') {
       // Buscar professor da turma do aluno
@@ -409,7 +410,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       if (professorTurma) {
         setProfessorInfo({ id: professorTurma.id, nome: professorTurma.nome });
       }
-      
+
       setMostrarPainelAcolhimento(false);
       setMostrarPainelPedagogico(true);
       return;
@@ -421,7 +422,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       setMostrarPainelAtendimentoFinanceiro(true);
       return;
     }
-    
+
     try {
       // Montar descrição da PRÓXIMA atividade (data de agendamento se houver)
       // Nota: observacoesAtividadeAnterior é o descritivo da atividade que está sendo concluída
@@ -429,18 +430,18 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       if (tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento) {
         descricaoProxima = `Agendado para ${format(dataNovoAcolhimento, 'dd/MM/yyyy')}`;
       }
-      
+
       // Criar próxima atividade passando as observações para a atividade anterior
       await criarAtividade({
         tipo_atividade: tipoProximaAtividade,
         descricao: descricaoProxima,
         atividadeAnteriorId: atividadeAcolhimento.id,
         observacoesAtividadeAnterior: observacoesAcolhimento.trim(),
-        data_agendada: tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento 
-          ? format(dataNovoAcolhimento, 'yyyy-MM-dd') 
+        data_agendada: tipoProximaAtividade === 'acolhimento' && dataNovoAcolhimento
+          ? format(dataNovoAcolhimento, 'yyyy-MM-dd')
           : undefined
       });
-      
+
       fecharPainelAcolhimento();
       onActivityCompleted?.();
     } catch (error) {
@@ -451,34 +452,34 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   // Gerar slots de horário para atendimento financeiro (30 min cada)
   const horariosAtendimentoFinanceiro = useMemo(() => {
     if (!dataAtendimentoFinanceiro) return [];
-    
+
     const diasSemana: DiaSemana[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
     const diaSemana = diasSemana[dataAtendimentoFinanceiro.getDay()];
     const horarioFuncionamento = HORARIOS_FUNCIONAMENTO[diaSemana];
-    
+
     if (!horarioFuncionamento.aberto) return [];
-    
+
     // Gerar slots de 30 em 30 min
     const slots: string[] = [];
     const [horaInicio, minInicio] = horarioFuncionamento.inicio.split(':').map(Number);
     const [horaFim, minFim] = horarioFuncionamento.fim.split(':').map(Number);
-    
+
     let totalMinutos = horaInicio * 60 + minInicio;
     const totalMinutosFim = horaFim * 60 + minFim;
-    
+
     while (totalMinutos < totalMinutosFim) {
       const horas = Math.floor(totalMinutos / 60);
       const minutos = totalMinutos % 60;
       slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
       totalMinutos += 30;
     }
-    
+
     return slots;
   }, [dataAtendimentoFinanceiro]);
 
   const handleConfirmarAtendimentoFinanceiro = async () => {
     if (!atividadeAcolhimento || !observacoesAcolhimento.trim()) return;
-    
+
     try {
       // Montar descrição da PRÓXIMA atividade (atendimento financeiro)
       // Nota: observacoesAtividadeAnterior é o descritivo da atividade que está sendo concluída
@@ -488,7 +489,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       } else if (dataAtendimentoFinanceiro) {
         descricaoProxima = `Agendado para ${format(dataAtendimentoFinanceiro, 'dd/MM/yyyy')}`;
       }
-      
+
       // Criar o atendimento financeiro passando as observações para a atividade anterior
       await criarAtividade({
         tipo_atividade: 'atendimento_financeiro',
@@ -497,7 +498,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         observacoesAtividadeAnterior: observacoesAcolhimento.trim(),
         data_agendada: dataAtendimentoFinanceiro ? format(dataAtendimentoFinanceiro, 'yyyy-MM-dd') : undefined
       });
-      
+
       fecharPainelAtendimentoFinanceiro();
       setAtividadeAcolhimento(null);
       setTipoProximaAtividade(null);
@@ -511,11 +512,11 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleConfirmarAgendamentoPedagogico = async () => {
     if (!dataPedagogico || !horarioPedagogico || !atividadeAcolhimento) return;
-    
+
     try {
       const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
       const descricaoProxima = `Agendado para ${format(dataPedagogico, 'dd/MM/yyyy')} às ${horarioPedagogico}${professorInfo ? ` com ${professorInfo.nome}` : ''}`;
-      
+
       await criarAtividade({
         tipo_atividade: 'atendimento_pedagogico',
         descricao: descricaoProxima,
@@ -525,7 +526,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         horario_agendado: horarioPedagogico,
         professor_id_agendamento: professorInfo?.id
       });
-      
+
       fecharPainelPedagogico();
       setAtividadeAcolhimento(null);
       setTipoProximaAtividade(null);
@@ -538,7 +539,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
 
   const handleConfirmarConclusaoPedagogico = async () => {
     if (!resultadoPedagogico || !atividadePedagogicoParaConcluir || !observacoesPedagogico.trim()) return;
-    
+
     try {
       // Se for retenção, cria atividade de retenção com observações
       if (resultadoPedagogico === 'retencao') {
@@ -552,7 +553,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         onActivityCompleted?.();
         return;
       }
-      
+
       // Se for atendimento financeiro, cria atividade de atendimento financeiro
       if (resultadoPedagogico === 'atendimento_financeiro') {
         let descricaoProxima = '';
@@ -561,7 +562,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         } else if (dataFinanceiroPedagogico) {
           descricaoProxima = `Agendado para ${format(dataFinanceiroPedagogico, 'dd/MM/yyyy')}`;
         }
-        
+
         await criarAtividade({
           tipo_atividade: 'atendimento_financeiro',
           descricao: descricaoProxima,
@@ -583,37 +584,37 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     const slots: string[] = [];
     let totalMinutos = 8 * 60; // 08:00
     const totalMinutosFim = 18 * 60 + 30; // 18:30
-    
+
     while (totalMinutos <= totalMinutosFim) {
       const horas = Math.floor(totalMinutos / 60);
       const minutos = totalMinutos % 60;
       slots.push(`${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`);
       totalMinutos += 30;
     }
-    
+
     return slots;
   }, []);
 
   // Calcular horários disponíveis para a data selecionada
   const horariosDisponiveis = useMemo(() => {
     if (!dataPedagogico || !professorInfo?.id || !agendaData) return [];
-    
+
     // Obter dia da semana
     const diasSemana: DiaSemana[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
     const diaSemana = diasSemana[dataPedagogico.getDay()];
     const horarioFuncionamento = HORARIOS_FUNCIONAMENTO[diaSemana];
-    
+
     if (!horarioFuncionamento.aberto) return [];
-    
+
     // Gerar todos os slots possíveis
     const todosSlots = gerarSlotsHorario(horarioFuncionamento.inicio, horarioFuncionamento.fim);
-    
+
     // Buscar eventos do professor na data selecionada
     const agendaProfessor = agendaData[professorInfo.id];
     if (!agendaProfessor) return todosSlots;
-    
+
     const dataFormatada = format(dataPedagogico, 'yyyy-MM-dd');
-    
+
     // Filtrar eventos que acontecem na data selecionada:
     // 1. Eventos com data específica igual à data selecionada
     // 2. Aulas regulares (data = null) que acontecem no mesmo dia da semana
@@ -625,7 +626,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
       // Aulas regulares baseadas no dia da semana
       return e.dia_semana === diaSemana;
     });
-    
+
     // Filtrar slots que não colidem com eventos
     return todosSlots.filter(slot => !slotColideComEvento(slot, eventosDoDia));
   }, [dataPedagogico, professorInfo?.id, agendaData]);
@@ -634,7 +635,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   const handleDataPedagogicoChange = (date: Date | undefined) => {
     setDataPedagogico(date);
     setHorarioPedagogico(''); // Reset horário ao mudar data
-    
+
     if (date) {
       const novaSemanainicio = startOfWeek(date, { weekStartsOn: 1 });
       if (!isSameDay(novaSemanainicio, semanaPedagogico)) {
@@ -663,7 +664,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   // Renderiza info do responsável baseado no tipo
   const renderResponsavelInfo = (atividade: AtividadeAlertaEvasao) => {
     const isPendente = atividade.status === 'pendente';
-    
+
     if (!isPendente && atividade.concluido_por_nome) {
       return (
         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -672,7 +673,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         </span>
       );
     }
-    
+
     if (atividade.departamento_responsavel) {
       return (
         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -681,7 +682,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         </span>
       );
     }
-    
+
     if (atividade.responsavel_nome) {
       return (
         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -690,7 +691,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
         </span>
       );
     }
-    
+
     return null;
   };
 
@@ -716,7 +717,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
   // Renderiza data agendada se houver
   const renderDataAgendada = (atividade: AtividadeAlertaEvasao) => {
     if (!atividade.data_agendada) return null;
-    
+
     return (
       <span className="text-[10px] text-amber-600 flex items-center gap-1">
         <CalendarIcon className="h-2.5 w-2.5" />
@@ -737,13 +738,12 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
     const isAcolhimentoAtivo = mostrarPainelAcolhimento && atividadeAcolhimento?.id === atividade.id;
     const isTarefaAdminAtiva = mostrarPainelTarefaAdmin && atividadeTarefaAdmin?.id === atividade.id;
     const isPainelAtivo = isNegociacaoAtiva || isAcolhimentoAtivo || isTarefaAdminAtiva;
-    
+
     return (
-      <Card 
-        key={atividade.id} 
-        className={`overflow-hidden transition-all ${
-          isPendente ? 'cursor-pointer hover:shadow-sm' : ''
-        } ${!isPendente ? 'opacity-70' : ''} ${isPainelAtivo ? 'ring-2 ring-primary' : ''}`}
+      <Card
+        key={atividade.id}
+        className={`overflow-hidden transition-all ${isPendente ? 'cursor-pointer hover:shadow-sm' : ''
+          } ${!isPendente ? 'opacity-70' : ''} ${isPainelAtivo ? 'ring-2 ring-primary' : ''}`}
         onClick={() => handleExpandirAtividade(atividade)}
       >
         <div className={`h-1 ${tipoConfig.color}`} />
@@ -763,7 +763,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                 {formatarData(atividade.created_at)}
               </span>
               {isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
-                atividadeExpandida === atividade.id 
+                atividadeExpandida === atividade.id
                   ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
                   : <ChevronDown className="h-3 w-3 text-muted-foreground" />
               )}
@@ -776,15 +776,15 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
             {renderResponsavelInfo(atividade)}
             {renderDataAgendada(atividade)}
           </div>
-          
+
           {/* Formulário para criar nova atividade (expandido) */}
           {atividadeExpandida === atividade.id && isPendente && !isTarefaAdmin && !isNegociacaoFinanceira && !isAcolhimento && (
-            <div 
+            <div
               className="mt-2 pt-2 border-t space-y-2"
               onClick={(e) => e.stopPropagation()}
             >
               <p className="text-[10px] font-medium">Nova atividade:</p>
-              
+
               <div className="flex flex-wrap gap-1">
                 {TIPOS_PERMITIDOS_APOS_ACOLHIMENTO.map((tipo) => {
                   const config = getTipoConfig(tipo);
@@ -792,11 +792,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   return (
                     <Badge
                       key={tipo}
-                      className={`cursor-pointer transition-all text-[10px] px-1.5 py-0 ${
-                        isSelected 
-                          ? `${config.color} text-white ring-1 ring-offset-1` 
+                      className={`cursor-pointer transition-all text-[10px] px-1.5 py-0 ${isSelected
+                          ? `${config.color} text-white ring-1 ring-offset-1`
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      }`}
+                        }`}
                       onClick={() => setTipoSelecionado(tipo)}
                     >
                       {config.label}
@@ -804,7 +803,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   );
                 })}
               </div>
-              
+
               <Textarea
                 placeholder="Descrição..."
                 value={descricao}
@@ -812,7 +811,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                 rows={2}
                 className="text-xs min-h-[50px]"
               />
-              
+
               <Button
                 size="sm"
                 disabled={!tipoSelecionado || !descricao.trim() || isCriando}
@@ -928,7 +927,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              
+
               <div className="p-3 space-y-3 flex-1">
                 {/* Etapa 1: Observações do atendimento realizado */}
                 {etapaNegociacao === 'observacoes' && (
@@ -992,11 +991,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setResultadoSelecionado('evasao')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        resultadoSelecionado === 'evasao'
+                      className={`w-full p-2 rounded border text-left transition-all ${resultadoSelecionado === 'evasao'
                           ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
                           : 'border-border hover:border-red-300 hover:bg-red-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${resultadoSelecionado === 'evasao' ? 'bg-red-500' : 'bg-red-100'}`}>
@@ -1017,11 +1015,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setResultadoSelecionado('ajuste_temporario')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        resultadoSelecionado === 'ajuste_temporario'
+                      className={`w-full p-2 rounded border text-left transition-all ${resultadoSelecionado === 'ajuste_temporario'
                           ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500'
                           : 'border-border hover:border-amber-300 hover:bg-amber-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${resultadoSelecionado === 'ajuste_temporario' ? 'bg-amber-500' : 'bg-amber-100'}`}>
@@ -1054,16 +1051,16 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                               if (value.length >= 3) formatted += '/' + value.substring(2, 4);
                               if (value.length >= 5) formatted += '/' + value.substring(4, 8);
                               e.target.value = formatted;
-                              
+
                               // Se tiver 8 dígitos, tentar converter para data
                               if (value.length === 8) {
                                 const day = parseInt(value.substring(0, 2), 10);
                                 const month = parseInt(value.substring(2, 4), 10) - 1;
                                 const year = parseInt(value.substring(4, 8), 10);
                                 const date = new Date(year, month, day);
-                                
+
                                 // Validar se a data é válida e não é passada
-                                if (!isNaN(date.getTime()) && date >= new Date(new Date().setHours(0,0,0,0))) {
+                                if (!isNaN(date.getTime()) && date >= new Date(new Date().setHours(0, 0, 0, 0))) {
                                   setDataFimAjuste(date.toISOString().split('T')[0]);
                                 }
                               } else if (value.length === 0) {
@@ -1101,11 +1098,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setResultadoSelecionado('ajuste_definitivo')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        resultadoSelecionado === 'ajuste_definitivo'
+                      className={`w-full p-2 rounded border text-left transition-all ${resultadoSelecionado === 'ajuste_definitivo'
                           ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
                           : 'border-border hover:border-green-300 hover:bg-green-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${resultadoSelecionado === 'ajuste_definitivo' ? 'bg-green-500' : 'bg-green-100'}`}>
@@ -1126,11 +1122,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setResultadoSelecionado('novo_atendimento_financeiro')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        resultadoSelecionado === 'novo_atendimento_financeiro'
+                      className={`w-full p-2 rounded border text-left transition-all ${resultadoSelecionado === 'novo_atendimento_financeiro'
                           ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
                           : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${resultadoSelecionado === 'novo_atendimento_financeiro' ? 'bg-purple-500' : 'bg-purple-100'}`}>
@@ -1163,16 +1158,16 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                               if (value.length >= 3) formatted += '/' + value.substring(2, 4);
                               if (value.length >= 5) formatted += '/' + value.substring(4, 8);
                               e.target.value = formatted;
-                              
+
                               // Se tiver 8 dígitos, tentar converter para data
                               if (value.length === 8) {
                                 const day = parseInt(value.substring(0, 2), 10);
                                 const month = parseInt(value.substring(2, 4), 10) - 1;
                                 const year = parseInt(value.substring(4, 8), 10);
                                 const date = new Date(year, month, day);
-                                
+
                                 // Validar se a data é válida e não é passada
-                                if (!isNaN(date.getTime()) && date >= new Date(new Date().setHours(0,0,0,0))) {
+                                if (!isNaN(date.getTime()) && date >= new Date(new Date().setHours(0, 0, 0, 0))) {
                                   setDataFimAjuste(date.toISOString().split('T')[0]);
                                 }
                               } else if (value.length === 0) {
@@ -1212,7 +1207,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                         size="sm"
                         className="w-full h-7 text-xs"
                         disabled={
-                          !resultadoSelecionado || 
+                          !resultadoSelecionado ||
                           (resultadoSelecionado === 'ajuste_temporario' && !dataFimAjuste) ||
                           (resultadoSelecionado === 'novo_atendimento_financeiro' && !dataFimAjuste) ||
                           isProcessandoNegociacao
@@ -1239,7 +1234,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              
+
               <div className="p-3 space-y-3 flex-1">
                 {/* Etapa 1: Observações do atendimento realizado */}
                 {etapaAcolhimento === 'observacoes' && (
@@ -1303,11 +1298,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setTipoProximaAtividade('atendimento_financeiro')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        tipoProximaAtividade === 'atendimento_financeiro'
+                      className={`w-full p-2 rounded border text-left transition-all ${tipoProximaAtividade === 'atendimento_financeiro'
                           ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
                           : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${tipoProximaAtividade === 'atendimento_financeiro' ? 'bg-purple-500' : 'bg-purple-100'}`}>
@@ -1328,11 +1322,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setTipoProximaAtividade('atendimento_pedagogico')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        tipoProximaAtividade === 'atendimento_pedagogico'
+                      className={`w-full p-2 rounded border text-left transition-all ${tipoProximaAtividade === 'atendimento_pedagogico'
                           ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500'
                           : 'border-border hover:border-orange-300 hover:bg-orange-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${tipoProximaAtividade === 'atendimento_pedagogico' ? 'bg-orange-500' : 'bg-orange-100'}`}>
@@ -1353,11 +1346,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setTipoProximaAtividade('acolhimento')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        tipoProximaAtividade === 'acolhimento'
+                      className={`w-full p-2 rounded border text-left transition-all ${tipoProximaAtividade === 'acolhimento'
                           ? 'border-yellow-500 bg-yellow-50 ring-1 ring-yellow-500'
                           : 'border-border hover:border-yellow-300 hover:bg-yellow-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${tipoProximaAtividade === 'acolhimento' ? 'bg-yellow-500' : 'bg-yellow-100'}`}>
@@ -1378,11 +1370,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                     <button
                       type="button"
                       onClick={() => setTipoProximaAtividade('retencao')}
-                      className={`w-full p-2 rounded border text-left transition-all ${
-                        tipoProximaAtividade === 'retencao'
+                      className={`w-full p-2 rounded border text-left transition-all ${tipoProximaAtividade === 'retencao'
                           ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
                           : 'border-border hover:border-green-300 hover:bg-green-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <div className={`p-1 rounded ${tipoProximaAtividade === 'retencao' ? 'bg-green-500' : 'bg-green-100'}`}>
@@ -1413,8 +1404,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                               )}
                             >
                               <CalendarIcon className="mr-2 h-3 w-3" />
-                              {dataNovoAcolhimento 
-                                ? format(dataNovoAcolhimento, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                              {dataNovoAcolhimento
+                                ? format(dataNovoAcolhimento, "dd/MM/yyyy (EEEE)", { locale: ptBR })
                                 : <span>Selecione a data</span>
                               }
                             </Button>
@@ -1446,11 +1437,11 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                         disabled={!tipoProximaAtividade || isCriando}
                         onClick={handleConfirmarAcolhimento}
                       >
-                        {tipoProximaAtividade === 'atendimento_pedagogico' 
-                          ? 'Agendar Atendimento' 
-                          : tipoProximaAtividade === 'atendimento_financeiro'
+                        {tipoProximaAtividade === 'atendimento_pedagogico'
                           ? 'Agendar Atendimento'
-                          : isCriando ? 'Registrando...' : 'Confirmar'}
+                          : tipoProximaAtividade === 'atendimento_financeiro'
+                            ? 'Agendar Atendimento'
+                            : isCriando ? 'Registrando...' : 'Confirmar'}
                       </Button>
                     </div>
                   </>
@@ -1468,7 +1459,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              
+
               <div className="p-3 space-y-3 flex-1">
                 {/* Informação da tarefa */}
                 <div className="p-2 bg-muted/50 rounded border">
@@ -1557,7 +1548,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              
+
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-3">
                   {/* Informação do professor */}
@@ -1589,8 +1580,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                           )}
                         >
                           <CalendarIcon className="mr-2 h-3 w-3" />
-                          {dataPedagogico 
-                            ? format(dataPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                          {dataPedagogico
+                            ? format(dataPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR })
                             : <span>Selecione a data</span>
                           }
                         </Button>
@@ -1637,7 +1628,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                               const fimH = Math.floor(fimMin / 60);
                               const fimM = fimMin % 60;
                               const horarioFim = `${String(fimH).padStart(2, '0')}:${String(fimM).padStart(2, '0')}`;
-                              
+
                               return (
                                 <SelectItem key={horario} value={horario} className="text-xs">
                                   <div className="flex items-center gap-2">
@@ -1671,8 +1662,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                       size="sm"
                       className="w-full h-7 text-xs"
                       disabled={
-                        !dataPedagogico || 
-                        !horarioPedagogico || 
+                        !dataPedagogico ||
+                        !horarioPedagogico ||
                         isCriando
                       }
                       onClick={handleConfirmarAgendamentoPedagogico}
@@ -1694,7 +1685,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              
+
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-3">
                   {/* Informação da atividade */}
@@ -1751,11 +1742,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                         onClick={() => {
                           setResultadoPedagogico('retencao');
                         }}
-                        className={`w-full p-2 rounded border text-left transition-all ${
-                          resultadoPedagogico === 'retencao'
+                        className={`w-full p-2 rounded border text-left transition-all ${resultadoPedagogico === 'retencao'
                             ? 'border-green-500 bg-green-50 ring-1 ring-green-500'
                             : 'border-border hover:border-green-300 hover:bg-green-50/50'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2">
                           <div className={`p-1 rounded ${resultadoPedagogico === 'retencao' ? 'bg-green-500' : 'bg-green-100'}`}>
@@ -1779,11 +1769,10 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                           setResultadoPedagogico('atendimento_financeiro');
                           setEtapaConclusaoPedagogico('financeiro');
                         }}
-                        className={`w-full p-2 rounded border text-left transition-all ${
-                          resultadoPedagogico === 'atendimento_financeiro'
+                        className={`w-full p-2 rounded border text-left transition-all ${resultadoPedagogico === 'atendimento_financeiro'
                             ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500'
                             : 'border-border hover:border-purple-300 hover:bg-purple-50/50'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2">
                           <div className={`p-1 rounded ${resultadoPedagogico === 'atendimento_financeiro' ? 'bg-purple-500' : 'bg-purple-100'}`}>
@@ -1858,8 +1847,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                               )}
                             >
                               <CalendarIcon className="mr-2 h-3 w-3" />
-                              {dataFinanceiroPedagogico 
-                                ? format(dataFinanceiroPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                              {dataFinanceiroPedagogico
+                                ? format(dataFinanceiroPedagogico, "dd/MM/yyyy (EEEE)", { locale: ptBR })
                                 : <span>Selecione a data</span>
                               }
                             </Button>
@@ -1949,7 +1938,7 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              
+
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-3">
                   {/* Card com estilo igual ao pedagógico */}
@@ -1985,8 +1974,8 @@ export function AtividadesDrawer({ open, onClose, alerta, onActivityCompleted }:
                           )}
                         >
                           <CalendarIcon className="mr-2 h-3 w-3" />
-                          {dataAtendimentoFinanceiro 
-                            ? format(dataAtendimentoFinanceiro, "dd/MM/yyyy (EEEE)", { locale: ptBR }) 
+                          {dataAtendimentoFinanceiro
+                            ? format(dataAtendimentoFinanceiro, "dd/MM/yyyy (EEEE)", { locale: ptBR })
                             : <span>Selecione a data</span>
                           }
                         </Button>

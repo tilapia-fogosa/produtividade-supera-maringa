@@ -75,7 +75,7 @@ export default function Home() {
   const { activeUnit } = useActiveUnit();
   const navigate = useNavigate();
   const hoje = new Date();
-  
+
   // Datas para os períodos
   const hojeStr = format(hoje, 'yyyy-MM-dd');
   const inicioSemana = startOfWeek(hoje, { weekStartsOn: 0 });
@@ -91,8 +91,8 @@ export default function Home() {
   const { reposicoes = [] } = useListaReposicoes();
 
   // Buscar atividades específicas do professor
-  const { 
-    isProfessor, 
+  const {
+    isProfessor,
     isLoading: loadingProfessor,
     reposicoes: reposicoesProfessor,
     camisetasPendentes,
@@ -109,17 +109,17 @@ export default function Home() {
 
   // Buscar coletas AH pendentes (para admins)
   const { data: todasColetasAH = [], isLoading: loadingColetasAH } = useProximasColetasAH();
-  
+
   // Buscar camisetas pendentes (para admins)
   const { alunos: todosCamisetas = [], loading: loadingCamisetas, marcarComoEntregueComDetalhes, refetch: refetchCamisetas } = useCamisetas();
-  
+
   // Buscar apostilas AH prontas (para admins)
   const { data: todasApostilasRecolhidas = [], isLoading: loadingApostilas } = useApostilasRecolhidas();
-  
+
   // Estado para modal de camiseta
   const [camisetaModalOpen, setCamisetaModalOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<{ id: string; nome: string } | null>(null);
-  
+
   // Estado para modal de coleta AH
   const [coletaAHModalOpen, setColetaAHModalOpen] = useState(false);
   const [pessoaSelecionadaAH, setPessoaSelecionadaAH] = useState<{
@@ -139,10 +139,10 @@ export default function Home() {
   // Estado para drawer de atividades de evasão
   const [drawerEvasaoAberto, setDrawerEvasaoAberto] = useState(false);
   const [alertaSelecionado, setAlertaSelecionado] = useState<AlertaEvasao | null>(null);
-  
+
   // Buscar aniversariantes
   const { data: aniversariantes, refetch: refetchAniversariantes } = useAniversariantes(activeUnit?.id);
-  
+
   // Estado para modal de aniversário
   const [aniversarioModalOpen, setAniversarioModalOpen] = useState(false);
   const [aniversariantesSelecionado, setAniversariantesSelecionado] = useState<{
@@ -210,37 +210,37 @@ export default function Home() {
 
   // Buscar pendências de botom (para admins e professores)
   const { pendencias: pendenciasBotom = [], refetch: refetchBotom } = usePendenciasBotom();
-  
+
   // Buscar atividades de alerta de evasão pendentes
   const { data: atividadesEvasao = [], isLoading: loadingAtividadesEvasao, refetch: refetchAtividadesEvasao } = useAtividadesEvasaoHome();
-  
+
   // Permissões do usuário
   const { isAdmin, isManagement, isAdministrativo } = useUserPermissions();
-  
+
   // Buscar pós-matrículas incompletas (para admins e administrativo)
   const { data: posMatriculasIncompletas = [], isLoading: loadingPosMatriculas } = usePosMatriculasIncompletas();
-  
+
   // Buscar pessoas ignoradas para filtrar atividades AH
   const { data: pessoasIgnoradas = [] } = useAlunosIgnoradosAH();
   const idsIgnorados = new Set(pessoasIgnoradas.map(p => p.pessoa_id));
-  
+
   // Filtrar coletas com mais de 90 dias para admins (excluindo ignorados)
-  const coletasAHAdmins = todasColetasAH.filter(c => 
-    c.dias_desde_ultima_correcao !== null && 
+  const coletasAHAdmins = todasColetasAH.filter(c =>
+    c.dias_desde_ultima_correcao !== null &&
     c.dias_desde_ultima_correcao >= 90 &&
     !idsIgnorados.has(c.id)
   );
-  
+
   // Filtrar camisetas pendentes (>60 dias e não entregues) para admins
-  const camisetasAdmins = todosCamisetas.filter(c => 
+  const camisetasAdmins = todosCamisetas.filter(c =>
     !c.camiseta_entregue && !c.nao_tem_tamanho && (c.dias_supera || 0) >= 60
   );
-  
+
   // Filtrar apostilas prontas para entregar (com correções) e para corrigir (sem correções) para admins (excluindo ignorados)
-  const apostilasProntasAdmins = todasApostilasRecolhidas.filter(a => 
+  const apostilasProntasAdmins = todasApostilasRecolhidas.filter(a =>
     !a.foi_entregue && a.total_correcoes > 0 && !idsIgnorados.has(a.pessoa_id)
   );
-  const apostilasParaCorrigirAdmins = todasApostilasRecolhidas.filter(a => 
+  const apostilasParaCorrigirAdmins = todasApostilasRecolhidas.filter(a =>
     !a.foi_entregue && !a.correcao_iniciada && !idsIgnorados.has(a.pessoa_id)
   );
 
@@ -272,6 +272,15 @@ export default function Home() {
       'atendimento_pedagogico': 'Atend. Pedagógico',
       'atendimento_financeiro': 'Atend. Financeiro',
       'remover_sgs': 'Remover SGS',
+      'cancelar_assinatura': 'Cancelar Assinatura',
+      'remover_whatsapp': 'Remover WhatsApp',
+      'criar_ficha_rescisao': 'Criar Ficha Rescisão',
+      'lancar_multa_sgs': 'Lançar Multa SGS',
+      'envio_agradecimento_nps': 'Enviar NPS',
+      'digitalizar_rescisao': 'Digitalizar Rescisão',
+      'digitalizar_contrato_remover_arquivos': 'Digitalizar Contrato e Remover',
+      'corrigir_valores_sgs': 'Corrigir SGS',
+      'corrigir_valores_assinatura': 'Corrigir Assinatura',
       'evasao': 'Evasão',
       'tarefa_admin': 'Tarefa Admin',
     };
@@ -307,7 +316,7 @@ export default function Home() {
     // Usar data_referencia (que é data_agendada ou created_at)
     const dataReferencia = parseISO(atividade.data_referencia);
     const hojeInicio = startOfDay(hoje);
-    
+
     if (isBefore(dataReferencia, hojeInicio)) {
       eventosAtrasados.push(evento);
     } else if (atividade.data_referencia === hojeStr) {
@@ -334,7 +343,7 @@ export default function Home() {
       });
 
       // === EVENTOS ATRASADOS ===
-      
+
       // Coletas AH pendentes (+90 dias)
       coletasAHAdmins.forEach(c => {
         eventosAtrasados.push({
@@ -347,7 +356,7 @@ export default function Home() {
           pessoa_origem: c.origem,
         });
       });
-      
+
       // Camisetas pendentes
       camisetasAdmins.forEach(c => {
         eventosAtrasados.push({
@@ -359,7 +368,7 @@ export default function Home() {
           aluno_nome: c.nome,
         });
       });
-      
+
       // Apostilas AH prontas para entregar (corrigidas e não entregues)
       apostilasProntasAdmins.forEach(a => {
         eventosAtrasados.push({
@@ -372,7 +381,7 @@ export default function Home() {
           pessoa_nome: a.pessoa_nome,
         });
       });
-      
+
       // Apostilas AH para corrigir (recolhidas sem correção iniciada)
       apostilasParaCorrigirAdmins.forEach(a => {
         eventosAtrasados.push({
@@ -385,7 +394,7 @@ export default function Home() {
           pessoa_nome: a.pessoa_nome,
         });
       });
-      
+
       // Pendências de botom (entregas pendentes)
       pendenciasBotom.forEach(b => {
         eventosAtrasados.push({
@@ -399,14 +408,14 @@ export default function Home() {
           apostila_nova: b.apostila_nova,
         });
       });
-      
+
       // Pós-matrículas incompletas (para admins e administrativo)
       posMatriculasIncompletas.forEach(pm => {
         const pendentes: string[] = [];
         if (!pm.cadastrais_completo) pendentes.push('Cadastrais');
         if (!pm.comerciais_completo) pendentes.push('Comerciais');
         if (!pm.pedagogicos_completo) pendentes.push('Pedagógicos');
-        
+
         eventosAtrasados.push({
           tipo: 'pos_matricula',
           titulo: `Pós-Matrícula: ${pm.client_name}`,
@@ -508,7 +517,7 @@ export default function Home() {
 
       return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     }
-    
+
     if (isProfessor) {
       // Para professores: usar apenas atividades das suas turmas
       const eventosAtrasados: Evento[] = [];
@@ -654,11 +663,16 @@ export default function Home() {
 
       return { eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana };
     } else if (isAdministrativo) {
-      // Para setor administrativo: mostrar pós-matrículas incompletas
+      // Para setor administrativo: mostrar pós-matrículas e tarefas de evasão
       const eventosAtrasados: Evento[] = [];
       const eventosHoje: Evento[] = [];
       const eventosSemana: Evento[] = [];
       const eventosProximaSemana: Evento[] = [];
+
+      // === ATIVIDADES DE ALERTA DE EVASÃO DO ADMINISTRATIVO ===
+      atividadesEvasao.forEach(atividade => {
+        categorizarEventoEvasao(atividade, eventosAtrasados, eventosHoje, eventosSemana, eventosProximaSemana);
+      });
 
       // Pós-matrículas incompletas
       posMatriculasIncompletas.forEach(pm => {
@@ -666,7 +680,7 @@ export default function Home() {
         if (!pm.cadastrais_completo) pendentes.push('Cadastrais');
         if (!pm.comerciais_completo) pendentes.push('Comerciais');
         if (!pm.pedagogicos_completo) pendentes.push('Pedagógicos');
-        
+
         eventosAtrasados.push({
           tipo: 'pos_matricula',
           titulo: `Pós-Matrícula: ${pm.client_name}`,
@@ -809,7 +823,7 @@ export default function Home() {
 
   const handleCriarTarefa = async () => {
     if (!novaTarefa.titulo.trim()) return;
-    
+
     await criarTarefa.mutateAsync({
       titulo: novaTarefa.titulo,
       descricao: novaTarefa.descricao || null,
@@ -817,7 +831,7 @@ export default function Home() {
       prioridade: novaTarefa.prioridade,
       concluida: false,
     });
-    
+
     setNovaTarefa({
       titulo: '',
       descricao: '',
@@ -841,9 +855,8 @@ export default function Home() {
   const renderTarefa = (tarefa: TarefaPessoal) => (
     <div
       key={tarefa.id}
-      className={`flex items-center gap-2 p-2 rounded-md border transition-colors ${
-        tarefa.concluida ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-muted/30'
-      }`}
+      className={`flex items-center gap-2 p-2 rounded-md border transition-colors ${tarefa.concluida ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-muted/30'
+        }`}
     >
       <Checkbox
         checked={tarefa.concluida}
@@ -952,7 +965,7 @@ export default function Home() {
         `)
         .eq('id', evento.alerta_evasao_id)
         .single();
-      
+
       if (alertaData) {
         setAlertaSelecionado(alertaData as unknown as AlertaEvasao);
         setDrawerEvasaoAberto(true);
@@ -1014,7 +1027,7 @@ export default function Home() {
   const handleAulaInauguralClick = async (evento: Evento) => {
     if (evento.aula_inaugural_atividade_id) {
       const atividadeId = evento.aula_inaugural_atividade_id;
-      
+
       // Buscar nome do aluno/cliente pela atividade específica
       const { data: posVenda } = await supabase
         .from('atividade_pos_venda')
@@ -1029,12 +1042,12 @@ export default function Home() {
   };
 
   const handleSalvarCamiseta = async (dados: {
-    alunoId: string; 
-    tamanho_camiseta: string; 
-    data_entrega: Date; 
-    observacoes?: string; 
-    funcionario_registro_id?: string; 
-    responsavel_nome?: string; 
+    alunoId: string;
+    tamanho_camiseta: string;
+    data_entrega: Date;
+    observacoes?: string;
+    funcionario_registro_id?: string;
+    responsavel_nome?: string;
   }) => {
     await marcarComoEntregueComDetalhes(dados);
     refetchCamisetas();
@@ -1052,7 +1065,7 @@ export default function Home() {
     const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
     const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_atividade_id;
     const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel || isAulaInauguralClicavel;
-    
+
     const handleClick = () => {
       if (isCamisetaClicavel) {
         handleCamisetaClick(evento);
@@ -1072,13 +1085,12 @@ export default function Home() {
         handleAulaInauguralClick(evento);
       }
     };
-    
+
     return (
       <div
         key={`${evento.tipo}-${index}`}
-        className={`flex items-center gap-2 p-2 rounded-md border bg-card ${
-          isClicavel ? 'cursor-pointer hover:bg-accent transition-colors active:scale-[0.98]' : ''
-        }`}
+        className={`flex items-center gap-2 p-2 rounded-md border bg-card ${isClicavel ? 'cursor-pointer hover:bg-accent transition-colors active:scale-[0.98]' : ''
+          }`}
         onClick={isClicavel ? handleClick : undefined}
       >
         {getEventoIcon(evento.tipo)}
@@ -1086,7 +1098,7 @@ export default function Home() {
           <p className="text-xs font-medium">{evento.titulo}</p>
           <p className="text-[10px] text-muted-foreground">
             {evento.subtitulo || (
-              (evento.tipo === 'reposicao' || evento.tipo === 'aula_experimental') 
+              (evento.tipo === 'reposicao' || evento.tipo === 'aula_experimental')
                 ? `${evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : ''} • ${evento.turma_nome || ''}${evento.educador_nome ? ` • ${evento.educador_nome}` : ''}`
                 : (evento.data ? format(parseISO(evento.data), "EEE, dd/MM", { locale: ptBR }) : '')
             )}
@@ -1202,7 +1214,7 @@ export default function Home() {
                     {tiposSelecionados.size === tiposAtividades.length ? 'Desmarcar todos' : 'Selecionar todos'}
                   </span>
                 </div>
-                
+
                 {/* Lista de tipos */}
                 {tiposAtividades.map(tipo => {
                   const Icon = tipo.icon;
@@ -1233,74 +1245,74 @@ export default function Home() {
                 Nova
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-[90vw] rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-base">Nova Tarefa</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 pt-2">
-              <div className="space-y-1">
-                <Label htmlFor="titulo" className="text-xs">Título</Label>
-                <Input
-                  id="titulo"
-                  value={novaTarefa.titulo}
-                  onChange={(e) => setNovaTarefa(prev => ({ ...prev, titulo: e.target.value }))}
-                  placeholder="O que precisa fazer?"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="descricao" className="text-xs">Descrição (opcional)</Label>
-                <Input
-                  id="descricao"
-                  value={novaTarefa.descricao}
-                  onChange={(e) => setNovaTarefa(prev => ({ ...prev, descricao: e.target.value }))}
-                  placeholder="Detalhes da tarefa"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+            <DialogContent className="max-w-[90vw] rounded-lg">
+              <DialogHeader>
+                <DialogTitle className="text-base">Nova Tarefa</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 pt-2">
                 <div className="space-y-1">
-                  <Label htmlFor="data" className="text-xs">Data</Label>
+                  <Label htmlFor="titulo" className="text-xs">Título</Label>
                   <Input
-                    id="data"
-                    type="date"
-                    value={novaTarefa.data_vencimento}
-                    onChange={(e) => setNovaTarefa(prev => ({ ...prev, data_vencimento: e.target.value }))}
+                    id="titulo"
+                    value={novaTarefa.titulo}
+                    onChange={(e) => setNovaTarefa(prev => ({ ...prev, titulo: e.target.value }))}
+                    placeholder="O que precisa fazer?"
                     className="h-8 text-sm"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="prioridade" className="text-xs">Prioridade</Label>
-                  <Select
-                    value={novaTarefa.prioridade}
-                    onValueChange={(v) => setNovaTarefa(prev => ({ ...prev, prioridade: v as any }))}
-                  >
-                    <SelectTrigger className="h-8 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="baixa">Baixa</SelectItem>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="descricao" className="text-xs">Descrição (opcional)</Label>
+                  <Input
+                    id="descricao"
+                    value={novaTarefa.descricao}
+                    onChange={(e) => setNovaTarefa(prev => ({ ...prev, descricao: e.target.value }))}
+                    placeholder="Detalhes da tarefa"
+                    className="h-8 text-sm"
+                  />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="data" className="text-xs">Data</Label>
+                    <Input
+                      id="data"
+                      type="date"
+                      value={novaTarefa.data_vencimento}
+                      onChange={(e) => setNovaTarefa(prev => ({ ...prev, data_vencimento: e.target.value }))}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="prioridade" className="text-xs">Prioridade</Label>
+                    <Select
+                      value={novaTarefa.prioridade}
+                      onValueChange={(v) => setNovaTarefa(prev => ({ ...prev, prioridade: v as any }))}
+                    >
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="baixa">Baixa</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="alta">Alta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleCriarTarefa}
+                  disabled={!novaTarefa.titulo.trim() || criarTarefa.isPending}
+                  className="w-full h-8 text-sm"
+                >
+                  {criarTarefa.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  Criar Tarefa
+                </Button>
               </div>
-              <Button
-                onClick={handleCriarTarefa}
-                disabled={!novaTarefa.titulo.trim() || criarTarefa.isPending}
-                className="w-full h-8 text-sm"
-              >
-                {criarTarefa.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                ) : (
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                )}
-                Criar Tarefa
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -1422,9 +1434,9 @@ export default function Home() {
       />
 
       {/* Modal de Alerta de Evasão (lançamento) */}
-      <AlertaEvasaoModal 
-        isOpen={showAlertaEvasaoModal} 
-        onClose={() => setShowAlertaEvasaoModal(false)} 
+      <AlertaEvasaoModal
+        isOpen={showAlertaEvasaoModal}
+        onClose={() => setShowAlertaEvasaoModal(false)}
       />
     </div>
   );

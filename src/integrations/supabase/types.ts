@@ -838,8 +838,8 @@ export type Database = {
           enrollment_payment_confirmed: boolean | null
           enrollment_payment_date: string | null
           enrollment_payment_method:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           first_monthly_fee_date: string | null
           full_name: string | null
           id: string
@@ -850,12 +850,12 @@ export type Database = {
           material_payment_confirmed: boolean | null
           material_payment_date: string | null
           material_payment_method:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           monthly_fee_amount: number | null
           monthly_fee_payment_method:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           motivo_procura: string | null
           percepcao_coordenador: string | null
           photo_thumbnail_url: string | null
@@ -902,8 +902,8 @@ export type Database = {
           enrollment_payment_confirmed?: boolean | null
           enrollment_payment_date?: string | null
           enrollment_payment_method?:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
@@ -914,12 +914,12 @@ export type Database = {
           material_payment_confirmed?: boolean | null
           material_payment_date?: string | null
           material_payment_method?:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           monthly_fee_amount?: number | null
           monthly_fee_payment_method?:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           motivo_procura?: string | null
           percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
@@ -966,8 +966,8 @@ export type Database = {
           enrollment_payment_confirmed?: boolean | null
           enrollment_payment_date?: string | null
           enrollment_payment_method?:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
@@ -978,12 +978,12 @@ export type Database = {
           material_payment_confirmed?: boolean | null
           material_payment_date?: string | null
           material_payment_method?:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           monthly_fee_amount?: number | null
           monthly_fee_payment_method?:
-            | Database["public"]["Enums"]["payment_method"]
-            | null
+          | Database["public"]["Enums"]["payment_method"]
+          | null
           motivo_procura?: string | null
           percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
@@ -2412,8 +2412,8 @@ export type Database = {
           enviado_crm: boolean | null
           evento: string | null
           "forma de pagamento":
-            | Database["public"]["Enums"]["forma_de_pagamento"]
-            | null
+          | Database["public"]["Enums"]["forma_de_pagamento"]
+          | null
           id: string
           nome: string | null
           Observaçoes: string | null
@@ -2428,8 +2428,8 @@ export type Database = {
           enviado_crm?: boolean | null
           evento?: string | null
           "forma de pagamento"?:
-            | Database["public"]["Enums"]["forma_de_pagamento"]
-            | null
+          | Database["public"]["Enums"]["forma_de_pagamento"]
+          | null
           id?: string
           nome?: string | null
           Observaçoes?: string | null
@@ -2444,8 +2444,8 @@ export type Database = {
           enviado_crm?: boolean | null
           evento?: string | null
           "forma de pagamento"?:
-            | Database["public"]["Enums"]["forma_de_pagamento"]
-            | null
+          | Database["public"]["Enums"]["forma_de_pagamento"]
+          | null
           id?: string
           nome?: string | null
           Observaçoes?: string | null
@@ -3087,8 +3087,8 @@ export type Database = {
           sala_id: string
           tipo_evento: Database["public"]["Enums"]["tipo_evento_sala"]
           tipo_recorrencia:
-            | Database["public"]["Enums"]["tipo_recorrencia"]
-            | null
+          | Database["public"]["Enums"]["tipo_recorrencia"]
+          | null
           titulo: string
           turma_id: string | null
           unit_id: string
@@ -3114,8 +3114,8 @@ export type Database = {
           sala_id: string
           tipo_evento: Database["public"]["Enums"]["tipo_evento_sala"]
           tipo_recorrencia?:
-            | Database["public"]["Enums"]["tipo_recorrencia"]
-            | null
+          | Database["public"]["Enums"]["tipo_recorrencia"]
+          | null
           titulo: string
           turma_id?: string | null
           unit_id: string
@@ -3141,8 +3141,8 @@ export type Database = {
           sala_id?: string
           tipo_evento?: Database["public"]["Enums"]["tipo_evento_sala"]
           tipo_recorrencia?:
-            | Database["public"]["Enums"]["tipo_recorrencia"]
-            | null
+          | Database["public"]["Enums"]["tipo_recorrencia"]
+          | null
           titulo?: string
           turma_id?: string | null
           unit_id?: string
@@ -6796,81 +6796,81 @@ export type Database = {
         Returns: Json
       }
       get_aluno_detalhes:
-        | {
-            Args: { p_aluno_nome: string }
-            Returns: {
-              aluno_id: string
-              educador: string
-              faltas_recorrentes: boolean
-              turma: string
-            }[]
-          }
-        | {
-            Args: { p_aluno_nome: string; p_unit_id?: string }
-            Returns: {
-              aluno_id: string
-              educador: string
-              faltas_recorrentes: boolean
-              turma: string
-            }[]
-          }
+      | {
+        Args: { p_aluno_nome: string }
+        Returns: {
+          aluno_id: string
+          educador: string
+          faltas_recorrentes: boolean
+          turma: string
+        }[]
+      }
+      | {
+        Args: { p_aluno_nome: string; p_unit_id?: string }
+        Returns: {
+          aluno_id: string
+          educador: string
+          faltas_recorrentes: boolean
+          turma: string
+        }[]
+      }
       get_alunos_retencoes_historico:
-        | {
-            Args: { p_search_term?: string; p_status_filter?: string }
-            Returns: {
-              alertas_ativos: number
-              educador: string
-              id: string
-              nome: string
-              status: string
-              total_alertas: number
-              total_retencoes: number
-              turma: string
-              ultima_retencao: string
-              ultimo_alerta: string
-            }[]
-          }
-        | {
-            Args: {
-              p_incluir_ocultos?: boolean
-              p_search_term?: string
-              p_status_filter?: string
-            }
-            Returns: {
-              alertas_ativos: number
-              educador: string
-              id: string
-              nome: string
-              oculto_retencoes: boolean
-              status: string
-              total_alertas: number
-              total_retencoes: number
-              turma: string
-              ultima_retencao: string
-              ultimo_alerta: string
-            }[]
-          }
-        | {
-            Args: {
-              p_incluir_ocultos?: boolean
-              p_search_term?: string
-              p_status_filter?: string
-              p_unit_id?: string
-            }
-            Returns: {
-              alertas_ativos: number
-              educador: string
-              id: string
-              nome: string
-              oculto_retencoes: boolean
-              status: string
-              total_alertas: number
-              total_retencoes: number
-              turma: string
-              ultima_retencao: string
-              ultimo_alerta: string
-            }[]
-          }
+      | {
+        Args: { p_search_term?: string; p_status_filter?: string }
+        Returns: {
+          alertas_ativos: number
+          educador: string
+          id: string
+          nome: string
+          status: string
+          total_alertas: number
+          total_retencoes: number
+          turma: string
+          ultima_retencao: string
+          ultimo_alerta: string
+        }[]
+      }
+      | {
+        Args: {
+          p_incluir_ocultos?: boolean
+          p_search_term?: string
+          p_status_filter?: string
+        }
+        Returns: {
+          alertas_ativos: number
+          educador: string
+          id: string
+          nome: string
+          oculto_retencoes: boolean
+          status: string
+          total_alertas: number
+          total_retencoes: number
+          turma: string
+          ultima_retencao: string
+          ultimo_alerta: string
+        }[]
+      }
+      | {
+        Args: {
+          p_incluir_ocultos?: boolean
+          p_search_term?: string
+          p_status_filter?: string
+          p_unit_id?: string
+        }
+        Returns: {
+          alertas_ativos: number
+          educador: string
+          id: string
+          nome: string
+          oculto_retencoes: boolean
+          status: string
+          total_alertas: number
+          total_retencoes: number
+          turma: string
+          ultima_retencao: string
+          ultimo_alerta: string
+        }[]
+      }
       get_apostilas_recolhidas_por_unidade: {
         Args: { p_unit_id: string }
         Returns: {
@@ -7214,73 +7214,73 @@ export type Database = {
       }
       get_leads_stats: { Args: { p_unit_ids: string[] }; Returns: Json }
       get_lista_aulas_experimentais:
-        | {
-            Args: never
-            Returns: {
-              aula_experimental_id: string
-              cliente_nome: string
-              data_aula_experimental: string
-              descricao_cliente: string
-              responsavel_id: string
-              responsavel_nome: string
-              responsavel_tipo: string
-              turma_id: string
-              turma_nome: string
-              unit_id: string
-            }[]
-          }
-        | {
-            Args: { p_unit_id?: string }
-            Returns: {
-              aula_experimental_id: string
-              cliente_nome: string
-              data_aula_experimental: string
-              descricao_cliente: string
-              responsavel_id: string
-              responsavel_nome: string
-              responsavel_tipo: string
-              turma_id: string
-              turma_nome: string
-              unit_id: string
-            }[]
-          }
+      | {
+        Args: never
+        Returns: {
+          aula_experimental_id: string
+          cliente_nome: string
+          data_aula_experimental: string
+          descricao_cliente: string
+          responsavel_id: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          turma_id: string
+          turma_nome: string
+          unit_id: string
+        }[]
+      }
+      | {
+        Args: { p_unit_id?: string }
+        Returns: {
+          aula_experimental_id: string
+          cliente_nome: string
+          data_aula_experimental: string
+          descricao_cliente: string
+          responsavel_id: string
+          responsavel_nome: string
+          responsavel_tipo: string
+          turma_id: string
+          turma_nome: string
+          unit_id: string
+        }[]
+      }
       get_lista_completa_reposicoes:
-        | {
-            Args: { p_incluir_anteriores?: boolean }
-            Returns: {
-              aluno_id: string
-              aluno_nome: string
-              data_falta: string
-              data_reposicao: string
-              observacoes: string
-              pessoa_tipo: string
-              reposicao_id: string
-              turma_original_id: string
-              turma_original_nome: string
-              turma_reposicao_id: string
-              turma_reposicao_nome: string
-              turma_reposicao_professor: string
-              unit_id: string
-            }[]
-          }
-        | {
-            Args: { p_incluir_anteriores?: boolean; p_unit_id?: string }
-            Returns: {
-              aluno_id: string
-              aluno_nome: string
-              data_falta: string
-              data_reposicao: string
-              observacoes: string
-              pessoa_tipo: string
-              reposicao_id: string
-              turma_original_id: string
-              turma_original_nome: string
-              turma_reposicao_id: string
-              turma_reposicao_nome: string
-              turma_reposicao_professor: string
-              unit_id: string
-            }[]
-          }
+      | {
+        Args: { p_incluir_anteriores?: boolean }
+        Returns: {
+          aluno_id: string
+          aluno_nome: string
+          data_falta: string
+          data_reposicao: string
+          observacoes: string
+          pessoa_tipo: string
+          reposicao_id: string
+          turma_original_id: string
+          turma_original_nome: string
+          turma_reposicao_id: string
+          turma_reposicao_nome: string
+          turma_reposicao_professor: string
+          unit_id: string
+        }[]
+      }
+      | {
+        Args: { p_incluir_anteriores?: boolean; p_unit_id?: string }
+        Returns: {
+          aluno_id: string
+          aluno_nome: string
+          data_falta: string
+          data_reposicao: string
+          observacoes: string
+          pessoa_tipo: string
+          reposicao_id: string
+          turma_original_id: string
+          turma_original_nome: string
+          turma_reposicao_id: string
+          turma_reposicao_nome: string
+          turma_reposicao_professor: string
+          unit_id: string
+        }[]
+      }
       get_loss_reasons_report: {
         Args: {
           p_created_by_ids?: string[]
@@ -7677,64 +7677,64 @@ export type Database = {
         }[]
       }
       save_pos_venda_commercial_data:
-        | {
-            Args: {
-              p_activity_id: string
-              p_commercial_observations?: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type?: Database["public"]["Enums"]["kit_type"]
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_activity_id: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_confirmed?: boolean
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type?: Database["public"]["Enums"]["kit_type"]
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_confirmed?: boolean
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_activity_id: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type_id?: string
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_observations?: string
-            }
-            Returns: boolean
-          }
+      | {
+        Args: {
+          p_activity_id: string
+          p_commercial_observations?: string
+          p_enrollment_amount?: number
+          p_enrollment_installments?: number
+          p_enrollment_payment_date?: string
+          p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_first_monthly_fee_date?: string
+          p_kit_type?: Database["public"]["Enums"]["kit_type"]
+          p_material_amount?: number
+          p_material_installments?: number
+          p_material_payment_date?: string
+          p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_monthly_fee_amount?: number
+          p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+        }
+        Returns: Json
+      }
+      | {
+        Args: {
+          p_activity_id: string
+          p_enrollment_amount?: number
+          p_enrollment_installments?: number
+          p_enrollment_payment_confirmed?: boolean
+          p_enrollment_payment_date?: string
+          p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_first_monthly_fee_date?: string
+          p_kit_type?: Database["public"]["Enums"]["kit_type"]
+          p_material_amount?: number
+          p_material_installments?: number
+          p_material_payment_confirmed?: boolean
+          p_material_payment_date?: string
+          p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_monthly_fee_amount?: number
+          p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+        }
+        Returns: Json
+      }
+      | {
+        Args: {
+          p_activity_id: string
+          p_enrollment_amount?: number
+          p_enrollment_installments?: number
+          p_enrollment_payment_date?: string
+          p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_first_monthly_fee_date?: string
+          p_kit_type_id?: string
+          p_material_amount?: number
+          p_material_installments?: number
+          p_material_payment_date?: string
+          p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_monthly_fee_amount?: number
+          p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_observations?: string
+        }
+        Returns: boolean
+      }
       save_pos_venda_pedagogical_data: {
         Args: {
           p_activity_id: string
@@ -7813,111 +7813,112 @@ export type Database = {
     }
     Enums: {
       dia_semana:
-        | "segunda"
-        | "terca"
-        | "quarta"
-        | "quinta"
-        | "sexta"
-        | "sabado"
-        | "domingo"
+      | "segunda"
+      | "terca"
+      | "quarta"
+      | "quinta"
+      | "sexta"
+      | "sabado"
+      | "domingo"
       due_day: "5" | "10" | "15" | "20" | "25"
       "etapa-do-bot": "apresentador" | "rapport" | "agendador" | "negociador"
       forma_de_pagamento: "Cartão" | "Pix" | "Dinheiro" | "Carimbo" | "Outro"
       gender: "masculino" | "feminino" | "outro"
       kit_type:
-        | "kit_1"
-        | "kit_2"
-        | "kit_3"
-        | "kit_4"
-        | "kit_5"
-        | "kit_6"
-        | "kit_7"
-        | "kit_8"
+      | "kit_1"
+      | "kit_2"
+      | "kit_3"
+      | "kit_4"
+      | "kit_5"
+      | "kit_6"
+      | "kit_7"
+      | "kit_8"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
       origem_alerta:
-        | "conversa_indireta"
-        | "aviso_recepcao"
-        | "aviso_professor_coordenador"
-        | "aviso_whatsapp"
-        | "inadimplencia"
-        | "outro"
+      | "conversa_indireta"
+      | "aviso_recepcao"
+      | "aviso_professor_coordenador"
+      | "aviso_whatsapp"
+      | "inadimplencia"
+      | "outro"
       payment_method:
-        | "dinheiro"
-        | "pix"
-        | "cartao_credito"
-        | "cartao_debito"
-        | "boleto"
-        | "recorrencia"
-        | "transferencia"
+      | "dinheiro"
+      | "pix"
+      | "cartao_credito"
+      | "cartao_debito"
+      | "boleto"
+      | "recorrencia"
+      | "transferencia"
       Perfil_idade:
-        | "crianca-adolescente"
-        | "adulto"
-        | "idoso-ativo"
-        | "60+"
-        | "80+"
+      | "crianca-adolescente"
+      | "adulto"
+      | "idoso-ativo"
+      | "60+"
+      | "80+"
       sale_type: "matricula" | "outros"
       status_alerta: "pendente" | "retido" | "evadido"
       status_sincronizacao:
-        | "nome_incorreto"
-        | "sincronizado"
-        | "aguardando_dados"
+      | "nome_incorreto"
+      | "sincronizado"
+      | "aguardando_dados"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
       tipo_atividade_evasao:
-        | "acolhimento"
-        | "atendimento_financeiro"
-        | "evasao"
-        | "atendimento_pedagogico"
-        | "retencao"
-        | "remover_sgs"
-        | "cancelar_assinatura"
-        | "remover_whatsapp"
-        | "corrigir_valores_sgs"
-        | "corrigir_valores_assinatura"
-        | "contato_financeiro"
-        | "criar_ficha_rescisao"
-        | "lancar_multa_sgs"
-        | "envio_agradecimento_nps"
-        | "digitalizar_rescisao"
-        | "comentario"
+      | "acolhimento"
+      | "atendimento_financeiro"
+      | "evasao"
+      | "atendimento_pedagogico"
+      | "retencao"
+      | "remover_sgs"
+      | "cancelar_assinatura"
+      | "remover_whatsapp"
+      | "corrigir_valores_sgs"
+      | "corrigir_valores_assinatura"
+      | "contato_financeiro"
+      | "criar_ficha_rescisao"
+      | "lancar_multa_sgs"
+      | "envio_agradecimento_nps"
+      | "digitalizar_rescisao"
+      | "digitalizar_contrato_remover_arquivos"
+      | "comentario"
       tipo_evento_sala:
-        | "manutencao"
-        | "reuniao"
-        | "evento_especial"
-        | "reserva_administrativa"
-        | "bloqueio_temporario"
-        | "workshop"
-        | "treinamento"
-        | "outro"
+      | "manutencao"
+      | "reuniao"
+      | "evento_especial"
+      | "reserva_administrativa"
+      | "bloqueio_temporario"
+      | "workshop"
+      | "treinamento"
+      | "outro"
       tipo_funcionalidade:
-        | "assistente_whatsapp"
-        | "google_agenda"
-        | "relatorios_avancados"
-        | "integracao_telefonia_net2phone"
-        | "disparo_slack"
-        | "gestao_estoque"
-        | "gestao_eventos"
-        | "automacao_whatsapp"
-        | "pos_venda_comercial"
+      | "assistente_whatsapp"
+      | "google_agenda"
+      | "relatorios_avancados"
+      | "integracao_telefonia_net2phone"
+      | "disparo_slack"
+      | "gestao_estoque"
+      | "gestao_eventos"
+      | "automacao_whatsapp"
+      | "pos_venda_comercial"
       tipo_recorrencia: "semanal" | "quinzenal" | "mensal"
       user_role:
-        | "consultor"
-        | "franqueado"
-        | "admin"
-        | "educador"
-        | "gestor_pedagogico"
-        | "financeiro"
-        | "administrativo"
-        | "estagiario"
-        | "sala"
-        | "sdr"
+      | "consultor"
+      | "franqueado"
+      | "admin"
+      | "educador"
+      | "gestor_pedagogico"
+      | "financeiro"
+      | "administrativo"
+      | "estagiario"
+      | "sala"
+      | "sdr"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
       Vinculo_aluno:
-        | "Pai do aluno"
-        | "Filho(a) do aluno"
-        | "amigo"
-        | "familiar"
-        | "outro"
+      | "Pai do aluno"
+      | "Filho(a) do aluno"
+      | "amigo"
+      | "familiar"
+      | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7931,116 +7932,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-    ? R
-    : never
+  ? R
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+    DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Enums"]
+  | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["CompositeTypes"]
+  | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {
