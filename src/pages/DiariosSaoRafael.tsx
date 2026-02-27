@@ -62,7 +62,7 @@ const DiariosSaoRafael = () => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
     try {
-      return format(new Date(dateStr + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR });
+      return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return dateStr;
     }
