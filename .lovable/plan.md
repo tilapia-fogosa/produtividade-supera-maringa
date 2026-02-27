@@ -1,19 +1,19 @@
 
 
-## Plano: Filtrar AH por `data_fim_correcao` em vez de `created_at`
+## Plano: Exibir nome do professor em vez do ID na coluna "Professor Correção"
 
-### Alteração
-No arquivo `src/hooks/use-diarios-sao-rafael.ts`, linhas 59-65, trocar o filtro da query de AH de `created_at` para `data_fim_correcao`, e ordenar por `data_fim_correcao`:
+### Problema
+O campo `professor_correcao` armazena UUIDs de professores, mas a tabela exibe o ID bruto ao invés do nome.
 
-```typescript
-supabase
-  .from('produtividade_ah')
-  .select('id, apostila, exercicios, erros, professor_correcao, comentario, data_fim_correcao, created_at')
-  .eq('pessoa_id', alunoId)
-  .gte('data_fim_correcao', `${dataInicial}T00:00:00.000Z`)
-  .lte('data_fim_correcao', `${dataFinal}T23:59:59.999Z`)
-  .order('data_fim_correcao', { ascending: true })
-```
+### Alterações
 
-Registros sem `data_fim_correcao` (null) serão automaticamente excluídos pelo filtro `gte`/`lte`.
+**1. `src/hooks/use-diarios-sao-rafael.ts`**
+- Após buscar os dados de AH, coletar os IDs únicos de `professor_correcao`
+- Fazer uma query na tabela `professores` para buscar os nomes correspondentes
+- Retornar um mapa `professorMap: Record<string, string>` (id → nome) junto com os demais dados
+
+**2. `src/pages/DiariosSaoRafael.tsx`**
+- Receber `professorMap` do hook
+- Na linha de exibição (linha 506), substituir `item.professor_correcao` por `professorMap[item.professor_correcao] || item.professor_correcao || '-'`
+- No modo edição (linha 472), trocar o Input de texto por um Select com os professores disponíveis, mantendo o valor como ID
 
