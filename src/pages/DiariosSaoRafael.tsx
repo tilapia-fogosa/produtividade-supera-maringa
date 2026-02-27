@@ -53,7 +53,7 @@ const DiariosSaoRafael = () => {
   const [saving, setSaving] = useState(false);
 
   const mesAno = `${ano}-${mes}`;
-  const { dadosAbaco, dadosAH, loading, refetch } = useDiariosSaoRafael(alunoSelecionado?.id || null, mesAno);
+  const { dadosAbaco, dadosAH, professorMap, loading, refetch } = useDiariosSaoRafael(alunoSelecionado?.id || null, mesAno);
 
   const alunosFiltrados = busca
     ? alunos.filter(a => a.nome.toLowerCase().includes(busca.toLowerCase()))
@@ -503,7 +503,7 @@ const DiariosSaoRafael = () => {
                               <TableCell>{item.exercicios ?? '-'}</TableCell>
                               <TableCell>{item.erros ?? '-'}</TableCell>
                               <TableCell>{percentual !== null ? `${percentual}%` : '-'}</TableCell>
-                              <TableCell>{item.professor_correcao || '-'}</TableCell>
+                              <TableCell>{(item.professor_correcao && professorMap[item.professor_correcao]) || item.professor_correcao || '-'}</TableCell>
                               <TableCell className="max-w-[200px] truncate">{item.comentario || '-'}</TableCell>
                               <TableCell className="whitespace-nowrap">{formatDateTime(item.created_at)}</TableCell>
                               <TableCell>
