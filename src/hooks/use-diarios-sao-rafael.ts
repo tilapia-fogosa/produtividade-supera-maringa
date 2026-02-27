@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ProdutividadeAbacoItem {
@@ -31,52 +31,52 @@ export function useDiariosSaoRafael(alunoId: string | null, mesAno: string) {
   const [dadosAH, setDadosAH] = useState<ProdutividadeAHItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!alunoId || !mesAno) {
       setDadosAbaco([]);
       setDadosAH([]);
       return;
     }
 
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const ultimoDia = new Date(
-          parseInt(mesAno.split('-')[0]),
-          parseInt(mesAno.split('-')[1]),
-          0
-        ).getDate();
-        const dataInicial = `${mesAno}-01`;
-        const dataFinal = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}`;
+    setLoading(true);
+    try {
+      const ultimoDia = new Date(
+        parseInt(mesAno.split('-')[0]),
+        parseInt(mesAno.split('-')[1]),
+        0
+      ).getDate();
+      const dataInicial = `${mesAno}-01`;
+      const dataFinal = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}`;
 
-        const [abacoRes, ahRes] = await Promise.all([
-          supabase
-            .from('produtividade_abaco')
-            .select('id, data_aula, apostila, pagina, exercicios, erros, presente, fez_desafio, is_reposicao, comentario, motivo_falta')
-            .eq('pessoa_id', alunoId)
-            .gte('data_aula', dataInicial)
-            .lte('data_aula', dataFinal)
-            .order('data_aula', { ascending: true }),
-          supabase
-            .from('produtividade_ah')
-            .select('id, apostila, exercicios, erros, professor_correcao, comentario, data_fim_correcao, created_at')
-            .eq('pessoa_id', alunoId)
-            .gte('created_at', `${dataInicial}T00:00:00.000Z`)
-            .lte('created_at', `${dataFinal}T23:59:59.999Z`)
-            .order('created_at', { ascending: true }),
-        ]);
+      const [abacoRes, ahRes] = await Promise.all([
+        supabase
+          .from('produtividade_abaco')
+          .select('id, data_aula, apostila, pagina, exercicios, erros, presente, fez_desafio, is_reposicao, comentario, motivo_falta')
+          .eq('pessoa_id', alunoId)
+          .gte('data_aula', dataInicial)
+          .lte('data_aula', dataFinal)
+          .order('data_aula', { ascending: true }),
+        supabase
+          .from('produtividade_ah')
+          .select('id, apostila, exercicios, erros, professor_correcao, comentario, data_fim_correcao, created_at')
+          .eq('pessoa_id', alunoId)
+          .gte('created_at', `${dataInicial}T00:00:00.000Z`)
+          .lte('created_at', `${dataFinal}T23:59:59.999Z`)
+          .order('created_at', { ascending: true }),
+      ]);
 
-        setDadosAbaco(abacoRes.data || []);
-        setDadosAH(ahRes.data || []);
-      } catch (error) {
-        console.error('Erro ao buscar diários:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetch();
+      setDadosAbaco(abacoRes.data || []);
+      setDadosAH(ahRes.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar diários:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [alunoId, mesAno]);
 
-  return { dadosAbaco, dadosAH, loading };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { dadosAbaco, dadosAH, loading, refetch: fetchData };
 }

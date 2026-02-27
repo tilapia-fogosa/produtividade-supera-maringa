@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,8 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAlunosProjetoSaoRafael } from '@/hooks/use-alunos-projeto-sao-rafael';
-import { useDiariosSaoRafael } from '@/hooks/use-diarios-sao-rafael';
+import { useDiariosSaoRafael, ProdutividadeAbacoItem, ProdutividadeAHItem } from '@/hooks/use-diarios-sao-rafael';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -43,8 +45,15 @@ const DiariosSaoRafael = () => {
   const [mes, setMes] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
   const [ano, setAno] = useState(currentYear.toString());
 
+  // Inline editing state
+  const [editingAbacoId, setEditingAbacoId] = useState<string | null>(null);
+  const [editingAHId, setEditingAHId] = useState<string | null>(null);
+  const [editAbaco, setEditAbaco] = useState<Partial<ProdutividadeAbacoItem>>({});
+  const [editAH, setEditAH] = useState<Partial<ProdutividadeAHItem>>({});
+  const [saving, setSaving] = useState(false);
+
   const mesAno = `${ano}-${mes}`;
-  const { dadosAbaco, dadosAH, loading } = useDiariosSaoRafael(alunoSelecionado?.id || null, mesAno);
+  const { dadosAbaco, dadosAH, loading, refetch } = useDiariosSaoRafael(alunoSelecionado?.id || null, mesAno);
 
   const alunosFiltrados = busca
     ? alunos.filter(a => a.nome.toLowerCase().includes(busca.toLowerCase()))
@@ -68,6 +77,89 @@ const DiariosSaoRafael = () => {
     }
   };
 
+  // Ábaco editing
+  const startEditAbaco = (item: ProdutividadeAbacoItem) => {
+    setEditingAbacoId(item.id);
+    setEditAbaco({ ...item });
+  };
+
+  const cancelEditAbaco = () => {
+    setEditingAbacoId(null);
+    setEditAbaco({});
+  };
+
+  const saveAbaco = async () => {
+    if (!editingAbacoId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('produtividade_abaco')
+        .update({
+          apostila: editAbaco.apostila || null,
+          pagina: editAbaco.pagina || null,
+          exercicios: editAbaco.exercicios ?? null,
+          erros: editAbaco.erros ?? null,
+          presente: editAbaco.presente ?? false,
+          fez_desafio: editAbaco.fez_desafio ?? false,
+          is_reposicao: editAbaco.is_reposicao ?? false,
+          comentario: editAbaco.comentario || null,
+          motivo_falta: editAbaco.motivo_falta || null,
+        })
+        .eq('id', editingAbacoId);
+
+      if (error) {
+        console.error('Erro ao salvar ábaco:', error);
+        return;
+      }
+
+      setEditingAbacoId(null);
+      setEditAbaco({});
+      refetch();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // AH editing
+  const startEditAH = (item: ProdutividadeAHItem) => {
+    setEditingAHId(item.id);
+    setEditAH({ ...item });
+  };
+
+  const cancelEditAH = () => {
+    setEditingAHId(null);
+    setEditAH({});
+  };
+
+  const saveAH = async () => {
+    if (!editingAHId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('produtividade_ah')
+        .update({
+          apostila: editAH.apostila || null,
+          exercicios: editAH.exercicios ?? null,
+          erros: editAH.erros ?? null,
+          professor_correcao: editAH.professor_correcao || null,
+          comentario: editAH.comentario || null,
+          data_fim_correcao: editAH.data_fim_correcao || null,
+        })
+        .eq('id', editingAHId);
+
+      if (error) {
+        console.error('Erro ao salvar AH:', error);
+        return;
+      }
+
+      setEditingAHId(null);
+      setEditAH({});
+      refetch();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-4 px-2">
       <div className="flex items-center gap-2 mb-4">
@@ -77,7 +169,6 @@ const DiariosSaoRafael = () => {
         <h1 className="text-2xl font-bold text-azul-500">Diários São Rafael</h1>
       </div>
 
-      {/* Seleção de aluno */}
       {!alunoSelecionado ? (
         <Card>
           <CardHeader>
@@ -115,7 +206,6 @@ const DiariosSaoRafael = () => {
         </Card>
       ) : (
         <>
-          {/* Header com aluno selecionado e filtros */}
           <Card className="mb-4">
             <CardContent className="pt-4">
               <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -152,7 +242,6 @@ const DiariosSaoRafael = () => {
             </CardContent>
           </Card>
 
-          {/* Tabs Ábaco / AH */}
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -164,6 +253,7 @@ const DiariosSaoRafael = () => {
                 <TabsTrigger value="ah" className="flex-1">Abrindo Horizontes ({dadosAH.length})</TabsTrigger>
               </TabsList>
 
+              {/* ===== ABA ÁBACO ===== */}
               <TabsContent value="abaco">
                 {dadosAbaco.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">Nenhum registro de Ábaco neste período</p>
@@ -183,13 +273,97 @@ const DiariosSaoRafael = () => {
                           <TableHead>Reposição</TableHead>
                           <TableHead>Comentário</TableHead>
                           <TableHead>Motivo Falta</TableHead>
+                          <TableHead className="w-[100px]">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {dadosAbaco.map(item => {
+                          const isEditing = editingAbacoId === item.id;
                           const percentual = item.exercicios && item.exercicios > 0
                             ? Math.round(((item.exercicios - (item.erros || 0)) / item.exercicios) * 100)
                             : null;
+
+                          if (isEditing) {
+                            return (
+                              <TableRow key={item.id} className="bg-muted/50">
+                                <TableCell className="whitespace-nowrap">{formatDate(item.data_aula)}</TableCell>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={editAbaco.presente ?? false}
+                                    onCheckedChange={(v) => setEditAbaco(prev => ({ ...prev, presente: !!v }))}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAbaco.apostila || ''}
+                                    onChange={(e) => setEditAbaco(prev => ({ ...prev, apostila: e.target.value }))}
+                                    className="h-8 w-24"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAbaco.pagina || ''}
+                                    onChange={(e) => setEditAbaco(prev => ({ ...prev, pagina: e.target.value }))}
+                                    className="h-8 w-20"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={editAbaco.exercicios ?? ''}
+                                    onChange={(e) => setEditAbaco(prev => ({ ...prev, exercicios: e.target.value ? Number(e.target.value) : null }))}
+                                    className="h-8 w-20"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={editAbaco.erros ?? ''}
+                                    onChange={(e) => setEditAbaco(prev => ({ ...prev, erros: e.target.value ? Number(e.target.value) : null }))}
+                                    className="h-8 w-20"
+                                  />
+                                </TableCell>
+                                <TableCell>-</TableCell>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={editAbaco.fez_desafio ?? false}
+                                    onCheckedChange={(v) => setEditAbaco(prev => ({ ...prev, fez_desafio: !!v }))}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={editAbaco.is_reposicao ?? false}
+                                    onCheckedChange={(v) => setEditAbaco(prev => ({ ...prev, is_reposicao: !!v }))}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAbaco.comentario || ''}
+                                    onChange={(e) => setEditAbaco(prev => ({ ...prev, comentario: e.target.value }))}
+                                    className="h-8 w-40"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAbaco.motivo_falta || ''}
+                                    onChange={(e) => setEditAbaco(prev => ({ ...prev, motivo_falta: e.target.value }))}
+                                    className="h-8 w-32"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    <Button size="icon" variant="ghost" onClick={saveAbaco} disabled={saving} className="h-8 w-8">
+                                      <Check className="h-4 w-4 text-green-600" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" onClick={cancelEditAbaco} disabled={saving} className="h-8 w-8">
+                                      <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+
                           return (
                             <TableRow key={item.id}>
                               <TableCell className="whitespace-nowrap">{formatDate(item.data_aula)}</TableCell>
@@ -217,6 +391,11 @@ const DiariosSaoRafael = () => {
                               </TableCell>
                               <TableCell className="max-w-[200px] truncate">{item.comentario || '-'}</TableCell>
                               <TableCell className="max-w-[150px] truncate">{item.motivo_falta || '-'}</TableCell>
+                              <TableCell>
+                                <Button size="icon" variant="ghost" onClick={() => startEditAbaco(item)} className="h-8 w-8">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           );
                         })}
@@ -226,6 +405,7 @@ const DiariosSaoRafael = () => {
                 )}
               </TabsContent>
 
+              {/* ===== ABA AH ===== */}
               <TabsContent value="ah">
                 {dadosAH.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">Nenhum registro de AH neste período</p>
@@ -242,13 +422,80 @@ const DiariosSaoRafael = () => {
                           <TableHead>Professor Correção</TableHead>
                           <TableHead>Comentário</TableHead>
                           <TableHead>Data Lançamento</TableHead>
+                          <TableHead className="w-[100px]">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {dadosAH.map(item => {
+                          const isEditing = editingAHId === item.id;
                           const percentual = item.exercicios && item.exercicios > 0
                             ? Math.round(((item.exercicios - (item.erros || 0)) / item.exercicios) * 100)
                             : null;
+
+                          if (isEditing) {
+                            return (
+                              <TableRow key={item.id} className="bg-muted/50">
+                                <TableCell>
+                                  <Input
+                                    type="date"
+                                    value={editAH.data_fim_correcao || ''}
+                                    onChange={(e) => setEditAH(prev => ({ ...prev, data_fim_correcao: e.target.value }))}
+                                    className="h-8 w-36"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAH.apostila || ''}
+                                    onChange={(e) => setEditAH(prev => ({ ...prev, apostila: e.target.value }))}
+                                    className="h-8 w-24"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={editAH.exercicios ?? ''}
+                                    onChange={(e) => setEditAH(prev => ({ ...prev, exercicios: e.target.value ? Number(e.target.value) : null }))}
+                                    className="h-8 w-20"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={editAH.erros ?? ''}
+                                    onChange={(e) => setEditAH(prev => ({ ...prev, erros: e.target.value ? Number(e.target.value) : null }))}
+                                    className="h-8 w-20"
+                                  />
+                                </TableCell>
+                                <TableCell>-</TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAH.professor_correcao || ''}
+                                    onChange={(e) => setEditAH(prev => ({ ...prev, professor_correcao: e.target.value }))}
+                                    className="h-8 w-32"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={editAH.comentario || ''}
+                                    onChange={(e) => setEditAH(prev => ({ ...prev, comentario: e.target.value }))}
+                                    className="h-8 w-40"
+                                  />
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap">{formatDateTime(item.created_at)}</TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    <Button size="icon" variant="ghost" onClick={saveAH} disabled={saving} className="h-8 w-8">
+                                      <Check className="h-4 w-4 text-green-600" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" onClick={cancelEditAH} disabled={saving} className="h-8 w-8">
+                                      <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+
                           return (
                             <TableRow key={item.id}>
                               <TableCell className="whitespace-nowrap">{formatDate(item.data_fim_correcao)}</TableCell>
@@ -259,6 +506,11 @@ const DiariosSaoRafael = () => {
                               <TableCell>{item.professor_correcao || '-'}</TableCell>
                               <TableCell className="max-w-[200px] truncate">{item.comentario || '-'}</TableCell>
                               <TableCell className="whitespace-nowrap">{formatDateTime(item.created_at)}</TableCell>
+                              <TableCell>
+                                <Button size="icon" variant="ghost" onClick={() => startEditAH(item)} className="h-8 w-8">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           );
                         })}
