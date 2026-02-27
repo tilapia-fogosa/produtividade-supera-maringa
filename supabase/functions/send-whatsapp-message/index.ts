@@ -202,7 +202,7 @@ serve(async (req) => {
           tipo_mensagem: finalTipoMensagem,
           media_url: finalMediaUrl,
           created_by: profile_id,
-          unit_id: unit_id || null,
+          ...(unit_id ? { unit_id } : {}),
           from_me: true
         });
 

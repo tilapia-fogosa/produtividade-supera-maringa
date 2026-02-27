@@ -88,35 +88,33 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     setShowEmojiPicker(false); // Fecha o picker ao enviar
 
     try {
-      // Buscar perfil do usuário
-      const userResult = await supabase.auth.getUser();
-
-      // Só chama replace-message-variables se a mensagem contém variáveis ({)
+      // Buscar usuário e processar variáveis em paralelo
+      const userPromise = supabase.auth.getUser();
+      
       let processedMessage = message.trim();
       if (message.includes('{')) {
-        console.log('ChatInput: Mensagem contém variáveis, processando...');
-        const { data: replaceData, error: replaceError } = await supabase.functions.invoke('replace-message-variables', {
-          body: {
-            message: message.trim(),
-            clientId: conversation.clientId,
-          },
-        });
+        console.log('ChatInput: Mensagem contém variáveis, processando em paralelo...');
+        const [userResult, replaceResult] = await Promise.all([
+          userPromise,
+          supabase.functions.invoke('replace-message-variables', {
+            body: { message: message.trim(), clientId: conversation.clientId },
+          }),
+        ]);
+        const { data: replaceData, error: replaceError } = replaceResult;
         if (replaceError) {
           console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
           throw new Error('Erro ao processar variáveis da mensagem');
         }
         processedMessage = replaceData?.processed || message.trim();
+        var user = userResult.data?.user;
+      } else {
+        const userResult = await userPromise;
+        var user = userResult.data?.user;
       }
       console.log('ChatInput: Mensagem processada:', processedMessage);
 
-      const user = userResult.data?.user;
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user?.id)
-        .single();
-
-      const userName = profile?.full_name || 'Usuário';
+      // Pega nome do user_metadata (evita query extra ao profiles)
+      const userName = user?.user_metadata?.full_name || user?.email || 'Usuário';
 
       // Verificar se é número não cadastrado (client_id começa com "phone_")
       const isUnregistered = conversation.clientId.startsWith('phone_');
