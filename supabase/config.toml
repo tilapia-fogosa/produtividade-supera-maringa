@@ -6,8 +6,8 @@ verify_jwt = false
 [functions.check-missing-launches]
 verify_jwt = false
 
-[calendar.check-missing-launches]
-schedule = "0 1 * * *"
+# [calendar.check-missing-launches]
+# schedule = "0 1 * * *"
 
 [functions.check-missing-attendance]
 verify_jwt = false
@@ -24,8 +24,8 @@ verify_jwt = false
 [functions.check-hibernating-cards]
 verify_jwt = false
 
-[calendar.check-hibernating-cards]
-schedule = "0 3 * * *"
+# [calendar.check-hibernating-cards]
+# schedule = "0 3 * * *"
 
 [functions.sync-turmas-xls]
 verify_jwt = false

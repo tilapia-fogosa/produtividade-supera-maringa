@@ -115,26 +115,24 @@ serve(async (req) => {
       hasVideo: !!video,
     });
 
-    // Envia para o webhook
-    const webhookResponse = await fetch(webhookUrl, {
+    // === FIRE-AND-FORGET: Envia para o webhook SEM esperar resposta ===
+    // Isso elimina o delay de 2-4s que o webhook externo causava
+    fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('send-whatsapp-message: Erro no webhook (background):', errorText);
+      } else {
+        console.log('send-whatsapp-message: Webhook respondeu com sucesso (background)');
+      }
+    }).catch((err) => {
+      console.error('send-whatsapp-message: Erro na chamada do webhook (background):', err);
     });
-
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error('send-whatsapp-message: Erro no webhook:', errorText);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao enviar mensagem', details: errorText }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const webhookResult = await webhookResponse.json();
-    console.log('send-whatsapp-message: Resposta do webhook:', webhookResult);
 
     // Salva no histórico comercial se for mensagem individual (não grupo) e tiver client_id
     const isGroup = finalDestinatario.includes('@g.us');
@@ -193,18 +191,20 @@ serve(async (req) => {
 
         console.log('send-whatsapp-message: Salvando no histórico comercial, media:', finalMediaUrl);
 
-        await supabase.from('historico_comercial').insert({
+        const { error: insertError } = await supabase.from('historico_comercial').insert({
           client_id,
           telefone: finalDestinatario,
-          tipo_acao: 'MENSAGEM_WHATSAPP',
-          descricao: mensagem ? mensagem.substring(0, 500) : '[Mídia]',
           mensagem: mensagem || null,
           tipo_mensagem: finalTipoMensagem,
           media_url: finalMediaUrl,
-          profile_id,
+          created_by: profile_id,
           unit_id: unit_id || null,
           from_me: true
         });
+
+        if (insertError) {
+          console.error('send-whatsapp-message: Erro no insert do histórico:', insertError);
+        }
 
         console.log('send-whatsapp-message: Histórico salvo com sucesso');
       } catch (histError) {
@@ -217,7 +217,6 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Mensagem enviada com sucesso',
-        webhook_response: webhookResult
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

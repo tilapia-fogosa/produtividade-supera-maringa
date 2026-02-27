@@ -22,17 +22,18 @@ export interface AtividadeEvasaoHome {
 
 export function useAtividadesEvasaoHome() {
   const { professorId, isProfessor, isLoading: isProfessorLoading } = useCurrentProfessor();
-  const { isAdmin, isManagement, isFinanceiro } = useUserPermissions();
+  const { isAdmin, isManagement, isFinanceiro, isAdministrativo } = useUserPermissions();
   const { activeUnit } = useActiveUnit();
-  
-  const isAdministrativo = isAdmin || isManagement || isFinanceiro;
-  
+
+  // Qualquer perfil com visão gerencial ou administrativo pode ver atividades de evasão
+  const canSeeEvasao = isAdmin || isManagement || isFinanceiro || isAdministrativo;
+
   // Para professores, só executa a query quando o professorId estiver carregado
-  // Para admins/gestores, pode executar imediatamente
-  const shouldFetch = !!activeUnit?.id && (isAdministrativo || (isProfessor && !!professorId && !isProfessorLoading));
+  // Para admins/gestores/administrativo, pode executar imediatamente
+  const shouldFetch = !!activeUnit?.id && (canSeeEvasao || (isProfessor && !!professorId && !isProfessorLoading));
 
   return useQuery({
-    queryKey: ['atividades-evasao-home', professorId, isAdministrativo, isProfessor, activeUnit?.id],
+    queryKey: ['atividades-evasao-home', professorId, canSeeEvasao, isProfessor, activeUnit?.id],
     queryFn: async () => {
       // Buscar atividades pendentes de alertas que ainda estão pendentes
       let query = supabase
@@ -61,14 +62,14 @@ export function useAtividadesEvasaoHome() {
         .eq('unit_id', activeUnit!.id)
         .in('alerta_evasao.status', ['pendente', 'evadido'])
         .eq('alerta_evasao.aluno.active', true);
-      
+
       // Filtrar baseado no perfil do usuário
       if (isProfessor && professorId) {
         // Professor vê suas atividades atribuídas
         query = query.eq('professor_responsavel_id', professorId);
-      } else if (isAdministrativo) {
-        // Administrativo vê atividades do departamento + todas se for admin
-        // Não adiciona filtro extra para admins - mostra tudo
+      } else if (canSeeEvasao) {
+        // Administrativo/Admin/Gestão vê atividades do departamento
+        // Não adiciona filtro extra - mostra tudo
       } else {
         // Este caso só ocorre se a query foi habilitada incorretamente
         console.warn('useAtividadesEvasaoHome: Query executada sem perfil válido');
@@ -87,7 +88,7 @@ export function useAtividadesEvasaoHome() {
         // Se não tem data_agendada, usar created_at como referência (apenas a parte da data)
         const hoje = new Date().toISOString().split('T')[0];
         const dataReferencia = item.data_agendada || (item.created_at ? item.created_at.split('T')[0] : hoje);
-        
+
         return {
           id: item.id,
           alerta_evasao_id: item.alerta_evasao_id,
