@@ -11,7 +11,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
 
 export function useToggleTipoAtendimento() {
   const queryClient = useQueryClient();
@@ -45,13 +45,11 @@ export function useToggleTipoAtendimento() {
       // Invalidar cache para atualizar lista de conversas
       queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
       
-      toast.success(
-        `Atendimento alterado para ${variables.newTipo === 'bot' ? 'Bot' : 'Humano'}`
-      );
+      console.log('useToggleTipoAtendimento: Atendimento alterado para', variables.newTipo);
     },
     onError: (error) => {
       console.error('useToggleTipoAtendimento: Erro na mutação:', error);
-      toast.error('Erro ao alterar tipo de atendimento');
+      console.error('useToggleTipoAtendimento: Erro na mutação:', error);
     }
   });
 }

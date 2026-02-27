@@ -14,7 +14,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
 import type { AutoMessage } from "../types/whatsapp.types";
 
 interface CreateAutoMessageParams {
@@ -101,11 +101,11 @@ export function useCreateAutoMessage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp-auto-messages'] });
-      toast.success('Mensagem automática criada com sucesso!');
+      console.log('useCreateAutoMessage: Criação concluída');
     },
     onError: (error) => {
       console.error('useCreateAutoMessage: Erro na criação:', error);
-      toast.error('Erro ao criar mensagem automática');
+      console.error('useCreateAutoMessage: Erro na criação:', error);
     },
   });
 }
@@ -135,11 +135,11 @@ export function useUpdateAutoMessage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp-auto-messages'] });
-      toast.success('Mensagem atualizada com sucesso!');
+      console.log('useUpdateAutoMessage: Atualização concluída');
     },
     onError: (error) => {
       console.error('useUpdateAutoMessage: Erro na atualização:', error);
-      toast.error('Erro ao atualizar mensagem');
+      console.error('useUpdateAutoMessage: Erro na atualização:', error);
     },
   });
 }
@@ -166,11 +166,11 @@ export function useDeleteAutoMessage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp-auto-messages'] });
-      toast.success('Mensagem excluída com sucesso!');
+      console.log('useDeleteAutoMessage: Exclusão concluída');
     },
     onError: (error) => {
       console.error('useDeleteAutoMessage: Erro na exclusão:', error);
-      toast.error('Erro ao excluir mensagem');
+      console.error('useDeleteAutoMessage: Erro na exclusão:', error);
     },
   });
 }
