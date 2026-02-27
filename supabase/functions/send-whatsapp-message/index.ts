@@ -137,11 +137,15 @@ serve(async (req) => {
     // Salva no histórico comercial se for mensagem individual (não grupo) e tiver client_id
     const isGroup = finalDestinatario.includes('@g.us');
 
-    if (!isGroup && client_id && (mensagem || audio || imagem || video)) {
+    if (!isGroup && (mensagem || audio || imagem || video)) {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Validar se client_id é um UUID válido, senão usar null
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const validClientId = client_id && uuidRegex.test(client_id) ? client_id : null;
 
         let finalMediaUrl = null;
         let finalTipoMensagem = 'text';
@@ -192,7 +196,7 @@ serve(async (req) => {
         console.log('send-whatsapp-message: Salvando no histórico comercial, media:', finalMediaUrl);
 
         const { error: insertError } = await supabase.from('historico_comercial').insert({
-          client_id,
+          client_id: validClientId,
           telefone: finalDestinatario,
           mensagem: mensagem || null,
           tipo_mensagem: finalTipoMensagem,
