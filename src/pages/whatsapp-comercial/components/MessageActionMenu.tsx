@@ -1,6 +1,6 @@
 /**
  * Menu de ações para mensagens (responder / reagir)
- * Exibe popover ao passar o mouse sobre uma mensagem
+ * Exibe botões ao passar o mouse sobre uma mensagem
  */
 
 import { useState } from "react";
@@ -33,12 +33,16 @@ export function MessageActionMenu({ message, onReply, fromMe }: MessageActionMen
     setShowEmojiPicker(false);
 
     try {
-      const { error } = await supabase.from('whatsapp_message_reactions').insert({
-        historico_comercial_id: Number(message.id),
-        tipo: 'reacao',
-        emoji,
-        profile_id: user?.id || null,
-        profile_name: profile?.full_name || user?.email || 'Usuário',
+      // Chamar edge function que salva no banco + envia ao webhook
+      const { error } = await supabase.functions.invoke('react-whatsapp-message', {
+        body: {
+          historico_comercial_id: Number(message.id),
+          tipo: 'reacao',
+          emoji,
+          profile_id: user?.id || null,
+          profile_name: profile?.full_name || user?.email || 'Usuário',
+          phone_number: message.clientId, // telefone do contato
+        },
       });
 
       if (error) {
