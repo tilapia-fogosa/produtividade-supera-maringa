@@ -88,27 +88,25 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     setShowEmojiPicker(false); // Fecha o picker ao enviar
 
     try {
-      // Etapas 1 e 2 em PARALELO: substituir variáveis + buscar perfil do usuário
-      console.log('ChatInput: Processando variáveis e buscando perfil em paralelo');
-      const [replaceResult, userResult] = await Promise.all([
-        // Etapa 1: Substituir variáveis dinâmicas na mensagem
-        supabase.functions.invoke('replace-message-variables', {
+      // Buscar perfil do usuário
+      const userResult = await supabase.auth.getUser();
+
+      // Só chama replace-message-variables se a mensagem contém variáveis ({)
+      let processedMessage = message.trim();
+      if (message.includes('{')) {
+        console.log('ChatInput: Mensagem contém variáveis, processando...');
+        const { data: replaceData, error: replaceError } = await supabase.functions.invoke('replace-message-variables', {
           body: {
             message: message.trim(),
             clientId: conversation.clientId,
           },
-        }),
-        // Etapa 2: Buscar nome do usuário logado
-        supabase.auth.getUser(),
-      ]);
-
-      const { data: replaceData, error: replaceError } = replaceResult;
-      if (replaceError) {
-        console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
-        throw new Error('Erro ao processar variáveis da mensagem');
+        });
+        if (replaceError) {
+          console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
+          throw new Error('Erro ao processar variáveis da mensagem');
+        }
+        processedMessage = replaceData?.processed || message.trim();
       }
-
-      const processedMessage = replaceData?.processed || message.trim();
       console.log('ChatInput: Mensagem processada:', processedMessage);
 
       const user = userResult.data?.user;
