@@ -62,7 +62,10 @@ const DiariosSaoRafael = () => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
     try {
-      return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
+      // Para datas tipo "2026-02-05" ou "2026-02-05T00:00:00+00:00", extrair apenas a parte da data
+      const dateOnly = dateStr.substring(0, 10); // "YYYY-MM-DD"
+      const [year, month, day] = dateOnly.split('-').map(Number);
+      return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return dateStr;
     }
