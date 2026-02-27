@@ -1,23 +1,19 @@
 
 
-## Plano: Formatar data de correção AH como DD/MM/YYYY
-
-### Problema
-O campo `data_fim_correcao` é `timestamptz` e a função `formatDate` concatena `T12:00:00` ao valor, o que causa problemas pois o valor já contém horário.
+## Plano: Filtrar AH por `data_fim_correcao` em vez de `created_at`
 
 ### Alteração
-Na função `formatDate` em `DiariosSaoRafael.tsx` (linha 65), remover a concatenação de `T12:00:00` e usar `new Date(dateStr)` diretamente, pois timestamps completos já são parseados corretamente:
+No arquivo `src/hooks/use-diarios-sao-rafael.ts`, linhas 59-65, trocar o filtro da query de AH de `created_at` para `data_fim_correcao`, e ordenar por `data_fim_correcao`:
 
 ```typescript
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-';
-  try {
-    return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
-  } catch {
-    return dateStr;
-  }
-};
+supabase
+  .from('produtividade_ah')
+  .select('id, apostila, exercicios, erros, professor_correcao, comentario, data_fim_correcao, created_at')
+  .eq('pessoa_id', alunoId)
+  .gte('data_fim_correcao', `${dataInicial}T00:00:00.000Z`)
+  .lte('data_fim_correcao', `${dataFinal}T23:59:59.999Z`)
+  .order('data_fim_correcao', { ascending: true })
 ```
 
-Isso garante que tanto datas simples (`2024-05-10`) quanto timestamps (`2024-05-10T15:30:00.000Z`) sejam formatados como `DD/MM/YYYY`.
+Registros sem `data_fim_correcao` (null) serão automaticamente excluídos pelo filtro `gte`/`lte`.
 
