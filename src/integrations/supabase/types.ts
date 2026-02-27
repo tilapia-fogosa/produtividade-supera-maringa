@@ -6324,6 +6324,47 @@ export type Database = {
           },
         ]
       }
+      whatsapp_message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          historico_comercial_id: number
+          id: string
+          mensagem_resposta: string | null
+          profile_id: string
+          profile_name: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          historico_comercial_id: number
+          id?: string
+          mensagem_resposta?: string | null
+          profile_id: string
+          profile_name?: string | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          historico_comercial_id?: number
+          id?: string
+          mensagem_resposta?: string | null
+          profile_id?: string
+          profile_name?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_message_reactions_historico_comercial_id_fkey"
+            columns: ["historico_comercial_id"]
+            isOneToOne: false
+            referencedRelation: "historico_comercial"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       alunos_projeto_sao_rafael: {
