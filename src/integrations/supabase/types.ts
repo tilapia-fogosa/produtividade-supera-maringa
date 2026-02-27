@@ -7078,6 +7078,7 @@ export type Database = {
           from_me: boolean
           id: number
           mensagem: string
+          quoted_message_id: number
           telefone: string
           tipo_mensagem: string
           url_media: string
