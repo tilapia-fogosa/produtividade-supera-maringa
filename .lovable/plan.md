@@ -1,37 +1,18 @@
 
 
-## Diagnóstico
+## Plano: Remover `getUser()` e usar AuthContext no ChatInput
 
-O log mostra:
-```
-null value in column "unit_id" of relation "historico_comercial" violates not-null constraint
-```
+### Mudança única: `src/pages/whatsapp-comercial/components/ChatInput.tsx`
 
-A coluna `unit_id` tem um valor padrão no banco (`0df79a04-444e-46ee-b218-59e4b1835f4a` = Maringá), mas a edge function passa `unit_id: null` explicitamente, sobrescrevendo o default.
+1. Importar `useAuth` de `@/contexts/AuthContext`
+2. No componente, extrair `{ user, profile }` do `useAuth()`
+3. No `handleSendMessage`:
+   - Remover toda chamada a `supabase.auth.getUser()`
+   - Usar `user?.id` para `profile_id`
+   - Usar `profile?.full_name || user?.email || 'Usuário'` para `userName`
+   - Simplificar o bloco de variáveis: se tem `{`, chamar só `replace-message-variables` (sem Promise.all com getUser)
+   - Mover `setMessage("")` para **antes** do `await` da edge function (fire-and-forget no input)
+4. `conversation.unitId` continua sendo passado normalmente — não muda nada
 
-## Plano
-
-### 1. Edge function `send-whatsapp-message` - Corrigir unit_id no insert
-
-Na linha do insert, trocar:
-```typescript
-unit_id: unit_id || null
-```
-Por: simplesmente não incluir `unit_id` quando estiver vazio, para o default do banco ser usado:
-```typescript
-...(unit_id ? { unit_id } : {})
-```
-
-### 2. ChatInput - Otimizar envio removendo query extra de profile
-
-O fluxo atual faz:
-1. `getUser()` → pega user id
-2. Query `profiles` → pega `full_name`
-3. `send-whatsapp-message` → envia
-
-A query ao `profiles` pode ser eliminada buscando o nome do `user_metadata` que já vem no `getUser()`. Isso remove uma chamada ao banco.
-
-### 3. ChatInput - Enviar unit_id do conversation
-
-O `conversation` já tem `unitId`. Garantir que está sendo passado corretamente (já está no código atual, mas se vier vazio, a edge function precisa tratar).
+**Resultado**: input libera instantaneamente, ~200-500ms a menos por mensagem, mesma funcionalidade.
 
