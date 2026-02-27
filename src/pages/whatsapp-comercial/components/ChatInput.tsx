@@ -20,7 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { Conversation } from "../types/whatsapp.types";
+import { Conversation, Message } from "../types/whatsapp.types";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,9 +31,11 @@ import { MediaAttachment } from "./MediaAttachment";
 interface ChatInputProps {
   conversation: Conversation;
   onMessageSent?: () => void;
+  replyingTo?: Message | null;
+  onReplySent?: () => void;
 }
 
-export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
+export function ChatInput({ conversation, onMessageSent, replyingTo, onReplySent }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -143,8 +145,23 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
       console.log('ChatInput: Mensagem enviada com sucesso:', data);
 
+      // Se estava respondendo, salvar referência na tabela de reações
+      if (replyingTo) {
+        try {
+          await supabase.from('whatsapp_message_reactions').insert({
+            historico_comercial_id: Number(replyingTo.id),
+            tipo: 'resposta',
+            mensagem_resposta: processedMessage,
+            profile_id: profileId || null,
+            profile_name: userName,
+          });
+        } catch (replyErr) {
+          console.error('ChatInput: Erro ao salvar referência de resposta:', replyErr);
+        }
+        onReplySent?.();
+      }
+
       // Invalida cache para atualizar mensagens e conversas com delay de 1s
-      // Isso garante que o backend teve tempo de processar a mensagem
       setTimeout(() => {
         console.log('ChatInput: Invalidando cache de mensagens e conversas após 1s');
         queryClient.invalidateQueries({ queryKey: ['whatsapp-individual-messages', conversation.clientId] });
