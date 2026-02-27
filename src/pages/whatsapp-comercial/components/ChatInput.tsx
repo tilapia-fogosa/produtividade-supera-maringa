@@ -145,15 +145,18 @@ export function ChatInput({ conversation, onMessageSent, replyingTo, onReplySent
 
       console.log('ChatInput: Mensagem enviada com sucesso:', data);
 
-      // Se estava respondendo, salvar referência na tabela de reações
+      // Se estava respondendo, salvar referência via edge function (que também envia ao webhook)
       if (replyingTo) {
         try {
-          await supabase.from('whatsapp_message_reactions').insert({
-            historico_comercial_id: Number(replyingTo.id),
-            tipo: 'resposta',
-            mensagem_resposta: processedMessage,
-            profile_id: profileId || null,
-            profile_name: userName,
+          await supabase.functions.invoke('react-whatsapp-message', {
+            body: {
+              historico_comercial_id: Number(replyingTo.id),
+              tipo: 'resposta',
+              mensagem_resposta: processedMessage,
+              profile_id: profileId || null,
+              profile_name: userName,
+              phone_number: conversation.phoneNumber || conversation.clientId,
+            },
           });
         } catch (replyErr) {
           console.error('ChatInput: Erro ao salvar referência de resposta:', replyErr);

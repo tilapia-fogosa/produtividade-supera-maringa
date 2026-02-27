@@ -107,12 +107,20 @@ serve(async (req) => {
     if (video) payload.video = video;
     if (mime_type) payload.mime_type = mime_type;
 
+    // Determinar o tipo de mensagem para o webhook global
+    let tipoMensagem = 'text';
+    if (audio) tipoMensagem = 'audio';
+    else if (imagem) tipoMensagem = 'image';
+    else if (video) tipoMensagem = 'video';
+    payload.tipo = tipoMensagem;
+
     console.log('send-whatsapp-message: Enviando para webhook', {
       destinatario: finalDestinatario,
       hasMensagem: !!mensagem,
       hasAudio: !!audio,
       hasImagem: !!imagem,
       hasVideo: !!video,
+      tipo: tipoMensagem,
     });
 
     // === FIRE-AND-FORGET: Envia para o webhook SEM esperar resposta ===
