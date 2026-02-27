@@ -1,23 +1,19 @@
 
 
-## Plano: Formatar data de correção AH como DD/MM/YYYY
+## Plano: Exibir nome do professor em vez do ID na coluna "Professor Correção"
 
 ### Problema
-O campo `data_fim_correcao` é `timestamptz` e a função `formatDate` concatena `T12:00:00` ao valor, o que causa problemas pois o valor já contém horário.
+O campo `professor_correcao` armazena UUIDs de professores, mas a tabela exibe o ID bruto ao invés do nome.
 
-### Alteração
-Na função `formatDate` em `DiariosSaoRafael.tsx` (linha 65), remover a concatenação de `T12:00:00` e usar `new Date(dateStr)` diretamente, pois timestamps completos já são parseados corretamente:
+### Alterações
 
-```typescript
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-';
-  try {
-    return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
-  } catch {
-    return dateStr;
-  }
-};
-```
+**1. `src/hooks/use-diarios-sao-rafael.ts`**
+- Após buscar os dados de AH, coletar os IDs únicos de `professor_correcao`
+- Fazer uma query na tabela `professores` para buscar os nomes correspondentes
+- Retornar um mapa `professorMap: Record<string, string>` (id → nome) junto com os demais dados
 
-Isso garante que tanto datas simples (`2024-05-10`) quanto timestamps (`2024-05-10T15:30:00.000Z`) sejam formatados como `DD/MM/YYYY`.
+**2. `src/pages/DiariosSaoRafael.tsx`**
+- Receber `professorMap` do hook
+- Na linha de exibição (linha 506), substituir `item.professor_correcao` por `professorMap[item.professor_correcao] || item.professor_correcao || '-'`
+- No modo edição (linha 472), trocar o Input de texto por um Select com os professores disponíveis, mantendo o valor como ID
 
