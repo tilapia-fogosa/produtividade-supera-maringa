@@ -20,10 +20,6 @@ const ProjetoSaoRafaelLancamento = () => {
   const [isAbacoModalOpen, setIsAbacoModalOpen] = useState(false);
   const [alunoAbaco, setAlunoAbaco] = useState<{ id: string; nome: string; turma_nome: string } | null>(null);
 
-  const irParaDevolutiva = () => {
-    navigate('/projeto-sao-rafael-devolutiva');
-  };
-
   // Handlers AH
   const handleSelectAlunoAh = (aluno: { id: string; nome: string; turma_nome: string }) => {
     setAlunoAh(aluno);
@@ -48,82 +44,65 @@ const ProjetoSaoRafaelLancamento = () => {
     setAlunoAbaco(null);
   };
 
+  const cards = [
+    {
+      title: 'Devolutiva Mensal',
+      description: 'Acesse o relatório mensal do Projeto São Rafael com dados de Ábaco e Abrindo Horizontes.',
+      buttonLabel: 'Ver Devolutiva',
+      icon: GraduationCap,
+      buttonClass: 'bg-azul-500 hover:bg-azul-600 text-white',
+      onClick: () => navigate('/projeto-sao-rafael-devolutiva'),
+    },
+    {
+      title: 'Lançar Abrindo Horizontes',
+      description: 'Realize o lançamento de exercícios de Abrindo Horizontes para alunos do projeto.',
+      buttonLabel: 'Lançar AH',
+      icon: BookOpen,
+      buttonClass: 'bg-orange-500 hover:bg-orange-600 text-white',
+      onClick: () => setIsAlunoSelectorAhOpen(true),
+    },
+    {
+      title: 'Lançar Ábaco',
+      description: 'Realize o lançamento de produtividade de Ábaco para alunos do projeto.',
+      buttonLabel: 'Lançar Ábaco',
+      icon: Calculator,
+      buttonClass: 'bg-azul-500 hover:bg-azul-600 text-white',
+      onClick: () => setIsAlunoSelectorAbacoOpen(true),
+    },
+    {
+      title: 'Diários',
+      description: 'Consulte todas as produtividades de Ábaco e AH de um aluno por período.',
+      buttonLabel: 'Ver Diários',
+      icon: ClipboardList,
+      buttonClass: 'bg-azul-500 hover:bg-azul-600 text-white',
+      onClick: () => navigate('/diarios-sao-rafael'),
+    },
+  ];
+
   return (
     <div className="container mx-auto py-4 px-2">
       <h1 className="text-2xl font-bold mb-6 text-azul-500">Projeto São Rafael</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-orange-200 bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-azul-500">Devolutiva Mensal</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500 mb-4">
-              Acesse o relatório mensal do Projeto São Rafael com dados de Ábaco e Abrindo Horizontes.
-            </p>
-            <Button 
-              onClick={irParaDevolutiva}
-              className="w-full bg-azul-500 hover:bg-azul-600 text-white"
-            >
-              <GraduationCap className="mr-2 h-4 w-4" />
-              Ver Devolutiva
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200 bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-azul-500">Lançar Abrindo Horizontes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500 mb-4">
-              Realize o lançamento de exercícios de Abrindo Horizontes para alunos do projeto.
-            </p>
-            <Button 
-              onClick={() => setIsAlunoSelectorAhOpen(true)}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              <BookOpen className="mr-2 h-4 w-4" />
-              Lançar AH
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200 bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-azul-500">Lançar Ábaco</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500 mb-4">
-              Realize o lançamento de produtividade de Ábaco para alunos do projeto.
-            </p>
-            <Button 
-              onClick={() => setIsAlunoSelectorAbacoOpen(true)}
-              className="w-full bg-azul-500 hover:bg-azul-600 text-white"
-            >
-              <Calculator className="mr-2 h-4 w-4" />
-              Lançar Ábaco
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200 bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-azul-500">Diários</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500 mb-4">
-              Consulte todas as produtividades de Ábaco e AH de um aluno por período.
-            </p>
-            <Button 
-              onClick={() => navigate('/diarios-sao-rafael')}
-              className="w-full bg-azul-500 hover:bg-azul-600 text-white"
-            >
-              <ClipboardList className="mr-2 h-4 w-4" />
-              Ver Diários
-            </Button>
-          </CardContent>
-        </Card>
+        {cards.map((card) => (
+          <Card key={card.title} className="border-orange-200 bg-white flex flex-col">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-azul-500">{card.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col flex-1">
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
+                {card.description}
+              </p>
+              <Button 
+                onClick={card.onClick}
+                className={`w-full ${card.buttonClass}`}
+              >
+                <card.icon className="mr-2 h-4 w-4" />
+                {card.buttonLabel}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Modal de Seleção de Aluno para AH */}
@@ -131,6 +110,7 @@ const ProjetoSaoRafaelLancamento = () => {
         isOpen={isAlunoSelectorAhOpen}
         onClose={() => setIsAlunoSelectorAhOpen(false)}
         onSelectAluno={handleSelectAlunoAh}
+        tipo="ah"
       />
 
       {/* Modal de Seleção de Aluno para Ábaco */}
@@ -138,6 +118,7 @@ const ProjetoSaoRafaelLancamento = () => {
         isOpen={isAlunoSelectorAbacoOpen}
         onClose={() => setIsAlunoSelectorAbacoOpen(false)}
         onSelectAluno={handleSelectAlunoAbaco}
+        tipo="abaco"
       />
 
       {/* Modal de Lançamento AH */}
