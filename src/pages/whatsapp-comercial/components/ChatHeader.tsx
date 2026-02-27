@@ -61,7 +61,7 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuC
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold text-lg flex items-center gap-2 group cursor-pointer">
             {clientName}
-            {conversation.alterarNome && (
+            {
               <Button
                 variant="ghost"
                 size="icon"
@@ -75,7 +75,7 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuC
               >
                 <Pencil className="h-3 w-3" />
               </Button>
-            )}
+            }
           </h2>
           <div className="flex items-center gap-2 text-sm text-purple-100">
             {!conversation.isGroup && (
