@@ -125,30 +125,49 @@ export function ChatInput({ conversation, onMessageSent, replyingTo, onReplySent
       // Limpar input imediatamente (fire-and-forget)
       setMessage("");
 
-      // Etapa 3: Enviar mensagem processada
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
-        body: {
-          destinatario: isGroup ? conversation.clientId : undefined,
-          phone_number: !isGroup ? conversation.phoneNumber : undefined,
-          user_name: userName,
-          mensagem: processedMessage,
-          client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
-          profile_id: profileId,
-          unit_id: conversation.unitId,
-          quoted_message_id: replyingTo ? Number(replyingTo.id) : undefined,
-        }
-      });
-
-      if (error) {
-        console.error('ChatInput: Erro ao enviar mensagem:', error);
-        throw error;
-      }
-
-      console.log('ChatInput: Mensagem enviada com sucesso:', data);
-
-      // Se estava respondendo, limpar estado de reply (quoted_message_id já foi enviado via send-whatsapp-message)
       if (replyingTo) {
+        // === RESPOSTA: usa apenas react-whatsapp-message ===
+        console.log('ChatInput: Enviando resposta via react-whatsapp-message');
+        const { data, error } = await supabase.functions.invoke('react-whatsapp-message', {
+          body: {
+            historico_comercial_id: Number(replyingTo.id),
+            tipo: 'resposta',
+            mensagem_resposta: processedMessage,
+            profile_id: profileId || null,
+            profile_name: userName,
+            phone_number: conversation.phoneNumber || conversation.clientId,
+            unit_id: conversation.unitId,
+            client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
+          },
+        });
+
+        if (error) {
+          console.error('ChatInput: Erro ao enviar resposta:', error);
+          throw error;
+        }
+
+        console.log('ChatInput: Resposta enviada com sucesso:', data);
         onReplySent?.();
+      } else {
+        // === MENSAGEM NORMAL: usa send-whatsapp-message ===
+        const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
+          body: {
+            destinatario: isGroup ? conversation.clientId : undefined,
+            phone_number: !isGroup ? conversation.phoneNumber : undefined,
+            user_name: userName,
+            mensagem: processedMessage,
+            client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
+            profile_id: profileId,
+            unit_id: conversation.unitId,
+          }
+        });
+
+        if (error) {
+          console.error('ChatInput: Erro ao enviar mensagem:', error);
+          throw error;
+        }
+
+        console.log('ChatInput: Mensagem enviada com sucesso:', data);
       }
 
       // Invalida cache para atualizar mensagens e conversas com delay de 1s
