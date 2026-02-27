@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Smile, Send, MessageSquare } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
@@ -49,7 +49,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
   const [showAutoMessages, setShowAutoMessages] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+  
   const queryClient = useQueryClient();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
   const { activeUnit } = useActiveUnit();
@@ -106,32 +106,20 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
       phoneSchema.parse(phoneNumber);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({
-          title: "Número inválido",
-          description: error.errors[0]?.message || "Verifique o número de telefone",
-          variant: "destructive",
-        });
+        console.error('SendToUnregisteredDrawer: Número inválido:', error);
         return;
       }
     }
 
     // Validação da mensagem
     if (!message.trim()) {
-      toast({
-        title: "Mensagem vazia",
-        description: "Digite uma mensagem para enviar",
-        variant: "destructive",
-      });
+      console.error('SendToUnregisteredDrawer: Mensagem vazia');
       return;
     }
 
     // Validação de tamanho da mensagem
     if (message.trim().length > 1000) {
-      toast({
-        title: "Mensagem muito longa",
-        description: "A mensagem deve ter no máximo 1000 caracteres",
-        variant: "destructive",
-      });
+      console.error('SendToUnregisteredDrawer: Mensagem muito longa');
       return;
     }
 
@@ -181,10 +169,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
 
       console.log('SendToUnregisteredDrawer: Mensagem enviada com sucesso:', sendData);
 
-      toast({
-        title: "Mensagem enviada",
-        description: "Mensagem enviada com sucesso",
-      });
+      console.log('SendToUnregisteredDrawer: Mensagem enviada com sucesso');
 
       // Limpar formulário
       setPhoneNumber("");
@@ -202,11 +187,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
 
     } catch (error: any) {
       console.error('SendToUnregisteredDrawer: Erro ao enviar mensagem:', error);
-      toast({
-        title: "Erro ao enviar",
-        description: error.message || "Não foi possível enviar a mensagem",
-        variant: "destructive",
-      });
+      console.error('SendToUnregisteredDrawer: Erro ao enviar:', error);
     } finally {
       setIsSending(false);
     }

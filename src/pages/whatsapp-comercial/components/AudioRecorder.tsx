@@ -18,7 +18,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Loader2, Play, Send, X } from "lucide-react";
-import { toast } from "sonner";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -103,9 +103,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
           onSendAudioReady(sendFn);
         }
 
-        toast.success('Áudio gravado!', {
-          description: 'Clique em play para ouvir ou enviar'
-        });
+        console.log('AudioRecorder: Áudio gravado com sucesso');
 
         // Para todos os tracks do stream
         stream.getTracks().forEach(track => track.stop());
@@ -117,15 +115,11 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
       onStateChange?.(newState);
       console.log('AudioRecorder: Gravação iniciada');
 
-      toast.info('Gravando áudio...', {
-        description: 'Clique no botão novamente para parar'
-      });
+      console.log('AudioRecorder: Gravação em andamento');
 
     } catch (error) {
       console.error('AudioRecorder: Erro ao acessar microfone:', error);
-      toast.error('Erro ao acessar microfone', {
-        description: 'Verifique as permissões do navegador'
-      });
+      console.error('AudioRecorder: Erro ao acessar microfone:', error);
     }
   };
 
