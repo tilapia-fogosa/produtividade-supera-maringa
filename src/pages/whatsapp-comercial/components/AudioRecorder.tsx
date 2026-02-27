@@ -29,11 +29,13 @@ interface AudioRecorderProps {
   };
   onStateChange?: (state: RecordingState) => void;
   onSendAudioReady?: (sendFn: () => Promise<void>) => void;
+  replyingTo?: { id: string | number } | null;
+  onReplySent?: () => void;
 }
 
 type RecordingState = 'idle' | 'recording' | 'preview' | 'processing';
 
-export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }: AudioRecorderProps) {
+export function AudioRecorder({ conversation, onStateChange, onSendAudioReady, replyingTo, onReplySent }: AudioRecorderProps) {
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -222,6 +224,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
           user_name: userName,
           client_id: isUnregistered ? null : conversation.clientId,
           profile_id: user?.id,
+          ...(replyingTo ? { quoted_message_id: Number(replyingTo.id) } : {}),
         }
       });
 
@@ -232,6 +235,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
       console.log('AudioRecorder: Áudio enviado com sucesso:', data);
 
       success = true;
+      onReplySent?.();
 
       setTimeout(() => {
         console.log('AudioRecorder: Invalidando cache de mensagens');
