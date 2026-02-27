@@ -173,7 +173,7 @@ serve(async (req) => {
               .storage
               .from('wpp_comercial')
               .upload(fileName, fileData, {
-                contentType: mime_type || defaultMime,
+                contentType: (mime_type || defaultMime).split(';')[0].trim(),
                 upsert: false
               });
 
