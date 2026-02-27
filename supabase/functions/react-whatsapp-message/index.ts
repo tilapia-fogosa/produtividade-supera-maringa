@@ -12,10 +12,13 @@ import { corsHeaders } from "../_shared/cors.ts";
  * - profile_id: ID do profile do usuário
  * - profile_name: nome do usuário
  * - phone_number: telefone do destinatário (para enviar ao webhook)
+ * - unit_id: ID da unidade (opcional, para resposta)
+ * - client_id: ID do cliente (opcional, para resposta)
  * 
  * Etapas:
  * 1. Salva na tabela whatsapp_message_reactions
- * 2. Envia para o webhook n8n (fire-and-forget)
+ * 2. Se tipo=resposta, salva também no historico_comercial (com quoted_message_id)
+ * 3. Envia para o webhook n8n (fire-and-forget)
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,7 +26,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { historico_comercial_id, tipo, emoji, mensagem_resposta, profile_id, profile_name, phone_number } = await req.json();
+    const { historico_comercial_id, tipo, emoji, mensagem_resposta, profile_id, profile_name, phone_number, unit_id, client_id } = await req.json();
 
     if (!historico_comercial_id || !tipo) {
       return new Response(
@@ -60,7 +63,36 @@ Deno.serve(async (req) => {
 
     console.log("Reação inserida com sucesso:", data.id);
 
-    // 2. Enviar para o webhook n8n (fire-and-forget)
+    // 2. Se tipo=resposta, salvar também no historico_comercial
+    if (tipo === "resposta" && mensagem_resposta && phone_number) {
+      try {
+        // Validar client_id como UUID
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const validClientId = client_id && uuidRegex.test(client_id) ? client_id : null;
+
+        const { error: insertError } = await supabase.from("historico_comercial").insert({
+          client_id: validClientId,
+          telefone: phone_number,
+          mensagem: mensagem_resposta,
+          tipo_mensagem: "text",
+          media_url: null,
+          created_by: profile_id || null,
+          ...(unit_id ? { unit_id } : {}),
+          quoted_message_id: historico_comercial_id,
+          from_me: true,
+        });
+
+        if (insertError) {
+          console.error("Erro ao salvar resposta no histórico:", insertError);
+        } else {
+          console.log("Resposta salva no historico_comercial com quoted_message_id:", historico_comercial_id);
+        }
+      } catch (histErr) {
+        console.error("Erro ao salvar histórico da resposta:", histErr);
+      }
+    }
+
+    // 3. Enviar para o webhook n8n (fire-and-forget)
     const webhookUrl = "https://webhookn8n.agenciakadin.com.br/webhook/mensagem_wpp_global";
 
     const webhookPayload: Record<string, any> = {
