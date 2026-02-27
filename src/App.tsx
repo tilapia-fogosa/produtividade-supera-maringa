@@ -66,6 +66,7 @@ import AlunosAtivos from "./pages/AlunosAtivos";
 import AlunosDevolutivas from "./pages/AlunosDevolutivas";
 import ProjetoSaoRafael from "./pages/ProjetoSaoRafael";
 import ProjetoSaoRafaelLancamento from "./pages/ProjetoSaoRafaelLancamento";
+import DiariosSaoRafael from "./pages/DiariosSaoRafael";
 import CorrecoesAbrindoHorizontes from "./pages/CorrecoesAbrindoHorizontes";
 import CalendarioAulas from "./pages/CalendarioAulas";
 import Eventos from "./pages/Eventos";
@@ -158,6 +159,7 @@ function ProtectedLayout() {
               <Route path="/devolutivas/funcionario/:funcionarioId" element={<DevolutivaFuncionario />} />
               <Route path="/projeto-sao-rafael-devolutiva" element={<ProjetoSaoRafael />} />
               <Route path="/projeto-sao-rafael" element={<ProjetoSaoRafaelLancamento />} />
+              <Route path="/diarios-sao-rafael" element={<DiariosSaoRafael />} />
               <Route path="/fichas" element={<Fichas />} />
               <Route path="/lancamentos" element={<Lancamentos />} />
               <Route path="/abrindo-horizontes-fila" element={<AbrindoHorizontesFila />} />

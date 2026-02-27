@@ -7880,6 +7880,7 @@ export type Database = {
         | "envio_agradecimento_nps"
         | "digitalizar_rescisao"
         | "comentario"
+        | "digitalizar_contrato_remover_arquivos"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8119,6 +8120,7 @@ export const Constants = {
         "envio_agradecimento_nps",
         "digitalizar_rescisao",
         "comentario",
+        "digitalizar_contrato_remover_arquivos",
       ],
       tipo_evento_sala: [
         "manutencao",

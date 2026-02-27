@@ -6,6 +6,7 @@ import { Turma } from '@/hooks/use-professor-turmas';
 import { useSalaPessoasTurma, SalaPessoaTurma } from '@/hooks/sala/use-sala-pessoas-turma';
 import { useLembretesAlunos } from '@/hooks/sala/use-lembretes-alunos';
 import { useReposicoesHoje } from '@/hooks/sala/use-reposicoes-hoje';
+import { useAulasExperimentaisHoje } from '@/hooks/sala/use-aulas-experimentais-hoje';
 import { calcularUltimaAula } from '@/utils/calcularUltimaAula';
 import SalaProdutividadeScreen from '@/components/sala/SalaProdutividadeScreen';
 import SalaProdutividadeDrawer from '@/components/sala/SalaProdutividadeDrawer';
@@ -48,6 +49,9 @@ const SalaProdutividadeTurma = () => {
 
   // Buscar reposições do dia para esta turma
   const { reposicoes: reposicoesHoje, refetch: refetchReposicoes } = useReposicoesHoje(turmaId, dataSelecionada);
+
+  // Buscar aulas experimentais do dia para esta turma
+  const { aulasExperimentais, refetch: refetchAulasExperimentais } = useAulasExperimentaisHoje(turmaId, dataSelecionada);
 
   // IDs dos alunos para buscar lembretes (incluindo reposições)
   const alunoIds = useMemo(() => {
@@ -117,6 +121,7 @@ const SalaProdutividadeTurma = () => {
       console.log('[Sala] Refresh automático - recarregando dados...');
       buscarPessoasPorTurma(turmaId, dataSelecionada);
       refetchReposicoes();
+      refetchAulasExperimentais();
     }, REFRESH_INTERVAL);
 
     return () => {
@@ -170,6 +175,7 @@ const SalaProdutividadeTurma = () => {
     if (turmaId && dataSelecionada) {
       buscarPessoasPorTurma(turmaId, dataSelecionada);
       refetchReposicoes();
+      refetchAulasExperimentais();
     }
   };
 
@@ -243,6 +249,7 @@ const SalaProdutividadeTurma = () => {
         onLembreteConcluido={handleLembreteConcluido}
         dataSelecionada={dataSelecionada}
         onDataChange={handleDataChange}
+        aulasExperimentais={aulasExperimentais}
       />
 
       <SalaProdutividadeDrawer
