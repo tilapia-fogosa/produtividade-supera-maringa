@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Smile, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Conversation } from "../types/whatsapp.types";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
@@ -41,6 +42,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
+  const { user, profile } = useAuth();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
 
   console.log('ChatInput: Renderizando input de mensagem para cliente:', conversation.clientId);
@@ -88,33 +90,22 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     setShowEmojiPicker(false); // Fecha o picker ao enviar
 
     try {
-      // Buscar usuário e processar variáveis em paralelo
-      const userPromise = supabase.auth.getUser();
-      
+      const userName = profile?.full_name || user?.email || 'Usuário';
+      const profileId = user?.id;
+
       let processedMessage = message.trim();
       if (message.includes('{')) {
-        console.log('ChatInput: Mensagem contém variáveis, processando em paralelo...');
-        const [userResult, replaceResult] = await Promise.all([
-          userPromise,
-          supabase.functions.invoke('replace-message-variables', {
-            body: { message: message.trim(), clientId: conversation.clientId },
-          }),
-        ]);
-        const { data: replaceData, error: replaceError } = replaceResult;
+        console.log('ChatInput: Mensagem contém variáveis, processando...');
+        const { data: replaceData, error: replaceError } = await supabase.functions.invoke('replace-message-variables', {
+          body: { message: message.trim(), clientId: conversation.clientId },
+        });
         if (replaceError) {
           console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
           throw new Error('Erro ao processar variáveis da mensagem');
         }
         processedMessage = replaceData?.processed || message.trim();
-        var user = userResult.data?.user;
-      } else {
-        const userResult = await userPromise;
-        var user = userResult.data?.user;
       }
       console.log('ChatInput: Mensagem processada:', processedMessage);
-
-      // Pega nome do user_metadata (evita query extra ao profiles)
-      const userName = user?.user_metadata?.full_name || user?.email || 'Usuário';
 
       // Verificar se é número não cadastrado (client_id começa com "phone_")
       const isUnregistered = conversation.clientId.startsWith('phone_');
@@ -128,9 +119,10 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         processedMessageLength: processedMessage.length
       });
 
+      // Limpar input imediatamente (fire-and-forget)
+      setMessage("");
+
       // Etapa 3: Enviar mensagem processada
-      // Para grupos: enviar clientId como destinatario
-      // Para contatos: enviar phone_number
       const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
         body: {
           destinatario: isGroup ? conversation.clientId : undefined,
@@ -138,7 +130,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
           user_name: userName,
           mensagem: processedMessage,
           client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
-          profile_id: user?.id,
+          profile_id: profileId,
           unit_id: conversation.unitId
         }
       });
@@ -149,9 +141,6 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
       }
 
       console.log('ChatInput: Mensagem enviada com sucesso:', data);
-
-      // Limpar input
-      setMessage("");
 
       // Invalida cache para atualizar mensagens e conversas com delay de 1s
       // Isso garante que o backend teve tempo de processar a mensagem
