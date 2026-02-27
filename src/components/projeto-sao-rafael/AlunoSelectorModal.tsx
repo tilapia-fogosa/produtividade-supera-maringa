@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Loader2, BookOpen } from 'lucide-react';
+import { Loader2, BookOpen, Calculator } from 'lucide-react';
 import { useAlunosProjetoSaoRafael } from '@/hooks/use-alunos-projeto-sao-rafael';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,10 +12,16 @@ interface AlunoSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectAluno: (aluno: { id: string; nome: string; turma_nome: string }) => void;
+  tipo?: 'ah' | 'abaco';
 }
 
-export const AlunoSelectorModal = ({ isOpen, onClose, onSelectAluno }: AlunoSelectorModalProps) => {
+export const AlunoSelectorModal = ({ isOpen, onClose, onSelectAluno, tipo = 'ah' }: AlunoSelectorModalProps) => {
   const { alunos, loading, filtro, setFiltro } = useAlunosProjetoSaoRafael();
+
+  const isAH = tipo === 'ah';
+  const titulo = isAH ? 'Selecionar Aluno para Lançamento AH' : 'Selecionar Aluno para Lançamento Ábaco';
+  const botaoLabel = isAH ? 'Lançar AH' : 'Lançar Ábaco';
+  const BotaoIcon = isAH ? BookOpen : Calculator;
 
   const formatarUltimaCorrecao = (data: string | null) => {
     if (!data) return 'Nunca';
@@ -30,18 +36,16 @@ export const AlunoSelectorModal = ({ isOpen, onClose, onSelectAluno }: AlunoSele
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Selecionar Aluno para Lançamento AH</DialogTitle>
+          <DialogTitle>{titulo}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
               placeholder="Buscar por nome do aluno..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
-              className="pl-10"
             />
           </div>
 
@@ -70,9 +74,11 @@ export const AlunoSelectorModal = ({ isOpen, onClose, onSelectAluno }: AlunoSele
                           <p className="text-sm text-muted-foreground">
                             Turma: {aluno.turma_nome}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Última correção: {formatarUltimaCorrecao(aluno.ultima_correcao_ah)}
-                          </p>
+                          {isAH && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Última correção: {formatarUltimaCorrecao(aluno.ultima_correcao_ah)}
+                            </p>
+                          )}
                         </div>
                         <Button
                           onClick={() => {
@@ -83,10 +89,10 @@ export const AlunoSelectorModal = ({ isOpen, onClose, onSelectAluno }: AlunoSele
                             });
                           }}
                           size="sm"
-                          className="shrink-0"
+                          className={`shrink-0 ${isAH ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-azul-500 hover:bg-azul-600 text-white'}`}
                         >
-                          <BookOpen className="h-4 w-4 mr-2" />
-                          Lançar AH
+                          <BotaoIcon className="h-4 w-4 mr-2" />
+                          {botaoLabel}
                         </Button>
                       </div>
                     </div>
