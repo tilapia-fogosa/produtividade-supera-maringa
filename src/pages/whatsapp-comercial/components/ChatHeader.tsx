@@ -15,11 +15,8 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, MailOpen } from "lucide-react";
+import { Mail, MailOpen, Menu, Pencil } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Menu, Pencil } from "lucide-react";
 
 interface ChatHeaderProps {
   conversation: Conversation;
@@ -64,7 +61,7 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuC
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold text-lg flex items-center gap-2 group cursor-pointer">
             {clientName}
-            {conversation.alterarNome && (
+            {
               <Button
                 variant="ghost"
                 size="icon"
@@ -78,7 +75,7 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuC
               >
                 <Pencil className="h-3 w-3" />
               </Button>
-            )}
+            }
           </h2>
           <div className="flex items-center gap-2 text-sm text-purple-100">
             {!conversation.isGroup && (
@@ -93,11 +90,6 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuC
               >
                 {conversation.status}
               </Badge>
-            )}
-            {lastMessageTime && (
-              <span className="text-xs text-purple-100">
-                {lastMessageTime}
-              </span>
             )}
           </div>
         </div>
@@ -120,13 +112,6 @@ export function ChatHeader({ conversation, onMarkAsRead, onMarkAsUnread, onMenuC
         </Button>
       )}
 
-      {/* Status Badge */}
-      <Badge
-        variant="outline"
-        className="flex-shrink-0 bg-secondary text-white border-secondary hover:bg-secondary/90"
-      >
-        {conversation.status}
-      </Badge>
     </div>
   );
 }

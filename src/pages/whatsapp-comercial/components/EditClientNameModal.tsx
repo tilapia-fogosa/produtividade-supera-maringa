@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { Conversation } from "../types/whatsapp.types";
 
@@ -51,7 +51,7 @@ export function EditClientNameModal() {
                 throw error;
             }
 
-            toast.success("Nome atualizado com sucesso!");
+            console.log('EditClientNameModal: Nome atualizado com sucesso');
             setOpen(false);
 
             // refetch conversations
@@ -61,7 +61,7 @@ export function EditClientNameModal() {
             conversation.alterarNome = false;
         } catch (e: any) {
             console.error(e);
-            toast.error("Erro ao atualizar o nome do cliente.");
+            console.error('EditClientNameModal: Erro ao atualizar nome:', e);
         } finally {
             setIsSaving(false);
         }

@@ -54,7 +54,8 @@ serve(async (req) => {
       user_name,
       client_id,
       profile_id,
-      unit_id
+      unit_id,
+      quoted_message_id
     } = body;
 
     // Determina o destinatário final
@@ -106,6 +107,14 @@ serve(async (req) => {
     if (imagem) payload.imagem = imagem;
     if (video) payload.video = video;
     if (mime_type) payload.mime_type = mime_type;
+    if (quoted_message_id) payload.quoted_message_id = quoted_message_id;
+
+    // Determinar o tipo de mensagem para o webhook global
+    let tipoMensagem = 'text';
+    if (audio) tipoMensagem = 'audio';
+    else if (imagem) tipoMensagem = 'image';
+    else if (video) tipoMensagem = 'video';
+    payload.tipo = tipoMensagem;
 
     console.log('send-whatsapp-message: Enviando para webhook', {
       destinatario: finalDestinatario,
@@ -113,37 +122,40 @@ serve(async (req) => {
       hasAudio: !!audio,
       hasImagem: !!imagem,
       hasVideo: !!video,
+      tipo: tipoMensagem,
     });
 
-    // Envia para o webhook
-    const webhookResponse = await fetch(webhookUrl, {
+    // === FIRE-AND-FORGET: Envia para o webhook SEM esperar resposta ===
+    // Isso elimina o delay de 2-4s que o webhook externo causava
+    fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('send-whatsapp-message: Erro no webhook (background):', errorText);
+      } else {
+        console.log('send-whatsapp-message: Webhook respondeu com sucesso (background)');
+      }
+    }).catch((err) => {
+      console.error('send-whatsapp-message: Erro na chamada do webhook (background):', err);
     });
-
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error('send-whatsapp-message: Erro no webhook:', errorText);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao enviar mensagem', details: errorText }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const webhookResult = await webhookResponse.json();
-    console.log('send-whatsapp-message: Resposta do webhook:', webhookResult);
 
     // Salva no histórico comercial se for mensagem individual (não grupo) e tiver client_id
     const isGroup = finalDestinatario.includes('@g.us');
 
-    if (!isGroup && client_id && (mensagem || audio || imagem || video)) {
+    if (!isGroup && (mensagem || audio || imagem || video)) {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Validar se client_id é um UUID válido, senão usar null
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const validClientId = client_id && uuidRegex.test(client_id) ? client_id : null;
 
         let finalMediaUrl = null;
         let finalTipoMensagem = 'text';
@@ -158,11 +170,17 @@ serve(async (req) => {
             const fileName = `${client_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
             // Assume bucket name is 'whatsapp-media'
+            // Supabase Storage não suporta audio/webm - fallback para audio/ogg
+            let cleanMime = (mime_type || defaultMime).split(';')[0].trim();
+            if (cleanMime === 'audio/webm') {
+              cleanMime = 'audio/ogg';
+            }
+
             const { data: uploadData, error: uploadError } = await supabase
               .storage
-              .from('whatsapp-media')
+              .from('wpp_comercial')
               .upload(fileName, fileData, {
-                contentType: mime_type || defaultMime,
+                contentType: cleanMime,
                 upsert: false
               });
 
@@ -171,8 +189,7 @@ serve(async (req) => {
               return null;
             }
 
-            // URL will be constructed later in the query or returned by getPublicUrl
-            const { data: publicUrlData } = supabase.storage.from('whatsapp-media').getPublicUrl(fileName);
+            const { data: publicUrlData } = supabase.storage.from('wpp_comercial').getPublicUrl(fileName);
             return publicUrlData.publicUrl;
           } catch (e) {
             console.error(`send-whatsapp-message: Erro convertendo/upando ${type}:`, e);
@@ -193,18 +210,21 @@ serve(async (req) => {
 
         console.log('send-whatsapp-message: Salvando no histórico comercial, media:', finalMediaUrl);
 
-        await supabase.from('historico_comercial').insert({
-          client_id,
+        const { error: insertError } = await supabase.from('historico_comercial').insert({
+          client_id: validClientId,
           telefone: finalDestinatario,
-          tipo_acao: 'MENSAGEM_WHATSAPP',
-          descricao: mensagem ? mensagem.substring(0, 500) : '[Mídia]',
           mensagem: mensagem || null,
           tipo_mensagem: finalTipoMensagem,
           media_url: finalMediaUrl,
-          profile_id,
-          unit_id: unit_id || null,
+          created_by: profile_id,
+          ...(unit_id ? { unit_id } : {}),
+          ...(quoted_message_id ? { quoted_message_id } : {}),
           from_me: true
         });
+
+        if (insertError) {
+          console.error('send-whatsapp-message: Erro no insert do histórico:', insertError);
+        }
 
         console.log('send-whatsapp-message: Histórico salvo com sucesso');
       } catch (histError) {
@@ -217,7 +237,6 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Mensagem enviada com sucesso',
-        webhook_response: webhookResult
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

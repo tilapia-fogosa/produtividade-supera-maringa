@@ -18,20 +18,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Smile, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-import { Conversation } from "../types/whatsapp.types";
+import { Conversation, Message } from "../types/whatsapp.types";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAutoMessages } from "../hooks/useAutoMessages";
 import { AudioRecorder } from "./AudioRecorder";
+import { MediaAttachment } from "./MediaAttachment";
 
 interface ChatInputProps {
   conversation: Conversation;
   onMessageSent?: () => void;
+  replyingTo?: Message | null;
+  onReplySent?: () => void;
 }
 
-export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
+export function ChatInput({ conversation, onMessageSent, replyingTo, onReplySent }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -41,6 +45,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
+  const { user, profile } = useAuth();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
 
   console.log('ChatInput: Renderizando input de mensagem para cliente:', conversation.clientId);
@@ -88,35 +93,22 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     setShowEmojiPicker(false); // Fecha o picker ao enviar
 
     try {
-      // Etapa 1: Substituir variáveis dinâmicas na mensagem
-      console.log('ChatInput: Substituindo variáveis dinâmicas na mensagem');
-      const { data: replaceData, error: replaceError } = await supabase.functions.invoke(
-        'replace-message-variables',
-        {
-          body: {
-            message: message.trim(),
-            clientId: conversation.clientId,
-          },
+      const userName = profile?.full_name || user?.email || 'Usuário';
+      const profileId = user?.id;
+
+      let processedMessage = message.trim();
+      if (message.includes('{')) {
+        console.log('ChatInput: Mensagem contém variáveis, processando...');
+        const { data: replaceData, error: replaceError } = await supabase.functions.invoke('replace-message-variables', {
+          body: { message: message.trim(), clientId: conversation.clientId },
+        });
+        if (replaceError) {
+          console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
+          throw new Error('Erro ao processar variáveis da mensagem');
         }
-      );
-
-      if (replaceError) {
-        console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
-        throw new Error('Erro ao processar variáveis da mensagem');
+        processedMessage = replaceData?.processed || message.trim();
       }
-
-      const processedMessage = replaceData?.processed || message.trim();
       console.log('ChatInput: Mensagem processada:', processedMessage);
-
-      // Etapa 2: Buscar nome do usuário logado
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user?.id)
-        .single();
-
-      const userName = profile?.full_name || 'Usuário';
 
       // Verificar se é número não cadastrado (client_id começa com "phone_")
       const isUnregistered = conversation.clientId.startsWith('phone_');
@@ -130,33 +122,55 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         processedMessageLength: processedMessage.length
       });
 
-      // Etapa 3: Enviar mensagem processada
-      // Para grupos: enviar clientId como destinatario
-      // Para contatos: enviar phone_number
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
-        body: {
-          destinatario: isGroup ? conversation.clientId : undefined,
-          phone_number: !isGroup ? conversation.phoneNumber : undefined,
-          user_name: userName,
-          mensagem: processedMessage,
-          client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
-          profile_id: user?.id,
-          unit_id: conversation.unitId
-        }
-      });
-
-      if (error) {
-        console.error('ChatInput: Erro ao enviar mensagem:', error);
-        throw error;
-      }
-
-      console.log('ChatInput: Mensagem enviada com sucesso:', data);
-
-      // Limpar input
+      // Limpar input imediatamente (fire-and-forget)
       setMessage("");
 
+      if (replyingTo) {
+        // === RESPOSTA: usa apenas react-whatsapp-message ===
+        console.log('ChatInput: Enviando resposta via react-whatsapp-message');
+        const { data, error } = await supabase.functions.invoke('react-whatsapp-message', {
+          body: {
+            historico_comercial_id: Number(replyingTo.id),
+            tipo: 'resposta',
+            mensagem_resposta: processedMessage,
+            profile_id: profileId || null,
+            profile_name: userName,
+            phone_number: conversation.phoneNumber || conversation.clientId,
+            unit_id: conversation.unitId,
+            client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
+          },
+        });
+
+        if (error) {
+          console.error('ChatInput: Erro ao enviar resposta:', error);
+          throw error;
+        }
+
+        console.log('ChatInput: Resposta enviada com sucesso:', data);
+        onReplySent?.();
+      } else {
+        // === MENSAGEM NORMAL: usa send-whatsapp-message ===
+        const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
+          body: {
+            destinatario: isGroup ? conversation.clientId : undefined,
+            phone_number: !isGroup ? conversation.phoneNumber : undefined,
+            user_name: userName,
+            mensagem: processedMessage,
+            client_id: isGroup ? null : (isUnregistered ? null : conversation.clientId),
+            profile_id: profileId,
+            unit_id: conversation.unitId,
+          }
+        });
+
+        if (error) {
+          console.error('ChatInput: Erro ao enviar mensagem:', error);
+          throw error;
+        }
+
+        console.log('ChatInput: Mensagem enviada com sucesso:', data);
+      }
+
       // Invalida cache para atualizar mensagens e conversas com delay de 1s
-      // Isso garante que o backend teve tempo de processar a mensagem
       setTimeout(() => {
         console.log('ChatInput: Invalidando cache de mensagens e conversas após 1s');
         queryClient.invalidateQueries({ queryKey: ['whatsapp-individual-messages', conversation.clientId] });
@@ -214,6 +228,8 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
   return (
     <div className="p-3 border-t border-border bg-muted/50 flex items-end gap-2 relative">
+      {/* Media Attachment (overlay + botão) */}
+      <MediaAttachment conversation={conversation} onMessageSent={onMessageSent} />
       {/* Emoji Picker Popover */}
       {showEmojiPicker && (
         <div
@@ -246,6 +262,8 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         conversation={conversation}
         onStateChange={handleAudioStateChange}
         onSendAudioReady={handleSendAudioReady}
+        replyingTo={replyingTo}
+        onReplySent={onReplySent}
       />
 
       {/* Textarea de texto com auto-expansão */}

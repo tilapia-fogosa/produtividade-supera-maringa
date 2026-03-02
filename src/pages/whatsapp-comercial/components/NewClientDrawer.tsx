@@ -17,7 +17,7 @@
  */
 
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/use-toast";
+
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,7 +69,7 @@ interface NewClientDrawerProps {
 }
 
 export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: NewClientDrawerProps) {
-  const { toast } = useToast();
+  
   const { profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -151,10 +151,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
           .eq('telefone', values.phoneNumber);
       }
 
-      toast({
-        title: "Contato cadastrado",
-        description: `Cliente ${values.name} registrado com sucesso!`,
-      });
+      console.log('NewClientDrawer: Cliente cadastrado com sucesso:', values.name);
 
       onSuccess?.();
       onOpenChange(false);
@@ -162,11 +159,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
 
     } catch (error) {
       console.error("NewClientDrawer: Error on submit:", error);
-      toast({
-        title: "Erro ao cadastrar",
-        description: "Não foi possível cadastrar o contato no momento.",
-        variant: "destructive"
-      });
+      console.error("NewClientDrawer: Error on submit:", error);
     } finally {
       setIsSubmitting(false);
     }

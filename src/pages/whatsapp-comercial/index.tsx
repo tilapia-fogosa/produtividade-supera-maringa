@@ -15,7 +15,7 @@ export default function WhatsAppPage() {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden bg-background relative z-0">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-background relative z-0">
       {/* Header Ultra Compacto */}
       <div className="flex-shrink-0 h-[40px] min-h-[40px] flex items-center justify-between px-3 border-b border-border bg-card/50">
         <div className="flex items-center gap-3">

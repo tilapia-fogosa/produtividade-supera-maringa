@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, FileText, Smile } from "lucide-react";
-import { toast } from "sonner";
+
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useCreateAutoMessage, useUpdateAutoMessage } from "../hooks/useAutoMessages";
 import { DynamicFieldsModal } from "./DynamicFieldsModal";
@@ -119,7 +119,7 @@ export function AutoMessageModal({ open, onOpenChange, editData }: AutoMessageMo
 
     if (!nome.trim() || !mensagem.trim()) {
       console.error('AutoMessageModal: Campos obrigatórios não preenchidos');
-      toast.error('Preencha todos os campos obrigatórios');
+      console.error('AutoMessageModal: Campos obrigatórios não preenchidos');
       return;
     }
 

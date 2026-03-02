@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Save, FileText, Smile } from "lucide-react";
-import { toast } from "sonner";
+
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useUpdateMensagemAutomatica, getTipoLabel } from "../hooks/useMensagensAutomaticas";
 import { DynamicFieldsModal } from "./DynamicFieldsModal";
@@ -118,7 +118,7 @@ export function MensagemAutomaticaModal({
 
     if (!mensagem.trim()) {
       console.error('MensagemAutomaticaModal: Mensagem vazia');
-      toast.error('A mensagem não pode estar vazia');
+      console.error('MensagemAutomaticaModal: Mensagem vazia');
       return;
     }
 

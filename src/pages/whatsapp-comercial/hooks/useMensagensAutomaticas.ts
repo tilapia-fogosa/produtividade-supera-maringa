@@ -11,7 +11,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
 
 // Tipos
 export interface MensagemAutomatica {
@@ -113,11 +113,11 @@ export function useUpdateMensagemAutomatica() {
     onSuccess: () => {
       console.log('useUpdateMensagemAutomatica: Invalidando cache de mensagens');
       queryClient.invalidateQueries({ queryKey: ['whatsapp-mensagens-automaticas'] });
-      toast.success('Mensagem automática atualizada com sucesso');
+      console.log('useUpdateMensagemAutomatica: Atualização concluída');
     },
     onError: (error: any) => {
       console.error('useUpdateMensagemAutomatica: Erro na mutação:', error);
-      toast.error('Erro ao atualizar mensagem automática');
+      console.error('useUpdateMensagemAutomatica: Erro na mutação:', error);
     },
   });
 }

@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, FileText } from "lucide-react";
-import { toast } from "sonner";
+
 import { useCreateAutoMessage, useUpdateAutoMessage } from "../hooks/useAutoMessages";
 import { DynamicFieldsModal } from "./DynamicFieldsModal";
 import { AutoMessagesList } from "./AutoMessagesList";
@@ -81,7 +81,7 @@ export function AutoMessageForm() {
     // Validação básica
     if (!nome.trim() || !mensagem.trim()) {
       console.error('AutoMessageForm: Campos obrigatórios não preenchidos');
-      toast.error('Preencha todos os campos obrigatórios');
+      console.error('AutoMessageForm: Campos obrigatórios não preenchidos');
       return;
     }
 

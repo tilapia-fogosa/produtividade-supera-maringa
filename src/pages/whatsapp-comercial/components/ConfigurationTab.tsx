@@ -1,29 +1,20 @@
 /**
- * Aba de configuração
+ * Aba de configuração do WhatsApp
  * 
- * Log: Componente da aba de configuração do WhatsApp
- * Etapas:
- * 1. Gerencia estado de ativação (useState local por enquanto)
- * 2. Exibe card com título e descrição
- * 3. Mostra switch para ativar/desativar
- * 4. Exibe badge visual do status atual
- * 5. Exibe status de conexão (somente leitura) da coluna 16
- * 6. Exibe seção para criar mensagens automáticas
- * 
- * Nota: Estado local por enquanto, no futuro será persistido no banco
- * 
- * Utiliza cores do sistema: card, muted-foreground, primary
+ * Organizada em 3 abas:
+ * 1. Mensagens Padronizadas (nível de conta/usuário)
+ * 2. Mensagens Automáticas (nível de unidade)
+ * 3. Conectividade (status da conexão)
  */
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, MessageSquareText, Bot, Wifi } from "lucide-react";
 import { useWhatsAppStatus } from "../hooks/useWhatsAppStatus";
 import { AutoMessageModal } from "./AutoMessageModal";
 import { AutoMessagesList } from "./AutoMessagesList";
@@ -33,8 +24,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 export function ConfigurationTab() {
-  console.log('ConfigurationTab: Renderizando aba de configuração');
-  const [isActive, setIsActive] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState<{ id: string; nome: string; mensagem: string } | null>(null);
 
@@ -49,104 +38,121 @@ export function ConfigurationTab() {
     isLoading
   } = useWhatsAppStatus();
 
-  const handleToggle = (checked: boolean) => {
-    console.log('ConfigurationTab: Alterando status para:', checked ? 'Ativo' : 'Inativo');
-    setIsActive(checked);
-  };
-
   const handleCreateNew = () => {
-    console.log('ConfigurationTab: Abrindo modal para criar nova mensagem');
     setEditData(null);
     setModalOpen(true);
   };
 
   const handleEdit = (id: string, nome: string, mensagem: string) => {
-    console.log('ConfigurationTab: Abrindo modal para editar mensagem');
     setEditData({ id, nome, mensagem });
     setModalOpen(true);
   };
 
   const handleEditAuto = (id: string, tipo: string, mensagem: string) => {
-    console.log('ConfigurationTab: Abrindo modal para editar mensagem automática');
     setAutoEditData({ id, tipo, mensagem });
     setAutoModalOpen(true);
   };
-  return <ScrollArea className="h-full pr-4">
-    <div className="space-y-6 pb-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurações do WhatsApp</CardTitle>
-          <CardDescription>
-            Gerencie as configurações da integração com WhatsApp
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Status de conexão */}
 
+  return (
+    <div className="space-y-4">
+      <Tabs defaultValue="padronizadas" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="padronizadas" className="flex items-center gap-2">
+            <MessageSquareText className="h-4 w-4" />
+            <span className="hidden sm:inline">Mensagens Padronizadas</span>
+            <span className="sm:hidden">Padronizadas</span>
+          </TabsTrigger>
+          <TabsTrigger value="automaticas" className="flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">Mensagens Automáticas</span>
+            <span className="sm:hidden">Automáticas</span>
+          </TabsTrigger>
+          <TabsTrigger value="conectividade" className="flex items-center gap-2">
+            <Wifi className="h-4 w-4" />
+            Conectividade
+          </TabsTrigger>
+        </TabsList>
 
-          <Separator />
+        {/* Aba 1: Mensagens Padronizadas (nível de conta/usuário) */}
+        <TabsContent value="padronizadas">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Mensagens Padronizadas</CardTitle>
+                  <CardDescription>
+                    Suas mensagens padronizadas pessoais. Cada usuário pode ter suas próprias mensagens.
+                  </CardDescription>
+                </div>
+                <Button onClick={handleCreateNew}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Mensagem
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AutoMessagesList onEdit={handleEdit} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Status da Conexão (Somente leitura) */}
-          <div className="space-y-2">
-            <Label>Status da Conexão</Label>
-            <div className="flex items-center gap-3">
-              <Input value={isLoading ? "Carregando..." : whatsappStatus?.label || "Desconectado"} readOnly className="max-w-xs bg-muted cursor-not-allowed" />
-              <Badge variant={whatsappStatus?.color === 'success' ? 'default' : whatsappStatus?.color === 'warning' ? 'secondary' : 'destructive'}>
-                {isLoading ? "..." : whatsappStatus?.label || "Desconectado"}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">Status em tempo real da conexão com WhatsApp</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Seção de Mensagens Padronizadas */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Mensagens Padronizadas</CardTitle>
+        {/* Aba 2: Mensagens Automáticas (nível de unidade) */}
+        <TabsContent value="automaticas">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mensagens Automáticas</CardTitle>
               <CardDescription>
-                Gerencie suas mensagens padronizadas do WhatsApp
+                Mensagens automáticas de boas-vindas e valorização. Configuração compartilhada por toda a unidade.
               </CardDescription>
-            </div>
-            <Button onClick={handleCreateNew}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Mensagem
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <AutoMessagesList onEdit={handleEdit} />
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent>
+              <MensagensAutomaticasList selectedUnitId={selectedUnitId} onEdit={handleEditAuto} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Seção de Mensagens Automáticas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mensagens Automáticas</CardTitle>
-          <CardDescription>
-            Configure as mensagens automáticas de boas-vindas e valorização
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MensagensAutomaticasList selectedUnitId={selectedUnitId} onEdit={handleEditAuto} />
-        </CardContent>
-      </Card>
+        {/* Aba 3: Conectividade */}
+        <TabsContent value="conectividade">
+          <Card>
+            <CardHeader>
+              <CardTitle>Conectividade</CardTitle>
+              <CardDescription>
+                Status da conexão com o WhatsApp
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Status da Conexão</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    value={isLoading ? "Carregando..." : whatsappStatus?.label || "Desconectado"}
+                    readOnly
+                    className="max-w-xs bg-muted cursor-not-allowed"
+                  />
+                  <Badge variant={whatsappStatus?.color === 'success' ? 'default' : whatsappStatus?.color === 'warning' ? 'secondary' : 'destructive'}>
+                    {isLoading ? "..." : whatsappStatus?.label || "Desconectado"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Status em tempo real da conexão com WhatsApp</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modal de criação/edição de mensagens padronizadas */}
+      <AutoMessageModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        editData={editData}
+      />
+
+      {/* Modal de edição de mensagens automáticas */}
+      <MensagemAutomaticaModal
+        open={autoModalOpen}
+        onOpenChange={setAutoModalOpen}
+        editData={autoEditData}
+      />
     </div>
-
-    {/* Modal de criação/edição de mensagens padronizadas */}
-    <AutoMessageModal
-      open={modalOpen}
-      onOpenChange={setModalOpen}
-      editData={editData}
-    />
-
-    {/* Modal de edição de mensagens automáticas */}
-    <MensagemAutomaticaModal
-      open={autoModalOpen}
-      onOpenChange={setAutoModalOpen}
-      editData={autoEditData}
-    />
-  </ScrollArea>;
+  );
 }

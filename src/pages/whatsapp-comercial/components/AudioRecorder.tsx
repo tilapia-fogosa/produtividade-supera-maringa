@@ -18,7 +18,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Loader2, Play, Send, X } from "lucide-react";
-import { toast } from "sonner";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -29,11 +29,13 @@ interface AudioRecorderProps {
   };
   onStateChange?: (state: RecordingState) => void;
   onSendAudioReady?: (sendFn: () => Promise<void>) => void;
+  replyingTo?: { id: string | number } | null;
+  onReplySent?: () => void;
 }
 
 type RecordingState = 'idle' | 'recording' | 'preview' | 'processing';
 
-export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }: AudioRecorderProps) {
+export function AudioRecorder({ conversation, onStateChange, onSendAudioReady, replyingTo, onReplySent }: AudioRecorderProps) {
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -103,9 +105,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
           onSendAudioReady(sendFn);
         }
 
-        toast.success('Áudio gravado!', {
-          description: 'Clique em play para ouvir ou enviar'
-        });
+        console.log('AudioRecorder: Áudio gravado com sucesso');
 
         // Para todos os tracks do stream
         stream.getTracks().forEach(track => track.stop());
@@ -117,15 +117,11 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
       onStateChange?.(newState);
       console.log('AudioRecorder: Gravação iniciada');
 
-      toast.info('Gravando áudio...', {
-        description: 'Clique no botão novamente para parar'
-      });
+      console.log('AudioRecorder: Gravação em andamento');
 
     } catch (error) {
       console.error('AudioRecorder: Erro ao acessar microfone:', error);
-      toast.error('Erro ao acessar microfone', {
-        description: 'Verifique as permissões do navegador'
-      });
+      console.error('AudioRecorder: Erro ao acessar microfone:', error);
     }
   };
 
@@ -228,6 +224,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
           user_name: userName,
           client_id: isUnregistered ? null : conversation.clientId,
           profile_id: user?.id,
+          ...(replyingTo ? { quoted_message_id: Number(replyingTo.id) } : {}),
         }
       });
 
@@ -238,6 +235,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
       console.log('AudioRecorder: Áudio enviado com sucesso:', data);
 
       success = true;
+      onReplySent?.();
 
       setTimeout(() => {
         console.log('AudioRecorder: Invalidando cache de mensagens');

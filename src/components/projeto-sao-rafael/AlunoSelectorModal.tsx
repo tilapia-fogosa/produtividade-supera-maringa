@@ -16,7 +16,7 @@ interface AlunoSelectorModalProps {
 }
 
 export const AlunoSelectorModal = ({ isOpen, onClose, onSelectAluno, tipo = 'ah' }: AlunoSelectorModalProps) => {
-  const { alunos, loading, filtro, setFiltro } = useAlunosProjetoSaoRafael();
+  const { alunos, loading, filtro, setFiltro } = useAlunosProjetoSaoRafael({ includeInactive: true });
 
   const isAH = tipo === 'ah';
   const titulo = isAH ? 'Selecionar Aluno para Lançamento AH' : 'Selecionar Aluno para Lançamento Ábaco';
