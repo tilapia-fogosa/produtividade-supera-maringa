@@ -424,7 +424,7 @@ const DiariosSaoRafael = () => {
                           <TableHead>% Acerto</TableHead>
                           <TableHead>Professor Correção</TableHead>
                           <TableHead>Comentário</TableHead>
-                          <TableHead>Data Lançamento</TableHead>
+                          
                           <TableHead className="w-[100px]">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -484,7 +484,6 @@ const DiariosSaoRafael = () => {
                                     className="h-8 w-40"
                                   />
                                 </TableCell>
-                                <TableCell className="whitespace-nowrap">{formatDateTime(item.created_at)}</TableCell>
                                 <TableCell>
                                   <div className="flex gap-1">
                                     <Button size="icon" variant="ghost" onClick={saveAH} disabled={saving} className="h-8 w-8">
@@ -508,7 +507,7 @@ const DiariosSaoRafael = () => {
                               <TableCell>{percentual !== null ? `${percentual}%` : '-'}</TableCell>
                               <TableCell>{(item.professor_correcao && professorMap[item.professor_correcao]) || item.professor_correcao || '-'}</TableCell>
                               <TableCell className="max-w-[200px] truncate">{item.comentario || '-'}</TableCell>
-                              <TableCell className="whitespace-nowrap">{formatDateTime(item.created_at)}</TableCell>
+                              
                               <TableCell>
                                 <Button size="icon" variant="ghost" onClick={() => startEditAH(item)} className="h-8 w-8">
                                   <Pencil className="h-4 w-4" />
