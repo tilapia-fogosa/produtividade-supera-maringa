@@ -130,14 +130,16 @@ function ProtectedLayout() {
             <AppSidebar />
           </div>
         )}
-        <main className="flex-1 overflow-auto">
-          <div className="p-2 md:p-4">
-            <div className="flex items-center justify-between gap-4 mb-2 md:mb-4 print:hidden">
-              {/* SidebarTrigger oculto para perfil sala */}
-              {!isSala && <SidebarTrigger />}
-              {isSala && <div />}
-              <UnitSelector />
-            </div>
+        <main className={location.pathname.startsWith('/whatsapp') ? "flex-1 overflow-hidden h-full" : "flex-1 overflow-auto"}>
+          <div className={location.pathname.startsWith('/whatsapp') ? 'h-full' : 'p-2 md:p-4'}>
+            {!location.pathname.startsWith('/whatsapp') && (
+              <div className="flex items-center justify-between gap-4 mb-2 md:mb-4 print:hidden">
+                {/* SidebarTrigger oculto para perfil sala */}
+                {!isSala && <SidebarTrigger />}
+                {isSala && <div />}
+                <UnitSelector />
+              </div>
+            )}
             <Routes>
               <Route path="/" element={<Navigate to={isSala ? "/sala/lancamentos" : "/home"} />} />
               <Route path="/home" element={isSala ? <Navigate to="/sala/lancamentos" /> : <Home />} />

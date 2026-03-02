@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, DoorOpen } from "lucide-react";
+import { Users, DoorOpen, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VincularProfessorModal } from '@/components/admin/VincularProfessorModal';
 import SalasManager from '@/components/admin/SalasManager';
+import { HorarioFuncionamentoForm } from '@/pages/whatsapp-comercial/components/HorarioFuncionamentoForm';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveUnit } from '@/contexts/ActiveUnitContext';
@@ -115,6 +116,10 @@ const AdminConfiguracao = () => {
             <DoorOpen className="h-4 w-4 mr-2" />
             Salas
           </TabsTrigger>
+          <TabsTrigger value="horarios">
+            <Clock className="h-4 w-4 mr-2" />
+            Horários da Unidade
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="vinculos" className="mt-4">
@@ -127,7 +132,7 @@ const AdminConfiguracao = () => {
                   <Badge variant="secondary" className="ml-2">{usuariosSemVinculo.length}</Badge>
                 )}
               </h3>
-              
+
               {isLoading ? (
                 <p className="text-muted-foreground">Carregando...</p>
               ) : usuariosSemVinculo.length === 0 ? (
@@ -163,7 +168,7 @@ const AdminConfiguracao = () => {
                   <Badge variant="default" className="ml-2">{usuariosComVinculo.length}</Badge>
                 )}
               </h3>
-              
+
               {isLoading ? (
                 <p className="text-muted-foreground">Carregando...</p>
               ) : usuariosComVinculo.length === 0 ? (
@@ -198,6 +203,10 @@ const AdminConfiguracao = () => {
 
         <TabsContent value="salas" className="mt-4">
           <SalasManager />
+        </TabsContent>
+
+        <TabsContent value="horarios" className="mt-4">
+          <HorarioFuncionamentoForm />
         </TabsContent>
       </Tabs>
 
