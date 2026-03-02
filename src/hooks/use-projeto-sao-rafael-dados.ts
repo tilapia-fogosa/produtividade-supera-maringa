@@ -204,15 +204,13 @@ async function buscarAlunosComLancamentos(turmasIds: string[], mesAno: string) {
     .lte('data_aula', dataFinal);
 
   // Buscar quais alunos tiveram lançamentos de AH no período usando pessoa_id
-  const dataInicialAH = `${dataInicial}T00:00:00.000Z`;
-  const dataFinalAH = `${dataFinal}T23:59:59.999Z`;
-  
   const { data: lancamentosAH } = await supabase
     .from('produtividade_ah')
     .select('pessoa_id')
     .in('pessoa_id', alunosIds)
-    .gte('created_at', dataInicialAH)
-    .lte('created_at', dataFinalAH);
+    .not('data_fim_correcao', 'is', null)
+    .gte('data_fim_correcao', dataInicial)
+    .lte('data_fim_correcao', dataFinal);
 
   // Combinar alunos que tiveram lançamentos em qualquer uma das tabelas
   const idsComLancamentos = new Set<string>();
@@ -322,16 +320,17 @@ async function processarDadosAHAlunosComLancamentos(alunos: any[], mesAno: strin
   console.log('Processando dados do AH para alunos com lançamentos:', alunos.length);
   
   const ultimoDia = obterUltimoDiaDoMes(mesAno);
-  const dataInicialAH = `${mesAno}-01T00:00:00.000Z`;
-  const dataFinalAH = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}T23:59:59.999Z`;
+  const dataInicial = `${mesAno}-01`;
+  const dataFinal = `${mesAno}-${ultimoDia.toString().padStart(2, '0')}`;
   
-  // Buscar dados de produtividade AH para o período usando pessoa_id
+  // Buscar dados de produtividade AH para o período usando pessoa_id e data_fim_correcao
   const { data: produtividadeAHData, error } = await supabase
     .from('produtividade_ah')
     .select('*')
     .in('pessoa_id', alunos.map(a => a.id))
-    .gte('created_at', dataInicialAH)
-    .lte('created_at', dataFinalAH);
+    .not('data_fim_correcao', 'is', null)
+    .gte('data_fim_correcao', dataInicial)
+    .lte('data_fim_correcao', dataFinal);
 
   if (error) {
     console.error('Erro ao buscar dados de produtividade AH:', error);
