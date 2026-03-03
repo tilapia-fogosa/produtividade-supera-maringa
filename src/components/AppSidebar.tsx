@@ -180,6 +180,11 @@ const comercialItems = [
     url: "/calendario-aulas",
     icon: Calendar,
   },
+  {
+    title: "Painel Administrativo",
+    url: "/painel-administrativo",
+    icon: LayoutDashboard,
+  },
 ];
 
 const administrativoItems: Array<{ title: string; url: string; icon: any; maringaOnly?: boolean }> = [
