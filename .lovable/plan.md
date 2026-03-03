@@ -1,46 +1,27 @@
 
 
-## Diagnóstico
+## Plano: Lembrete "Devolver AH" só após correção finalizada
 
-A RPC `get_commercial_conversations_by_phone` está dando **timeout** (erro 57014). A causa é a combinação de:
+### Situação Atual
+No hook `useLembretesAlunos`, a query busca registros em `ah_recolhidas` onde `data_entrega_real IS NULL` — ou seja, o lembrete aparece assim que a apostila é **recolhida**, mesmo sem correção.
 
-1. **Falta de índice** na coluna `telefone` da tabela `historico_comercial`
-2. **Subconsultas correlacionadas** com `REGEXP_REPLACE` executadas para cada um dos 324 telefones únicos, cruzando com `alunos` e `clients` sem índices adequados
-3. **Múltiplas subconsultas por linha** (nome, origem, última mensagem, contagem, unread) — são ~7 subconsultas por telefone
+### Mudança
+Adicionar um filtro na query para que o lembrete só apareça quando a correção estiver **finalizada** — isto é, quando existir um registro correspondente em `produtividade_ah` com `ah_recolhida_id` apontando para o registro de `ah_recolhidas`.
 
-## Plano de Correção
+### Implementação
 
-### 1. Criar índices necessários
-- Índice em `historico_comercial(telefone)`
-- Índice em `historico_comercial(telefone, created_at DESC)` para otimizar a busca da última mensagem
-- Índice em `historico_comercial(telefone, lida, from_me)` para contagem de não lidas
+**Arquivo:** `src/hooks/sala/use-lembretes-alunos.ts`
 
-### 2. Reescrever a RPC otimizada
-A nova versão vai:
-- Usar **CTEs materializadas** para pré-calcular a última mensagem, contagem total e unread count por telefone de uma vez só (em vez de subconsultas por linha)
-- Pré-computar os últimos 10 dígitos dos telefones de `alunos` e `clients` uma única vez e fazer JOIN, eliminando os `REGEXP_REPLACE` repetidos
-- Manter a mesma interface de retorno para não precisar alterar o frontend
+1. Após buscar os `ah_recolhidas` (com `data_entrega_real IS NULL`), fazer uma segunda query em `produtividade_ah` filtrando pelos IDs retornados, para obter quais têm correção finalizada.
+2. No mapa de apostilas AH pendentes, só incluir as que possuem registro correspondente em `produtividade_ah`.
 
-### Detalhes Técnicos
-
+Lógica simplificada:
 ```text
-Antes (N subconsultas por telefone):
-  Para cada telefone:
-    → subconsulta última mensagem
-    → subconsulta última data
-    → subconsulta contagem total
-    → subconsulta unread
-    → subconsulta nome (com REGEXP em alunos)
-    → subconsulta nome (com REGEXP em clients)
-    → subconsulta origem
-    → subconsulta alterar_nome
-
-Depois (tudo pré-calculado):
-  CTE 1: Agregar por telefone (última msg, contagem, unread) - 1 scan
-  CTE 2: Normalizar telefones de alunos - 1 scan
-  CTE 3: Normalizar telefones de clients - 1 scan
-  JOIN final: combinar tudo
+ah_recolhidas (data_entrega_real = NULL)
+  → buscar IDs
+  → produtividade_ah WHERE ah_recolhida_id IN (esses IDs)
+  → só mostrar lembrete para os que têm match
 ```
 
-Nenhuma alteração no frontend será necessária.
+Nenhuma alteração de banco necessária — apenas lógica no frontend.
 
