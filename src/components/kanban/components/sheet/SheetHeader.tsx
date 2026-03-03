@@ -6,30 +6,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { WhatsAppIcon } from "../icons/WhatsAppIcon"
 import { useToast } from "@/components/ui/use-toast"
 
-import { useNavigate } from "react-router-dom"
-
 interface SheetHeaderProps {
-  cardId: string
   clientName: string
   phoneNumber: string
   email?: string
   onWhatsAppClick: (e: React.MouseEvent) => void
 }
 
-export function SheetHeaderContent({ cardId, clientName, phoneNumber, email, onWhatsAppClick }: SheetHeaderProps) {
+export function SheetHeaderContent({ clientName, phoneNumber, email, onWhatsAppClick }: SheetHeaderProps) {
   const { toast } = useToast()
-  const navigate = useNavigate()
-
-  const handleConvertToStudent = () => {
-    navigate('/cadastro-novo-aluno', {
-      state: {
-        client_id: cardId,
-        nome: clientName,
-        telefone: phoneNumber,
-        email: email
-      }
-    })
-  }
 
   // Função para copiar o número de telefone
   const handleCopyPhone = () => {
@@ -133,14 +118,6 @@ export function SheetHeaderContent({ cardId, clientName, phoneNumber, email, onW
           </div>
         )}
 
-        <div className="mt-4 flex w-full max-w-sm">
-          <Button
-            onClick={handleConvertToStudent}
-            className="w-full bg-primary hover:bg-primary/90 text-white shadow-md font-semibold"
-          >
-            Converter para Aluno
-          </Button>
-        </div>
       </div>
     </div>
   )

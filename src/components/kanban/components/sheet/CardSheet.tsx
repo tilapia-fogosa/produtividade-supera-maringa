@@ -150,7 +150,6 @@ export function CardSheet({
       >
         <SheetHeader>
           <SheetHeaderContent
-            cardId={card.id}
             clientName={card.clientName}
             phoneNumber={card.phoneNumber}
             email={card.email}
