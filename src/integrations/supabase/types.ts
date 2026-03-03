@@ -7624,7 +7624,7 @@ export type Database = {
         }[]
       }
       get_unit_clients_with_next_activity: {
-        Args: { p_unit_id: string }
+        Args: { p_limit?: number; p_offset?: number; p_unit_id: string }
         Returns: {
           created_at: string
           created_by_name: string
@@ -7636,6 +7636,7 @@ export type Database = {
           original_ad: string
           phone_number: string
           status: string
+          total_count: number
         }[]
       }
       get_unit_performance: {
