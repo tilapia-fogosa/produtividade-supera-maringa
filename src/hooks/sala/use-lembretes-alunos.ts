@@ -64,6 +64,17 @@ export function useLembretesAlunos(alunoIds: string[]) {
         .in('pessoa_id', alunoIds)
         .is('data_entrega_real', null);
 
+      // Filtrar apenas as que já tiveram correção finalizada (existem em produtividade_ah)
+      const ahRecolhidaIds = ahRecolhidas?.map(ah => ah.id) || [];
+      let ahCorrigidaIds = new Set<number>();
+      if (ahRecolhidaIds.length > 0) {
+        const { data: correcoes } = await supabase
+          .from('produtividade_ah')
+          .select('ah_recolhida_id')
+          .in('ah_recolhida_id', ahRecolhidaIds);
+        ahCorrigidaIds = new Set((correcoes || []).map(c => c.ah_recolhida_id).filter(Boolean) as number[]);
+      }
+
       // Buscar pendências de botom
       const { data: botomPendencias } = await supabase
         .from('pendencias_botom')
@@ -89,7 +100,8 @@ export function useLembretesAlunos(alunoIds: string[]) {
       // Criar mapa de apostilas AH pendentes (pegar a primeira se houver múltiplas)
       const ahPendentesMap = new Map<string, ApostilaAHPendente>();
       ahRecolhidas?.forEach(ah => {
-        if (!ahPendentesMap.has(ah.pessoa_id)) {
+        // Só incluir se a correção já foi finalizada
+        if (!ahPendentesMap.has(ah.pessoa_id) && ahCorrigidaIds.has(ah.id)) {
           ahPendentesMap.set(ah.pessoa_id, {
             recolhidaId: ah.id,
             apostilaNome: ah.apostila
