@@ -234,6 +234,9 @@ export function AppSidebar() {
   const isTeacher = userRole === 'educador';
   const isFuncionario = ['gestor_pedagogico', 'franqueado'].includes(userRole);
 
+  const isSDR = userRole === 'sdr';
+  const isConsultor = userRole === 'consultor';
+  const isOnlyComercial = isSDR || isConsultor;
   const filteredItems = items.filter(item => {
     if (item.maringaOnly && !isMaringa) return false;
     if (item.requiresTeacher && !isTeacher) return false;
@@ -254,8 +257,6 @@ export function AppSidebar() {
     return true;
   });
 
-  const isSDR = userRole === 'sdr';
-  const isConsultor = userRole === 'consultor';
   const showComercial = isAdmin || isConsultor || isFranqueado || isSDR;
 
 
@@ -275,28 +276,30 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
-            Pedagógico
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            {filteredItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === item.url}
-                  className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  onClick={() => navigate(item.url)}
-                >
-                  <button className="flex items-center space-x-3 w-full p-2 rounded-md transition-colors">
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    <span className="font-medium">{item.title}</span>
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
+        {!isOnlyComercial && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
+              Pedagógico
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {filteredItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.url}
+                    className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    onClick={() => navigate(item.url)}
+                  >
+                    <button className="flex items-center space-x-3 w-full p-2 rounded-md transition-colors">
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="font-medium">{item.title}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
 
         {showComercial && (
           <SidebarGroup>
@@ -323,7 +326,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {(isAdmin || isAdministrativo || isFranqueado) && filteredAdministrativoItems.length > 0 && (
+        {!isOnlyComercial && (isAdmin || isAdministrativo || isFranqueado) && filteredAdministrativoItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
               Administrativo
@@ -348,7 +351,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {adminItems.length > 0 && (
+        {!isOnlyComercial && adminItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-foreground/80 mb-2">
               Gestão
