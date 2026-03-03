@@ -1,45 +1,46 @@
 
 
-## Plano: Responder e Reagir a Mensagens no WhatsApp Comercial
+## Diagnóstico
 
-A tabela `whatsapp_message_reactions` já foi criada no banco com as colunas: `id`, `historico_comercial_id` (bigint), `tipo` (reacao/resposta), `emoji`, `mensagem_resposta`, `profile_id`, `profile_name`, `created_at`.
+A RPC `get_commercial_conversations_by_phone` está dando **timeout** (erro 57014). A causa é a combinação de:
 
-### Etapas de Implementação
+1. **Falta de índice** na coluna `telefone` da tabela `historico_comercial`
+2. **Subconsultas correlacionadas** com `REGEXP_REPLACE` executadas para cada um dos 324 telefones únicos, cruzando com `alunos` e `clients` sem índices adequados
+3. **Múltiplas subconsultas por linha** (nome, origem, última mensagem, contagem, unread) — são ~7 subconsultas por telefone
 
-**1. Criar componente `MessageActionMenu`**
-- Ao clicar em uma mensagem (`ChatMessage`), exibe um mini popover com 2 opções: "Responder" e "Reagir"
-- Se clicar em "Reagir": exibe os 6 emojis padrão do WhatsApp (👍 ❤️ 😂 😮 😢 🙏) + botão "+" que abre o emoji-picker completo
-- Se clicar em "Responder": seta a mensagem como "replyTo" via callback para o `ChatArea`
-- Inserção na tabela `whatsapp_message_reactions` para reações (tipo=reacao, emoji preenchido)
+## Plano de Correção
 
-**2. Adicionar estado `replyingTo` no `ChatArea`**
-- Estado controlado em `ChatArea` que armazena a mensagem sendo respondida
-- Passa `onReply` callback para `ChatMessages` → `ChatMessage`
-- Passa `replyingTo` + `onCancelReply` para `ChatInput`
+### 1. Criar índices necessários
+- Índice em `historico_comercial(telefone)`
+- Índice em `historico_comercial(telefone, created_at DESC)` para otimizar a busca da última mensagem
+- Índice em `historico_comercial(telefone, lida, from_me)` para contagem de não lidas
 
-**3. Modificar `ChatInput` para exibir barra de resposta**
-- Quando `replyingTo` está setado, exibe uma barra acima do input com:
-  - Borda lateral colorida (estilo WhatsApp)
-  - Nome do remetente + trecho da mensagem
-  - Botão X para cancelar
-- Ao enviar, inclui referência à mensagem original (salva na tabela `whatsapp_message_reactions` com tipo=resposta)
-
-**4. Modificar `ChatMessages` para propagar callbacks**
-- Passa `onReply` e `onReact` para cada `ChatMessage`
-
-**5. Atualizar `useMessages` para carregar reações**
-- Após buscar mensagens, faz query nas `whatsapp_message_reactions` para enriquecer cada mensagem com suas reações
-- As reações já são renderizadas pelo `ChatMessage` existente (campo `message.reactions`)
-
-**6. Criar Edge Function `react-whatsapp-message`**
-- Recebe: `historico_comercial_id`, `tipo`, `emoji`, `profile_id`, `profile_name`
-- Insere na tabela `whatsapp_message_reactions`
-- Opcionalmente envia reação via webhook WhatsApp
+### 2. Reescrever a RPC otimizada
+A nova versão vai:
+- Usar **CTEs materializadas** para pré-calcular a última mensagem, contagem total e unread count por telefone de uma vez só (em vez de subconsultas por linha)
+- Pré-computar os últimos 10 dígitos dos telefones de `alunos` e `clients` uma única vez e fazer JOIN, eliminando os `REGEXP_REPLACE` repetidos
+- Manter a mesma interface de retorno para não precisar alterar o frontend
 
 ### Detalhes Técnicos
 
-- O `MessageActionMenu` será um Popover posicionado junto ao balão da mensagem
-- Reações são salvas localmente + enviadas via webhook (fire-and-forget)
-- Respostas criam um registro na tabela de referência E enviam a mensagem normalmente via `send-whatsapp-message`
-- O hook `useMessages` será atualizado para fazer LEFT JOIN ou query separada nas reactions
+```text
+Antes (N subconsultas por telefone):
+  Para cada telefone:
+    → subconsulta última mensagem
+    → subconsulta última data
+    → subconsulta contagem total
+    → subconsulta unread
+    → subconsulta nome (com REGEXP em alunos)
+    → subconsulta nome (com REGEXP em clients)
+    → subconsulta origem
+    → subconsulta alterar_nome
+
+Depois (tudo pré-calculado):
+  CTE 1: Agregar por telefone (última msg, contagem, unread) - 1 scan
+  CTE 2: Normalizar telefones de alunos - 1 scan
+  CTE 3: Normalizar telefones de clients - 1 scan
+  JOIN final: combinar tudo
+```
+
+Nenhuma alteração no frontend será necessária.
 
