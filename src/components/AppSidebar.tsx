@@ -158,7 +158,7 @@ const comercialItems = [
   {
     title: "Painel do Consultor",
     url: "/crm",
-    icon: Target, // Using Target icon for CRM/Consultor as it fits well
+    icon: Target,
   },
   {
     title: "Clientes da Unidade",
@@ -174,6 +174,11 @@ const comercialItems = [
     title: "Comissão",
     url: "/comissao",
     icon: DollarSign,
+  },
+  {
+    title: "Calendário de Aulas",
+    url: "/calendario-aulas",
+    icon: Calendar,
   },
 ];
 
