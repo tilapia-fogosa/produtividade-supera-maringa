@@ -37,16 +37,35 @@ export function ClientHistoryDrawer({ open, onOpenChange, clientId }: ClientHist
                 .select(`
                     id,
                     tipo_atividade,
-                    description,
+                    tipo_contato,
+                    notes,
                     next_contact_date,
-                    status,
+                    active,
                     created_at,
-                    creator:profiles!client_activities_created_by_fkey (full_name)
+                    created_by
                 `)
                 .eq('client_id', clientId)
+                .eq('active', true)
                 .order('created_at', { ascending: false });
             if (error) throw error;
-            return data;
+            
+            // Buscar nomes dos autores
+            const creatorIds = [...new Set(data?.map(a => a.created_by).filter(Boolean) || [])];
+            let creatorsMap: Record<string, string> = {};
+            if (creatorIds.length > 0) {
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, full_name')
+                    .in('id', creatorIds);
+                if (profiles) {
+                    creatorsMap = Object.fromEntries(profiles.map(p => [p.id, p.full_name || '']));
+                }
+            }
+            
+            return (data || []).map(a => ({
+                ...a,
+                creator_name: creatorsMap[a.created_by] || null
+            }));
         },
         enabled: !!clientId && open
     });
@@ -98,16 +117,16 @@ export function ClientHistoryDrawer({ open, onOpenChange, clientId }: ClientHist
                                                     Registrado em {format(new Date(activity.created_at), "dd/MM/yyyy 'às' HH:mm")}
                                                 </span>
                                             </div>
-                                            {activity.status && (
+                                            {activity.tipo_contato && (
                                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-white">
-                                                    {activity.status}
+                                                    {activity.tipo_contato}
                                                 </Badge>
                                             )}
                                         </div>
 
-                                        {activity.description && (
+                                        {activity.notes && (
                                             <div className="text-sm text-slate-700 bg-white p-2 rounded border border-slate-100 mt-2">
-                                                {activity.description}
+                                                {activity.notes}
                                             </div>
                                         )}
 
@@ -118,10 +137,10 @@ export function ClientHistoryDrawer({ open, onOpenChange, clientId }: ClientHist
                                             </div>
                                         )}
 
-                                        {activity.creator?.full_name && (
+                                        {activity.creator_name && (
                                             <div className="mt-3 text-xs text-muted-foreground flex items-center gap-1 border-t pt-2">
                                                 <User className="h-3 w-3" />
-                                                Por: {activity.creator.full_name}
+                                                Por: {activity.creator_name}
                                             </div>
                                         )}
                                     </div>
