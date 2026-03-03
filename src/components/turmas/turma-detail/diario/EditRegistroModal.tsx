@@ -18,7 +18,7 @@ import { usePessoasTurma } from '@/hooks/use-pessoas-turma';
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { APOSTILAS_AH as apostilas } from '@/components/constants/apostilas';
+import { useApostilas } from '@/hooks/use-apostilas';
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EditRegistroModalProps {
@@ -41,6 +41,7 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
   modo
 }) => {
   const { pessoasTurma, buscarPessoasPorTurma } = usePessoasTurma();
+  const { apostilas: apostilasDB } = useApostilas();
   const [enviando, setEnviando] = useState(false);
   
   useEffect(() => {
@@ -243,9 +244,9 @@ const EditRegistroModal: React.FC<EditRegistroModalProps> = ({
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {apostilas.map((apostila) => (
-                        <SelectItem key={apostila} value={apostila}>
-                          {apostila}
+                      {apostilasDB.map((apostila) => (
+                        <SelectItem key={apostila.nome} value={apostila.nome}>
+                          {apostila.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>

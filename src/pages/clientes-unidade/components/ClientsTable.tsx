@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { History, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { History, Pencil, Trash2, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { ClientHistoryDrawer } from "./ClientHistoryDrawer";
@@ -15,11 +15,15 @@ import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
 import { AdvancedFiltersModal, AdvancedFilters } from "./AdvancedFiltersModal";
 
+const ITEMS_PER_PAGE = 50;
 
 export function ClientsTable() {
     const { activeUnit } = useActiveUnit();
     const { toast } = useToast();
     const queryClient = useQueryClient();
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
 
     // History Drawer State
     const [selectedHistoryClientId, setSelectedHistoryClientId] = useState<string | null>(null);
@@ -41,17 +45,17 @@ export function ClientsTable() {
         responsible: 'Todos',
     });
 
-    const { data: clients, isLoading } = useQuery({
-        queryKey: ['unit-clients', activeUnit?.id],
+    const { data: queryResult, isLoading } = useQuery({
+        queryKey: ['unit-clients', activeUnit?.id, currentPage],
         queryFn: async () => {
             if (!activeUnit?.id) {
-                console.log("No active unit ID provided to ClientsTable.");
-                return [];
+                return { clients: [], totalCount: 0 };
             }
-            console.log("Fetching clients for unit:", activeUnit.id);
-            // Fetch clients and their next activity using the RPC function to bypass RLS
+            const offset = (currentPage - 1) * ITEMS_PER_PAGE;
             const { data, error } = await supabase.rpc('get_unit_clients_with_next_activity', {
-                p_unit_id: activeUnit.id
+                p_unit_id: activeUnit.id,
+                p_limit: ITEMS_PER_PAGE,
+                p_offset: offset
             });
 
             if (error) {
@@ -59,11 +63,15 @@ export function ClientsTable() {
                 throw error;
             }
 
-            console.log("Clients fetched from RPC:", data);
-            return data || [];
+            const totalCount = data?.[0]?.total_count ?? 0;
+            return { clients: data || [], totalCount: Number(totalCount) };
         },
         enabled: !!activeUnit?.id
     });
+
+    const clients = queryResult?.clients;
+    const totalCount = queryResult?.totalCount ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
     const changeStatusMutation = useMutation({
         mutationFn: async (clientId: string) => {
@@ -257,6 +265,38 @@ export function ClientsTable() {
                             )}
                         </TableBody>
                     </Table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-4 px-2">
+                    <span className="text-sm text-muted-foreground">
+                        {totalCount > 0 
+                            ? `Mostrando ${((currentPage - 1) * ITEMS_PER_PAGE) + 1}–${Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} de ${totalCount} clientes`
+                            : 'Nenhum cliente'}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage <= 1}
+                            onClick={() => setCurrentPage(p => p - 1)}
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            Anterior
+                        </Button>
+                        <span className="text-sm font-medium">
+                            Página {currentPage} de {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage >= totalPages}
+                            onClick={() => setCurrentPage(p => p + 1)}
+                        >
+                            Próxima
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
                 </div>
             </CardContent>
 
