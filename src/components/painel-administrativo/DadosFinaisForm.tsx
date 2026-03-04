@@ -281,6 +281,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             .eq("id", alunoVinculado.id);
 
           if (removeError) throw removeError;
+
+          // Limpar aluno_id na aulas_inaugurais vinculada
+          await (supabase as any)
+            .from('aulas_inaugurais')
+            .update({ aluno_id: null })
+            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
         }
 
         // Adicionar vínculo ao novo aluno (se selecionado)
@@ -295,6 +301,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             .eq("id", data.alunoId);
 
           if (addError) throw addError;
+
+          // Atualizar aluno_id na aulas_inaugurais vinculada
+          await (supabase as any)
+            .from('aulas_inaugurais')
+            .update({ aluno_id: data.alunoId })
+            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
         }
       } else if (data.alunoId) {
         // Atualizar foto e data_onboarding do aluno vinculado existente
