@@ -1,38 +1,24 @@
 
 
-## Plano: Vincular aluno_id automaticamente na aulas_inaugurais
+## Plano: Mover envio do webhook para quando o Acordeão 2 for concluído
 
-### Problema
-O `aluno_id` na tabela `aulas_inaugurais` é sempre `null` no momento do agendamento, pois o aluno pode não existir ainda. O vínculo do aluno acontece no formulário "Dados Iniciais" (`DadosFinaisForm.tsx`), onde o admin associa um aluno ao `client_id`.
+### Situação atual
+O webhook `webhook-aula-inaugural` é disparado dentro do fluxo de salvamento (`mutation`), condicionado à existência de `dataAulaInaugural`, `horarioSelecionado` e `professorSelecionado` (linhas 418-458).
 
-### Solução
-No `DadosFinaisForm.tsx`, após vincular o aluno (update em `alunos.client_id`), buscar se existe um registro em `aulas_inaugurais` para o mesmo `atividade_pos_venda_id` e atualizar o `aluno_id`.
+### Mudança proposta
+Mover o disparo do webhook para um `useEffect` que observa `isAccordion2Complete`. Quando o acordeão 2 for marcado como completo (foto + lançar SGS + sincronizar SGS + vincular aluno), o webhook é disparado automaticamente, independente do botão "Salvar".
 
-### Alteração
+### Detalhes técnicos
 
-**Arquivo:** `src/components/painel-administrativo/DadosFinaisForm.tsx`
+1. **Criar um `useRef` de controle** (`webhookEnviado`) para garantir que o webhook seja disparado apenas uma vez por sessão da drawer.
 
-Na mutation, após o bloco que faz `update({ client_id: cliente.id })` no aluno (linhas ~287-298), adicionar:
+2. **Adicionar um `useEffect`** que dispara quando `isAccordion2Complete` muda para `true`:
+   - Coleta os dados necessários (nome do aluno, unit_id, dados da aula inaugural, kit, descritivo comercial)
+   - Invoca `supabase.functions.invoke('webhook-aula-inaugural', { body: payload })`
+   - Marca `webhookEnviado.current = true` para evitar re-envios
 
-```typescript
-// Atualizar aluno_id na aulas_inaugurais vinculada
-await (supabase as any)
-  .from('aulas_inaugurais')
-  .update({ aluno_id: data.alunoId })
-  .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
-```
+3. **Remover o bloco de webhook** (linhas 418-458) de dentro do `mutationFn`, mantendo todo o restante da lógica de salvamento intacto.
 
-Mesma lógica no bloco de remoção de vínculo (linhas ~276-284): se o aluno anterior é removido, limpar o `aluno_id`:
-
-```typescript
-await (supabase as any)
-  .from('aulas_inaugurais')
-  .update({ aluno_id: null })
-  .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
-```
-
-### Arquivo impactado
-| Arquivo | Ação |
-|---|---|
-| `DadosFinaisForm.tsx` | Sincronizar `aluno_id` na `aulas_inaugurais` ao vincular/desvincular aluno |
+### Arquivo alterado
+- `src/components/painel-administrativo/DadosFinaisForm.tsx`
 
