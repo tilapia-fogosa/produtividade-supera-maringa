@@ -129,7 +129,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
           phone_number: values.phoneNumber,
           email: values.email || null,
           lead_source: values.lead_source,
-          obs: values.observations || null,
+          observations: values.observations || null,
           unit_id: values.unit_id,
           tipo_atendimento: 'humano',
           status: 'novo'
