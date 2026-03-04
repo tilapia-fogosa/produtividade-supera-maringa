@@ -689,6 +689,22 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
               }}
             />
 
+            {/* Checkbox temporário para simular sincronização SGS (teste) */}
+            {!checklist.check_sincronizar_sgs && (
+              <div className="flex items-center space-x-2 pl-1">
+                <Checkbox
+                  id="simular_sync_sgs"
+                  checked={false}
+                  onCheckedChange={() => {
+                    handleToggle("check_sincronizar_sgs");
+                  }}
+                />
+                <Label htmlFor="simular_sync_sgs" className="text-xs text-muted-foreground cursor-pointer">
+                  Marcar como sincronizado (teste)
+                </Label>
+              </div>
+            )}
+
             {/* Vincular Aluno */}
             <div className="space-y-3 pt-4 border-t">
               <Label className="text-sm font-semibold">Vincular Aluno</Label>
