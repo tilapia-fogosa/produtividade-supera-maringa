@@ -2,6 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Lock, CheckCircle2 } from "lucide-react";
 
 // Função para converter base64 em Blob (compatível com navegador)
 function base64ToBlob(base64: string, contentType: string): Blob {
@@ -97,6 +104,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   const [fotoUrlExistente, setFotoUrlExistente] = useState<string | null>(null);
   const [descritivoComercial, setDescritivoComercial] = useState("");
   const [kitType, setKitType] = useState<string>("");
+  const [openAccordion, setOpenAccordion] = useState<string>("accordion-1");
 
   // Estados da aula inaugural
   const [dataAulaInaugural, setDataAulaInaugural] = useState<Date | undefined>();
@@ -484,6 +492,35 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
     setSelectedAlunoId(null);
   };
 
+  // Completion checks for accordion gating
+  const isAccordion1Complete = !!(
+    dataAulaInaugural &&
+    horarioSelecionado &&
+    checklist.check_entregar_kit
+  );
+
+  const isAccordion2Complete = !!(
+    (fotoCapturada || fotoUrlExistente) &&
+    checklist.check_lancar_sgs &&
+    checklist.check_sincronizar_sgs &&
+    selectedAlunoId
+  );
+
+  // Determine which accordions can open
+
+  // Auto-advance when completing an accordion
+  useEffect(() => {
+    if (isAccordion1Complete && openAccordion === "accordion-1") {
+      setOpenAccordion("accordion-2");
+    }
+  }, [isAccordion1Complete]);
+
+  useEffect(() => {
+    if (isAccordion2Complete && openAccordion === "accordion-2") {
+      setOpenAccordion("accordion-3");
+    }
+  }, [isAccordion2Complete]);
+
   if (isLoading || isLoadingVinculado) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -493,247 +530,303 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Seção: Aula Inaugural (primeiro campo) */}
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold">Aula Inaugural</Label>
-        <AulaInauguralSelector
-          dataAulaInaugural={dataAulaInaugural}
-          setDataAulaInaugural={setDataAulaInaugural}
-          horarioSelecionado={horarioSelecionado}
-          setHorarioSelecionado={setHorarioSelecionado}
-          professorSelecionado={professorSelecionado}
-          setProfessorSelecionado={setProfessorSelecionado}
-          salaSelecionada={salaSelecionada}
-          setSalaSelecionada={setSalaSelecionada}
-        />
-        {eventoExistente && (
-          <div className="mt-2 p-3 rounded-md bg-muted text-sm space-y-1">
-            <p><span className="font-medium text-foreground">Horário:</span> {eventoExistente.horario_inicio.substring(0, 5)} - {eventoExistente.horario_fim.substring(0, 5)}</p>
-            <p><span className="font-medium text-foreground">Professor:</span> {eventoExistente.professor_nome}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Seção: Descritivo Comercial */}
-      <DescritivoComercialField
-        value={descritivoComercial}
-        onChange={setDescritivoComercial}
-      />
-
-      {/* Seção: Entregar Kit */}
-      <div className="space-y-3">
-        <div className="flex items-center space-x-3">
-          <Checkbox
-            id="entregar_kit"
-            checked={checklist.check_entregar_kit}
-            onCheckedChange={() => handleToggle("check_entregar_kit")}
-          />
-          <Label
-            htmlFor="entregar_kit"
-            className="text-sm font-medium leading-none cursor-pointer"
-          >
-            Entregar Kit
-          </Label>
-        </div>
-        {checklist.check_entregar_kit && (
-          <div className="pl-7">
-            <Label className="text-sm mb-1.5 block">Tipo de Kit</Label>
-            <Select value={kitType} onValueChange={setKitType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o kit" />
-              </SelectTrigger>
-              <SelectContent>
-                {KIT_OPTIONS.map((kit) => (
-                  <SelectItem key={kit.value} value={kit.value}>
-                    {kit.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
-
-      {/* Seção: Foto do Aluno */}
-      <WebcamCapture
-        capturedImage={fotoCapturada}
-        existingImageUrl={fotoUrlExistente}
-        onCapture={setFotoCapturada}
-        onClear={() => {
-          setFotoCapturada(null);
-          setFotoUrlExistente(null);
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Accordion
+        type="single"
+        collapsible
+        value={openAccordion}
+        onValueChange={(val) => {
+          // Only allow opening if prerequisites are met
+          if (val === "accordion-2" && !isAccordion1Complete) return;
+          if (val === "accordion-3" && !isAccordion2Complete) return;
+          setOpenAccordion(val);
         }}
-      />
-
-      {/* Lançar SGS */}
-      <div className="flex items-center space-x-3">
-        <Checkbox
-          id="lancar_sgs"
-          checked={checklist.check_lancar_sgs}
-          onCheckedChange={() => handleToggle("check_lancar_sgs")}
-        />
-        <Label
-          htmlFor="lancar_sgs"
-          className="text-sm font-medium leading-none cursor-pointer"
-        >
-          Lançar SGS
-        </Label>
-      </div>
-
-      {/* Sincronizar dados SGS */}
-      <div className="flex items-center space-x-3">
-        <Checkbox
-          id="sincronizar_sgs"
-          checked={checklist.check_sincronizar_sgs}
-          onCheckedChange={() => handleToggle("check_sincronizar_sgs")}
-        />
-        <Label
-          htmlFor="sincronizar_sgs"
-          className="text-sm font-medium leading-none cursor-pointer"
-        >
-          Sincronizar dados SGS
-        </Label>
-      </div>
-
-      {/* Seção Vincular Aluno */}
-      <div className="space-y-3 pt-4 border-t">
-        <Label className="text-sm font-semibold">Vincular Aluno</Label>
-        
-        <Popover open={openAlunoPopover} onOpenChange={setOpenAlunoPopover}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={openAlunoPopover}
-              className="w-full justify-between"
-              disabled={isLoadingAlunos}
-            >
-              {isLoadingAlunos ? (
-                <span className="text-muted-foreground">Carregando alunos...</span>
-              ) : alunoSelecionado ? (
-                <span className="truncate">
-                  {alunoSelecionado.nome}
-                  {alunoSelecionado.turma_nome && (
-                    <span className="text-muted-foreground ml-1">
-                      ({alunoSelecionado.turma_nome})
-                    </span>
-                  )}
-                </span>
+      >
+        {/* ===== ACORDEÃO 1: Aula Inaugural → Entregar Kit ===== */}
+        <AccordionItem value="accordion-1" className="border rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              {isAccordion1Complete ? (
+                <CheckCircle2 className="h-4 w-4 text-primary" />
               ) : (
-                <span className="text-muted-foreground">Selecione um aluno...</span>
+                <span className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 inline-block" />
               )}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command shouldFilter={false}>
-              <CommandInput 
-                placeholder="Filtrar por nome..." 
-                value={searchFilter}
-                onValueChange={setSearchFilter}
+              <span className="text-sm font-semibold">Aula Inaugural e Kit</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-6 pt-2 pb-4">
+            {/* Aula Inaugural */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Aula Inaugural</Label>
+              <AulaInauguralSelector
+                dataAulaInaugural={dataAulaInaugural}
+                setDataAulaInaugural={setDataAulaInaugural}
+                horarioSelecionado={horarioSelecionado}
+                setHorarioSelecionado={setHorarioSelecionado}
+                professorSelecionado={professorSelecionado}
+                setProfessorSelecionado={setProfessorSelecionado}
+                salaSelecionada={salaSelecionada}
+                setSalaSelecionada={setSalaSelecionada}
               />
-              <CommandList>
-                <CommandEmpty>Nenhum aluno encontrado.</CommandEmpty>
-                <CommandGroup>
-                  {alunosFiltrados.map((aluno) => (
-                    <CommandItem
-                      key={aluno.id}
-                      value={aluno.id}
-                      onSelect={(value) => {
-                        setSelectedAlunoId(value === selectedAlunoId ? null : value);
-                        setOpenAlunoPopover(false);
-                        setSearchFilter("");
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedAlunoId === aluno.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <span>{aluno.nome}</span>
-                      {aluno.turma_nome && (
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          {aluno.turma_nome}
-                        </span>
-                      )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-
-        {alunoSelecionado && (
-          <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-            <div>
-              <p className="text-sm font-medium">{alunoSelecionado.nome}</p>
-              {alunoSelecionado.turma_nome && (
-                <p className="text-xs text-muted-foreground">{alunoSelecionado.turma_nome}</p>
+              {eventoExistente && (
+                <div className="mt-2 p-3 rounded-md bg-muted text-sm space-y-1">
+                  <p><span className="font-medium text-foreground">Horário:</span> {eventoExistente.horario_inicio.substring(0, 5)} - {eventoExistente.horario_fim.substring(0, 5)}</p>
+                  <p><span className="font-medium text-foreground">Professor:</span> {eventoExistente.professor_nome}</p>
+                </div>
               )}
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleRemoveAluno}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
 
-      {/* Contrato assinado */}
-      <div className="flex items-center space-x-3">
-        <Checkbox
-          id="assinar_contrato"
-          checked={checklist.check_assinar_contrato}
-          onCheckedChange={() => handleToggle("check_assinar_contrato")}
-        />
-        <Label
-          htmlFor="assinar_contrato"
-          className="text-sm font-medium leading-none cursor-pointer"
-        >
-          Contrato Assinado
-        </Label>
-      </div>
+            {/* Descritivo Comercial */}
+            <DescritivoComercialField
+              value={descritivoComercial}
+              onChange={setDescritivoComercial}
+            />
 
-      {/* Cadastrar forma de pagamento */}
-      <div className="flex items-center space-x-3">
-        <Checkbox
-          id="cadastrar_pagamento"
-          checked={checklist.check_cadastrar_pagamento}
-          onCheckedChange={() => handleToggle("check_cadastrar_pagamento")}
-        />
-        <Label
-          htmlFor="cadastrar_pagamento"
-          className="text-sm font-medium leading-none cursor-pointer"
-        >
-          Cadastrar forma de pagamento
-        </Label>
-      </div>
+            {/* Entregar Kit */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="entregar_kit"
+                  checked={checklist.check_entregar_kit}
+                  onCheckedChange={() => handleToggle("check_entregar_kit")}
+                />
+                <Label htmlFor="entregar_kit" className="text-sm font-medium leading-none cursor-pointer">
+                  Entregar Kit
+                </Label>
+              </div>
+              {checklist.check_entregar_kit && (
+                <div className="pl-7">
+                  <Label className="text-sm mb-1.5 block">Tipo de Kit</Label>
+                  <Select value={kitType} onValueChange={setKitType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o kit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KIT_OPTIONS.map((kit) => (
+                        <SelectItem key={kit.value} value={kit.value}>
+                          {kit.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Adicionar Grupo WhatsApp (último item) */}
-      <div className="flex items-center space-x-3 pt-4 border-t">
-        <Checkbox
-          id="grupo_whatsapp"
-          checked={checklist.check_grupo_whatsapp}
-          onCheckedChange={() => handleToggle("check_grupo_whatsapp")}
-        />
-        <Label
-          htmlFor="grupo_whatsapp"
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+        {/* ===== ACORDEÃO 2: Foto → Vincular Aluno ===== */}
+        <AccordionItem
+          value="accordion-2"
+          className={cn(
+            "border rounded-lg px-4 mt-2",
+            !isAccordion1Complete && "opacity-50"
+          )}
+          disabled={!isAccordion1Complete}
         >
-          Adicionar Grupo Whatsapp
-        </Label>
-      </div>
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              {!isAccordion1Complete ? (
+                <Lock className="h-4 w-4 text-muted-foreground" />
+              ) : isAccordion2Complete ? (
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+              ) : (
+                <span className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 inline-block" />
+              )}
+              <span className="text-sm font-semibold">Cadastro e Vínculo</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-6 pt-2 pb-4">
+            {/* Foto do Aluno */}
+            <WebcamCapture
+              capturedImage={fotoCapturada}
+              existingImageUrl={fotoUrlExistente}
+              onCapture={setFotoCapturada}
+              onClear={() => {
+                setFotoCapturada(null);
+                setFotoUrlExistente(null);
+              }}
+            />
+
+            {/* Lançar SGS */}
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="lancar_sgs"
+                checked={checklist.check_lancar_sgs}
+                onCheckedChange={() => handleToggle("check_lancar_sgs")}
+              />
+              <Label htmlFor="lancar_sgs" className="text-sm font-medium leading-none cursor-pointer">
+                Lançar SGS
+              </Label>
+            </div>
+
+            {/* Sincronizar dados SGS */}
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="sincronizar_sgs"
+                checked={checklist.check_sincronizar_sgs}
+                onCheckedChange={() => handleToggle("check_sincronizar_sgs")}
+              />
+              <Label htmlFor="sincronizar_sgs" className="text-sm font-medium leading-none cursor-pointer">
+                Sincronizar dados SGS
+              </Label>
+            </div>
+
+            {/* Vincular Aluno */}
+            <div className="space-y-3 pt-4 border-t">
+              <Label className="text-sm font-semibold">Vincular Aluno</Label>
+              <Popover open={openAlunoPopover} onOpenChange={setOpenAlunoPopover}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openAlunoPopover}
+                    className="w-full justify-between"
+                    disabled={isLoadingAlunos}
+                  >
+                    {isLoadingAlunos ? (
+                      <span className="text-muted-foreground">Carregando alunos...</span>
+                    ) : alunoSelecionado ? (
+                      <span className="truncate">
+                        {alunoSelecionado.nome}
+                        {alunoSelecionado.turma_nome && (
+                          <span className="text-muted-foreground ml-1">
+                            ({alunoSelecionado.turma_nome})
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Selecione um aluno...</span>
+                    )}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Filtrar por nome..."
+                      value={searchFilter}
+                      onValueChange={setSearchFilter}
+                    />
+                    <CommandList>
+                      <CommandEmpty>Nenhum aluno encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {alunosFiltrados.map((aluno) => (
+                          <CommandItem
+                            key={aluno.id}
+                            value={aluno.id}
+                            onSelect={(value) => {
+                              setSelectedAlunoId(value === selectedAlunoId ? null : value);
+                              setOpenAlunoPopover(false);
+                              setSearchFilter("");
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedAlunoId === aluno.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <span>{aluno.nome}</span>
+                            {aluno.turma_nome && (
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                {aluno.turma_nome}
+                              </span>
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {alunoSelecionado && (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                  <div>
+                    <p className="text-sm font-medium">{alunoSelecionado.nome}</p>
+                    {alunoSelecionado.turma_nome && (
+                      <p className="text-xs text-muted-foreground">{alunoSelecionado.turma_nome}</p>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveAluno}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* ===== ACORDEÃO 3: Contrato → WhatsApp ===== */}
+        <AccordionItem
+          value="accordion-3"
+          className={cn(
+            "border rounded-lg px-4 mt-2",
+            !isAccordion2Complete && "opacity-50"
+          )}
+          disabled={!isAccordion2Complete}
+        >
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              {!isAccordion2Complete ? (
+                <Lock className="h-4 w-4 text-muted-foreground" />
+              ) : (checklist.check_assinar_contrato && checklist.check_cadastrar_pagamento && checklist.check_grupo_whatsapp) ? (
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+              ) : (
+                <span className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 inline-block" />
+              )}
+              <span className="text-sm font-semibold">Contrato e Pagamento</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-6 pt-2 pb-4">
+            {/* Contrato assinado */}
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="assinar_contrato"
+                checked={checklist.check_assinar_contrato}
+                onCheckedChange={() => handleToggle("check_assinar_contrato")}
+              />
+              <Label htmlFor="assinar_contrato" className="text-sm font-medium leading-none cursor-pointer">
+                Contrato Assinado
+              </Label>
+            </div>
+
+            {/* Cadastrar forma de pagamento */}
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="cadastrar_pagamento"
+                checked={checklist.check_cadastrar_pagamento}
+                onCheckedChange={() => handleToggle("check_cadastrar_pagamento")}
+              />
+              <Label htmlFor="cadastrar_pagamento" className="text-sm font-medium leading-none cursor-pointer">
+                Cadastrar forma de pagamento
+              </Label>
+            </div>
+
+            {/* Adicionar Grupo WhatsApp */}
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="grupo_whatsapp"
+                checked={checklist.check_grupo_whatsapp}
+                onCheckedChange={() => handleToggle("check_grupo_whatsapp")}
+              />
+              <Label htmlFor="grupo_whatsapp" className="text-sm font-medium leading-none cursor-pointer">
+                Adicionar Grupo Whatsapp
+              </Label>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {mutation.isSuccess && (
-        <p className="text-sm text-green-600">Dados salvos com sucesso!</p>
+        <p className="text-sm text-primary">Dados salvos com sucesso!</p>
       )}
 
       {mutation.isError && (
