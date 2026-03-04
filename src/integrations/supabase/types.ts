@@ -1243,6 +1243,142 @@ export type Database = {
         }
         Relationships: []
       }
+      aulas_inaugurais: {
+        Row: {
+          aluno_id: string | null
+          atividade_pos_venda_id: string | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          client_id: string
+          coordenador_responsavel: string | null
+          created_at: string | null
+          created_by: string | null
+          data: string
+          evento_professor_id: string | null
+          horario_fim: string
+          horario_inicio: string
+          id: string
+          motivo_procura: string | null
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          professor_id: string | null
+          sala_id: string | null
+          status: string
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          atividade_pos_venda_id?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          client_id: string
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data: string
+          evento_professor_id?: string | null
+          horario_fim: string
+          horario_inicio: string
+          id?: string
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          professor_id?: string | null
+          sala_id?: string | null
+          status?: string
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          aluno_id?: string | null
+          atividade_pos_venda_id?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          client_id?: string
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data?: string
+          evento_professor_id?: string | null
+          horario_fim?: string
+          horario_inicio?: string
+          id?: string
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          professor_id?: string | null
+          sala_id?: string | null
+          status?: string
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aulas_inaugurais_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_atividade_pos_venda_id_fkey"
+            columns: ["atividade_pos_venda_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_evento_professor_id_fkey"
+            columns: ["evento_professor_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_professor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["sala_id"]
+          },
+          {
+            foreignKeyName: "aulas_inaugurais_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avisos: {
         Row: {
           ativo: boolean | null

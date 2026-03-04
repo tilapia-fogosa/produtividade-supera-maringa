@@ -329,6 +329,12 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id)
             .eq('tipo_evento', 'aula_zero');
 
+          // Remover aula inaugural anterior deste cliente
+          await supabase
+            .from('aulas_inaugurais')
+            .delete()
+            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
+
           const year = dataAulaInaugural.getFullYear();
           const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
           const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
@@ -348,12 +354,45 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             atividade_pos_venda_id: cliente.atividade_pos_venda_id,
           };
 
-          const { error: eventoError } = await supabase
+          const { data: eventoInserido, error: eventoError } = await supabase
             .from('eventos_professor')
-            .insert(eventoData);
+            .insert(eventoData)
+            .select('id')
+            .single();
 
           if (eventoError) {
             console.error("Erro ao criar evento de aula inaugural (RLS):", eventoError);
+          }
+
+          // Buscar unit_id da atividade
+          const { data: atividadeData } = await supabase
+            .from('atividade_pos_venda')
+            .select('unit_id')
+            .eq('id', cliente.atividade_pos_venda_id)
+            .maybeSingle();
+
+          // Criar registro na tabela aulas_inaugurais
+          if (atividadeData?.unit_id) {
+            const { error: aulaError } = await supabase
+              .from('aulas_inaugurais')
+              .insert({
+                evento_professor_id: eventoInserido?.id || null,
+                atividade_pos_venda_id: cliente.atividade_pos_venda_id,
+                client_id: cliente.id,
+                unit_id: atividadeData.unit_id,
+                professor_id: professorSelecionado.id,
+                sala_id: salaSelecionada?.id || null,
+                aluno_id: data.alunoId || null,
+                data: dataStr,
+                horario_inicio: horarioSelecionado,
+                horario_fim: horarioFim,
+                status: 'agendada',
+                created_by: userId,
+              });
+
+            if (aulaError) {
+              console.error("Erro ao criar registro em aulas_inaugurais:", aulaError);
+            }
           }
 
           // Enviar webhook com dados da aula inaugural
@@ -409,6 +448,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
       queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
       queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
       queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
+      queryClient.invalidateQueries({ queryKey: ["aulas-inaugurais-professor"] });
       setTimeout(() => onCancel(), 1500);
     },
     onError: (error) => {
