@@ -1249,7 +1249,7 @@ export type Database = {
           atividade_pos_venda_id: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
-          client_id: string
+          client_id: string | null
           coordenador_responsavel: string | null
           created_at: string | null
           created_by: string | null
@@ -1272,7 +1272,7 @@ export type Database = {
           atividade_pos_venda_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
-          client_id: string
+          client_id?: string | null
           coordenador_responsavel?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -1295,7 +1295,7 @@ export type Database = {
           atividade_pos_venda_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
-          client_id?: string
+          client_id?: string | null
           coordenador_responsavel?: string | null
           created_at?: string | null
           created_by?: string | null
