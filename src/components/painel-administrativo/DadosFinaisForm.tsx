@@ -56,6 +56,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import SyncSgsInline from "./SyncSgsInline";
 
 interface DadosFinaisFormProps {
   cliente: ClienteMatriculado;
@@ -682,16 +683,11 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             </div>
 
             {/* Sincronizar dados SGS */}
-            <div className="flex items-center space-x-3">
-              <Checkbox
-                id="sincronizar_sgs"
-                checked={checklist.check_sincronizar_sgs}
-                onCheckedChange={() => handleToggle("check_sincronizar_sgs")}
-              />
-              <Label htmlFor="sincronizar_sgs" className="text-sm font-medium leading-none cursor-pointer">
-                Sincronizar dados SGS
-              </Label>
-            </div>
+            <SyncSgsInline
+              onSyncComplete={() => {
+                handleToggle("check_sincronizar_sgs");
+              }}
+            />
 
             {/* Vincular Aluno */}
             <div className="space-y-3 pt-4 border-t">
