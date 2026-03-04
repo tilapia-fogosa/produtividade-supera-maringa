@@ -57,15 +57,15 @@ export function useComissoes(mes: number, ano: number) {
       if (!data?.length) return [];
 
       // Buscar alunos vinculados para verificar finais_completo
-      const clientIds = [...new Set(data.map((d: any) => d.client_id).filter(Boolean))] as string[];
+      const atividadeIds = data.map((d: any) => d.id) as string[];
       const alunosMap = new Map<string, boolean>();
-      if (clientIds.length > 0) {
+      if (atividadeIds.length > 0) {
         const { data: alunos } = await supabase
           .from("alunos")
-          .select("client_id")
-          .in("client_id", clientIds);
+          .select("atividade_pos_venda_id")
+          .in("atividade_pos_venda_id", atividadeIds);
         alunos?.forEach((a: any) => {
-          if (a.client_id) alunosMap.set(a.client_id, true);
+          if (a.atividade_pos_venda_id) alunosMap.set(a.atividade_pos_venda_id, true);
         });
       }
 
@@ -90,7 +90,7 @@ export function useComissoes(mes: number, ano: number) {
         const cadastrais = isManualCompleto || !!(item.full_name && item.cpf && item.birth_date && item.address_street);
         const comerciais = isManualCompleto || !!(item.kit_type && item.enrollment_amount !== null && item.monthly_fee_amount !== null);
         const pedagogicos = isManualCompleto || !!(item.turma_id && item.data_aula_inaugural);
-        const temAluno = alunosMap.has(item.client_id);
+        const temAluno = alunosMap.has(item.id);
         const finais = isManualCompleto || !!(
           item.check_lancar_sgs && item.check_assinar_contrato && item.check_entregar_kit &&
           item.check_cadastrar_pagamento && item.check_sincronizar_sgs && item.check_grupo_whatsapp && temAluno

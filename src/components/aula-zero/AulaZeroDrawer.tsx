@@ -112,7 +112,7 @@ export function AulaZeroDrawer({ open, onOpenChange, aulaInauguralId, alunoNome,
       // Buscar dados da aula inaugural para sincronização
       const { data: aulaInaugural } = await (supabase as any)
         .from('aulas_inaugurais')
-        .select('client_id, atividade_pos_venda_id')
+        .select('atividade_pos_venda_id')
         .eq('id', aulaInauguralId)
         .maybeSingle();
 
@@ -122,14 +122,12 @@ export function AulaZeroDrawer({ open, onOpenChange, aulaInauguralId, alunoNome,
           .from('atividade_pos_venda')
           .update(fields)
           .eq('id', aulaInaugural.atividade_pos_venda_id);
-      }
 
-      // Sincronizar com alunos
-      if (aulaInaugural?.client_id) {
+        // Sincronizar com alunos
         const { data: aluno } = await supabase
           .from('alunos')
           .select('id')
-          .eq('client_id', aulaInaugural.client_id)
+          .eq('atividade_pos_venda_id', aulaInaugural.atividade_pos_venda_id)
           .maybeSingle();
         if (aluno) {
           await supabase.from('alunos').update({
