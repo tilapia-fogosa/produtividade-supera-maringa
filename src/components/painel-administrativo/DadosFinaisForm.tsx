@@ -566,23 +566,34 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         }}
       />
 
-      {/* Checklist */}
-      <div className="space-y-4">
-        {CHECKLIST_ITEMS.map((item) => (
-          <div key={item.id} className="flex items-center space-x-3">
-            <Checkbox
-              id={item.id}
-              checked={checklist[item.field]}
-              onCheckedChange={() => handleToggle(item.field)}
-            />
-            <Label
-              htmlFor={item.id}
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-            >
-              {item.label}
-            </Label>
-          </div>
-        ))}
+      {/* Lançar SGS */}
+      <div className="flex items-center space-x-3">
+        <Checkbox
+          id="lancar_sgs"
+          checked={checklist.check_lancar_sgs}
+          onCheckedChange={() => handleToggle("check_lancar_sgs")}
+        />
+        <Label
+          htmlFor="lancar_sgs"
+          className="text-sm font-medium leading-none cursor-pointer"
+        >
+          Lançar SGS
+        </Label>
+      </div>
+
+      {/* Sincronizar dados SGS */}
+      <div className="flex items-center space-x-3">
+        <Checkbox
+          id="sincronizar_sgs"
+          checked={checklist.check_sincronizar_sgs}
+          onCheckedChange={() => handleToggle("check_sincronizar_sgs")}
+        />
+        <Label
+          htmlFor="sincronizar_sgs"
+          className="text-sm font-medium leading-none cursor-pointer"
+        >
+          Sincronizar dados SGS
+        </Label>
       </div>
 
       {/* Seção Vincular Aluno */}
@@ -676,7 +687,37 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         )}
       </div>
 
-      {/* Checkbox Grupo WhatsApp (último item) */}
+      {/* Contrato assinado */}
+      <div className="flex items-center space-x-3">
+        <Checkbox
+          id="assinar_contrato"
+          checked={checklist.check_assinar_contrato}
+          onCheckedChange={() => handleToggle("check_assinar_contrato")}
+        />
+        <Label
+          htmlFor="assinar_contrato"
+          className="text-sm font-medium leading-none cursor-pointer"
+        >
+          Contrato Assinado
+        </Label>
+      </div>
+
+      {/* Cadastrar forma de pagamento */}
+      <div className="flex items-center space-x-3">
+        <Checkbox
+          id="cadastrar_pagamento"
+          checked={checklist.check_cadastrar_pagamento}
+          onCheckedChange={() => handleToggle("check_cadastrar_pagamento")}
+        />
+        <Label
+          htmlFor="cadastrar_pagamento"
+          className="text-sm font-medium leading-none cursor-pointer"
+        >
+          Cadastrar forma de pagamento
+        </Label>
+      </div>
+
+      {/* Adicionar Grupo WhatsApp (último item) */}
       <div className="flex items-center space-x-3 pt-4 border-t">
         <Checkbox
           id="grupo_whatsapp"
