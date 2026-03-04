@@ -51,8 +51,10 @@ export function useAulasInauguraisProfessor() {
         // Buscar nomes dos clientes e professores
         const atividadeIds = (aulas || []).map(a => a.atividade_pos_venda_id).filter(Boolean) as string[];
         const professorIds = (aulas || []).map(a => a.professor_id).filter(Boolean) as string[];
+        const clientIds = (aulas || []).map(a => a.client_id).filter(Boolean) as string[];
 
-        let clienteNomes: Record<string, string> = {};
+        let clienteNomesPorAtividade: Record<string, string> = {};
+        let clienteNomesPorClientId: Record<string, string> = {};
         let professorNomes: Record<string, string> = {};
 
         if (atividadeIds.length > 0) {
@@ -61,7 +63,18 @@ export function useAulasInauguraisProfessor() {
             .select('id, client_name, full_name')
             .in('id', atividadeIds);
           atividades?.forEach(a => {
-            clienteNomes[a.id] = a.full_name || a.client_name;
+            clienteNomesPorAtividade[a.id] = a.full_name || a.client_name;
+          });
+        }
+
+        // Fallback: buscar nome pelo client_id para registros sem atividade_pos_venda
+        if (clientIds.length > 0) {
+          const { data: clients } = await supabase
+            .from('clients')
+            .select('id, name')
+            .in('id', clientIds);
+          clients?.forEach(c => {
+            clienteNomesPorClientId[c.id] = c.name;
           });
         }
 
@@ -84,7 +97,9 @@ export function useAulasInauguraisProfessor() {
             horario_inicio: a.horario_inicio,
             horario_fim: a.horario_fim,
             descricao: null,
-            cliente_nome: a.atividade_pos_venda_id ? clienteNomes[a.atividade_pos_venda_id] : undefined,
+            cliente_nome: a.atividade_pos_venda_id
+              ? clienteNomesPorAtividade[a.atividade_pos_venda_id]
+              : (a.client_id ? clienteNomesPorClientId[a.client_id] : undefined),
             professor_nome: a.professor_id ? professorNomes[a.professor_id] : undefined,
             client_id: a.client_id || undefined,
             atividade_pos_venda_id: a.atividade_pos_venda_id || undefined,
@@ -103,7 +118,9 @@ export function useAulasInauguraisProfessor() {
         if (error) throw error;
 
         const atividadeIds = (aulas || []).map(a => a.atividade_pos_venda_id).filter(Boolean) as string[];
-        let clienteNomes: Record<string, string> = {};
+        const clientIds = (aulas || []).map(a => a.client_id).filter(Boolean) as string[];
+        let clienteNomesPorAtividade: Record<string, string> = {};
+        let clienteNomesPorClientId: Record<string, string> = {};
 
         if (atividadeIds.length > 0) {
           const { data: atividades } = await supabase
@@ -111,7 +128,17 @@ export function useAulasInauguraisProfessor() {
             .select('id, client_name, full_name')
             .in('id', atividadeIds);
           atividades?.forEach(a => {
-            clienteNomes[a.id] = a.full_name || a.client_name;
+            clienteNomesPorAtividade[a.id] = a.full_name || a.client_name;
+          });
+        }
+
+        if (clientIds.length > 0) {
+          const { data: clients } = await supabase
+            .from('clients')
+            .select('id, name')
+            .in('id', clientIds);
+          clients?.forEach(c => {
+            clienteNomesPorClientId[c.id] = c.name;
           });
         }
 
@@ -124,7 +151,9 @@ export function useAulasInauguraisProfessor() {
             horario_inicio: a.horario_inicio,
             horario_fim: a.horario_fim,
             descricao: null,
-            cliente_nome: a.atividade_pos_venda_id ? clienteNomes[a.atividade_pos_venda_id] : undefined,
+            cliente_nome: a.atividade_pos_venda_id
+              ? clienteNomesPorAtividade[a.atividade_pos_venda_id]
+              : (a.client_id ? clienteNomesPorClientId[a.client_id] : undefined),
             client_id: a.client_id || undefined,
             atividade_pos_venda_id: a.atividade_pos_venda_id || undefined,
             status: a.status,
