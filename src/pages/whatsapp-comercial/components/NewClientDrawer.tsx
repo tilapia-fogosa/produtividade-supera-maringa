@@ -37,19 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-// Opções de origem de Lead comuns
-const originOptions = [
-  "Instagram",
-  "Facebook Ads",
-  "Google Ads",
-  "Indicação",
-  "Passagem",
-  "Panfleto",
-  "Telemarketing",
-  "Ativação",
-  "Orgânico"
-];
+import { useQuery } from "@tanstack/react-query";
 
 // Schema de validação Zod
 const formSchema = z.object({
@@ -76,6 +64,18 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
   // Maringá Fallback ID em caso de usuário sem unit_ids
   const fallbackUnitId = "0df79a04-444e-46ee-b218-59e4b1835f4a";
   const userUnitId = profile?.unit_ids?.[0] || fallbackUnitId;
+
+  // Buscar origens de lead do banco
+  const { data: leadSources } = useQuery({
+    queryKey: ['lead_sources'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('lead_sources')
+        .select('id, name')
+        .order('name');
+      return data || [];
+    },
+  });
 
   console.log('NewClientDrawer: Montando drawer com telefone:', phoneNumber);
 
@@ -179,11 +179,11 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Phone className="h-4 w-4 text-primary" />
             </div>
-            <DialogTitle className="text-base">Cadastrar Contato do WhatsApp</DialogTitle>
+            <DialogTitle className="text-base">Cadastrar Lead</DialogTitle>
           </div>
 
           <DialogDescription className="text-xs">
-            Preencha os dados abaixo para vincular as mensagens existentes.
+            Preencha os dados abaixo para cadastrar um novo lead.
           </DialogDescription>
         </DialogHeader>
 
@@ -222,7 +222,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                   <FormItem className="space-y-1">
                     <FormLabel className="text-xs">Telefone</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly className="h-8 text-xs font-medium bg-muted" />
+                      <Input {...field} placeholder="Telefone do contato" className="h-8 text-xs font-medium" readOnly={!!phoneNumber} />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -276,8 +276,8 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {originOptions.map(option => (
-                          <SelectItem key={option} value={option} className="text-xs">{option}</SelectItem>
+                        {leadSources?.map(source => (
+                          <SelectItem key={source.id} value={source.id} className="text-xs">{source.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
