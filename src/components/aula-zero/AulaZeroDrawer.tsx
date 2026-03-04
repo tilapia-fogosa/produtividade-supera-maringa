@@ -26,7 +26,7 @@ import { useActiveUnit } from '@/contexts/ActiveUnitContext';
 interface AulaZeroDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  atividadePosVendaId: string;
+  aulaInauguralId: string;
   alunoNome: string;
   onSalvo?: () => void;
 }
@@ -39,7 +39,7 @@ interface AulaZeroFormData {
   pontos_atencao: string;
 }
 
-export function AulaZeroDrawer({ open, onOpenChange, atividadePosVendaId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
+export function AulaZeroDrawer({ open, onOpenChange, aulaInauguralId, alunoNome, onSalvo }: AulaZeroDrawerProps) {
   const { profile } = useAuth();
   const { activeUnit } = useActiveUnit();
   const [isSaving, setIsSaving] = useState(false);
@@ -54,14 +54,14 @@ export function AulaZeroDrawer({ open, onOpenChange, atividadePosVendaId, alunoN
     },
   });
 
-  // Carregar dados existentes da atividade_pos_venda ao abrir
+  // Carregar dados existentes da aulas_inaugurais ao abrir
   useEffect(() => {
-    if (open && atividadePosVendaId) {
+    if (open && aulaInauguralId) {
       (async () => {
         const { data } = await supabase
-          .from('atividade_pos_venda')
+          .from('aulas_inaugurais')
           .select('percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
-          .eq('id', atividadePosVendaId)
+          .eq('id', aulaInauguralId)
           .maybeSingle();
 
         if (data) {
@@ -83,10 +83,10 @@ export function AulaZeroDrawer({ open, onOpenChange, atividadePosVendaId, alunoN
         }
       })();
     }
-  }, [open, atividadePosVendaId]);
+  }, [open, aulaInauguralId]);
 
   const onSubmit = async (data: AulaZeroFormData) => {
-    if (!atividadePosVendaId) return;
+    if (!aulaInauguralId) return;
     setIsSaving(true);
     try {
       const fields = {
@@ -97,26 +97,39 @@ export function AulaZeroDrawer({ open, onOpenChange, atividadePosVendaId, alunoN
         pontos_atencao: data.pontos_atencao,
       };
 
-      // Atualizar atividade_pos_venda pelo ID específico
-      const updateResult = await supabase
-        .from('atividade_pos_venda')
-        .update(fields)
-        .eq('id', atividadePosVendaId);
+      // Atualizar aulas_inaugurais com dados pedagógicos e status realizada
+      const { error: updateError } = await supabase
+        .from('aulas_inaugurais')
+        .update({
+          ...fields,
+          coordenador_responsavel: profile?.full_name || null,
+          status: 'realizada',
+        })
+        .eq('id', aulaInauguralId);
 
-      if (updateResult.error) throw updateResult.error;
+      if (updateError) throw updateError;
 
-      // Buscar client_id da atividade para sincronizar com aluno
-      const { data: atividade } = await supabase
-        .from('atividade_pos_venda')
-        .select('client_id')
-        .eq('id', atividadePosVendaId)
+      // Buscar dados da aula inaugural para sincronização
+      const { data: aulaInaugural } = await supabase
+        .from('aulas_inaugurais')
+        .select('client_id, atividade_pos_venda_id')
+        .eq('id', aulaInauguralId)
         .maybeSingle();
 
-      if (atividade?.client_id) {
+      // Sincronizar com atividade_pos_venda (retrocompatibilidade)
+      if (aulaInaugural?.atividade_pos_venda_id) {
+        await supabase
+          .from('atividade_pos_venda')
+          .update(fields)
+          .eq('id', aulaInaugural.atividade_pos_venda_id);
+      }
+
+      // Sincronizar com alunos
+      if (aulaInaugural?.client_id) {
         const { data: aluno } = await supabase
           .from('alunos')
           .select('id')
-          .eq('client_id', atividade.client_id)
+          .eq('client_id', aulaInaugural.client_id)
           .maybeSingle();
         if (aluno) {
           await supabase.from('alunos').update({
@@ -131,10 +144,11 @@ export function AulaZeroDrawer({ open, onOpenChange, atividadePosVendaId, alunoN
       onOpenChange(false);
       onSalvo?.();
 
-      // Webhook fire-and-forget (sem await)
+      // Webhook fire-and-forget
       supabase.functions.invoke('webhook-aula-inaugural', {
         body: {
-          atividade_pos_venda_id: atividadePosVendaId,
+          aula_inaugural_id: aulaInauguralId,
+          atividade_pos_venda_id: aulaInaugural?.atividade_pos_venda_id || null,
           client_name: alunoNome,
           unit_id: activeUnit?.id || null,
           registrado_por: profile?.full_name || profile?.email || 'Desconhecido',

@@ -66,6 +66,7 @@ interface Evento {
   pendencia_botom_id?: string;
   apostila_nova?: string;
   // Campos para aula inaugural
+  aula_inaugural_id?: string;
   aula_inaugural_client_id?: string;
   aula_inaugural_atividade_id?: string;
 }
@@ -164,7 +165,7 @@ export default function Home() {
 
   // Estado para gaveta de Aula Zero
   const [aulaZeroDrawerAberto, setAulaZeroDrawerAberto] = useState(false);
-  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ atividadePosVendaId: string; nome: string } | null>(null);
+  const [aulaZeroAluno, setAulaZeroAluno] = useState<{ aulaInauguralId: string; nome: string } | null>(null);
 
   // Tipos de atividades disponíveis para filtro
   const tiposAtividades = useMemo(() => [
@@ -432,6 +433,7 @@ export default function Home() {
           titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}${ai.professor_nome ? ` • ${ai.professor_nome}` : ''}`,
+          aula_inaugural_id: ai.id,
           aula_inaugural_client_id: ai.client_id,
           aula_inaugural_atividade_id: ai.atividade_pos_venda_id,
         };
@@ -537,6 +539,7 @@ export default function Home() {
           titulo: `Aula Inaugural${ai.cliente_nome ? `: ${ai.cliente_nome}` : ''}`,
           data: ai.data,
           subtitulo: `${ai.horario_inicio.slice(0, 5)} - ${ai.horario_fim.slice(0, 5)}`,
+          aula_inaugural_id: ai.id,
           aula_inaugural_client_id: ai.client_id,
           aula_inaugural_atividade_id: ai.atividade_pos_venda_id,
         };
@@ -1025,18 +1028,9 @@ export default function Home() {
   };
 
   const handleAulaInauguralClick = async (evento: Evento) => {
-    if (evento.aula_inaugural_atividade_id) {
-      const atividadeId = evento.aula_inaugural_atividade_id;
-
-      // Buscar nome do aluno/cliente pela atividade específica
-      const { data: posVenda } = await supabase
-        .from('atividade_pos_venda')
-        .select('full_name, client_name')
-        .eq('id', atividadeId)
-        .maybeSingle();
-
-      const nome = posVenda?.full_name || posVenda?.client_name || evento.titulo || '';
-      setAulaZeroAluno({ atividadePosVendaId: atividadeId, nome });
+    if (evento.aula_inaugural_id) {
+      const nome = evento.titulo?.replace('Aula Inaugural: ', '') || evento.titulo || '';
+      setAulaZeroAluno({ aulaInauguralId: evento.aula_inaugural_id, nome });
       setAulaZeroDrawerAberto(true);
     }
   };
@@ -1063,7 +1057,7 @@ export default function Home() {
     const isPosMatriculaClicavel = evento.tipo === 'pos_matricula' && evento.pos_matricula_client_id;
     const isAniversarioClicavel = evento.tipo === 'aniversario' && evento.aluno_id;
     const isBotomClicavel = evento.tipo === 'botom_pendente' && evento.pendencia_botom_id;
-    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_atividade_id;
+    const isAulaInauguralClicavel = evento.tipo === 'aula_inaugural' && evento.aula_inaugural_id;
     const isClicavel = isCamisetaClicavel || isColetaAHClicavel || isAHProntaClicavel || isAlertaEvasaoClicavel || isPosMatriculaClicavel || isAniversarioClicavel || isBotomClicavel || isAulaInauguralClicavel;
 
     const handleClick = () => {
@@ -1429,7 +1423,7 @@ export default function Home() {
           setAulaZeroDrawerAberto(open);
           if (!open) setAulaZeroAluno(null);
         }}
-        atividadePosVendaId={aulaZeroAluno?.atividadePosVendaId || ''}
+        aulaInauguralId={aulaZeroAluno?.aulaInauguralId || ''}
         alunoNome={aulaZeroAluno?.nome || ''}
       />
 
