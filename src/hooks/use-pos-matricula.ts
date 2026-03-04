@@ -96,17 +96,22 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
         `)
         .in("client_id", clientIds);
 
-      // Buscar alunos vinculados para verificar se tem aluno associado
-      const { data: alunosVinculados } = await supabase
-        .from("alunos")
-        .select("id, client_id")
-        .in("client_id", clientIds);
+      // Buscar IDs das atividades pos_venda
+      const posVendaIds = posVendaData?.map((pv: any) => pv.id).filter(Boolean) || [];
 
-      // Mapear alunos por client_id
+      // Buscar alunos vinculados por atividade_pos_venda_id
+      const { data: alunosVinculados } = posVendaIds.length > 0
+        ? await supabase
+            .from("alunos")
+            .select("id, atividade_pos_venda_id")
+            .in("atividade_pos_venda_id", posVendaIds)
+        : { data: [] };
+
+      // Mapear alunos por atividade_pos_venda_id
       const alunosMap = new Map<string, boolean>();
       alunosVinculados?.forEach((aluno: any) => {
-        if (aluno.client_id) {
-          alunosMap.set(aluno.client_id, true);
+        if (aluno.atividade_pos_venda_id) {
+          alunosMap.set(aluno.atividade_pos_venda_id, true);
         }
       });
 
@@ -161,8 +166,8 @@ export function usePosMatricula(filters?: PosMatriculaFilters) {
           posVenda.data_aula_inaugural
         );
 
-        // Verificar se tem aluno vinculado
-        const temAlunoVinculado = alunosMap.has(clientId);
+        // Verificar se tem aluno vinculado (por atividade_pos_venda_id)
+        const temAlunoVinculado = posVenda ? alunosMap.has(posVenda.id) : false;
 
         const finais_completo = posVenda && !!(
           posVenda.check_lancar_sgs &&

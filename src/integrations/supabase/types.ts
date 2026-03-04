@@ -484,6 +484,7 @@ export type Database = {
         Row: {
           active: boolean
           aniversario_mes_dia: string | null
+          atividade_pos_venda_id: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
           client_id: string | null
@@ -543,6 +544,7 @@ export type Database = {
         Insert: {
           active?: boolean
           aniversario_mes_dia?: string | null
+          atividade_pos_venda_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           client_id?: string | null
@@ -602,6 +604,7 @@ export type Database = {
         Update: {
           active?: boolean
           aniversario_mes_dia?: string | null
+          atividade_pos_venda_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
           client_id?: string | null
@@ -659,6 +662,13 @@ export type Database = {
           whatapp_contato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "alunos_atividade_pos_venda_id_fkey"
+            columns: ["atividade_pos_venda_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "alunos_client_id_fkey"
             columns: ["client_id"]
