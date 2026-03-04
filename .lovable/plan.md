@@ -1,32 +1,38 @@
 
 
-## Plano: Corrigir visibilidade das aulas inaugurais na Home
+## Plano: Vincular aluno_id automaticamente na aulas_inaugurais
 
-### Problema diagnosticado
+### Problema
+O `aluno_id` na tabela `aulas_inaugurais` é sempre `null` no momento do agendamento, pois o aluno pode não existir ainda. O vínculo do aluno acontece no formulário "Dados Iniciais" (`DadosFinaisForm.tsx`), onde o admin associa um aluno ao `client_id`.
 
-1. **Migração incompleta**: dos 4 registros em `eventos_professor` com `tipo_evento = 'aula_zero'`, apenas 1 foi migrado para `aulas_inaugurais`. Os outros 3 tinham `atividade_pos_venda_id = NULL`, e a condição `AND apv.unit_id IS NOT NULL` no SQL de migração os excluiu.
+### Solução
+No `DadosFinaisForm.tsx`, após vincular o aluno (update em `alunos.client_id`), buscar se existe um registro em `aulas_inaugurais` para o mesmo `atividade_pos_venda_id` e atualizar o `aluno_id`.
 
-2. **Data fora da janela**: o unico registro migrado (2026-03-19) esta 2+ semanas no futuro. A Home so exibe "Hoje", "Esta Semana" (ate 08/03) e "Proxima Semana" (09-15/03).
+### Alteração
 
-### Correções
+**Arquivo:** `src/components/painel-administrativo/DadosFinaisForm.tsx`
 
-**1. Remigrar registros faltantes (SQL)**
-- Inserir os 3 registros de `eventos_professor` que ficaram de fora, usando `unit_id` de Maringá como fallback (todos os dados estão nessa unidade)
-- Para registros sem `client_id`, tratar como NULL (campo é NOT NULL na tabela -- precisará ajustar a constraint ou buscar o client_id de outra forma)
+Na mutation, após o bloco que faz `update({ client_id: cliente.id })` no aluno (linhas ~287-298), adicionar:
 
-**2. Ajustar constraint `client_id NOT NULL`**
-- Tornar `client_id` nullable na tabela `aulas_inaugurais`, pois existem eventos de aula_zero legados sem client_id vinculado
+```typescript
+// Atualizar aluno_id na aulas_inaugurais vinculada
+await (supabase as any)
+  .from('aulas_inaugurais')
+  .update({ aluno_id: data.alunoId })
+  .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
+```
 
-**3. Ampliar janela de exibição na Home**
-- Atualmente a Home filtra em 3 faixas: hoje, esta semana, próxima semana
-- Alterar o hook para buscar aulas inaugurais dos próximos 30 dias (em vez de depender apenas das seções da Home)
-- OU criar uma seção "Próximas Aulas Inaugurais" separada que mostre todas as pendentes independente da data
+Mesma lógica no bloco de remoção de vínculo (linhas ~276-284): se o aluno anterior é removido, limpar o `aluno_id`:
 
-### Arquivos impactados
+```typescript
+await (supabase as any)
+  .from('aulas_inaugurais')
+  .update({ aluno_id: null })
+  .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
+```
 
+### Arquivo impactado
 | Arquivo | Ação |
 |---|---|
-| Migração SQL | Ajustar `client_id` para nullable + inserir registros faltantes |
-| `use-aulas-inaugurais-professor.ts` | Remover filtro `.gte('data', hojeStr)` ou ampliar para 30 dias |
-| `Home.tsx` | Opcionalmente criar seção dedicada para aulas inaugurais futuras |
+| `DadosFinaisForm.tsx` | Sincronizar `aluno_id` na `aulas_inaugurais` ao vincular/desvincular aluno |
 
