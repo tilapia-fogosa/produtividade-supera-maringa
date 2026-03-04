@@ -1,14 +1,23 @@
 
 
-## Plano: Remover botão "Converter para Aluno"
+## Plano: Corrigir insert do cadastro de lead
 
-Remover o botão "Converter para Aluno" e a lógica associada do componente `SheetHeaderContent` em `src/components/kanban/components/sheet/SheetHeader.tsx`.
+### Problema
+O erro `Could not find the 'obs' column of 'clients'` ocorre porque o código usa `obs` no insert, mas a coluna real na tabela é `observations`.
 
-### Mudanças
+### Correção
 
-**Arquivo:** `src/components/kanban/components/sheet/SheetHeader.tsx`
-- Remover a função `handleConvertToStudent`
-- Remover o import de `useNavigate`
-- Remover o bloco do botão "Converter para Aluno" do JSX
-- Remover o prop `cardId` se não for mais utilizado em outro lugar do componente
+**Arquivo:** `src/pages/whatsapp-comercial/components/NewClientDrawer.tsx`
+- Na função `onSubmit`, trocar `obs: values.observations || null` para `observations: values.observations || null` no objeto de insert.
+
+Linha ~120:
+```typescript
+// DE:
+obs: values.observations || null,
+
+// PARA:
+observations: values.observations || null,
+```
+
+Essa é a única mudança necessária.
 
