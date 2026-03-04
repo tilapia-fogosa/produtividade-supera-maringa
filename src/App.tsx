@@ -75,7 +75,7 @@ import Trofeus1000Dias from "./pages/Trofeus1000Dias";
 import Retencoes from "./pages/Retencoes";
 import ResultadosMensais from "./pages/ResultadosMensais";
 import GerenciarFotosAlunos from "./pages/GerenciarFotosAlunos";
-import CadastroNovoAluno from "./pages/CadastroNovoAluno";
+
 import CRM from "./pages/CRM";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -188,7 +188,7 @@ function ProtectedLayout() {
               <Route path="/comissao" element={<Comissao />} />
               <Route path="/indicadores-comerciais" element={<IndicadoresComerciais />} />
               <Route path="/clientes-unidade" element={<ClientesUnidade />} />
-              <Route path="/cadastro-novo-aluno" element={<CadastroNovoAluno />} />
+              
               <Route path="/crm" element={<CRM />} />
               <Route path="/whatsapp" element={<WhatsAppPage />} />
               <Route path="/whatsapp-comercial" element={<WhatsAppComercialPage />} />
