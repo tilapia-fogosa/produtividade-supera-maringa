@@ -38,6 +38,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 // Schema de validação Zod
 const formSchema = z.object({
@@ -59,11 +60,13 @@ interface NewClientDrawerProps {
 export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: NewClientDrawerProps) {
   
   const { profile } = useAuth();
+  const { activeUnit } = useActiveUnit();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Maringá Fallback ID em caso de usuário sem unit_ids
+  // Maringá Fallback ID em caso de usuário sem unit ativa
   const fallbackUnitId = "0df79a04-444e-46ee-b218-59e4b1835f4a";
-  const userUnitId = profile?.unit_ids?.[0] || fallbackUnitId;
+  const userUnitId = activeUnit?.id || profile?.unit_ids?.[0] || fallbackUnitId;
 
   // Buscar origens de lead do banco
   const { data: leadSources } = useQuery({
@@ -92,12 +95,13 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
   });
 
   useEffect(() => {
-    if (open && phoneNumber) {
+    if (open) {
+      setSubmitError(null);
       console.log("NewClientDrawer: Configurando formulário com telefone:", phoneNumber);
       form.reset({
         unit_id: userUnitId,
         name: "",
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber || "",
         email: "",
         lead_source: "",
         observations: ""
@@ -119,6 +123,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("NewClientDrawer: Submitting client creation", values);
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       // Cria registro na tabela clients
@@ -132,7 +137,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
           observations: values.observations || null,
           unit_id: values.unit_id,
           tipo_atendimento: 'humano',
-          status: 'novo'
+          status: 'novo-cadastro'
         })
         .select('id')
         .single();
@@ -157,9 +162,9 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
       onOpenChange(false);
       form.reset();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("NewClientDrawer: Error on submit:", error);
-      console.error("NewClientDrawer: Error on submit:", error);
+      setSubmitError(error?.message || "Erro ao cadastrar lead. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -206,7 +211,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={userUnitId} className="text-xs">Unidade Atual</SelectItem>
+                        <SelectItem value={userUnitId} className="text-xs">{activeUnit?.name || 'Maringá'}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage className="text-[10px]" />
@@ -305,6 +310,12 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                 </FormItem>
               )}
             />
+
+            {submitError && (
+              <div className="text-xs text-destructive bg-destructive/10 rounded p-2">
+                {submitError}
+              </div>
+            )}
 
             <DialogFooter className="gap-2 sm:gap-0 pt-2 pb-1">
               <Button

@@ -22,7 +22,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { ConversationItem } from "./ConversationItem";
 import { useConversations } from "../hooks/useConversations";
 import { useGroupConversations } from "../hooks/useGroupConversations";
-import { NewClientDrawer } from "./NewClientDrawer";
+import { NewClientDrawer } from "../../whatsapp-comercial/components/NewClientDrawer";
 import { SendToUnregisteredDrawer } from "./SendToUnregisteredDrawer";
 import { useQueryClient } from "@tanstack/react-query";
 
