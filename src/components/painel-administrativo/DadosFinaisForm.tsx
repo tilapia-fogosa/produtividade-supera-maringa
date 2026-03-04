@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -415,47 +415,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             }
           }
 
-          // Enviar webhook com dados da aula inaugural
-          try {
-            // Buscar nome do aluno vinculado
-            let nomeAluno = cliente.name;
-            if (data.alunoId) {
-              const { data: alunoData } = await supabase
-                .from('alunos')
-                .select('nome')
-                .eq('id', data.alunoId)
-                .maybeSingle();
-              if (alunoData?.nome) nomeAluno = alunoData.nome;
-            }
-
-            const { data: atividadeData } = await supabase
-              .from('atividade_pos_venda')
-              .select('unit_id')
-              .eq('id', cliente.atividade_pos_venda_id)
-              .maybeSingle();
-
-            const horarioFormatado = horarioSelecionado.substring(0, 5);
-
-            const webhookPayload = {
-              atividade_pos_venda_id: cliente.atividade_pos_venda_id,
-              nome_aluno: nomeAluno,
-              professor_id: professorSelecionado.id,
-              data_aula: dataStr,
-              horario_aula: horarioFormatado,
-              unit_id: atividadeData?.unit_id || null,
-              kit_entregue: data.checklist.check_entregar_kit || false,
-              tipo_kit: kitType || null,
-              descritivo_comercial: descritivoComercial || null,
-            };
-
-            console.log('[Webhook Aula Inaugural] Enviando via edge function:', webhookPayload);
-
-            await supabase.functions.invoke('webhook-aula-inaugural', {
-              body: webhookPayload,
-            });
-          } catch (webhookErr) {
-            console.error('[Webhook Aula Inaugural] Erro ao enviar:', webhookErr);
-          }
+          // Webhook removido daqui - agora é disparado via useEffect quando accordion 2 é completado
         } catch (eventoErr) {
           console.error("Erro ao criar evento de aula inaugural:", eventoErr);
         }
@@ -508,6 +468,9 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   // Determine which accordions can open
 
+  // Ref para evitar envio duplicado do webhook na mesma sessão
+  const webhookEnviado = useRef(false);
+
   // Auto-advance when completing an accordion
   useEffect(() => {
     if (isAccordion1Complete && openAccordion === "accordion-1") {
@@ -519,6 +482,64 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
     if (isAccordion2Complete && openAccordion === "accordion-2") {
       setOpenAccordion("accordion-3");
     }
+  }, [isAccordion2Complete]);
+
+  // Disparar webhook quando accordion 2 for completado
+  useEffect(() => {
+    if (!isAccordion2Complete || webhookEnviado.current) return;
+
+    const enviarWebhook = async () => {
+      try {
+        // Buscar nome do aluno vinculado
+        let nomeAluno = cliente.name;
+        if (selectedAlunoId) {
+          const { data: alunoData } = await supabase
+            .from('alunos')
+            .select('nome')
+            .eq('id', selectedAlunoId)
+            .maybeSingle();
+          if (alunoData?.nome) nomeAluno = alunoData.nome;
+        }
+
+        const { data: atividadeData } = await supabase
+          .from('atividade_pos_venda')
+          .select('unit_id')
+          .eq('id', cliente.atividade_pos_venda_id)
+          .limit(1)
+          .maybeSingle();
+
+        const horarioFormatado = horarioSelecionado ? horarioSelecionado.substring(0, 5) : null;
+
+        const dataStr = dataAulaInaugural
+          ? `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`
+          : null;
+
+        const webhookPayload = {
+          atividade_pos_venda_id: cliente.atividade_pos_venda_id,
+          nome_aluno: nomeAluno,
+          professor_id: professorSelecionado?.id || null,
+          data_aula: dataStr,
+          horario_aula: horarioFormatado,
+          unit_id: atividadeData?.unit_id || null,
+          kit_entregue: checklist.check_entregar_kit || false,
+          tipo_kit: kitType || null,
+          descritivo_comercial: descritivoComercial || null,
+        };
+
+        console.log('[Webhook Aula Inaugural] Enviando via edge function (accordion 2 completo):', webhookPayload);
+
+        await supabase.functions.invoke('webhook-aula-inaugural', {
+          body: webhookPayload,
+        });
+
+        webhookEnviado.current = true;
+        console.log('[Webhook Aula Inaugural] Enviado com sucesso');
+      } catch (webhookErr) {
+        console.error('[Webhook Aula Inaugural] Erro ao enviar:', webhookErr);
+      }
+    };
+
+    enviarWebhook();
   }, [isAccordion2Complete]);
 
   if (isLoading || isLoadingVinculado) {
