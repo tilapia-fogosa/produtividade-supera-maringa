@@ -76,20 +76,20 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
       if (error) throw error;
       if (!data?.length) return [];
 
-      // Buscar client_ids para verificar alunos vinculados
-      const clientIds = [...new Set(data.map((a) => a.client_id).filter(Boolean))] as string[];
+      // Buscar IDs das atividades para verificar alunos vinculados
+      const atividadeIds = data.map((a) => a.id).filter(Boolean) as string[];
 
-      // Buscar alunos vinculados
+      // Buscar alunos vinculados por atividade_pos_venda_id
       const { data: alunosVinculados } = await supabase
         .from("alunos")
-        .select("id, client_id")
-        .in("client_id", clientIds);
+        .select("id, atividade_pos_venda_id")
+        .in("atividade_pos_venda_id", atividadeIds);
 
-      // Mapear alunos por client_id
+      // Mapear alunos por atividade_pos_venda_id
       const alunosMap = new Map<string, boolean>();
-      alunosVinculados?.forEach((aluno) => {
-        if (aluno.client_id) {
-          alunosMap.set(aluno.client_id, true);
+      alunosVinculados?.forEach((aluno: any) => {
+        if (aluno.atividade_pos_venda_id) {
+          alunosMap.set(aluno.atividade_pos_venda_id, true);
         }
       });
 
@@ -117,8 +117,8 @@ export function useAtividadesPosVenda(filters?: AtividadesPosVendaFilters) {
           pv.data_aula_inaugural
         );
 
-        // Verificar se tem aluno vinculado
-        const temAlunoVinculado = alunosMap.has(pv.client_id);
+        // Verificar se tem aluno vinculado (agora por atividade_pos_venda_id)
+        const temAlunoVinculado = alunosMap.has(pv.id);
 
         const finais_completo = isManualCompleto || !!(
           pv.check_lancar_sgs &&

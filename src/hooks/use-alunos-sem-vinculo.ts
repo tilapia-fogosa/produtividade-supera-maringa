@@ -8,20 +8,20 @@ export interface AlunoSemVinculo {
   turma_nome: string | null;
 }
 
-export function useAlunosSemVinculo(currentClientId?: string) {
+export function useAlunosSemVinculo(currentAtividadeId?: string) {
   const { activeUnit } = useActiveUnit();
 
   return useQuery({
-    queryKey: ["alunos-sem-vinculo", activeUnit?.id, currentClientId],
+    queryKey: ["alunos-sem-vinculo", activeUnit?.id, currentAtividadeId],
     queryFn: async (): Promise<AlunoSemVinculo[]> => {
-      // Buscar alunos ativos que não possuem client_id OU que já estão vinculados ao client atual
+      // Buscar alunos ativos que não possuem atividade_pos_venda_id OU que já estão vinculados à atividade atual
       let query = supabase
         .from("alunos")
         .select(`
           id,
           nome,
           turma_id,
-          client_id,
+          atividade_pos_venda_id,
           turmas:turma_id (
             nome
           )
@@ -39,9 +39,9 @@ export function useAlunosSemVinculo(currentClientId?: string) {
       if (error) throw error;
       if (!data?.length) return [];
 
-      // Filtrar apenas alunos sem vínculo OU vinculados ao client atual
+      // Filtrar apenas alunos sem vínculo OU vinculados à atividade atual
       const alunosFiltrados = data.filter((aluno: any) => {
-        return aluno.client_id === null || aluno.client_id === currentClientId;
+        return aluno.atividade_pos_venda_id === null || aluno.atividade_pos_venda_id === currentAtividadeId;
       });
 
       return alunosFiltrados.map((aluno: any) => ({
@@ -54,12 +54,12 @@ export function useAlunosSemVinculo(currentClientId?: string) {
   });
 }
 
-// Hook para buscar o aluno atualmente vinculado a um client
-export function useAlunoVinculado(clientId?: string) {
+// Hook para buscar o aluno atualmente vinculado a uma atividade_pos_venda
+export function useAlunoVinculado(atividadePosVendaId?: string) {
   return useQuery({
-    queryKey: ["aluno-vinculado", clientId],
+    queryKey: ["aluno-vinculado", atividadePosVendaId],
     queryFn: async (): Promise<AlunoSemVinculo | null> => {
-      if (!clientId) return null;
+      if (!atividadePosVendaId) return null;
 
       const { data, error } = await supabase
         .from("alunos")
@@ -71,7 +71,7 @@ export function useAlunoVinculado(clientId?: string) {
             nome
           )
         `)
-        .eq("client_id", clientId)
+        .eq("atividade_pos_venda_id", atividadePosVendaId)
         .maybeSingle();
 
       if (error) throw error;
@@ -83,6 +83,6 @@ export function useAlunoVinculado(clientId?: string) {
         turma_nome: (data as any).turmas?.nome || null,
       };
     },
-    enabled: !!clientId,
+    enabled: !!atividadePosVendaId,
   });
 }

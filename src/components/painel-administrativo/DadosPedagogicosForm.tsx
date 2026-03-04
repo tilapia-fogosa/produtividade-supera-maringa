@@ -30,7 +30,7 @@ interface DadosPedagogicosFormProps {
 export function DadosPedagogicosForm({ cliente, onCancel }: DadosPedagogicosFormProps) {
   const { turmas, loading: loadingTurmas } = useTodasTurmas();
   const salvarDados = useSalvarDadosPedagogicos();
-  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.atividade_pos_venda_id);
   const { data: dadosSalvos } = useDadosPosVenda(cliente.atividade_pos_venda_id);
 
   const [turmaId, setTurmaId] = useState<string>("");

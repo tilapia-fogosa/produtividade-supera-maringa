@@ -69,7 +69,7 @@ export function DadosCadastraisForm({
   const [salvoComSucesso, setSalvoComSucesso] = useState(false);
   
   const salvarDados = useSalvarDadosCadastrais();
-  const { data: alunoVinculado } = useAlunoVinculado(cliente.id);
+  const { data: alunoVinculado } = useAlunoVinculado(cliente.atividade_pos_venda_id);
   const { data: dadosSalvos } = useDadosPosVenda(cliente.atividade_pos_venda_id);
   
   const form = useForm<DadosCadastraisFormData>({

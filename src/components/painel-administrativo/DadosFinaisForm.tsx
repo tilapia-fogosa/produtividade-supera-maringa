@@ -115,8 +115,8 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   const [salaSelecionada, setSalaSelecionada] = useState<{ id: string; nome: string } | null>(null);
 
   // Hooks para alunos
-  const { data: alunosDisponiveis = [], isLoading: isLoadingAlunos } = useAlunosSemVinculo(cliente.id);
-  const { data: alunoVinculado, isLoading: isLoadingVinculado } = useAlunoVinculado(cliente.id);
+  const { data: alunosDisponiveis = [], isLoading: isLoadingAlunos } = useAlunosSemVinculo(cliente.atividade_pos_venda_id);
+  const { data: alunoVinculado, isLoading: isLoadingVinculado } = useAlunoVinculado(cliente.atividade_pos_venda_id);
 
   // Atualizar o aluno selecionado quando carregar o vinculado
   useEffect(() => {
@@ -286,7 +286,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
         if (alunoVinculado?.id) {
           const { error: removeError } = await supabase
             .from("alunos")
-            .update({ client_id: null })
+            .update({ client_id: null, atividade_pos_venda_id: null } as any)
             .eq("id", alunoVinculado.id);
 
           if (removeError) throw removeError;
@@ -300,7 +300,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
         // Adicionar vínculo ao novo aluno (se selecionado)
         if (data.alunoId) {
-          const updateAluno: Record<string, any> = { client_id: cliente.id, foto_url: photoUrl, kit_sugerido: kitType || null };
+          const updateAluno: Record<string, any> = { client_id: cliente.id, atividade_pos_venda_id: cliente.atividade_pos_venda_id, foto_url: photoUrl, kit_sugerido: kitType || null };
           if (dataAulaInaugural) {
             updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
           }
