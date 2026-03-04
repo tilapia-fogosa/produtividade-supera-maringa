@@ -487,7 +487,6 @@ export type Database = {
           atividade_pos_venda_id: string | null
           avaliacao_abaco: string | null
           avaliacao_ah: string | null
-          client_id: string | null
           codigo: string | null
           coordenador_responsavel: string | null
           cpf: string | null
@@ -547,7 +546,6 @@ export type Database = {
           atividade_pos_venda_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
-          client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
           cpf?: string | null
@@ -607,7 +605,6 @@ export type Database = {
           atividade_pos_venda_id?: string | null
           avaliacao_abaco?: string | null
           avaliacao_ah?: string | null
-          client_id?: string | null
           codigo?: string | null
           coordenador_responsavel?: string | null
           cpf?: string | null
@@ -667,20 +664,6 @@ export type Database = {
             columns: ["atividade_pos_venda_id"]
             isOneToOne: false
             referencedRelation: "atividade_pos_venda"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "alunos_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "alunos_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
           {
