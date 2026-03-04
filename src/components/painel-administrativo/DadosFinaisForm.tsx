@@ -230,138 +230,111 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   }, [cliente.atividade_pos_venda_id]);
 
   const mutation = useMutation({
-    mutationFn: async (data: { checklist: Record<string, boolean>; alunoId: string | null; fotoBase64: string | null }) => {
-      let photoUrl = fotoUrlExistente;
+    mutationFn: async () => {
+      await saveAccordionData();
+    },
+    onSuccess: () => {
+      invalidateAllQueries();
+      setTimeout(() => onCancel(), 1500);
+    },
+    onError: (error) => {
+      console.error("Erro detalhado ao salvar dados iniciais:", error);
+    },
+  });
 
-      // Upload da foto se houver nova captura
-      if (data.fotoBase64) {
-        const base64Data = data.fotoBase64.split(',')[1];
-        const fileName = `${cliente.id}-${Date.now()}.jpg`;
-        
-        const blob = base64ToBlob(base64Data, 'image/jpeg');
-        const { error: uploadError } = await supabase.storage
-          .from('alunos-fotos')
-          .upload(fileName, blob, {
-            contentType: 'image/jpeg',
-            upsert: true
-          });
+  const [isSavingAuto, setIsSavingAuto] = useState(false);
+  const [autoSaveMessage, setAutoSaveMessage] = useState<string | null>(null);
 
-        if (uploadError) throw uploadError;
+  const handleToggle = (field: string) => {
+    setChecklist((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
-        const { data: urlData } = supabase.storage
-          .from('alunos-fotos')
-          .getPublicUrl(fileName);
-        
+  // Função reutilizável para persistir dados no banco
+  const saveAccordionData = async () => {
+    let photoUrl = fotoUrlExistente;
+
+    // Upload da foto se houver nova captura
+    if (fotoCapturada) {
+      const base64Data = fotoCapturada.split(',')[1];
+      const fileName = `${cliente.id}-${Date.now()}.jpg`;
+      const blob = base64ToBlob(base64Data, 'image/jpeg');
+      const { error: uploadError } = await supabase.storage
+        .from('alunos-fotos')
+        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('alunos-fotos').getPublicUrl(fileName);
         photoUrl = urlData.publicUrl;
       }
+    }
 
-      // Atualizar checklist, foto e aula inaugural na atividade_pos_venda
-      const updateData: Record<string, any> = { ...data.checklist };
-      if (photoUrl) {
-        updateData.photo_url = photoUrl;
+    // Montar dados de update
+    const updateData: Record<string, any> = { ...checklist };
+    if (photoUrl) updateData.photo_url = photoUrl;
+    updateData.informacoes_onboarding = descritivoComercial || null;
+    updateData.kit_type = kitType || null;
+
+    if (dataAulaInaugural && horarioSelecionado) {
+      const year = dataAulaInaugural.getFullYear();
+      const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
+      const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
+      const horarioLimpo = horarioSelecionado.length === 8 ? horarioSelecionado : `${horarioSelecionado}:00`;
+      updateData.data_aula_inaugural = `${year}-${month}-${day}T${horarioLimpo}`;
+    }
+
+    const { error: checklistError } = await supabase
+      .from("atividade_pos_venda")
+      .update(updateData)
+      .eq("id", cliente.atividade_pos_venda_id);
+
+    if (checklistError) throw checklistError;
+
+    // Vincular/desvincular aluno
+    if (selectedAlunoId !== alunoVinculado?.id) {
+      if (alunoVinculado?.id) {
+        await supabase.from("alunos").update({ atividade_pos_venda_id: null } as any).eq("id", alunoVinculado.id);
+        await (supabase as any).from('aulas_inaugurais').update({ aluno_id: null }).eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
       }
-      updateData.informacoes_onboarding = descritivoComercial || null;
-      updateData.kit_type = kitType || null;
+      if (selectedAlunoId) {
+        const updateAluno: Record<string, any> = { atividade_pos_venda_id: cliente.atividade_pos_venda_id, foto_url: photoUrl, kit_sugerido: kitType || null };
+        if (dataAulaInaugural) {
+          updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
+        }
+        await supabase.from("alunos").update(updateAluno).eq("id", selectedAlunoId);
+        await (supabase as any).from('aulas_inaugurais').update({ aluno_id: selectedAlunoId }).eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
+      }
+    } else if (selectedAlunoId) {
+      const updateAluno: Record<string, any> = {};
+      if (photoUrl) updateAluno.foto_url = photoUrl;
+      if (kitType) updateAluno.kit_sugerido = kitType;
+      if (dataAulaInaugural) updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
+      if (Object.keys(updateAluno).length > 0) {
+        await supabase.from("alunos").update(updateAluno).eq("id", selectedAlunoId);
+      }
+    }
 
-      // Salvar data da aula inaugural
-      if (dataAulaInaugural && horarioSelecionado) {
+    // Criar evento na agenda do professor
+    if (dataAulaInaugural && horarioSelecionado && professorSelecionado) {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id ?? null;
+        const [hora, minuto] = horarioSelecionado.split(':').map(Number);
+        const totalMinutos = hora * 60 + minuto + 60;
+        const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
+
+        await supabase.from('eventos_professor').delete().eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id).eq('tipo_evento', 'aula_zero');
+        await (supabase as any).from('aulas_inaugurais').delete().eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
+
         const year = dataAulaInaugural.getFullYear();
         const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
         const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
         const dataStr = `${year}-${month}-${day}`;
-        const horarioLimpo = horarioSelecionado.length === 8 ? horarioSelecionado : `${horarioSelecionado}:00`;
-        updateData.data_aula_inaugural = `${dataStr}T${horarioLimpo}`;
-      }
 
-      const { error: checklistError } = await supabase
-        .from("atividade_pos_venda")
-        .update(updateData)
-        .eq("id", cliente.atividade_pos_venda_id);
-
-      if (checklistError) throw checklistError;
-
-      // Se mudou o aluno vinculado
-      if (data.alunoId !== alunoVinculado?.id) {
-        // Remover vínculo do aluno anterior (se existir)
-        if (alunoVinculado?.id) {
-          const { error: removeError } = await supabase
-            .from("alunos")
-            .update({ atividade_pos_venda_id: null } as any)
-            .eq("id", alunoVinculado.id);
-
-          if (removeError) throw removeError;
-
-          // Limpar aluno_id na aulas_inaugurais vinculada
-          await (supabase as any)
-            .from('aulas_inaugurais')
-            .update({ aluno_id: null })
-            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
-        }
-
-        // Adicionar vínculo ao novo aluno (se selecionado)
-        if (data.alunoId) {
-          const updateAluno: Record<string, any> = { atividade_pos_venda_id: cliente.atividade_pos_venda_id, foto_url: photoUrl, kit_sugerido: kitType || null };
-          if (dataAulaInaugural) {
-            updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
-          }
-          const { error: addError } = await supabase
-            .from("alunos")
-            .update(updateAluno)
-            .eq("id", data.alunoId);
-
-          if (addError) throw addError;
-
-          // Atualizar aluno_id na aulas_inaugurais vinculada
-          await (supabase as any)
-            .from('aulas_inaugurais')
-            .update({ aluno_id: data.alunoId })
-            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
-        }
-      } else if (data.alunoId) {
-        // Atualizar foto e data_onboarding do aluno vinculado existente
-        const updateAluno: Record<string, any> = {};
-        if (photoUrl) updateAluno.foto_url = photoUrl;
-        if (kitType) updateAluno.kit_sugerido = kitType;
-        if (dataAulaInaugural) updateAluno.data_onboarding = `${dataAulaInaugural.getFullYear()}-${String(dataAulaInaugural.getMonth() + 1).padStart(2, '0')}-${String(dataAulaInaugural.getDate()).padStart(2, '0')}`;
-        
-        if (Object.keys(updateAluno).length > 0) {
-          await supabase
-            .from("alunos")
-            .update(updateAluno)
-            .eq("id", data.alunoId);
-        }
-      }
-
-      // Criar evento na agenda do professor (se aula inaugural preenchida)
-      // Separado do fluxo principal para não bloquear o salvamento dos demais dados
-      if (dataAulaInaugural && horarioSelecionado && professorSelecionado) {
-        try {
-          const { data: userData } = await supabase.auth.getUser();
-          const userId = userData.user?.id ?? null;
-
-          const [hora, minuto] = horarioSelecionado.split(':').map(Number);
-          const totalMinutos = hora * 60 + minuto + 60;
-          const horarioFim = `${String(Math.floor(totalMinutos / 60)).padStart(2, '0')}:${String(totalMinutos % 60).padStart(2, '0')}`;
-
-          // Remover evento anterior de aula inaugural deste cliente
-          await supabase
-            .from('eventos_professor')
-            .delete()
-            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id)
-            .eq('tipo_evento', 'aula_zero');
-
-          // Remover aula inaugural anterior deste cliente
-          await (supabase as any)
-            .from('aulas_inaugurais')
-            .delete()
-            .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
-
-          const year = dataAulaInaugural.getFullYear();
-          const month = String(dataAulaInaugural.getMonth() + 1).padStart(2, '0');
-          const day = String(dataAulaInaugural.getDate()).padStart(2, '0');
-          const dataStr = `${year}-${month}-${day}`;
-
-          const eventoData = {
+        const { data: eventoInserido, error: eventoError } = await supabase
+          .from('eventos_professor')
+          .insert({
             professor_id: professorSelecionado.id,
             tipo_evento: 'aula_zero' as const,
             titulo: 'Aula Inaugural',
@@ -373,80 +346,49 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             created_by: userId,
             client_id: cliente.id,
             atividade_pos_venda_id: cliente.atividade_pos_venda_id,
-          };
+          })
+          .select('id')
+          .single();
 
-          const { data: eventoInserido, error: eventoError } = await supabase
-            .from('eventos_professor')
-            .insert(eventoData)
-            .select('id')
-            .single();
+        if (eventoError) console.error("Erro ao criar evento de aula inaugural (RLS):", eventoError);
 
-          if (eventoError) {
-            console.error("Erro ao criar evento de aula inaugural (RLS):", eventoError);
-          }
+        const { data: atividadeData } = await supabase.from('atividade_pos_venda').select('unit_id').eq('id', cliente.atividade_pos_venda_id).maybeSingle();
 
-          // Buscar unit_id da atividade
-          const { data: atividadeData } = await supabase
-            .from('atividade_pos_venda')
-            .select('unit_id')
-            .eq('id', cliente.atividade_pos_venda_id)
-            .maybeSingle();
-
-          // Criar registro na tabela aulas_inaugurais
-          if (atividadeData?.unit_id) {
-            const { error: aulaError } = await (supabase as any)
-              .from('aulas_inaugurais')
-              .insert({
-                evento_professor_id: eventoInserido?.id || null,
-                atividade_pos_venda_id: cliente.atividade_pos_venda_id,
-                client_id: cliente.id,
-                unit_id: atividadeData.unit_id,
-                professor_id: professorSelecionado.id,
-                sala_id: salaSelecionada?.id || null,
-                aluno_id: data.alunoId || null,
-                data: dataStr,
-                horario_inicio: horarioSelecionado,
-                horario_fim: horarioFim,
-                status: 'agendada',
-                created_by: userId,
-              });
-
-            if (aulaError) {
-              console.error("Erro ao criar registro em aulas_inaugurais:", aulaError);
-            }
-          }
-
-          // Webhook removido daqui - agora é disparado via useEffect quando accordion 2 é completado
-        } catch (eventoErr) {
-          console.error("Erro ao criar evento de aula inaugural:", eventoErr);
+        if (atividadeData?.unit_id) {
+          await (supabase as any).from('aulas_inaugurais').insert({
+            evento_professor_id: eventoInserido?.id || null,
+            atividade_pos_venda_id: cliente.atividade_pos_venda_id,
+            client_id: cliente.id,
+            unit_id: atividadeData.unit_id,
+            professor_id: professorSelecionado.id,
+            sala_id: salaSelecionada?.id || null,
+            aluno_id: selectedAlunoId || null,
+            data: dataStr,
+            horario_inicio: horarioSelecionado,
+            horario_fim: horarioFim,
+            status: 'agendada',
+            created_by: userId,
+          });
         }
+      } catch (eventoErr) {
+        console.error("Erro ao criar evento de aula inaugural:", eventoErr);
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pos-matricula"] });
-      queryClient.invalidateQueries({ queryKey: ["pos-matriculas-incompletas"] });
-      queryClient.invalidateQueries({ queryKey: ["alunos-sem-vinculo"] });
-      queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
-      queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
-      queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
-      queryClient.invalidateQueries({ queryKey: ["aulas-inaugurais-professor"] });
-      setTimeout(() => onCancel(), 1500);
-    },
-    onError: (error) => {
-      console.error("Erro detalhado ao salvar dados iniciais:", error);
-    },
-  });
+    }
+  };
 
-  const handleToggle = (field: string) => {
-    setChecklist((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
+  const invalidateAllQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["pos-matricula"] });
+    queryClient.invalidateQueries({ queryKey: ["pos-matriculas-incompletas"] });
+    queryClient.invalidateQueries({ queryKey: ["alunos-sem-vinculo"] });
+    queryClient.invalidateQueries({ queryKey: ["aluno-vinculado"] });
+    queryClient.invalidateQueries({ queryKey: ["agenda-professores"] });
+    queryClient.invalidateQueries({ queryKey: ["atividades-pos-venda"] });
+    queryClient.invalidateQueries({ queryKey: ["aulas-inaugurais-professor"] });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ checklist, alunoId: selectedAlunoId, fotoBase64: fotoCapturada });
+    mutation.mutate();
   };
 
   const handleRemoveAluno = () => {
@@ -469,19 +411,54 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
   // Determine which accordions can open
 
-  // Ref para evitar envio duplicado do webhook na mesma sessão
+  // Refs para controlar auto-save e webhook
   const webhookEnviado = useRef(false);
+  const accordion1Saved = useRef(false);
+  const accordion2Saved = useRef(false);
 
-  // Auto-advance when completing an accordion
+  // Auto-advance + auto-save accordion 1→2
   useEffect(() => {
-    if (isAccordion1Complete && openAccordion === "accordion-1") {
+    if (isAccordion1Complete && openAccordion === "accordion-1" && !accordion1Saved.current) {
+      accordion1Saved.current = true;
       setOpenAccordion("accordion-2");
+      setIsSavingAuto(true);
+      setAutoSaveMessage("Salvando dados do acordeão 1...");
+      saveAccordionData()
+        .then(() => {
+          invalidateAllQueries();
+          setAutoSaveMessage("Dados salvos ✓");
+          setTimeout(() => setAutoSaveMessage(null), 2000);
+        })
+        .catch((err) => {
+          console.error("Erro no auto-save accordion 1:", err);
+          setAutoSaveMessage("Erro ao salvar");
+          setTimeout(() => setAutoSaveMessage(null), 3000);
+          accordion1Saved.current = false;
+        })
+        .finally(() => setIsSavingAuto(false));
     }
   }, [isAccordion1Complete]);
 
+  // Auto-advance + auto-save accordion 2→3 (ANTES do webhook)
   useEffect(() => {
-    if (isAccordion2Complete && openAccordion === "accordion-2") {
+    if (isAccordion2Complete && openAccordion === "accordion-2" && !accordion2Saved.current) {
+      accordion2Saved.current = true;
       setOpenAccordion("accordion-3");
+      setIsSavingAuto(true);
+      setAutoSaveMessage("Salvando dados do acordeão 2...");
+      saveAccordionData()
+        .then(() => {
+          invalidateAllQueries();
+          setAutoSaveMessage("Dados salvos ✓");
+          setTimeout(() => setAutoSaveMessage(null), 2000);
+        })
+        .catch((err) => {
+          console.error("Erro no auto-save accordion 2:", err);
+          setAutoSaveMessage("Erro ao salvar");
+          setTimeout(() => setAutoSaveMessage(null), 3000);
+          accordion2Saved.current = false;
+        })
+        .finally(() => setIsSavingAuto(false));
     }
   }, [isAccordion2Complete]);
 
@@ -857,6 +834,13 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {autoSaveMessage && (
+        <p className={cn("text-sm transition-opacity", autoSaveMessage.includes("Erro") ? "text-destructive" : "text-primary")}>
+          {isSavingAuto && <Loader2 className="inline mr-1 h-3 w-3 animate-spin" />}
+          {autoSaveMessage}
+        </p>
+      )}
 
       {mutation.isSuccess && (
         <p className="text-sm text-primary">Dados salvos com sucesso!</p>
