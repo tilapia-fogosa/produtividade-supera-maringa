@@ -58,7 +58,7 @@ export function AulaZeroDrawer({ open, onOpenChange, aulaInauguralId, alunoNome,
   useEffect(() => {
     if (open && aulaInauguralId) {
       (async () => {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from('aulas_inaugurais')
           .select('percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
           .eq('id', aulaInauguralId)
@@ -98,7 +98,7 @@ export function AulaZeroDrawer({ open, onOpenChange, aulaInauguralId, alunoNome,
       };
 
       // Atualizar aulas_inaugurais com dados pedagógicos e status realizada
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('aulas_inaugurais')
         .update({
           ...fields,
@@ -110,7 +110,7 @@ export function AulaZeroDrawer({ open, onOpenChange, aulaInauguralId, alunoNome,
       if (updateError) throw updateError;
 
       // Buscar dados da aula inaugural para sincronização
-      const { data: aulaInaugural } = await supabase
+      const { data: aulaInaugural } = await (supabase as any)
         .from('aulas_inaugurais')
         .select('client_id, atividade_pos_venda_id')
         .eq('id', aulaInauguralId)

@@ -41,7 +41,7 @@ export function useAulasInauguraisProfessor() {
       const hojeStr = new Date().toISOString().split('T')[0];
 
       if (isAdminOrManagement && activeUnit?.id) {
-        const { data: aulas, error } = await supabase
+        const { data: aulas, error } = await (supabase as any)
           .from('aulas_inaugurais')
           .select('id, data, horario_inicio, horario_fim, status, client_id, atividade_pos_venda_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao, professor_id')
           .eq('unit_id', activeUnit.id)
@@ -96,7 +96,7 @@ export function useAulasInauguraisProfessor() {
       }
 
       if (isProfessor && professorId) {
-        const { data: aulas, error } = await supabase
+        const { data: aulas, error } = await (supabase as any)
           .from('aulas_inaugurais')
           .select('id, data, horario_inicio, horario_fim, status, client_id, atividade_pos_venda_id, percepcao_coordenador, motivo_procura, avaliacao_abaco, avaliacao_ah, pontos_atencao')
           .eq('professor_id', professorId)

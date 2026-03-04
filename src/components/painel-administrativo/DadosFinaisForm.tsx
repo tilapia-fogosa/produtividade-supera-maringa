@@ -330,7 +330,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
             .eq('tipo_evento', 'aula_zero');
 
           // Remover aula inaugural anterior deste cliente
-          await supabase
+          await (supabase as any)
             .from('aulas_inaugurais')
             .delete()
             .eq('atividade_pos_venda_id', cliente.atividade_pos_venda_id);
@@ -373,7 +373,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
 
           // Criar registro na tabela aulas_inaugurais
           if (atividadeData?.unit_id) {
-            const { error: aulaError } = await supabase
+            const { error: aulaError } = await (supabase as any)
               .from('aulas_inaugurais')
               .insert({
                 evento_professor_id: eventoInserido?.id || null,
