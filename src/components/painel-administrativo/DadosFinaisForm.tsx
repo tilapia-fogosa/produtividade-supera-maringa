@@ -456,7 +456,7 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
   // Completion checks for accordion gating
   const isAccordion1Complete = !!(
     dataAulaInaugural &&
-    horarioSelecionado &&
+    (horarioSelecionado || eventoExistente) &&
     checklist.check_entregar_kit
   );
 
