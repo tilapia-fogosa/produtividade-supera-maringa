@@ -732,8 +732,8 @@ export function DadosFinaisForm({ cliente, onCancel }: DadosFinaisFormProps) {
                           <CommandItem
                             key={aluno.id}
                             value={aluno.id}
-                            onSelect={(value) => {
-                              setSelectedAlunoId(value === selectedAlunoId ? null : value);
+                            onSelect={() => {
+                              setSelectedAlunoId(aluno.id === selectedAlunoId ? null : aluno.id);
                               setOpenAlunoPopover(false);
                               setSearchFilter("");
                             }}
