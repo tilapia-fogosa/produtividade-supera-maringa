@@ -37,19 +37,8 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-// Opções de origem de Lead comuns
-const originOptions = [
-  "Instagram",
-  "Facebook Ads",
-  "Google Ads",
-  "Indicação",
-  "Passagem",
-  "Panfleto",
-  "Telemarketing",
-  "Ativação",
-  "Orgânico"
-];
+import { useQuery } from "@tanstack/react-query";
+import { useActiveUnit } from "@/contexts/ActiveUnitContext";
 
 // Schema de validação Zod
 const formSchema = z.object({
@@ -71,11 +60,25 @@ interface NewClientDrawerProps {
 export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: NewClientDrawerProps) {
   
   const { profile } = useAuth();
+  const { activeUnit } = useActiveUnit();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Maringá Fallback ID em caso de usuário sem unit_ids
+  // Maringá Fallback ID em caso de usuário sem unit ativa
   const fallbackUnitId = "0df79a04-444e-46ee-b218-59e4b1835f4a";
-  const userUnitId = profile?.unit_ids?.[0] || fallbackUnitId;
+  const userUnitId = activeUnit?.id || profile?.unit_ids?.[0] || fallbackUnitId;
+
+  // Buscar origens de lead do banco
+  const { data: leadSources } = useQuery({
+    queryKey: ['lead_sources'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('lead_sources')
+        .select('id, name')
+        .order('name');
+      return data || [];
+    },
+  });
 
   console.log('NewClientDrawer: Montando drawer com telefone:', phoneNumber);
 
@@ -92,12 +95,13 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
   });
 
   useEffect(() => {
-    if (open && phoneNumber) {
+    if (open) {
+      setSubmitError(null);
       console.log("NewClientDrawer: Configurando formulário com telefone:", phoneNumber);
       form.reset({
         unit_id: userUnitId,
         name: "",
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber || "",
         email: "",
         lead_source: "",
         observations: ""
@@ -119,6 +123,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("NewClientDrawer: Submitting client creation", values);
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       // Cria registro na tabela clients
@@ -129,10 +134,10 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
           phone_number: values.phoneNumber,
           email: values.email || null,
           lead_source: values.lead_source,
-          obs: values.observations || null,
+          observations: values.observations || null,
           unit_id: values.unit_id,
           tipo_atendimento: 'humano',
-          status: 'novo'
+          status: 'novo-cadastro'
         })
         .select('id')
         .single();
@@ -157,9 +162,9 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
       onOpenChange(false);
       form.reset();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("NewClientDrawer: Error on submit:", error);
-      console.error("NewClientDrawer: Error on submit:", error);
+      setSubmitError(error?.message || "Erro ao cadastrar lead. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -179,11 +184,11 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Phone className="h-4 w-4 text-primary" />
             </div>
-            <DialogTitle className="text-base">Cadastrar Contato do WhatsApp</DialogTitle>
+            <DialogTitle className="text-base">Cadastrar Lead</DialogTitle>
           </div>
 
           <DialogDescription className="text-xs">
-            Preencha os dados abaixo para vincular as mensagens existentes.
+            Preencha os dados abaixo para cadastrar um novo lead.
           </DialogDescription>
         </DialogHeader>
 
@@ -206,7 +211,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={userUnitId} className="text-xs">Unidade Atual</SelectItem>
+                        <SelectItem value={userUnitId} className="text-xs">{activeUnit?.name || 'Maringá'}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage className="text-[10px]" />
@@ -222,7 +227,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                   <FormItem className="space-y-1">
                     <FormLabel className="text-xs">Telefone</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly className="h-8 text-xs font-medium bg-muted" />
+                      <Input {...field} placeholder="Telefone do contato" className="h-8 text-xs font-medium" readOnly={!!phoneNumber} />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -276,8 +281,8 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {originOptions.map(option => (
-                          <SelectItem key={option} value={option} className="text-xs">{option}</SelectItem>
+                        {leadSources?.map(source => (
+                          <SelectItem key={source.id} value={source.id} className="text-xs">{source.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -305,6 +310,12 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                 </FormItem>
               )}
             />
+
+            {submitError && (
+              <div className="text-xs text-destructive bg-destructive/10 rounded p-2">
+                {submitError}
+              </div>
+            )}
 
             <DialogFooter className="gap-2 sm:gap-0 pt-2 pb-1">
               <Button
