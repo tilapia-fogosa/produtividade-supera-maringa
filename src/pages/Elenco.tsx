@@ -33,7 +33,7 @@ const Elenco = () => {
         console.error('Erro ao buscar atletas:', error);
         throw error;
       }
-      return (data || []) as Athlete[];
+      return (data || []) as unknown as Athlete[];
     }
   });
 
