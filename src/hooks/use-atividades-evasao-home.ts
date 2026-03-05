@@ -60,7 +60,7 @@ export function useAtividadesEvasaoHome() {
         `)
         .eq('status', 'pendente')
         .eq('unit_id', activeUnit!.id)
-        .in('alerta_evasao.status', ['pendente', 'evadido'])
+        .in('alerta_evasao.status', ['pendente', 'evadido', 'retido'])
         .eq('alerta_evasao.aluno.active', true);
 
       // Filtrar baseado no perfil do usuário
