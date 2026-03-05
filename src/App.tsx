@@ -101,6 +101,7 @@ import PainelAdministrativo from "./pages/PainelAdministrativo";
 import Comissao from "./pages/Comissao";
 import IndicadoresComerciais from "./pages/IndicadoresComerciais";
 import ClientesUnidade from "./pages/clientes-unidade";
+import Elenco from "./pages/Elenco";
 
 // Páginas do fluxo Sala
 import SalaLancamentos from "./pages/sala/SalaLancamentos";
@@ -237,6 +238,7 @@ function App() {
                   <Route path="/access-denied" element={<AccessDenied />} />
                   <Route path="/devolutiva-fim-ano-impressao" element={<DevolutivaFimAnoImpressao />} />
                   <Route path="/visualizador" element={<VisualizadorImagens />} />
+                  <Route path="/elenco" element={<Elenco />} />
                   <Route path="/*" element={
                     <ProtectedRoute>
                       <ProtectedLayout />
